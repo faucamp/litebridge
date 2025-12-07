@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.litebridge.example</groupId>
+        <artifactId>litebridge-example</artifactId>
+        <version>DEV-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>litebridge-example-h2</artifactId>
+    <version>DEV-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <flyway.version>8.5.13</flyway.version>
+        <flyway-maven-plugin.version>9.22.2</flyway-maven-plugin.version>
+    </properties>
+
+    <build>
+        <plugins>
+            <!-- H2 database Flyway migration -->
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>${flyway-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>H2 database Flyway migration</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>migrate</goal>
+                        </goals>
+                        <configuration>
+                            <user>sa</user>
+                            <password></password>
+                            <url>jdbc:h2:file:./target/h2/lb;MODE=Oracle</url>
+                            <driver>org.h2.Driver</driver>
+                            <locations>
+                                <location>filesystem:src/main/resources/flyway/migration</location>
+                            </locations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+    <dependencies>
+        <!-- Project dependencies -->
+        <dependency>
+            <groupId>org.litebridge</groupId>
+            <artifactId>litebridge-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.litebridge.db</groupId>
+            <artifactId>litebridge-db-h2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.litebridge.example</groupId>
+            <artifactId>litebridge-example-common</artifactId>
+        </dependency>
+
+        <!-- External dependencies -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>${flyway.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2.version}</version>
+        </dependency>
+    </dependencies>
+
+</project>

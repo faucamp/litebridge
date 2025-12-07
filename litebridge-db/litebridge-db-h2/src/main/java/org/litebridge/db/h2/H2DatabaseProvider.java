@@ -1,0 +1,12 @@
+package org.litebridge.db.h2;
+
+import org.litebridge.db.api.AbstractDatabaseProvider;
+
+import java.sql.Connection;
+
+public class H2DatabaseProvider extends AbstractDatabaseProvider {
+
+    public H2DatabaseProvider(final Connection connection) {
+        super(connection);
+    }
+}
