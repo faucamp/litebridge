@@ -15,44 +15,8 @@
     <version>DEV-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
         <flyway.version>8.5.13</flyway.version>
-        <flyway-maven-plugin.version>9.22.2</flyway-maven-plugin.version>
     </properties>
-
-    <build>
-        <plugins>
-            <!-- H2 database Flyway migration -->
-            <plugin>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-maven-plugin</artifactId>
-                <version>${flyway-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>H2 database Flyway migration</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>migrate</goal>
-                        </goals>
-                        <configuration>
-                            <user>sa</user>
-                            <password></password>
-                            <url>jdbc:h2:file:./target/h2/lb;MODE=Oracle</url>
-                            <driver>org.h2.Driver</driver>
-                            <locations>
-                                <location>filesystem:src/main/resources/flyway/migration</location>
-                            </locations>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
 
     <dependencies>
         <!-- Project dependencies -->
@@ -78,7 +42,10 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>${h2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
         </dependency>
     </dependencies>
 

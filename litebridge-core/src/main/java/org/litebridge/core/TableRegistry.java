@@ -13,6 +13,10 @@ public class TableRegistry {
         return tables.get(dtoClass);
     }
 
+    public boolean containsTable(final Class<?> dtoClass) {
+        return tables.containsKey(dtoClass);
+    }
+
     public void addTable(final Class<?> dtoClass, final Table table) {
         tables.put(dtoClass, table);
     }

@@ -4,6 +4,7 @@ import jakarta.annotation.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.core.dto.ChangedField;
 import org.litebridge.core.dto.TrackedDto;
+import org.litebridge.core.persistence.PersistenceFacade;
 import org.litebridge.db.api.Column;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
@@ -21,17 +22,20 @@ import java.util.stream.Collectors;
 public class LiteBridge {
 
     private final DatabaseProvider databaseProvider;
-    private final TableRegistry tableRegistry = new TableRegistry();
+    private final TableRegistry tableRegistry;
+    private final PersistenceFacade persistenceFacade;
 
-    public LiteBridge(DatabaseProvider databaseProvider) {
+    public LiteBridge(final DatabaseProvider databaseProvider) {
         this.databaseProvider = databaseProvider;
+        this.tableRegistry = new TableRegistry();
+        this.persistenceFacade = new PersistenceFacade(tableRegistry, databaseProvider);
     }
 
     public void register(final Class<?> dtoClass, @Nullable final String catalog, @Nullable final String schema, final String table, final Map<String, String> fieldColumnMap) throws SQLException {
         tableRegistry.addTable(dtoClass, mapToTable(dtoClass, catalog, schema, table, fieldColumnMap));
     }
 
-    public void track(final Object dto) {
+    public <T> T track(final T dto) {
         if (dto == null) {
             throw new IllegalArgumentException("DTO cannot be null");
         }
@@ -43,45 +47,26 @@ public class LiteBridge {
         }
 
         table.trackDto(dto);
+        return dto;
     }
 
     public void save(final Object dto) {
-        if (dto == null) {
-            throw new IllegalArgumentException("DTO cannot be null");
+        try {
+            persistenceFacade.save(dto);
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to save DTO: " + dto, ex);
         }
-
-        final Table table = tableRegistry.getTable(dto.getClass());
-
-        if (table == null) {
-            throw new IllegalArgumentException("DTO class not registered: '%s'".formatted(dto.getClass().getName()));
-        }
-
-        final TrackedDto trackedDto = table.getTrackedDto(dto);
-
-        if (trackedDto == null) {
-            throw new IllegalArgumentException("DTO not tracked: '%s'".formatted(dto.toString()));
-        }
-
-        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields(dto);
-
-        System.out.println("The following fields have changed:");
-
-        changedFields.entrySet().forEach(entry -> {
-            System.out.println(entry.getKey() + " = " + entry.getValue().value());
-        });
     }
 
     private Table mapToTable(final Class<?> dtoClass, @Nullable final String catalog, @Nullable final String schema, final String table, final Map<String, String> fieldColumnMap) throws SQLException {
         // Up-front validation
         if (dtoClass == null) {
             throw new IllegalArgumentException("DTO class cannot be null");
-        }
-
-        if (table == null) {
+        } else if (ClassUtil.isBasicType(dtoClass)) {
+            throw new IllegalArgumentException("Not a DTO: " + dtoClass.getName());
+        } else if (table == null) {
             throw new IllegalArgumentException("Table name cannot be null");
-        }
-
-        if (CollectionUtils.isEmpty(fieldColumnMap)) {
+        } else if (CollectionUtils.isEmpty(fieldColumnMap)) {
             throw new IllegalArgumentException("No field-column map provided");
         }
 
@@ -92,17 +77,13 @@ public class LiteBridge {
     }
 
     private Map<Field, Column> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<String, String> fieldColumnMap) {
-        final Map<String, Column> columnMap = tableMetaData.columns().stream()
-                .collect(Collectors.toMap(Column::name, Function.identity()));
-        final Set<String> unmappedColumns = tableMetaData.columns().stream()
-                .map(Column::name)
-                .collect(Collectors.toCollection(TreeSet::new));
+        final Set<String> unmappedColumns = new TreeSet<>(tableMetaData.columns().keySet());
         final Map<Field, Column> mappedFields = new HashMap<>();
 
         // Validate and formalise field mapping
         fieldColumnMap.forEach((fieldName, columnName) -> {
-            if (!columnMap.containsKey(columnName)) {
-                throw new IllegalArgumentException(String.format("Column '%s', mapped by field '%s' of DTO '%s', does not exist in table: '%s'", columnName, fieldName, dtoClass, tableMetaData.tableName()));
+            if (!tableMetaData.columns().containsKey(columnName)) {
+                throw new IllegalArgumentException(String.format("Column '%s', mapped by field '%s' of DTO '%s', does not exist in table: '%s'", columnName, fieldName, dtoClass, tableMetaData.table()));
             }
 
             if (!unmappedColumns.contains(columnName)) {
@@ -118,7 +99,15 @@ public class LiteBridge {
 
             // Add field-column mapping
             final Field field = ClassUtil.getField(dtoClass, fieldName);
-            mappedFields.put(field, columnMap.get(columnName));
+            final Column column = tableMetaData.columns().get(columnName);
+
+            if (!ClassUtil.isBasicType(field.getType())
+                    && !tableRegistry.containsTable(field.getType())) {
+                // Cascading child DTO, but no table mapping exists
+                throw new IllegalArgumentException(String.format("Sub-DTO '%s' in field '%s' of DTO '%s' is not registered", field.getType().getName(), fieldName, dtoClass.getName()));
+            }
+
+            mappedFields.put(field, column);
             unmappedColumns.remove(columnName);
         });
 
@@ -126,11 +115,11 @@ public class LiteBridge {
         if (!unmappedColumns.isEmpty()) {
             // Check if any non-nullable columns are missing
             final List<String> missingColumns = unmappedColumns.stream()
-                    .filter(columnName -> !columnMap.get(columnName).nullable())
+                    .filter(columnName -> !tableMetaData.columns().get(columnName).nullable())
                     .toList();
 
             if (!missingColumns.isEmpty()) {
-                throw new IllegalArgumentException(String.format("Unmapped non-nullable columns for table '%s': %s; DTO class: '%s'", tableMetaData.tableName(), missingColumns, dtoClass.getName()));
+                throw new IllegalArgumentException(String.format("Unmapped non-nullable columns for table '%s': %s; DTO class: '%s'", tableMetaData.table(), missingColumns, dtoClass.getName()));
             }
         }
 

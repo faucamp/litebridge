@@ -14,4 +14,17 @@
     <artifactId>litebridge-db-api</artifactId>
     <version>DEV-SNAPSHOT</version>
 
+    <dependencies>
+        <!-- Project dependencies -->
+        <dependency>
+            <groupId>org.litebridge</groupId>
+            <artifactId>litebridge-commons</artifactId>
+        </dependency>
+
+        <!-- External dependencies -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+    </dependencies>
 </project>

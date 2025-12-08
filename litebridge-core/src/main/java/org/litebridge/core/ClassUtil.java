@@ -1,16 +1,17 @@
 package org.litebridge.core;
 
-import jakarta.annotation.Nullable;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-class ClassUtil {
+public final class ClassUtil {
+
+    private ClassUtil() {
+    }
 
     public static List<Field> getAllFields(Class<?> type) {
-        List<Field> fields = new ArrayList<>();
+        final List<Field> fields = new ArrayList<>();
         // Add fields declared in the current class
         fields.addAll(Arrays.asList(type.getDeclaredFields()));
 
@@ -22,7 +23,7 @@ class ClassUtil {
         return fields;
     }
 
-    public static @Nullable Field getField(Class<?> type, String fieldName) {
+    public static Field getField(Class<?> type, String fieldName) {
         try {
             return type.getDeclaredField(fieldName);
         } catch (NoSuchFieldException ex) {
@@ -32,5 +33,14 @@ class ClassUtil {
                 throw new IllegalArgumentException("Field '%s' does not exist in DTO class '%s'".formatted(fieldName, type.getName()));
             }
         }
+    }
+
+    public static boolean isBasicType(final Class<?> type) {
+        return type.isPrimitive()
+                || type.isEnum()
+                || CharSequence.class.isAssignableFrom(type)
+                || Number.class.isAssignableFrom(type)
+                || Boolean.class.isAssignableFrom(type)
+                || byte[].class.equals(type);
     }
 }

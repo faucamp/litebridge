@@ -5,6 +5,7 @@ import jakarta.annotation.Nullable;
 import org.litebridge.commons.CollectionUtils;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -19,19 +20,19 @@ public class TrackedDto {
 
     private List<FieldSnapshot> fieldSnapshots;
     private Map<String, ChangedField> changedFields;
-    private boolean persisted;
 
-    public void snapshot(final Object dto, final Set<Field> fields, final boolean skipIfSnapshotsExist) {
+    public void snapshot(final Object dto, final Set<Field> fields, final boolean overwrite) {
         if (fieldSnapshots != null) {
-            if (skipIfSnapshotsExist) {
-                return;
+            if (overwrite) {
+                fieldSnapshots.clear();
+                changedFields = null;
             } else {
                 throw new IllegalStateException("Field snapshots already taken for object: " + this);
             }
+        } else {
+            fieldSnapshots = new ArrayList<>();
         }
 
-        persisted = true;
-        fieldSnapshots = new LinkedList<>();
         fields.forEach(field -> {
             // To track changes in a map, we need to snapshot the current map values
             if (Map.class.isAssignableFrom(field.getType())) {
@@ -79,7 +80,7 @@ public class TrackedDto {
     }
 
     public @Nullable Map<String, ChangedField> getChangedFields(Object dto) {
-        if (changedFields == null) {
+        if (CollectionUtils.isEmpty(changedFields)) {
             if (fieldSnapshots == null) {
                 throw new IllegalStateException("Field snapshots not taken for object: " + dto);
             }

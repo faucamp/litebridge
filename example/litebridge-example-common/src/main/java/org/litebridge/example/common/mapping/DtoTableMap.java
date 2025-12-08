@@ -16,6 +16,7 @@ public final class DtoTableMap {
 
     public static final Map<String, String> Account = Map.of(
             "id", "ACCOUNT_ID",
-            "name", "ACCOUNT_NAME"
+            "name", "ACCOUNT_NAME",
+            "owner", "PERSON_ID"
     );
 }

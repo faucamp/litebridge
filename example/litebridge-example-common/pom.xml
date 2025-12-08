@@ -14,4 +14,11 @@
     <artifactId>litebridge-example-common</artifactId>
     <version>DEV-SNAPSHOT</version>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.litebridge</groupId>
+            <artifactId>litebridge-core</artifactId>
+        </dependency>
+    </dependencies>
+
 </project>
