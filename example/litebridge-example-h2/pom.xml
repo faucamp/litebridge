@@ -7,12 +7,12 @@
     <parent>
         <groupId>org.litebridge.example</groupId>
         <artifactId>litebridge-example</artifactId>
-        <version>DEV-SNAPSHOT</version>
+        <version>0.0.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>litebridge-example-h2</artifactId>
-    <version>DEV-SNAPSHOT</version>
+    <version>0.0.1</version>
 
     <properties>
         <flyway.version>8.5.13</flyway.version>

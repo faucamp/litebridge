@@ -7,12 +7,12 @@
     <parent>
         <groupId>org.litebridge.db</groupId>
         <artifactId>litebridge-db</artifactId>
-        <version>DEV-SNAPSHOT</version>
+        <version>0.0.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>litebridge-db-api</artifactId>
-    <version>DEV-SNAPSHOT</version>
+    <version>0.0.1</version>
 
     <dependencies>
         <!-- Project dependencies -->

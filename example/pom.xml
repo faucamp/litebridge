@@ -7,14 +7,14 @@
     <parent>
         <groupId>org.litebridge</groupId>
         <artifactId>litebridge</artifactId>
-        <version>DEV-SNAPSHOT</version>
+        <version>0.0.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>org.litebridge.example</groupId>
     <artifactId>litebridge-example</artifactId>
     <packaging>pom</packaging>
-    <version>DEV-SNAPSHOT</version>
+    <version>0.0.1</version>
 
     <modules>
         <module>litebridge-example-common</module>
