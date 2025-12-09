@@ -22,7 +22,7 @@
         <!-- Project dependencies -->
         <dependency>
             <groupId>org.litebridge</groupId>
-            <artifactId>litebridge-core</artifactId>
+            <artifactId>litebridge-orm</artifactId>
         </dependency>
         <dependency>
             <groupId>org.litebridge.db</groupId>

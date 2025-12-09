@@ -28,9 +28,9 @@
 
     <modules>
         <module>litebridge-commons</module>
-        <module>litebridge-core</module>
         <module>litebridge-db</module>
         <module>litebridge-dto</module>
+        <module>litebridge-orm</module>
         <module>litebridge-tracking</module>
         <module>example</module>
     </modules>
@@ -83,7 +83,7 @@
             </dependency>
             <dependency>
                 <groupId>org.litebridge</groupId>
-                <artifactId>litebridge-core</artifactId>
+                <artifactId>litebridge-orm</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

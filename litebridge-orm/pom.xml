@@ -11,7 +11,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>litebridge-core</artifactId>
+    <artifactId>litebridge-orm</artifactId>
     <version>0.0.1</version>
 
     <dependencies>
