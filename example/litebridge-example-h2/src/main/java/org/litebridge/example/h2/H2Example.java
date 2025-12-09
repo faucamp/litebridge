@@ -14,6 +14,8 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static org.litebridge.core.TableSpec.t;
+
 public class H2Example {
 
     public static void main(String[] args) {
@@ -26,8 +28,8 @@ public class H2Example {
 
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             final LiteBridge liteBridge = new LiteBridge(new H2DatabaseProvider(connection));
-            liteBridge.register(Person.class, null, "LB", "PERSON", DtoTableMap.Person);
-            liteBridge.register(Account.class, null, "LB", "ACCOUNT", DtoTableMap.Account);
+            liteBridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+            liteBridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
 
             final Person person = liteBridge.track(new Person());
             person.setName("Alice");

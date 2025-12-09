@@ -28,8 +28,8 @@ public class LiteBridge {
         this.persistenceFacade = new PersistenceFacade(tableRegistry, databaseProvider);
     }
 
-    public void register(final Class<?> dtoClass, @Nullable final String catalog, @Nullable final String schema, final String table, final Map<String, ColumnSpec> fieldColumnSpecMap) throws SQLException {
-        tableRegistry.addTable(dtoClass, mapToTable(dtoClass, catalog, schema, table, fieldColumnSpecMap));
+    public void register(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
+        tableRegistry.addTable(dtoClass, mapToTable(dtoClass, tableSpec));
     }
 
     public <T> T track(final T dto) {
@@ -55,22 +55,22 @@ public class LiteBridge {
         }
     }
 
-    private Table mapToTable(final Class<?> dtoClass, @Nullable final String catalog, @Nullable final String schema, final String table, final Map<String, ColumnSpec> fieldColumnSpecMap) throws SQLException {
+    private Table mapToTable(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
         // Up-front validation
         if (dtoClass == null) {
             throw new IllegalArgumentException("DTO class cannot be null");
         } else if (ClassUtil.isBasicType(dtoClass)) {
             throw new IllegalArgumentException("Not a DTO: " + dtoClass.getName());
-        } else if (table == null) {
+        } else if (tableSpec.getTable() == null) {
             throw new IllegalArgumentException("Table name cannot be null");
-        } else if (CollectionUtils.isEmpty(fieldColumnSpecMap)) {
+        } else if (CollectionUtils.isEmpty(tableSpec.getFieldColumnSpecMap())) {
             throw new IllegalArgumentException("No field-column map provided");
         }
 
         // Read the table metadata
-        final TableMetaData tableMetaData = databaseProvider.getTableMetaData(catalog, schema, table);
+        final TableMetaData tableMetaData = databaseProvider.getTableMetaData(tableSpec.getCatalog(), tableSpec.getSchema(), tableSpec.getTable());
 
-        final Map<Field, Column> columnMap = mapFields(dtoClass, tableMetaData, fieldColumnSpecMap);
+        final Map<Field, Column> columnMap = mapFields(dtoClass, tableMetaData, tableSpec.getFieldColumnSpecMap());
         return new Table(tableMetaData, columnMap);
     }
 
