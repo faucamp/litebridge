@@ -2,7 +2,8 @@ package org.litebridge.core;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.litebridge.core.dto.TrackedDto;
+import org.litebridge.tracking.TrackedDto;
+import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.db.api.Column;
 import org.litebridge.db.api.TableMetaData;
 
@@ -11,7 +12,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.WeakHashMap;
 
 public class Table {
 
@@ -20,12 +20,14 @@ public class Table {
     private final Map<String, Column> columnMap;
     private final Map<String, Column> fieldNameColumnMap;
     private final Map<String, Field> columnNameFieldMap;
-    private final Map<Object, TrackedDto> trackedDtos = Collections.synchronizedMap(new WeakHashMap<>());
+    private final ChangeTracker changeTracker;
+
     private final WeakRefSet<Object> persistedDtos = new WeakRefSet<>();
 
-    public Table(TableMetaData metaData, Map<Field, Column> fieldColumnMap) {
+    public Table(final TableMetaData metaData, final Map<Field, Column> fieldColumnMap, final ChangeTracker changeTracker) {
         this.metaData = metaData;
         this.fieldColumnMap = fieldColumnMap;
+        this.changeTracker = changeTracker;
         final Map<String, Column> columnMap = new HashMap<>(fieldColumnMap.size());
         final Map<String, Column> fieldNameColumnMap = new HashMap<>(fieldColumnMap.size());
         final Map<String, Field> columnNameFieldMap = new HashMap<>(fieldColumnMap.size());
@@ -57,15 +59,12 @@ public class Table {
         return Objects.requireNonNull(fieldNameColumnMap.get(columnName), "No column '" + columnName + "' in table '" + metaData.getTable() + "'");
     }
 
-    public @Nullable TrackedDto getTrackedDto(Object dto) {
-        return trackedDtos.get(dto);
+    public @Nullable TrackedDto getTrackedDto(final Object dto) {
+        return changeTracker.getTrackedDto(dto);
     }
 
-    public TrackedDto trackDto(Object dto) {
-        final TrackedDto trackedDto = new TrackedDto();
-        trackedDto.snapshot(dto, fieldColumnMap.keySet(), false);
-        trackedDtos.put(dto, trackedDto);
-        return trackedDto;
+    public void trackDto(final Object dto) {
+        changeTracker.trackDtoFields(dto, fieldColumnMap.keySet());
     }
 
     public @Nullable Field getFieldForColumnName(final String columnName) {
@@ -74,7 +73,11 @@ public class Table {
 
     public void syncPersistedDto(final Object dto) {
         persistedDtos.add(dto);
-        trackedDtos.get(dto).snapshot(dto, fieldColumnMap.keySet(), true);
+        final TrackedDto trackedDto = changeTracker.getTrackedDto(dto);
+
+        if (trackedDto != null) {
+            trackedDto.snapshot(dto, fieldColumnMap.keySet(), true);
+        }
     }
 
     public boolean isPersistedDto(final Object dto) {

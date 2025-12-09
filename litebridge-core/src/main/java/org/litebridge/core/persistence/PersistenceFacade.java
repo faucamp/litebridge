@@ -1,11 +1,11 @@
 package org.litebridge.core.persistence;
 
 import org.litebridge.commons.CollectionUtils;
-import org.litebridge.core.ClassUtil;
+import org.litebridge.commons.ClassUtils;
 import org.litebridge.core.Table;
 import org.litebridge.core.TableRegistry;
-import org.litebridge.core.dto.ChangedField;
-import org.litebridge.core.dto.TrackedDto;
+import org.litebridge.tracking.ChangedField;
+import org.litebridge.tracking.TrackedDto;
 import org.litebridge.db.api.Column;
 import org.litebridge.db.api.DatabaseProvider;
 import org.slf4j.Logger;
@@ -82,7 +82,7 @@ public class PersistenceFacade {
                     continue;
                 }
             } else {
-                basicType = changedField.value() == null || ClassUtil.isBasicType(changedField.value().getClass());
+                basicType = changedField.value() == null || ClassUtils.isBasicType(changedField.value().getClass());
                 value = changedField.value();
             }
 

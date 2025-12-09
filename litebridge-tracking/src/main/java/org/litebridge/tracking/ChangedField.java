@@ -1,4 +1,4 @@
-package org.litebridge.core.dto;
+package org.litebridge.tracking;
 
 import jakarta.annotation.Nullable;
 

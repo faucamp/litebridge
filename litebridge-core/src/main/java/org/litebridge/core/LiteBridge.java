@@ -1,11 +1,13 @@
 package org.litebridge.core;
 
+import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.core.persistence.PersistenceFacade;
 import org.litebridge.db.api.Column;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
+import org.litebridge.tracking.ChangeTracker;
 
 import java.lang.reflect.Field;
 import java.sql.SQLException;
@@ -20,10 +22,12 @@ public class LiteBridge {
     private final DatabaseProvider databaseProvider;
     private final TableRegistry tableRegistry;
     private final PersistenceFacade persistenceFacade;
+    private final ChangeTracker changeTracker;
 
     public LiteBridge(final DatabaseProvider databaseProvider) {
         this.databaseProvider = databaseProvider;
         this.tableRegistry = new TableRegistry();
+        this.changeTracker = new ChangeTracker();
         this.persistenceFacade = new PersistenceFacade(tableRegistry, databaseProvider);
     }
 
@@ -58,7 +62,7 @@ public class LiteBridge {
         // Up-front validation
         if (dtoClass == null) {
             throw new IllegalArgumentException("DTO class cannot be null");
-        } else if (ClassUtil.isBasicType(dtoClass)) {
+        } else if (ClassUtils.isBasicType(dtoClass)) {
             throw new IllegalArgumentException("Not a DTO: " + dtoClass.getName());
         } else if (CollectionUtils.isEmpty(tableSpec.getFieldColumnSpecMap())) {
             throw new IllegalArgumentException("No field-column map provided");
@@ -68,7 +72,7 @@ public class LiteBridge {
         final TableMetaData tableMetaData = databaseProvider.getTableMetaData(tableSpec.getCatalog(), tableSpec.getSchema(), tableSpec.getTable());
 
         final Map<Field, Column> columnMap = mapFields(dtoClass, tableMetaData, tableSpec.getFieldColumnSpecMap());
-        return new Table(tableMetaData, columnMap);
+        return new Table(tableMetaData, columnMap, changeTracker);
     }
 
     private Map<Field, Column> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<String, ColumnSpec> fieldColumnSpecMap) {
@@ -93,14 +97,14 @@ public class LiteBridge {
             }
 
             // Add field-column mapping
-            final Field field = ClassUtil.getField(dtoClass, fieldName);
+            final Field field = ClassUtils.getField(dtoClass, fieldName);
             final Column column = tableMetaData.getColumns().get(columnSpec.getName());
 
             if (!StringUtils.isBlank(columnSpec.getSequence())) {
                 column.setSequence(columnSpec.getSequence());
             }
 
-            if (!ClassUtil.isBasicType(field.getType())
+            if (!ClassUtils.isBasicType(field.getType())
                     && !tableRegistry.containsTable(field.getType())) {
                 // Cascading child DTO, but no table mapping exists
                 throw new IllegalArgumentException(String.format("Sub-DTO '%s' in field '%s' of DTO '%s' is not registered", field.getType().getName(), fieldName, dtoClass.getName()));

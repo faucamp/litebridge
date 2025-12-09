@@ -1,4 +1,4 @@
-package org.litebridge.core;
+package org.litebridge.commons;
 
 import org.junit.jupiter.api.Test;
 
@@ -8,12 +8,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ClassUtilTest {
+class ClassUtilsTest {
 
     @Test
     void getAllFields() {
         // When
-        final List<Field> result = ClassUtil.getAllFields(TestDto.class);
+        final List<Field> result = ClassUtils.getAllFields(TestDto.class);
 
         // Then
         assertEquals(2, result.size());
@@ -24,7 +24,7 @@ class ClassUtilTest {
     @Test
     void getAllFields_inheritance() {
         // When
-        final List<Field> result = ClassUtil.getAllFields(ChildTestDto.class);
+        final List<Field> result = ClassUtils.getAllFields(ChildTestDto.class);
 
         // Then
         assertEquals(3, result.size());
@@ -39,7 +39,7 @@ class ClassUtilTest {
         final String fieldName = "age";
 
         // When
-        final Field field = ClassUtil.getField(TestDto.class, fieldName);
+        final Field field = ClassUtils.getField(TestDto.class, fieldName);
 
         // Then
         assertNotNull(field);
@@ -52,7 +52,7 @@ class ClassUtilTest {
         final String fieldName = "nonExistingField";
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> ClassUtil.getField(TestDto.class, fieldName));
+        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getField(TestDto.class, fieldName));
     }
 
     @Test
@@ -61,7 +61,7 @@ class ClassUtilTest {
         final String fieldName = "age";
 
         // When
-        final Field field = ClassUtil.getField(ChildTestDto.class, fieldName);
+        final Field field = ClassUtils.getField(ChildTestDto.class, fieldName);
 
         // Then
         assertNotNull(field);
@@ -74,7 +74,7 @@ class ClassUtilTest {
         final String fieldName = "nonExistingField";
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> ClassUtil.getField(ChildTestDto.class, fieldName));
+        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getField(ChildTestDto.class, fieldName));
     }
 
     @Test
@@ -83,7 +83,7 @@ class ClassUtilTest {
         final String object = "Hello World!";
 
         // When
-        final boolean result = ClassUtil.isBasicType(object.getClass());
+        final boolean result = ClassUtils.isBasicType(object.getClass());
 
         // Then
         assertTrue(result);
@@ -95,7 +95,7 @@ class ClassUtilTest {
         final Short object = Short.valueOf((short) 1);
 
         // When
-        final boolean result = ClassUtil.isBasicType(object.getClass());
+        final boolean result = ClassUtils.isBasicType(object.getClass());
 
         // Then
         assertTrue(result);
@@ -107,7 +107,7 @@ class ClassUtilTest {
         final Integer object = Integer.valueOf(1);
 
         // When
-        final boolean result = ClassUtil.isBasicType(object.getClass());
+        final boolean result = ClassUtils.isBasicType(object.getClass());
 
         // Then
         assertTrue(result);
@@ -116,10 +116,10 @@ class ClassUtilTest {
     @Test
     void isBasicType_int() {
         // Given
-        final Field ageField = ClassUtil.getField(TestDto.class, "age");
+        final Field ageField = ClassUtils.getField(TestDto.class, "age");
 
         // When
-        final boolean result = ClassUtil.isBasicType(ageField.getType());
+        final boolean result = ClassUtils.isBasicType(ageField.getType());
 
         // Then
         assertTrue(result);
@@ -131,7 +131,7 @@ class ClassUtilTest {
         final Long object = Long.valueOf(1);
 
         // When
-        final boolean result = ClassUtil.isBasicType(object.getClass());
+        final boolean result = ClassUtils.isBasicType(object.getClass());
 
         // Then
         assertTrue(result);
@@ -143,7 +143,7 @@ class ClassUtilTest {
         final BigDecimal object = BigDecimal.valueOf(1);
 
         // When
-        final boolean result = ClassUtil.isBasicType(object.getClass());
+        final boolean result = ClassUtils.isBasicType(object.getClass());
 
         // Then
         assertTrue(result);
@@ -155,7 +155,7 @@ class ClassUtilTest {
         final Double object = Double.valueOf(1.234);
 
         // When
-        final boolean result = ClassUtil.isBasicType(object.getClass());
+        final boolean result = ClassUtils.isBasicType(object.getClass());
 
         // Then
         assertTrue(result);
@@ -167,7 +167,7 @@ class ClassUtilTest {
         final Float object = Float.valueOf(1.234f);
 
         // When
-        final boolean result = ClassUtil.isBasicType(object.getClass());
+        final boolean result = ClassUtils.isBasicType(object.getClass());
 
         // Then
         assertTrue(result);
@@ -176,7 +176,7 @@ class ClassUtilTest {
     @Test
     void isBasicType_Enum() {
         // When
-        final boolean result = ClassUtil.isBasicType(TestEnum.class);
+        final boolean result = ClassUtils.isBasicType(TestEnum.class);
 
         // Then
         assertTrue(result);
@@ -188,7 +188,7 @@ class ClassUtilTest {
         final Boolean object = Boolean.TRUE;
 
         // When
-        final boolean result = ClassUtil.isBasicType(object.getClass());
+        final boolean result = ClassUtils.isBasicType(object.getClass());
 
         // Then
         assertTrue(result);
@@ -200,7 +200,7 @@ class ClassUtilTest {
         final byte[] byteArray = new byte[1];
 
         // When
-        final boolean result = ClassUtil.isBasicType(byteArray.getClass());
+        final boolean result = ClassUtils.isBasicType(byteArray.getClass());
 
         // Then
         assertTrue(result);

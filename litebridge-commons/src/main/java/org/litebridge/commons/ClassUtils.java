@@ -1,13 +1,13 @@
-package org.litebridge.core;
+package org.litebridge.commons;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public final class ClassUtil {
+public final class ClassUtils {
 
-    private ClassUtil() {
+    private ClassUtils() {
     }
 
     public static List<Field> getAllFields(Class<?> type) {
