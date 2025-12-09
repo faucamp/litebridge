@@ -27,6 +27,15 @@ public final class StringUtils {
         return str == null || str.isEmpty();
     }
 
+    /**
+     * Splits the given string into two parts by the first occurrence of the specified delimiter.
+     * If the delimiter is not found, returns an array containing the original string as the only element.
+     *
+     * @param str       the string to be split; must not be null
+     * @param delimiter the character used as the delimiter for the split
+     * @return an array of two strings; the part before the delimiter and the part after it.
+     * If the delimiter is not found, returns a single-element array containing the original string.
+     */
     public static String[] splitOnce(final String str, final char delimiter) {
         final int index = str.indexOf(delimiter);
 

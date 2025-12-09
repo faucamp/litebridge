@@ -10,7 +10,14 @@ public final class ClassUtils {
     private ClassUtils() {
     }
 
-    public static List<Field> getAllFields(Class<?> type) {
+    /**
+     * Retrieves all fields from a given class, including fields declared in its superclasses
+     * (except for the `Object` class).
+     *
+     * @param type the class from which to retrieve all declared fields
+     * @return a list of all fields declared in the given class and its superclasses
+     */
+    public static List<Field> getAllFields(final Class<?> type) {
         final List<Field> fields = new ArrayList<>();
         // Add fields declared in the current class
         fields.addAll(Arrays.asList(type.getDeclaredFields()));
@@ -23,7 +30,18 @@ public final class ClassUtils {
         return fields;
     }
 
-    public static Field getField(Class<?> type, String fieldName) {
+    /**
+     * Retrieves a specific field from the specified class or its superclasses.
+     * <p>
+     * This method attempts to find a field in the given class by its name. If the field is not
+     * found in the current class, it recursively checks the superclasses up to (but not including) the `Object` class.
+     *
+     * @param type      the class to search for the field
+     * @param fieldName the name of the field to retrieve
+     * @return the {@code Field} object representing the specified field if found
+     * @throws IllegalArgumentException if the field cannot be found in the specified class or its superclasses
+     */
+    public static Field getField(final Class<?> type, final String fieldName) {
         try {
             return type.getDeclaredField(fieldName);
         } catch (NoSuchFieldException ex) {
@@ -35,6 +53,20 @@ public final class ClassUtils {
         }
     }
 
+    /**
+     * Determines if the provided class type represents a basic type.
+     * <p>
+     * A basic type is defined as one of the following:
+     * - A primitive type (e.g., int, double).
+     * - An enum.
+     * - A type that is a subclass or implementation of {@code CharSequence}.
+     * - A type that is a subclass of {@code Number}.
+     * - A type that is a subclass of {@code Boolean}.
+     * - A {@code byte[]} type.
+     *
+     * @param type the {@code Class} object to check for being a basic type
+     * @return {@code true} if the provided class type is considered a basic type, {@code false} otherwise
+     */
     public static boolean isBasicType(final Class<?> type) {
         return type.isPrimitive()
                 || type.isEnum()

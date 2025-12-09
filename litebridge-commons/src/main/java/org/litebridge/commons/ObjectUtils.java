@@ -1,5 +1,7 @@
 package org.litebridge.commons;
 
+import jakarta.annotation.Nullable;
+
 public final class ObjectUtils {
 
     private ObjectUtils() {
@@ -15,7 +17,7 @@ public final class ObjectUtils {
      * @param <T> the type of the object to be validated
      * @throws IllegalArgumentException if {@code obj} is null
      */
-    public static <T> T requireNonNull(final T obj, final String message) {
+    public static <T> T requireNonNull(@Nullable final T obj, @Nullable final String message) {
         if (obj == null) {
             throw new IllegalArgumentException(message);
         }
