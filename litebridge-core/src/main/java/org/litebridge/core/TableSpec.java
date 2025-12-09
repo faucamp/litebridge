@@ -5,14 +5,32 @@ import jakarta.annotation.Nullable;
 
 import java.util.Map;
 
+/**
+ * Specification of a database tab, used to map DTO instances to to target tables.
+ * <p>
+ * This class is immutable and provides various factory methods to create instances
+ * with different configurations.
+ */
 public final class TableSpec {
 
+    /**
+     * Database catalog name
+     */
     @Nullable
     private final String catalog;
+    /**
+     * Database schema name
+     */
     @Nullable
     private final String schema;
+    /**
+     * Database table name
+     */
     @Nonnull
     private final String table;
+    /**
+     * Field name to ColumnSpec map; key is field name, value is the column definition
+     */
     @Nonnull
     private final Map<String, ColumnSpec> fieldColumnSpecMap;
 
@@ -23,18 +41,32 @@ public final class TableSpec {
         this.fieldColumnSpecMap = fieldColumnSpecMap;
     }
 
+    /**
+     * @return Database catalog name
+     */
     public @Nullable String getCatalog() {
         return catalog;
     }
 
+    /**
+     * @return Database schema name
+     */
     public @Nullable String getSchema() {
         return schema;
     }
 
+    /**
+     * @return Database table name
+     */
     public @Nonnull String getTable() {
         return table;
     }
 
+    /**
+     * Field name to {@link ColumnSpec} map; key is field name, value is the column definition
+     *
+     * @return field name-database column mapping
+     */
     public @Nonnull Map<String, ColumnSpec> getFieldColumnSpecMap() {
         return fieldColumnSpecMap;
     }
