@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * <p>
  * This class is thread-safe.
  */
-public class ChangeTracker {
+public final class ChangeTracker {
 
     /**
      * A thread-safe map used to store and manage associations between tracked Data Transfer Objects (DTOs)
@@ -89,7 +89,7 @@ public class ChangeTracker {
      * @param dto the Data Transfer Object (DTO) whose tracked version is to be retrieved; can be null
      * @return the tracked version of the specified DTO, or null if no tracked version exists
      */
-    public @Nullable TrackedDto getTrackedDto(Object dto) {
+    public @Nullable TrackedDto getTrackedDto(final Object dto) {
         return trackedDtos.get(dto);
     }
 
