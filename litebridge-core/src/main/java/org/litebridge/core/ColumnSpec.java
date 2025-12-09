@@ -2,6 +2,7 @@ package org.litebridge.core;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.litebridge.commons.StringUtils;
 
 /**
  * Specification of a database column, used to map DTO fields to target columns.
@@ -34,7 +35,7 @@ public final class ColumnSpec {
      * @param sequence      the name of the sequence associated with the column, or null if no sequence is used
      */
     public ColumnSpec(@Nonnull final String name, final boolean autoIncrement, @Nullable final String sequence) {
-        this.name = name;
+        this.name = StringUtils.requireNonBlank(name, "Column name cannot be null");
         this.autoIncrement = autoIncrement;
         this.sequence = sequence;
     }

@@ -2,6 +2,8 @@ package org.litebridge.core;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.litebridge.commons.CollectionUtils;
+import org.litebridge.commons.StringUtils;
 
 import java.util.Map;
 
@@ -37,8 +39,8 @@ public final class TableSpec {
     public TableSpec(@Nullable final String catalog, @Nullable final String schema, @Nonnull final String table, @Nonnull final Map<String, ColumnSpec> fieldColumnSpecMap) {
         this.catalog = catalog;
         this.schema = schema;
-        this.table = table;
-        this.fieldColumnSpecMap = fieldColumnSpecMap;
+        this.table = StringUtils.requireNonBlank(table, "Table name cannot be null");
+        this.fieldColumnSpecMap = CollectionUtils.requireNonEmpty(fieldColumnSpecMap, "Field-column map cannot be null");
     }
 
     /**

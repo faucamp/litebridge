@@ -38,4 +38,21 @@ public final class StringUtils {
             return new String[]{part1, part2};
         }
     }
+
+    /**
+     * Ensures that the provided string is not null, empty, or composed solely of whitespace characters.
+     * If the string is blank, an {@code IllegalArgumentException} is thrown with the provided message.
+     *
+     * @param str     the string to check; may be null
+     * @param message the exception message to use if the string is blank
+     * @return the provided string if it is not blank
+     * @throws IllegalArgumentException if the string is blank
+     */
+    public static String requireNonBlank(@Nullable final String str, final String message) {
+        if (isBlank(str)) {
+            throw new IllegalArgumentException(message);
+        }
+
+        return str;
+    }
 }

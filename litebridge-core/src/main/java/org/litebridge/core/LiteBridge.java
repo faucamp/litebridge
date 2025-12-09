@@ -1,6 +1,5 @@
 package org.litebridge.core;
 
-import jakarta.annotation.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.core.persistence.PersistenceFacade;
@@ -61,8 +60,6 @@ public class LiteBridge {
             throw new IllegalArgumentException("DTO class cannot be null");
         } else if (ClassUtil.isBasicType(dtoClass)) {
             throw new IllegalArgumentException("Not a DTO: " + dtoClass.getName());
-        } else if (tableSpec.getTable() == null) {
-            throw new IllegalArgumentException("Table name cannot be null");
         } else if (CollectionUtils.isEmpty(tableSpec.getFieldColumnSpecMap())) {
             throw new IllegalArgumentException("No field-column map provided");
         }
