@@ -80,34 +80,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         sql.append(")");
         LOGGER.trace("Generated SQL: {}; raw column value map: {}", sql, columnValueMap);
 
-        final List<Object> generatedKeys = executeSql(sql.toString(), tableMetaData, columnValueMap);
-
-        return generatedKeys;
-    }
-
-    private @Nullable List<Object> executeSql(final String sql, final TableMetaData tableMetaData, final Map<String, Object> columnValueMap) throws SQLException {
-        final List<Object> generatedKeys;
-
-        try (final PreparedStatement preparedStatement = createPreparedStatement(sql, tableMetaData, columnValueMap)) {
-            final int affectedRows = preparedStatement.executeUpdate();
-
-            if (affectedRows > 0) {
-                generatedKeys = new ArrayList<>(tableMetaData.getPrimaryKey().size());
-                final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
-
-                for (String pkColumnName : tableMetaData.getPrimaryKey()) {
-                    if (generatedKeysResultSet.next()) {
-                        final Object generatedId = generatedKeysResultSet.getLong(pkColumnName);
-                        LOGGER.debug("Generated ID for column '{}': {}", pkColumnName, generatedId);
-                        generatedKeys.add(generatedId);
-                    }
-                }
-
-                generatedKeysResultSet.close();
-            } else {
-                generatedKeys = null;
-            }
-        }
+        final List<Object> generatedKeys = executeSql(sql.toString(), tableMetaData, columnValueMap, true);
 
         return generatedKeys;
     }
@@ -129,7 +102,34 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final LinkedHashMap<String, Object> columnValueMapWithPrimaryKey = new LinkedHashMap<>(columnValueMap);
         columnValueMapWithPrimaryKey.putAll(primaryKey);
 
-        return executeSql(sql.toString(), tableMetaData, columnValueMapWithPrimaryKey);
+        return executeSql(sql.toString(), tableMetaData, columnValueMapWithPrimaryKey, false);
+    }
+
+    private @Nullable List<Object> executeSql(final String sql, final TableMetaData tableMetaData, final Map<String, Object> columnValueMap, final boolean returnGeneratedKeys) throws SQLException {
+        final List<Object> generatedKeys;
+
+        try (final PreparedStatement preparedStatement = createPreparedStatement(sql, tableMetaData, columnValueMap)) {
+            final int affectedRows = preparedStatement.executeUpdate();
+
+            if (affectedRows > 0 && returnGeneratedKeys) {
+                generatedKeys = new ArrayList<>(tableMetaData.getPrimaryKey().size());
+                final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
+
+                for (String pkColumnName : tableMetaData.getPrimaryKey()) {
+                    if (generatedKeysResultSet.next()) {
+                        final Object generatedId = generatedKeysResultSet.getLong(pkColumnName);
+                        LOGGER.debug("Generated ID for column '{}': {}", pkColumnName, generatedId);
+                        generatedKeys.add(generatedId);
+                    }
+                }
+
+                generatedKeysResultSet.close();
+            } else {
+                generatedKeys = null;
+            }
+        }
+
+        return generatedKeys;
     }
 
     protected List<Column> getColumnNames(final String catalog, final String schema, final String table, final DatabaseMetaData databaseMetaData) throws SQLException {

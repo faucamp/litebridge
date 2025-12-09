@@ -68,25 +68,39 @@ public class PersistenceFacade {
 
         final Map<String, Object> columnValues = new LinkedHashMap<>();
 
-        for (ChangedField changedField : changedFields.values()) {
-            final Column column = table.getColumnForFieldName(changedField.fieldName());
-            final boolean basicType = changedField.value() == null || ClassUtil.isBasicType(changedField.value().getClass());
+        for (Column column : table.getMetaData().getColumns().values()) {
+            final String fieldName = table.getFieldForColumnName(column.getName()).getName();
+            final ChangedField changedField = changedFields.get(fieldName);
+            final Object value;
+            final boolean basicType;
+
+            if (changedField == null) {
+                if (column.isAutoIncrement() || column.getSequence() != null) {
+                    basicType = true;
+                    value = null;
+                } else {
+                    continue;
+                }
+            } else {
+                basicType = changedField.value() == null || ClassUtil.isBasicType(changedField.value().getClass());
+                value = changedField.value();
+            }
 
             if (basicType) {
-                columnValues.put(column.getName(), changedField.value());
-            } else if (!table.isPersistedDto(changedField.value())) {
+                columnValues.put(column.getName(), value);
+            } else if (!table.isPersistedDto(value)) {
                 // Cascade save to the embedded DTO
-                save(changedField.value());
+                save(value);
                 // Retrieve the PK
-                final Table embeddedDtoTable = tableRegistry.getTable(changedField.value().getClass());
+                final Table embeddedDtoTable = tableRegistry.getTable(value.getClass());
                 // TODO: composite PK support
                 final List<String> embeddedDtoPk = embeddedDtoTable.getMetaData().getPrimaryKey();
                 final Field field = embeddedDtoTable.getFieldForColumnName(embeddedDtoPk.get(0));
 
                 try {
-                    columnValues.put(column.getName(), field.get(changedField.value()));
+                    columnValues.put(column.getName(), field.get(value));
                 } catch (IllegalAccessException ex) {
-                    throw new IllegalStateException("Failed to retrieve PK from cascaded DTO: " + changedField.value(), ex);
+                    throw new IllegalStateException("Failed to retrieve PK from cascaded DTO: " + value, ex);
                 }
             }
         }
