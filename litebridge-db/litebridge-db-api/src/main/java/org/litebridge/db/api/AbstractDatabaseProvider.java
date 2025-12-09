@@ -11,14 +11,14 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
@@ -50,31 +50,74 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public Object insert(final TableMetaData tableMetaData, final Map<String, Object> columnValueMap) throws SQLException {
+    public @Nullable List<Object> insert(final TableMetaData tableMetaData, final Map<String, Object> columnValueMap) throws SQLException {
         final StringBuilder sql = new StringBuilder("INSERT INTO ")
-                .append(tableMetaData.schema())
+                .append(tableMetaData.getSchema())
                 .append('.')
-                .append(tableMetaData.table())
+                .append(tableMetaData.getTable())
                 .append(" (")
-                .append(columnValueMap.keySet().stream()
-                        .collect(Collectors.joining(", ")))
+                .append(String.join(", ", columnValueMap.keySet()))
                 .append(") VALUES (");
-        sql.append("?, ".repeat(columnValueMap.size()));
+
+        final Iterator<Map.Entry<String, Object>> columnValueIterator = columnValueMap.entrySet().iterator();
+
+        while (columnValueIterator.hasNext()) {
+            final Map.Entry<String, Object> entry = columnValueIterator.next();
+
+            final Column column = tableMetaData.getColumns().get(entry.getKey());
+            final Object convertedValue = databaseValueConverter.convert(entry.getValue(), column.getDataType());
+
+            if (convertedValue == null && column.getSequence() != null) {
+                // Add the next value in the sequence directly to the statement
+                sql.append("NEXT VALUE FOR %s, ".formatted(column.getSequence()));
+                columnValueIterator.remove();
+            } else {
+                sql.append("?, ");
+            }
+        }
+
         sql.delete(sql.length() - 2, sql.length());
         sql.append(")");
+        LOGGER.trace("Generated SQL: {}; raw column value map: {}", sql, columnValueMap);
 
-        try (final PreparedStatement preparedStatement = createPreparedStatement(sql.toString(), tableMetaData, columnValueMap)) {
-            preparedStatement.executeUpdate();
-            return preparedStatement.getGeneratedKeys().next() ? preparedStatement.getGeneratedKeys().getLong(1) : null;
+        final List<Object> generatedKeys = executeSql(sql.toString(), tableMetaData, columnValueMap);
+
+        return generatedKeys;
+    }
+
+    private @Nullable List<Object> executeSql(final String sql, final TableMetaData tableMetaData, final Map<String, Object> columnValueMap) throws SQLException {
+        final List<Object> generatedKeys;
+
+        try (final PreparedStatement preparedStatement = createPreparedStatement(sql, tableMetaData, columnValueMap)) {
+            final int affectedRows = preparedStatement.executeUpdate();
+
+            if (affectedRows > 0) {
+                generatedKeys = new ArrayList<>(tableMetaData.getPrimaryKey().size());
+                final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
+
+                for (String pkColumnName : tableMetaData.getPrimaryKey()) {
+                    if (generatedKeysResultSet.next()) {
+                        final Object generatedId = generatedKeysResultSet.getLong(pkColumnName);
+                        LOGGER.debug("Generated ID for column '{}': {}", pkColumnName, generatedId);
+                        generatedKeys.add(generatedId);
+                    }
+                }
+
+                generatedKeysResultSet.close();
+            } else {
+                generatedKeys = null;
+            }
         }
+
+        return generatedKeys;
     }
 
     @Override
-    public Object update(final TableMetaData tableMetaData, final Map<String, Object> columnValueMap, final LinkedHashMap<String, Object> primaryKey) throws SQLException {
+    public @Nullable List<Object> update(final TableMetaData tableMetaData, final Map<String, Object> columnValueMap, final LinkedHashMap<String, Object> primaryKey) throws SQLException {
         final StringBuilder sql = new StringBuilder("UPDATE ")
-                .append(tableMetaData.schema())
+                .append(tableMetaData.getSchema())
                 .append('.')
-                .append(tableMetaData.table())
+                .append(tableMetaData.getTable())
                 .append(" SET ");
 
         columnValueMap.keySet().forEach(columnName -> sql.append(columnName).append(" = ?, "));
@@ -86,10 +129,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final LinkedHashMap<String, Object> columnValueMapWithPrimaryKey = new LinkedHashMap<>(columnValueMap);
         columnValueMapWithPrimaryKey.putAll(primaryKey);
 
-        try (final PreparedStatement preparedStatement = createPreparedStatement(sql.toString(), tableMetaData, columnValueMapWithPrimaryKey)) {
-            preparedStatement.executeUpdate();
-            return preparedStatement.getGeneratedKeys().next() ? preparedStatement.getGeneratedKeys().getLong(1) : null;
-        }
+        return executeSql(sql.toString(), tableMetaData, columnValueMapWithPrimaryKey);
     }
 
     protected List<Column> getColumnNames(final String catalog, final String schema, final String table, final DatabaseMetaData databaseMetaData) throws SQLException {
@@ -162,16 +202,30 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             bindValues = null;
         }
 
-        final PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        final PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
         final int[] ordinal = {1};
 
         for (Map.Entry<String, Object> entry : columnValueMap.entrySet()) {
-            final Column column = tableMetaData.columns().get(entry.getKey());
-            final Object convertedValue = databaseValueConverter.convert(entry.getValue(), column.dataType());
+            final Column column = tableMetaData.getColumns().get(entry.getKey());
+            final Object convertedValue = databaseValueConverter.convert(entry.getValue(), column.getDataType());
+
+            if (convertedValue == null && column.getSequence() != null) {
+                // Add the next value in the sequence directly to the statement
+                final String con = "NEXT VALUE FOR %s".formatted(column.getSequence());
+            }
 
             if (logger.isTraceEnabled()) {
                 assert bindValues != null;
                 bindValues.add(convertedValue);
+            }
+
+            if (convertedValue == null) {
+                if (column.isNullable()) {
+                    preparedStatement.setNull(ordinal[0]++, column.getDataType());
+                } else {
+                    throw new IllegalArgumentException("Attempting to insert NULL into non-nullable column: '%s'. Possible cause: column spec missing generator such as autoincrement/sequence (schema: '%s', table: '%s')".formatted(column.getName(), tableMetaData.getSchema(), tableMetaData.getTable()));
+                }
+                continue;
             }
 
             switch (convertedValue) {
@@ -181,7 +235,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 case Boolean bool -> preparedStatement.setBoolean(ordinal[0]++, bool);
                 case String string -> preparedStatement.setString(ordinal[0]++, string);
                 case Timestamp timestamp -> preparedStatement.setTimestamp(ordinal[0]++, timestamp);
-                default -> preparedStatement.setObject(ordinal[0]++, convertedValue, column.dataType());
+                default -> preparedStatement.setObject(ordinal[0]++, convertedValue, column.getDataType());
             }
         }
 

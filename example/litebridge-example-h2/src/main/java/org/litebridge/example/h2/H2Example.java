@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 public class H2Example {
 
     public static void main(String[] args) {
-        configureLogging();
+        final Logger logger = configureLogging();
 
         final String url = "jdbc:h2:mem:lb;DB_CLOSE_DELAY=-1";
         final String user = "sa";
@@ -30,19 +30,20 @@ public class H2Example {
             liteBridge.register(Account.class, null, "LB", "ACCOUNT", DtoTableMap.Account);
 
             final Person person = liteBridge.track(new Person());
-            person.setId(123L);
             person.setName("Alice");
             person.setSurname("Smith");
             person.setAge(20);
             person.setEyeColour("blue");
 
             final Account account = liteBridge.track(new Account());
-            account.setId(234L);
             account.setName("Test account");
             account.setOwner(person);
 
             liteBridge.save(person);
             liteBridge.save(account);
+
+            logger.info("Saved person ID: " + person.getId());
+            logger.info("Saved account ID: " + account.getId());
 
             person.setEyeColour("brown");
             liteBridge.save(person);
@@ -51,13 +52,15 @@ public class H2Example {
         }
     }
 
-    private static void configureLogging() {
+    private static Logger configureLogging() {
         final Logger rootLogger = Logger.getLogger("");
         rootLogger.setLevel(Level.ALL);
 
         final ConsoleHandler consoleHandler = new ConsoleHandler();
         consoleHandler.setLevel(Level.ALL);
         rootLogger.addHandler(consoleHandler);
+
+        return rootLogger;
     }
 
     private static String configureDatabase(final String url, final String user, final String password) {

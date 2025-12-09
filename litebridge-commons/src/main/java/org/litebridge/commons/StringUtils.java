@@ -26,4 +26,16 @@ public final class StringUtils {
     public static boolean isEmpty(@Nullable final String str) {
         return str == null || str.isEmpty();
     }
+
+    public static String[] splitOnce(final String str, final char delimiter) {
+        final int index = str.indexOf(delimiter);
+
+        if (index == -1) {
+            return new String[]{str};
+        } else {
+            final String part1 = str.substring(0, index);
+            final String part2 = str.substring(index + 1);
+            return new String[]{part1, part2};
+        }
+    }
 }

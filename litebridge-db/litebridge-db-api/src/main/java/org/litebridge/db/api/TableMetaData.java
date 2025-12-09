@@ -2,7 +2,6 @@ package org.litebridge.db.api;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -13,7 +12,7 @@ public final class TableMetaData {
     private final String schema;
     private final String table;
     private final List<String> primaryKey;
-    private final Map<String, Column> columns;
+    private final LinkedHashMap<String, Column> columns;
 
     public TableMetaData(String catalog, String schema, String table, final List<String> primaryKey, List<Column> columns) {
         this.catalog = catalog;
@@ -21,29 +20,29 @@ public final class TableMetaData {
         this.table = table;
         this.primaryKey = primaryKey;
         this.columns = columns.stream()
-                .collect(Collectors.toMap(Column::name,
+                .collect(Collectors.toMap(Column::getName,
                         Function.identity(),
                         (oldValue, newValue) -> newValue,
                         LinkedHashMap::new));
     }
 
-    public String catalog() {
+    public String getCatalog() {
         return catalog;
     }
 
-    public String schema() {
+    public String getSchema() {
         return schema;
     }
 
-    public String table() {
+    public String getTable() {
         return table;
     }
 
-    public List<String> primaryKey() {
+    public List<String> getPrimaryKey() {
         return primaryKey;
     }
 
-    public Map<String, Column> columns() {
+    public LinkedHashMap<String, Column> getColumns() {
         return columns;
     }
 

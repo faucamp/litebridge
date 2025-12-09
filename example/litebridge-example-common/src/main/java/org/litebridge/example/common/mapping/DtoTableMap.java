@@ -1,22 +1,26 @@
 package org.litebridge.example.common.mapping;
 
+import org.litebridge.core.ColumnSpec;
+
 import java.util.Map;
+
+import static org.litebridge.core.ColumnSpec.c;
 
 public final class DtoTableMap {
 
     private DtoTableMap() {}
 
-    public static final Map<String, String> Person = Map.of(
-            "id", "PERSON_ID",
-            "name", "FIRST_NAME",
-            "surname", "SURNAME",
-            "age", "AGE",
-            "eyeColour", "EYE_COLOUR"
+    public static final Map<String, ColumnSpec> Person = Map.of(
+            "id", c("PERSON_ID", true, "LB.PERSON_SEQ"),
+            "name", c("FIRST_NAME"),
+            "surname", c("SURNAME"),
+            "age", c("AGE"),
+            "eyeColour", c("EYE_COLOUR")
     );
 
-    public static final Map<String, String> Account = Map.of(
-            "id", "ACCOUNT_ID",
-            "name", "ACCOUNT_NAME",
-            "owner", "PERSON_ID"
+    public static final Map<String, ColumnSpec> Account = Map.of(
+            "id", c("ACCOUNT_ID", true, "LB.ACCOUNT_SEQ"),
+            "name", c("ACCOUNT_NAME"),
+            "owner", c("PERSON_ID")
     );
 }

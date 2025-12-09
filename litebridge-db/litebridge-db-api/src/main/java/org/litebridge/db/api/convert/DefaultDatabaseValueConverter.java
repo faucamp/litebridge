@@ -1,5 +1,7 @@
 package org.litebridge.db.api.convert;
 
+import jakarta.annotation.Nullable;
+
 import java.sql.Types;
 
 public class DefaultDatabaseValueConverter implements DatabaseValueConverter {
@@ -11,7 +13,7 @@ public class DefaultDatabaseValueConverter implements DatabaseValueConverter {
     private final LongConverter longConverter = new LongConverter();
     private final ShortConverter shortConverter = new ShortConverter();
 
-    public Object convert(final Object value, final int dbDataType) {
+    public Object convert(@Nullable final Object value, final int dbDataType) {
         return switch (dbDataType) {
             case Types.BOOLEAN -> booleanConverter.convert(value);
             case Types.TIMESTAMP -> timestampConverter.convert(value);
