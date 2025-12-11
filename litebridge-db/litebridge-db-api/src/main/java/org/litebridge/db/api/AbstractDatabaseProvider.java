@@ -1,5 +1,6 @@
 package org.litebridge.db.api;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.litebridge.db.api.convert.DatabaseValueConverter;
 import org.litebridge.db.api.convert.DefaultDatabaseValueConverter;
@@ -69,7 +70,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
             if (convertedValue == null && column.getSequence() != null) {
                 // Add the next value in the sequence directly to the statement
-                sql.append("NEXT VALUE FOR %s, ".formatted(column.getSequence()));
+                sql.append(createSequenceNextValueForDirectInsert(column.getSequence()));
                 columnValueIterator.remove();
             } else {
                 sql.append("?, ");
@@ -83,6 +84,18 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final List<Object> generatedKeys = executeSql(sql.toString(), tableMetaData, columnValueMap, true);
 
         return generatedKeys;
+    }
+
+    /**
+     * Generates a SQL fragment to retrieve the next value from a sequence for direct use in an INSERT or UPDATE statement,
+     * e.g. to generate "INSERT INTO LB.ACCOUNT(ACCOUNT_ID, ACCOUNT_NAME) VALUES (NEXT VALUE FOR sequence_name, ?)",
+     * this method returns "NEXT VALUE FOR sequence_name".
+     *
+     * @param sequence the name of the database sequence to generate the next value from
+     * @return a formatted SQL string representing the next sequence value for direct insertion
+     */
+    protected static @Nonnull String createSequenceNextValueForDirectInsert(final String sequence) {
+        return "NEXT VALUE FOR %s, ".formatted(sequence);
     }
 
     @Override
@@ -208,11 +221,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         for (Map.Entry<String, Object> entry : columnValueMap.entrySet()) {
             final Column column = tableMetaData.getColumns().get(entry.getKey());
             final Object convertedValue = databaseValueConverter.convert(entry.getValue(), column.getDataType());
-
-            if (convertedValue == null && column.getSequence() != null) {
-                // Add the next value in the sequence directly to the statement
-                final String con = "NEXT VALUE FOR %s".formatted(column.getSequence());
-            }
 
             if (logger.isTraceEnabled()) {
                 assert bindValues != null;
