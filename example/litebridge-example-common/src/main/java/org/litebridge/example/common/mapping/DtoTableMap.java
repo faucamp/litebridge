@@ -1,10 +1,10 @@
 package org.litebridge.example.common.mapping;
 
-import org.litebridge.core.ColumnSpec;
+import org.litebridge.orm.ColumnSpec;
 
 import java.util.Map;
 
-import static org.litebridge.core.ColumnSpec.c;
+import static org.litebridge.orm.ColumnSpec.c;
 
 public final class DtoTableMap {
 

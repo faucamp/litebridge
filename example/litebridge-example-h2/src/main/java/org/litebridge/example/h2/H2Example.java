@@ -1,8 +1,7 @@
 package org.litebridge.example.h2;
 
 import org.flywaydb.core.Flyway;
-import org.litebridge.core.LiteBridge;
-import org.litebridge.db.api.DatabaseProvider;
+import org.litebridge.orm.Litebridge;
 import org.litebridge.db.h2.H2DatabaseProvider;
 import org.litebridge.example.common.dto.Account;
 import org.litebridge.example.common.dto.Person;
@@ -14,7 +13,7 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.litebridge.core.TableSpec.t;
+import static org.litebridge.orm.TableSpec.t;
 
 public class H2Example {
 
@@ -27,28 +26,28 @@ public class H2Example {
         configureDatabase(url, user, password);
 
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            final LiteBridge liteBridge = new LiteBridge(new H2DatabaseProvider(connection));
-            liteBridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
-            liteBridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+            final Litebridge litebridge = new Litebridge(new H2DatabaseProvider(connection));
+            litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+            litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
 
-            final Person person = liteBridge.track(new Person());
+            final Person person = litebridge.track(new Person());
             person.setName("Alice");
             person.setSurname("Smith");
             person.setAge(20);
             person.setEyeColour("blue");
 
-            final Account account = liteBridge.track(new Account());
+            final Account account = litebridge.track(new Account());
             account.setName("Test account");
             account.setOwner(person);
 
-            liteBridge.save(person);
-            liteBridge.save(account);
+            litebridge.save(person);
+            litebridge.save(account);
 
             logger.info("Saved person ID: " + person.getId());
             logger.info("Saved account ID: " + account.getId());
 
             person.setEyeColour("brown");
-            liteBridge.save(person);
+            litebridge.save(person);
         } catch (Exception e) {
             e.printStackTrace();
         }

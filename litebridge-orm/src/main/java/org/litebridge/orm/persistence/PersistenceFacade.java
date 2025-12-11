@@ -1,9 +1,9 @@
-package org.litebridge.core.persistence;
+package org.litebridge.orm.persistence;
 
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ClassUtils;
-import org.litebridge.core.Table;
-import org.litebridge.core.TableRegistry;
+import org.litebridge.orm.Table;
+import org.litebridge.orm.TableRegistry;
 import org.litebridge.tracking.ChangedField;
 import org.litebridge.tracking.TrackedDto;
 import org.litebridge.db.api.Column;

@@ -1,4 +1,4 @@
-package org.litebridge.core;
+package org.litebridge.orm;
 
 import java.util.Collections;
 import java.util.Set;

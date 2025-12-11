@@ -1,9 +1,9 @@
-package org.litebridge.core;
+package org.litebridge.orm;
 
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
-import org.litebridge.core.persistence.PersistenceFacade;
+import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.db.api.Column;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
@@ -17,14 +17,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class LiteBridge {
+public class Litebridge {
 
     private final DatabaseProvider databaseProvider;
     private final TableRegistry tableRegistry;
     private final PersistenceFacade persistenceFacade;
     private final ChangeTracker changeTracker;
 
-    public LiteBridge(final DatabaseProvider databaseProvider) {
+    public Litebridge(final DatabaseProvider databaseProvider) {
         this.databaseProvider = databaseProvider;
         this.tableRegistry = new TableRegistry();
         this.changeTracker = new ChangeTracker();
