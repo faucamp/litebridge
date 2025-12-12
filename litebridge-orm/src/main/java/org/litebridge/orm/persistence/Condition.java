@@ -2,6 +2,9 @@ package org.litebridge.orm.persistence;
 
 import org.litebridge.db.api.query.Operator;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 public class Condition<T> implements org.litebridge.db.api.query.Condition {
 
     private final Selector<T>.SelectorStack selectorStack;
@@ -15,10 +18,34 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
         selectorStack.push(this);
     }
 
-    public Condition<T>.ConditionClosure eq(final Object value) {
-        this.operator = Operator.EQ;
+    private ConditionClosure condition(final Operator eq, final Object value) {
+        this.operator = eq;
         this.operand = value;
         return new ConditionClosure();
+    }
+
+    public Condition<T>.ConditionClosure eq(final Object value) {
+        return condition(Operator.EQ, value);
+    }
+
+    public Condition<T>.ConditionClosure neq(final Object value) {
+        return condition(Operator.NEQ, value);
+    }
+
+    public Condition<T>.ConditionClosure lt(final Object value) {
+        return condition(Operator.LT, value);
+    }
+
+    public Condition<T>.ConditionClosure lte(final Object value) {
+        return condition(Operator.LTE, value);
+    }
+
+    public Condition<T>.ConditionClosure gt(final Object value) {
+        return condition(Operator.GT, value);
+    }
+
+    public Condition<T>.ConditionClosure gte(final Object value) {
+        return condition(Operator.GTE, value);
     }
 
     @Override
@@ -43,7 +70,15 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
         }
 
         public T get() {
-            return selectorStack.execute();
+            return selectorStack.get();
+        }
+
+        public List<T> getAll() {
+            return selectorStack.getAll();
+        }
+
+        public Stream<T> stream() {
+            return selectorStack.stream();
         }
     }
 }

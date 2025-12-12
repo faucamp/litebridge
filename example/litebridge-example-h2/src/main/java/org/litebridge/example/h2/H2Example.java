@@ -9,6 +9,8 @@ import org.litebridge.example.common.mapping.DtoTableMap;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.Comparator;
+import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,6 +51,18 @@ public class H2Example {
             person.setEyeColour("brown");
             litebridge.save(person);
 
+            // Retrieve all persons and return a List
+            final List<Person> persons = litebridge.select(Person.class).getAll();
+            logger.info("All persons (list): " + persons);
+
+            // Retrieve oldest person with criteria using a Stream
+            litebridge.select(Person.class)
+                    .where("age").gte(18)
+                    .stream()
+                    .max(Comparator.comparing(Person::getAge))
+                    .ifPresent(p -> logger.info("Oldest person: " + p));
+
+            // Retrieve a single person with criteria
             final Person alice = litebridge.select(Person.class)
                     .where("name").eq("Alice")
                     .and("surname").eq("Smith")
