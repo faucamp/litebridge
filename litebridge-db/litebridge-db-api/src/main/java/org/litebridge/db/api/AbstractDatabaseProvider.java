@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDatabaseProvider.class);
+    protected static final Object NULL = new Null();
     private final Connection connection;
     private final TypeConverter typeConverter;
 
@@ -134,8 +135,9 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
 
         final LinkedHashMap<String, Object> columnValueMap = conditions.stream()
+                .filter(condition -> condition.getOperator() != Operator.IS_NULL && condition.getOperator() != Operator.IS_NOT_NULL)
                 .collect(Collectors.toMap(Condition::getColumn,
-                        Condition::getValue,
+                        condition -> condition.getValue() != null ? condition.getValue() : NULL,
                         (oldValue, newValue) -> newValue,
                         LinkedHashMap::new));
         LOGGER.trace("Generated SQL: {} with bind parameters: {}", sql, columnValueMap);
@@ -149,7 +151,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     protected String createCondition(final Condition condition) {
-        return "%s %s ?".formatted(condition.getColumn(), mapOperator(condition.getOperator()));
+        if (condition.getOperator() == Operator.IS_NULL || condition.getOperator() == Operator.IS_NOT_NULL) {
+            return "%s %s".formatted(condition.getColumn(), mapOperator(condition.getOperator()));
+        } else {
+            return "%s %s ?".formatted(condition.getColumn(), mapOperator(condition.getOperator()));
+        }
     }
 
     protected String mapOperator(final Operator operator) {
@@ -161,6 +167,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             case LTE -> "<=";
             case NEQ -> "<>";
             case IN -> "IN";
+            case IS_NULL -> "IS NULL";
+            case IS_NOT_NULL -> "IS NOT NULL";
         };
     }
 
@@ -331,5 +339,13 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     protected Logger getLogger() {
         return LOGGER;
+    }
+
+    protected static final class Null {
+
+        @Override
+        public String toString() {
+            return "NULL";
+        }
     }
 }

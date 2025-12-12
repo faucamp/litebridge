@@ -18,9 +18,21 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
         selectorStack.push(this);
     }
 
-    private ConditionClosure condition(final Operator eq, final Object value) {
-        this.operator = eq;
+    private ConditionClosure condition(final Operator operator, final Object value) {
         this.operand = value;
+
+        if (value == null) {
+            this.operator = switch (operator) {
+                case EQ -> Operator.IS_NULL;
+                case NEQ -> Operator.IS_NOT_NULL;
+                case IS_NULL, IS_NOT_NULL -> operator;
+                default ->
+                        throw new IllegalArgumentException("Operator %s does not support null value".formatted(operator));
+            };
+        } else {
+            this.operator = operator;
+        }
+
         return new ConditionClosure();
     }
 
@@ -46,6 +58,14 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
 
     public Condition<T>.ConditionClosure gte(final Object value) {
         return condition(Operator.GTE, value);
+    }
+
+    public Condition<T>.ConditionClosure isNull() {
+        return condition(Operator.IS_NULL, null);
+    }
+
+    public Condition<T>.ConditionClosure isNotNull() {
+        return condition(Operator.IS_NOT_NULL, null);
     }
 
     @Override

@@ -70,7 +70,17 @@ public class H2Example {
                     .and("surname").eq("Smith")
                     .get();
 
-            logger.info("Retrieved person: " + alice);
+            // Retrieve Persons that have an eye colour set
+            litebridge.select(Person.class)
+                    .where("eyeColour").isNotNull()
+                    .stream()
+                    .forEach(p -> logger.info("Person without eye colour (isNull): " + p));
+
+            // Retrieve Persons that do not have an eye colour set, using eq(null) instead of isNull()
+            litebridge.select(Person.class)
+                    .where("eyeColour").eq(null)
+                    .stream()
+                    .forEach(p -> logger.info("Person without eye colour (eq): " + p));
         } catch (Exception e) {
             e.printStackTrace();
         }
