@@ -91,6 +91,11 @@ public class H2Example {
         final Logger rootLogger = Logger.getLogger("");
         rootLogger.setLevel(Level.ALL);
 
+        // Remove default handlers to prevent duplicate output
+        for (var handler : rootLogger.getHandlers()) {
+            rootLogger.removeHandler(handler);
+        }
+
         final ConsoleHandler consoleHandler = new ConsoleHandler();
         consoleHandler.setLevel(Level.ALL);
         rootLogger.addHandler(consoleHandler);
