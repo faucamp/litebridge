@@ -7,6 +7,7 @@ import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.db.api.Column;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
+import org.litebridge.orm.persistence.Selector;
 import org.litebridge.tracking.ChangeTracker;
 
 import java.lang.reflect.Field;
@@ -56,6 +57,16 @@ public class Litebridge {
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to save DTO: " + dto, ex);
         }
+    }
+
+    public <T> Selector<T> select(Class<T> dtoClass) {
+        final Table table = tableRegistry.getTable(dtoClass);
+
+        if (table == null) {
+            throw new IllegalArgumentException("DTO class not registered: '%s'".formatted(dtoClass.getName()));
+        }
+
+        return new Selector<>(dtoClass, table, databaseProvider);
     }
 
     private Table mapToTable(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {

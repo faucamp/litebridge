@@ -24,10 +24,12 @@
         <junit-jupiter.version>5.14.1</junit-jupiter.version>
         <mockito-junit-jupiter.version>5.20.0</mockito-junit-jupiter.version>
         <slf4j.version>2.0.17</slf4j.version>
+        <typeconverter.version>1.0</typeconverter.version>
     </properties>
 
     <modules>
         <module>litebridge-commons</module>
+        <module>litebridge-converter</module>
         <module>litebridge-db</module>
         <module>litebridge-dto</module>
         <module>litebridge-orm</module>
@@ -79,6 +81,11 @@
             <dependency>
                 <groupId>org.litebridge</groupId>
                 <artifactId>litebridge-commons</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.litebridge</groupId>
+                <artifactId>litebridge-converter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -137,6 +144,11 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-jdk14</artifactId>
                 <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.toddfast.typeconverter</groupId>
+                <artifactId>typeconverter</artifactId>
+                <version>${typeconverter.version}</version>
             </dependency>
 
             <!-- Test dependencies -->

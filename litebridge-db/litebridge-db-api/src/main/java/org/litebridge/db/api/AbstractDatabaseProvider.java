@@ -2,8 +2,11 @@ package org.litebridge.db.api;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.litebridge.db.api.convert.DatabaseValueConverter;
-import org.litebridge.db.api.convert.DefaultDatabaseValueConverter;
+import org.litebridge.commons.CollectionUtils;
+import org.litebridge.commons.ObjectUtils;
+import org.litebridge.db.api.convert.TypeConverter;
+import org.litebridge.db.api.query.Condition;
+import org.litebridge.db.api.query.Operator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,21 +23,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDatabaseProvider.class);
     private final Connection connection;
-    private final DatabaseValueConverter databaseValueConverter;
-
-    public AbstractDatabaseProvider(final Connection connection) {
-        this(connection, null);
-    }
+    private final TypeConverter typeConverter;
 
     public AbstractDatabaseProvider(final Connection connection,
-                                    @Nullable final DatabaseValueConverter databaseValueConverter) {
+                                    final TypeConverter typeConverter) {
         this.connection = connection;
-        this.databaseValueConverter = Objects.requireNonNullElseGet(databaseValueConverter, DefaultDatabaseValueConverter::new);
+        this.typeConverter = ObjectUtils.requireNonNull(typeConverter, "No TypeConverter provided");
     }
 
     @Override
@@ -66,7 +66,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             final Map.Entry<String, Object> entry = columnValueIterator.next();
 
             final Column column = tableMetaData.getColumns().get(entry.getKey());
-            final Object convertedValue = databaseValueConverter.convert(entry.getValue(), column.getDataType());
+            final Object convertedValue = typeConverter.convert(entry.getValue(), column.getDataType());
 
             if (convertedValue == null && column.getSequence() != null) {
                 // Add the next value in the sequence directly to the statement
@@ -81,7 +81,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         sql.append(")");
         LOGGER.trace("Generated SQL: {}; raw column value map: {}", sql, columnValueMap);
 
-        final List<Object> generatedKeys = executeSql(sql.toString(), tableMetaData, columnValueMap, true);
+        final List<Object> generatedKeys = executeSqlUpdate(sql.toString(), columnValueMap, tableMetaData, true);
 
         return generatedKeys;
     }
@@ -115,13 +115,59 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final LinkedHashMap<String, Object> columnValueMapWithPrimaryKey = new LinkedHashMap<>(columnValueMap);
         columnValueMapWithPrimaryKey.putAll(primaryKey);
 
-        return executeSql(sql.toString(), tableMetaData, columnValueMapWithPrimaryKey, false);
+        return executeSqlUpdate(sql.toString(), columnValueMapWithPrimaryKey, tableMetaData, false);
     }
 
-    private @Nullable List<Object> executeSql(final String sql, final TableMetaData tableMetaData, final Map<String, Object> columnValueMap, final boolean returnGeneratedKeys) throws SQLException {
+    @Override
+    public List<Map<String, Object>> select(final TableMetaData tableMetaData, final List<String> columns, final List<Condition> conditions) throws SQLException {
+        final StringBuilder sql = new StringBuilder("SELECT ")
+                .append(String.join(", ", columns))
+                .append(" FROM ")
+                .append(tableMetaData.getSchema())
+                .append('.')
+                .append(tableMetaData.getTable());
+
+        if (!CollectionUtils.isEmpty(conditions)) {
+            sql.append(" WHERE ");
+            conditions.forEach(condition -> sql.append(createCondition(condition)).append(" AND "));
+            sql.delete(sql.length() - 5, sql.length());
+        }
+
+        final LinkedHashMap<String, Object> columnValueMap = conditions.stream()
+                .collect(Collectors.toMap(Condition::getColumn,
+                        Condition::getValue,
+                        (oldValue, newValue) -> newValue,
+                        LinkedHashMap::new));
+        LOGGER.trace("Generated SQL: {} with bind parameters: {}", sql, columnValueMap);
+
+        return executeSqlQuery(sql.toString(), columns, columnValueMap, tableMetaData);
+    }
+
+    @Override
+    public TypeConverter getTypeConverter() {
+        return typeConverter;
+    }
+
+    protected String createCondition(final Condition condition) {
+        return "%s %s ?".formatted(condition.getColumn(), mapOperator(condition.getOperator()));
+    }
+
+    protected String mapOperator(final Operator operator) {
+        return switch (operator) {
+            case EQ -> "=";
+            case GT -> ">";
+            case GTE -> ">=";
+            case LT -> "<";
+            case LTE -> "<=";
+            case NEQ -> "<>";
+            case IN -> "IN";
+        };
+    }
+
+    private @Nullable List<Object> executeSqlUpdate(final String sql, final Map<String, Object> columnValueMap, final TableMetaData tableMetaData, final boolean returnGeneratedKeys) throws SQLException {
         final List<Object> generatedKeys;
 
-        try (final PreparedStatement preparedStatement = createPreparedStatement(sql, tableMetaData, columnValueMap)) {
+        try (final PreparedStatement preparedStatement = createPreparedStatement(sql, columnValueMap, tableMetaData, true)) {
             final int affectedRows = preparedStatement.executeUpdate();
 
             if (affectedRows > 0 && returnGeneratedKeys) {
@@ -143,6 +189,26 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
 
         return generatedKeys;
+    }
+
+    private List<Map<String, Object>> executeSqlQuery(final String sql, final List<String> columns, final Map<String, Object> columnValueMap, final TableMetaData tableMetaData) throws SQLException {
+        try (final PreparedStatement preparedStatement = createPreparedStatement(sql, columnValueMap, tableMetaData, false)) {
+            final ResultSet resultSet = preparedStatement.executeQuery();
+            final List<Map<String, Object>> resultList = new ArrayList<>();
+
+            while (resultSet.next()) {
+                final Map<String, Object> row = new LinkedHashMap<>();
+
+                for (String columnName : tableMetaData.getColumns().keySet()) {
+                    final Column column = tableMetaData.getColumns().get(columnName);
+                    row.put(columnName, typeConverter.convert(resultSet.getObject(columnName), column.getDataType()));
+                }
+
+                resultList.add(row);
+            }
+
+            return resultList;
+        }
     }
 
     protected List<Column> getColumnNames(final String catalog, final String schema, final String table, final DatabaseMetaData databaseMetaData) throws SQLException {
@@ -205,7 +271,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
-    protected PreparedStatement createPreparedStatement(final String sql, final TableMetaData tableMetaData, final Map<String, Object> columnValueMap) throws SQLException {
+    protected PreparedStatement createPreparedStatement(final String sql, final Map<String, Object> columnValueMap, final TableMetaData tableMetaData, final boolean returnGeneratedKeys) throws SQLException {
         final Logger logger = getLogger();
         final List<Object> bindValues;
 
@@ -215,12 +281,19 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             bindValues = null;
         }
 
-        final PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        final PreparedStatement preparedStatement;
+
+        if (returnGeneratedKeys) {
+            preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        } else {
+            preparedStatement = connection.prepareStatement(sql);
+        }
+
         final int[] ordinal = {1};
 
         for (Map.Entry<String, Object> entry : columnValueMap.entrySet()) {
             final Column column = tableMetaData.getColumns().get(entry.getKey());
-            final Object convertedValue = databaseValueConverter.convert(entry.getValue(), column.getDataType());
+            final Object convertedValue = typeConverter.convert(entry.getValue(), column.getDataType());
 
             if (logger.isTraceEnabled()) {
                 assert bindValues != null;

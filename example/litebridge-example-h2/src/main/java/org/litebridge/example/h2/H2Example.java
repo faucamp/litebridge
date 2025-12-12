@@ -48,6 +48,13 @@ public class H2Example {
 
             person.setEyeColour("brown");
             litebridge.save(person);
+
+            final Person alice = litebridge.select(Person.class)
+                    .where("name").eq("Alice")
+                    .and("surname").eq("Smith")
+                    .get();
+
+            logger.info("Retrieved person: " + alice);
         } catch (Exception e) {
             e.printStackTrace();
         }
