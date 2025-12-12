@@ -69,6 +69,7 @@ public class H2Example {
                     .where("name").eq("Alice")
                     .and("surname").eq("Smith")
                     .get();
+            logger.info("Retrieved person: " + alice);
 
             // Retrieve Persons that have an eye colour set
             litebridge.select(Person.class)
