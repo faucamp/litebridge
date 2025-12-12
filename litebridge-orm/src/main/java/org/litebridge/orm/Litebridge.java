@@ -59,7 +59,18 @@ public class Litebridge {
         }
     }
 
-    public <T> Selector<T> select(Class<T> dtoClass) {
+    /**
+     * Selects a specific Data Transfer Object (DTO) type for database query operations.
+     * This method returns a generic {@link Selector} instance that facilitates querying
+     * and retrieving data associated with the specified DTO class.
+     *
+     * @param <T>      The type of the DTO to select.
+     * @param dtoClass The class of the DTO to be queried.
+     *                 Must be a registered DTO class in the table registry.
+     * @return A {@link Selector} instance for querying and retrieving data for the specified DTO class.
+     * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
+     */
+    public <T> Selector<T> select(final Class<T> dtoClass) {
         final Table table = tableRegistry.getTable(dtoClass);
 
         if (table == null) {

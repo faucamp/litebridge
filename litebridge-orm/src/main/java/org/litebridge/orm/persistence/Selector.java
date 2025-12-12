@@ -12,6 +12,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+/**
+ * The Selector class provides a mechanism to retrieve data from a database table
+ * and map it to Data Transfer Objects (DTOs). It performs selection operations
+ * with optional filtering conditions and supports retrieving results as individual
+ * objects, collections, or streams. This class is generic and operates on the
+ * specified DTO class type.
+ *
+ * @param <T> The type of DTO that this selector will operate on.
+ */
 public class Selector<T> {
 
     private final Class<T> dtoClass;
@@ -25,6 +34,15 @@ public class Selector<T> {
         this.databaseProvider = databaseProvider;
     }
 
+    /**
+     * Creates a new query condition based on the specified field name.
+     * This method retrieves the corresponding column name for the given field name
+     * and initializes a new {@link Condition} instance which can be used to build query conditions.
+     *
+     * @param field The name of the DTO field for which the condition is being created.
+     * @return A new {@link Condition} instance representing the condition on the specified field.
+     * @throws IllegalArgumentException if there is no column mapped to the given field name in the table.
+     */
     public Condition<T> where(final String field) {
         final String column = table.getColumnForFieldName(field).getName();
         return new Condition<>(column, new SelectorStack());
@@ -45,10 +63,21 @@ public class Selector<T> {
         return mapToDto(resultList.getFirst(), databaseProvider.getTypeConverter());
     }
 
+    /**
+     * Retrieves all matching DTOs from the query result as a list.
+     *
+     * @return a list of DTOs matching the query conditions
+     */
     public List<T> getAll() {
         return stream().toList();
     }
 
+    /**
+     * Provides a sequential stream of DTO objects derived from the query results.
+     *
+     * @return a {@link Stream} of DTO objects corresponding to the query results mapped from the database.
+     * @throws IllegalStateException if the query execution or DTO mapping fails
+     */
     public Stream<T> stream() {
         final List<Map<String, Object>> resultList = executeQuery();
         return resultList.stream()

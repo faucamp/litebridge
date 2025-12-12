@@ -76,7 +76,7 @@ public class H2Example {
             litebridge.select(Person.class)
                     .where("eyeColour").isNotNull()
                     .stream()
-                    .forEach(p -> logger.info("Person without eye colour (isNull): " + p));
+                    .forEach(p -> logger.info("Person with eye colour (isNotNull): " + p));
 
             // Retrieve Persons that do not have an eye colour set, using eq(null) instead of isNull()
             litebridge.select(Person.class)

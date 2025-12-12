@@ -2,16 +2,16 @@ package org.litebridge.orm;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.litebridge.tracking.TrackedDto;
-import org.litebridge.tracking.ChangeTracker;
+import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.api.Column;
 import org.litebridge.db.api.TableMetaData;
+import org.litebridge.tracking.ChangeTracker;
+import org.litebridge.tracking.TrackedDto;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class Table {
 
@@ -52,11 +52,11 @@ public class Table {
     }
 
     public @Nonnull Column getColumnForFieldName(final String fieldName) {
-        return Objects.requireNonNull(fieldNameColumnMap.get(fieldName), "No column for field '" + fieldName + "' in table '" + metaData.getTable() + "'");
+        return ObjectUtils.requireNonNull(fieldNameColumnMap.get(fieldName), "No column for field '" + fieldName + "' in schema '" + metaData.getSchema() + "', table '" + metaData.getTable() + "'");
     }
 
     public @Nonnull Column getColumn(final String columnName) {
-        return Objects.requireNonNull(fieldNameColumnMap.get(columnName), "No column '" + columnName + "' in table '" + metaData.getTable() + "'");
+        return ObjectUtils.requireNonNull(fieldNameColumnMap.get(columnName), "No column '" + columnName + "' in table '" + metaData.getTable() + "'");
     }
 
     public @Nullable TrackedDto getTrackedDto(final Object dto) {
