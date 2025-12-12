@@ -12,6 +12,7 @@ import java.sql.DriverManager;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -92,7 +93,7 @@ public class H2Example {
         rootLogger.setLevel(Level.ALL);
 
         // Remove default handlers to prevent duplicate output
-        for (var handler : rootLogger.getHandlers()) {
+        for (Handler handler : rootLogger.getHandlers()) {
             rootLogger.removeHandler(handler);
         }
 
