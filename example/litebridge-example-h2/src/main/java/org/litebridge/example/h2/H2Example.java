@@ -28,10 +28,12 @@ public class H2Example {
         configureDatabase(url, user, password);
 
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            // Initialise litebridge and register DTO-table mappings
             final Litebridge litebridge = new Litebridge(new H2DatabaseProvider(connection));
             litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
             litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
 
+            // Create DTOs and enable change tracking
             final Person person = litebridge.track(new Person());
             person.setName("Alice");
             person.setSurname("Smith");
@@ -42,12 +44,12 @@ public class H2Example {
             account.setName("Test account");
             account.setOwner(person);
 
-            litebridge.save(person);
+            // Save DTOs ("person" will also be saved due to cascading)
             litebridge.save(account);
-
             logger.info("Saved person ID: " + person.getId());
             logger.info("Saved account ID: " + account.getId());
 
+            // Update a single field of a tracked DTO and update the database accordingly
             person.setEyeColour("brown");
             litebridge.save(person);
 
