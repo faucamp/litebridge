@@ -159,6 +159,10 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
             return selectorStack.where(field);
         }
 
+        public AbstractSelector<T>.SelectorStack orderBy(final String field) {
+            return selectorStack.orderBy(field);
+        }
+
         /**
          * Returns a single matching DTO from the query result.
          *

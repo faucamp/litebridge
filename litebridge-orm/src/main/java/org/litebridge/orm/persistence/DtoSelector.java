@@ -6,7 +6,6 @@ import org.litebridge.db.api.convert.TypeConverter;
 import org.litebridge.orm.Table;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -24,7 +23,6 @@ public final class DtoSelector<T> extends AbstractSelector<T> {
 
     private final Class<T> dtoClass;
     private final Table table;
-    private final List<org.litebridge.db.api.query.Condition> conditions = new ArrayList<>();
 
     public DtoSelector(final Class<T> dtoClass, final Table table, final DatabaseProvider databaseProvider) {
         super(List.copyOf(table.getMetaData().getColumns().keySet()), table.getMetaData(), databaseProvider);
@@ -45,6 +43,12 @@ public final class DtoSelector<T> extends AbstractSelector<T> {
     public Condition<T> where(final String field) {
         final String column = table.getColumnForFieldName(field).getName();
         return super.where(column);
+    }
+
+    @Override
+    public AbstractSelector<T>.SelectorStack orderBy(final String field) {
+        final String column = table.getColumnForFieldName(field).getName();
+        return super.orderBy(column);
     }
 
     @Override

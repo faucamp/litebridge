@@ -5,6 +5,7 @@ import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ public abstract class AbstractSelector<T> {
     protected final List<String> columns;
     protected final DatabaseProvider databaseProvider;
     protected final List<org.litebridge.db.api.query.Condition> conditions = new ArrayList<>();
+    protected final List<String> orderByColumns = new ArrayList<>();
     protected final TableMetaData tableMetaData;
 
     public AbstractSelector(final List<String> columns, final TableMetaData tableMetaData, final DatabaseProvider databaseProvider) {
@@ -69,6 +71,7 @@ public abstract class AbstractSelector<T> {
     }
 
     public abstract List<T> list();
+
     public abstract Stream<T> stream();
 
     protected Map<String, Object> getOneRecord(final boolean first) {
@@ -114,7 +117,7 @@ public abstract class AbstractSelector<T> {
         final List<Map<String, Object>> resultList;
 
         try {
-            resultList = databaseProvider.select(tableMetaData, columns, conditions);
+            resultList = databaseProvider.select(tableMetaData, columns, conditions, orderByColumns);
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute select query", ex);
         }
@@ -122,10 +125,19 @@ public abstract class AbstractSelector<T> {
         return resultList;
     }
 
+    public SelectorStack orderBy(final String column) {
+        orderByColumns.add(column);
+        return new SelectorStack();
+    }
+
     public final class SelectorStack {
 
         public Condition<T> where(final String field) {
             return AbstractSelector.this.where(field);
+        }
+
+        public SelectorStack orderBy(final String field) {
+            return AbstractSelector.this.orderBy(field);
         }
 
         public void push(final Condition<T> condition) {

@@ -128,7 +128,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public List<Map<String, Object>> select(final TableMetaData tableMetaData, final List<String> columns, final List<Condition> conditions) throws SQLException {
+    public List<Map<String, Object>> select(final TableMetaData tableMetaData, final List<String> columns, final List<Condition> conditions, final List<String> orderBy) throws SQLException {
         final StringBuilder sql = new StringBuilder("SELECT ")
                 .append(String.join(", ", columns))
                 .append(" FROM ")
@@ -140,6 +140,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             sql.append(" WHERE ");
             conditions.forEach(condition -> sql.append(createCondition(condition)).append(" AND "));
             sql.delete(sql.length() - 5, sql.length());
+        }
+
+        if (!CollectionUtils.isEmpty(orderBy)) {
+            sql.append(" ORDER BY ").append(String.join(", ", orderBy));
         }
 
         return executeSqlQuery(sql.toString(), columns, conditions, tableMetaData);
