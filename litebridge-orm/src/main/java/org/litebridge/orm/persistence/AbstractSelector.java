@@ -1,5 +1,6 @@
 package org.litebridge.orm.persistence;
 
+import jakarta.annotation.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
@@ -8,7 +9,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public abstract class AbstractSelector<T> {
@@ -37,23 +40,45 @@ public abstract class AbstractSelector<T> {
         return new Condition<>(column, new AbstractSelector<T>.SelectorStack());
     }
 
-    protected abstract T get();
-
-    protected Optional<T> getOptional() {
-        return Optional.ofNullable(get());
+    protected Optional<T> one() {
+        return Optional.ofNullable(oneOrNull());
     }
 
-    public abstract List<T> getAll();
+    protected abstract @Nullable T oneOrNull();
+
+    protected T oneOrThrow() {
+        return oneOrThrow(() -> new NoSuchElementException("No record found for query"));
+    }
+
+    protected <X extends Throwable> T oneOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
+        return one().orElseThrow(exceptionSupplier);
+    }
+
+    protected Optional<T> first() {
+        return Optional.ofNullable(oneOrNull());
+    }
+
+    protected abstract @Nullable T firstOrNull();
+
+    protected T firstOrThrow() {
+        return oneOrThrow(() -> new NoSuchElementException("No record found for query"));
+    }
+
+    protected <X extends Throwable> T firstOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
+        return one().orElseThrow(exceptionSupplier);
+    }
+
+    public abstract List<T> list();
     public abstract Stream<T> stream();
 
-    protected Map<String, Object> getRecord() {
+    protected Map<String, Object> getOneRecord(final boolean first) {
         final List<Map<String, Object>> resultList = executeQuery();
 
         if (CollectionUtils.isEmpty(resultList)) {
             return null;
         }
 
-        if (resultList.size() > 1) {
+        if (!first && resultList.size() > 1) {
             throw new IllegalStateException("Expected exactly one result, but got %d".formatted(resultList.size()));
         }
 
@@ -107,16 +132,40 @@ public abstract class AbstractSelector<T> {
             conditions.add(condition);
         }
 
-        public T get() {
-            return AbstractSelector.this.get();
+        public Optional<T> one() {
+            return AbstractSelector.this.one();
         }
 
-        public Optional<T> getOptional() {
-            return AbstractSelector.this.getOptional();
+        public T oneOrNull() {
+            return AbstractSelector.this.oneOrNull();
         }
 
-        public List<T> getAll() {
-            return AbstractSelector.this.getAll();
+        public T oneOrThrow() {
+            return AbstractSelector.this.oneOrThrow();
+        }
+
+        public <X extends Throwable> T oneOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
+            return AbstractSelector.this.oneOrThrow(exceptionSupplier);
+        }
+
+        public Optional<T> first() {
+            return AbstractSelector.this.first();
+        }
+
+        public T firstOrNull() {
+            return AbstractSelector.this.firstOrNull();
+        }
+
+        public T firstOrThrow() {
+            return AbstractSelector.this.firstOrThrow();
+        }
+
+        public <X extends Throwable> T firstOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
+            return AbstractSelector.this.firstOrThrow(exceptionSupplier);
+        }
+
+        public List<T> list() {
+            return AbstractSelector.this.list();
         }
 
         public Stream<T> stream() {

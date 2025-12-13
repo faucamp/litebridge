@@ -55,23 +55,23 @@ public class H2Example {
             litebridge.save(person);
 
             // Retrieve all persons and return a List
-            final List<Person> persons = litebridge.select(Person.class).getAll();
+            final List<Person> persons = litebridge.select(Person.class).list();
             logger.info("All persons (list): " + persons);
 
             // Retrieve a single person with criteria
             final Person alice = litebridge.select(Person.class)
                     .where("name").eq("Alice")
                     .and("surname").eq("Smith")
-                    .get();
-            logger.info("Retrieved person: " + alice);
+                    .oneOrNull();
+            logger.info("Retrieved person (nullable): " + alice);
 
             // Retrieve a single person with criteria using an Optional, and log it
             litebridge.select(Person.class)
                     .where("name").eq("Alice")
                     .and("surname").eq("Smith")
-                    .getOptional()
+                    .one()
                     .ifPresent(p -> logger.info("Retrieved person (Optional): " + p));
-            
+
             // Retrieve oldest adult person with criteria using a Stream
             litebridge.select(Person.class)
                     .where("age").gte(18)

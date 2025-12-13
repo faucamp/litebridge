@@ -1,5 +1,6 @@
 package org.litebridge.orm.sql;
 
+import jakarta.annotation.Nullable;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
 import org.litebridge.orm.persistence.AbstractSelector;
@@ -15,12 +16,17 @@ public final class SqlSelector extends AbstractSelector<Map<String, Object>> {
     }
 
     @Override
-    protected Map<String, Object> get() {
-        return super.getRecord();
+    protected @Nullable Map<String, Object> oneOrNull() {
+        return super.getOneRecord(false);
     }
 
     @Override
-    public List<Map<String, Object>> getAll() {
+    protected @Nullable Map<String, Object> firstOrNull() {
+        return super.getOneRecord(true);
+    }
+
+    @Override
+    public List<Map<String, Object>> list() {
         return super.getAllRecords();
     }
 

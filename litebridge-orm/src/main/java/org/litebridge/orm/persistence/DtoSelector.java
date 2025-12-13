@@ -1,5 +1,6 @@
 package org.litebridge.orm.persistence;
 
+import jakarta.annotation.Nullable;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.convert.TypeConverter;
 import org.litebridge.orm.Table;
@@ -47,17 +48,22 @@ public final class DtoSelector<T> extends AbstractSelector<T> {
     }
 
     @Override
-    protected T get() {
-        return mapToDto(super.getRecord(), databaseProvider.getTypeConverter());
+    protected @Nullable T oneOrNull() {
+        return mapToDto(super.getOneRecord(false), databaseProvider.getTypeConverter());
+    }
+
+    @Override
+    protected @Nullable T firstOrNull() {
+        return mapToDto(super.getOneRecord(true), databaseProvider.getTypeConverter());
     }
 
     /**
-     * Retrieves all matching DTOs from the query result as a list.
+     * Eagerly retrieves all matching DTOs from the query result as a list.
      *
-     * @return a list of DTOs matching the query conditions
+     * @return an unmodifiable list of DTOs matching the query conditions
      */
     @Override
-    public List<T> getAll() {
+    public List<T> list() {
         return stream().toList();
     }
 

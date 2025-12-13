@@ -5,6 +5,7 @@ import org.litebridge.db.api.query.Operator;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -164,12 +165,36 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
          * @return a single matching DTO from the query result
          * @throws IllegalStateException if the query result contains more than one matching DTO
          */
-        public T get() {
-            return selectorStack.get();
+        public Optional<T> one() {
+            return selectorStack.one();
         }
 
-        public Optional<T> getOptional() {
-            return selectorStack.getOptional();
+        public T oneOrNull() {
+            return selectorStack.oneOrNull();
+        }
+
+        public T oneOrThrow() {
+            return selectorStack.oneOrThrow();
+        }
+
+        public <X extends Throwable> T oneOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
+            return selectorStack.oneOrThrow(exceptionSupplier);
+        }
+
+        public Optional<T> first() {
+            return selectorStack.first();
+        }
+
+        public T firstOrNull() {
+            return selectorStack.firstOrNull();
+        }
+
+        public T firstOrThrow() {
+            return selectorStack.firstOrThrow();
+        }
+
+        public <X extends Throwable> T firstOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
+            return selectorStack.firstOrThrow(exceptionSupplier);
         }
 
         /**
@@ -177,8 +202,8 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
          *
          * @return a list of matching DTOs from the query result
          */
-        public List<T> getAll() {
-            return selectorStack.getAll();
+        public List<T> list() {
+            return selectorStack.list();
         }
 
         /**
