@@ -22,6 +22,8 @@ public abstract class AbstractSelector<T> {
     protected final List<org.litebridge.db.api.query.Condition> conditions = new ArrayList<>();
     protected final List<String> orderByColumns = new ArrayList<>();
     protected final TableMetaData tableMetaData;
+    protected Integer offset;
+    protected Integer limit;
 
     public AbstractSelector(final List<String> columns, final TableMetaData tableMetaData, final DatabaseProvider databaseProvider) {
         this.columns = columns;
@@ -75,6 +77,11 @@ public abstract class AbstractSelector<T> {
     public abstract Stream<T> stream();
 
     protected Map<String, Object> getOneRecord(final boolean first) {
+        if (first) {
+            // Set LIMIT since we are only interested in the first record
+            this.limit = 1;
+        }
+
         final List<Map<String, Object>> resultList = executeQuery();
 
         if (CollectionUtils.isEmpty(resultList)) {
@@ -117,7 +124,7 @@ public abstract class AbstractSelector<T> {
         final List<Map<String, Object>> resultList;
 
         try {
-            resultList = databaseProvider.select(tableMetaData, columns, conditions, orderByColumns);
+            resultList = databaseProvider.select(tableMetaData, columns, conditions, orderByColumns, offset, limit);
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute select query", ex);
         }
@@ -130,6 +137,16 @@ public abstract class AbstractSelector<T> {
         return new SelectorStack();
     }
 
+    public SelectorStack offset(final int offset) {
+        this.offset = offset;
+        return new SelectorStack();
+    }
+
+    private SelectorStack limit(final int limit) {
+        this.limit = limit;
+        return new SelectorStack();
+    }
+
     public final class SelectorStack {
 
         public Condition<T> where(final String field) {
@@ -138,6 +155,14 @@ public abstract class AbstractSelector<T> {
 
         public SelectorStack orderBy(final String field) {
             return AbstractSelector.this.orderBy(field);
+        }
+
+        public SelectorStack offset(final int offset) {
+            return AbstractSelector.this.offset(offset);
+        }
+
+        public SelectorStack limit(final int limit) {
+            return AbstractSelector.this.limit(limit);
         }
 
         public void push(final Condition<T> condition) {

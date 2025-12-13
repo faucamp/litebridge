@@ -72,12 +72,6 @@ public class H2Example {
                     .one()
                     .ifPresent(p -> logger.info("Retrieved person (Optional): " + p));
 
-            // Retrieve and log the first person found, ordering by age (i.e. the youngest person)
-            litebridge.select(Person.class)
-                    .orderBy("age")
-                    .first()
-                    .ifPresent(p -> logger.info("First/youngest person: " + p));
-
             // Retrieve oldest adult person with criteria using a Stream
             litebridge.select(Person.class)
                     .where("age").gte(18)
@@ -96,6 +90,20 @@ public class H2Example {
                     .where("eyeColour").eq(null)
                     .stream()
                     .forEach(p -> logger.info("Person without eye colour (eq): " + p));
+
+            // Retrieve and log the first person found, ordering by age (i.e. the youngest person)
+            litebridge.select(Person.class)
+                    .orderBy("age")
+                    .first()
+                    .ifPresent(p -> logger.info("First/youngest person: " + p));
+
+            // Retrieve a single person record with offset
+            litebridge.select(Person.class)
+                    .orderBy("id")
+                    .offset(2)
+                    .limit(1)
+                    .one()
+                    .ifPresent(p -> logger.info("Person fetched with offset/limit: " + p));
 
             // Retrieve a person's details using a lower-level SQL query
             litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")

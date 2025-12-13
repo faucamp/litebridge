@@ -20,7 +20,7 @@ public interface DatabaseProvider {
     @Nullable
     List<Object> update(TableMetaData tableMetaData, Map<String, Object> columnValueMap, LinkedHashMap<String, Object> primaryKey) throws SQLException;
 
-    List<Map<String, Object>> select(TableMetaData tableMetaData, List<String> columns, List<Condition> conditions, List<String> orderBy) throws SQLException;
+    List<Map<String, Object>> select(TableMetaData tableMetaData, List<String> columns, List<Condition> conditions, List<String> orderBy, final Integer offset, final Integer limit) throws SQLException;
 
     @Nonnull
     TypeConverter getTypeConverter();
