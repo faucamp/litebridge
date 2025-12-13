@@ -5,7 +5,6 @@ import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public abstract class AbstractSelector<T> {
+public abstract class AbstractSelector<T> implements Selector<T> {
 
     protected final List<String> columns;
     protected final DatabaseProvider databaseProvider;
@@ -40,34 +39,63 @@ public abstract class AbstractSelector<T> {
      * @return A new {@link Condition} instance representing the condition on the specified field.
      * @throws IllegalArgumentException if there is no column mapped to the given field name in the table.
      */
+    @Override
     public Condition<T> where(final String column) {
-        return new Condition<>(column, new AbstractSelector<T>.SelectorStack());
+        final Condition<T> condition = new Condition<>(column, this);
+        conditions.add(condition);
+        return condition;
     }
 
+    @Override
+    public Selector<T> orderBy(final String column) {
+        orderByColumns.add(column);
+        return this;
+    }
+
+    @Override
+    public Selector<T> offset(final int offset) {
+        this.offset = offset;
+        return this;
+    }
+
+    @Override
+    public Selector<T> limit(final int limit) {
+        this.limit = limit;
+        return this;
+    }
+
+    @Override
     public Optional<T> one() {
         return Optional.ofNullable(oneOrNull());
     }
 
+    @Override
     public abstract @Nullable T oneOrNull();
 
+    @Override
     public T oneOrThrow() {
         return oneOrThrow(() -> new NoSuchElementException("No record found for query"));
     }
 
+    @Override
     public <X extends Throwable> T oneOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
         return one().orElseThrow(exceptionSupplier);
     }
 
+    @Override
     public Optional<T> first() {
         return Optional.ofNullable(firstOrNull());
     }
 
+    @Override
     public abstract @Nullable T firstOrNull();
 
+    @Override
     public T firstOrThrow() {
         return oneOrThrow(() -> new NoSuchElementException("No record found for query"));
     }
 
+    @Override
     public <X extends Throwable> T firstOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
         return one().orElseThrow(exceptionSupplier);
     }
@@ -130,83 +158,5 @@ public abstract class AbstractSelector<T> {
         }
 
         return resultList;
-    }
-
-    public SelectorStack orderBy(final String column) {
-        orderByColumns.add(column);
-        return new SelectorStack();
-    }
-
-    public SelectorStack offset(final int offset) {
-        this.offset = offset;
-        return new SelectorStack();
-    }
-
-    private SelectorStack limit(final int limit) {
-        this.limit = limit;
-        return new SelectorStack();
-    }
-
-    public final class SelectorStack {
-
-        public Condition<T> where(final String field) {
-            return AbstractSelector.this.where(field);
-        }
-
-        public SelectorStack orderBy(final String field) {
-            return AbstractSelector.this.orderBy(field);
-        }
-
-        public SelectorStack offset(final int offset) {
-            return AbstractSelector.this.offset(offset);
-        }
-
-        public SelectorStack limit(final int limit) {
-            return AbstractSelector.this.limit(limit);
-        }
-
-        public void push(final Condition<T> condition) {
-            conditions.add(condition);
-        }
-
-        public Optional<T> one() {
-            return AbstractSelector.this.one();
-        }
-
-        public T oneOrNull() {
-            return AbstractSelector.this.oneOrNull();
-        }
-
-        public T oneOrThrow() {
-            return AbstractSelector.this.oneOrThrow();
-        }
-
-        public <X extends Throwable> T oneOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
-            return AbstractSelector.this.oneOrThrow(exceptionSupplier);
-        }
-
-        public Optional<T> first() {
-            return AbstractSelector.this.first();
-        }
-
-        public T firstOrNull() {
-            return AbstractSelector.this.firstOrNull();
-        }
-
-        public T firstOrThrow() {
-            return AbstractSelector.this.firstOrThrow();
-        }
-
-        public <X extends Throwable> T firstOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
-            return AbstractSelector.this.firstOrThrow(exceptionSupplier);
-        }
-
-        public List<T> list() {
-            return AbstractSelector.this.list();
-        }
-
-        public Stream<T> stream() {
-            return AbstractSelector.this.stream();
-        }
     }
 }

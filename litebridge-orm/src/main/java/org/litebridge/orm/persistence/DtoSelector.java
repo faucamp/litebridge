@@ -46,7 +46,7 @@ public final class DtoSelector<T> extends AbstractSelector<T> {
     }
 
     @Override
-    public AbstractSelector<T>.SelectorStack orderBy(final String field) {
+    public Selector<T> orderBy(final String field) {
         final String column = table.getColumnForFieldName(field).getName();
         return super.orderBy(column);
     }

@@ -3,25 +3,18 @@ package org.litebridge.orm.persistence;
 import jakarta.annotation.Nullable;
 import org.litebridge.db.api.query.Operator;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
 /**
  * Represents a condition in a query, encapsulating column, operator, and operand.
  */
-public class Condition<T> implements org.litebridge.db.api.query.Condition {
+public class Condition<T> extends DelegatingSelectorChain<T> implements org.litebridge.db.api.query.Condition, ConditionClosure<T> {
 
-    private final AbstractSelector<T>.SelectorStack selectorStack;
     private final String column;
     private Operator operator;
     private Object operand;
 
-    public Condition(final String column, final AbstractSelector<T>.SelectorStack selectorStack) {
+    public Condition(final String column, final Selector<T> selector) {
+        super(selector);
         this.column = column;
-        this.selectorStack = selectorStack;
-        selectorStack.push(this);
     }
 
     /**
@@ -31,7 +24,7 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
      * @param value    The operand for the condition.
      * @return A ConditionClosure instance for further chaining.
      */
-    private ConditionClosure condition(final Operator operator, final Object value) {
+    private ConditionClosure<T> condition(final Operator operator, final Object value) {
         this.operand = value;
 
         if (value == null) {
@@ -46,7 +39,7 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
             this.operator = operator;
         }
 
-        return new ConditionClosure();
+        return this;
     }
 
     /**
@@ -55,7 +48,7 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
      * @param value The operand for the condition.
      * @return A ConditionClosure instance for further chaining.
      */
-    public Condition<T>.ConditionClosure eq(final @Nullable Object value) {
+    public ConditionClosure<T> eq(final @Nullable Object value) {
         return condition(Operator.EQ, value);
     }
 
@@ -65,7 +58,7 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
      * @param value The operand for the condition.
      * @return A ConditionClosure instance for further chaining.
      */
-    public Condition<T>.ConditionClosure neq(final @Nullable Object value) {
+    public ConditionClosure<T> neq(final @Nullable Object value) {
         return condition(Operator.NEQ, value);
     }
 
@@ -75,7 +68,7 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
      * @param value The operand for the condition.
      * @return A ConditionClosure instance for further chaining.
      */
-    public Condition<T>.ConditionClosure lt(final Object value) {
+    public ConditionClosure<T> lt(final Object value) {
         return condition(Operator.LT, value);
     }
 
@@ -85,7 +78,7 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
      * @param value The operand for the condition.
      * @return A ConditionClosure instance for further chaining.
      */
-    public Condition<T>.ConditionClosure lte(final Object value) {
+    public ConditionClosure<T> lte(final Object value) {
         return condition(Operator.LTE, value);
     }
 
@@ -95,7 +88,7 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
      * @param value The operand for the condition.
      * @return A ConditionClosure instance for further chaining.
      */
-    public Condition<T>.ConditionClosure gt(final Object value) {
+    public ConditionClosure<T> gt(final Object value) {
         return condition(Operator.GT, value);
     }
 
@@ -105,7 +98,7 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
      * @param value The operand for the condition.
      * @return A ConditionClosure instance for further chaining.
      */
-    public Condition<T>.ConditionClosure gte(final Object value) {
+    public ConditionClosure<T> gte(final Object value) {
         return condition(Operator.GTE, value);
     }
 
@@ -115,7 +108,7 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
      *
      * @return A ConditionClosure instance for further chaining.
      */
-    public Condition<T>.ConditionClosure isNull() {
+    public ConditionClosure<T> isNull() {
         return condition(Operator.IS_NULL, null);
     }
 
@@ -125,8 +118,13 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
      *
      * @return A ConditionClosure instance for further chaining.
      */
-    public Condition<T>.ConditionClosure isNotNull() {
+    public ConditionClosure<T> isNotNull() {
         return condition(Operator.IS_NOT_NULL, null);
+    }
+
+    @Override
+    public Condition<T> and(final String field) {
+        return selector.where(field);
     }
 
     @Override
@@ -142,89 +140,5 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
     @Override
     public Object getValue() {
         return operand;
-    }
-
-    /**
-     * Represents a closure for chaining additional conditions.
-     */
-    public class ConditionClosure {
-
-        /**
-         * Chains an additional condition with the specified DTO field (or table column name, if building using a lower-level SQL query).
-         *
-         * @param field The DTO field name (or table column name, if building using a lower-level SQL query) to apply the condition to.
-         * @return A Condition instance for further chaining.
-         */
-        public Condition<T> and(final String field) {
-            return selectorStack.where(field);
-        }
-
-        public AbstractSelector<T>.SelectorStack orderBy(final String field) {
-            return selectorStack.orderBy(field);
-        }
-
-        public AbstractSelector<T>.SelectorStack offset(final int offset) {
-            return selectorStack.offset(offset);
-        }
-
-        public AbstractSelector<T>.SelectorStack limit(final int limit) {
-            return selectorStack.limit(limit);
-        }
-
-        /**
-         * Returns a single matching DTO from the query result.
-         *
-         * @return a single matching DTO from the query result
-         * @throws IllegalStateException if the query result contains more than one matching DTO
-         */
-        public Optional<T> one() {
-            return selectorStack.one();
-        }
-
-        public T oneOrNull() {
-            return selectorStack.oneOrNull();
-        }
-
-        public T oneOrThrow() {
-            return selectorStack.oneOrThrow();
-        }
-
-        public <X extends Throwable> T oneOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
-            return selectorStack.oneOrThrow(exceptionSupplier);
-        }
-
-        public Optional<T> first() {
-            return selectorStack.first();
-        }
-
-        public T firstOrNull() {
-            return selectorStack.firstOrNull();
-        }
-
-        public T firstOrThrow() {
-            return selectorStack.firstOrThrow();
-        }
-
-        public <X extends Throwable> T firstOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
-            return selectorStack.firstOrThrow(exceptionSupplier);
-        }
-
-        /**
-         * Returns all matching DTOs from the query result.
-         *
-         * @return a list of matching DTOs from the query result
-         */
-        public List<T> list() {
-            return selectorStack.list();
-        }
-
-        /**
-         * Returns a stream of matching DTOs from the query result.
-         *
-         * @return a stream of matching DTOs from the query result
-         */
-        public Stream<T> stream() {
-            return selectorStack.stream();
-        }
     }
 }
