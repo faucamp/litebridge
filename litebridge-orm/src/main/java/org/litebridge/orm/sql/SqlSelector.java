@@ -16,12 +16,12 @@ public final class SqlSelector extends AbstractSelector<Map<String, Object>> {
     }
 
     @Override
-    protected @Nullable Map<String, Object> oneOrNull() {
+    public @Nullable Map<String, Object> oneOrNull() {
         return super.getOneRecord(false);
     }
 
     @Override
-    protected @Nullable Map<String, Object> firstOrNull() {
+    public @Nullable Map<String, Object> firstOrNull() {
         return super.getOneRecord(true);
     }
 

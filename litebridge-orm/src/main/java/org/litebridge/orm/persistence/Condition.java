@@ -150,9 +150,9 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
     public class ConditionClosure {
 
         /**
-         * Chains an additional condition with the specified DTO field.
+         * Chains an additional condition with the specified DTO field (or table column name, if building using a lower-level SQL query).
          *
-         * @param field The DTO field name to apply the condition to.
+         * @param field The DTO field name (or table column name, if building using a lower-level SQL query) to apply the condition to.
          * @return A Condition instance for further chaining.
          */
         public Condition<T> and(final String field) {

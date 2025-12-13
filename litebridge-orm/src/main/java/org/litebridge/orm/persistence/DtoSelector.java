@@ -48,12 +48,12 @@ public final class DtoSelector<T> extends AbstractSelector<T> {
     }
 
     @Override
-    protected @Nullable T oneOrNull() {
+    public @Nullable T oneOrNull() {
         return mapToDto(super.getOneRecord(false), databaseProvider.getTypeConverter());
     }
 
     @Override
-    protected @Nullable T firstOrNull() {
+    public @Nullable T firstOrNull() {
         return mapToDto(super.getOneRecord(true), databaseProvider.getTypeConverter());
     }
 

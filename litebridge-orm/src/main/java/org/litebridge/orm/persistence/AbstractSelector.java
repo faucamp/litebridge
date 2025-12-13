@@ -40,31 +40,31 @@ public abstract class AbstractSelector<T> {
         return new Condition<>(column, new AbstractSelector<T>.SelectorStack());
     }
 
-    protected Optional<T> one() {
+    public Optional<T> one() {
         return Optional.ofNullable(oneOrNull());
     }
 
-    protected abstract @Nullable T oneOrNull();
+    public abstract @Nullable T oneOrNull();
 
-    protected T oneOrThrow() {
+    public T oneOrThrow() {
         return oneOrThrow(() -> new NoSuchElementException("No record found for query"));
     }
 
-    protected <X extends Throwable> T oneOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
+    public <X extends Throwable> T oneOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
         return one().orElseThrow(exceptionSupplier);
     }
 
-    protected Optional<T> first() {
-        return Optional.ofNullable(oneOrNull());
+    public Optional<T> first() {
+        return Optional.ofNullable(firstOrNull());
     }
 
-    protected abstract @Nullable T firstOrNull();
+    public abstract @Nullable T firstOrNull();
 
-    protected T firstOrThrow() {
+    public T firstOrThrow() {
         return oneOrThrow(() -> new NoSuchElementException("No record found for query"));
     }
 
-    protected <X extends Throwable> T firstOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
+    public <X extends Throwable> T firstOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
         return one().orElseThrow(exceptionSupplier);
     }
 

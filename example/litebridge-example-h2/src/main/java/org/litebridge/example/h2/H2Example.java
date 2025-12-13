@@ -72,6 +72,9 @@ public class H2Example {
                     .one()
                     .ifPresent(p -> logger.info("Retrieved person (Optional): " + p));
 
+            // Retrieve and log the first person found
+            litebridge.select(Person.class).first().ifPresent(p -> logger.info("First person: " + p));
+
             // Retrieve oldest adult person with criteria using a Stream
             litebridge.select(Person.class)
                     .where("age").gte(18)
