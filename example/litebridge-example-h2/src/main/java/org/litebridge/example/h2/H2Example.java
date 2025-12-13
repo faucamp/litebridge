@@ -1,11 +1,11 @@
 package org.litebridge.example.h2;
 
 import org.flywaydb.core.Flyway;
-import org.litebridge.orm.Litebridge;
 import org.litebridge.db.h2.H2DatabaseProvider;
 import org.litebridge.example.common.dto.Account;
 import org.litebridge.example.common.dto.Person;
 import org.litebridge.example.common.mapping.DtoTableMap;
+import org.litebridge.orm.Litebridge;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -65,6 +65,13 @@ public class H2Example {
                     .get();
             logger.info("Retrieved person: " + alice);
 
+            // Retrieve a single person with criteria using an Optional, and log it
+            litebridge.select(Person.class)
+                    .where("name").eq("Alice")
+                    .and("surname").eq("Smith")
+                    .getOptional()
+                    .ifPresent(p -> logger.info("Retrieved person (Optional): " + p));
+            
             // Retrieve oldest adult person with criteria using a Stream
             litebridge.select(Person.class)
                     .where("age").gte(18)
@@ -85,11 +92,11 @@ public class H2Example {
                     .forEach(p -> logger.info("Person without eye colour (eq): " + p));
 
             // Retrieve a person's details using a lower-level SQL query
-            litebridge.select("FIRST_NAME", "SURNAME").from("LB", "PERSON")
+            litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
                     .where("AGE").gt(18)
                     .and("AGE").lt(25)
                     .stream()
-                    .forEach(p -> logger.info("Person with age > 18 (SQL): " + p));
+                    .forEach(p -> logger.info("SQL result: Selected data for PERSON record: " + p));
 
         } catch (Exception e) {
             e.printStackTrace();

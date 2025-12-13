@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public abstract class AbstractSelector<T> {
@@ -37,6 +38,11 @@ public abstract class AbstractSelector<T> {
     }
 
     protected abstract T get();
+
+    protected Optional<T> getOptional() {
+        return Optional.ofNullable(get());
+    }
+
     public abstract List<T> getAll();
     public abstract Stream<T> stream();
 
@@ -103,6 +109,10 @@ public abstract class AbstractSelector<T> {
 
         public T get() {
             return AbstractSelector.this.get();
+        }
+
+        public Optional<T> getOptional() {
+            return AbstractSelector.this.getOptional();
         }
 
         public List<T> getAll() {

@@ -4,6 +4,7 @@ import jakarta.annotation.Nullable;
 import org.litebridge.db.api.query.Operator;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -165,6 +166,10 @@ public class Condition<T> implements org.litebridge.db.api.query.Condition {
          */
         public T get() {
             return selectorStack.get();
+        }
+
+        public Optional<T> getOptional() {
+            return selectorStack.getOptional();
         }
 
         /**
