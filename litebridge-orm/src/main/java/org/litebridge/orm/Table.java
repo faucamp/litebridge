@@ -67,8 +67,8 @@ public class Table {
         changeTracker.trackDtoFields(dto, fieldColumnMap.keySet());
     }
 
-    public @Nullable Field getFieldForColumnName(final String columnName) {
-        return columnNameFieldMap.get(columnName);
+    public @Nonnull Field getFieldForColumnName(final String columnName) {
+        return ObjectUtils.requireNonNull(columnNameFieldMap.get(columnName), "No field for column '" + columnName + "' in schema '" + metaData.getSchema() + "', table '" + metaData.getTable() + "'");
     }
 
     public void syncPersistedDto(final Object dto) {

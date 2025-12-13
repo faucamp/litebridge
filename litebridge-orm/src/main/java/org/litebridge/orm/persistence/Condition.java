@@ -11,12 +11,12 @@ import java.util.stream.Stream;
  */
 public class Condition<T> implements org.litebridge.db.api.query.Condition {
 
-    private final Selector<T>.SelectorStack selectorStack;
+    private final AbstractSelector<T>.SelectorStack selectorStack;
     private final String column;
     private Operator operator;
     private Object operand;
 
-    public Condition(final String column, final Selector<T>.SelectorStack selectorStack) {
+    public Condition(final String column, final AbstractSelector<T>.SelectorStack selectorStack) {
         this.column = column;
         this.selectorStack = selectorStack;
         selectorStack.push(this);

@@ -58,13 +58,6 @@ public class H2Example {
             final List<Person> persons = litebridge.select(Person.class).getAll();
             logger.info("All persons (list): " + persons);
 
-            // Retrieve oldest person with criteria using a Stream
-            litebridge.select(Person.class)
-                    .where("age").gte(18)
-                    .stream()
-                    .max(Comparator.comparing(Person::getAge))
-                    .ifPresent(p -> logger.info("Oldest person: " + p));
-
             // Retrieve a single person with criteria
             final Person alice = litebridge.select(Person.class)
                     .where("name").eq("Alice")
@@ -72,17 +65,32 @@ public class H2Example {
                     .get();
             logger.info("Retrieved person: " + alice);
 
-            // Retrieve Persons that have an eye colour set
+            // Retrieve oldest adult person with criteria using a Stream
+            litebridge.select(Person.class)
+                    .where("age").gte(18)
+                    .stream()
+                    .max(Comparator.comparing(Person::getAge))
+                    .ifPresent(p -> logger.info("Oldest person: " + p));
+
+            // Retrieve and log Persons that have an eye colour set
             litebridge.select(Person.class)
                     .where("eyeColour").isNotNull()
                     .stream()
                     .forEach(p -> logger.info("Person with eye colour (isNotNull): " + p));
 
-            // Retrieve Persons that do not have an eye colour set, using eq(null) instead of isNull()
+            // Retrieve and log Persons that do not have an eye colour set, using eq(null) instead of isNull()
             litebridge.select(Person.class)
                     .where("eyeColour").eq(null)
                     .stream()
                     .forEach(p -> logger.info("Person without eye colour (eq): " + p));
+
+            // Retrieve a person's details using a lower-level SQL query
+            litebridge.select("FIRST_NAME", "SURNAME").from("LB", "PERSON")
+                    .where("AGE").gt(18)
+                    .and("AGE").lt(25)
+                    .stream()
+                    .forEach(p -> logger.info("Person with age > 18 (SQL): " + p));
+
         } catch (Exception e) {
             e.printStackTrace();
         }

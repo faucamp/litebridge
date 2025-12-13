@@ -1,8 +1,11 @@
 package org.litebridge.commons;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public final class CollectionUtils {
@@ -82,5 +85,25 @@ public final class CollectionUtils {
         }
 
         return map;
+    }
+
+    /**
+     * Converts the given array to a {@link List}. If the array is null or empty,
+     * an immutable empty list is returned. Otherwise, a list containing the
+     * elements of the array is returned.
+     *
+     * @param array the array to convert to a list; may be null
+     * @return a non-null list containing the elements of the array, or an immutable empty list if the array is null or empty
+     */
+    public static @Nonnull <T> List<T> toList(final @Nullable T... array) {
+        final List<T> list;
+
+        if (array == null || array.length == 0) {
+            list = Collections.emptyList();
+        } else {
+            list = List.of(array);
+        }
+
+        return list;
     }
 }
