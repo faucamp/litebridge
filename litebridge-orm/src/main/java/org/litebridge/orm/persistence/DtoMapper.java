@@ -1,7 +1,6 @@
 package org.litebridge.orm.persistence;
 
 import org.litebridge.db.api.convert.TypeConverter;
-import org.litebridge.orm.Table;
 
 import java.lang.reflect.Field;
 import java.util.Map;

@@ -2,8 +2,8 @@ package org.litebridge.orm.api.select.sql;
 
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
-import org.litebridge.orm.Table;
-import org.litebridge.orm.TableRegistry;
+import org.litebridge.orm.persistence.Table;
+import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.Collections;
 import java.util.List;

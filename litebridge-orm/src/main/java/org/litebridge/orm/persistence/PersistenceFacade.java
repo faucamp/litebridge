@@ -4,8 +4,6 @@ import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.api.Column;
 import org.litebridge.db.api.DatabaseProvider;
-import org.litebridge.orm.Table;
-import org.litebridge.orm.TableRegistry;
 import org.litebridge.tracking.ChangedField;
 import org.litebridge.tracking.TrackedDto;
 import org.slf4j.Logger;

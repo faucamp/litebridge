@@ -1,4 +1,4 @@
-package org.litebridge.orm;
+package org.litebridge.orm.api.spec;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;

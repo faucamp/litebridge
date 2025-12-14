@@ -16,7 +16,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.litebridge.orm.TableSpec.t;
+import static org.litebridge.orm.api.spec.TableSpec.t;
 
 public class H2Example {
 

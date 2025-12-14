@@ -1,4 +1,4 @@
-package org.litebridge.orm;
+package org.litebridge.orm.persistence;
 
 import java.util.Collections;
 import java.util.Set;

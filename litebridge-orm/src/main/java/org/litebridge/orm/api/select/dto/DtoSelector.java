@@ -6,7 +6,7 @@ import org.litebridge.commons.StringUtils;
 import org.litebridge.db.api.Column;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.convert.TypeConverter;
-import org.litebridge.orm.Table;
+import org.litebridge.orm.persistence.Table;
 import org.litebridge.orm.api.select.AbstractSelector;
 import org.litebridge.orm.api.select.Condition;
 import org.litebridge.orm.api.select.OrderByChain;

@@ -8,7 +8,11 @@ import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
 import org.litebridge.orm.api.select.dto.DtoSelector;
 import org.litebridge.orm.api.select.sql.SqlSelectorStart;
+import org.litebridge.orm.api.spec.ColumnSpec;
+import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.persistence.PersistenceFacade;
+import org.litebridge.orm.persistence.Table;
+import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ChangeTracker;
 
 import java.lang.reflect.Field;
