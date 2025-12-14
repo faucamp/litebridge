@@ -9,7 +9,7 @@ final class WeakRefSet<T> {
     private final Set<T> set;
 
     public WeakRefSet() {
-        this.set = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<T, Boolean>()));
+        this.set = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>()));
     }
 
     public boolean add(T element) {
