@@ -1,6 +1,7 @@
 package org.litebridge.orm;
 
 import jakarta.annotation.Nullable;
+import org.litebridge.commons.ObjectUtils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,7 +12,12 @@ public class TableRegistry {
     private Map<String, Table> tablesByName = new ConcurrentHashMap<>();
 
     public @Nullable Table getTable(final Class<?> dtoClass) {
+        ObjectUtils.requireNonNull(dtoClass, "DTO class cannot be null");
         return tables.get(dtoClass);
+    }
+
+    public Table getTableOrThrow(final Class<?> dtoClass) throws IllegalArgumentException {
+        return ObjectUtils.requireNonNull(getTable(dtoClass), "DTO class not registered: '%s'".formatted(dtoClass.getName()));
     }
 
     public @Nullable Table getTable(final String tableName) {

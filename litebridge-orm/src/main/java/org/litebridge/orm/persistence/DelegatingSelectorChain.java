@@ -7,26 +7,26 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public abstract class DelegatingSelectorChain<T> implements SelectorChain<T> {
+public abstract class DelegatingSelectorChain<T, CT extends ConditionTerminal<T, CT>> implements SelectorChain<T, CT> {
 
-    protected final Selector<T> selector;
+    protected final Selector<T, CT> selector;
 
-    public DelegatingSelectorChain(final Selector<T> selector) {
+    public DelegatingSelectorChain(final Selector<T, CT> selector) {
         this.selector = selector;
     }
 
     @Override
-    public OrderByChain<T> orderBy(final String... columns) {
+    public OrderByChain<T, CT> orderBy(final String... columns) {
         return selector.orderBy(columns);
     }
 
     @Override
-    public SelectorChain<T> offset(final int offset) {
+    public SelectorChain<T, CT> offset(final int offset) {
         return selector.offset(offset);
     }
 
     @Override
-    public SelectorChain<T> limit(final int limit) {
+    public SelectorChain<T, CT> limit(final int limit) {
         return selector.limit(limit);
     }
 

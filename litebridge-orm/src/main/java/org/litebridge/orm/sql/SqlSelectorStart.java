@@ -27,7 +27,7 @@ public final class SqlSelectorStart {
 
     public SqlSelector from(final String schema, final String table) {
         final TableMetaData tableMetaData = getTableMetaData(schema, table);
-        return new SqlSelector(columns, tableMetaData, databaseProvider);
+        return new SqlSelector(columns, tableMetaData, tableRegistry, databaseProvider);
     }
 
     private TableMetaData getTableMetaData(final String schema, final String table) {

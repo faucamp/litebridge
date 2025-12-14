@@ -23,7 +23,7 @@ import java.util.stream.Stream;
  *
  * @param <T> The type of DTO that this selector will operate on.
  */
-public final class DtoSelector<T> extends AbstractSelector<T> {
+public final class DtoSelector<T> extends AbstractSelector<T, DtoConditionTerminal<T>> implements DtoConditionTerminal<T> {
 
     private final Class<T> dtoClass;
     private final Table table;
@@ -32,6 +32,11 @@ public final class DtoSelector<T> extends AbstractSelector<T> {
         super(List.copyOf(table.getMetaData().getColumns().keySet()), table.getMetaData(), databaseProvider);
         this.dtoClass = dtoClass;
         this.table = table;
+    }
+
+    @Override
+    public Condition<T, DtoConditionTerminal<T>> and(final String field) {
+        return where(field);
     }
 
     /**
@@ -44,7 +49,7 @@ public final class DtoSelector<T> extends AbstractSelector<T> {
      * @throws IllegalArgumentException if there is no column mapped to the given field name in the table.
      */
     @Override
-    public Condition<T> where(final String field) {
+    public Condition<T, DtoConditionTerminal<T>> where(final String field) {
         if (StringUtils.isBlank(field)) {
             throw new IllegalArgumentException("Field name cannot be empty");
         }
@@ -54,7 +59,7 @@ public final class DtoSelector<T> extends AbstractSelector<T> {
     }
 
     @Override
-    public OrderByChain<T> orderBy(final String... fields) {
+    public OrderByChain<T, DtoConditionTerminal<T>> orderBy(final String... fields) {
         if (CollectionUtils.isEmpty(fields)) {
             throw new IllegalArgumentException("At least one field must be specified for ordering");
         }
@@ -97,6 +102,11 @@ public final class DtoSelector<T> extends AbstractSelector<T> {
     public Stream<T> stream() {
         return super.streamRecords()
                 .map(row -> mapToDto(row, databaseProvider.getTypeConverter()));
+    }
+
+    @Override
+    protected Condition<T, DtoConditionTerminal<T>> createCondition(final String column) {
+        return new DtoCondition<>(column, this, this);
     }
 
     private T mapToDto(final Map<String, Object> row, final TypeConverter typeConverter) {

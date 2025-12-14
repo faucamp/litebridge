@@ -3,11 +3,11 @@ package org.litebridge.orm;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
-import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.db.api.Column;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
 import org.litebridge.orm.persistence.DtoSelector;
+import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.orm.sql.SqlSelectorStart;
 import org.litebridge.tracking.ChangeTracker;
 
@@ -72,12 +72,7 @@ public class Litebridge {
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */
     public <T> DtoSelector<T> select(final Class<T> dtoClass) {
-        final Table table = tableRegistry.getTable(dtoClass);
-
-        if (table == null) {
-            throw new IllegalArgumentException("DTO class not registered: '%s'".formatted(dtoClass.getName()));
-        }
-
+        final Table table = tableRegistry.getTableOrThrow(dtoClass);
         return new DtoSelector<>(dtoClass, table, databaseProvider);
     }
 

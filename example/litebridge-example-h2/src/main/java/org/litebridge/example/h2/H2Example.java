@@ -117,8 +117,15 @@ public class H2Example {
                     .where("AGE").gt(18)
                     .and("AGE").lt(25)
                     .stream()
-                    .forEach(p -> logger.info("SQL result: Selected data for PERSON record: " + p));
+                    .forEach(record -> logger.info("SQL result: Selected data for PERSON record: " + record));
 
+            // Retrieve a person's details using a lower-level SQL query and map it to a DTO
+            litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
+                    .where("AGE").gt(18)
+                    .and("AGE").lt(25)
+                    .mapToDto(Person.class)
+                    .stream()
+                    .forEach(p -> logger.info("SQL result: Selected data for PERSON record: " + p));
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -1,30 +1,34 @@
 package org.litebridge.orm.persistence;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.litebridge.db.api.query.Operator;
 
 /**
  * Represents a condition in a query, encapsulating column, operator, and operand.
  */
-public class Condition<T> extends DelegatingSelectorChain<T> implements org.litebridge.db.api.query.Condition, ConditionClosure<T> {
+public abstract class Condition<T, CT extends ConditionTerminal<T, CT>> extends DelegatingSelectorChain<T, CT> implements org.litebridge.db.api.query.Condition {
 
+    @Nonnull
+    private final CT conditionTerminal;
     private final String column;
     private Operator operator;
     private Object operand;
 
-    public Condition(final String column, final Selector<T> selector) {
+    public Condition(final String column, final Selector<T, CT> selector, final CT conditionTerminal) {
         super(selector);
         this.column = column;
+        this.conditionTerminal = conditionTerminal;
     }
 
     /**
-     * Creates a condition closure for the specified operator and value.
+     * Creates a condition terminal for the specified operator and value.
      *
      * @param operator The operator for the condition.
      * @param value    The operand for the condition.
-     * @return A ConditionClosure instance for further chaining.
+     * @return A {@link ConditionTerminal} instance for further chaining.
      */
-    private ConditionClosure<T> condition(final Operator operator, final Object value) {
+    private CT condition(final Operator operator, final Object value) {
         this.operand = value;
 
         if (value == null) {
@@ -39,92 +43,87 @@ public class Condition<T> extends DelegatingSelectorChain<T> implements org.lite
             this.operator = operator;
         }
 
-        return this;
+        return conditionTerminal;
     }
 
     /**
-     * Creates a condition closure for equality comparison with the specified value.
+     * Creates a condition terminal for equality comparison with the specified value.
      *
      * @param value The operand for the condition.
-     * @return A ConditionClosure instance for further chaining.
+     * @return A {@link ConditionTerminal} instance for further chaining.
      */
-    public ConditionClosure<T> eq(final @Nullable Object value) {
+    public CT eq(final @Nullable Object value) {
         return condition(Operator.EQ, value);
     }
 
     /**
-     * Creates a condition closure for inequality comparison with the specified value.
+     * Creates a condition terminal for inequality comparison with the specified value.
      *
      * @param value The operand for the condition.
-     * @return A ConditionClosure instance for further chaining.
+     * @return A {@link ConditionTerminal} instance for further chaining.
      */
-    public ConditionClosure<T> neq(final @Nullable Object value) {
+    public CT neq(final @Nullable Object value) {
         return condition(Operator.NEQ, value);
     }
 
     /**
-     * Creates a condition closure for less-than comparison with the specified value.
+     * Creates a condition terminal for less-than comparison with the specified value.
      *
      * @param value The operand for the condition.
-     * @return A ConditionClosure instance for further chaining.
+     * @return A {@link ConditionTerminal} instance for further chaining.
      */
-    public ConditionClosure<T> lt(final Object value) {
+    public CT lt(final Object value) {
         return condition(Operator.LT, value);
     }
 
     /**
-     * Creates a condition closure for less-than-or-equal comparison with the specified value.
+     * Creates a condition terminal for less-than-or-equal comparison with the specified value.
      *
      * @param value The operand for the condition.
-     * @return A ConditionClosure instance for further chaining.
+     * @return A {@link ConditionTerminal} instance for further chaining.
      */
-    public ConditionClosure<T> lte(final Object value) {
+    public CT lte(final Object value) {
         return condition(Operator.LTE, value);
     }
 
     /**
-     * Creates a condition closure for greater-than comparison with the specified value.
+     * Creates a condition terminal for greater-than comparison with the specified value.
      *
      * @param value The operand for the condition.
-     * @return A ConditionClosure instance for further chaining.
+     * @return A {@link ConditionTerminal} instance for further chaining.
      */
-    public ConditionClosure<T> gt(final Object value) {
+    public CT gt(final Object value) {
         return condition(Operator.GT, value);
     }
 
     /**
-     * Creates a condition closure for greater-than-or-equal comparison with the specified value.
+     * Creates a condition terminal for greater-than-or-equal comparison with the specified value.
      *
      * @param value The operand for the condition.
-     * @return A ConditionClosure instance for further chaining.
+     * @return A {@link ConditionTerminal} instance for further chaining.
      */
-    public ConditionClosure<T> gte(final Object value) {
+    public CT gte(final Object value) {
         return condition(Operator.GTE, value);
     }
 
     /**
-     * Creates a condition closure for null comparison.
+     * Creates a condition terminal for null comparison.
      * Equivalent to {@code eq(null)}.
      *
-     * @return A ConditionClosure instance for further chaining.
+     * @return A {@link ConditionTerminal} instance for further chaining.
      */
-    public ConditionClosure<T> isNull() {
+    public CT isNull() {
         return condition(Operator.IS_NULL, null);
     }
 
     /**
-     * Creates a condition closure for not null comparison.
+     * Creates a condition terminal for not null comparison.
      * Equivalent to {@code neq(null)}.
      *
-     * @return A ConditionClosure instance for further chaining.
+     * @return A {@link ConditionTerminal} instance for further chaining.
      */
-    public ConditionClosure<T> isNotNull() {
+    public CT isNotNull() {
         return condition(Operator.IS_NOT_NULL, null);
-    }
-
-    @Override
-    public Condition<T> and(final String field) {
-        return selector.where(field);
     }
 
     @Override

@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public abstract class AbstractSelector<T> implements Selector<T> {
+public abstract class AbstractSelector<T, CT extends ConditionTerminal<T, CT>> implements Selector<T, CT> {
 
     protected final List<String> columns;
     protected final DatabaseProvider databaseProvider;
@@ -42,18 +42,18 @@ public abstract class AbstractSelector<T> implements Selector<T> {
      * @throws IllegalArgumentException if there is no column mapped to the given field name in the table.
      */
     @Override
-    public Condition<T> where(final String column) {
+    public Condition<T, CT> where(final String column) {
         if (StringUtils.isBlank(column)) {
             throw new IllegalArgumentException("Column name cannot be empty");
         }
 
-        final Condition<T> condition = new Condition<>(column, this);
+        final Condition<T, CT> condition = createCondition(column);
         conditions.add(condition);
         return condition;
     }
 
     @Override
-    public OrderByChain<T> orderBy(final String... columns) {
+    public OrderByChain<T, CT> orderBy(final String... columns) {
         if (CollectionUtils.isEmpty(columns)) {
             throw new IllegalArgumentException("At least one column/field must be specified for ordering");
         }
@@ -62,7 +62,7 @@ public abstract class AbstractSelector<T> implements Selector<T> {
     }
 
     @Override
-    public Selector<T> offset(final int offset) {
+    public Selector<T, CT> offset(final int offset) {
         if (offset < 0) {
             throw new IllegalArgumentException("Offset must be non-negative: " + offset);
         }
@@ -72,7 +72,7 @@ public abstract class AbstractSelector<T> implements Selector<T> {
     }
 
     @Override
-    public Selector<T> limit(final int limit) {
+    public Selector<T, CT> limit(final int limit) {
         if (limit < 1) {
             throw new IllegalArgumentException("Limit must be positive: " + limit);
         }
@@ -120,6 +120,8 @@ public abstract class AbstractSelector<T> implements Selector<T> {
     public abstract List<T> list();
 
     public abstract Stream<T> stream();
+
+    protected abstract Condition<T, CT> createCondition(final String column);
 
     protected Map<String, Object> getOneRecord(final boolean first) {
         if (first) {
@@ -177,7 +179,7 @@ public abstract class AbstractSelector<T> implements Selector<T> {
         return resultList;
     }
 
-    final class OrderByChainImpl implements OrderByChain<T> {
+    final class OrderByChainImpl implements OrderByChain<T, CT> {
 
         private final String[] columns;
 
@@ -186,15 +188,15 @@ public abstract class AbstractSelector<T> implements Selector<T> {
         }
 
         @Override
-        public OrderByClosure<T> asc() {
+        public OrderByTerminal<T, CT> asc() {
             addOrderBys(true);
-            return new OrderByClosure<>(AbstractSelector.this);
+            return new OrderByTerminal<>(AbstractSelector.this);
         }
 
         @Override
-        public OrderByClosure<T> desc() {
+        public OrderByTerminal<T, CT> desc() {
             addOrderBys(false);
-            return new OrderByClosure<>(AbstractSelector.this);
+            return new OrderByTerminal<>(AbstractSelector.this);
         }
 
         private void addOrderBys(final boolean asc) {
