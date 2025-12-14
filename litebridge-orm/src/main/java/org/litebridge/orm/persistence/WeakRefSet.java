@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-public final class WeakRefSet<T> {
+final class WeakRefSet<T> {
 
     private final Set<T> set;
 
