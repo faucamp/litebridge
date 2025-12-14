@@ -13,15 +13,13 @@ public interface OrderByChain<T, CT extends ConditionTerminal<T, CT>> {
 
     /**
      * Specifies an ascending order for the current ordering clause in a query.
-     * This method is part of a fluent interface for building query conditions.
      *
      * @return an {@link OrderByTerminal} instance with ascending order applied
      */
     OrderByTerminal<T, CT> asc();
 
     /**
-     * Specifies an descending order for the current ordering clause in a query.
-     * This method is part of a fluent interface for building query conditions.
+     * Specifies a descending order for the current ordering clause in a query.
      *
      * @return an {@link OrderByTerminal} instance with descending order applied
      */
