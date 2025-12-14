@@ -61,13 +61,10 @@ public class Litebridge {
     }
 
     /**
-     * Selects a specific Data Transfer Object (DTO) type for database query operations.
-     * This method returns a generic {@link DtoSelector} instance that facilitates querying
-     * and retrieving data associated with the specified DTO class.
+     * Selects a registered Data Transfer Object (DTO) type for database query operations.
      *
      * @param <T>      The type of the DTO to select.
-     * @param dtoClass The class of the DTO to be queried.
-     *                 Must be a registered DTO class in the table registry.
+     * @param dtoClass The class of the DTO to be queried, which must already be registered.
      * @return A {@link DtoSelector} instance for querying and retrieving data for the specified DTO class.
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */

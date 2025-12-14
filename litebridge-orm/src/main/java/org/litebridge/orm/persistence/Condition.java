@@ -47,7 +47,7 @@ public abstract class Condition<T, CT extends ConditionTerminal<T, CT>> extends 
     }
 
     /**
-     * Creates a condition terminal for equality comparison with the specified value.
+     * Equals
      *
      * @param value The operand for the condition.
      * @return A {@link ConditionTerminal} instance for further chaining.
@@ -57,7 +57,7 @@ public abstract class Condition<T, CT extends ConditionTerminal<T, CT>> extends 
     }
 
     /**
-     * Creates a condition terminal for inequality comparison with the specified value.
+     * Not equals
      *
      * @param value The operand for the condition.
      * @return A {@link ConditionTerminal} instance for further chaining.
@@ -77,7 +77,7 @@ public abstract class Condition<T, CT extends ConditionTerminal<T, CT>> extends 
     }
 
     /**
-     * Creates a condition terminal for less-than-or-equal comparison with the specified value.
+     * Less than or equals
      *
      * @param value The operand for the condition.
      * @return A {@link ConditionTerminal} instance for further chaining.
@@ -87,7 +87,7 @@ public abstract class Condition<T, CT extends ConditionTerminal<T, CT>> extends 
     }
 
     /**
-     * Creates a condition terminal for greater-than comparison with the specified value.
+     * Greater than
      *
      * @param value The operand for the condition.
      * @return A {@link ConditionTerminal} instance for further chaining.
@@ -97,7 +97,7 @@ public abstract class Condition<T, CT extends ConditionTerminal<T, CT>> extends 
     }
 
     /**
-     * Creates a condition terminal for greater-than-or-equal comparison with the specified value.
+     * Greater than or equals
      *
      * @param value The operand for the condition.
      * @return A {@link ConditionTerminal} instance for further chaining.
@@ -107,7 +107,8 @@ public abstract class Condition<T, CT extends ConditionTerminal<T, CT>> extends 
     }
 
     /**
-     * Creates a condition terminal for null comparison.
+     * Null comparison.
+     * <p>
      * Equivalent to {@code eq(null)}.
      *
      * @return A {@link ConditionTerminal} instance for further chaining.
@@ -117,7 +118,8 @@ public abstract class Condition<T, CT extends ConditionTerminal<T, CT>> extends 
     }
 
     /**
-     * Creates a condition terminal for not null comparison.
+     * Not null comparison.
+     * <p>
      * Equivalent to {@code neq(null)}.
      *
      * @return A {@link ConditionTerminal} instance for further chaining.
