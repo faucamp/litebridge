@@ -1,4 +1,4 @@
-package org.litebridge.orm.persistence;
+package org.litebridge.orm.api.select;
 
 /**
  * Fluent selector pipeline used to configure and execute a read/query operation.

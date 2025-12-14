@@ -1,4 +1,7 @@
-package org.litebridge.orm.persistence;
+package org.litebridge.orm.api.select.dto;
+
+import org.litebridge.orm.api.select.Condition;
+import org.litebridge.orm.api.select.Selector;
 
 /**
  * Represents a condition in a query, encapsulating column, operator, and operand.

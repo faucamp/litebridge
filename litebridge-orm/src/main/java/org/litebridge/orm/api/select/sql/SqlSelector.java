@@ -1,4 +1,4 @@
-package org.litebridge.orm.sql;
+package org.litebridge.orm.api.select.sql;
 
 import jakarta.annotation.Nullable;
 import org.litebridge.commons.ObjectUtils;
@@ -7,10 +7,10 @@ import org.litebridge.db.api.TableMetaData;
 import org.litebridge.orm.Table;
 import org.litebridge.orm.TableRegistry;
 import org.litebridge.orm.exception.NonUniqueResultException;
-import org.litebridge.orm.persistence.AbstractSelector;
-import org.litebridge.orm.persistence.Condition;
+import org.litebridge.orm.api.select.AbstractSelector;
+import org.litebridge.orm.api.select.Condition;
 import org.litebridge.orm.persistence.DtoMapper;
-import org.litebridge.orm.persistence.SelectorTerminal;
+import org.litebridge.orm.api.select.SelectorTerminal;
 
 import java.util.List;
 import java.util.Map;

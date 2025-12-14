@@ -1,4 +1,4 @@
-package org.litebridge.orm.persistence;
+package org.litebridge.orm.api.select.dto;
 
 import jakarta.annotation.Nullable;
 import org.litebridge.commons.CollectionUtils;
@@ -7,6 +7,9 @@ import org.litebridge.db.api.Column;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.convert.TypeConverter;
 import org.litebridge.orm.Table;
+import org.litebridge.orm.api.select.AbstractSelector;
+import org.litebridge.orm.api.select.Condition;
+import org.litebridge.orm.api.select.OrderByChain;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;

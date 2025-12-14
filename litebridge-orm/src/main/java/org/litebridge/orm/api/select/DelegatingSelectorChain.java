@@ -1,4 +1,4 @@
-package org.litebridge.orm.persistence;
+package org.litebridge.orm.api.select;
 
 import jakarta.annotation.Nullable;
 

@@ -1,4 +1,4 @@
-package org.litebridge.orm.persistence;
+package org.litebridge.orm.api.select;
 
 /**
  * The OrderByTerminal class extends the functionality of the DelegatingSelectorChain

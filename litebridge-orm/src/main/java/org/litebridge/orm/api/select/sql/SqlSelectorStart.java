@@ -1,4 +1,4 @@
-package org.litebridge.orm.sql;
+package org.litebridge.orm.api.select.sql;
 
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;

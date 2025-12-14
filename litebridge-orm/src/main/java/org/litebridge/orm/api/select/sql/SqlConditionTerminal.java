@@ -1,8 +1,8 @@
-package org.litebridge.orm.sql;
+package org.litebridge.orm.api.select.sql;
 
-import org.litebridge.orm.persistence.Condition;
-import org.litebridge.orm.persistence.ConditionTerminal;
-import org.litebridge.orm.persistence.SelectorTerminal;
+import org.litebridge.orm.api.select.Condition;
+import org.litebridge.orm.api.select.ConditionTerminal;
+import org.litebridge.orm.api.select.SelectorTerminal;
 
 import java.util.Map;
 

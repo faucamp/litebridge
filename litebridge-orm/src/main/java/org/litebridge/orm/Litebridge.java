@@ -6,9 +6,9 @@ import org.litebridge.commons.StringUtils;
 import org.litebridge.db.api.Column;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
-import org.litebridge.orm.persistence.DtoSelector;
+import org.litebridge.orm.api.select.dto.DtoSelector;
+import org.litebridge.orm.api.select.sql.SqlSelectorStart;
 import org.litebridge.orm.persistence.PersistenceFacade;
-import org.litebridge.orm.sql.SqlSelectorStart;
 import org.litebridge.tracking.ChangeTracker;
 
 import java.lang.reflect.Field;
