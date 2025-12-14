@@ -4,6 +4,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.litebridge.db.api.convert.TypeConverter;
 import org.litebridge.db.api.query.Condition;
+import org.litebridge.db.api.query.OrderBy;
 
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
@@ -20,7 +21,7 @@ public interface DatabaseProvider {
     @Nullable
     List<Object> update(TableMetaData tableMetaData, Map<String, Object> columnValueMap, LinkedHashMap<String, Object> primaryKey) throws SQLException;
 
-    List<Map<String, Object>> select(TableMetaData tableMetaData, List<String> columns, List<Condition> conditions, List<String> orderBy, final Integer offset, final Integer limit) throws SQLException;
+    List<Map<String, Object>> select(TableMetaData tableMetaData, List<String> columns, List<Condition> conditions, List<OrderBy> orderBy, final Integer offset, final Integer limit) throws SQLException;
 
     @Nonnull
     TypeConverter getTypeConverter();

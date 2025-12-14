@@ -2,8 +2,10 @@ package org.litebridge.orm.persistence;
 
 import jakarta.annotation.Nullable;
 import org.litebridge.commons.CollectionUtils;
+import org.litebridge.commons.StringUtils;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
+import org.litebridge.db.api.query.OrderBy;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -19,7 +21,7 @@ public abstract class AbstractSelector<T> implements Selector<T> {
     protected final List<String> columns;
     protected final DatabaseProvider databaseProvider;
     protected final List<org.litebridge.db.api.query.Condition> conditions = new ArrayList<>();
-    protected final List<String> orderByColumns = new ArrayList<>();
+    protected final List<OrderBy> orderByParams = new ArrayList<>();
     protected final TableMetaData tableMetaData;
     protected Integer offset;
     protected Integer limit;
@@ -41,25 +43,40 @@ public abstract class AbstractSelector<T> implements Selector<T> {
      */
     @Override
     public Condition<T> where(final String column) {
+        if (StringUtils.isBlank(column)) {
+            throw new IllegalArgumentException("Column name cannot be empty");
+        }
+
         final Condition<T> condition = new Condition<>(column, this);
         conditions.add(condition);
         return condition;
     }
 
     @Override
-    public Selector<T> orderBy(final String column) {
-        orderByColumns.add(column);
-        return this;
+    public OrderByChain<T> orderBy(final String... columns) {
+        if (CollectionUtils.isEmpty(columns)) {
+            throw new IllegalArgumentException("At least one column/field must be specified for ordering");
+        }
+
+        return new OrderByChainImpl(columns);
     }
 
     @Override
     public Selector<T> offset(final int offset) {
+        if (offset < 0) {
+            throw new IllegalArgumentException("Offset must be non-negative: " + offset);
+        }
+
         this.offset = offset;
         return this;
     }
 
     @Override
     public Selector<T> limit(final int limit) {
+        if (limit < 1) {
+            throw new IllegalArgumentException("Limit must be positive: " + limit);
+        }
+
         this.limit = limit;
         return this;
     }
@@ -152,11 +169,38 @@ public abstract class AbstractSelector<T> implements Selector<T> {
         final List<Map<String, Object>> resultList;
 
         try {
-            resultList = databaseProvider.select(tableMetaData, columns, conditions, orderByColumns, offset, limit);
+            resultList = databaseProvider.select(tableMetaData, columns, conditions, orderByParams, offset, limit);
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute select query", ex);
         }
 
         return resultList;
+    }
+
+    final class OrderByChainImpl implements OrderByChain<T> {
+
+        private final String[] columns;
+
+        public OrderByChainImpl(final String... columns) {
+            this.columns = columns;
+        }
+
+        @Override
+        public OrderByClosure<T> asc() {
+            addOrderBys(true);
+            return new OrderByClosure<>(AbstractSelector.this);
+        }
+
+        @Override
+        public OrderByClosure<T> desc() {
+            addOrderBys(false);
+            return new OrderByClosure<>(AbstractSelector.this);
+        }
+
+        private void addOrderBys(final boolean asc) {
+            for (String column : columns) {
+                orderByParams.add(new OrderBy(column, asc));
+            }
+        }
     }
 }

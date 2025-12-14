@@ -1,11 +1,15 @@
 package org.litebridge.orm.persistence;
 
 import jakarta.annotation.Nullable;
+import org.litebridge.commons.CollectionUtils;
+import org.litebridge.commons.StringUtils;
+import org.litebridge.db.api.Column;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.convert.TypeConverter;
 import org.litebridge.orm.Table;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -41,14 +45,26 @@ public final class DtoSelector<T> extends AbstractSelector<T> {
      */
     @Override
     public Condition<T> where(final String field) {
+        if (StringUtils.isBlank(field)) {
+            throw new IllegalArgumentException("Field name cannot be empty");
+        }
+
         final String column = table.getColumnForFieldName(field).getName();
         return super.where(column);
     }
 
     @Override
-    public Selector<T> orderBy(final String field) {
-        final String column = table.getColumnForFieldName(field).getName();
-        return super.orderBy(column);
+    public OrderByChain<T> orderBy(final String... fields) {
+        if (CollectionUtils.isEmpty(fields)) {
+            throw new IllegalArgumentException("At least one field must be specified for ordering");
+        }
+
+        final String[] columns = Arrays.stream(fields)
+                .map(table::getColumnForFieldName)
+                .map(Column::getName)
+                .toArray(String[]::new);
+
+        return super.orderBy(columns);
     }
 
     @Override

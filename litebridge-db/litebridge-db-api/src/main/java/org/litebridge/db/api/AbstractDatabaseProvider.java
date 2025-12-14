@@ -7,6 +7,7 @@ import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.api.convert.TypeConverter;
 import org.litebridge.db.api.query.Condition;
 import org.litebridge.db.api.query.Operator;
+import org.litebridge.db.api.query.OrderBy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +129,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public List<Map<String, Object>> select(final TableMetaData tableMetaData, final List<String> columns, final List<Condition> conditions, final List<String> orderBy, final Integer offset, final Integer limit) throws SQLException {
+    public List<Map<String, Object>> select(final TableMetaData tableMetaData, final List<String> columns, final List<Condition> conditions, final List<OrderBy> orderBy, final Integer offset, final Integer limit) throws SQLException {
         final StringBuilder sql = new StringBuilder("SELECT ")
                 .append(String.join(", ", columns))
                 .append(" FROM ")
@@ -143,7 +144,9 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
 
         if (!CollectionUtils.isEmpty(orderBy)) {
-            sql.append(" ORDER BY ").append(String.join(", ", orderBy));
+            sql.append(" ORDER BY ");
+            orderBy.forEach(ob -> sql.append(ob.column()).append(ob.asc() ? " ASC" : " DESC").append(", "));
+            sql.delete(sql.length() - 2, sql.length());
         }
 
         if (limit != null) {

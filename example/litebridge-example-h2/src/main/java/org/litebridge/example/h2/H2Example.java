@@ -91,15 +91,22 @@ public class H2Example {
                     .stream()
                     .forEach(p -> logger.info("Person without eye colour (eq): " + p));
 
-            // Retrieve and log the first person found, ordering by age (i.e. the youngest person)
+            // Retrieve and log the first person found, ordering by surname & age, ascending
             litebridge.select(Person.class)
-                    .orderBy("age")
+                    .orderBy("surname", "age").asc()
                     .first()
-                    .ifPresent(p -> logger.info("First/youngest person: " + p));
+                    .ifPresent(p -> logger.info("First person record ordered by surname, age ASC: " + p));
+
+            // Retrieve and log the first person found, ordering by descending surname and ascending age
+            // - demonstrates how to use then() to chain multiple orderBy() calls
+            litebridge.select(Person.class)
+                    .orderBy("surname").desc().then("age").asc()
+                    .first()
+                    .ifPresent(p -> logger.info("First person record ordered by surname DESC, age ASC: " + p));
 
             // Retrieve a single person record with offset
             litebridge.select(Person.class)
-                    .orderBy("id")
+                    .orderBy("id").asc()
                     .offset(2)
                     .limit(1)
                     .one()

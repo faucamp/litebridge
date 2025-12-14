@@ -16,8 +16,8 @@ public abstract class DelegatingSelectorChain<T> implements SelectorChain<T> {
     }
 
     @Override
-    public SelectorChain<T> orderBy(final String column) {
-        return selector.orderBy(column);
+    public OrderByChain<T> orderBy(final String... columns) {
+        return selector.orderBy(columns);
     }
 
     @Override
