@@ -41,13 +41,13 @@ public class PersistenceFacade {
             throw new IllegalArgumentException("DTO class not registered: '%s'".formatted(dto.getClass().getName()));
         }
 
-        final TrackedDto trackedDto = table.getTrackedDto(dto);
+        final TrackedDto<?> trackedDto = table.getTrackedDto(dto);
 
         if (trackedDto == null) {
             throw new IllegalArgumentException("DTO not tracked: '%s'".formatted(dto.toString()));
         }
 
-        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields(dto);
+        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields();
 
         if (CollectionUtils.isEmpty(changedFields)) {
             LOGGER.debug("No changed fields found for DTO: {}", dto);
@@ -56,11 +56,7 @@ public class PersistenceFacade {
 
         if (LOGGER.isDebugEnabled()) {
             final StringBuilder sb = new StringBuilder("Changed fields for DTO: ").append(dto).append("\n");
-
-            changedFields.entrySet().forEach(entry -> {
-                sb.append("\t").append(entry.getKey()).append(" = ").append(entry.getValue().value()).append("\n");
-            });
-
+            changedFields.forEach((key, value) -> sb.append("\t").append(key).append(" = ").append(value.value()).append("\n"));
             LOGGER.debug(sb.toString());
         }
 

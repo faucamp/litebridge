@@ -54,6 +54,8 @@ public class H2Example {
             person.setEyeColour("brown");
             litebridge.save(person);
 
+            if (false) {
+
             // Retrieve all persons and return a List
             final List<Person> persons = litebridge.select(Person.class).list();
             logger.info("All persons (list): " + persons);
@@ -126,6 +128,13 @@ public class H2Example {
                     .mapToDto(Person.class)
                     .stream()
                     .forEach(p -> logger.info("SQL result: Selected data for PERSON record: " + p));
+        }
+
+            // Select an account with a foreign key reference to a person
+            litebridge.select(Account.class)
+                    .where("owner").eq(person.getId())
+                    .one()
+                    .ifPresent(a -> logger.info("Account with owner ID: " + a.getId()));
         } catch (Exception e) {
             e.printStackTrace();
         }

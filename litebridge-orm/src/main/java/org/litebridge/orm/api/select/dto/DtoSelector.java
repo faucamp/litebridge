@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.select.dto;
 
 import jakarta.annotation.Nullable;
+import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.api.Column;
@@ -126,7 +127,14 @@ public final class DtoSelector<T> extends AbstractSelector<T, DtoConditionTermin
 
         for (final String column : row.keySet()) {
             final Field field = table.getFieldForColumnName(column);
-            final Object convertedValue = typeConverter.convert(row.get(column), field.getType());
+            final Object convertedValue;
+
+            if (ClassUtils.isBasicType(field.getType())) {
+                convertedValue = typeConverter.convert(row.get(column), field.getType());
+            } else {
+                // Dealing with an embedded DTO
+                throw new UnsupportedOperationException("Embedded DTOs are not supported yet");
+            }
 
             try {
                 field.set(dto, convertedValue);

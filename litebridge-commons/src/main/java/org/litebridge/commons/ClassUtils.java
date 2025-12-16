@@ -3,7 +3,9 @@ package org.litebridge.commons;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class ClassUtils {
 
@@ -17,8 +19,8 @@ public final class ClassUtils {
      * @param type the class from which to retrieve all declared fields
      * @return a list of all fields declared in the given class and its superclasses
      */
-    public static List<Field> getAllFields(final Class<?> type) {
-        final List<Field> fields = new ArrayList<>();
+    public static Set<Field> getAllFields(final Class<?> type) {
+        final Set<Field> fields = new HashSet<>();
         // Add fields declared in the current class
         fields.addAll(Arrays.asList(type.getDeclaredFields()));
 

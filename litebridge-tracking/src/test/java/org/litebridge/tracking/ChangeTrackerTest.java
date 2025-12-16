@@ -37,10 +37,10 @@ public class ChangeTrackerTest {
         // Then
         assertEquals(dto, result);
 
-        final TrackedDto trackedDto = changeTracker.getTrackedDto(dto);
+        final TrackedDto<TestDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
 
-        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields(dto);
+        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields();
         assertNotNull(changedFields);
         assertEquals(2, changedFields.size());
 
@@ -89,7 +89,7 @@ public class ChangeTrackerTest {
 
         final TrackedDto trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
-        assertTrue(trackedDto.getChangedFields(dto).isEmpty());
+        assertTrue(trackedDto.getChangedFields().isEmpty());
     }
 
     @Test
@@ -123,10 +123,10 @@ public class ChangeTrackerTest {
         // Then
         assertEquals(dto, result);
 
-        final TrackedDto trackedDto = changeTracker.getTrackedDto(dto);
+        final TrackedDto<TestDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
 
-        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields(dto);
+        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields();
         assertNotNull(changedFields);
         assertEquals(2, changedFields.size());
 
@@ -151,6 +151,76 @@ public class ChangeTrackerTest {
 
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> changeTracker.trackDtoFields(dto, trackedFields));
+    }
+
+    /**
+     * Tests tracking changes to a complex DTO with nested child DTOs.
+     * In this case, the child DTO is already present when the parent DTO is registered for tracking.
+     */
+    @Test
+    public void trackDto_nested_nestedDtoAlreadyPresent() {
+        // Given
+        final ContainerDto dto = new ContainerDto();
+        dto.setParentField1(1L);
+        final TestDto nestedDto = new TestDto();
+        nestedDto.setField1("NestedDtoField1");
+        dto.setNestedDto(nestedDto);
+
+        // When
+        final ContainerDto result = changeTracker.trackDto(dto);
+
+        // Then
+        assertEquals(dto, result);
+        nestedDto.setField1("NestedDtoField1_Changed");
+
+        final TrackedDto<ContainerDto> trackedDto = changeTracker.getTrackedDto(dto);
+        assertNotNull(trackedDto);
+
+        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields();
+        assertNotNull(changedFields);
+        assertEquals(1, changedFields.size());
+        assertTrue(changedFields.containsKey("nestedDto"));
+        assertEquals(nestedDto, changedFields.get("nestedDto").value());
+
+        final TrackedDto<TestDto> nestedTrackedDto = changeTracker.getTrackedDto(nestedDto);
+        final Map<String, ChangedField> nestedChangedFields = nestedTrackedDto.getChangedFields();
+        assertNotNull(nestedChangedFields);
+        assertEquals(1, nestedChangedFields.size());
+    }
+
+    /**
+     * Tests tracking changes to a complex DTO with nested child DTOs.
+     * In this case, the child DTO is not present when the parent DTO is registered for tracking.
+     */
+    @Test
+    public void trackDto_nested_nestedDtoNotPresent() {
+        // Given
+        final ContainerDto dto = new ContainerDto();
+        dto.setParentField1(1L);
+
+        // When
+        final ContainerDto result = changeTracker.trackDto(dto);
+        final TestDto nestedDto = new TestDto();
+        nestedDto.setField1("NestedDtoField1");
+        dto.setNestedDto(nestedDto);
+
+        // Then
+        assertEquals(dto, result);
+        nestedDto.setField1("NestedDtoField1_Changed");
+
+        final TrackedDto<ContainerDto> trackedDto = changeTracker.getTrackedDto(dto);
+        assertNotNull(trackedDto);
+
+        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields();
+        assertNotNull(changedFields);
+        assertEquals(1, changedFields.size());
+        assertTrue(changedFields.containsKey("nestedDto"));
+        assertEquals(nestedDto, changedFields.get("nestedDto").value());
+
+        final TrackedDto<TestDto> nestedTrackedDto = changeTracker.getTrackedDto(nestedDto);
+        final Map<String, ChangedField> nestedChangedFields = nestedTrackedDto.getChangedFields();
+        assertNotNull(nestedChangedFields);
+        assertEquals(1, nestedChangedFields.size());
     }
 
     // Helper DTO class for testing
@@ -181,6 +251,28 @@ public class ChangeTrackerTest {
             } catch (NoSuchFieldException e) {
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    static class ContainerDto {
+
+        private long parentField1;
+        private TestDto nestedDto;
+
+        public long getParentField1() {
+            return parentField1;
+        }
+
+        public void setParentField1(final long parentField1) {
+            this.parentField1 = parentField1;
+        }
+
+        public TestDto getNestedDto() {
+            return nestedDto;
+        }
+
+        public void setNestedDto(final TestDto nestedDto) {
+            this.nestedDto = nestedDto;
         }
     }
 }

@@ -59,7 +59,7 @@ public class Table {
         return ObjectUtils.requireNonNull(fieldNameColumnMap.get(columnName), "No column '" + columnName + "' in table '" + metaData.getTable() + "'");
     }
 
-    public @Nullable TrackedDto getTrackedDto(final Object dto) {
+    public <DTO> @Nullable TrackedDto<DTO> getTrackedDto(final DTO dto) {
         return changeTracker.getTrackedDto(dto);
     }
 
@@ -73,11 +73,8 @@ public class Table {
 
     public void syncPersistedDto(final Object dto) {
         persistedDtos.add(dto);
-        final TrackedDto trackedDto = changeTracker.getTrackedDto(dto);
-
-        if (trackedDto != null) {
-            trackedDto.snapshot(dto, fieldColumnMap.keySet(), true);
-        }
+        final TrackedDto<?> trackedDto = changeTracker.getTrackedDto(dto);
+        trackedDto.snapshot(dto, fieldColumnMap.keySet(), true);
     }
 
     public boolean isPersistedDto(final Object dto) {

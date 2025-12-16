@@ -1,9 +1,12 @@
 package org.litebridge.tracking;
 
 
-import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
+import org.litebridge.commons.ObjectUtils;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,13 +15,25 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class TrackedDto {
+public class TrackedDto<T> {
 
+    private final WeakReference<T> dtoRef;
+    private final Consumer<Object> trackDtoCallback;
     private List<FieldSnapshot> fieldSnapshots;
     private Map<String, ChangedField> changedFields;
+
+    public TrackedDto(final T dto, final Consumer<Object> trackDtoCallback) {
+        this.dtoRef = new WeakReference<>(ObjectUtils.requireNonNull(dto, "DTO cannot be null"));
+        this.trackDtoCallback = ObjectUtils.requireNonNull(trackDtoCallback, "No \"track DTO\" callback provided");
+    }
+
+    public @Nonnull T getDto() {
+        return ObjectUtils.requireNonNull(dtoRef.get(), "DTO object has been garbage collected: " + this);
+    }
 
     public void snapshot(final Object dto, final Set<Field> fields, final boolean overwrite) {
         if (fieldSnapshots != null) {
@@ -52,12 +67,11 @@ public class TrackedDto {
             } else {
                 fieldSnapshots.add(new FieldSnapshot(field, getFieldHash(dto, field)));
 
-                // Snapshot nested DTOs
-//                final org.litebridge.dto.TrackedField trackedField = field.getAnnotation(TrackedField.class);
+                if (Collection.class.isAssignableFrom(field.getType())) {
+                    // Snapshot nested collection
+                    final Collection<?> collection = (Collection<?>) getFieldValue(this, field);
 
-//                if (Collection.class.isAssignableFrom(field.getType())) {
-//                    final Collection<?> collection = (Collection<?>) getFieldValue(field);
-//
+                    throw new UnsupportedOperationException("Collection tracking is not yet implemented");
 //                    if (!CollectionUtils.isEmpty(collection)) {
 //                        for (Object listItem : (Collection<?>) getFieldValue(field)) {
 //                            if (ChangeTrackingDto.class.isAssignableFrom(listItem.getClass())) {
@@ -66,19 +80,31 @@ public class TrackedDto {
 //                            }
 //                        }
 //                    }
-//                } else if (StringUtils.isBlank(trackedField.dbColumnName())
-//                        && ChangeTrackingDto.class.isAssignableFrom(field.getType())) {
-//                    final ChangeTrackingDto nestedDto = (ChangeTrackingDto) getFieldValue(field);
-//
-//                    if (nestedDto != null) {
-//                        nestedDto.snapshot();
-//                    }
-//                }
+                } else if (!ClassUtils.isBasicType(field.getType())) {
+                    // Snapshot nested DTO
+                    final Object nestedDto = getFieldValue(dto, field);
+
+                    if (nestedDto != null) {
+                        trackDtoCallback.accept(nestedDto);
+                    }
+                }
             }
         });
     }
 
-    public @Nullable Map<String, ChangedField> getChangedFields(Object dto) {
+    public void snapshotEmpty(final Set<Field> fields) {
+        if (fieldSnapshots != null) {
+            throw new IllegalStateException("Field snapshots already taken for object: " + this);
+        }
+
+
+        fieldSnapshots = new ArrayList<>();
+        fields.forEach(field -> fieldSnapshots.add(new FieldSnapshot(field, 0)));
+    }
+
+    public @Nonnull Map<String, ChangedField> getChangedFields() {
+        final Object dto = getDto();
+
         if (CollectionUtils.isEmpty(changedFields)) {
             if (fieldSnapshots == null) {
                 throw new IllegalStateException("Field snapshots not taken for object: " + dto);
@@ -87,6 +113,18 @@ public class TrackedDto {
             changedFields = fieldSnapshots.stream()
                     .filter(fieldSnapshot -> {
                         final int currentFieldValueHash = getFieldHash(dto, fieldSnapshot.field());
+
+                        if (currentFieldValueHash != fieldSnapshot.hash()) {
+                            // The value has changed; update internal DTO tracking if required
+                            if (currentFieldValueHash != 0 && ClassFieldCache.isNestedDtoField(fieldSnapshot.field())) {
+                                // This nested DTO field was null previously, so we need to track the new value
+                                final Object nestedDto = getFieldValue(dto, fieldSnapshot.field());
+                                trackDtoCallback.accept(nestedDto);
+                            }
+
+
+                        }
+
                         return currentFieldValueHash != fieldSnapshot.hash();
                     })
                     .map(fieldSnapshot -> new ChangedField(fieldSnapshot.field().getName(), getFieldValue(dto, fieldSnapshot.field()), fieldSnapshot.originalMapSnapshot()))
@@ -100,47 +138,33 @@ public class TrackedDto {
         return changedFields;
     }
 
-//    private void snapshotEmpty() {
-//        if (fieldSnapshots != null) {
-//            throw new IllegalStateException("Field snapshots already taken for object: " + this);
-//        }
-//
-//        fieldSnapshots = new LinkedList<>();
-//        ClassUtil.getAllFields(getClass()).stream()
-//                .filter(field -> field.getAnnotation(TrackedField.class) != null)
-//                .forEach(field -> fieldSnapshots.add(new org.litebridge.dto.FieldSnapshot(field, 0)));
-//    }
-
-//    private static int getChangeTrackingDtoHash(final ChangeTrackingDto changeTrackingDto) {
-//        return ClassUtil.getAllFields(changeTrackingDto.getClass()).stream()
-//                .filter(field -> field.getAnnotation(TrackedField.class) != null)
-//                .reduce(0, (hash, field) -> hash + getFieldHash(changeTrackingDto, field), Integer::sum);
-//    }
-
     private static int getFieldHash(final Object instance, Field field) {
         return getValueHash(getFieldValue(instance, field));
     }
 
-    private static int getValueHash(Object fieldValue) {
+    private static int getValueHash(final Object fieldValue) {
         if (fieldValue == null) {
             return 0;
-        }
-//        else if (ChangeTrackingDto.class.isAssignableFrom(fieldValue.getClass())) {
-//            return getChangeTrackingDtoHash((ChangeTrackingDto) fieldValue);
-//        }
-        else if (fieldValue instanceof Collection) {
+        } else if (ClassUtils.isBasicType(fieldValue.getClass())) {
+            return fieldValue.hashCode();
+        } else if (fieldValue instanceof Collection) {
             final Collection<Object> collection = (Collection<Object>) fieldValue;
 
             if (collection.isEmpty()) {
                 return 0;
             } else {
                 return collection.stream()
-                        .map(item -> getValueHash(item))
+                        .map(TrackedDto::getValueHash)
                         .reduce(0, Integer::sum);
             }
         } else {
-            return fieldValue.hashCode();
+            return getDtoHash(fieldValue);
         }
+    }
+
+    private static int getDtoHash(final @Nonnull Object dto) {
+        return ClassFieldCache.getFields(dto).stream()
+                .reduce(0, (hash, field) -> hash + getFieldHash(dto, field), Integer::sum);
     }
 
     private static Object getFieldValue(final Object instance, final Field field) {
