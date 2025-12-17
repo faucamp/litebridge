@@ -1,10 +1,12 @@
 package org.litebridge.commons;
 
+import jakarta.annotation.Nonnull;
+
 import java.lang.reflect.Field;
-import java.util.ArrayList;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public final class ClassUtils {
@@ -19,7 +21,7 @@ public final class ClassUtils {
      * @param type the class from which to retrieve all declared fields
      * @return a list of all fields declared in the given class and its superclasses
      */
-    public static Set<Field> getAllFields(final Class<?> type) {
+    public static Set<Field> getAllFields(@Nonnull final Class<?> type) {
         final Set<Field> fields = new HashSet<>();
         // Add fields declared in the current class
         fields.addAll(Arrays.asList(type.getDeclaredFields()));
@@ -43,7 +45,7 @@ public final class ClassUtils {
      * @return the {@code Field} object representing the specified field if found
      * @throws IllegalArgumentException if the field cannot be found in the specified class or its superclasses
      */
-    public static Field getField(final Class<?> type, final String fieldName) {
+    public static Field getField(@Nonnull final Class<?> type, @Nonnull final String fieldName) {
         try {
             return type.getDeclaredField(fieldName);
         } catch (NoSuchFieldException ex) {
@@ -69,12 +71,28 @@ public final class ClassUtils {
      * @param type the {@code Class} object to check for being a basic type
      * @return {@code true} if the provided class type is considered a basic type, {@code false} otherwise
      */
-    public static boolean isBasicType(final Class<?> type) {
+    public static boolean isBasicType(@Nonnull final Class<?> type) {
         return type.isPrimitive()
                 || type.isEnum()
                 || CharSequence.class.isAssignableFrom(type)
                 || Number.class.isAssignableFrom(type)
                 || Boolean.class.isAssignableFrom(type)
                 || byte[].class.equals(type);
+    }
+
+    public static Class<?> getGenericType(@Nonnull final Field field) {
+        final Type genericFieldType = field.getGenericType();
+
+        if (genericFieldType instanceof ParameterizedType) {
+            final ParameterizedType parameterizedType = (ParameterizedType) genericFieldType;
+            // Get the actual type arguments (e.g., String)
+            final Type[] fieldArgTypes = parameterizedType.getActualTypeArguments();
+
+            if (!CollectionUtils.isEmpty(fieldArgTypes) && fieldArgTypes[0] instanceof Class) {
+                return (Class<?>) fieldArgTypes[0];
+            }
+        }
+
+        throw new IllegalArgumentException("Cannot determine generic type for field '%s'".formatted(field.getName()));
     }
 }

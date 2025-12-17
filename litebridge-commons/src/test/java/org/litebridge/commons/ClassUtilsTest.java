@@ -5,32 +5,36 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ClassUtilsTest {
 
     @Test
     void getAllFields() {
         // When
-        final List<Field> result = ClassUtils.getAllFields(TestDto.class);
+        final Set<Field> result = ClassUtils.getAllFields(TestDto.class);
 
         // Then
         assertEquals(2, result.size());
-        assertEquals("name", result.get(0).getName());
-        assertEquals("age", result.get(1).getName());
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("name")));
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("age")));
     }
 
     @Test
     void getAllFields_inheritance() {
         // When
-        final List<Field> result = ClassUtils.getAllFields(ChildTestDto.class);
+        final Set<Field> result = ClassUtils.getAllFields(ChildTestDto.class);
 
         // Then
         assertEquals(3, result.size());
-        assertEquals("active", result.get(0).getName());
-        assertEquals("name", result.get(1).getName());
-        assertEquals("age", result.get(2).getName());
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("active")));
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("name")));
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("age")));
     }
 
     @Test
@@ -206,9 +210,44 @@ class ClassUtilsTest {
         assertTrue(result);
     }
 
+    @Test
+    void getGenericType() {
+        // Given
+        final Field listField = ClassUtils.getField(TestDtoWithList.class, "list");
+
+        // When
+        final Class<?> result = ClassUtils.getGenericType(listField);
+
+        // Then
+        assertEquals(String.class, result);
+    }
+
+    @Test
+    void getGenericType_nonGenericField() {
+        // Given
+        final Field listField = ClassUtils.getField(TestDtoWithList.class, "rawList");
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getGenericType(listField));
+    }
+
+    @Test
+    void getGenericType_basicField() {
+        // Given
+        final Field listField = ClassUtils.getField(TestDto.class, "name");
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getGenericType(listField));
+    }
+
     static class TestDto {
         private String name;
         private int age;
+    }
+
+    static class TestDtoWithList {
+        private List<String> list;
+        private List rawList;
     }
 
     static class ChildTestDto extends TestDto {
