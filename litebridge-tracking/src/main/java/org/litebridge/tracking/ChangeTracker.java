@@ -5,7 +5,6 @@ import org.litebridge.commons.ObjectUtils;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -106,22 +105,13 @@ public final class ChangeTracker {
         }
 
         final TrackedDto<T> trackedDto = new TrackedDto<>(dto, this::trackNestedDto);
-        final Set<Field> dtoFields = ClassFieldCache.getFields(dto);
-
-        if (!dtoFields.containsAll(trackedFields)) {
-            final List<String> missingFields = trackedFields.stream()
-                    .filter(field -> !dtoFields.contains(field))
-                    .map(Field::getName)
-                    .toList();
-            throw new IllegalArgumentException("Requested tracked fields do not exist in the DTO: " + missingFields);
-        }
 
         if (snapshotEmpty) {
             // Create an empty snapshot (useful for highlighting "all fields are new" in newly created nested DTOs)
             trackedDto.snapshotEmpty(trackedFields);
         } else {
             // Default behaviour
-            trackedDto.snapshot(dto, trackedFields, false);
+            trackedDto.snapshot(trackedFields, false);
         }
 
         trackedDtos.put(dto, trackedDto);

@@ -5,6 +5,7 @@ import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.api.Column;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.tracking.ChangedField;
+import org.litebridge.tracking.ChangedFields;
 import org.litebridge.tracking.TrackedDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,16 +48,16 @@ public class PersistenceFacade {
             throw new IllegalArgumentException("DTO not tracked: '%s'".formatted(dto.toString()));
         }
 
-        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields();
+        final ChangedFields changedFields = trackedDto.getChangedFields();
 
-        if (CollectionUtils.isEmpty(changedFields)) {
+        if (changedFields.isEmpty()) {
             LOGGER.debug("No changed fields found for DTO: {}", dto);
             return;
         }
 
         if (LOGGER.isDebugEnabled()) {
             final StringBuilder sb = new StringBuilder("Changed fields for DTO: ").append(dto).append("\n");
-            changedFields.forEach((key, value) -> sb.append("\t").append(key).append(" = ").append(value.value()).append("\n"));
+            changedFields.forEach(changedField -> sb.append("\t").append(changedField.name()).append(" = ").append(changedField.value()).append("\n"));
             LOGGER.debug(sb.toString());
         }
 
@@ -64,7 +65,7 @@ public class PersistenceFacade {
 
         for (Column column : table.getMetaData().getColumns().values()) {
             final String fieldName = table.getFieldForColumnName(column.getName()).getName();
-            final ChangedField changedField = changedFields.get(fieldName);
+            final ChangedField changedField = changedFields.get(fieldName).orElseThrow(() -> new IllegalStateException("Missing changed field '" + fieldName + "' for column: " + column.getName()));
             final Object value;
             final boolean basicType;
 

@@ -74,7 +74,7 @@ public class Table {
     public void syncPersistedDto(final Object dto) {
         persistedDtos.add(dto);
         final TrackedDto<?> trackedDto = changeTracker.getTrackedDto(dto);
-        trackedDto.snapshot(dto, fieldColumnMap.keySet(), true);
+        trackedDto.snapshot(fieldColumnMap.keySet(), true);
     }
 
     public boolean isPersistedDto(final Object dto) {

@@ -1,10 +1,14 @@
 package org.litebridge.tracking;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 public class ChangeTrackerTest {
 
@@ -31,7 +34,7 @@ public class ChangeTrackerTest {
 
         // When
         final TestDto result = changeTracker.trackDto(dto, trackedFields);
-        dto.setField1("TestName");
+        dto.setField1("TestValue");
         dto.setField2(42);
 
         // Then
@@ -40,19 +43,17 @@ public class ChangeTrackerTest {
         final TrackedDto<TestDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
 
-        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields();
+        final ChangedFields changedFields = trackedDto.getChangedFields();
         assertNotNull(changedFields);
         assertEquals(2, changedFields.size());
-
-        changedFields.forEach((fieldName, changedField) -> {
-            if ("field1".equals(fieldName)) {
-                assertEquals("TestName", changedField.value());
-            } else if ("field2".equals(fieldName)) {
-                assertEquals(42, changedField.value());
-            } else {
-                fail("Unexpected field name: " + fieldName);
-            }
-        });
+        changedFields.get("field1")
+                .ifPresentOrElse(
+                        changedField -> assertEquals("TestValue", changedField.value()),
+                        Assertions::fail);
+        changedFields.get("field2")
+                .ifPresentOrElse(
+                        changedField -> assertEquals(42, changedField.value()),
+                        Assertions::fail);
     }
 
     @Test
@@ -73,6 +74,16 @@ public class ChangeTrackerTest {
 
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> changeTracker.trackDto(dto, trackedFields));
+    }
+
+    @Test
+    public void trackDto_fieldType_invalidField() throws Exception {
+        // Given
+        final TestDto dto = new TestDto();
+        final Set<Field> invalidFields = Set.of(ContainerDto.class.getDeclaredField("parentField1"));
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> changeTracker.trackDtoFields(dto, invalidFields));
     }
 
     @Test
@@ -117,7 +128,7 @@ public class ChangeTrackerTest {
 
         // When
         final TestDto result = changeTracker.trackDtoFields(dto, trackedFields);
-        dto.setField1("TestName");
+        dto.setField1("TestValue");
         dto.setField2(42);
 
         // Then
@@ -126,19 +137,17 @@ public class ChangeTrackerTest {
         final TrackedDto<TestDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
 
-        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields();
+        final ChangedFields changedFields = trackedDto.getChangedFields();
         assertNotNull(changedFields);
         assertEquals(2, changedFields.size());
-
-        changedFields.forEach((fieldName, changedField) -> {
-            if ("field1".equals(fieldName)) {
-                assertEquals("TestName", changedField.value());
-            } else if ("field2".equals(fieldName)) {
-                assertEquals(42, changedField.value());
-            } else {
-                fail("Unexpected field name: " + fieldName);
-            }
-        });
+        changedFields.get("field1")
+                .ifPresentOrElse(
+                        changedField -> assertEquals("TestValue", changedField.value()),
+                        Assertions::fail);
+        changedFields.get("field2")
+                .ifPresentOrElse(
+                        changedField -> assertEquals(42, changedField.value()),
+                        Assertions::fail);
     }
 
     @Test
@@ -176,14 +185,14 @@ public class ChangeTrackerTest {
         final TrackedDto<ContainerDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
 
-        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields();
+        final ChangedFields changedFields = trackedDto.getChangedFields();
         assertNotNull(changedFields);
         assertEquals(1, changedFields.size());
-        assertTrue(changedFields.containsKey("nestedDto"));
-        assertEquals(nestedDto, changedFields.get("nestedDto").value());
+        assertTrue(changedFields.contains("nestedDto"));
+        assertEquals(nestedDto, changedFields.get("nestedDto").orElseThrow().value());
 
         final TrackedDto<TestDto> nestedTrackedDto = changeTracker.getTrackedDto(nestedDto);
-        final Map<String, ChangedField> nestedChangedFields = nestedTrackedDto.getChangedFields();
+        final ChangedFields nestedChangedFields = nestedTrackedDto.getChangedFields();
         assertNotNull(nestedChangedFields);
         assertEquals(1, nestedChangedFields.size());
     }
@@ -211,16 +220,101 @@ public class ChangeTrackerTest {
         final TrackedDto<ContainerDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
 
-        final Map<String, ChangedField> changedFields = trackedDto.getChangedFields();
+        final ChangedFields changedFields = trackedDto.getChangedFields();
         assertNotNull(changedFields);
         assertEquals(1, changedFields.size());
-        assertTrue(changedFields.containsKey("nestedDto"));
-        assertEquals(nestedDto, changedFields.get("nestedDto").value());
+        assertTrue(changedFields.contains("nestedDto"));
+        assertEquals(nestedDto, changedFields.get("nestedDto").orElseThrow().value());
 
         final TrackedDto<TestDto> nestedTrackedDto = changeTracker.getTrackedDto(nestedDto);
-        final Map<String, ChangedField> nestedChangedFields = nestedTrackedDto.getChangedFields();
+        final ChangedFields nestedChangedFields = nestedTrackedDto.getChangedFields();
         assertNotNull(nestedChangedFields);
         assertEquals(1, nestedChangedFields.size());
+    }
+
+    @Test
+    public void trackDto_basicList() {
+        // Given
+        final ContainerDto dto = new ContainerDto();
+        dto.setBasicList(new ArrayList<>());
+        dto.getBasicList().add("TestValue1");
+
+        // When
+        final ContainerDto result = changeTracker.trackDto(dto);
+        dto.getBasicList().add("TestValue2");
+
+        // Then
+        assertEquals(dto, result);
+
+        final TrackedDto<ContainerDto> trackedDto = changeTracker.getTrackedDto(dto);
+        assertNotNull(trackedDto);
+
+        final ChangedFields changedFields = trackedDto.getChangedFields();
+        assertNotNull(changedFields);
+        assertEquals(1, changedFields.size());
+        assertTrue(changedFields.contains("basicList"));
+        assertEquals(dto.getBasicList(), changedFields.get("basicList").orElseThrow().value());
+    }
+
+    @Test
+    public void trackDto_nestedDtoList() {
+        // Given
+        final ContainerDto dto = new ContainerDto();
+        dto.setNestedDtoList(new ArrayList<>());
+
+        final TestDto nestedDto1 = new TestDto();
+        nestedDto1.setField1("String1");
+        nestedDto1.setField2(1);
+        dto.getNestedDtoList().add(nestedDto1);
+
+        final TestDto nestedDto2 = new TestDto();
+        nestedDto2.setField1("String2");
+        nestedDto2.setField2(2);
+
+        // When
+        final ContainerDto result = changeTracker.trackDto(dto);
+        dto.getNestedDtoList().add(nestedDto2);
+
+        // Then
+        assertEquals(dto, result);
+
+        final TrackedDto<ContainerDto> trackedDto = changeTracker.getTrackedDto(dto);
+        assertNotNull(trackedDto);
+
+        final ChangedFields changedFields = trackedDto.getChangedFields();
+        assertNotNull(changedFields);
+        assertEquals(1, changedFields.size());
+        assertTrue(changedFields.contains("nestedDtoList"));
+        assertEquals(dto.getNestedDtoList(), changedFields.get("nestedDtoList").orElseThrow().value());
+    }
+
+    @Test
+    public void trackDto_nestedDtoMap() {
+        // Given
+        final ContainerDto dto = new ContainerDto();
+        dto.setStringMap(new HashMap<>());
+        dto.getStringMap().put("Key1", "Value1");
+
+        // When
+        final ContainerDto result = changeTracker.trackDto(dto);
+        dto.getStringMap().put("Key2", "Value2");
+
+        // Then
+        assertEquals(dto, result);
+
+        final TrackedDto<ContainerDto> trackedDto = changeTracker.getTrackedDto(dto);
+        assertNotNull(trackedDto);
+
+        final ChangedFields changedFields = trackedDto.getChangedFields();
+        assertNotNull(changedFields);
+        assertEquals(1, changedFields.size());
+        final ChangedMapField changedMapField = changedFields.get("stringMap").orElseThrow()
+                        .cast(ChangedMapField.class).orElseThrow();
+        assertEquals(dto.getStringMap(), changedMapField.value());
+
+        assertNotNull(changedMapField.mapSnapshot());
+        assertEquals(1, changedMapField.mapSnapshot().size());
+        assertTrue(changedMapField.mapSnapshot().containsKey("Key1"));
     }
 
     // Helper DTO class for testing
@@ -258,6 +352,9 @@ public class ChangeTrackerTest {
 
         private long parentField1;
         private TestDto nestedDto;
+        private List<String> basicList;
+        private List<TestDto> nestedDtoList;
+        private Map<String, String> stringMap;
 
         public long getParentField1() {
             return parentField1;
@@ -273,6 +370,30 @@ public class ChangeTrackerTest {
 
         public void setNestedDto(final TestDto nestedDto) {
             this.nestedDto = nestedDto;
+        }
+
+        public List<String> getBasicList() {
+            return basicList;
+        }
+
+        public void setBasicList(final List<String> basicList) {
+            this.basicList = basicList;
+        }
+
+        public List<TestDto> getNestedDtoList() {
+            return nestedDtoList;
+        }
+
+        public void setNestedDtoList(final List<TestDto> nestedDtoList) {
+            this.nestedDtoList = nestedDtoList;
+        }
+
+        public Map<String, String> getStringMap() {
+            return stringMap;
+        }
+
+        public void setStringMap(final Map<String, String> stringMap) {
+            this.stringMap = stringMap;
         }
     }
 }

@@ -81,15 +81,34 @@ public final class ClassUtils {
     }
 
     public static Class<?> getGenericType(@Nonnull final Field field) {
+        return getGenericTypes(field)[0];
+    }
+
+    public static Class<?>[] getGenericTypes(@Nonnull final Field field) {
         final Type genericFieldType = field.getGenericType();
 
-        if (genericFieldType instanceof ParameterizedType) {
-            final ParameterizedType parameterizedType = (ParameterizedType) genericFieldType;
+        if (genericFieldType instanceof final ParameterizedType parameterizedType) {
             // Get the actual type arguments (e.g., String)
             final Type[] fieldArgTypes = parameterizedType.getActualTypeArguments();
 
-            if (!CollectionUtils.isEmpty(fieldArgTypes) && fieldArgTypes[0] instanceof Class) {
-                return (Class<?>) fieldArgTypes[0];
+            if (!CollectionUtils.isEmpty(fieldArgTypes)) {
+                // Convert each Type to Class, handling different Type implementations
+                final Class<?>[] result = new Class<?>[fieldArgTypes.length];
+
+                for (int i = 0; i < fieldArgTypes.length; i++) {
+                    final Type type = fieldArgTypes[i];
+
+                    if (type instanceof Class<?> clazz) {
+                        result[i] = clazz;
+                    } else if (type instanceof ParameterizedType paramType) {
+                        // For parameterized types like List<String>, get the raw type
+                        result[i] = (Class<?>) paramType.getRawType();
+                    } else {
+                        // For other types (TypeVariable, WildcardType, etc.), we can't determine a concrete class
+                        throw new IllegalArgumentException("Cannot determine concrete class for generic type argument '%s' in field '%s'".formatted(type, field.getName()));
+                    }
+                }
+                return result;
             }
         }
 

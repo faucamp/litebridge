@@ -19,12 +19,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class TrackedDto<T> {
+public final class TrackedDto<T> {
 
     private final WeakReference<T> dtoRef;
     private final Consumer<Object> trackDtoCallback;
     private List<FieldSnapshot> fieldSnapshots;
-    private Map<String, ChangedField> changedFields;
+    private ChangedFields changedFields;
 
     public TrackedDto(final T dto, final Consumer<Object> trackDtoCallback) {
         this.dtoRef = new WeakReference<>(ObjectUtils.requireNonNull(dto, "DTO cannot be null"));
@@ -35,7 +35,7 @@ public class TrackedDto<T> {
         return ObjectUtils.requireNonNull(dtoRef.get(), "DTO object has been garbage collected: " + this);
     }
 
-    public void snapshot(final Object dto, final Set<Field> fields, final boolean overwrite) {
+    public void snapshot(final Set<Field> fields, final boolean overwrite) {
         if (fieldSnapshots != null) {
             if (overwrite) {
                 fieldSnapshots.clear();
@@ -47,18 +47,31 @@ public class TrackedDto<T> {
             fieldSnapshots = new ArrayList<>();
         }
 
+        final T dto = getDto();
+
         fields.forEach(field -> {
             // To track changes in a map, we need to snapshot the current map values
             if (Map.class.isAssignableFrom(field.getType())) {
                 final Map<?, ?> currentMap = (Map<?, ?>) getFieldValue(dto, field);
                 final int overallFieldHash = getFieldHash(dto, field);
 
-                // Create snapshot of current map contents
                 final Map<?, Integer> mapSnapshot;
 
                 if (!CollectionUtils.isEmpty(currentMap)) {
+                    // Create snapshot of current map contents
                     mapSnapshot = currentMap.entrySet().stream()
                             .collect(Collectors.toMap(Map.Entry::getKey, entry -> getValueHash(entry.getValue())));
+
+                    // Track changes to its keys/values if they are nested DTOs
+                    final Class<?>[] genericTypes = ClassFieldCache.getGenericTypes(field);
+
+                    if (!ClassUtils.isBasicType(genericTypes[0])) {
+                        currentMap.keySet().forEach(trackDtoCallback);
+                    }
+
+                    if (!ClassUtils.isBasicType(genericTypes[1])) {
+                        currentMap.values().forEach(trackDtoCallback);
+                    }
                 } else {
                     mapSnapshot = Collections.emptyMap();
                 }
@@ -69,17 +82,15 @@ public class TrackedDto<T> {
 
                 if (Collection.class.isAssignableFrom(field.getType())) {
                     // Snapshot nested collection
-                    final Collection<?> collection = (Collection<?>) getFieldValue(this, field);
+                    final Collection<?> collection = (Collection<?>) getFieldValue(dto, field);
 
-                    throw new UnsupportedOperationException("Collection tracking is not yet implemented");
-//                    if (!CollectionUtils.isEmpty(collection)) {
-//                        for (Object listItem : (Collection<?>) getFieldValue(field)) {
-//                            if (ChangeTrackingDto.class.isAssignableFrom(listItem.getClass())) {
-//                                final ChangeTrackingDto nestedDto = (ChangeTrackingDto) listItem;
-//                                nestedDto.snapshot(true);
-//                            }
-//                        }
-//                    }
+                    if (!CollectionUtils.isEmpty(collection)) {
+                        final Class<?> genericType = ClassFieldCache.getGenericType(field);
+
+                        if (!ClassUtils.isBasicType(genericType)) {
+                            collection.forEach(trackDtoCallback);
+                        }
+                    }
                 } else if (!ClassUtils.isBasicType(field.getType())) {
                     // Snapshot nested DTO
                     final Object nestedDto = getFieldValue(dto, field);
@@ -102,15 +113,15 @@ public class TrackedDto<T> {
         fields.forEach(field -> fieldSnapshots.add(new FieldSnapshot(field, 0)));
     }
 
-    public @Nonnull Map<String, ChangedField> getChangedFields() {
+    public @Nonnull ChangedFields getChangedFields() {
         final Object dto = getDto();
 
-        if (CollectionUtils.isEmpty(changedFields)) {
+        if (changedFields == null) {
             if (fieldSnapshots == null) {
                 throw new IllegalStateException("Field snapshots not taken for object: " + dto);
             }
 
-            changedFields = fieldSnapshots.stream()
+            final Map<String, ChangedField> changedFieldsMap = fieldSnapshots.stream()
                     .filter(fieldSnapshot -> {
                         final int currentFieldValueHash = getFieldHash(dto, fieldSnapshot.field());
 
@@ -121,24 +132,30 @@ public class TrackedDto<T> {
                                 final Object nestedDto = getFieldValue(dto, fieldSnapshot.field());
                                 trackDtoCallback.accept(nestedDto);
                             }
-
-
                         }
 
                         return currentFieldValueHash != fieldSnapshot.hash();
                     })
-                    .map(fieldSnapshot -> new ChangedField(fieldSnapshot.field().getName(), getFieldValue(dto, fieldSnapshot.field()), fieldSnapshot.originalMapSnapshot()))
+                    .map(fieldSnapshot -> {
+                        if (fieldSnapshot.isMap()) {
+                            return new ChangedMapField(fieldSnapshot.field().getName(), getFieldValue(dto, fieldSnapshot.field()), fieldSnapshot.mapSnapshot());
+                        } else {
+                            return new ChangedField(fieldSnapshot.field().getName(), getFieldValue(dto, fieldSnapshot.field()));
+                        }
+                    })
                     .collect(Collectors.toMap(
-                            ChangedField::fieldName,
+                            ChangedField::name,
                             Function.identity(),
                             (oldValue, newValue) -> newValue,
                             LinkedHashMap::new));
+
+            changedFields = new ChangedFields(changedFieldsMap);
         }
 
         return changedFields;
     }
 
-    private static int getFieldHash(final Object instance, Field field) {
+    private static int getFieldHash(final Object instance, final Field field) {
         return getValueHash(getFieldValue(instance, field));
     }
 
@@ -147,14 +164,20 @@ public class TrackedDto<T> {
             return 0;
         } else if (ClassUtils.isBasicType(fieldValue.getClass())) {
             return fieldValue.hashCode();
-        } else if (fieldValue instanceof Collection) {
-            final Collection<Object> collection = (Collection<Object>) fieldValue;
-
+        } else if (fieldValue instanceof Collection<?> collection) {
             if (collection.isEmpty()) {
                 return 0;
             } else {
                 return collection.stream()
                         .map(TrackedDto::getValueHash)
+                        .reduce(0, Integer::sum);
+            }
+        } else if (fieldValue instanceof Map<?, ?> map) {
+            if (map.isEmpty()) {
+                return 0;
+            } else {
+                return map.entrySet().stream()
+                        .map(entry -> getValueHash(entry.getKey()) + getValueHash(entry.getValue()))
                         .reduce(0, Integer::sum);
             }
         } else {

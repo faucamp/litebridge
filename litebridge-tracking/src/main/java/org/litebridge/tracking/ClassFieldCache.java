@@ -13,6 +13,7 @@ public final class ClassFieldCache {
 
     private static final Map<Class<?>, Set<Field>> fieldMap = new ConcurrentHashMap<>();
     private static final Map<Class<?>, Set<Field>> nestedDtoFieldsMap = new ConcurrentHashMap<>();
+    private static final Map<Field, Class<?>[]> genericTypesMap = new ConcurrentHashMap<>();
 
     private ClassFieldCache() {
     }
@@ -34,5 +35,13 @@ public final class ClassFieldCache {
 
     public static boolean isNestedDtoField(final Field field) {
         return getNestedDtoFields(field.getDeclaringClass()).contains(field);
+    }
+
+    public static Class<?> getGenericType(final Field field) {
+        return getGenericTypes(field)[0];
+    }
+
+    public static Class<?>[] getGenericTypes(final Field field) {
+        return genericTypesMap.computeIfAbsent(field, key -> ClassUtils.getGenericTypes(field));
     }
 }
