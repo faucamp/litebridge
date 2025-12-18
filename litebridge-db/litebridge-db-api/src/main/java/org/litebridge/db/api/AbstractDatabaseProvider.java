@@ -1,7 +1,6 @@
 package org.litebridge.db.api;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.api.convert.TypeConverter;
@@ -94,7 +93,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @param sequence the name of the database sequence to generate the next value from
      * @return a formatted SQL string representing the next sequence value for direct insertion
      */
-    protected static @Nonnull String createSequenceNextValueForDirectInsert(final String sequence) {
+    protected static String createSequenceNextValueForDirectInsert(final String sequence) {
         return "NEXT VALUE FOR %s, ".formatted(sequence);
     }
 

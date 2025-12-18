@@ -1,7 +1,5 @@
 package org.litebridge.tracking;
 
-
-import jakarta.annotation.Nonnull;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ObjectUtils;
@@ -31,7 +29,7 @@ public final class TrackedDto<T> {
         this.trackDtoCallback = ObjectUtils.requireNonNull(trackDtoCallback, "No \"track DTO\" callback provided");
     }
 
-    public @Nonnull T getDto() {
+    public T getDto() {
         return ObjectUtils.requireNonNull(dtoRef.get(), "DTO object has been garbage collected: " + this);
     }
 
@@ -113,7 +111,7 @@ public final class TrackedDto<T> {
         fields.forEach(field -> fieldSnapshots.add(new FieldSnapshot(field, 0)));
     }
 
-    public @Nonnull ChangedFields getChangedFields() {
+    public ChangedFields getChangedFields() {
         final Object dto = getDto();
 
         if (changedFields == null) {
@@ -185,7 +183,7 @@ public final class TrackedDto<T> {
         }
     }
 
-    private static int getDtoHash(final @Nonnull Object dto) {
+    private static int getDtoHash(final Object dto) {
         return ClassFieldCache.getFields(dto).stream()
                 .reduce(0, (hash, field) -> hash + getFieldHash(dto, field), Integer::sum);
     }

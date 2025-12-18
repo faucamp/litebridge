@@ -1,6 +1,5 @@
 package org.litebridge.tracking;
 
-import jakarta.annotation.Nonnull;
 import org.litebridge.commons.ClassUtils;
 
 import java.lang.reflect.Field;
@@ -18,7 +17,7 @@ public final class ClassFieldCache {
     private ClassFieldCache() {
     }
 
-    public static Set<Field> getFields(@Nonnull final Object dto) {
+    public static Set<Field> getFields(final Object dto) {
         return getFields(dto.getClass());
     }
 

@@ -1,6 +1,6 @@
 package org.litebridge.tracking;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 
 import java.util.Collections;

@@ -1,7 +1,7 @@
 package org.litebridge.orm.api.spec;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.StringUtils;
 
 /**
@@ -10,12 +10,12 @@ import org.litebridge.commons.StringUtils;
  * This class is immutable and provides various factory methods to create instances
  * with different configurations.
  */
+@NullMarked
 public final class ColumnSpec {
 
     /**
      * Database column name
      */
-    @Nonnull
     private final String name;
     /**
      * Whether column is set to auto-increment
@@ -34,7 +34,7 @@ public final class ColumnSpec {
      * @param autoIncrement indicates whether the column is auto-incrementing
      * @param sequence      the name of the sequence associated with the column, or null if no sequence is used
      */
-    public ColumnSpec(@Nonnull final String name, final boolean autoIncrement, @Nullable final String sequence) {
+    public ColumnSpec(final String name, final boolean autoIncrement, @Nullable final String sequence) {
         this.name = StringUtils.requireNonBlank(name, "Column name cannot be null");
         this.autoIncrement = autoIncrement;
         this.sequence = sequence;
@@ -43,7 +43,7 @@ public final class ColumnSpec {
     /**
      * @return Database column name
      */
-    public @Nonnull String getName() {
+    public String getName() {
         return name;
     }
 

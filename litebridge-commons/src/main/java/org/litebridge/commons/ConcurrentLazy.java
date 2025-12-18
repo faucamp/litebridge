@@ -1,5 +1,7 @@
 package org.litebridge.commons;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.function.Supplier;
 
 
@@ -13,7 +15,10 @@ import java.util.function.Supplier;
  * @param <T> the type of the lazily initialized value
  */
 public final class ConcurrentLazy<T> {
+
+    @Nullable
     private volatile T value;
+
     private final Supplier<T> initializer;
 
     /**
@@ -33,7 +38,7 @@ public final class ConcurrentLazy<T> {
      *
      * @return the initialized value
      */
-    public T get() {
+    public @Nullable T get() {
         T result = value;
         if (result == null) {
             synchronized (this) {

@@ -1,7 +1,7 @@
 package org.litebridge.orm.persistence;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.api.Column;
 import org.litebridge.db.api.TableMetaData;
@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+@NullMarked
 public class Table {
 
     private TableMetaData metaData;
@@ -51,11 +52,11 @@ public class Table {
         return fieldColumnMap;
     }
 
-    public @Nonnull Column getColumnForFieldName(final String fieldName) {
+    public Column getColumnForFieldName(final String fieldName) {
         return ObjectUtils.requireNonNull(fieldNameColumnMap.get(fieldName), "No column for field '" + fieldName + "' in schema '" + metaData.getSchema() + "', table '" + metaData.getTable() + "'");
     }
 
-    public @Nonnull Column getColumn(final String columnName) {
+    public Column getColumn(final String columnName) {
         return ObjectUtils.requireNonNull(fieldNameColumnMap.get(columnName), "No column '" + columnName + "' in table '" + metaData.getTable() + "'");
     }
 
@@ -67,7 +68,7 @@ public class Table {
         changeTracker.trackDtoFields(dto, fieldColumnMap.keySet());
     }
 
-    public @Nonnull Field getFieldForColumnName(final String columnName) {
+    public Field getFieldForColumnName(final String columnName) {
         return ObjectUtils.requireNonNull(columnNameFieldMap.get(columnName), "No field for column '" + columnName + "' in schema '" + metaData.getSchema() + "', table '" + metaData.getTable() + "'");
     }
 

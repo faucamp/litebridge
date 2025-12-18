@@ -1,7 +1,7 @@
 package org.litebridge.orm.api.select;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.api.query.Operator;
 
 /**
@@ -9,7 +9,7 @@ import org.litebridge.db.api.query.Operator;
  */
 public abstract class Condition<T, CT extends ConditionTerminal<T, CT>> extends DelegatingSelectorChain<T, CT> implements org.litebridge.db.api.query.Condition {
 
-    @Nonnull
+    @NonNull
     private final CT conditionTerminal;
     private final String column;
     private Operator operator;

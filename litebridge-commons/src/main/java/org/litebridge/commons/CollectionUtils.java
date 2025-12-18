@@ -1,7 +1,6 @@
 package org.litebridge.commons;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -95,7 +94,7 @@ public final class CollectionUtils {
      * @param array the array to convert to a list; may be null
      * @return a non-null list containing the elements of the array, or an immutable empty list if the array is null or empty
      */
-    public static @Nonnull <T> List<T> toList(final @Nullable T... array) {
+    public static <T> List<T> toList(final @Nullable T... array) {
         final List<T> list;
 
         if (array == null || array.length == 0) {

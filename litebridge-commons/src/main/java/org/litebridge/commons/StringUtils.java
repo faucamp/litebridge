@@ -1,6 +1,6 @@
 package org.litebridge.commons;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public final class StringUtils {
 

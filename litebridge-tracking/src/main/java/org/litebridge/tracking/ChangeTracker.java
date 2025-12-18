@@ -1,6 +1,5 @@
 package org.litebridge.tracking;
 
-import jakarta.annotation.Nonnull;
 import org.litebridge.commons.ObjectUtils;
 
 import java.lang.reflect.Field;
@@ -95,11 +94,11 @@ public final class ChangeTracker {
      * @param dto the Data Transfer Object (DTO) whose tracked version is to be retrieved; can be null
      * @return the tracked version of the specified DTO, or null if no tracked version exists
      */
-    public <T> @Nonnull TrackedDto<T> getTrackedDto(final T dto) {
+    public <T> TrackedDto<T> getTrackedDto(final T dto) {
         return (TrackedDto<T>) ObjectUtils.requireNonNull(trackedDtos.get(dto), "DTO is not tracked: " + dto);
     }
 
-    private <T> T trackImpl(@Nonnull final T dto, @Nonnull final Set<Field> trackedFields, final boolean snapshotEmpty) {
+    private <T> T trackImpl(final T dto, final Set<Field> trackedFields, final boolean snapshotEmpty) {
         if (trackedDtos.containsKey(dto)) {
             return dto;
         }

@@ -1,14 +1,19 @@
 package org.litebridge.tracking;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
 
 public sealed class ChangedField permits ChangedMapField {
+
     protected final String name;
+
+    @Nullable
     protected final Object value;
 
-    public ChangedField(String name, Object value) {
+    public ChangedField(String name, @Nullable Object value) {
         this.name = name;
         this.value = value;
     }

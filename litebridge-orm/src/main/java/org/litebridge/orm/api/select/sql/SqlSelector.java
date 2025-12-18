@@ -1,16 +1,17 @@
 package org.litebridge.orm.api.select.sql;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
-import org.litebridge.orm.persistence.Table;
-import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.orm.exception.NonUniqueResultException;
 import org.litebridge.orm.api.select.AbstractSelector;
 import org.litebridge.orm.api.select.Condition;
-import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.api.select.SelectorTerminal;
+import org.litebridge.orm.exception.NonUniqueResultException;
+import org.litebridge.orm.persistence.DtoMapper;
+import org.litebridge.orm.persistence.Table;
+import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+@NullMarked
 public final class SqlSelector extends AbstractSelector<Map<String, Object>, SqlConditionTerminal> implements SqlConditionTerminal {
 
     private final TableRegistry tableRegistry;

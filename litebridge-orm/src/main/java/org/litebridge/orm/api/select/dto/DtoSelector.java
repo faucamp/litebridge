@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.select.dto;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
@@ -27,6 +28,7 @@ import java.util.stream.Stream;
  *
  * @param <T> The type of DTO that this selector will operate on.
  */
+@NullMarked
 public final class DtoSelector<T> extends AbstractSelector<T, DtoConditionTerminal<T>> implements DtoConditionTerminal<T> {
 
     private final Class<T> dtoClass;

@@ -1,6 +1,6 @@
 package org.litebridge.commons;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NullMarked;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -19,12 +19,11 @@ public final class ClassUtils {
      * (except for the `Object` class).
      *
      * @param type the class from which to retrieve all declared fields
-     * @return a list of all fields declared in the given class and its superclasses
+     * @return a set of all fields declared in the given class and its superclasses
      */
-    public static Set<Field> getAllFields(@Nonnull final Class<?> type) {
-        final Set<Field> fields = new HashSet<>();
+    public static Set<Field> getAllFields(final Class<?> type) {
         // Add fields declared in the current class
-        fields.addAll(Arrays.asList(type.getDeclaredFields()));
+        final Set<Field> fields = new HashSet<>(Arrays.asList(type.getDeclaredFields()));
 
         // Recursively get fields from the superclass
         if (type.getSuperclass() != null && !type.getSuperclass().equals(Object.class)) {
@@ -45,7 +44,7 @@ public final class ClassUtils {
      * @return the {@code Field} object representing the specified field if found
      * @throws IllegalArgumentException if the field cannot be found in the specified class or its superclasses
      */
-    public static Field getField(@Nonnull final Class<?> type, @Nonnull final String fieldName) {
+    public static Field getField(final Class<?> type, final String fieldName) {
         try {
             return type.getDeclaredField(fieldName);
         } catch (NoSuchFieldException ex) {
@@ -71,7 +70,7 @@ public final class ClassUtils {
      * @param type the {@code Class} object to check for being a basic type
      * @return {@code true} if the provided class type is considered a basic type, {@code false} otherwise
      */
-    public static boolean isBasicType(@Nonnull final Class<?> type) {
+    public static boolean isBasicType(final Class<?> type) {
         return type.isPrimitive()
                 || type.isEnum()
                 || CharSequence.class.isAssignableFrom(type)
@@ -80,11 +79,11 @@ public final class ClassUtils {
                 || byte[].class.equals(type);
     }
 
-    public static Class<?> getGenericType(@Nonnull final Field field) {
+    public static Class<?> getGenericType(final Field field) {
         return getGenericTypes(field)[0];
     }
 
-    public static Class<?>[] getGenericTypes(@Nonnull final Field field) {
+    public static Class<?>[] getGenericTypes(final Field field) {
         final Type genericFieldType = field.getGenericType();
 
         if (genericFieldType instanceof final ParameterizedType parameterizedType) {

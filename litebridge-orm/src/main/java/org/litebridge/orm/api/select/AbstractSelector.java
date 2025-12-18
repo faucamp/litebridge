@@ -1,14 +1,13 @@
 package org.litebridge.orm.api.select;
 
-import jakarta.annotation.Nullable;
-import org.litebridge.commons.ClassUtils;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.api.DatabaseProvider;
 import org.litebridge.db.api.TableMetaData;
 import org.litebridge.db.api.query.OrderBy;
 
-import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +17,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+@NullMarked
 public abstract class AbstractSelector<T, CT extends ConditionTerminal<T, CT>> implements Selector<T, CT> {
 
     protected final List<String> columns;

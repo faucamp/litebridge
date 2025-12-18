@@ -1,11 +1,13 @@
 package org.litebridge.orm.persistence;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@NullMarked
 public class TableRegistry {
 
     private Map<Class<?>, Table> tables = new ConcurrentHashMap<>();

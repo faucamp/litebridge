@@ -1,5 +1,7 @@
 package org.litebridge.commons;
 
+import org.jspecify.annotations.NullUnmarked;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -12,6 +14,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@NullUnmarked
 public final class TimeUtils {
 
     private static final DateTimeFormatter LOOSE_ISO_DATE_TIME_ZONE_PARSER = DateTimeFormatter.ofPattern("[yyyyMMdd][yyyy-MM-dd][yyyy-DDD]['T'[HHmmss][HHmm][HH:mm:ss][HH:mm][.SSSSSSSSS][.SSSSSSS][.SSSSSS][.SSSSS][.SSSS][.SSS][.SS][.S][Z]][' 'HH:mm:ss][.SSS][OOOO][O][z][XXXXX][XXXX]['['VV']']");

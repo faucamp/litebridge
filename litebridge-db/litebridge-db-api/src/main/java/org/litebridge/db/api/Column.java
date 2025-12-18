@@ -1,6 +1,5 @@
 package org.litebridge.db.api;
 
-
 import java.util.Objects;
 import java.util.StringJoiner;
 

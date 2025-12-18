@@ -1,19 +1,21 @@
 package org.litebridge.convert;
 
 import com.toddfast.util.convert.TypeConverter;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.convert.conversion.SqlTimestampTypeConversion;
 
 import java.sql.Types;
 
-public class DefaultTypeConverter implements org.litebridge.db.api.convert.TypeConverter  {
+@NullMarked
+public class DefaultTypeConverter implements org.litebridge.db.api.convert.TypeConverter {
 
     static {
         TypeConverter.registerTypeConversion(new SqlTimestampTypeConversion());
     }
 
     @Override
-    public Object convert(@Nullable final Object value, final int sqlDataType) {
+    public @Nullable Object convert(@Nullable final Object value, final int sqlDataType) {
         return switch (sqlDataType) {
             case Types.BOOLEAN -> TypeConverter.convert(Boolean.class, value);
             case Types.TIMESTAMP -> TypeConverter.convert(java.sql.Timestamp.class, value);
@@ -27,7 +29,7 @@ public class DefaultTypeConverter implements org.litebridge.db.api.convert.TypeC
     }
 
     @Override
-    public Object convert(@Nullable final Object value, final Class<?> fieldType) {
+    public @Nullable Object convert(@Nullable final Object value, final Class<?> fieldType) {
         return TypeConverter.convert(fieldType, value);
     }
 }

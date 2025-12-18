@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.select;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.exception.NonUniqueResultException;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+@NullMarked
 public interface SelectorTerminal<T> {
 
     /**

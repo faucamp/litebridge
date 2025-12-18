@@ -1,7 +1,6 @@
 package org.litebridge.commons;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Supplier;
 
@@ -30,7 +29,7 @@ public final class ObjectUtils {
         });
     }
 
-    public static <T, X extends Throwable> T requireNonNull(@Nullable final T obj, @Nonnull final Supplier<? extends X> exceptionSupplier) throws X {
+    public static <T, X extends Throwable> T requireNonNull(@Nullable final T obj, final Supplier<? extends X> exceptionSupplier) throws X {
         if (obj == null) {
             throw exceptionSupplier.get();
         }

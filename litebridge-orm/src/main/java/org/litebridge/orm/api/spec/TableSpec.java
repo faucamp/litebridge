@@ -1,7 +1,7 @@
 package org.litebridge.orm.api.spec;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
 
@@ -13,6 +13,7 @@ import java.util.Map;
  * This class is immutable and provides various factory methods to create instances
  * with different configurations.
  */
+@NullMarked
 public final class TableSpec {
 
     /**
@@ -28,15 +29,13 @@ public final class TableSpec {
     /**
      * Database table name
      */
-    @Nonnull
     private final String table;
     /**
      * Field name to ColumnSpec map; key is field name, value is the column definition
      */
-    @Nonnull
     private final Map<String, ColumnSpec> fieldColumnSpecMap;
 
-    public TableSpec(@Nullable final String catalog, @Nullable final String schema, @Nonnull final String table, @Nonnull final Map<String, ColumnSpec> fieldColumnSpecMap) {
+    public TableSpec(@Nullable final String catalog, @Nullable final String schema, final String table, final Map<String, ColumnSpec> fieldColumnSpecMap) {
         this.catalog = catalog;
         this.schema = schema;
         this.table = StringUtils.requireNonBlank(table, "Table name cannot be null");
@@ -60,7 +59,7 @@ public final class TableSpec {
     /**
      * @return Database table name
      */
-    public @Nonnull String getTable() {
+    public String getTable() {
         return table;
     }
 
@@ -69,7 +68,7 @@ public final class TableSpec {
      *
      * @return field name-database column mapping
      */
-    public @Nonnull Map<String, ColumnSpec> getFieldColumnSpecMap() {
+    public Map<String, ColumnSpec> getFieldColumnSpecMap() {
         return fieldColumnSpecMap;
     }
 
