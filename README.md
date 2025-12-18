@@ -29,7 +29,7 @@ litebridge.register(Person .class, t("LB", "PERSON",Map.of(
 
 ### Persisting a DTO:
 
-Persisting a DTO is performed by calling `save()` on an instance that is tracked by Liitebridge using the `track()` call:
+Persisting a DTO is performed by tracking it using the `track()` method, and calling `save()` to persist the changes:
 
 ```java
 // Track changes to the Person DTO
@@ -43,7 +43,7 @@ person.setSurname("Smith");
 litebridge.save(person);
 ```
 
-The resulting SQL statement (insert/update, and what columns to update) is determined automatically by Litebridge.
+The resulting SQL statement (insert/update, and which columns to update) is determined automatically by Litebridge.
 
 ### Querying
 
@@ -89,8 +89,7 @@ final List<Person> allPersons = litebridge.select(Person.class)
 
 #### Arbitrary SQL queries
 
-You can use the same fluent API to perform any SQL query, without requiring a DTO mapping (and thus bypassing the object
-mapping portions of the ORM):
+You can use the same fluent API to perform any SQL query, without requiring a DTO mapping:
 
 ```java
 litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
@@ -101,7 +100,7 @@ litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
         .forEach(record -> logger.info("SQL result: Selected data for PERSON record: " + record));
 ```
 
-You are of course free to decide to invoke the object mapping as a terminating `mapToDto()` step to such a SQL query:
+You can also map the result of such a SQL query to a DTO:
 
 ```java
 litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
@@ -110,7 +109,7 @@ litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
         .orderBy("PERSON_ID").asc()
         .mapToDto(Person.class)
         .stream()
-        .forEach(p -> logger.info("SQL result: Selected data for PERSON record: " + p));
+        .forEach(p -> logger.info("Person DTO: " + p));
 ```
 
 
