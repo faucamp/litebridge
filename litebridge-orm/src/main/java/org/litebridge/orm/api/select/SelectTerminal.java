@@ -34,7 +34,7 @@ public interface SelectTerminal<DTO> {
      * Executes the query and expects exactly one result.
      *
      * @return the single result
-     * @throws RuntimeException if no row matches or more than one row matches
+     * @throws NoSuchElementException if no row matches or more than one row matches
      */
     DTO oneOrThrow() throws NoSuchElementException;
 

@@ -1,4 +1,4 @@
-package org.litebridge.orm.api.model;
+package org.litebridge.db.api.query;
 
 public class SelectField {
 
@@ -7,6 +7,11 @@ public class SelectField {
 
     public SelectField(final String name) {
         this.name = name;
+    }
+
+    public SelectField(final String name, final String alias) {
+        this.name = name;
+        this.alias = alias;
     }
 
     public String name() {
