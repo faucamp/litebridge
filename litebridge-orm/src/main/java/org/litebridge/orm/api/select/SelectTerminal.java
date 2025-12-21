@@ -1,6 +1,5 @@
 package org.litebridge.orm.api.select;
 
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.exception.NonUniqueResultException;
 
@@ -10,8 +9,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-@NullMarked
-public interface SelectorTerminal<T> {
+public interface SelectTerminal<DTO> {
 
     /**
      * Executes the query and expects exactly one result.
@@ -21,7 +19,7 @@ public interface SelectorTerminal<T> {
      *
      * @return an {@link Optional} containing the single result, if present
      */
-    Optional<T> one();
+    Optional<DTO> one();
 
     /**
      * Executes the query and expects exactly one result.
@@ -30,7 +28,7 @@ public interface SelectorTerminal<T> {
      * @throws NonUniqueResultException if more than one row matches
      */
     @Nullable
-    T oneOrNull() throws NonUniqueResultException;
+    DTO oneOrNull() throws NonUniqueResultException;
 
     /**
      * Executes the query and expects exactly one result.
@@ -38,7 +36,7 @@ public interface SelectorTerminal<T> {
      * @return the single result
      * @throws RuntimeException if no row matches or more than one row matches
      */
-    T oneOrThrow() throws NoSuchElementException;
+    DTO oneOrThrow() throws NoSuchElementException;
 
     /**
      * Executes the query and expects exactly one result.
@@ -50,7 +48,7 @@ public interface SelectorTerminal<T> {
      * @return the single result
      * @throws X if no row matches or more than one row matches
      */
-    <X extends Throwable> T oneOrThrow(final Supplier<? extends X> exceptionSupplier) throws X;
+    <X extends Throwable> DTO oneOrThrow(final Supplier<? extends X> exceptionSupplier) throws X;
 
     /**
      * Executes the query and returns the first row if present.
@@ -60,7 +58,7 @@ public interface SelectorTerminal<T> {
      *
      * @return an {@link Optional} with the first result, if present
      */
-    Optional<T> first();
+    Optional<DTO> first();
 
     /**
      * Executes the query and returns the first row if present.
@@ -68,7 +66,7 @@ public interface SelectorTerminal<T> {
      * @return the first result, or {@code null} when no row matches
      */
     @Nullable
-    T firstOrNull();
+    DTO firstOrNull();
 
     /**
      * Executes the query and returns the first row.
@@ -76,7 +74,7 @@ public interface SelectorTerminal<T> {
      * @return the first result
      * @throws NoSuchElementException if no row matches
      */
-    T firstOrThrow() throws NoSuchElementException;
+    DTO firstOrThrow() throws NoSuchElementException;
 
     /**
      * Executes the query and returns the first row.
@@ -88,7 +86,7 @@ public interface SelectorTerminal<T> {
      * @return the first result
      * @throws X if no row matches
      */
-    <X extends Throwable> T firstOrThrow(final Supplier<? extends X> exceptionSupplier) throws X;
+    <X extends Throwable> DTO firstOrThrow(final Supplier<? extends X> exceptionSupplier) throws X;
 
     /**
      * Executes the query and returns results as a {@link Stream}.
@@ -99,12 +97,13 @@ public interface SelectorTerminal<T> {
      *
      * @return a stream of results
      */
-    Stream<T> stream();
+    Stream<DTO> stream();
 
     /**
      * Executes the query and materializes all results into a {@link List}.
      *
      * @return list of all matching results (possibly empty)
      */
-    List<T> list();
+    List<DTO> list();
+    
 }
