@@ -22,7 +22,7 @@
         </dependency>
         <dependency>
             <groupId>org.litebridge.db</groupId>
-            <artifactId>litebridge-db-api</artifactId>
+            <artifactId>litebridge-db-spi</artifactId>
         </dependency>
 
         <!-- External dependencies -->

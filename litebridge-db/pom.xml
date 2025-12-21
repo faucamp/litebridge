@@ -17,7 +17,7 @@
     <version>0.0.1</version>
 
     <modules>
-        <module>litebridge-db-api</module>
+        <module>litebridge-db-spi</module>
         <module>litebridge-db-h2</module>
     </modules>
 

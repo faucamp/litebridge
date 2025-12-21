@@ -11,7 +11,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>litebridge-db-api</artifactId>
+    <artifactId>litebridge-db-spi</artifactId>
     <version>0.0.1</version>
 
     <dependencies>
