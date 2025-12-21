@@ -2,8 +2,8 @@ package org.litebridge.orm.persistence;
 
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
-import org.litebridge.db.api.Column;
-import org.litebridge.db.api.DatabaseProvider;
+import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.tracking.ChangedField;
 import org.litebridge.tracking.ChangedFields;
 import org.litebridge.tracking.TrackedDto;

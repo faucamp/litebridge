@@ -1,6 +1,6 @@
 package org.litebridge.orm.api.select.impl;
 
-import org.litebridge.db.api.DatabaseProvider;
+import org.litebridge.db.spi.DatabaseProvider;
 
 import java.sql.SQLException;
 import java.util.Map;

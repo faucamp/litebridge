@@ -1,6 +1,6 @@
-package org.litebridge.db.api.query;
+package org.litebridge.db.spi.query;
 
-import org.litebridge.db.api.TableMetaData;
+import org.litebridge.db.spi.TableMetaData;
 
 import java.util.List;
 

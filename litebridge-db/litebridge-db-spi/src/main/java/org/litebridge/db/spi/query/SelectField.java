@@ -1,4 +1,4 @@
-package org.litebridge.db.api.query;
+package org.litebridge.db.spi.query;
 
 public class SelectField {
 

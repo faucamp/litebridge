@@ -1,8 +1,8 @@
 package org.litebridge.orm.api.select.impl;
 
-import org.litebridge.db.api.TableMetaData;
-import org.litebridge.db.api.query.Select;
-import org.litebridge.db.api.query.SelectField;
+import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.SelectField;
 
 import java.util.List;
 

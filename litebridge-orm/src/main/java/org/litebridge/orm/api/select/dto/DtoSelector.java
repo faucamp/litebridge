@@ -2,15 +2,14 @@ package org.litebridge.orm.api.select.dto;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
-import org.litebridge.db.api.Column;
-import org.litebridge.db.api.DatabaseProvider;
-import org.litebridge.db.api.query.SelectField;
+import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.query.SelectField;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.persistence.Table;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 

@@ -3,8 +3,8 @@ package org.litebridge.orm.persistence;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
-import org.litebridge.db.api.Column;
-import org.litebridge.db.api.TableMetaData;
+import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.TrackedDto;
 

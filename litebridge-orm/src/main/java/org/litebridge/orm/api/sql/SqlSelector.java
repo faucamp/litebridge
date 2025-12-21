@@ -1,8 +1,8 @@
 package org.litebridge.orm.api.sql;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.api.DatabaseProvider;
-import org.litebridge.db.api.query.SelectField;
+import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.query.SelectField;
 import org.litebridge.orm.api.select.FromClause;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.persistence.TableRegistry;

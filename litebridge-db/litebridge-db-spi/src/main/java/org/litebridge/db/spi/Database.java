@@ -1,4 +1,4 @@
-package org.litebridge.db.api;
+package org.litebridge.db.spi;
 
 public abstract class Database {
 

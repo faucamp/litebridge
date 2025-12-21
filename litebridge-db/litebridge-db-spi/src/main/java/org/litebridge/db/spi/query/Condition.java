@@ -1,4 +1,4 @@
-package org.litebridge.db.api.query;
+package org.litebridge.db.spi.query;
 
 /**
  * Represents a condition in a database query, specifying a column, operator, and value/operand.

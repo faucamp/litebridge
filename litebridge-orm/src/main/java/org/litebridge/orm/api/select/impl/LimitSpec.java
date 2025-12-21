@@ -1,7 +1,7 @@
 package org.litebridge.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.api.query.Limit;
+import org.litebridge.db.spi.query.Limit;
 
 public final class LimitSpec {
 

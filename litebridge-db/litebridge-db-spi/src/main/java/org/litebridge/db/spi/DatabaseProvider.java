@@ -1,10 +1,8 @@
-package org.litebridge.db.api;
+package org.litebridge.db.spi;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.api.convert.TypeConverter;
-import org.litebridge.db.api.query.Condition;
-import org.litebridge.db.api.query.OrderBy;
-import org.litebridge.db.api.query.Select;
+import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.query.Select;
 
 import java.sql.SQLException;
 import java.util.LinkedHashMap;

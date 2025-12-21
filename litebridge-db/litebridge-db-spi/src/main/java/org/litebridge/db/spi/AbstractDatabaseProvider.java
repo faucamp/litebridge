@@ -1,12 +1,12 @@
-package org.litebridge.db.api;
+package org.litebridge.db.spi;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ObjectUtils;
-import org.litebridge.db.api.convert.TypeConverter;
-import org.litebridge.db.api.query.Condition;
-import org.litebridge.db.api.query.Operator;
-import org.litebridge.db.api.query.OrderBy;
+import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.query.Condition;
+import org.litebridge.db.spi.query.Operator;
+import org.litebridge.db.spi.query.OrderBy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

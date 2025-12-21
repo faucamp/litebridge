@@ -1,7 +1,7 @@
 package org.litebridge.orm.api.sql;
 
-import org.litebridge.db.api.DatabaseProvider;
-import org.litebridge.db.api.TableMetaData;
+import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.select.FromClause;
 import org.litebridge.orm.api.select.FromClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;

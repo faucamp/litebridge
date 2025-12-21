@@ -1,7 +1,7 @@
 package org.litebridge.db.h2;
 
 import org.litebridge.convert.DefaultTypeConverter;
-import org.litebridge.db.api.AbstractDatabaseProvider;
+import org.litebridge.db.spi.AbstractDatabaseProvider;
 
 import java.sql.Connection;
 

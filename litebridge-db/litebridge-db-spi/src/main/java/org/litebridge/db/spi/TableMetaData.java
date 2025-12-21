@@ -1,4 +1,4 @@
-package org.litebridge.db.api;
+package org.litebridge.db.spi;
 
 import java.util.LinkedHashMap;
 import java.util.List;

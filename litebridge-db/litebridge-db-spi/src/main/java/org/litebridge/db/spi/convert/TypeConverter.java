@@ -1,4 +1,4 @@
-package org.litebridge.db.api.convert;
+package org.litebridge.db.spi.convert;
 
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;

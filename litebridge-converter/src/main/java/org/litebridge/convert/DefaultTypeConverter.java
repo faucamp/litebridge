@@ -8,7 +8,7 @@ import org.litebridge.convert.conversion.SqlTimestampTypeConversion;
 import java.sql.Types;
 
 @NullMarked
-public class DefaultTypeConverter implements org.litebridge.db.api.convert.TypeConverter {
+public class DefaultTypeConverter implements org.litebridge.db.spi.convert.TypeConverter {
 
     static {
         TypeConverter.registerTypeConversion(new SqlTimestampTypeConversion());
