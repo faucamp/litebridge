@@ -6,10 +6,12 @@ import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.orm.api.select.dto.DtoSelector;
-import org.litebridge.orm.api.select.sql.SqlSelectorStart;
+import org.litebridge.orm.api.dto.DtoSelector;
+import org.litebridge.orm.api.select.impl.FromClauseTerminalImpl;
 import org.litebridge.orm.api.spec.ColumnSpec;
 import org.litebridge.orm.api.spec.TableSpec;
+import org.litebridge.orm.api.sql.SqlFromClause;
+import org.litebridge.orm.api.sql.SqlSelector;
 import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.orm.persistence.Table;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -72,13 +74,13 @@ public class Litebridge {
      * @return A {@link DtoSelector} instance for querying and retrieving data for the specified DTO class.
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */
-    public <T> DtoSelector<T> select(final Class<T> dtoClass) {
+    public <T> FromClauseTerminalImpl<T> select(final Class<T> dtoClass) {
         final Table table = tableRegistry.getTableOrThrow(dtoClass);
-        return new DtoSelector<>(dtoClass, table, databaseProvider);
+        return new DtoSelector<>(dtoClass, table, databaseProvider).from();
     }
 
-    public SqlSelectorStart select(final String... columns) {
-        return new SqlSelectorStart(CollectionUtils.toList(columns), tableRegistry, databaseProvider);
+    public SqlFromClause select(final String... columns) {
+        return new SqlSelector(databaseProvider, tableRegistry).select(columns);
     }
 
     private Table mapToTable(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {

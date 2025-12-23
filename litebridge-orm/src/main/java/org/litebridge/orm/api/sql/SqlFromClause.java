@@ -1,11 +1,11 @@
 package org.litebridge.orm.api.sql;
 
-import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.select.FromClause;
 import org.litebridge.orm.api.select.FromClauseTerminal;
-import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.impl.SelectSpec;
+import org.litebridge.orm.api.select.impl.AbstractSelector;
+import org.litebridge.orm.api.select.impl.FromClauseTerminalImpl;
+import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.Table;
 import org.litebridge.orm.persistence.TableRegistry;
 
@@ -17,23 +17,20 @@ public class SqlFromClause implements FromClause<Map<String, Object>> {
 
     private final SelectSpec selectSpec;
     private final TableRegistry tableRegistry;
-    private final DatabaseProvider databaseProvider;
-    private final SelectTerminal<Map<String, Object>> selectTerminal;
+    private final AbstractSelector<Map<String, Object>> delegate;
 
     public SqlFromClause(final SelectSpec selectSpec,
                          final TableRegistry tableRegistry,
-                         final DatabaseProvider databaseProvider,
-                         final SelectTerminal<Map<String, Object>> selectTerminal) {
+                         final AbstractSelector<Map<String, Object>> delegate) {
         this.selectSpec = selectSpec;
         this.tableRegistry = tableRegistry;
-        this.databaseProvider = databaseProvider;
-        this.selectTerminal = selectTerminal;
+        this.delegate = delegate;
     }
 
     public FromClauseTerminal<Map<String, Object>> from(final String schema, final String table) {
         final TableMetaData tableMetaData = getTableMetaData(schema, table);
         selectSpec.setTable(tableMetaData);
-        return new SqlFromClauseTerminal(selectSpec, selectTerminal);
+        return new FromClauseTerminalImpl<>(delegate);
     }
 
     @Override

@@ -54,8 +54,6 @@ public class H2Example {
             person.setEyeColour("brown");
             litebridge.save(person);
 
-            if (false) {
-
             // Retrieve all persons and return a List
             final List<Person> persons = litebridge.select(Person.class).list();
             logger.info("All persons (list): " + persons);
@@ -109,8 +107,8 @@ public class H2Example {
             // Retrieve a single person record with offset
             litebridge.select(Person.class)
                     .orderBy("id").asc()
-                    .offset(2)
                     .limit(1)
+                    .offset(2)
                     .one()
                     .ifPresent(p -> logger.info("Person fetched with offset/limit: " + p));
 
@@ -124,11 +122,11 @@ public class H2Example {
             // Retrieve a person's details using a lower-level SQL query and map it to a DTO
             litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
                     .where("AGE").gt(18)
-                    .and("AGE").lt(25)
-                    .mapToDto(Person.class)
+                    .and("AGE")
+                    .lt(25)
+//                    .toDto(Person.class)
                     .stream()
                     .forEach(p -> logger.info("SQL result: Selected data for PERSON record: " + p));
-        }
 
             // Select an account with a foreign key reference to a person
             litebridge.select(Account.class)

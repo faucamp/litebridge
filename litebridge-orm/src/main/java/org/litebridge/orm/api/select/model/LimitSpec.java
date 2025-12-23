@@ -1,4 +1,4 @@
-package org.litebridge.orm.api.select.impl;
+package org.litebridge.orm.api.select.model;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.Limit;

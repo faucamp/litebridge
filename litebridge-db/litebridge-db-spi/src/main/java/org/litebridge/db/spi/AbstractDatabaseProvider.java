@@ -3,10 +3,14 @@ package org.litebridge.db.spi;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ObjectUtils;
+import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Condition;
+import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
+import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.SelectField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,35 +132,9 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public List<Map<String, Object>> select(final TableMetaData tableMetaData, final List<String> columns, final List<Condition> conditions, final List<OrderBy> orderBy, final Integer offset, final Integer limit) throws SQLException {
-        final StringBuilder sql = new StringBuilder("SELECT ")
-                .append(String.join(", ", columns))
-                .append(" FROM ")
-                .append(tableMetaData.getSchema())
-                .append('.')
-                .append(tableMetaData.getTable());
-
-        if (!CollectionUtils.isEmpty(conditions)) {
-            sql.append(" WHERE ");
-            conditions.forEach(condition -> sql.append(createCondition(condition)).append(" AND "));
-            sql.delete(sql.length() - 5, sql.length());
-        }
-
-        if (!CollectionUtils.isEmpty(orderBy)) {
-            sql.append(" ORDER BY ");
-            orderBy.forEach(ob -> sql.append(ob.column()).append(ob.asc() ? " ASC" : " DESC").append(", "));
-            sql.delete(sql.length() - 2, sql.length());
-        }
-
-        if (limit != null) {
-            sql.append(" LIMIT ").append(limit);
-        }
-
-        if (offset != null) {
-            sql.append(" OFFSET ").append(offset);
-        }
-
-        return executeSqlQuery(sql.toString(), columns, conditions, tableMetaData);
+    public List<Map<String, Object>> select(final Select select) throws SQLException {
+        final String sql = toSql(select);
+        return executeSqlQuery(sql, select.columns(), select.where(), select.table());
     }
 
     @Override
@@ -164,11 +142,77 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return typeConverter;
     }
 
+    protected String toSql(final Select select) {
+        final StringBuilder sql = new StringBuilder("SELECT ");
+
+        boolean first = true;
+
+        // Select fields
+        for (final SelectField column : select.columns()) {
+            if (first) {
+                first = false;
+            } else {
+                sql.append(", ");
+            }
+
+            sql.append(column.name());
+
+            if (!StringUtils.isBlank(column.alias())) {
+                sql.append(" AS ").append(column.alias());
+            }
+        }
+
+        sql.append(" FROM ");
+
+        if (!StringUtils.isBlank(select.table().getSchema())) {
+            sql.append(select.table().getSchema()).append('.');
+        }
+
+        sql.append(select.table().getTable());
+
+        // Where
+        if (!CollectionUtils.isEmpty(select.where())) {
+            sql.append(" WHERE ");
+            select.where().forEach(condition -> sql.append(createCondition(condition)).append(" AND "));
+            sql.delete(sql.length() - 5, sql.length());
+        }
+
+        // Order by
+        if (!CollectionUtils.isEmpty(select.orderBy())) {
+            sql.append(" ORDER BY ");
+            first = true;
+
+            for (final OrderBy orderBy : select.orderBy()) {
+                if (first) {
+                    first = false;
+                } else {
+                    sql.append(", ");
+                }
+
+                sql.append(orderBy.column()).append(orderBy.asc() ? " ASC" : " DESC");
+            }
+        }
+
+        if (select.limit() != null) {
+            final Limit limit = select.limit();
+
+            if (limit.limit() != null) {
+                sql.append(" LIMIT ").append(select.limit().limit());
+            }
+
+            if (limit.offset() != null) {
+                sql.append(" OFFSET ").append(limit.offset());
+            }
+        }
+
+        return sql.toString();
+    }
+
     protected String createCondition(final Condition condition) {
-        if (condition.getOperator() == Operator.IS_NULL || condition.getOperator() == Operator.IS_NOT_NULL) {
-            return "%s %s".formatted(condition.getColumn(), mapOperator(condition.getOperator()));
+        if (condition.operator() == Operator.IS_NULL || condition.operator() == Operator.IS_NOT_NULL) {
+            return "%s %s".formatted(condition.column(), mapOperator(condition.operator()));
         } else {
-            return "%s %s ?".formatted(condition.getColumn(), mapOperator(condition.getOperator()));
+            return "%s %s ?".formatted(condition.column(), mapOperator(condition.operator()));
         }
     }
 
@@ -213,12 +257,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return generatedKeys;
     }
 
-    private List<Map<String, Object>> executeSqlQuery(final String sql, final List<String> columns, final List<Condition> conditions, final TableMetaData tableMetaData) throws SQLException {
+    private List<Map<String, Object>> executeSqlQuery(final String sql, final List<SelectField> columns, final List<Condition> conditions, final TableMetaData tableMetaData) throws SQLException {
         final List<BindValue> bindValues = conditions.stream()
-                .filter(condition -> condition.getOperator() != Operator.IS_NULL && condition.getOperator() != Operator.IS_NOT_NULL)
+                .filter(condition -> condition.operator() != Operator.IS_NULL && condition.operator() != Operator.IS_NOT_NULL)
                 .map(condition -> {
-                    final Column column = tableMetaData.getColumns().get(condition.getColumn());
-                    final Object convertedValue = typeConverter.convert(condition.getValue(), column.getDataType());
+                    final Column column = tableMetaData.getColumns().get(condition.column());
+                    final Object convertedValue = typeConverter.convert(condition.value(), column.getDataType());
                     return new BindValue(convertedValue, column.getDataType());
                 })
                 .toList();
@@ -230,9 +274,9 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             while (resultSet.next()) {
                 final Map<String, Object> row = new LinkedHashMap<>();
 
-                for (final String columnName : columns) {
-                    final Column column = tableMetaData.getColumns().get(columnName);
-                    row.put(columnName, typeConverter.convert(resultSet.getObject(columnName), column.getDataType()));
+                for (final SelectField selectField : columns) {
+                    final Column column = tableMetaData.getColumns().get(selectField.name());
+                    row.put(selectField.name(), typeConverter.convert(resultSet.getObject(selectField.name()), column.getDataType()));
                 }
 
                 resultList.add(row);

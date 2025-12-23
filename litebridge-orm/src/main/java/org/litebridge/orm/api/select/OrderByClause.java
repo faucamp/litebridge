@@ -7,13 +7,13 @@ public interface OrderByClause<DTO>  {
      *
      * @return an {@link OrderByClauseTerminal} instance with ascending order applied
      */
-    OrderByClauseTerminal<DTO> asc();
+    OrderByClauseChain<DTO> asc();
 
     /**
      * Specifies a descending order for the current ordering clause in a query.
      *
      * @return an {@link OrderByClauseTerminal} instance with descending order applied
      */
-    OrderByClauseTerminal<DTO> desc();
+    OrderByClauseChain<DTO> desc();
 
 }
