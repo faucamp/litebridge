@@ -16,6 +16,8 @@ public class PersistenceExample extends AbstractExample {
 
     @Override
     void run() {
+        LOGGER.info("---======< Persistence example >======---");
+
         // Create DTOs and enable change tracking
         final Person person = litebridge.track(new Person());
         person.setName("Alice");

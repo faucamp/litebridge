@@ -6,57 +6,47 @@ import org.litebridge.example.common.dto.Account;
 import org.litebridge.example.common.dto.Person;
 import org.litebridge.example.common.mapping.DtoTableMap;
 import org.litebridge.orm.Litebridge;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static org.litebridge.orm.api.spec.TableSpec.t;
 
 public class H2Example {
 
-    public static void main(String[] args) {
-        final Logger logger = configureLogging();
+    private static final Logger LOGGER = LoggerFactory.getLogger(H2Example.class);
 
+    public static void main(String[] args) {
+        // Setup H2 in-memory database
         final String url = "jdbc:h2:mem:lb;DB_CLOSE_DELAY=-1";
         final String user = "sa";
         final String password = "";
         configureDatabase(url, user, password);
 
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            // Initialise litebridge and register DTO-table mappings
-            final Litebridge litebridge = new Litebridge(new H2DatabaseProvider(connection));
-            litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
-            litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
-
-            //new PersistenceExample(litebridge).run();
-            //new QueryExample(litebridge).run();
-            new SqlExample(litebridge).run();
-
+            runExamples(connection);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static Logger configureLogging() {
-        final Logger rootLogger = Logger.getLogger("");
-        rootLogger.setLevel(Level.ALL);
+    private static void runExamples(final Connection connection) throws SQLException {
+        // Initialise litebridge and register DTO-table mappings
+        final Litebridge litebridge = new Litebridge(new H2DatabaseProvider(connection));
+        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
 
-        // Remove default handlers to prevent duplicate output
-        for (Handler handler : rootLogger.getHandlers()) {
-            rootLogger.removeHandler(handler);
-        }
-
-        final ConsoleHandler consoleHandler = new ConsoleHandler();
-        consoleHandler.setLevel(Level.ALL);
-        rootLogger.addHandler(consoleHandler);
-
-        return rootLogger;
+        new PersistenceExample(litebridge).run();
+        new QueryExample(litebridge).run();
+        new SqlExample(litebridge).run();
     }
 
     private static String configureDatabase(final String url, final String user, final String password) {

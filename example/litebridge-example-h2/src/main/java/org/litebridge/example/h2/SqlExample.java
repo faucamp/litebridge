@@ -1,5 +1,6 @@
 package org.litebridge.example.h2;
 
+import org.litebridge.example.common.dto.Person;
 import org.litebridge.orm.Litebridge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,8 @@ public class SqlExample extends AbstractExample {
 
     @Override
     public void run() {
+        LOGGER.info("---======< SQL example >======---");
+
         // Retrieve a person's details using a lower-level SQL query
         litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
                 .where("AGE").gt(18)
@@ -21,13 +24,22 @@ public class SqlExample extends AbstractExample {
                 .stream()
                 .forEach(record -> LOGGER.info("SQL result: Selected data for PERSON record: " + record));
 
+        litebridge.select("FIRST_NAME", "SURNAME", "AGE")
+                .from("LB", "PERSON")
+                        .offset(1)
+                                .list();
+
+
+
         // Retrieve a person's details using a lower-level SQL query and map it to a DTO
         litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
                 .where("AGE").gt(18)
                 .and("AGE")
                 .lt(25)
-//                    .toDto(Person.class)
+                .limit(10)
+                .offset(1)
                 .stream()
+                .map(row -> litebridge.toDto(row, Person.class))
                 .forEach(p -> LOGGER.info("SQL result: Selected data for PERSON record: " + p));
     }
 

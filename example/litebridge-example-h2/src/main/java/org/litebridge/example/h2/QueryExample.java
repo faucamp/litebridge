@@ -18,6 +18,8 @@ public class QueryExample extends AbstractExample {
 
     @Override
     public void run() {
+        LOGGER.info("---======< Query example >======---");
+
         // Retrieve all persons and return a List
         final List<Person> persons = litebridge.select(Person.class).list();
         LOGGER.info("All persons (list): " + persons);
