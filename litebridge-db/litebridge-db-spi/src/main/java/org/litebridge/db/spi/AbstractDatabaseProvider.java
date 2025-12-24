@@ -6,7 +6,6 @@ import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Condition;
-import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
@@ -193,17 +192,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             }
         }
 
-        if (select.limit() != null) {
-            final Limit limit = select.limit();
-
-            if (limit.limit() != null) {
-                sql.append(" LIMIT ").append(select.limit().limit());
-            }
-
-            if (limit.offset() != null) {
-                sql.append(" OFFSET ").append(limit.offset());
-            }
-        }
+        select.limit().ifPresent(limit -> {
+            limit.limit().ifPresent(limitVal -> sql.append(" LIMIT ").append(limitVal));
+            limit.offset().ifPresent(offset -> sql.append(" OFFSET ").append(offset));
+        });
 
         return sql.toString();
     }

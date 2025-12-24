@@ -7,7 +7,9 @@ import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.query.SelectField;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class SelectSpec {
 
@@ -103,11 +105,21 @@ public class SelectSpec {
     }
 
     public Select toSelect() {
+        if (table == null) {
+            throw new IllegalStateException("Table not specified");
+        }
+
         return new Select(table,
-                columns,
-                null,
-                null,
-                null,
-                limit != null ? limit.toLimit() : null);
+                columns != null ? Collections.unmodifiableList(columns) : Collections.emptyList(),
+                joins != null ? joins.stream()
+                        .map(JoinSpec::toJoin)
+                        .toList() : Collections.emptyList(),
+                orderBys != null ? orderBys.stream()
+                        .flatMap(orderBySpec -> orderBySpec.toOrderBys().stream())
+                        .toList() : Collections.emptyList(),
+                whereConditions != null ? whereConditions.stream()
+                        .map(ConditionSpec::toCondition)
+                        .toList() : Collections.emptyList(),
+                limit != null ? limit.toLimit() : Optional.empty());
     }
 }

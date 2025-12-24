@@ -1,6 +1,6 @@
 package org.litebridge.db.spi.query;
 
-import org.jspecify.annotations.Nullable;
+import java.util.Optional;
 
-public record Limit(@Nullable Integer limit, @Nullable Integer offset) {
+public record Limit(Optional<Integer> limit, Optional<Integer> offset) {
 }

@@ -34,105 +34,10 @@ public class H2Example {
             litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
             litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
 
-            // Create DTOs and enable change tracking
-            final Person person = litebridge.track(new Person());
-            person.setName("Alice");
-            person.setSurname("Smith");
-            person.setAge(20);
-            person.setEyeColour("blue");
+            //new PersistenceExample(litebridge).run();
+            //new QueryExample(litebridge).run();
+            new SqlExample(litebridge).run();
 
-            final Account account = litebridge.track(new Account());
-            account.setName("Test account");
-            account.setOwner(person);
-
-            // Save DTOs ("person" will also be saved due to cascading)
-            litebridge.save(account);
-            logger.info("Saved person ID: " + person.getId());
-            logger.info("Saved account ID: " + account.getId());
-
-            // Update a single field of a tracked DTO and update the database accordingly
-            person.setEyeColour("brown");
-            litebridge.save(person);
-
-            // Retrieve all persons and return a List
-            final List<Person> persons = litebridge.select(Person.class).list();
-            logger.info("All persons (list): " + persons);
-
-            // Retrieve a single person with criteria
-            final Person alice = litebridge.select(Person.class)
-                    .where("name").eq("Alice")
-                    .and("surname").eq("Smith")
-                    .oneOrNull();
-            logger.info("Retrieved person (nullable): " + alice);
-
-            // Retrieve a single person with criteria using an Optional, and log it
-            litebridge.select(Person.class)
-                    .where("name").eq("Alice")
-                    .and("surname").eq("Smith")
-                    .one()
-                    .ifPresent(p -> logger.info("Retrieved person (Optional): " + p));
-
-            // Retrieve oldest adult person with criteria using a Stream
-            litebridge.select(Person.class)
-                    .where("age").gte(18)
-                    .stream()
-                    .max(Comparator.comparing(Person::getAge))
-                    .ifPresent(p -> logger.info("Oldest person: " + p));
-
-            // Retrieve and log Persons that have an eye colour set
-            litebridge.select(Person.class)
-                    .where("eyeColour").isNotNull()
-                    .stream()
-                    .forEach(p -> logger.info("Person with eye colour (isNotNull): " + p));
-
-            // Retrieve and log Persons that do not have an eye colour set, using eq(null) instead of isNull()
-            litebridge.select(Person.class)
-                    .where("eyeColour").eq(null)
-                    .stream()
-                    .forEach(p -> logger.info("Person without eye colour (eq): " + p));
-
-            // Retrieve and log the first person found, ordering by surname & age, ascending
-            litebridge.select(Person.class)
-                    .orderBy("surname", "age").asc()
-                    .first()
-                    .ifPresent(p -> logger.info("First person record ordered by surname, age ASC: " + p));
-
-            // Retrieve and log the first person found, ordering by descending surname and ascending age
-            // - demonstrates how to use then() to chain multiple orderBy() calls
-            litebridge.select(Person.class)
-                    .orderBy("surname").desc().then("age").asc()
-                    .first()
-                    .ifPresent(p -> logger.info("First person record ordered by surname DESC, age ASC: " + p));
-
-            // Retrieve a single person record with offset
-            litebridge.select(Person.class)
-                    .orderBy("id").asc()
-                    .limit(1)
-                    .offset(2)
-                    .one()
-                    .ifPresent(p -> logger.info("Person fetched with offset/limit: " + p));
-
-            // Retrieve a person's details using a lower-level SQL query
-            litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
-                    .where("AGE").gt(18)
-                    .and("AGE").lt(25)
-                    .stream()
-                    .forEach(record -> logger.info("SQL result: Selected data for PERSON record: " + record));
-
-            // Retrieve a person's details using a lower-level SQL query and map it to a DTO
-            litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
-                    .where("AGE").gt(18)
-                    .and("AGE")
-                    .lt(25)
-//                    .toDto(Person.class)
-                    .stream()
-                    .forEach(p -> logger.info("SQL result: Selected data for PERSON record: " + p));
-
-            // Select an account with a foreign key reference to a person
-            litebridge.select(Account.class)
-                    .where("owner").eq(person.getId())
-                    .one()
-                    .ifPresent(a -> logger.info("Account with owner ID: " + a.getId()));
         } catch (Exception e) {
             e.printStackTrace();
         }
