@@ -3,14 +3,13 @@ package org.litebridge.orm.api.select.impl;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.DtoMapper;
-import org.litebridge.orm.api.select.SelectTerminal;
 
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -109,6 +108,10 @@ public abstract class AbstractSelector<DTO> implements SelectTerminal<DTO> {
      * @return a {@link Stream} of @{code Map<String, Object>} corresponding to records return from query result.
      */
     protected List<LinkedHashMap<String, Object>> executeQuery() {
+        return executeQuery(selectSpec);
+    }
+
+    protected List<LinkedHashMap<String, Object>> executeQuery(final SelectSpec selectSpec) {
         // Execute SQL query
         final List<LinkedHashMap<String, Object>> resultList;
 
@@ -119,5 +122,9 @@ public abstract class AbstractSelector<DTO> implements SelectTerminal<DTO> {
         }
 
         return resultList;
+    }
+
+    protected final SelectSpec selectSpec() {
+        return selectSpec;
     }
 }

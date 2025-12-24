@@ -58,11 +58,11 @@ class SqlSelectorTest {
         assertEquals("COL2", selectSpec.getColumns().get(1).name());
         assertNull(selectSpec.getColumns().get(1).alias());
 
-        assertNotNull(selectSpec.whereConditions());
-        assertEquals(1, selectSpec.whereConditions().size());
-        assertEquals("COL1", selectSpec.whereConditions().get(0).getColumn());
-        assertEquals(Operator.EQ, selectSpec.whereConditions().get(0).getOperator());
-        assertEquals(123, selectSpec.whereConditions().get(0).getValue());
+        assertNotNull(selectSpec.getWhereConditions());
+        assertEquals(1, selectSpec.getWhereConditions().size());
+        assertEquals("COL1", selectSpec.getWhereConditions().get(0).getColumn());
+        assertEquals(Operator.EQ, selectSpec.getWhereConditions().get(0).getOperator());
+        assertEquals(123, selectSpec.getWhereConditions().get(0).getValue());
     }
 
     @Test

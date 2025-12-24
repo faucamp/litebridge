@@ -29,6 +29,6 @@ public class JoinConditionClauseTerminalImpl<DTO>
 
     @Override
     public JoinClause<DTO> join(final String table) {
-        return new JoinClauseImpl<>(selectSpec.newJoinSpec(table), this);
+        return new JoinClauseImpl<>(selectSpec.newJoinSpec(table), delegate);
     }
 }

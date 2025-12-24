@@ -13,6 +13,6 @@ public class OrderByClauseChainImpl<DTO>
 
     @Override
     public OrderByClause<DTO> then(final String... columns) {
-        return new OrderByClauseImpl<>(selectSpec.newOrderBy(columns), this);
+        return new OrderByClauseImpl<>(selectSpec.newOrderBy(columns), delegate);
     }
 }

@@ -26,8 +26,10 @@ public final class DefaultDtoMapper<DTO> implements DtoMapper<DTO> {
         return toDto(row, dtoClass, table, typeConverter);
     }
 
-    private static <DTO> DTO toDto(final Map<String, Object> row, final Class<DTO> dtoClass, final Table table, final TypeConverter typeConverter) {
-        ObjectUtils.requireNonNull(row, "Row cannot be null");
+    private static <DTO> @Nullable DTO toDto(@Nullable final Map<String, Object> row, final Class<DTO> dtoClass, final Table table, final TypeConverter typeConverter) {
+        if (row == null) {
+            return null;
+        }
 
         final DTO dto;
         try {

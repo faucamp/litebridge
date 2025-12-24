@@ -14,11 +14,11 @@ public class JoinClauseTerminalImpl<DTO>
 
     @Override
     public WhereConditionClause<DTO> where(final String column) {
-        return new WhereConditionClauseImpl<>(selectSpec.newWhereCondition(column), new WhereConditionClauseTerminalImpl<>(this));
+        return new WhereConditionClauseImpl<>(selectSpec.newWhereCondition(column), new WhereConditionClauseTerminalImpl<>(delegate));
     }
 
     @Override
     public JoinClause<DTO> join(final String table) {
-        return new JoinClauseImpl<>(selectSpec.newJoinSpec(table), this);
+        return new JoinClauseImpl<>(selectSpec.newJoinSpec(table), delegate);
     }
 }

@@ -24,23 +24,23 @@ public class SqlExample extends AbstractExample {
                 .stream()
                 .forEach(record -> LOGGER.info("SQL result: Selected data for PERSON record: " + record));
 
-        litebridge.select("FIRST_NAME", "SURNAME", "AGE")
-                .from("LB", "PERSON")
-                        .offset(1)
-                                .list();
-
-
-
         // Retrieve a person's details using a lower-level SQL query and map it to a DTO
         litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
                 .where("AGE").gt(18)
-                .and("AGE")
-                .lt(25)
+                .and("AGE").lt(25)
+                .stream()
+                .map(row -> litebridge.toDto(row, Person.class))
+                .forEach(p -> LOGGER.info("SQL result: Mapped Person object: " + p));
+
+        // Full example demonstrating the use of all SELECT clauses
+        litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
+                .where("AGE").gte(18)
+                .and("AGE").lt(25)
                 .limit(10)
                 .offset(1)
                 .stream()
                 .map(row -> litebridge.toDto(row, Person.class))
-                .forEach(p -> LOGGER.info("SQL result: Selected data for PERSON record: " + p));
+                .forEach(p -> LOGGER.info("SQL result: Mapped Person object: " + p));
     }
 
 }

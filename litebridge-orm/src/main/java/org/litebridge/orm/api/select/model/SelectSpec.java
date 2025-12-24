@@ -26,7 +26,6 @@ public class SelectSpec {
     @Nullable
     private LimitSpec limit;
 
-
     public @Nullable TableMetaData getTable() {
         return table;
     }
@@ -43,8 +42,12 @@ public class SelectSpec {
         this.columns = columns;
     }
 
-    public @Nullable List<JoinSpec> joins() {
+    public @Nullable List<JoinSpec> getJoins() {
         return joins;
+    }
+
+    public void setJoins(@Nullable final List<JoinSpec> joins) {
+        this.joins = joins;
     }
 
     public JoinSpec newJoinSpec(final String table) {
@@ -57,8 +60,12 @@ public class SelectSpec {
         return joinSpec;
     }
 
-    public @Nullable List<ConditionSpec> whereConditions() {
+    public @Nullable List<ConditionSpec> getWhereConditions() {
         return whereConditions;
+    }
+
+    public void setWhereConditions(@Nullable final List<ConditionSpec> whereConditions) {
+        this.whereConditions = whereConditions;
     }
 
     public ConditionSpec newWhereCondition(final String column) {
@@ -72,8 +79,12 @@ public class SelectSpec {
         return conditionSpec;
     }
 
-    public @Nullable List<OrderBySpec> orderBys() {
+    public @Nullable List<OrderBySpec> getOrderBys() {
         return orderBys;
+    }
+
+    public void setOrderBys(@Nullable final List<OrderBySpec> orderBys) {
+        this.orderBys = orderBys;
     }
 
     public OrderBySpec newOrderBy(final String... columns) {

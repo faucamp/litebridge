@@ -80,7 +80,7 @@ public class Litebridge {
     public <DTO> FromClauseTerminalImpl<DTO> select(final Class<DTO> dtoClass) {
         final Table table = tableRegistry.getTableOrThrow(dtoClass);
         final DtoMapper<DTO> dtoMapper = dtoMapperRegistry.ensureDtoMapper(dtoClass, () -> new DefaultDtoMapper<>(dtoClass, table, databaseProvider.getTypeConverter()));
-        return new DtoSelector<>(dtoClass, table, databaseProvider, dtoMapper).from();
+        return new DtoSelector<>(dtoClass, table, databaseProvider, dtoMapper).selectAll();
     }
 
     public SqlFromClause select(final String... columns) {

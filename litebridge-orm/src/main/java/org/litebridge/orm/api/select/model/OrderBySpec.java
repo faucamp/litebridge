@@ -8,10 +8,19 @@ import java.util.List;
 public class OrderBySpec {
 
     private final String[] columns;
-    private boolean asc = true;
+    private boolean asc;
 
-    public OrderBySpec(final String... columns) {
+    public OrderBySpec(final String[] columns) {
+        this(columns, true);
+    }
+
+    public OrderBySpec(final String[] columns, final boolean asc) {
         this.columns = columns;
+        this.asc = asc;
+    }
+
+    public String[] columns() {
+        return columns;
     }
 
     public boolean isAsc() {

@@ -65,7 +65,7 @@ public class PersistenceFacade {
 
         for (Column column : table.getMetaData().getColumns().values()) {
             final String fieldName = table.getFieldForColumnName(column.getName()).getName();
-            final ChangedField changedField = changedFields.get(fieldName).orElseThrow(() -> new IllegalStateException("Missing changed field '" + fieldName + "' for column: " + column.getName()));
+            final ChangedField changedField = changedFields.getOrNull(fieldName);
             final Object value;
             final boolean basicType;
 
@@ -77,7 +77,7 @@ public class PersistenceFacade {
                     continue;
                 }
             } else {
-                basicType = changedField.value() == null || ClassUtils.isBasicType(changedField.value().getClass());
+                basicType = ClassUtils.isBasicType(changedField.value().getClass());
                 value = changedField.value();
             }
 

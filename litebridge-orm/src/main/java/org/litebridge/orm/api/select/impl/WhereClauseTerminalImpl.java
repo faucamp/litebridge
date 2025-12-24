@@ -13,6 +13,6 @@ public class WhereClauseTerminalImpl<DTO>
 
     @Override
     public OrderByClause<DTO> orderBy(final String... column) {
-        return new OrderByClauseImpl<>(selectSpec.newOrderBy(column), this);
+        return new OrderByClauseImpl<>(selectSpec.newOrderBy(column), delegate);
     }
 }
