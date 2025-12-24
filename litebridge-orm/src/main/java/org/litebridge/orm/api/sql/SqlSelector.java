@@ -1,23 +1,18 @@
 package org.litebridge.orm.api.sql;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.query.SelectField;
-import org.litebridge.orm.api.select.DtoMappingSelectTerminal;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.model.SelectSpec;
-import org.litebridge.orm.persistence.DefaultDtoMapper;
 import org.litebridge.orm.persistence.DtoMapper;
-import org.litebridge.orm.persistence.Table;
 import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
-public class SqlSelector extends AbstractSelector<Map<String, Object>>
-        implements DtoMappingSelectTerminal<Map<String, Object>> {
+public class SqlSelector extends AbstractSelector<LinkedHashMap<String, Object>> {
 
     private final TableRegistry tableRegistry;
 
@@ -37,15 +32,9 @@ public class SqlSelector extends AbstractSelector<Map<String, Object>>
         return new SqlFromClause(selectSpec, tableRegistry, this);
     }
 
-    @Override
-    public <T> T toDto(final Map<String, Object> result, final Class<T> dtoClass) {
-        final Table table = ObjectUtils.requireNonNull(tableRegistry.getTable(dtoClass), "DTO class not registered: " + dtoClass.getName());
-        return DefaultDtoMapper.toDto(result, dtoClass, table, databaseProvider.getTypeConverter());
-    }
-
-    private static class NoOpDtoMapper implements DtoMapper<Map<String, Object>> {
+    private static class NoOpDtoMapper implements DtoMapper<LinkedHashMap<String, Object>> {
         @Override
-        public @Nullable Map<String, Object> toDto(final @Nullable Map<String, Object> row) {
+        public @Nullable LinkedHashMap<String, Object> toDto(final @Nullable LinkedHashMap<String, Object> row) {
             return row;
         }
     }

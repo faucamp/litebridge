@@ -8,6 +8,7 @@ import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.api.select.SelectTerminal;
 
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -83,13 +84,13 @@ public abstract class AbstractSelector<DTO> implements SelectTerminal<DTO> {
         return stream().toList();
     }
 
-    protected @Nullable Map<String, Object> fetchOneRecord(final boolean first) {
+    protected @Nullable LinkedHashMap<String, Object> fetchOneRecord(final boolean first) {
         if (first) {
             // Set LIMIT since we are only interested in the first record
             selectSpec.ensureLimit().setLimit(1);
         }
 
-        final List<Map<String, Object>> resultList = executeQuery();
+        final List<LinkedHashMap<String, Object>> resultList = executeQuery();
 
         if (CollectionUtils.isEmpty(resultList)) {
             return null;
@@ -107,9 +108,9 @@ public abstract class AbstractSelector<DTO> implements SelectTerminal<DTO> {
      *
      * @return a {@link Stream} of @{code Map<String, Object>} corresponding to records return from query result.
      */
-    protected List<Map<String, Object>> executeQuery() {
+    protected List<LinkedHashMap<String, Object>> executeQuery() {
         // Execute SQL query
-        final List<Map<String, Object>> resultList;
+        final List<LinkedHashMap<String, Object>> resultList;
 
         try {
             resultList = databaseProvider.select(selectSpec.toSelect());

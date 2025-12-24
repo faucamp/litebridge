@@ -12,6 +12,9 @@ import org.litebridge.orm.api.spec.ColumnSpec;
 import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.api.sql.SqlFromClause;
 import org.litebridge.orm.api.sql.SqlSelector;
+import org.litebridge.orm.persistence.DefaultDtoMapper;
+import org.litebridge.orm.persistence.DtoMapper;
+import org.litebridge.orm.persistence.DtoMapperRegistry;
 import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.orm.persistence.Table;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -20,6 +23,7 @@ import org.litebridge.tracking.ChangeTracker;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,15 +31,14 @@ import java.util.TreeSet;
 
 public class Litebridge {
 
+    private final TableRegistry tableRegistry = new TableRegistry();
+    private final DtoMapperRegistry dtoMapperRegistry = new DtoMapperRegistry();
+    private final ChangeTracker changeTracker = new ChangeTracker();
     private final DatabaseProvider databaseProvider;
-    private final TableRegistry tableRegistry;
     private final PersistenceFacade persistenceFacade;
-    private final ChangeTracker changeTracker;
 
     public Litebridge(final DatabaseProvider databaseProvider) {
         this.databaseProvider = databaseProvider;
-        this.tableRegistry = new TableRegistry();
-        this.changeTracker = new ChangeTracker();
         this.persistenceFacade = new PersistenceFacade(tableRegistry, databaseProvider);
     }
 
@@ -69,14 +72,15 @@ public class Litebridge {
     /**
      * Selects a registered Data Transfer Object (DTO) type for database query operations.
      *
-     * @param <T>      The type of the DTO to select.
+     * @param <DTO>    The type of the DTO to select.
      * @param dtoClass The class of the DTO to be queried, which must already be registered.
      * @return A {@link DtoSelector} instance for querying and retrieving data for the specified DTO class.
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */
-    public <T> FromClauseTerminalImpl<T> select(final Class<T> dtoClass) {
+    public <DTO> FromClauseTerminalImpl<DTO> select(final Class<DTO> dtoClass) {
         final Table table = tableRegistry.getTableOrThrow(dtoClass);
-        return new DtoSelector<>(dtoClass, table, databaseProvider).from();
+        final DtoMapper<DTO> dtoMapper = dtoMapperRegistry.ensureDtoMapper(dtoClass, () -> new DefaultDtoMapper<>(dtoClass, table, databaseProvider.getTypeConverter()));
+        return new DtoSelector<>(dtoClass, table, databaseProvider, dtoMapper).from();
     }
 
     public SqlFromClause select(final String... columns) {
@@ -152,5 +156,9 @@ public class Litebridge {
         }
 
         return mappedFields;
+    }
+
+    public <DTO> DTO toDto(final LinkedHashMap<String, Object> row, final Class<DTO> dtoClass) {
+        return dtoMapperRegistry.getDtoMapperOrThrow(dtoClass).toDto(row);
     }
 }

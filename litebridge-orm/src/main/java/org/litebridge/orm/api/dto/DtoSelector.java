@@ -6,7 +6,7 @@ import org.litebridge.db.spi.query.SelectField;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.impl.FromClauseTerminalImpl;
 import org.litebridge.orm.api.select.model.SelectSpec;
-import org.litebridge.orm.persistence.DefaultDtoMapper;
+import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.Table;
 
 import java.util.Arrays;
@@ -17,8 +17,11 @@ public class DtoSelector<DTO> extends AbstractSelector<DTO> {
     private final Class<DTO> dtoClass;
     private final Table table;
 
-    public DtoSelector(final Class<DTO> dtoClass, final Table table, final DatabaseProvider databaseProvider) {
-        super(new SelectSpec(), databaseProvider, new DefaultDtoMapper<>(dtoClass, table, databaseProvider.getTypeConverter()));
+    public DtoSelector(final Class<DTO> dtoClass,
+                       final Table table,
+                       final DatabaseProvider databaseProvider,
+                       final DtoMapper<DTO> dtoMapper) {
+        super(new SelectSpec(), databaseProvider, dtoMapper);
         this.dtoClass = dtoClass;
         this.table = table;
     }

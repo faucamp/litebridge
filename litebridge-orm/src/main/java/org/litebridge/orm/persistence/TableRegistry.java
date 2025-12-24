@@ -1,17 +1,15 @@
 package org.litebridge.orm.persistence;
 
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@NullMarked
-public class TableRegistry {
+public final class TableRegistry {
 
-    private Map<Class<?>, Table> tables = new ConcurrentHashMap<>();
-    private Map<String, Table> tablesByName = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Table> tables = new ConcurrentHashMap<>();
+    private final Map<String, Table> tablesByName = new ConcurrentHashMap<>();
 
     public @Nullable Table getTable(final Class<?> dtoClass) {
         ObjectUtils.requireNonNull(dtoClass, "DTO class cannot be null");

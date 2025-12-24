@@ -2,9 +2,11 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
+import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.convert.TypeConverter;
 
 import java.lang.reflect.Field;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class DefaultDtoMapper<DTO> implements DtoMapper<DTO> {
@@ -20,14 +22,12 @@ public final class DefaultDtoMapper<DTO> implements DtoMapper<DTO> {
     }
 
     @Override
-    public @Nullable DTO toDto(final @Nullable Map<String, Object> row) {
+    public @Nullable DTO toDto(final @Nullable LinkedHashMap<String, Object> row) {
         return toDto(row, dtoClass, table, typeConverter);
     }
 
-    public static <DTO> DTO toDto(final Map<String, Object> row, final Class<DTO> dtoClass, final Table table, final TypeConverter typeConverter) {
-        if (row == null) {
-            return null;
-        }
+    private static <DTO> DTO toDto(final Map<String, Object> row, final Class<DTO> dtoClass, final Table table, final TypeConverter typeConverter) {
+        ObjectUtils.requireNonNull(row, "Row cannot be null");
 
         final DTO dto;
         try {

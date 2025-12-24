@@ -131,7 +131,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public List<Map<String, Object>> select(final Select select) throws SQLException {
+    public List<LinkedHashMap<String, Object>> select(final Select select) throws SQLException {
         final String sql = toSql(select);
         return executeSqlQuery(sql, select.columns(), select.where(), select.table());
     }
@@ -249,7 +249,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return generatedKeys;
     }
 
-    private List<Map<String, Object>> executeSqlQuery(final String sql, final List<SelectField> columns, final List<Condition> conditions, final TableMetaData tableMetaData) throws SQLException {
+    private List<LinkedHashMap<String, Object>> executeSqlQuery(final String sql, final List<SelectField> columns, final List<Condition> conditions, final TableMetaData tableMetaData) throws SQLException {
         final List<BindValue> bindValues = conditions.stream()
                 .filter(condition -> condition.operator() != Operator.IS_NULL && condition.operator() != Operator.IS_NOT_NULL)
                 .map(condition -> {
@@ -261,10 +261,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
         try (final PreparedStatement preparedStatement = createPreparedStatement(sql, bindValues, tableMetaData, false)) {
             final ResultSet resultSet = preparedStatement.executeQuery();
-            final List<Map<String, Object>> resultList = new ArrayList<>();
+            final List<LinkedHashMap<String, Object>> resultList = new ArrayList<>();
 
             while (resultSet.next()) {
-                final Map<String, Object> row = new LinkedHashMap<>();
+                final LinkedHashMap<String, Object> row = new LinkedHashMap<>();
 
                 for (final SelectField selectField : columns) {
                     final Column column = tableMetaData.getColumns().get(selectField.name());

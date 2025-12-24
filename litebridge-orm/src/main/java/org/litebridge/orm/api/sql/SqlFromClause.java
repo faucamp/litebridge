@@ -3,38 +3,37 @@ package org.litebridge.orm.api.sql;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.select.FromClause;
 import org.litebridge.orm.api.select.FromClauseTerminal;
-import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.impl.FromClauseTerminalImpl;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.Table;
 import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.Collections;
-import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 
-public class SqlFromClause implements FromClause<Map<String, Object>> {
+public class SqlFromClause implements FromClause<LinkedHashMap<String, Object>> {
 
     private final SelectSpec selectSpec;
     private final TableRegistry tableRegistry;
-    private final AbstractSelector<Map<String, Object>> delegate;
+    private final SqlSelector delegate;
 
     public SqlFromClause(final SelectSpec selectSpec,
                          final TableRegistry tableRegistry,
-                         final AbstractSelector<Map<String, Object>> delegate) {
+                         final SqlSelector delegate) {
         this.selectSpec = selectSpec;
         this.tableRegistry = tableRegistry;
         this.delegate = delegate;
     }
 
-    public FromClauseTerminal<Map<String, Object>> from(final String schema, final String table) {
+    public FromClauseTerminal<LinkedHashMap<String, Object>> from(final String schema, final String table) {
         final TableMetaData tableMetaData = getTableMetaData(schema, table);
         selectSpec.setTable(tableMetaData);
         return new FromClauseTerminalImpl<>(delegate);
     }
 
     @Override
-    public FromClauseTerminal<Map<String, Object>> from(final String table) {
+    public FromClauseTerminal<LinkedHashMap<String, Object>> from(final String table) {
         return from("", table);
     }
 

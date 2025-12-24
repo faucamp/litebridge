@@ -2,11 +2,11 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 
-import java.util.Map;
+import java.util.LinkedHashMap;
 
 public interface DtoMapper<DTO> {
 
     @Nullable
-    DTO toDto(final @Nullable Map<String, Object> row);
+    DTO toDto(final @Nullable LinkedHashMap<String, Object> row);
 
 }
