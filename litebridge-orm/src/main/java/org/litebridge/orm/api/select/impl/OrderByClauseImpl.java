@@ -1,8 +1,8 @@
 package org.litebridge.orm.api.select.impl;
 
-import org.litebridge.orm.api.select.model.OrderBySpec;
 import org.litebridge.orm.api.select.OrderByClause;
 import org.litebridge.orm.api.select.OrderByClauseChain;
+import org.litebridge.orm.api.select.model.OrderBySpec;
 
 public class OrderByClauseImpl<DTO> implements OrderByClause<DTO> {
 

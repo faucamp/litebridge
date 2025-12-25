@@ -1,6 +1,9 @@
 package org.litebridge.orm.api.select;
 
-public interface WhereConditionClauseTerminal<DTO>
-        extends ConditionClauseTerminal<DTO, WhereConditionClause<DTO>, WhereConditionClauseTerminal<DTO>>, WhereClauseTerminal<DTO> {
+public interface WhereConditionClauseTerminal<DTO,
+        WCC extends WhereConditionClause<DTO, WCC, SELF>,
+        SELF extends WhereConditionClauseTerminal<DTO, WCC, SELF>>
+
+        extends ConditionClauseTerminal<DTO, WCC, SELF>, WhereClauseTerminal<DTO> {
 
 }

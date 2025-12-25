@@ -2,7 +2,6 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
-import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.convert.TypeConverter;
 
 import java.lang.reflect.Field;

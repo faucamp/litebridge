@@ -2,10 +2,6 @@ package org.litebridge.orm.api.sql;
 
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.select.FromClause;
-import org.litebridge.orm.api.select.impl.FromClauseTerminalImpl;
-import org.litebridge.orm.api.select.impl.JoinClauseImpl;
-import org.litebridge.orm.api.select.impl.JoinConditionClauseImpl;
-import org.litebridge.orm.api.select.impl.JoinConditionClauseTerminalImpl;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.Table;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -15,10 +11,12 @@ import java.util.LinkedHashMap;
 import java.util.Objects;
 
 public class SqlFromClause implements FromClause<LinkedHashMap<String, Object>,
-        JoinClauseImpl<LinkedHashMap<String, Object>>,
-        JoinConditionClauseImpl<LinkedHashMap<String, Object>, JoinConditionClauseTerminalImpl<LinkedHashMap<String, Object>>>,
-        JoinConditionClauseTerminalImpl<LinkedHashMap<String, Object>>,
-        SqlFromClauseTerminal> {
+        SqlFromClauseTerminal,
+        SqlJoinClause,
+        SqlJoinConditionClause,
+        SqlJoinConditionClauseTerminal,
+        SqlWhereConditionClause,
+        SqlWhereConditionClauseTerminal> {
 
     private final SelectSpec selectSpec;
     private final TableRegistry tableRegistry;

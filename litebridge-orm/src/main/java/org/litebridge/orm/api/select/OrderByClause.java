@@ -1,6 +1,6 @@
 package org.litebridge.orm.api.select;
 
-public interface OrderByClause<DTO>  {
+public interface OrderByClause<DTO> {
 
     /**
      * Specifies an ascending order for the current ordering clause in a query.

@@ -105,5 +105,5 @@ public interface SelectTerminal<DTO> {
      * @return list of all matching results (possibly empty)
      */
     List<DTO> list();
-    
+
 }

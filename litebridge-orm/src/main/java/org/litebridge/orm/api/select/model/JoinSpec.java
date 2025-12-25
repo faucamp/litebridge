@@ -23,8 +23,9 @@ public class JoinSpec {
         return conditions;
     }
 
-    public ConditionSpec newCondition() {
+    public ConditionSpec newCondition(final String column) {
         final ConditionSpec conditionSpec = new ConditionSpec();
+        conditionSpec.setColumn(column);
         conditions.add(conditionSpec);
         return conditionSpec;
     }
