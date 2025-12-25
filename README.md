@@ -100,7 +100,7 @@ litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
         .forEach(record -> logger.info("SQL result: Selected data for PERSON record: " + record));
 ```
 
-You can also map the result of such a SQL query to a DTO:
+You can also map the result of such a SQL query to a DTO by using `stream().map()`:
 
 ```java
 litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
@@ -109,6 +109,7 @@ litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
         .orderBy("PERSON_ID").asc()
         .mapToDto(Person.class)
         .stream()
+        .map(row -> litebridge.toDto(row, Person.class))
         .forEach(p -> logger.info("Person DTO: " + p));
 ```
 
