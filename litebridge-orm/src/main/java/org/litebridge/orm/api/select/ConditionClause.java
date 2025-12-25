@@ -2,7 +2,9 @@ package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
 
-public interface ConditionClause<DTO, CCT extends ConditionClauseTerminal<DTO, CCT>> {
+public interface ConditionClause<DTO,
+        SELF extends ConditionClause<DTO, SELF, CCT>,
+        CCT extends ConditionClauseTerminal<DTO, SELF, CCT>> {
 
     /**
      * Equals

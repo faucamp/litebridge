@@ -2,11 +2,15 @@ package org.litebridge.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.ConditionClause;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
+import org.litebridge.orm.api.select.model.ConditionSpec;
 
-public class ConditionClauseImpl<DTO, CCT extends ConditionClauseTerminal<DTO, CCT>> implements ConditionClause<DTO, CCT> {
+public class ConditionClauseImpl<DTO,
+        SELF extends ConditionClause<DTO, SELF, CCT>,
+        CCT extends ConditionClauseTerminal<DTO, SELF, CCT>>
+
+        implements ConditionClause<DTO, SELF, CCT> {
 
     private final ConditionSpec conditionSpec;
     private final CCT conditionTerminal;

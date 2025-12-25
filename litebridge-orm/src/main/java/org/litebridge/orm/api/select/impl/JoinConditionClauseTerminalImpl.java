@@ -8,7 +8,7 @@ import org.litebridge.orm.api.select.WhereConditionClause;
 
 public class JoinConditionClauseTerminalImpl<DTO>
         extends WhereClauseTerminalImpl<DTO>
-        implements JoinConditionClauseTerminal<DTO> {
+        implements JoinConditionClauseTerminal<DTO, JoinConditionClauseImpl<DTO, JoinConditionClauseTerminalImpl<DTO>>, JoinConditionClauseTerminalImpl<DTO>> {
 
     private final JoinSpec joinSpec;
 
@@ -18,17 +18,17 @@ public class JoinConditionClauseTerminalImpl<DTO>
     }
 
     @Override
-    public JoinConditionClause<DTO> and(final String column) {
+    public JoinConditionClauseImpl<DTO, JoinConditionClauseTerminalImpl<DTO>> and(final String column) {
         return new JoinConditionClauseImpl<>(joinSpec.newCondition(), this);
     }
 
-    @Override
+//    @Override
     public WhereConditionClause<DTO> where(final String column) {
         return null;
     }
 
-    @Override
-    public JoinClause<DTO> join(final String table) {
+//    @Override
+    public JoinClauseImpl<DTO> join(final String table) {
         return new JoinClauseImpl<>(selectSpec.newJoinSpec(table), delegate);
     }
 }

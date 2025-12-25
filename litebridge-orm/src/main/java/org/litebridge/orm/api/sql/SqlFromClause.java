@@ -2,8 +2,10 @@ package org.litebridge.orm.api.sql;
 
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.select.FromClause;
-import org.litebridge.orm.api.select.FromClauseTerminal;
 import org.litebridge.orm.api.select.impl.FromClauseTerminalImpl;
+import org.litebridge.orm.api.select.impl.JoinClauseImpl;
+import org.litebridge.orm.api.select.impl.JoinConditionClauseImpl;
+import org.litebridge.orm.api.select.impl.JoinConditionClauseTerminalImpl;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.Table;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -12,7 +14,11 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 
-public class SqlFromClause implements FromClause<LinkedHashMap<String, Object>> {
+public class SqlFromClause implements FromClause<LinkedHashMap<String, Object>,
+        JoinClauseImpl<LinkedHashMap<String, Object>>,
+        JoinConditionClauseImpl<LinkedHashMap<String, Object>, JoinConditionClauseTerminalImpl<LinkedHashMap<String, Object>>>,
+        JoinConditionClauseTerminalImpl<LinkedHashMap<String, Object>>,
+        SqlFromClauseTerminal> {
 
     private final SelectSpec selectSpec;
     private final TableRegistry tableRegistry;
@@ -26,14 +32,15 @@ public class SqlFromClause implements FromClause<LinkedHashMap<String, Object>> 
         this.delegate = delegate;
     }
 
-    public FromClauseTerminal<LinkedHashMap<String, Object>> from(final String schema, final String table) {
+    @Override
+    public SqlFromClauseTerminal from(final String schema, final String table) {
         final TableMetaData tableMetaData = getTableMetaData(schema, table);
         selectSpec.setTable(tableMetaData);
-        return new FromClauseTerminalImpl<>(delegate);
+        return new SqlFromClauseTerminal(delegate);
     }
 
     @Override
-    public FromClauseTerminal<LinkedHashMap<String, Object>> from(final String table) {
+    public SqlFromClauseTerminal from(final String table) {
         return from("", table);
     }
 
