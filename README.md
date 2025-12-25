@@ -107,7 +107,6 @@ litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
         .where("AGE").gt(18)
         .and("AGE").lt(25)
         .orderBy("PERSON_ID").asc()
-        .mapToDto(Person.class)
         .stream()
         .map(row -> litebridge.toDto(row, Person.class))
         .forEach(p -> logger.info("Person DTO: " + p));
