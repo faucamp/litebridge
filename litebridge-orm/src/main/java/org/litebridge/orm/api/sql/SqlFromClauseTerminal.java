@@ -4,12 +4,14 @@ import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
 
 import java.util.LinkedHashMap;
 
-public class SqlFromClauseTerminal extends AbstractFromClauseTerminal<LinkedHashMap<String, Object>,
+public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<LinkedHashMap<String, Object>,
         SqlJoinClause,
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal,
         SqlWhereConditionClause,
-        SqlWhereConditionClauseTerminal> {
+        SqlWhereConditionClauseTerminal,
+        SqlOrderByClause,
+        SqlOrderByClauseChain> {
 
     public SqlFromClauseTerminal(final SqlSelector delegate) {
         super(delegate);
@@ -22,6 +24,11 @@ public class SqlFromClauseTerminal extends AbstractFromClauseTerminal<LinkedHash
 
     @Override
     public SqlWhereConditionClause where(final String column) {
-        return new SqlWhereConditionClause(selectSpec.newWhereCondition(column), new SqlWhereConditionClauseTerminal(delegate));
+        return new SqlWhereConditionClause(selectSpec.newWhereCondition(column), new SqlWhereConditionClauseTerminal((SqlSelector) delegate));
+    }
+
+    @Override
+    public SqlOrderByClause orderBy(final String... columns) {
+        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
     }
 }

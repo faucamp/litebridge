@@ -6,12 +6,16 @@ import org.litebridge.orm.api.select.model.ConditionSpec;
 
 import java.util.LinkedHashMap;
 
-public class SqlWhereConditionClause
+public final class SqlWhereConditionClause
         extends ConditionClauseImpl<LinkedHashMap<String, Object>,
         SqlWhereConditionClause,
         SqlWhereConditionClauseTerminal>
 
-        implements WhereConditionClause<LinkedHashMap<String, Object>, SqlWhereConditionClause, SqlWhereConditionClauseTerminal> {
+        implements WhereConditionClause<LinkedHashMap<String, Object>,
+        SqlWhereConditionClause,
+        SqlWhereConditionClauseTerminal,
+        SqlOrderByClause,
+        SqlOrderByClauseChain> {
 
     public SqlWhereConditionClause(final ConditionSpec conditionSpec, final SqlWhereConditionClauseTerminal conditionTerminal) {
         super(conditionSpec, conditionTerminal);

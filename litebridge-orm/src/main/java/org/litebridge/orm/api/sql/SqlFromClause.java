@@ -10,13 +10,15 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 
-public class SqlFromClause implements FromClause<LinkedHashMap<String, Object>,
+public final class SqlFromClause implements FromClause<LinkedHashMap<String, Object>,
         SqlFromClauseTerminal,
         SqlJoinClause,
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal,
         SqlWhereConditionClause,
-        SqlWhereConditionClauseTerminal> {
+        SqlWhereConditionClauseTerminal,
+        SqlOrderByClause,
+        SqlOrderByClauseChain> {
 
     private final SelectSpec selectSpec;
     private final TableRegistry tableRegistry;

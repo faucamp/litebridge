@@ -253,7 +253,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final List<BindValue> bindValues = conditions.stream()
                 .filter(condition -> condition.operator() != Operator.IS_NULL && condition.operator() != Operator.IS_NOT_NULL)
                 .map(condition -> {
-                    final Column column = tableMetaData.getColumns().get(condition.column());
+                    final Column column = ObjectUtils.requireNonNull(tableMetaData.getColumns().get(condition.column()), () -> new IllegalArgumentException("Column not found: " + condition.column()));
                     final Object convertedValue = typeConverter.convert(condition.value(), column.getDataType());
                     return new BindValue(convertedValue, column.getDataType());
                 })

@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-public class SqlSelector extends AbstractSelector<LinkedHashMap<String, Object>> {
+public final class SqlSelector extends AbstractSelector<LinkedHashMap<String, Object>> {
 
     private final TableRegistry tableRegistry;
 
@@ -32,7 +32,7 @@ public class SqlSelector extends AbstractSelector<LinkedHashMap<String, Object>>
         return new SqlFromClause(selectSpec, tableRegistry, this);
     }
 
-    private static class NoOpDtoMapper implements DtoMapper<LinkedHashMap<String, Object>> {
+    private static final class NoOpDtoMapper implements DtoMapper<LinkedHashMap<String, Object>> {
         @Override
         public @Nullable LinkedHashMap<String, Object> toDto(final @Nullable LinkedHashMap<String, Object> row) {
             return row;

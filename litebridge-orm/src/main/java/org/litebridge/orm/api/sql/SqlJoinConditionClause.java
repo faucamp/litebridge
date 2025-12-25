@@ -6,7 +6,7 @@ import org.litebridge.orm.api.select.model.ConditionSpec;
 
 import java.util.LinkedHashMap;
 
-public class SqlJoinConditionClause extends ConditionClauseImpl<LinkedHashMap<String, Object>,
+public final class SqlJoinConditionClause extends ConditionClauseImpl<LinkedHashMap<String, Object>,
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal>
 

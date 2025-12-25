@@ -28,14 +28,16 @@ public class SqlExample extends AbstractExample {
         litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
                 .where("AGE").gt(18)
                 .and("AGE").lt(25)
+                .orderBy("PERSON_ID").asc()
                 .stream()
                 .map(row -> litebridge.toDto(row, Person.class))
                 .forEach(p -> LOGGER.info("SQL result: Mapped Person object: " + p));
 
         // Full example demonstrating the use of all SELECT clauses
         litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
-                .where("AGE").gte(18)
-                .and("AGE").lt(25)
+                .where("AGE").gte(1)
+                .and("AGE").lt(75)
+                .orderBy("PERSON_ID").asc()
                 .limit(10)
                 .offset(1)
                 .stream()

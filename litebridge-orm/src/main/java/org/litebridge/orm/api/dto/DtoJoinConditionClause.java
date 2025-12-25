@@ -4,7 +4,7 @@ import org.litebridge.orm.api.select.JoinConditionClause;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 
-public class DtoJoinConditionClause<DTO> extends ConditionClauseImpl<DTO,
+public final class DtoJoinConditionClause<DTO> extends ConditionClauseImpl<DTO,
         DtoJoinConditionClause<DTO>,
         DtoJoinConditionClauseTerminal<DTO>>
 

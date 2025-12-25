@@ -1,19 +1,37 @@
 package org.litebridge.orm.api.dto;
 
+import org.litebridge.db.spi.Column;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
-import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.model.JoinSpec;
+import org.litebridge.orm.persistence.Table;
 
-public class DtoJoinConditionClauseTerminal<DTO> extends AbstractJoinConditionClauseTerminal<DTO,
+import java.util.Arrays;
+
+public final class DtoJoinConditionClauseTerminal<DTO> extends AbstractJoinConditionClauseTerminal<DTO,
         DtoJoinConditionClause<DTO>,
-        DtoJoinConditionClauseTerminal<DTO>> {
+        DtoJoinConditionClauseTerminal<DTO>,
+        DtoOrderByClause<DTO>,
+        DtoOrderByClauseChain<DTO>> {
 
-    public DtoJoinConditionClauseTerminal(final JoinSpec joinSpec, final AbstractSelector<DTO> delegate) {
+    private final Table table;
+
+    public DtoJoinConditionClauseTerminal(final JoinSpec joinSpec, final DtoSelector<DTO> delegate) {
         super(joinSpec, delegate);
+        this.table = delegate.table();
     }
 
     @Override
     public DtoJoinConditionClause<DTO> and(final String field) {
-        return new DtoJoinConditionClause<>(joinSpec.newCondition(field), this);
+        final String column = table.getColumnForFieldName(field).getName();
+        return new DtoJoinConditionClause<>(joinSpec.newCondition(column), this);
+    }
+
+    @Override
+    public DtoOrderByClause<DTO> orderBy(final String... fields) {
+        final String[] columns = Arrays.stream(fields)
+                .map(table::getColumnForFieldName)
+                .map(Column::getName)
+                .toArray(String[]::new);
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), (DtoSelector<DTO>) delegate);
     }
 }

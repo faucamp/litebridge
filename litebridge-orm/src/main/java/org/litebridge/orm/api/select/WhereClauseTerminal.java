@@ -1,6 +1,10 @@
 package org.litebridge.orm.api.select;
 
-public interface WhereClauseTerminal<DTO> extends OrderByClauseTerminal<DTO> {
+public interface WhereClauseTerminal<DTO,
+        OBC extends OrderByClause<DTO, OBC, OBCC>,
+        OBCC extends OrderByClauseChain<DTO, OBC, OBCC>>
 
-    OrderByClause<DTO> orderBy(String... column);
+        extends OrderByClauseTerminal<DTO> {
+
+    OBC orderBy(String... columns);
 }
