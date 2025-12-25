@@ -6,7 +6,6 @@ import org.junit.platform.commons.support.HierarchyTraversalMode;
 import org.junit.platform.commons.support.ReflectionSupport;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.mockito.InjectMocks;
@@ -14,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Field;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -35,7 +33,7 @@ class SqlSelectorTest {
     @Test
     void select_basic_columnNames() throws Exception {
         // When
-        final SelectTerminal<Map<String, Object>> result = sqlSelector.select("COL1", "COL2")
+        final SqlWhereConditionClauseTerminal result = sqlSelector.select("COL1", "COL2")
                 .from("TABLE")
                 .where("COL1").eq(123);
 
