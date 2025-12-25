@@ -97,7 +97,7 @@ litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
         .and("AGE").lt(25)
         .orderBy("PERSON_ID").asc()
         .stream()
-        .forEach(record -> logger.info("SQL result: Selected data for PERSON record: " + record));
+        .forEach(row -> logger.info("SQL result: Selected data for PERSON row: " + row));
 ```
 
 You can also map the result of such a SQL query to a DTO by using `stream().map()`:
