@@ -6,6 +6,7 @@ import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Condition;
+import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
@@ -147,18 +148,23 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         boolean first = true;
 
         // Select fields
-        for (final SelectField column : select.columns()) {
-            if (first) {
-                first = false;
-            } else {
-                sql.append(", ");
-            }
+        if (!CollectionUtils.isEmpty(select.columns())) {
+            for (final SelectField column : select.columns()) {
+                if (first) {
+                    first = false;
+                } else {
+                    sql.append(", ");
+                }
 
-            sql.append(column.name());
+                sql.append(column.name());
 
-            if (!StringUtils.isBlank(column.alias())) {
-                sql.append(" AS ").append(column.alias());
+                if (!StringUtils.isBlank(column.alias())) {
+                    sql.append(" AS ").append(column.alias());
+                }
             }
+        } else {
+            // Empty select clause; return all columns
+            sql.append("*");
         }
 
         sql.append(" FROM ");
@@ -168,6 +174,22 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
 
         sql.append(select.table().getTable());
+
+        // Joins
+        if (!CollectionUtils.isEmpty(select.joins())) {
+            sql.append(" JOIN ");
+            first = true;
+
+            for (Join join : select.joins()) {
+                if (first) {
+                    first = false;
+                } else {
+                    sql.append(", ");
+                }
+
+                sql.append(createJoin(join));
+            }
+        }
 
         // Where
         if (!CollectionUtils.isEmpty(select.where())) {
@@ -198,6 +220,23 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         });
 
         return sql.toString();
+    }
+
+    protected String createJoin(final Join join) {
+        final StringBuilder sb = new StringBuilder(join.table()).append(" ON ");
+        boolean first = true;
+
+        for (Condition condition : join.conditions()) {
+            if (first) {
+                first = false;
+            } else {
+                sb.append(" AND ");
+            }
+
+            sb.append(createCondition(condition));
+        }
+
+        return sb.toString();
     }
 
     protected String createCondition(final Condition condition) {
@@ -265,10 +304,13 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
             while (resultSet.next()) {
                 final LinkedHashMap<String, Object> row = new LinkedHashMap<>();
+                final int columnCount = resultSet.getMetaData().getColumnCount();
 
-                for (final SelectField selectField : columns) {
-                    final Column column = tableMetaData.getColumns().get(selectField.name());
-                    row.put(selectField.name(), typeConverter.convert(resultSet.getObject(selectField.name()), column.getDataType()));
+                for (int i = 1; i <= columnCount; i++) {
+                    final String columnName = resultSet.getMetaData().getColumnName(i);
+                    final Column column = tableMetaData.getColumns().get(columnName);
+                    final Object value = typeConverter.convert(resultSet.getObject(columnName), column.getDataType());
+                    row.put(columnName, value);
                 }
 
                 resultList.add(row);

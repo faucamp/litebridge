@@ -1,5 +1,6 @@
 package org.litebridge.orm;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
@@ -83,7 +84,7 @@ public class Litebridge {
         return new DtoSelector<>(dtoClass, table, databaseProvider, dtoMapper).selectAll();
     }
 
-    public SqlFromClause select(final String... columns) {
+    public SqlFromClause select(final @Nullable String... columns) {
         return new SqlSelector(databaseProvider, tableRegistry).select(columns);
     }
 
@@ -159,6 +160,9 @@ public class Litebridge {
     }
 
     public <DTO> DTO toDto(final LinkedHashMap<String, Object> row, final Class<DTO> dtoClass) {
-        return dtoMapperRegistry.getDtoMapperOrThrow(dtoClass).toDto(row);
+        return dtoMapperRegistry.ensureDtoMapper(dtoClass, () -> {
+            final Table table = tableRegistry.getTableOrThrow(dtoClass);
+            return new DefaultDtoMapper<>(dtoClass, table, databaseProvider.getTypeConverter());
+        }).toDto(row);
     }
 }

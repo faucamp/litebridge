@@ -1,15 +1,26 @@
 package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.Column;
+import org.litebridge.orm.api.select.JoinClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.persistence.Table;
 
 import java.util.Arrays;
 
-public final class DtoJoinConditionClauseTerminal<DTO> extends AbstractJoinConditionClauseTerminal<DTO,
+public final class DtoJoinConditionClauseTerminal<DTO>
+        extends AbstractJoinConditionClauseTerminal<DTO,
         DtoJoinConditionClause<DTO>,
         DtoJoinConditionClauseTerminal<DTO>,
+        DtoOrderByClause<DTO>,
+        DtoOrderByClauseChain<DTO>>
+
+        implements JoinClauseTerminal<DTO,
+        DtoJoinClause<DTO>,
+        DtoJoinConditionClause<DTO>,
+        DtoJoinConditionClauseTerminal<DTO>,
+        DtoWhereConditionClause<DTO>,
+        DtoWhereConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 
@@ -24,6 +35,17 @@ public final class DtoJoinConditionClauseTerminal<DTO> extends AbstractJoinCondi
     public DtoJoinConditionClause<DTO> and(final String field) {
         final String column = table.getColumnForFieldName(field).getName();
         return new DtoJoinConditionClause<>(joinSpec.newCondition(column), this);
+    }
+
+    @Override
+    public DtoWhereConditionClause<DTO> where(final String field) {
+        final String column = table.getColumnForFieldName(field).getName();
+        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate));
+    }
+
+    @Override
+    public DtoJoinClause<DTO> join(final String table) {
+        return new DtoJoinClause<>(selectSpec.newJoinSpec(table), (DtoSelector<DTO>) delegate);
     }
 
     @Override

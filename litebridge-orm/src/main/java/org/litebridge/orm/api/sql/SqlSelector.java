@@ -9,6 +9,7 @@ import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -22,8 +23,13 @@ public final class SqlSelector extends AbstractSelector<LinkedHashMap<String, Ob
         this.tableRegistry = tableRegistry;
     }
 
-    public SqlFromClause select(final String... columns) {
-        selectSpec.setColumns(Arrays.stream(columns).map(SelectField::new).toList());
+    public SqlFromClause select(final @Nullable String... columns) {
+        if (columns != null && columns.length > 0) {
+            selectSpec.setColumns(Arrays.stream(columns).map(SelectField::new).toList());
+        } else {
+            selectSpec.setColumns(Collections.emptyList());
+        }
+
         return new SqlFromClause(selectSpec, tableRegistry, this);
     }
 

@@ -5,6 +5,9 @@ import org.litebridge.orm.Litebridge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+
 public class SqlExample extends AbstractExample {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SqlExample.class);
@@ -17,14 +20,22 @@ public class SqlExample extends AbstractExample {
     public void run() {
         LOGGER.info("---======< SQL example >======---");
 
-        // Retrieve a person's details using a lower-level SQL query
+        LOGGER.info("[EXAMPLE] Retrieve all persons");
+        final List<LinkedHashMap<String, Object>> personRows =
+                litebridge.select().from("LB", "PERSON")
+                        .orderBy("PERSON_ID").asc()
+                        .list();
+
+        personRows.forEach(row -> LOGGER.info("Row data for PERSON record: {}", row));
+
+        LOGGER.info("[EXAMPLE] Retrieve persons using a WHERE clause");
         litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
                 .where("AGE").gt(18)
                 .and("AGE").lt(25)
                 .stream()
                 .forEach(record -> LOGGER.info("SQL result: Selected data for PERSON record: " + record));
 
-        // Retrieve a person's details using a lower-level SQL query and map it to a DTO
+        LOGGER.info("[EXAMPLE] Retrieve persons using SQL and map results to a DTO");
         litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
                 .where("AGE").gt(18)
                 .and("AGE").lt(25)
@@ -33,7 +44,7 @@ public class SqlExample extends AbstractExample {
                 .map(row -> litebridge.toDto(row, Person.class))
                 .forEach(p -> LOGGER.info("SQL result: Mapped Person object: " + p));
 
-        // Full example demonstrating the use of all SELECT clauses
+        LOGGER.info("[EXAMPLE] Testing mixtures of SELECT clauses");
         litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
                 .where("AGE").gte(1)
                 .and("AGE").lt(75)
