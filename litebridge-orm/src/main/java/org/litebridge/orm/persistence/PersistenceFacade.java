@@ -2,7 +2,7 @@ package org.litebridge.orm.persistence;
 
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
-import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.tracking.ChangedField;
 import org.litebridge.tracking.ChangedFields;
@@ -63,8 +63,8 @@ public class PersistenceFacade {
 
         final Map<String, Object> columnValues = new LinkedHashMap<>();
 
-        for (Column column : table.getMetaData().getColumns().values()) {
-            final String fieldName = table.getFieldForColumnName(column.getName()).getName();
+        for (ColumnMetaData column : table.getMetaData().columns()) {
+            final String fieldName = table.getFieldForColumnName(column.name()).getName();
             final ChangedField changedField = changedFields.getOrNull(fieldName);
             final Object value;
             final boolean basicType;
@@ -82,18 +82,18 @@ public class PersistenceFacade {
             }
 
             if (basicType) {
-                columnValues.put(column.getName(), value);
+                columnValues.put(column.name(), value);
             } else if (!table.isPersistedDto(value)) {
                 // Cascade save to the embedded DTO
                 save(value);
                 // Retrieve the PK
                 final Table embeddedDtoTable = tableRegistry.getTable(value.getClass());
                 // TODO: composite PK support
-                final List<String> embeddedDtoPk = embeddedDtoTable.getMetaData().getPrimaryKey();
+                final List<String> embeddedDtoPk = embeddedDtoTable.getMetaData().primaryKey();
                 final Field field = embeddedDtoTable.getFieldForColumnName(embeddedDtoPk.get(0));
 
                 try {
-                    columnValues.put(column.getName(), field.get(value));
+                    columnValues.put(column.name(), field.get(value));
                 } catch (IllegalAccessException ex) {
                     throw new IllegalStateException("Failed to retrieve PK from cascaded DTO: " + value, ex);
                 }
@@ -110,7 +110,7 @@ public class PersistenceFacade {
     }
 
     private void insert(final Object dto, final Table table, final Map<String, Object> columnValues) throws SQLException {
-        table.getMetaData().getPrimaryKey().stream()
+        table.getMetaData().primaryKey().stream()
                 .filter(pk -> !columnValues.containsKey(pk))
                 .forEach(pk -> {
                     final Field pkField = Objects.requireNonNull(table.getFieldForColumnName(pk), "Missing field for PK column: " + pk);
@@ -129,8 +129,8 @@ public class PersistenceFacade {
         final List<Object> generatedKeys = databaseProvider.insert(table.getMetaData(), columnValues);
 
         if (!CollectionUtils.isEmpty(generatedKeys)) {
-            table.getMetaData().getPrimaryKey().forEach(pk -> {
-                final Object pkValue = generatedKeys.get(table.getMetaData().getPrimaryKey().indexOf(pk));
+            table.getMetaData().primaryKey().forEach(pk -> {
+                final Object pkValue = generatedKeys.get(table.getMetaData().primaryKey().indexOf(pk));
                 final Field pkField = Objects.requireNonNull(table.getFieldForColumnName(pk), "Missing field for PK column: " + pk);
 
                 try {
@@ -144,7 +144,7 @@ public class PersistenceFacade {
 
     private void update(final Object dto, final Table table, final Map<String, Object> columnValues) throws SQLException {
         // Extract the PK
-        final LinkedHashMap<String, Object> primaryKey = table.getMetaData().getPrimaryKey().stream()
+        final LinkedHashMap<String, Object> primaryKey = table.getMetaData().primaryKey().stream()
                 .collect(Collectors.toMap(Function.identity(),
                         pkColumn -> {
                             Object pkValue = columnValues.remove(pkColumn);

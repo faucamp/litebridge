@@ -1,14 +1,14 @@
 package org.litebridge.orm.api.sql;
 
-import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.Aliased;
+import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.FromClause;
 import org.litebridge.orm.api.select.model.SelectSpec;
-import org.litebridge.orm.persistence.Table;
 import org.litebridge.orm.persistence.TableRegistry;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.Objects;
 
 public final class SqlFromClause implements FromClause<LinkedHashMap<String, Object>,
         SqlFromClauseTerminal,
@@ -20,13 +20,16 @@ public final class SqlFromClause implements FromClause<LinkedHashMap<String, Obj
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
+    private final Aliased[] columns;
     private final SelectSpec selectSpec;
     private final TableRegistry tableRegistry;
     private final SqlSelector delegate;
 
-    public SqlFromClause(final SelectSpec selectSpec,
+    public SqlFromClause(final Aliased[] columns,
+                         final SelectSpec selectSpec,
                          final TableRegistry tableRegistry,
                          final SqlSelector delegate) {
+        this.columns = columns;
         this.selectSpec = selectSpec;
         this.tableRegistry = tableRegistry;
         this.delegate = delegate;
@@ -34,27 +37,17 @@ public final class SqlFromClause implements FromClause<LinkedHashMap<String, Obj
 
     @Override
     public SqlFromClauseTerminal from(final String schema, final String table) {
-        final TableMetaData tableMetaData = getTableMetaData(schema, table);
-        selectSpec.setTable(tableMetaData);
+        final Table spiTable = tableRegistry.getOrCreateSpiTable(schema, table);
+        selectSpec.setTable(spiTable);
+        selectSpec.setColumns(Arrays.stream(columns)
+                .map(aliased -> {
+                    if (aliased instanceof Column column) {
+                        return column;
+                    } else {
+                        return new Column(spiTable, aliased.name(), aliased.alias());
+                    }
+                })
+                .toList());
         return new SqlFromClauseTerminal(delegate);
-    }
-
-    @Override
-    public SqlFromClauseTerminal from(final String table) {
-        return from("", table);
-    }
-
-    private TableMetaData getTableMetaData(final String schema, final String table) {
-        // If the table has been registered for DTO mapping, use the corresponding Table object, else use the table name directly
-        final TableMetaData tableMetaData;
-        final Table tableImpl = tableRegistry.getTable(table);
-
-        if (tableImpl != null && Objects.equals(schema, tableImpl.getMetaData().getSchema())) {
-            tableMetaData = tableImpl.getMetaData();
-        } else {
-            tableMetaData = new TableMetaData("", schema, table, Collections.emptyList(), Collections.emptyList());
-        }
-
-        return tableMetaData;
     }
 }

@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.sql;
 
+import org.litebridge.db.spi.Column;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
@@ -20,7 +21,8 @@ public final class SqlWhereConditionClauseTerminal
 
     @Override
     public SqlWhereConditionClause and(final String column) {
-        return new SqlWhereConditionClause(selectSpec.newWhereCondition(column), this);
+        final Column spiColumn = new Column(selectSpec.getTable(), column);
+        return new SqlWhereConditionClause(selectSpec.newWhereCondition(spiColumn), this);
     }
 
     @Override

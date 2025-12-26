@@ -64,4 +64,12 @@ public final class StringUtils {
 
         return str;
     }
+
+    public static String blankIfNull(final @Nullable String str) {
+        return str == null ? "" : str;
+    }
+
+    public static String defaultIfNull(final @Nullable String str, final String defaultValue) {
+        return str == null ? defaultValue : str;
+    }
 }

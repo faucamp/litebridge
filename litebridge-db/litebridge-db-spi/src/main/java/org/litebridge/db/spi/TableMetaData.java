@@ -1,77 +1,74 @@
 package org.litebridge.db.spi;
 
-import java.util.LinkedHashMap;
+import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.ObjectUtils;
+
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public final class TableMetaData {
+public final class TableMetaData extends Table {
 
-    private final String catalog;
-    private final String schema;
-    private final String table;
     private final List<String> primaryKey;
-    private final LinkedHashMap<String, Column> columns;
+    private final List<ColumnMetaData> columns;
+    private final Map<String, ColumnMetaData> columnMap;
 
-    public TableMetaData(String catalog, String schema, String table, final List<String> primaryKey, List<Column> columns) {
-        this.catalog = catalog;
-        this.schema = schema;
-        this.table = table;
+    public TableMetaData(final Table table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
+        this(table.catalog(), table.schema(), table.name(), primaryKey, columns);
+    }
+
+    public TableMetaData(final String catalog, final String schema, final String table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
+        super(catalog, schema, table);
         this.primaryKey = primaryKey;
-        this.columns = columns.stream()
-                .collect(Collectors.toMap(Column::getName,
-                        Function.identity(),
-                        (oldValue, newValue) -> newValue,
-                        LinkedHashMap::new));
+        this.columns = Collections.unmodifiableList(columns);
+        this.columnMap = columns.stream()
+                .collect(Collectors.toMap(ColumnMetaData::name,
+                        Function.identity()));
     }
 
-    public String getCatalog() {
-        return catalog;
-    }
-
-    public String getSchema() {
-        return schema;
-    }
-
-    public String getTable() {
-        return table;
-    }
-
-    public List<String> getPrimaryKey() {
+    public List<String> primaryKey() {
         return primaryKey;
     }
 
-    public LinkedHashMap<String, Column> getColumns() {
+    public List<ColumnMetaData> columns() {
         return columns;
     }
 
+    public ColumnMetaData column(final String columnName) {
+        return ObjectUtils.requireNonNull(columnMap.get(columnName), "Column metadata not found: " + columnName);
+    }
+
+    public boolean hasColumn(final String columnName) {
+        return columnMap.containsKey(columnName);
+    }
+
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (TableMetaData) obj;
-        return Objects.equals(this.catalog, that.catalog) &&
-                Objects.equals(this.schema, that.schema) &&
-                Objects.equals(this.table, that.table) &&
+        return Objects.equals(this.catalog(), that.catalog()) &&
+                Objects.equals(this.schema(), that.schema()) &&
+                Objects.equals(this.name(), that.name()) &&
                 Objects.equals(this.primaryKey, that.primaryKey) &&
                 Objects.equals(this.columns, that.columns);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(catalog, schema, table, primaryKey, columns);
+        return Objects.hash(catalog(), schema(), name(), primaryKey, columns);
     }
 
     @Override
     public String toString() {
         return "TableMetaData[" +
-                "catalog=" + catalog + ", " +
-                "schema=" + schema + ", " +
-                "table=" + table + ", " +
+                "catalog=" + catalog() + ", " +
+                "schema=" + schema() + ", " +
+                "table=" + name() + ", " +
                 "primaryKey=" + primaryKey + ", " +
                 "columns=" + columns + ']';
     }
-
-
 }

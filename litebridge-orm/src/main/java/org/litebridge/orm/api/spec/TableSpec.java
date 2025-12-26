@@ -4,6 +4,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
+import org.litebridge.db.spi.Table;
 
 import java.util.Map;
 
@@ -14,53 +15,21 @@ import java.util.Map;
  * with different configurations.
  */
 @NullMarked
-public final class TableSpec {
+public final class TableSpec extends Table {
 
-    /**
-     * Database catalog name
-     */
-    @Nullable
-    private final String catalog;
-    /**
-     * Database schema name
-     */
-    @Nullable
-    private final String schema;
-    /**
-     * Database table name
-     */
-    private final String table;
     /**
      * Field name to ColumnSpec map; key is field name, value is the column definition
      */
     private final Map<String, ColumnSpec> fieldColumnSpecMap;
 
-    public TableSpec(@Nullable final String catalog, @Nullable final String schema, final String table, final Map<String, ColumnSpec> fieldColumnSpecMap) {
-        this.catalog = catalog;
-        this.schema = schema;
-        this.table = StringUtils.requireNonBlank(table, "Table name cannot be null");
+    public TableSpec(@Nullable final String catalog,
+                     @Nullable final String schema,
+                     final String table,
+                     final Map<String, ColumnSpec> fieldColumnSpecMap) {
+        super(StringUtils.blankIfNull(catalog),
+                StringUtils.blankIfNull(schema),
+                StringUtils.requireNonBlank(table, "Table name cannot be blank"));
         this.fieldColumnSpecMap = CollectionUtils.requireNonEmpty(fieldColumnSpecMap, "Field-column map cannot be null");
-    }
-
-    /**
-     * @return Database catalog name
-     */
-    public @Nullable String getCatalog() {
-        return catalog;
-    }
-
-    /**
-     * @return Database schema name
-     */
-    public @Nullable String getSchema() {
-        return schema;
-    }
-
-    /**
-     * @return Database table name
-     */
-    public String getTable() {
-        return table;
     }
 
     /**
@@ -68,7 +37,7 @@ public final class TableSpec {
      *
      * @return field name-database column mapping
      */
-    public Map<String, ColumnSpec> getFieldColumnSpecMap() {
+    public Map<String, ColumnSpec> fieldColumnSpecMap() {
         return fieldColumnSpecMap;
     }
 

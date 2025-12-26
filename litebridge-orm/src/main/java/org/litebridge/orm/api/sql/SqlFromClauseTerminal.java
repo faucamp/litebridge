@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.sql;
 
+import org.litebridge.db.spi.Column;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
 
 import java.util.LinkedHashMap;
@@ -11,20 +12,23 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Link
         SqlWhereConditionClause,
         SqlWhereConditionClauseTerminal,
         SqlOrderByClause,
-        SqlOrderByClauseChain> {
+        SqlOrderByClauseChain>
+
+        implements SqlJoinClauseTerminal {
 
     public SqlFromClauseTerminal(final SqlSelector delegate) {
         super(delegate);
     }
 
     @Override
-    public SqlJoinClause join(final String table) {
-        return new SqlJoinClause(selectSpec.newJoinSpec(table), delegate);
+    public SqlJoinClause join(final String schema, final String table) {
+        return new SqlJoinClause(selectSpec.newJoinSpec(schema, table), delegate);
     }
 
     @Override
     public SqlWhereConditionClause where(final String column) {
-        return new SqlWhereConditionClause(selectSpec.newWhereCondition(column), new SqlWhereConditionClauseTerminal((SqlSelector) delegate));
+        final Column spiColumn = new Column(selectSpec.getTable(), column);
+        return new SqlWhereConditionClause(selectSpec.newWhereCondition(spiColumn), new SqlWhereConditionClauseTerminal((SqlSelector) delegate));
     }
 
     @Override

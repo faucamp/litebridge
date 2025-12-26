@@ -12,5 +12,7 @@ public interface FromClause<DTO,
 
     FCT from(final String schema, final String table);
 
-    FCT from(final String table);
+    default FCT from(final String table) {
+        return from("", table);
+    }
 }

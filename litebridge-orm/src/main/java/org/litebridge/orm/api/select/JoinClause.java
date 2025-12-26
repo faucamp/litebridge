@@ -6,4 +6,5 @@ public interface JoinClause<DTO,
 
     JCC on(String column);
 
+    JCCT using(String column);
 }

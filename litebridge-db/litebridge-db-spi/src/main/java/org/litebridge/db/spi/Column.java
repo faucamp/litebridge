@@ -1,93 +1,37 @@
 package org.litebridge.db.spi;
 
-import java.util.Objects;
-import java.util.StringJoiner;
+import org.jspecify.annotations.Nullable;
 
-public final class Column {
+public class Column extends Aliased {
 
-    private final String name;
-    private final boolean nullable;
-    private final int dataType;
-    private final int size;
-    private final int decimalDigits;
-    private boolean autoIncrement;
-    private String sequence;
+    private final Table table;
 
-    public Column(final String name, final boolean nullable, final int dataType, final int size, final int decimalDigits, final boolean autoIncrement, final String sequence) {
-        this.name = name;
-        this.nullable = nullable;
-        this.dataType = dataType;
-        this.size = size;
-        this.decimalDigits = decimalDigits;
-        this.autoIncrement = autoIncrement;
-        this.sequence = sequence;
+    public Column(final Table table, final String name) {
+        this(table, name, null);
     }
 
-    public Column(final String name, final boolean nullable, final int dataType, final int size) {
-        this(name, nullable, dataType, size, 0, false, null);
+    public Column(final Table table, final String name, final @Nullable String alias) {
+        super(name, alias);
+        this.table = table;
     }
 
-    public Column(final String name, final boolean nullable, final int dataType) {
-        this(name, nullable, dataType, 0);
+    public Table table() {
+        return table;
     }
 
-    public String getName() {
-        return name;
+    public static Column c(final Table table, final String column) {
+        return new Column(table, column);
     }
 
-    public boolean isNullable() {
-        return nullable;
+    public static Column c(final String table, final String column) {
+        return c("", "", table, column);
     }
 
-    public int getDataType() {
-        return dataType;
+    public static Column c(final String schema, final String table, final String column) {
+        return c("", schema, table, column);
     }
 
-    public int getSize() {
-        return size;
-    }
-
-    public int getDecimalDigits() {
-        return decimalDigits;
-    }
-
-    public boolean isAutoIncrement() {
-        return autoIncrement;
-    }
-
-    public void setAutoIncrement(final boolean autoIncrement) {
-        this.autoIncrement = autoIncrement;
-    }
-
-    public String getSequence() {
-        return sequence;
-    }
-
-    public void setSequence(final String sequence) {
-        this.sequence = sequence;
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (!(o instanceof final Column column)) return false;
-        return nullable == column.nullable && dataType == column.dataType && size == column.size && decimalDigits == column.decimalDigits && autoIncrement == column.autoIncrement && Objects.equals(name, column.name) && Objects.equals(sequence, column.sequence);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, nullable, dataType, size, decimalDigits, autoIncrement, sequence);
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", Column.class.getSimpleName() + "[", "]")
-                .add("name='" + name + "'")
-                .add("nullable=" + nullable)
-                .add("dataType=" + dataType)
-                .add("size=" + size)
-                .add("decimalDigits=" + decimalDigits)
-                .add("autoIncrement=" + autoIncrement)
-                .add("sequenceName='" + sequence + "'")
-                .toString();
+    public static Column c(final String catalog, final String schema, final String table, final String column) {
+        return new Column(new Table(catalog, schema, table), column);
     }
 }

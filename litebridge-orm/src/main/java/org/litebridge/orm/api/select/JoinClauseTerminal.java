@@ -13,6 +13,4 @@ public interface JoinClauseTerminal<DTO,
 
     WCC where(final String column);
 
-    JC join(String table);
-
 }

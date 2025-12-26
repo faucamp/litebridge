@@ -1,15 +1,15 @@
 package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
-import org.litebridge.db.spi.query.SelectField;
+import org.litebridge.db.spi.Aliased;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.Table;
 
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 public final class DtoSelector<DTO> extends AbstractSelector<DTO> {
 
@@ -27,24 +27,32 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO> {
     }
 
     public DtoFromClauseTerminal<DTO> select(final String... fields) {
-        return select(Arrays.stream(fields).map(SelectField::new));
-    }
+        selectSpec.setColumns(Arrays.stream(fields)
+                .map(field -> {
+                    // Map the input DTO field names to database column names
+                    final ColumnMetaData column = table.getColumnForFieldName(field);
+                    return new Column(table.getMetaData(), column.name());
+                })
+                .toList());
 
-    public DtoFromClauseTerminal<DTO> select(final SelectField... fields) {
-        return select(Arrays.stream(fields));
-    }
-
-    public DtoFromClauseTerminal<DTO> selectAll() {
-        selectSpec.setColumns(table.getMetaData().getColumns().keySet().stream().map(SelectField::new).toList());
         return new DtoFromClauseTerminal<>(this);
     }
 
-    public DtoFromClauseTerminal<DTO> select(final Stream<SelectField> fields) {
-        selectSpec.setColumns(fields.map(selectField -> {
+    public DtoFromClauseTerminal<DTO> select(final Aliased... fields) {
+        selectSpec.setColumns(Arrays.stream(fields)
+                .map(field -> {
                     // Map the input DTO field names to database column names
-                    final Column column = table.getColumnForFieldName(selectField.name());
-                    return new SelectField(column.getName(), selectField.alias());
+                    final ColumnMetaData column = table.getColumnForFieldName(field.name());
+                    return new Column(table.getMetaData(), column.name(), field.alias());
                 })
+                .toList());
+
+        return new DtoFromClauseTerminal<>(this);
+    }
+
+    public DtoFromClauseTerminal<DTO> selectAll() {
+        selectSpec.setColumns(table.getMetaData().columns().stream()
+                .map(column -> (Column) column)
                 .toList());
         return new DtoFromClauseTerminal<>(this);
     }

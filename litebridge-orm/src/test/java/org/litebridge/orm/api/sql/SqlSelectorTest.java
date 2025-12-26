@@ -47,7 +47,7 @@ class SqlSelectorTest {
 
         assertNotNull(selectSpec);
         assertNotNull(selectSpec.getTable());
-        assertEquals("TABLE", selectSpec.getTable().getTable());
+        assertEquals("TABLE", selectSpec.getTable().name());
 
         assertNotNull(selectSpec.getColumns());
         assertEquals(2, selectSpec.getColumns().size());

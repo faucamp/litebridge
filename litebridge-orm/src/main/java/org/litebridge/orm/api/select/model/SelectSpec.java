@@ -2,9 +2,10 @@ package org.litebridge.orm.api.select.model;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
+import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.query.Select;
-import org.litebridge.db.spi.query.SelectField;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,9 +15,9 @@ import java.util.Optional;
 public class SelectSpec {
 
     @Nullable
-    private TableMetaData table;
+    private Table table;
     @Nullable
-    private List<SelectField> columns;
+    private List<Column> columns;
     @Nullable
     private List<JoinSpec> joins;
     @Nullable
@@ -26,19 +27,19 @@ public class SelectSpec {
     @Nullable
     private LimitSpec limit;
 
-    public @Nullable TableMetaData getTable() {
+    public @Nullable Table getTable() {
         return table;
     }
 
-    public void setTable(final TableMetaData table) {
+    public void setTable(final Table table) {
         this.table = table;
     }
 
-    public @Nullable List<SelectField> getColumns() {
+    public @Nullable List<Column> getColumns() {
         return columns;
     }
 
-    public void setColumns(final List<SelectField> columns) {
+    public void setColumns(final List<Column> columns) {
         this.columns = columns;
     }
 
@@ -51,11 +52,15 @@ public class SelectSpec {
     }
 
     public JoinSpec newJoinSpec(final String table) {
+        return newJoinSpec("", table);
+    }
+
+    public JoinSpec newJoinSpec(final String schema, final String table) {
         if (this.joins == null) {
             joins = new ArrayList<>();
         }
 
-        final JoinSpec joinSpec = new JoinSpec(table);
+        final JoinSpec joinSpec = new JoinSpec(schema, table);
         joins.add(joinSpec);
         return joinSpec;
     }
@@ -68,7 +73,7 @@ public class SelectSpec {
         this.whereConditions = whereConditions;
     }
 
-    public ConditionSpec newWhereCondition(final String column) {
+    public ConditionSpec newWhereCondition(final Column column) {
         if (this.whereConditions == null) {
             whereConditions = new ArrayList<>();
         }

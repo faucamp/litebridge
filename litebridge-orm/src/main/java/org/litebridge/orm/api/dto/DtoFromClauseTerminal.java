@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridge.orm.persistence.Table;
 
@@ -13,7 +14,9 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         DtoWhereConditionClause<DTO>,
         DtoWhereConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
-        DtoOrderByClauseChain<DTO>> {
+        DtoOrderByClauseChain<DTO>>
+
+        implements DtoJoinClassTerminal<DTO> {
 
     private final Table table;
 
@@ -24,20 +27,20 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     @Override
     public DtoWhereConditionClause<DTO> where(final String field) {
-        final String column = table.getColumnForFieldName(field).getName();
+        final Column column = table.getColumnForFieldName(field);
         return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate));
     }
 
     @Override
-    public DtoJoinClause<DTO> join(final String table) {
-        return new DtoJoinClause<>(selectSpec.newJoinSpec(table), (DtoSelector<DTO>) delegate);
+    public DtoJoinClause<DTO> join(final Class<?> dtoClass) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
         final String[] columns = Arrays.stream(fields)
                 .map(table::getColumnForFieldName)
-                .map(Column::getName)
+                .map(ColumnMetaData::name)
                 .toArray(String[]::new);
         return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);
     }

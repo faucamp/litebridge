@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import static org.litebridge.db.spi.Column.c;
+
 public class SqlExample extends AbstractExample {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SqlExample.class);
@@ -44,16 +46,17 @@ public class SqlExample extends AbstractExample {
                 .map(row -> litebridge.toDto(row, Person.class))
                 .forEach(p -> LOGGER.info("SQL result: Mapped Person object: " + p));
 
-        LOGGER.info("[EXAMPLE] Testing mixtures of SELECT clauses");
-        litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
-                .where("AGE").gte(1)
-                .and("AGE").lt(75)
-                .orderBy("PERSON_ID").asc()
-                .limit(10)
-                .offset(1)
+        LOGGER.info("[EXAMPLE] Using joins");
+        litebridge.select(
+                        c("PERSON", "FIRST_NAME"),
+                        c("PERSON", "SURNAME"),
+                        c("PERSON", "AGE"),
+                        c("ACCOUNT", "ACCOUNT_ID"),
+                        c("ACCOUNT", "ACCOUNT_NAME"))
+                .from("LB", "PERSON")
+                .join("LB", "ACCOUNT").using("PERSON_ID")
                 .stream()
-                .map(row -> litebridge.toDto(row, Person.class))
-                .forEach(p -> LOGGER.info("SQL result: Mapped Person object: " + p));
+                .forEach(p -> LOGGER.info("Joined result: " + p));
     }
 
 }

@@ -3,7 +3,7 @@ package org.litebridge.orm.persistence;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
-import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.TrackedDto;
@@ -17,26 +17,26 @@ import java.util.Map;
 public class Table {
 
     private TableMetaData metaData;
-    private final Map<Field, Column> fieldColumnMap;
-    private final Map<String, Column> columnMap;
-    private final Map<String, Column> fieldNameColumnMap;
+    private final Map<Field, ColumnMetaData> fieldColumnMap;
+    private final Map<String, ColumnMetaData> columnMap;
+    private final Map<String, ColumnMetaData> fieldNameColumnMap;
     private final Map<String, Field> columnNameFieldMap;
     private final ChangeTracker changeTracker;
 
     private final WeakRefSet<Object> persistedDtos = new WeakRefSet<>();
 
-    public Table(final TableMetaData metaData, final Map<Field, Column> fieldColumnMap, final ChangeTracker changeTracker) {
+    public Table(final TableMetaData metaData, final Map<Field, ColumnMetaData> fieldColumnMap, final ChangeTracker changeTracker) {
         this.metaData = metaData;
         this.fieldColumnMap = fieldColumnMap;
         this.changeTracker = changeTracker;
-        final Map<String, Column> columnMap = new HashMap<>(fieldColumnMap.size());
-        final Map<String, Column> fieldNameColumnMap = new HashMap<>(fieldColumnMap.size());
+        final Map<String, ColumnMetaData> columnMap = new HashMap<>(fieldColumnMap.size());
+        final Map<String, ColumnMetaData> fieldNameColumnMap = new HashMap<>(fieldColumnMap.size());
         final Map<String, Field> columnNameFieldMap = new HashMap<>(fieldColumnMap.size());
 
         fieldColumnMap.forEach(((field, column) -> {
-            columnMap.put(column.getName(), column);
+            columnMap.put(column.name(), column);
             fieldNameColumnMap.put(field.getName(), column);
-            columnNameFieldMap.put(column.getName(), field);
+            columnNameFieldMap.put(column.name(), field);
         }));
 
         this.columnMap = Collections.unmodifiableMap(columnMap);
@@ -48,16 +48,16 @@ public class Table {
         return metaData;
     }
 
-    public Map<Field, Column> getFieldColumnMap() {
+    public Map<Field, ColumnMetaData> getFieldColumnMap() {
         return fieldColumnMap;
     }
 
-    public Column getColumnForFieldName(final String fieldName) {
-        return ObjectUtils.requireNonNull(fieldNameColumnMap.get(fieldName), "No column for field '" + fieldName + "' in schema '" + metaData.getSchema() + "', table '" + metaData.getTable() + "'");
+    public ColumnMetaData getColumnForFieldName(final String fieldName) {
+        return ObjectUtils.requireNonNull(fieldNameColumnMap.get(fieldName), "No column for field '" + fieldName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
     }
 
-    public Column getColumn(final String columnName) {
-        return ObjectUtils.requireNonNull(fieldNameColumnMap.get(columnName), "No column '" + columnName + "' in table '" + metaData.getTable() + "'");
+    public ColumnMetaData getColumn(final String columnName) {
+        return ObjectUtils.requireNonNull(fieldNameColumnMap.get(columnName), "No column '" + columnName + "' in table '" + metaData.name() + "'");
     }
 
     public <DTO> @Nullable TrackedDto<DTO> getTrackedDto(final DTO dto) {
@@ -69,7 +69,7 @@ public class Table {
     }
 
     public Field getFieldForColumnName(final String columnName) {
-        return ObjectUtils.requireNonNull(columnNameFieldMap.get(columnName), "No field for column '" + columnName + "' in schema '" + metaData.getSchema() + "', table '" + metaData.getTable() + "'");
+        return ObjectUtils.requireNonNull(columnNameFieldMap.get(columnName), "No field for column '" + columnName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
     }
 
     public void syncPersistedDto(final Object dto) {

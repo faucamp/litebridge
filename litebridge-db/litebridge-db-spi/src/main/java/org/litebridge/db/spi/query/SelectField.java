@@ -1,29 +1,23 @@
 package org.litebridge.db.spi.query;
 
-public class SelectField {
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Aliased;
+import org.litebridge.db.spi.Table;
 
-    private final String name;
-    private String alias;
+public class SelectField extends Aliased {
 
-    public SelectField(final String name) {
-        this.name = name;
+    private final Table table;
+
+    public SelectField(final Table table, final String name) {
+        this(table, name, null);
     }
 
-    public SelectField(final String name, final String alias) {
-        this.name = name;
-        this.alias = alias;
+    public SelectField(final Table table, final String name, @Nullable final String alias) {
+        super(name, alias);
+        this.table = table;
     }
 
-    public String name() {
-        return name;
-    }
-
-    public String alias() {
-        return alias;
-    }
-
-    SelectField as(String alias) {
-        this.alias = alias;
-        return this;
+    public Table table() {
+        return table;
     }
 }

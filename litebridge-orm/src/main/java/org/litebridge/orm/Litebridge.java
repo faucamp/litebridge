@@ -1,12 +1,13 @@
 package org.litebridge.orm;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
+import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.StringUtils;
-import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.Aliased;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelector;
 import org.litebridge.orm.api.spec.ColumnSpec;
@@ -23,12 +24,13 @@ import org.litebridge.tracking.ChangeTracker;
 
 import java.lang.reflect.Field;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public class Litebridge {
 
@@ -84,8 +86,16 @@ public class Litebridge {
         return new DtoSelector<>(dtoClass, table, databaseProvider, dtoMapper).selectAll();
     }
 
-    public SqlFromClause select(final @Nullable String... columns) {
+    public SqlFromClause select(final String... columns) {
         return new SqlSelector(databaseProvider, tableRegistry).select(columns);
+    }
+
+    public SqlFromClause select(final Aliased... columns) {
+        return new SqlSelector(databaseProvider, tableRegistry).select(columns);
+    }
+
+    public SqlFromClause select() {
+        return new SqlSelector(databaseProvider, tableRegistry).select(new Aliased[0]);
     }
 
     private Table mapToTable(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
@@ -94,31 +104,33 @@ public class Litebridge {
             throw new IllegalArgumentException("DTO class cannot be null");
         } else if (ClassUtils.isBasicType(dtoClass)) {
             throw new IllegalArgumentException("Not a DTO: " + dtoClass.getName());
-        } else if (CollectionUtils.isEmpty(tableSpec.getFieldColumnSpecMap())) {
+        } else if (CollectionUtils.isEmpty(tableSpec.fieldColumnSpecMap())) {
             throw new IllegalArgumentException("No field-column map provided");
         }
 
         // Read the table metadata
-        final TableMetaData tableMetaData = databaseProvider.getTableMetaData(tableSpec.getCatalog(), tableSpec.getSchema(), tableSpec.getTable());
+        final TableMetaData tableMetaData = databaseProvider.getTableMetaData(tableSpec);
 
-        final Map<Field, Column> columnMap = mapFields(dtoClass, tableMetaData, tableSpec.getFieldColumnSpecMap());
+        final Map<Field, ColumnMetaData> columnMap = mapFields(dtoClass, tableMetaData, tableSpec.fieldColumnSpecMap());
         return new Table(tableMetaData, columnMap, changeTracker);
     }
 
-    private Map<Field, Column> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<String, ColumnSpec> fieldColumnSpecMap) {
-        final Set<String> unmappedColumns = new TreeSet<>(tableMetaData.getColumns().keySet());
-        final Map<Field, Column> mappedFields = new HashMap<>();
+    private Map<Field, ColumnMetaData> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<String, ColumnSpec> fieldColumnSpecMap) {
+        final Set<String> unmappedColumns = tableMetaData.columns().stream()
+                .map(ColumnMetaData::name)
+                .collect(Collectors.toSet());
+        final Map<Field, ColumnMetaData> mappedFields = new HashMap<>();
 
         // Validate and formalise field mapping
         fieldColumnSpecMap.forEach((fieldName, columnSpec) -> {
-            if (!tableMetaData.getColumns().containsKey(columnSpec.getName())) {
-                throw new IllegalArgumentException(String.format("Column '%s', mapped by field '%s' of DTO '%s', does not exist in table: '%s'", columnSpec, fieldName, dtoClass, tableMetaData.getTable()));
+            if (!tableMetaData.hasColumn(columnSpec.getName())) {
+                throw new IllegalArgumentException(String.format("Column '%s', mapped by field '%s' of DTO '%s', does not exist in table: '%s'", columnSpec, fieldName, dtoClass, tableMetaData.name()));
             }
 
             if (!unmappedColumns.contains(columnSpec.getName())) {
                 // Column is already mapped
                 final String conflictingFieldName = mappedFields.entrySet().stream()
-                        .filter(fieldColumnEntry -> fieldColumnEntry.getValue().getName().equals(columnSpec.getName()))
+                        .filter(fieldColumnEntry -> fieldColumnEntry.getValue().name().equals(columnSpec.getName()))
                         .map(Map.Entry::getKey)
                         .map(Field::getName)
                         .findFirst()
@@ -128,7 +140,7 @@ public class Litebridge {
 
             // Add field-column mapping
             final Field field = ClassUtils.getField(dtoClass, fieldName);
-            final Column column = tableMetaData.getColumns().get(columnSpec.getName());
+            final ColumnMetaData column = ObjectUtils.requireNonNull(tableMetaData.column(columnSpec.getName()), "Column metadata not found: " + columnSpec.getName());
 
             if (!StringUtils.isBlank(columnSpec.getSequence())) {
                 column.setSequence(columnSpec.getSequence());
@@ -148,11 +160,11 @@ public class Litebridge {
         if (!unmappedColumns.isEmpty()) {
             // Check if any non-nullable columns are missing
             final List<String> missingColumns = unmappedColumns.stream()
-                    .filter(columnName -> !tableMetaData.getColumns().get(columnName).isNullable())
+                    .filter(columnName -> !tableMetaData.column(columnName).isNullable())
                     .toList();
 
             if (!missingColumns.isEmpty()) {
-                throw new IllegalArgumentException(String.format("Unmapped non-nullable columns for table '%s': %s; DTO class: '%s'", tableMetaData.getTable(), missingColumns, dtoClass.getName()));
+                throw new IllegalArgumentException(String.format("Unmapped non-nullable columns for table '%s': %s; DTO class: '%s'", tableMetaData.name(), missingColumns, dtoClass.getName()));
             }
         }
 

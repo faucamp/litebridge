@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 
 public interface DatabaseProvider {
 
-    TableMetaData getTableMetaData(String catalog, String schema, String table) throws SQLException;
+    TableMetaData getTableMetaData(Table table) throws SQLException;
 
     @Nullable
     List<Object> insert(TableMetaData tableMetaData, Map<String, Object> columnValueMap) throws SQLException;

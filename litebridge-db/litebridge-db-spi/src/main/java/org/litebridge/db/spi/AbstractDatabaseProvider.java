@@ -10,7 +10,6 @@ import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
-import org.litebridge.db.spi.query.SelectField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public abstract class AbstractDatabaseProvider implements DatabaseProvider {
@@ -33,6 +33,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDatabaseProvider.class);
     private final Connection connection;
     private final TypeConverter typeConverter;
+    private final Map<Table, TableMetaData> tableMetaDataCache = new ConcurrentHashMap<>();
 
     public AbstractDatabaseProvider(final Connection connection,
                                     final TypeConverter typeConverter) {
@@ -41,24 +42,43 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public TableMetaData getTableMetaData(final String catalog, final String schema, final String table) throws SQLException {
+    public TableMetaData getTableMetaData(final Table table) throws SQLException {
+        return ensureTableMetaData(table);
+    }
+
+    private TableMetaData ensureTableMetaData(final String schema, final String table) throws SQLException {
+        return ensureTableMetaData(new Table("", schema, table));
+    }
+
+    private TableMetaData ensureTableMetaData(final Table table) throws SQLException {
+        TableMetaData tableMetaData = this.tableMetaDataCache.get(table);
+
+        if (tableMetaData == null) {
+            tableMetaData = fetchTableMetaData(table);
+            tableMetaDataCache.put(table, tableMetaData);
+        }
+
+        return tableMetaData;
+    }
+
+    protected TableMetaData fetchTableMetaData(final Table table) throws SQLException {
         final DatabaseMetaData databaseMetaData = connection.getMetaData();
 
         // Verify basic details
-        verifySchemaAndTableExists(catalog, schema, table, databaseMetaData);
+        verifySchemaAndTableExists(table, databaseMetaData);
 
         // Load table metadata
-        final List<String> primaryKeys = getPrimaryKeyColumnNames(catalog, schema, table, databaseMetaData);
-        final List<Column> columns = getColumnNames(catalog, schema, table, databaseMetaData);
-        return new TableMetaData(catalog, schema, table, primaryKeys, columns);
+        final List<String> primaryKeys = getPrimaryKeyColumnNames(table, databaseMetaData);
+        final List<ColumnMetaData> columns = getColumnNames(table, databaseMetaData);
+        return new TableMetaData(table, primaryKeys, columns);
     }
 
     @Override
     public @Nullable List<Object> insert(final TableMetaData tableMetaData, final Map<String, Object> columnValueMap) throws SQLException {
         final StringBuilder sql = new StringBuilder("INSERT INTO ")
-                .append(tableMetaData.getSchema())
+                .append(tableMetaData.schema())
                 .append('.')
-                .append(tableMetaData.getTable())
+                .append(tableMetaData.name())
                 .append(" (")
                 .append(String.join(", ", columnValueMap.keySet()))
                 .append(") VALUES (");
@@ -66,12 +86,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final List<BindValue> bindValues = new ArrayList<>();
 
         for (Map.Entry<String, Object> entry : columnValueMap.entrySet()) {
-            final Column column = tableMetaData.getColumns().get(entry.getKey());
+            final ColumnMetaData column = tableMetaData.column(entry.getKey());
             final Object convertedValue = typeConverter.convert(entry.getValue(), column.getDataType());
 
             if (convertedValue == null) {
                 if (!column.isNullable() && !column.isAutoIncrement() && column.getSequence() == null) {
-                    throw new IllegalArgumentException("Attempting to insert NULL into non-nullable column: '%s'. Possible cause: column spec missing generator such as autoincrement/sequence (schema: '%s', table: '%s')".formatted(column.getName(), tableMetaData.getSchema(), tableMetaData.getTable()));
+                    throw new IllegalArgumentException("Attempting to insert NULL into non-nullable column: '%s'. Possible cause: column spec missing generator such as autoincrement/sequence (schema: '%s', table: '%s')".formatted(column.name(), tableMetaData.schema(), tableMetaData.name()));
                 } else if (column.getSequence() != null) {
                     // Add the next value in the sequence directly to the statement
                     sql.append(createSequenceNextValueForDirectInsert(column.getSequence()));
@@ -104,9 +124,9 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     @Override
     public @Nullable List<Object> update(final TableMetaData tableMetaData, final Map<String, Object> columnValueMap, final LinkedHashMap<String, Object> primaryKey) throws SQLException {
         final StringBuilder sql = new StringBuilder("UPDATE ")
-                .append(tableMetaData.getSchema())
+                .append(tableMetaData.schema())
                 .append('.')
-                .append(tableMetaData.getTable())
+                .append(tableMetaData.name())
                 .append(" SET ");
 
         columnValueMap.keySet().forEach(columnName -> sql.append(columnName).append(" = ?, "));
@@ -117,13 +137,13 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
         final List<BindValue> bindValues = columnValueMap.entrySet().stream()
                 .map(entry -> {
-                    final Column column = tableMetaData.getColumns().get(entry.getKey());
+                    final ColumnMetaData column = tableMetaData.column(entry.getKey());
                     final Object convertedValue = typeConverter.convert(entry.getValue(), column.getDataType());
                     return new BindValue(convertedValue, column.getDataType());
                 })
                 .collect(Collectors.toCollection(ArrayList::new));
         primaryKey.forEach((columnName, value) -> {
-            final Column column = tableMetaData.getColumns().get(columnName);
+            final ColumnMetaData column = tableMetaData.column(columnName);
             final Object convertedValue = typeConverter.convert(value, column.getDataType());
             bindValues.add(new BindValue(convertedValue, column.getDataType()));
         });
@@ -149,14 +169,14 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
         // Select fields
         if (!CollectionUtils.isEmpty(select.columns())) {
-            for (final SelectField column : select.columns()) {
+            for (final Column column : select.columns()) {
                 if (first) {
                     first = false;
                 } else {
                     sql.append(", ");
                 }
 
-                sql.append(column.name());
+                sql.append(column.table().name()).append('.').append(column.name());
 
                 if (!StringUtils.isBlank(column.alias())) {
                     sql.append(" AS ").append(column.alias());
@@ -169,11 +189,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
         sql.append(" FROM ");
 
-        if (!StringUtils.isBlank(select.table().getSchema())) {
-            sql.append(select.table().getSchema()).append('.');
+        if (!StringUtils.isBlank(select.table().schema())) {
+            sql.append(select.table().schema()).append('.');
         }
 
-        sql.append(select.table().getTable());
+        sql.append(select.table().name());
 
         // Joins
         if (!CollectionUtils.isEmpty(select.joins())) {
@@ -194,8 +214,17 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         // Where
         if (!CollectionUtils.isEmpty(select.where())) {
             sql.append(" WHERE ");
-            select.where().forEach(condition -> sql.append(createCondition(condition)).append(" AND "));
-            sql.delete(sql.length() - 5, sql.length());
+
+            first = true;
+            for (Condition condition : select.where()) {
+                if (first) {
+                    first = false;
+                } else {
+                    sql.append(" AND ");
+                }
+
+                sql.append(createCondition(condition));
+            }
         }
 
         // Order by
@@ -223,7 +252,20 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     protected String createJoin(final Join join) {
-        final StringBuilder sb = new StringBuilder(join.table()).append(" ON ");
+        final StringBuilder sb = new StringBuilder();
+
+        if (!StringUtils.isBlank(join.table().schema())) {
+            sb.append(join.table().schema()).append('.');
+        }
+
+        sb.append(join.table().name());
+
+        if (join.conditions().getFirst().operator() != Operator.USING) {
+            sb.append(" ON ");
+        } else {
+            sb.append(' ');
+        }
+
         boolean first = true;
 
         for (Condition condition : join.conditions()) {
@@ -241,9 +283,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     protected String createCondition(final Condition condition) {
         if (condition.operator() == Operator.IS_NULL || condition.operator() == Operator.IS_NOT_NULL) {
-            return "%s %s".formatted(condition.column(), mapOperator(condition.operator()));
+            return "%s %s".formatted(condition.column().name(), mapOperator(condition.operator()));
+        } else if (condition.operator() == Operator.USING) {
+            return "%s (%s)".formatted(mapOperator(condition.operator()), condition.column().name());
         } else {
-            return "%s %s ?".formatted(condition.column(), mapOperator(condition.operator()));
+            return "%s %s ?".formatted(condition.column().name(), mapOperator(condition.operator()));
         }
     }
 
@@ -258,6 +302,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             case IN -> "IN";
             case IS_NULL -> "IS NULL";
             case IS_NOT_NULL -> "IS NOT NULL";
+            case USING -> "USING";
         };
     }
 
@@ -268,10 +313,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             final int affectedRows = preparedStatement.executeUpdate();
 
             if (affectedRows > 0 && returnGeneratedKeys) {
-                generatedKeys = new ArrayList<>(tableMetaData.getPrimaryKey().size());
+                generatedKeys = new ArrayList<>(tableMetaData.primaryKey().size());
                 final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
 
-                for (String pkColumnName : tableMetaData.getPrimaryKey()) {
+                for (String pkColumnName : tableMetaData.primaryKey()) {
                     if (generatedKeysResultSet.next()) {
                         final Object generatedId = generatedKeysResultSet.getLong(pkColumnName);
                         LOGGER.debug("Generated ID for column '{}': {}", pkColumnName, generatedId);
@@ -288,17 +333,18 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return generatedKeys;
     }
 
-    private List<LinkedHashMap<String, Object>> executeSqlQuery(final String sql, final List<SelectField> columns, final List<Condition> conditions, final TableMetaData tableMetaData) throws SQLException {
+    private List<LinkedHashMap<String, Object>> executeSqlQuery(final String sql, final List<Column> columns, final List<Condition> conditions, final Table table) throws SQLException {
+        final TableMetaData fromTable = ensureTableMetaData(table);
         final List<BindValue> bindValues = conditions.stream()
                 .filter(condition -> condition.operator() != Operator.IS_NULL && condition.operator() != Operator.IS_NOT_NULL)
                 .map(condition -> {
-                    final Column column = ObjectUtils.requireNonNull(tableMetaData.getColumns().get(condition.column()), () -> new IllegalArgumentException("Column not found: " + condition.column()));
+                    final ColumnMetaData column = fromTable.column(condition.column().name());
                     final Object convertedValue = typeConverter.convert(condition.value(), column.getDataType());
                     return new BindValue(convertedValue, column.getDataType());
                 })
                 .toList();
 
-        try (final PreparedStatement preparedStatement = createPreparedStatement(sql, bindValues, tableMetaData, false)) {
+        try (final PreparedStatement preparedStatement = createPreparedStatement(sql, bindValues, fromTable, false)) {
             final ResultSet resultSet = preparedStatement.executeQuery();
             final List<LinkedHashMap<String, Object>> resultList = new ArrayList<>();
 
@@ -307,8 +353,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 final int columnCount = resultSet.getMetaData().getColumnCount();
 
                 for (int i = 1; i <= columnCount; i++) {
+                    final String schemaName = resultSet.getMetaData().getSchemaName(i);
+                    final String tableName = resultSet.getMetaData().getTableName(i);
+                    final TableMetaData columnTable = ensureTableMetaData(schemaName, tableName);
                     final String columnName = resultSet.getMetaData().getColumnName(i);
-                    final Column column = tableMetaData.getColumns().get(columnName);
+                    final ColumnMetaData column = columnTable.column(columnName);
+
                     final Object value = typeConverter.convert(resultSet.getObject(columnName), column.getDataType());
                     row.put(columnName, value);
                 }
@@ -320,9 +370,9 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
-    protected List<Column> getColumnNames(final String catalog, final String schema, final String table, final DatabaseMetaData databaseMetaData) throws SQLException {
-        final ResultSet dbColumns = databaseMetaData.getColumns(catalog, schema, table, null);
-        final List<Column> columns = new ArrayList<>();
+    protected List<ColumnMetaData> getColumnNames(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
+        final ResultSet dbColumns = databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null);
+        final List<ColumnMetaData> columns = new ArrayList<>();
 
         while (dbColumns.next()) {
             final String name = dbColumns.getString("COLUMN_NAME");
@@ -330,15 +380,15 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             final int dataType = dbColumns.getInt("DATA_TYPE");
             final int size = dbColumns.getInt("COLUMN_SIZE");
 
-            columns.add(new Column(name, nullable, dataType, size));
+            columns.add(new ColumnMetaData(table, name, nullable, dataType, size));
         }
 
         dbColumns.close();
         return columns;
     }
 
-    protected List<String> getPrimaryKeyColumnNames(final String catalog, final String schema, final String table, final DatabaseMetaData databaseMetaData) throws SQLException {
-        final ResultSet primaryKeys = databaseMetaData.getPrimaryKeys(catalog, schema, table);
+    protected List<String> getPrimaryKeyColumnNames(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
+        final ResultSet primaryKeys = databaseMetaData.getPrimaryKeys(table.catalog(), table.schema(), table.name());
         final List<String> primaryKeyColumnNames = new ArrayList<>();
 
         while (primaryKeys.next()) {
@@ -350,26 +400,26 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return primaryKeyColumnNames;
     }
 
-    protected static void verifySchemaAndTableExists(final String catalog, final String schema, final String table, final DatabaseMetaData databaseMetaData) throws SQLException {
-        final ResultSet schemas = databaseMetaData.getSchemas(catalog, schema);
+    protected static void verifySchemaAndTableExists(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
+        final ResultSet schemas = databaseMetaData.getSchemas(table.catalog(), table.schema());
         boolean schemaExists = false;
 
         while (schemas.next()) {
-            if (Objects.equals(schema, schemas.getString("TABLE_SCHEM"))) {
+            if (Objects.equals(table.schema(), schemas.getString("TABLE_SCHEM"))) {
                 schemaExists = true;
                 break;
             }
         }
 
         if (!schemaExists) {
-            throw new IllegalArgumentException("Schema not found: " + schema);
+            throw new IllegalArgumentException("Schema not found: " + table.schema());
         }
 
-        final ResultSet tables = databaseMetaData.getTables(catalog, schema, table, new String[]{"TABLE"});
+        final ResultSet tables = databaseMetaData.getTables(table.catalog(), table.schema(), table.name(), new String[]{"TABLE"});
         boolean tableExists = false;
 
         while (tables.next()) {
-            if (Objects.equals(table, tables.getString("TABLE_NAME"))) {
+            if (Objects.equals(table.name(), tables.getString("TABLE_NAME"))) {
                 tableExists = true;
                 break;
             }

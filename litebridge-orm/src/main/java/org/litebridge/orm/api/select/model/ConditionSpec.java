@@ -1,19 +1,22 @@
 package org.litebridge.orm.api.select.model;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.Operator;
 
 public class ConditionSpec {
 
-    private String column;
+    private Column column;
     private Operator operator;
+    @Nullable
     private Object value;
 
-    public String getColumn() {
+    public Column getColumn() {
         return column;
     }
 
-    public void setColumn(final String column) {
+    public void setColumn(final Column column) {
         this.column = column;
     }
 
@@ -25,7 +28,7 @@ public class ConditionSpec {
         this.operator = operator;
     }
 
-    public Object getValue() {
+    public @Nullable Object getValue() {
         return value;
     }
 

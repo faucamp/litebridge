@@ -1,5 +1,7 @@
 package org.litebridge.db.spi.query;
 
+import org.litebridge.db.spi.Column;
+
 /**
  * Represents a condition in a database query, specifying a column, operator, and value/operand.
  *
@@ -7,5 +9,5 @@ package org.litebridge.db.spi.query;
  * @param operator Operator for this condition, which is used to define the comparison type in a query (e.g., equality, greater than, less than).
  * @param value    Operand associated with the condition.
  */
-public record Condition(String column, Operator operator, Object value) {
+public record Condition(Column column, Operator operator, Object value) {
 }

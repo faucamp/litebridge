@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.sql;
 
+import org.litebridge.db.spi.Column;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.model.JoinSpec;
@@ -10,7 +11,9 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal,
         SqlOrderByClause,
-        SqlOrderByClauseChain> {
+        SqlOrderByClauseChain>
+
+        implements SqlJoinClauseTerminal {
 
     public SqlJoinConditionClauseTerminal(final JoinSpec joinSpec, final AbstractSelector<LinkedHashMap<String, Object>> delegate) {
         super(joinSpec, delegate);
@@ -18,7 +21,19 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     @Override
     public SqlJoinConditionClause and(final String column) {
-        return new SqlJoinConditionClause(joinSpec.newCondition(column), this);
+        final Column spiColumn = new Column(joinSpec.getTable(), column);
+        return new SqlJoinConditionClause(joinSpec.newCondition(spiColumn), this);
+    }
+
+    @Override
+    public SqlJoinClause join(final String schema, final String table) {
+        return new SqlJoinClause(selectSpec.newJoinSpec(schema, table), delegate);
+    }
+
+    @Override
+    public SqlWhereConditionClause where(final String column) {
+        final Column spiColumn = new Column(selectSpec.getTable(), column);
+        return new SqlWhereConditionClause(selectSpec.newWhereCondition(spiColumn), new SqlWhereConditionClauseTerminal((SqlSelector) delegate));
     }
 
     @Override

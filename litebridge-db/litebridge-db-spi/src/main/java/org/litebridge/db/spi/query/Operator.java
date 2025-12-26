@@ -9,5 +9,6 @@ public enum Operator {
     LTE,
     IN,
     IS_NULL,
-    IS_NOT_NULL;
+    IS_NOT_NULL,
+    USING;
 }
