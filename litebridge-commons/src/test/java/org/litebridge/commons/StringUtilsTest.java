@@ -213,4 +213,124 @@ class StringUtilsTest {
         assertEquals(1, result.length);
         assertEquals("hello", result[0]);
     }
+
+    @Test
+    void abbreviate_basic() {
+        // Given
+        final String input = "input";
+
+        // When
+        final String result = StringUtils.abbreviate(input);
+
+        // Then
+        assertEquals("i", result);
+    }
+
+    @Test
+    void abbreviate_capital() {
+        // Given
+        final String input = "Input";
+
+        // When
+        final String result = StringUtils.abbreviate(input);
+
+        // Then
+        assertEquals("i", result);
+    }
+
+    @Test
+    void abbreviate_camelCase() {
+        // Given
+        final String input = "CamelCase";
+
+        // When
+        final String result = StringUtils.abbreviate(input);
+
+        // Then
+        assertEquals("cc", result);
+    }
+
+    @Test
+    void abbreviate_capitalsUnderscore() {
+        // Given
+        final String input = "PERSON_ID";
+
+        // When
+        final String result = StringUtils.abbreviate(input);
+
+        // Then
+        assertEquals("pi", result);
+    }
+
+    @Test
+    void abbreviate_spacesAndSpecialChars() {
+        // Given
+        final String input = " Hello\t World!";
+
+        // When
+        final String result = StringUtils.abbreviate(input);
+
+        // Then
+        assertEquals("hw", result);
+    }
+
+    @Test
+    void abbreviate_numbers() {
+        // Given
+        final String input = "Test123";
+
+        // When
+        final String result = StringUtils.abbreviate(input);
+
+        // Then
+        assertEquals("t123", result);
+    }
+
+    @Test
+    void abbreviate_empty() {
+        // Given
+        final String input = "";
+
+        // When
+        final String result = StringUtils.abbreviate(input);
+
+        // Then
+        assertEquals("", result);
+    }
+
+    @Test
+    void abbreviate_null() {
+        // Given
+        final String input = null;
+
+        // When
+        final String result = StringUtils.abbreviate(input);
+
+        // Then
+        assertEquals("", result);
+    }
+
+    @Test
+    void isAscii_true() {
+        // Given
+        final String input = "Hello World!";
+
+        // When
+        final boolean result = StringUtils.isAsciiOnly(input);
+
+        // Then
+        assertTrue(result);
+    }
+
+    @Test
+    void isAscii_false() {
+        // Given
+        final String input = "å∫ç≈ß∂";
+
+        // When
+        final boolean result = StringUtils.isAsciiOnly(input);
+
+        // Then
+        assertFalse(result);
+    }
 }

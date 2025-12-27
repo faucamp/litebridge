@@ -18,11 +18,11 @@ public class JoinSpec {
         this(new Table("", schema, table));
     }
 
-    public JoinSpec(final Table table) {
+    private JoinSpec(final Table table) {
         this.table = table;
     }
 
-    public Table getTable() {
+    public Table table() {
         return table;
     }
 

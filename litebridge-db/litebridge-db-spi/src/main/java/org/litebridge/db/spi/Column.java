@@ -19,6 +19,12 @@ public class Column extends Aliased {
         return table;
     }
 
+    @Override
+    public Column as(final String alias) {
+        setAlias(alias);
+        return this;
+    }
+
     public static Column c(final Table table, final String column) {
         return new Column(table, column);
     }

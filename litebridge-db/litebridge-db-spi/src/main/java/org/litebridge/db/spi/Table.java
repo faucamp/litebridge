@@ -34,6 +34,11 @@ public class Table extends Aliased {
         return schema;
     }
 
+    @Override
+    public Table as(final String alias) {
+        return (Table) super.as(alias);
+    }
+
     public final boolean isTableMetaData() {
         return this instanceof TableMetaData;
     }

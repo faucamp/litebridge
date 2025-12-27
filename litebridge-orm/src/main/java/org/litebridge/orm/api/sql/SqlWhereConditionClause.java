@@ -1,17 +1,16 @@
 package org.litebridge.orm.api.sql;
 
+import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.WhereConditionClause;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 
-import java.util.LinkedHashMap;
-
 public final class SqlWhereConditionClause
-        extends ConditionClauseImpl<LinkedHashMap<String, Object>,
+        extends ConditionClauseImpl<Row,
         SqlWhereConditionClause,
         SqlWhereConditionClauseTerminal>
 
-        implements WhereConditionClause<LinkedHashMap<String, Object>,
+        implements WhereConditionClause<Row,
         SqlWhereConditionClause,
         SqlWhereConditionClauseTerminal,
         SqlOrderByClause,

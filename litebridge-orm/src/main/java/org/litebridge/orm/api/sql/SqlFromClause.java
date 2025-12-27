@@ -2,15 +2,15 @@ package org.litebridge.orm.api.sql;
 
 import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.FromClause;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 
-public final class SqlFromClause implements FromClause<LinkedHashMap<String, Object>,
+public final class SqlFromClause implements FromClause<Row,
         SqlFromClauseTerminal,
         SqlJoinClause,
         SqlJoinConditionClause,

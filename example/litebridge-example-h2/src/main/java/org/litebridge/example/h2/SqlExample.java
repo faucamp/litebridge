@@ -1,5 +1,6 @@
 package org.litebridge.example.h2;
 
+import org.litebridge.db.spi.Row;
 import org.litebridge.example.common.dto.Person;
 import org.litebridge.orm.Litebridge;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ public class SqlExample extends AbstractExample {
         LOGGER.info("---======< SQL example >======---");
 
         LOGGER.info("[EXAMPLE] Retrieve all persons");
-        final List<LinkedHashMap<String, Object>> personRows =
+        final List<Row> personRows =
                 litebridge.select().from("LB", "PERSON")
                         .orderBy("PERSON_ID").asc()
                         .list();

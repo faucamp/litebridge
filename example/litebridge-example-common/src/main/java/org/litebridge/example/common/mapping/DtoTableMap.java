@@ -4,14 +4,14 @@ import org.litebridge.orm.api.spec.ColumnSpec;
 
 import java.util.Map;
 
-import static org.litebridge.orm.api.spec.ColumnSpec.c;
+import static org.litebridge.orm.api.spec.ColumnSpecBuilder.c;
 
 public final class DtoTableMap {
 
     private DtoTableMap() {}
 
     public static final Map<String, ColumnSpec> Person = Map.of(
-            "id", c("PERSON_ID", true, "LB.PERSON_SEQ"),
+            "id", c("PERSON_ID").autoIncrement(true).sequence("LB.PERSON_SEQ"),
             "name", c("FIRST_NAME"),
             "surname", c("SURNAME"),
             "age", c("AGE"),
@@ -19,8 +19,8 @@ public final class DtoTableMap {
     );
 
     public static final Map<String, ColumnSpec> Account = Map.of(
-            "id", c("ACCOUNT_ID", true, "LB.ACCOUNT_SEQ"),
+            "id", c("ACCOUNT_ID").autoIncrement(true).sequence("LB.ACCOUNT_SEQ"),
             "name", c("ACCOUNT_NAME"),
-            "owner", c("PERSON_ID")
+            "owner", c("PERSON_ID").joinUsing()
     );
 }

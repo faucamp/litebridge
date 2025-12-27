@@ -4,10 +4,11 @@ import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.StringUtils;
+import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.Aliased;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelector;
 import org.litebridge.orm.api.spec.ColumnSpec;
@@ -15,8 +16,8 @@ import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.api.sql.SqlFromClause;
 import org.litebridge.orm.api.sql.SqlSelector;
 import org.litebridge.orm.persistence.DefaultDtoMapper;
+import org.litebridge.orm.persistence.DtoAliasRegistry;
 import org.litebridge.orm.persistence.DtoMapper;
-import org.litebridge.orm.persistence.DtoMapperRegistry;
 import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.orm.persistence.Table;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -24,9 +25,7 @@ import org.litebridge.tracking.ChangeTracker;
 
 import java.lang.reflect.Field;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,8 +33,9 @@ import java.util.stream.Collectors;
 
 public class Litebridge {
 
+    private static final Aliased[] ALL_COLUMNS = new Aliased[0];
+
     private final TableRegistry tableRegistry = new TableRegistry();
-    private final DtoMapperRegistry dtoMapperRegistry = new DtoMapperRegistry();
     private final ChangeTracker changeTracker = new ChangeTracker();
     private final DatabaseProvider databaseProvider;
     private final PersistenceFacade persistenceFacade;
@@ -82,8 +82,9 @@ public class Litebridge {
      */
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass) {
         final Table table = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoMapper<DTO> dtoMapper = dtoMapperRegistry.ensureDtoMapper(dtoClass, () -> new DefaultDtoMapper<>(dtoClass, table, databaseProvider.getTypeConverter()));
-        return new DtoSelector<>(dtoClass, table, databaseProvider, dtoMapper).selectAll();
+        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, databaseProvider.getTypeConverter(), dtoAliasRegistry);
+        return new DtoSelector<>(dtoClass, table, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry).select();
     }
 
     public SqlFromClause select(final String... columns) {
@@ -95,7 +96,7 @@ public class Litebridge {
     }
 
     public SqlFromClause select() {
-        return new SqlSelector(databaseProvider, tableRegistry).select(new Aliased[0]);
+        return new SqlSelector(databaseProvider, tableRegistry).select(ALL_COLUMNS);
     }
 
     private Table mapToTable(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
@@ -123,14 +124,14 @@ public class Litebridge {
 
         // Validate and formalise field mapping
         fieldColumnSpecMap.forEach((fieldName, columnSpec) -> {
-            if (!tableMetaData.hasColumn(columnSpec.getName())) {
+            if (!tableMetaData.hasColumn(columnSpec.name())) {
                 throw new IllegalArgumentException(String.format("Column '%s', mapped by field '%s' of DTO '%s', does not exist in table: '%s'", columnSpec, fieldName, dtoClass, tableMetaData.name()));
             }
 
-            if (!unmappedColumns.contains(columnSpec.getName())) {
+            if (!unmappedColumns.contains(columnSpec.name())) {
                 // Column is already mapped
                 final String conflictingFieldName = mappedFields.entrySet().stream()
-                        .filter(fieldColumnEntry -> fieldColumnEntry.getValue().name().equals(columnSpec.getName()))
+                        .filter(fieldColumnEntry -> fieldColumnEntry.getValue().name().equals(columnSpec.name()))
                         .map(Map.Entry::getKey)
                         .map(Field::getName)
                         .findFirst()
@@ -140,20 +141,27 @@ public class Litebridge {
 
             // Add field-column mapping
             final Field field = ClassUtils.getField(dtoClass, fieldName);
-            final ColumnMetaData column = ObjectUtils.requireNonNull(tableMetaData.column(columnSpec.getName()), "Column metadata not found: " + columnSpec.getName());
+            final ColumnMetaData column = ObjectUtils.requireNonNull(tableMetaData.column(columnSpec.name()), "Column metadata not found: " + columnSpec.name());
 
-            if (!StringUtils.isBlank(columnSpec.getSequence())) {
-                column.setSequence(columnSpec.getSequence());
+            if (!StringUtils.isBlank(columnSpec.sequence())) {
+                column.setSequence(columnSpec.sequence());
             }
 
-            if (!ClassUtils.isBasicType(field.getType())
-                    && !tableRegistry.containsTable(field.getType())) {
-                // Cascading child DTO, but no table mapping exists
-                throw new IllegalArgumentException(String.format("Sub-DTO '%s' in field '%s' of DTO '%s' is not registered", field.getType().getName(), fieldName, dtoClass.getName()));
+            if (!ClassUtils.isBasicType(field.getType())) {
+                if (!tableRegistry.containsTable(field.getType())) {
+                    // Cascading child DTO, but no table mapping exists
+                    throw new IllegalArgumentException(String.format("Sub-DTO '%s' in field '%s' of DTO '%s' is not registered", field.getType().getName(), fieldName, dtoClass.getName()));
+                }
+
+                if (columnSpec.joinColumn() == null) {
+                    throw new IllegalArgumentException(String.format("No \"join on\" field specified for sub-DTO '%s' in field '%s' of DTO '%s'", field.getType().getName(), fieldName, dtoClass.getName()));
+                }
+
+                column.setJoinColumn(columnSpec.joinColumn());
             }
 
             mappedFields.put(field, column);
-            unmappedColumns.remove(columnSpec.getName());
+            unmappedColumns.remove(columnSpec.name());
         });
 
         // Check for unmapped columns
@@ -171,10 +179,8 @@ public class Litebridge {
         return mappedFields;
     }
 
-    public <DTO> DTO toDto(final LinkedHashMap<String, Object> row, final Class<DTO> dtoClass) {
-        return dtoMapperRegistry.ensureDtoMapper(dtoClass, () -> {
-            final Table table = tableRegistry.getTableOrThrow(dtoClass);
-            return new DefaultDtoMapper<>(dtoClass, table, databaseProvider.getTypeConverter());
-        }).toDto(row);
+    public <DTO> DTO toDto(final Row row, final Class<DTO> dtoClass) {
+        return new DefaultDtoMapper(tableRegistry, databaseProvider.getTypeConverter(), new DtoAliasRegistry())
+                .toDto(row, dtoClass);
     }
 }

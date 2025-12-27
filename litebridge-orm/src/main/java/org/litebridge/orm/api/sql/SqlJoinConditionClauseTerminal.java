@@ -1,13 +1,12 @@
 package org.litebridge.orm.api.sql;
 
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.model.JoinSpec;
 
-import java.util.LinkedHashMap;
-
-public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionClauseTerminal<LinkedHashMap<String, Object>,
+public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionClauseTerminal<Row,
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal,
         SqlOrderByClause,
@@ -15,13 +14,13 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
         implements SqlJoinClauseTerminal {
 
-    public SqlJoinConditionClauseTerminal(final JoinSpec joinSpec, final AbstractSelector<LinkedHashMap<String, Object>> delegate) {
+    public SqlJoinConditionClauseTerminal(final JoinSpec joinSpec, final AbstractSelector<Row> delegate) {
         super(joinSpec, delegate);
     }
 
     @Override
     public SqlJoinConditionClause and(final String column) {
-        final Column spiColumn = new Column(joinSpec.getTable(), column);
+        final Column spiColumn = new Column(joinSpec.table(), column);
         return new SqlJoinConditionClause(joinSpec.newCondition(spiColumn), this);
     }
 

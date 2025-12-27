@@ -29,6 +29,10 @@ public final class TableMetaData extends Table {
                         Function.identity()));
     }
 
+    private TableMetaData(final TableMetaData other) {
+        this(other.catalog(), other.schema(), other.name(), other.primaryKey, other.columns);
+    }
+
     public List<String> primaryKey() {
         return primaryKey;
     }
@@ -43,6 +47,12 @@ public final class TableMetaData extends Table {
 
     public boolean hasColumn(final String columnName) {
         return columnMap.containsKey(columnName);
+    }
+
+    public TableMetaData as(final String alias) {
+        final TableMetaData copy = new TableMetaData(this);
+        copy.setAlias(alias);
+        return copy;
     }
 
     @Override

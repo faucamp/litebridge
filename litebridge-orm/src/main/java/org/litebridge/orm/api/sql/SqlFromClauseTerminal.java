@@ -1,11 +1,10 @@
 package org.litebridge.orm.api.sql;
 
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
 
-import java.util.LinkedHashMap;
-
-public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<LinkedHashMap<String, Object>,
+public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
         SqlJoinClause,
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal,

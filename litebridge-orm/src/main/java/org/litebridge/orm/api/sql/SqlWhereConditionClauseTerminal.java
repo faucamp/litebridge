@@ -1,21 +1,20 @@
 package org.litebridge.orm.api.sql;
 
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
 
-import java.util.LinkedHashMap;
-
 public final class SqlWhereConditionClauseTerminal
-        extends AbstractWhereClauseTerminal<LinkedHashMap<String, Object>, SqlOrderByClause, SqlOrderByClauseChain>
-        implements WhereConditionClauseTerminal<LinkedHashMap<String, Object>,
+        extends AbstractWhereClauseTerminal<Row, SqlOrderByClause, SqlOrderByClauseChain>
+        implements WhereConditionClauseTerminal<Row,
         SqlWhereConditionClause,
         SqlWhereConditionClauseTerminal,
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
-    public SqlWhereConditionClauseTerminal(final AbstractSelector<LinkedHashMap<String, Object>> delegate) {
+    public SqlWhereConditionClauseTerminal(final AbstractSelector<Row> delegate) {
         super(delegate);
     }
 

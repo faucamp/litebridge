@@ -32,11 +32,15 @@ public class Aliased {
     }
 
     public Aliased as(final String alias) {
-        this.alias = alias;
+        setAlias(alias);
         return this;
     }
 
     public static Aliased a(final String name) {
         return new Aliased(name);
+    }
+
+    final void setAlias(final String alias) {
+        this.alias = alias;
     }
 }

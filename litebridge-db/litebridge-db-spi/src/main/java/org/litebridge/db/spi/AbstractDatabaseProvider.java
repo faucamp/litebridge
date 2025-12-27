@@ -152,7 +152,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public List<LinkedHashMap<String, Object>> select(final Select select) throws SQLException {
+    public List<Row> select(final Select select) throws SQLException {
         final String sql = toSql(select);
         return executeSqlQuery(sql, select.columns(), select.where(), select.table());
     }
@@ -176,7 +176,13 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                     sql.append(", ");
                 }
 
-                sql.append(column.table().name()).append('.').append(column.name());
+                if (!StringUtils.isEmpty(column.table().alias())) {
+                    sql.append(column.table().alias());
+                } else {
+                    sql.append(column.table().name());
+                }
+
+                sql.append('.').append(column.name());
 
                 if (!StringUtils.isBlank(column.alias())) {
                     sql.append(" AS ").append(column.alias());
@@ -194,6 +200,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
 
         sql.append(select.table().name());
+
+        if (select.table().alias() != null) {
+            sql.append(" AS ").append(select.table().alias());
+        }
 
         // Joins
         if (!CollectionUtils.isEmpty(select.joins())) {
@@ -260,6 +270,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
         sb.append(join.table().name());
 
+        if (join.table().alias() != null) {
+            sb.append(" AS ").append(join.table().alias());
+        }
+
         if (join.conditions().getFirst().operator() != Operator.USING) {
             sb.append(" ON ");
         } else {
@@ -282,12 +296,20 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     protected String createCondition(final Condition condition) {
+        final String column;
+
+        if (!StringUtils.isEmpty(condition.column().table().alias())) {
+            column = condition.column().table().alias() + '.' + condition.column().name();
+        } else {
+            column = condition.column().name();
+        }
+
         if (condition.operator() == Operator.IS_NULL || condition.operator() == Operator.IS_NOT_NULL) {
-            return "%s %s".formatted(condition.column().name(), mapOperator(condition.operator()));
+            return "%s %s".formatted(column, mapOperator(condition.operator()));
         } else if (condition.operator() == Operator.USING) {
             return "%s (%s)".formatted(mapOperator(condition.operator()), condition.column().name());
         } else {
-            return "%s %s ?".formatted(condition.column().name(), mapOperator(condition.operator()));
+            return "%s %s ?".formatted(column, mapOperator(condition.operator()));
         }
     }
 
@@ -333,7 +355,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return generatedKeys;
     }
 
-    private List<LinkedHashMap<String, Object>> executeSqlQuery(final String sql, final List<Column> columns, final List<Condition> conditions, final Table table) throws SQLException {
+    private List<Row> executeSqlQuery(final String sql, final List<Column> columns, final List<Condition> conditions, final Table table) throws SQLException {
         final TableMetaData fromTable = ensureTableMetaData(table);
         final List<BindValue> bindValues = conditions.stream()
                 .filter(condition -> condition.operator() != Operator.IS_NULL && condition.operator() != Operator.IS_NOT_NULL)
@@ -345,11 +367,14 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 .toList();
 
         try (final PreparedStatement preparedStatement = createPreparedStatement(sql, bindValues, fromTable, false)) {
+            // Execute SQL query
             final ResultSet resultSet = preparedStatement.executeQuery();
-            final List<LinkedHashMap<String, Object>> resultList = new ArrayList<>();
+
+            // Parse results
+            final List<Row> rows = new ArrayList<>();
 
             while (resultSet.next()) {
-                final LinkedHashMap<String, Object> row = new LinkedHashMap<>();
+                final Row row = new Row();
                 final int columnCount = resultSet.getMetaData().getColumnCount();
 
                 for (int i = 1; i <= columnCount; i++) {
@@ -357,16 +382,17 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                     final String tableName = resultSet.getMetaData().getTableName(i);
                     final TableMetaData columnTable = ensureTableMetaData(schemaName, tableName);
                     final String columnName = resultSet.getMetaData().getColumnName(i);
-                    final ColumnMetaData column = columnTable.column(columnName);
+                    final String alias = resultSet.getMetaData().getColumnLabel(i);
+                    final ColumnMetaData column = columnTable.column(columnName).as(alias);
 
                     final Object value = typeConverter.convert(resultSet.getObject(columnName), column.getDataType());
-                    row.put(columnName, value);
+                    row.withColumn(column, value);
                 }
 
-                resultList.add(row);
+                rows.add(row);
             }
 
-            return resultList;
+            return rows;
         }
     }
 

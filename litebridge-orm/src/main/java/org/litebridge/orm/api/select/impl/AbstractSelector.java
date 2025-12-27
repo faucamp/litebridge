@@ -3,12 +3,14 @@ package org.litebridge.orm.api.select.impl;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.DtoMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -17,20 +19,23 @@ import java.util.stream.Stream;
 
 public abstract class AbstractSelector<DTO> implements SelectTerminal<DTO> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSelector.class);
     protected final SelectSpec selectSpec;
     protected final DatabaseProvider databaseProvider;
-    protected final DtoMapper<DTO> dtoMapper;
+    protected final DtoMapper dtoMapper;
+    protected final Class<DTO> dtoClass;
 
     protected AbstractSelector(final SelectSpec selectSpec,
                                final DatabaseProvider databaseProvider,
-                               final DtoMapper<DTO> dtoMapper) {
+                               final DtoMapper dtoMapper, final Class<DTO> dtoClass) {
         this.selectSpec = selectSpec;
         this.databaseProvider = databaseProvider;
         this.dtoMapper = dtoMapper;
+        this.dtoClass = dtoClass;
     }
 
     protected AbstractSelector(final AbstractSelector<DTO> delegate) {
-        this(delegate.selectSpec, delegate.databaseProvider, delegate.dtoMapper);
+        this(delegate.selectSpec, delegate.databaseProvider, delegate.dtoMapper, delegate.dtoClass);
     }
 
     @Override
@@ -40,7 +45,7 @@ public abstract class AbstractSelector<DTO> implements SelectTerminal<DTO> {
 
     @Override
     public @Nullable DTO oneOrNull() {
-        return dtoMapper.toDto(fetchOneRecord(false));
+        return dtoMapper.toDto(fetchOneRecord(false), dtoClass);
     }
 
     @Override
@@ -60,7 +65,7 @@ public abstract class AbstractSelector<DTO> implements SelectTerminal<DTO> {
 
     @Override
     public @Nullable DTO firstOrNull() {
-        return dtoMapper.toDto(fetchOneRecord(true));
+        return dtoMapper.toDto(fetchOneRecord(true), dtoClass);
     }
 
     @Override
@@ -75,7 +80,7 @@ public abstract class AbstractSelector<DTO> implements SelectTerminal<DTO> {
 
     @Override
     public Stream<DTO> stream() {
-        return executeQuery().stream().map(dtoMapper::toDto);
+        return executeQuery().stream().map(row -> dtoMapper.toDto(row, dtoClass));
     }
 
     @Override
@@ -83,13 +88,13 @@ public abstract class AbstractSelector<DTO> implements SelectTerminal<DTO> {
         return stream().toList();
     }
 
-    protected @Nullable LinkedHashMap<String, Object> fetchOneRecord(final boolean first) {
+    protected @Nullable Row fetchOneRecord(final boolean first) {
         if (first) {
             // Set LIMIT since we are only interested in the first record
             selectSpec.ensureLimit().setLimit(1);
         }
 
-        final List<LinkedHashMap<String, Object>> resultList = executeQuery();
+        final List<Row> resultList = executeQuery();
 
         if (CollectionUtils.isEmpty(resultList)) {
             return null;
@@ -102,26 +107,23 @@ public abstract class AbstractSelector<DTO> implements SelectTerminal<DTO> {
         return resultList.getFirst();
     }
 
-    /**
-     * Executes the query and returns a {@link Stream} of records.
-     *
-     * @return a {@link Stream} of @{code Map<String, Object>} corresponding to records return from query result.
-     */
-    protected List<LinkedHashMap<String, Object>> executeQuery() {
+    protected List<Row> executeQuery() {
         return executeQuery(selectSpec);
     }
 
-    protected List<LinkedHashMap<String, Object>> executeQuery(final SelectSpec selectSpec) {
+    protected List<Row> executeQuery(final SelectSpec selectSpec) {
         // Execute SQL query
-        final List<LinkedHashMap<String, Object>> resultList;
+        final List<Row> rows;
 
         try {
-            resultList = databaseProvider.select(selectSpec.toSelect());
+            rows = databaseProvider.select(selectSpec.toSelect());
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute select query", ex);
         }
 
-        return resultList;
+        LOGGER.debug("Row count: {}", rows.size());
+        LOGGER.trace("Query result: {}", rows);
+        return rows;
     }
 
     protected final SelectSpec selectSpec() {

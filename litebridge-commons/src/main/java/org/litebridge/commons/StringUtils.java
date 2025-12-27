@@ -69,7 +69,149 @@ public final class StringUtils {
         return str == null ? "" : str;
     }
 
-    public static String defaultIfNull(final @Nullable String str, final String defaultValue) {
-        return str == null ? defaultValue : str;
+    public static String lowerFirst(final String str) {
+        if (isEmpty(str)) {
+            throw new IllegalArgumentException("Empty or null input string");
+        }
+
+        final char firstChar = Character.toLowerCase(str.charAt(0));
+        return firstChar + str.substring(1);
+    }
+
+    public static String camelCase(final String str) {
+        if (isEmpty(str)) {
+            return str;
+        }
+
+        // Split the string by any non-word characters (including spaces and underscores)
+        final String[] words = str.split("[\\W_]+");
+        final StringBuilder builder = new StringBuilder();
+
+        for (int i = 0; i < words.length; i++) {
+            final String word = words[i];
+
+            if (word.isEmpty()) {
+                continue;
+            }
+
+            if (i == 0) {
+                // For the first word, convert to lowercase
+                builder.append(word.toLowerCase());
+            } else {
+                // For subsequent words, capitalize the first letter and lowercase the rest
+                builder.append(Character.toUpperCase(word.charAt(0)));
+                builder.append(word.substring(1).toLowerCase());
+            }
+        }
+
+        return builder.toString();
+    }
+
+    public static boolean isAsciiOnly(final String str) {
+        final int len = str.length();
+
+        for (int i = 0; i < len; i++) {
+            final char ch = str.charAt(i);
+
+            if (ch > 0x7F) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns a lowercase string consisting of:
+     * <ul>
+     *     <li>the first letter of each "word" (a letter that follows a non-letter/digit),</li>
+     *     <li>the first letter of each camelCase hump (an uppercase letter that follows a lowercase letter),</li>
+     *     <li>and all digits found anywhere in the input.</li>
+     * </ul>
+     * Non-letter/digit characters act as separators and are otherwise ignored.
+     */
+    public static String abbreviate(final @Nullable String str) {
+        if (isEmpty(str)) {
+            return "";
+        }
+
+        final int len = str.length();
+
+        // Fast path: common case for DB/Java identifiers (ASCII, no surrogates)
+        if (isAsciiOnly(str)) {
+            return abbreviateAscii(str, len);
+        }
+
+        // Unicode-correct path (iterates code points)
+        final StringBuilder sb = new StringBuilder(len);
+        boolean prevWasLetterOrDigit = false;
+        boolean prevWasLowercaseLetter = false;
+
+        for (int i = 0; i < len; ) {
+            final int cp = str.codePointAt(i);
+            final int step = Character.charCount(cp);
+
+            if (Character.isDigit(cp)) {
+                sb.appendCodePoint(cp);
+                prevWasLetterOrDigit = true;
+                prevWasLowercaseLetter = false;
+            } else if (Character.isLetter(cp)) {
+                final boolean isWordStartAfterSeparator = !prevWasLetterOrDigit;
+                final boolean isCamelHumpStart = Character.isUpperCase(cp) && prevWasLowercaseLetter;
+
+                if (isWordStartAfterSeparator || isCamelHumpStart) {
+                    sb.appendCodePoint(Character.toLowerCase(cp));
+                }
+
+                prevWasLetterOrDigit = true;
+                prevWasLowercaseLetter = Character.isLowerCase(cp);
+            } else {
+                prevWasLetterOrDigit = false;
+                prevWasLowercaseLetter = false;
+            }
+
+            i += step;
+        }
+
+        return sb.toString();
+    }
+
+    private static String abbreviateAscii(final String str, final int len) {
+        final StringBuilder sb = new StringBuilder(len);
+
+        boolean prevWasLetterOrDigit = false;
+        boolean prevWasLowercaseLetter = false;
+
+        for (int i = 0; i < len; i++) {
+            final char ch = str.charAt(i);
+
+            if (ch >= '0' && ch <= '9') {
+                sb.append(ch);
+                prevWasLetterOrDigit = true;
+                prevWasLowercaseLetter = false;
+                continue;
+            }
+
+            final boolean isLower = (ch >= 'a' && ch <= 'z');
+            final boolean isUpper = (ch >= 'A' && ch <= 'Z');
+
+            if (isLower || isUpper) {
+                final boolean isWordStartAfterSeparator = !prevWasLetterOrDigit;
+                final boolean isCamelHumpStart = isUpper && prevWasLowercaseLetter;
+
+                if (isWordStartAfterSeparator || isCamelHumpStart) {
+                    sb.append(isUpper ? (char) (ch + ('a' - 'A')) : ch);
+                }
+
+                prevWasLetterOrDigit = true;
+                prevWasLowercaseLetter = isLower;
+            } else {
+                // separator
+                prevWasLetterOrDigit = false;
+                prevWasLowercaseLetter = false;
+            }
+        }
+
+        return sb.toString();
     }
 }

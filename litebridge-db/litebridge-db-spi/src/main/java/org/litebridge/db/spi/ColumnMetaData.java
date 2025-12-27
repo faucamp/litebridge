@@ -1,5 +1,7 @@
 package org.litebridge.db.spi;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 import java.util.StringJoiner;
 
@@ -10,7 +12,10 @@ public final class ColumnMetaData extends Column {
     private final int size;
     private final int decimalDigits;
     private boolean autoIncrement;
+    @Nullable
     private String sequence;
+    @Nullable
+    private String joinColumn;
 
     public ColumnMetaData(final Table table,
                           final String name,
@@ -19,7 +24,7 @@ public final class ColumnMetaData extends Column {
                           final int size,
                           final int decimalDigits,
                           final boolean autoIncrement,
-                          final String sequence) {
+                          final @Nullable String sequence) {
         super(table, name);
         this.nullable = nullable;
         this.dataType = dataType;
@@ -35,6 +40,16 @@ public final class ColumnMetaData extends Column {
 
     public ColumnMetaData(final Table table, final String name, final boolean nullable, final int dataType) {
         this(table, name, nullable, dataType, 0);
+    }
+
+    public ColumnMetaData(final ColumnMetaData other) {
+        super(other.table(), other.name(), other.alias());
+        this.nullable = other.nullable;
+        this.dataType = other.dataType;
+        this.size = other.size;
+        this.decimalDigits = other.decimalDigits;
+        this.autoIncrement = other.autoIncrement;
+        this.sequence = other.sequence;
     }
 
     public boolean isNullable() {
@@ -61,12 +76,27 @@ public final class ColumnMetaData extends Column {
         this.autoIncrement = autoIncrement;
     }
 
-    public String getSequence() {
+    public @Nullable String getSequence() {
         return sequence;
     }
 
-    public void setSequence(final String sequence) {
+    public void setSequence(final @Nullable String sequence) {
         this.sequence = sequence;
+    }
+
+    public @Nullable String getJoinColumn() {
+        return joinColumn;
+    }
+
+    public void setJoinColumn(final @Nullable String joinColumn) {
+        this.joinColumn = joinColumn;
+    }
+
+    @Override
+    public ColumnMetaData as(final String alias) {
+        final ColumnMetaData copy = new ColumnMetaData(this);
+        copy.setAlias(alias);
+        return copy;
     }
 
     @Override

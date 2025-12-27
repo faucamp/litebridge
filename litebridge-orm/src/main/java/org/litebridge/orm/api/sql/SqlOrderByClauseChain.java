@@ -1,13 +1,12 @@
 package org.litebridge.orm.api.sql;
 
+import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.OrderByClauseChain;
 import org.litebridge.orm.api.select.impl.OrderByClauseTerminalImpl;
 
-import java.util.LinkedHashMap;
-
 public final class SqlOrderByClauseChain
-        extends OrderByClauseTerminalImpl<LinkedHashMap<String, Object>>
-        implements OrderByClauseChain<LinkedHashMap<String, Object>, SqlOrderByClause, SqlOrderByClauseChain> {
+        extends OrderByClauseTerminalImpl<Row>
+        implements OrderByClauseChain<Row, SqlOrderByClause, SqlOrderByClauseChain> {
 
     public SqlOrderByClauseChain(final SqlSelector delegate) {
         super(delegate);

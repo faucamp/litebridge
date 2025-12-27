@@ -2,30 +2,28 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
+import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.convert.TypeConverter;
 
 import java.lang.reflect.Field;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
-public final class DefaultDtoMapper<DTO> implements DtoMapper<DTO> {
+public final class DefaultDtoMapper implements DtoMapper {
 
-    private final Class<DTO> dtoClass;
-    private final Table table;
+    private final TableRegistry tableRegistry;
     private final TypeConverter typeConverter;
+    private final DtoAliasRegistry dtoAliasRegistry;
 
-    public DefaultDtoMapper(final Class<DTO> dtoClass, final Table table, final TypeConverter typeConverter) {
-        this.dtoClass = dtoClass;
-        this.table = table;
+    public DefaultDtoMapper(final TableRegistry tableRegistry,
+                            final TypeConverter typeConverter,
+                            final DtoAliasRegistry dtoAliasRegistry) {
+        this.tableRegistry = tableRegistry;
         this.typeConverter = typeConverter;
+        this.dtoAliasRegistry = dtoAliasRegistry;
     }
+
 
     @Override
-    public @Nullable DTO toDto(final @Nullable LinkedHashMap<String, Object> row) {
-        return toDto(row, dtoClass, table, typeConverter);
-    }
-
-    private static <DTO> @Nullable DTO toDto(@Nullable final Map<String, Object> row, final Class<DTO> dtoClass, final Table table, final TypeConverter typeConverter) {
+    public <DTO> @Nullable DTO toDto(final @Nullable Row row, final Class<DTO> dtoClass) {
         if (row == null) {
             return null;
         }
@@ -37,23 +35,28 @@ public final class DefaultDtoMapper<DTO> implements DtoMapper<DTO> {
             throw new IllegalStateException("Failed to instantiate DTO: " + dtoClass, ex);
         }
 
-        for (final String column : row.keySet()) {
-            final Field field = table.getFieldForColumnName(column);
-            final Object convertedValue;
+        // Filter results for this DTO
+        final Table table = tableRegistry.getTableOrThrow(dtoClass);
+        final String tableAlias = dtoAliasRegistry.aliasOrNull(table.getMetaData());
 
-            if (ClassUtils.isBasicType(field.getType())) {
-                convertedValue = typeConverter.convert(row.get(column), field.getType());
-            } else {
-                // Dealing with an embedded DTO
-                throw new UnsupportedOperationException("Embedded DTOs are not supported yet");
-            }
+        row.columnStream()
+                .filter(rowColumn -> tableAlias == null || dtoAliasRegistry.belongsTo(tableAlias, rowColumn.column()))
+                .forEach(rowColumn -> {
+                    final Field field = table.getFieldForColumnName(rowColumn.column().name());
+                    final Object convertedValue;
 
-            try {
-                field.set(dto, convertedValue);
-            } catch (final IllegalAccessException ex) {
-                throw new IllegalStateException("Failed to set field '%s' of DTO: %s".formatted(field.getName(), dto), ex);
-            }
-        }
+                    if (ClassUtils.isBasicType(field.getType())) {
+                        convertedValue = typeConverter.convert(rowColumn.value(), field.getType());
+                    } else {
+                        convertedValue = toDto(row, field.getType());
+                    }
+
+                    try {
+                        field.set(dto, convertedValue);
+                    } catch (final IllegalAccessException ex) {
+                        throw new IllegalStateException("Failed to set field '%s' of DTO: %s".formatted(field.getName(), dto), ex);
+                    }
+                });
 
         return dto;
     }

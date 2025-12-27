@@ -57,7 +57,7 @@ public class Table {
     }
 
     public ColumnMetaData getColumn(final String columnName) {
-        return ObjectUtils.requireNonNull(fieldNameColumnMap.get(columnName), "No column '" + columnName + "' in table '" + metaData.name() + "'");
+        return ObjectUtils.requireNonNull(columnMap.get(columnName), "No column '" + columnName + "' in table '" + metaData.name() + "'");
     }
 
     public <DTO> @Nullable TrackedDto<DTO> getTrackedDto(final DTO dto) {

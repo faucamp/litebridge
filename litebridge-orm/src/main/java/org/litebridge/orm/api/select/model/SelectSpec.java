@@ -4,13 +4,17 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.query.Select;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class SelectSpec {
 
@@ -26,6 +30,8 @@ public class SelectSpec {
     private List<OrderBySpec> orderBys;
     @Nullable
     private LimitSpec limit;
+    @Nullable
+    private Map<Class<?>, String> dtoAliases;
 
     public @Nullable Table getTable() {
         return table;
@@ -40,7 +46,21 @@ public class SelectSpec {
     }
 
     public void setColumns(final List<Column> columns) {
-        this.columns = columns;
+        setColumns(columns.stream());
+    }
+
+    public void addColumns(final Collection<? extends Column> columns) {
+        if (this.columns == null) {
+            this.columns = new ArrayList<>();
+        } else if (!(columns instanceof ArrayList)) {
+            this.columns = new ArrayList<>(this.columns);
+        }
+
+        this.columns.addAll(sanitise(((List<Column>) columns).stream()));
+    }
+
+    public void setColumns(final Stream<Column> columns) {
+        this.columns = sanitise(columns);
     }
 
     public @Nullable List<JoinSpec> getJoins() {
@@ -79,7 +99,7 @@ public class SelectSpec {
         }
 
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setColumn(column);
+        conditionSpec.setColumn(sanitise(column));
         whereConditions.add(conditionSpec);
         return conditionSpec;
     }
@@ -120,6 +140,22 @@ public class SelectSpec {
         return limit;
     }
 
+    public void setDtoAlias(Class<?> dtoClass, String alias) {
+        if (dtoAliases == null) {
+            dtoAliases = new HashMap<>();
+        }
+
+        dtoAliases.put(dtoClass, alias);
+    }
+
+    public String getDtoAlias(Class<?> dtoClass) {
+        if (dtoAliases != null) {
+            return dtoAliases.get(dtoClass);
+        } else {
+            return null;
+        }
+    }
+
     public Select toSelect() {
         if (table == null) {
             throw new IllegalStateException("Table not specified");
@@ -137,5 +173,23 @@ public class SelectSpec {
                         .map(ConditionSpec::toCondition)
                         .toList() : Collections.emptyList(),
                 limit != null ? limit.toLimit() : Optional.empty());
+    }
+
+    private List<Column> sanitise(final Stream<Column> columns) {
+        // Ensure just one instance of the same table is used
+        return columns
+                .map(this::sanitise)
+                .toList();
+    }
+
+    private Column sanitise(final Column column) {
+        if (column.table() != table
+                && column.table().alias() == null
+                && Objects.equals(column.table().schema(), table.schema())
+                && Objects.equals(column.table().name(), table.name())) {
+            return new Column(table, column.name(), column.alias());
+        } else {
+            return column;
+        }
     }
 }
