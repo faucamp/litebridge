@@ -26,13 +26,19 @@ public class PersistenceExample extends AbstractExample {
         person.setEyeColour("blue");
 
         final Account account = litebridge.track(new Account());
-        account.setName("Test account");
+        account.setName("Account 1");
         account.setOwner(person);
 
         // Save DTOs ("person" will also be saved due to cascading)
         litebridge.save(account);
         LOGGER.info("Saved person ID: " + person.getId());
         LOGGER.info("Saved account ID: " + account.getId());
+
+        // Add another account to the person
+        final Account account2 = litebridge.track(new Account());
+        account2.setName("Account 2");
+        account2.setOwner(person);
+        litebridge.save(account2);
 
         // Update a single field of a tracked DTO and update the database accordingly
         person.setEyeColour("brown");

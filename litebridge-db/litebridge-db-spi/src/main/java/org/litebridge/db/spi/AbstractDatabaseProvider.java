@@ -162,7 +162,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return typeConverter;
     }
 
-    protected String toSql(final Select select) {
+    @Override
+    public String toSql(final Select select) {
         final StringBuilder sql = new StringBuilder("SELECT ");
 
         boolean first = true;

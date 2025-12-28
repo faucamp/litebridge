@@ -106,4 +106,5 @@ public interface SelectTerminal<DTO> {
      */
     List<DTO> list();
 
+    String toSql();
 }

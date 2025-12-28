@@ -21,6 +21,8 @@ public interface DatabaseProvider {
     List<Object> update(TableMetaData tableMetaData, Map<String, Object> columnValueMap, LinkedHashMap<String, Object> primaryKey) throws SQLException;
 
     List<Row> select(Select select) throws SQLException;
+
+    String toSql(Select select);
     
     TypeConverter getTypeConverter();
 }

@@ -2,6 +2,7 @@ package org.litebridge.db.spi;
 
 import java.util.LinkedHashMap;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
 
@@ -16,6 +17,12 @@ public final class Row {
     public Stream<RowColumn> columnStream() {
         return columns.keySet().stream()
                 .map(RowColumn::new);
+    }
+
+    public Optional<RowColumn> column(final String column) {
+        return columnStream()
+                .filter(rc -> Objects.equals(rc.column().name(), column))
+                .findFirst();
     }
 
     @Override

@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -33,7 +32,7 @@ public final class TrackedDto<T> {
         return ObjectUtils.requireNonNull(dtoRef.get(), "DTO object has been garbage collected: " + this);
     }
 
-    public void snapshot(final Set<Field> fields, final boolean overwrite) {
+    public void snapshot(final Collection<FieldAccessor> fields, final boolean overwrite) {
         if (fieldSnapshots != null) {
             if (overwrite) {
                 fieldSnapshots.clear();
@@ -49,7 +48,7 @@ public final class TrackedDto<T> {
 
         fields.forEach(field -> {
             // To track changes in a map, we need to snapshot the current map values
-            if (Map.class.isAssignableFrom(field.getType())) {
+            if (Map.class.isAssignableFrom(field.type())) {
                 final Map<?, ?> currentMap = (Map<?, ?>) getFieldValue(dto, field);
                 final int overallFieldHash = getFieldHash(dto, field);
 
@@ -61,7 +60,7 @@ public final class TrackedDto<T> {
                             .collect(Collectors.toMap(Map.Entry::getKey, entry -> getValueHash(entry.getValue())));
 
                     // Track changes to its keys/values if they are nested DTOs
-                    final Class<?>[] genericTypes = ClassFieldCache.getGenericTypes(field);
+                    final Class<?>[] genericTypes = field.genericTypes();
 
                     if (!ClassUtils.isBasicType(genericTypes[0])) {
                         currentMap.keySet().forEach(trackDtoCallback);
@@ -78,18 +77,18 @@ public final class TrackedDto<T> {
             } else {
                 fieldSnapshots.add(new FieldSnapshot(field, getFieldHash(dto, field)));
 
-                if (Collection.class.isAssignableFrom(field.getType())) {
+                if (Collection.class.isAssignableFrom(field.type())) {
                     // Snapshot nested collection
                     final Collection<?> collection = (Collection<?>) getFieldValue(dto, field);
 
                     if (!CollectionUtils.isEmpty(collection)) {
-                        final Class<?> genericType = ClassFieldCache.getGenericType(field);
+                        final Class<?> genericType = field.genericType();
 
                         if (!ClassUtils.isBasicType(genericType)) {
                             collection.forEach(trackDtoCallback);
                         }
                     }
-                } else if (!ClassUtils.isBasicType(field.getType())) {
+                } else if (!ClassUtils.isBasicType(field.type())) {
                     // Snapshot nested DTO
                     final Object nestedDto = getFieldValue(dto, field);
 
@@ -101,7 +100,7 @@ public final class TrackedDto<T> {
         });
     }
 
-    public void snapshotEmpty(final Set<Field> fields) {
+    public void snapshotEmpty(final Collection<FieldAccessor> fields) {
         if (fieldSnapshots != null) {
             throw new IllegalStateException("Field snapshots already taken for object: " + this);
         }
@@ -125,7 +124,7 @@ public final class TrackedDto<T> {
 
                         if (currentFieldValueHash != fieldSnapshot.hash()) {
                             // The value has changed; update internal DTO tracking if required
-                            if (currentFieldValueHash != 0 && ClassFieldCache.isNestedDtoField(fieldSnapshot.field())) {
+                            if (currentFieldValueHash != 0 && ClassFieldAccessorCache.isNestedDtoField(dto.getClass(), fieldSnapshot.field())) {
                                 // This nested DTO field was null previously, so we need to track the new value
                                 final Object nestedDto = getFieldValue(dto, fieldSnapshot.field());
                                 trackDtoCallback.accept(nestedDto);
@@ -136,9 +135,9 @@ public final class TrackedDto<T> {
                     })
                     .map(fieldSnapshot -> {
                         if (fieldSnapshot.isMap()) {
-                            return new ChangedMapField(fieldSnapshot.field().getName(), getFieldValue(dto, fieldSnapshot.field()), fieldSnapshot.mapSnapshot());
+                            return new ChangedMapField(fieldSnapshot.field().name(), getFieldValue(dto, fieldSnapshot.field()), fieldSnapshot.mapSnapshot());
                         } else {
-                            return new ChangedField(fieldSnapshot.field().getName(), getFieldValue(dto, fieldSnapshot.field()));
+                            return new ChangedField(fieldSnapshot.field().name(), getFieldValue(dto, fieldSnapshot.field()));
                         }
                     })
                     .collect(Collectors.toMap(
@@ -153,8 +152,12 @@ public final class TrackedDto<T> {
         return changedFields;
     }
 
-    private static int getFieldHash(final Object instance, final Field field) {
+    private static int getFieldHash(final Object instance, final FieldAccessor field) {
         return getValueHash(getFieldValue(instance, field));
+    }
+
+    private static int getFieldHash(final Object instance, final Field field) {
+        return getValueHash(getFieldValue(instance, ClassFieldAccessorCache.fieldAccessorOrThrow(instance.getClass(), field.getName())));
     }
 
     private static int getValueHash(final Object fieldValue) {
@@ -188,12 +191,8 @@ public final class TrackedDto<T> {
                 .reduce(0, (hash, field) -> hash + getFieldHash(dto, field), Integer::sum);
     }
 
-    private static Object getFieldValue(final Object instance, final Field field) {
-        try {
-            field.setAccessible(true);
-            return field.get(instance);
-        } catch (IllegalAccessException ex) {
-            throw new AssertionError("Failed to access field: %s on object: %s".formatted(field, instance), ex);
-        }
+    private static Object getFieldValue(final Object instance, final FieldAccessor field) {
+        return field.get(instance);
     }
+
 }

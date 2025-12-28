@@ -6,7 +6,9 @@ import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.persistence.DtoCacheImpl;
 import org.litebridge.orm.persistence.DtoMapper;
+import org.litebridge.orm.persistence.DtoCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,12 +82,18 @@ public abstract class AbstractSelector<DTO> implements SelectTerminal<DTO> {
 
     @Override
     public Stream<DTO> stream() {
-        return executeQuery().stream().map(row -> dtoMapper.toDto(row, dtoClass));
+        final DtoCache dtoCache = new DtoCacheImpl();
+        return executeQuery().stream().map(row -> dtoMapper.toDto(row, dtoClass, dtoCache));
     }
 
     @Override
     public List<DTO> list() {
         return stream().toList();
+    }
+
+    @Override
+    public String toSql() {
+        return databaseProvider.toSql(selectSpec.toSelect());
     }
 
     protected @Nullable Row fetchOneRecord(final boolean first) {

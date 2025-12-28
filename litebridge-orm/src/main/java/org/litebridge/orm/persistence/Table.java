@@ -6,9 +6,9 @@ import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.tracking.ChangeTracker;
+import org.litebridge.tracking.FieldAccessor;
 import org.litebridge.tracking.TrackedDto;
 
-import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,25 +17,25 @@ import java.util.Map;
 public class Table {
 
     private TableMetaData metaData;
-    private final Map<Field, ColumnMetaData> fieldColumnMap;
+    private final Map<FieldAccessor, ColumnMetaData> fieldColumnMap;
     private final Map<String, ColumnMetaData> columnMap;
     private final Map<String, ColumnMetaData> fieldNameColumnMap;
-    private final Map<String, Field> columnNameFieldMap;
+    private final Map<String, FieldAccessor> columnNameFieldMap;
     private final ChangeTracker changeTracker;
 
     private final WeakRefSet<Object> persistedDtos = new WeakRefSet<>();
 
-    public Table(final TableMetaData metaData, final Map<Field, ColumnMetaData> fieldColumnMap, final ChangeTracker changeTracker) {
+    public Table(final TableMetaData metaData, final Map<FieldAccessor, ColumnMetaData> fieldColumnMap, final ChangeTracker changeTracker) {
         this.metaData = metaData;
         this.fieldColumnMap = fieldColumnMap;
         this.changeTracker = changeTracker;
         final Map<String, ColumnMetaData> columnMap = new HashMap<>(fieldColumnMap.size());
         final Map<String, ColumnMetaData> fieldNameColumnMap = new HashMap<>(fieldColumnMap.size());
-        final Map<String, Field> columnNameFieldMap = new HashMap<>(fieldColumnMap.size());
+        final Map<String, FieldAccessor> columnNameFieldMap = new HashMap<>(fieldColumnMap.size());
 
         fieldColumnMap.forEach(((field, column) -> {
             columnMap.put(column.name(), column);
-            fieldNameColumnMap.put(field.getName(), column);
+            fieldNameColumnMap.put(field.name(), column);
             columnNameFieldMap.put(column.name(), field);
         }));
 
@@ -48,7 +48,7 @@ public class Table {
         return metaData;
     }
 
-    public Map<Field, ColumnMetaData> getFieldColumnMap() {
+    public Map<FieldAccessor, ColumnMetaData> getFieldColumnMap() {
         return fieldColumnMap;
     }
 
@@ -68,12 +68,15 @@ public class Table {
         changeTracker.trackDtoFields(dto, fieldColumnMap.keySet());
     }
 
-    public Field getFieldForColumnName(final String columnName) {
+    public FieldAccessor getFieldForColumnName(final String columnName) {
         return ObjectUtils.requireNonNull(columnNameFieldMap.get(columnName), "No field for column '" + columnName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
     }
 
     public void syncPersistedDto(final Object dto) {
-        persistedDtos.add(dto);
+        if (!persistedDtos.contains(dto)) {
+            persistedDtos.add(dto);
+        }
+
         final TrackedDto<?> trackedDto = changeTracker.getTrackedDto(dto);
         trackedDto.snapshot(fieldColumnMap.keySet(), true);
     }

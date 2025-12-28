@@ -7,6 +7,7 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.DtoMapper;
+import org.litebridge.orm.persistence.DtoCache;
 import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.Arrays;
@@ -33,7 +34,7 @@ public final class SqlSelector extends AbstractSelector<Row> {
 
         @Override
         @SuppressWarnings("unchecked")
-        public <DTO> @Nullable DTO toDto(final @Nullable Row row, final Class<DTO> dtoClass) {
+        public <DTO> @Nullable DTO toDto(final @Nullable Row row, final Class<DTO> dtoClass, final @Nullable DtoCache dtoCache) {
             return (DTO) row;
         }
     }

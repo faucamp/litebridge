@@ -67,4 +67,9 @@ public class DelegatingSelector<DTO> implements SelectTerminal<DTO> {
     public List<DTO> list() {
         return delegate.list();
     }
+
+    @Override
+    public String toSql() {
+        return delegate.toSql();
+    }
 }

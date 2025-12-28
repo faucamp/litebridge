@@ -66,7 +66,7 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO> {
         selectSpec.setColumns(columns.map(column -> column.as(dtoAliasRegistry.alias(tableAlias, column))));
 
         // Calculate and add joins to embedded DTOs
-        ClassFieldCache.getNestedDtoFields(dtoClass).forEach(this::addJoinForNestedDto);
+        ClassFieldCache.nestedDtoFields(dtoClass).forEach(this::addJoinForNestedDto);
 
         return new DtoFromClauseTerminal<>(this);
     }

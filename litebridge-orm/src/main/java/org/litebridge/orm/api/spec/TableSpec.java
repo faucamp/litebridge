@@ -20,12 +20,12 @@ public final class TableSpec extends Table {
     /**
      * Field name to ColumnSpec map; key is field name, value is the column definition
      */
-    private final Map<String, ColumnSpec> fieldColumnSpecMap;
+    private final Map<FieldSpec, ColumnSpec> fieldColumnSpecMap;
 
     public TableSpec(@Nullable final String catalog,
                      @Nullable final String schema,
                      final String table,
-                     final Map<String, ColumnSpec> fieldColumnSpecMap) {
+                     final Map<FieldSpec, ColumnSpec> fieldColumnSpecMap) {
         super(StringUtils.blankIfNull(catalog),
                 StringUtils.blankIfNull(schema),
                 StringUtils.requireNonBlank(table, "Table name cannot be blank"));
@@ -37,19 +37,19 @@ public final class TableSpec extends Table {
      *
      * @return field name-database column mapping
      */
-    public Map<String, ColumnSpec> fieldColumnSpecMap() {
+    public Map<FieldSpec, ColumnSpec> fieldColumnSpecMap() {
         return fieldColumnSpecMap;
     }
 
-    public static TableSpec t(final String catalog, final String schema, final String table, final Map<String, ColumnSpec> fieldColumnSpecMap) {
+    public static TableSpec t(final String catalog, final String schema, final String table, final Map<FieldSpec, ColumnSpec> fieldColumnSpecMap) {
         return new TableSpec(catalog, schema, table, fieldColumnSpecMap);
     }
 
-    public static TableSpec t(final String schema, final String table, final Map<String, ColumnSpec> fieldColumnSpecMap) {
+    public static TableSpec t(final String schema, final String table, final Map<FieldSpec, ColumnSpec> fieldColumnSpecMap) {
         return new TableSpec(null, schema, table, fieldColumnSpecMap);
     }
 
-    public static TableSpec t(final String table, final Map<String, ColumnSpec> fieldColumnSpecMap) {
+    public static TableSpec t(final String table, final Map<FieldSpec, ColumnSpec> fieldColumnSpecMap) {
         return new TableSpec(null, null, table, fieldColumnSpecMap);
     }
 }

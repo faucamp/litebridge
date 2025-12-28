@@ -3,6 +3,7 @@ package org.litebridge.tracking;
 import org.litebridge.commons.ClassUtils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,7 +13,7 @@ public final class ClassFieldCache {
 
     private static final Map<Class<?>, Set<Field>> fieldMap = new ConcurrentHashMap<>();
     private static final Map<Class<?>, Set<Field>> nestedDtoFieldsMap = new ConcurrentHashMap<>();
-    private static final Map<Field, Class<?>[]> genericTypesMap = new ConcurrentHashMap<>();
+    private static final Map<Type, Class<?>[]> genericTypesMap = new ConcurrentHashMap<>();
 
     private ClassFieldCache() {
     }
@@ -25,7 +26,7 @@ public final class ClassFieldCache {
         return fieldMap.computeIfAbsent(dtoClass, ClassUtils::getAllFields);
     }
 
-    public static Set<Field> getNestedDtoFields(final Class<?> dtoClass) {
+    public static Set<Field> nestedDtoFields(final Class<?> dtoClass) {
         return nestedDtoFieldsMap.computeIfAbsent(dtoClass, key ->
                 ClassUtils.getAllFields(dtoClass).stream()
                         .filter(field -> !ClassUtils.isBasicType(field.getType()))
@@ -33,7 +34,7 @@ public final class ClassFieldCache {
     }
 
     public static boolean isNestedDtoField(final Field field) {
-        return getNestedDtoFields(field.getDeclaringClass()).contains(field);
+        return nestedDtoFields(field.getDeclaringClass()).contains(field);
     }
 
     public static Class<?> getGenericType(final Field field) {
@@ -41,6 +42,10 @@ public final class ClassFieldCache {
     }
 
     public static Class<?>[] getGenericTypes(final Field field) {
-        return genericTypesMap.computeIfAbsent(field, key -> ClassUtils.getGenericTypes(field));
+        return getGenericTypes(field.getGenericType());
+    }
+
+    public static Class<?>[] getGenericTypes(final Type genericType) {
+        return genericTypesMap.computeIfAbsent(genericType, ClassUtils::getGenericTypes);
     }
 }

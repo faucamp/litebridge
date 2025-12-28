@@ -4,8 +4,9 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.tracking.FieldAccessor;
 
-import java.lang.reflect.Field;
+import java.util.Optional;
 
 public final class DefaultDtoMapper implements DtoMapper {
 
@@ -21,11 +22,26 @@ public final class DefaultDtoMapper implements DtoMapper {
         this.dtoAliasRegistry = dtoAliasRegistry;
     }
 
-
-    @Override
-    public <DTO> @Nullable DTO toDto(final @Nullable Row row, final Class<DTO> dtoClass) {
+    @SuppressWarnings("unchecked")
+    public <DTO> @Nullable DTO toDto(final @Nullable Row row, final Class<DTO> dtoClass, final @Nullable DtoCache dtoCache) {
         if (row == null) {
             return null;
+        }
+
+        final Table table = tableRegistry.getTableOrThrow(dtoClass);
+
+        // Extract the primary key and re-use already-created DTOs if possible
+        final Object[] primaryKeyValues = table.getMetaData().primaryKey().stream()
+                .map(row::column)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(Row.RowColumn::value)
+                .toArray(Object[]::new);
+
+        final DTO cachedDto = primaryKeyValues.length > 0 ? dtoCache.get(dtoClass, primaryKeyValues) : null;
+
+        if (cachedDto != null) {
+            return cachedDto;
         }
 
         final DTO dto;
@@ -36,28 +52,24 @@ public final class DefaultDtoMapper implements DtoMapper {
         }
 
         // Filter results for this DTO
-        final Table table = tableRegistry.getTableOrThrow(dtoClass);
         final String tableAlias = dtoAliasRegistry.aliasOrNull(table.getMetaData());
 
         row.columnStream()
                 .filter(rowColumn -> tableAlias == null || dtoAliasRegistry.belongsTo(tableAlias, rowColumn.column()))
                 .forEach(rowColumn -> {
-                    final Field field = table.getFieldForColumnName(rowColumn.column().name());
+                    final FieldAccessor field = table.getFieldForColumnName(rowColumn.column().name());
                     final Object convertedValue;
 
-                    if (ClassUtils.isBasicType(field.getType())) {
-                        convertedValue = typeConverter.convert(rowColumn.value(), field.getType());
+                    if (ClassUtils.isBasicType(field.type())) {
+                        convertedValue = typeConverter.convert(rowColumn.value(), field.type());
                     } else {
-                        convertedValue = toDto(row, field.getType());
+                        convertedValue = toDto(row, field.type(), dtoCache);
                     }
 
-                    try {
-                        field.set(dto, convertedValue);
-                    } catch (final IllegalAccessException ex) {
-                        throw new IllegalStateException("Failed to set field '%s' of DTO: %s".formatted(field.getName(), dto), ex);
-                    }
+                    field.set(dto, convertedValue);
                 });
 
+        dtoCache.put(primaryKeyValues, dto);
         return dto;
     }
 }

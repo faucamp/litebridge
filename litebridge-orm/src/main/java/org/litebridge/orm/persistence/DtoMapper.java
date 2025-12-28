@@ -5,7 +5,9 @@ import org.litebridge.db.spi.Row;
 
 public interface DtoMapper {
 
-    @Nullable
-    <DTO> DTO toDto(final @Nullable Row row, final Class<DTO> dtoClass);
+    <DTO> @Nullable DTO toDto(final @Nullable Row row, final Class<DTO> dtoClass, final DtoCache dtoCache);
 
+    default <DTO> @Nullable DTO toDto(final @Nullable Row row, final Class<DTO> dtoClass) {
+        return toDto(row, dtoClass, NoOpDtoCache.INSTANCE);
+    }
 }

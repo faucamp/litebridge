@@ -2,8 +2,9 @@ package org.litebridge.tracking;
 
 import org.litebridge.commons.ObjectUtils;
 
-import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -47,7 +48,7 @@ public final class ChangeTracker {
 
     public <T> T trackDto(final T dto) {
         ObjectUtils.requireNonNull(dto, "DTO cannot be null");
-        return trackImpl(dto, ClassFieldCache.getFields(dto), false);
+        return trackImpl(dto, ClassFieldAccessorCache.fieldAccessors(dto.getClass()), false);
     }
 
     /**
@@ -64,11 +65,11 @@ public final class ChangeTracker {
      */
     public <T> T trackDto(final T dto, final Set<String> trackedFieldNames) {
         ObjectUtils.requireNonNull(dto, "DTO cannot be null");
-        final Map<String, Field> allFields = ClassFieldCache.getFields(dto).stream()
-                .collect(Collectors.toMap(Field::getName, Function.identity()));
-        final Set<Field> trackedFields = trackedFieldNames.stream()
+        final Map<String, FieldAccessor> allFields = ClassFieldAccessorCache.fieldAccessors(dto.getClass()).stream()
+                .collect(Collectors.toMap(FieldAccessor::name, Function.identity()));
+        final List<FieldAccessor> trackedFields = trackedFieldNames.stream()
                 .map(fieldName -> ObjectUtils.requireNonNull(allFields.get(fieldName), "Field '%s' does not exist in DTO '%s'".formatted(fieldName, dto.getClass().getName())))
-                .collect(Collectors.toSet());
+                .toList();
         return trackImpl(dto, trackedFields, false);
     }
 
@@ -82,7 +83,7 @@ public final class ChangeTracker {
      * @return the tracked instance of the provided DTO
      * @throws IllegalArgumentException if {@code dto} is null
      */
-    public <T> T trackDtoFields(final T dto, final Set<Field> trackedFields) {
+    public <T> T trackDtoFields(final T dto, final Set<FieldAccessor> trackedFields) {
         ObjectUtils.requireNonNull(dto, "DTO cannot be null");
         return trackImpl(dto, trackedFields, false);
     }
@@ -98,7 +99,7 @@ public final class ChangeTracker {
         return (TrackedDto<T>) ObjectUtils.requireNonNull(trackedDtos.get(dto), "DTO is not tracked: " + dto);
     }
 
-    private <T> T trackImpl(final T dto, final Set<Field> trackedFields, final boolean snapshotEmpty) {
+    private <T> T trackImpl(final T dto, final Collection<FieldAccessor> trackedFields, final boolean snapshotEmpty) {
         if (trackedDtos.containsKey(dto)) {
             return dto;
         }
@@ -119,6 +120,6 @@ public final class ChangeTracker {
 
     private void trackNestedDto(final Object dto) {
         ObjectUtils.requireNonNull(dto, () -> new IllegalStateException("trackNestedDto() called with null value"));
-        trackImpl(dto, ClassFieldCache.getFields(dto), true);
+        trackImpl(dto, ClassFieldAccessorCache.fieldAccessors(dto.getClass()), true);
     }
 }
