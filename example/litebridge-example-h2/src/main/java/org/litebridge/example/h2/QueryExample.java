@@ -21,10 +21,10 @@ public class QueryExample extends AbstractExample {
     public void run() {
         LOGGER.info("---======< Query example >======---");
 
-//        LOGGER.info("[EXAMPLE] Retrieve all persons and return a List");
-//        final List<Person> persons = litebridge.select(Person.class).list();
-//        LOGGER.info("All persons (list): " + persons);
-//
+        LOGGER.info("[EXAMPLE] Retrieve all persons and return a List");
+        final List<Person> persons = litebridge.select(Person.class).list();
+        LOGGER.info("All persons (list): " + persons);
+
         LOGGER.info("[EXAMPLE] Retrieve a single person with criteria");
         final Person alice = litebridge.select(Person.class)
                 .where("name").eq("Alice")
