@@ -125,7 +125,7 @@ The core engine. This is the primary dependency required for all applications us
 #### `litebridge-db`
 A collection of database provider modules. You only need to include the specific implementation for your database (or multiple if needed).
 * **`litebridge-db-h2`**: H2 database provider.
-* **`litebridge-db-api`**: The SPI for implementing custom database providers (not required for client use).
+* **`litebridge-db-spi`**: The SPI for implementing custom database providers (not required for client use).
 
 #### `litebridge-tracking`
 Exposes the `ChangeTracker` API. This provides lightweight change tracking for arbitrary DTOs. While the ORM uses this internally for SQL optimization, it can be used independently for other state-tracking needs.
