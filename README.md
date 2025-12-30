@@ -1,5 +1,7 @@
 # litebridge
 
+[![Coverage](.github/badges/jacoco.svg)](https://github.com/faucamp/litebridge/actions/workflows/maven.yml)
+
 Litebridge is a fast, lightweight Object-Relational Mapper (ORM) for Java 21+. It simplifies persistence by treating SQL as a first-class citizen, balancing relational power with the flexibility of OOP - without the "annotation hell" or complex toolchains of JPA.
 
 > **Philosophy**: SQL-first, minimal magic. Litebridge favours programmatic configuration and developer intent over code-to-table generation and heavy abstraction.
