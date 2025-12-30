@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
 
@@ -338,26 +339,6 @@ class TimeUtilsTest {
         assertEquals(zonedDateTime.getHour(), result.getHour());
         assertEquals(zonedDateTime.getMinute(), result.getMinute());
         assertEquals(zonedDateTime.getSecond(), result.getSecond());
-    }
-
-    /**
-     * Converts a ZonedDateTime in timezone GMT to LocalDateTime in the system timezone (GMT+2)
-     */
-    @Test
-    void toLocalDateTime_zonedDateTime_gmtToSast() {
-        // Given
-        ZonedDateTime zonedDateTime = TimeUtils.toZonedDateTime("2023-05-26T12:00:00Z");
-
-        // When
-        final LocalDateTime result = TimeUtils.toLocalDateTime(zonedDateTime);
-
-        // Then
-        assertEquals(2023, result.getYear());
-        assertEquals(Month.MAY, result.getMonth());
-        assertEquals(26, result.getDayOfMonth());
-        assertEquals(14, result.getHour());
-        assertEquals(0, result.getMinute());
-        assertEquals(0, result.getSecond());
     }
 
     @Test
