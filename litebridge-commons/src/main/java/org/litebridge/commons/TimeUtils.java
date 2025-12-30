@@ -1,6 +1,6 @@
 package org.litebridge.commons;
 
-import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,7 +14,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@NullUnmarked
 public final class TimeUtils {
 
     private static final DateTimeFormatter LOOSE_ISO_DATE_TIME_ZONE_PARSER = DateTimeFormatter.ofPattern("[yyyyMMdd][yyyy-MM-dd][yyyy-DDD]['T'[HHmmss][HHmm][HH:mm:ss][HH:mm][.SSSSSSSSS][.SSSSSSS][.SSSSSS][.SSSSS][.SSSS][.SSS][.SS][.S][Z]][' 'HH:mm:ss][.SSS][OOOO][O][z][XXXXX][XXXX]['['VV']']");
@@ -24,7 +23,7 @@ public final class TimeUtils {
     private TimeUtils() {
     }
 
-    public static ZonedDateTime toZonedDateTime(final String dateStr) {
+    public static @Nullable ZonedDateTime toZonedDateTime(final @Nullable String dateStr) {
         if (dateStr == null) {
             return null;
         }
@@ -47,22 +46,15 @@ public final class TimeUtils {
         }
     }
 
-    public static ZonedDateTime toZonedDateTime(final Date requestedDate) {
+    public static @Nullable ZonedDateTime toZonedDateTime(final @Nullable Date requestedDate) {
         if (requestedDate == null) {
             return null;
         }
+
         return ZonedDateTime.ofInstant(requestedDate.toInstant(), ZoneId.systemDefault());
     }
 
-    public static LocalDateTime toLocalDateTime(final ZonedDateTime zonedDateTime) {
-        if (zonedDateTime == null) {
-            return null;
-        }
-
-        return zonedDateTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
-    }
-
-    public static ZonedDateTime toZonedDateTime(final LocalDateTime localDateTime) {
+    public static @Nullable ZonedDateTime toZonedDateTime(final @Nullable LocalDateTime localDateTime) {
         if (localDateTime == null) {
             return null;
         }
@@ -70,7 +62,7 @@ public final class TimeUtils {
         return ZonedDateTime.of(localDateTime, ZoneId.systemDefault());
     }
 
-    public static ZonedDateTime toZonedDateTime(final LocalDate localDate) {
+    public static @Nullable ZonedDateTime toZonedDateTime(final @Nullable LocalDate localDate) {
         if (localDate == null) {
             return null;
         }
@@ -78,7 +70,7 @@ public final class TimeUtils {
         return localDate.atStartOfDay().atZone(ZoneId.systemDefault());
     }
 
-    public static Date toDate(final ZonedDateTime zonedDateTime) {
+    public static @Nullable Date toDate(final @Nullable ZonedDateTime zonedDateTime) {
         if (zonedDateTime == null) {
             return null;
         }
@@ -86,7 +78,7 @@ public final class TimeUtils {
         return Date.from(zonedDateTime.toInstant());
     }
 
-    public static Date toDate(final LocalDate localDate) {
+    public static @Nullable Date toDate(final @Nullable LocalDate localDate) {
         if (localDate == null) {
             return null;
         }
@@ -94,7 +86,7 @@ public final class TimeUtils {
         return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 
-    public static Date toDate(final LocalDateTime localDateTime) {
+    public static @Nullable Date toDate(final @Nullable LocalDateTime localDateTime) {
         if (localDateTime == null) {
             return null;
         }
@@ -102,7 +94,7 @@ public final class TimeUtils {
         return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
     }
 
-    public static LocalDate toLocalDate(final ZonedDateTime zonedDateTime) {
+    public static @Nullable LocalDate toLocalDate(final @Nullable ZonedDateTime zonedDateTime) {
         if (zonedDateTime == null) {
             return null;
         }
@@ -110,7 +102,7 @@ public final class TimeUtils {
         return zonedDateTime.toLocalDate();
     }
 
-    public static LocalDate toLocalDate(String dateStr) {
+    public static @Nullable LocalDate toLocalDate(final @Nullable String dateStr) {
         if (dateStr == null) {
             return null;
         }
@@ -133,7 +125,15 @@ public final class TimeUtils {
         }
     }
 
-    public static LocalDateTime toLocalDateTime(String dateStr) {
+    public static @Nullable LocalDateTime toLocalDateTime(final @Nullable ZonedDateTime zonedDateTime) {
+        if (zonedDateTime == null) {
+            return null;
+        }
+
+        return zonedDateTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
+    public static @Nullable LocalDateTime toLocalDateTime(final @Nullable String dateStr) {
         if (dateStr == null) {
             return null;
         }
