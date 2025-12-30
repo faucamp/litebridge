@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
+    static final String[] TYPES_TABLE = {"TABLE"};
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDatabaseProvider.class);
     private final Connection connection;
     private final TypeConverter typeConverter;
@@ -46,8 +47,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return ensureTableMetaData(table);
     }
 
-    private TableMetaData ensureTableMetaData(final String schema, final String table) throws SQLException {
-        return ensureTableMetaData(new Table("", schema, table));
+    private TableMetaData ensureTableMetaData(final String catalog, final String schema, final String table) throws SQLException {
+        return ensureTableMetaData(new Table(catalog, schema, table));
     }
 
     private TableMetaData ensureTableMetaData(final Table table) throws SQLException {
@@ -381,7 +382,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 for (int i = 1; i <= columnCount; i++) {
                     final String schemaName = resultSet.getMetaData().getSchemaName(i);
                     final String tableName = resultSet.getMetaData().getTableName(i);
-                    final TableMetaData columnTable = ensureTableMetaData(schemaName, tableName);
+                    final TableMetaData columnTable = ensureTableMetaData(fromTable.catalog(), schemaName, tableName);
                     final String columnName = resultSet.getMetaData().getColumnName(i);
                     final String alias = resultSet.getMetaData().getColumnLabel(i);
                     final ColumnMetaData column = columnTable.column(columnName).as(alias);
@@ -442,7 +443,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             throw new IllegalArgumentException("Schema not found: " + table.schema());
         }
 
-        final ResultSet tables = databaseMetaData.getTables(table.catalog(), table.schema(), table.name(), new String[]{"TABLE"});
+        final ResultSet tables = databaseMetaData.getTables(table.catalog(), table.schema(), table.name(), TYPES_TABLE);
         boolean tableExists = false;
 
         while (tables.next()) {
@@ -478,6 +479,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             for (BindValue bindValue : bindValues) {
                 if (bindValue == null) {
                     preparedStatement.setString(ordinal[0]++, null);
+                    continue;
                 }
 
                 switch (bindValue.value) {
