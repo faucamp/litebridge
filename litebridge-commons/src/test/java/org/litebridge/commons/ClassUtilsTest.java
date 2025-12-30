@@ -2,9 +2,11 @@ package org.litebridge.commons;
 
 import org.junit.jupiter.api.Test;
 
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -240,14 +242,98 @@ class ClassUtilsTest {
         assertThrows(IllegalArgumentException.class, () -> ClassUtils.getGenericType(listField));
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    void getGenericTypes() {
+        // Given
+        final Field mapField = ClassUtils.getField(TestDtoWithMap.class, "map");
+
+        // When
+        final Class<?>[] result = ClassUtils.getGenericTypes(mapField);
+
+        // Then
+        assertEquals(2, result.length);
+        assertEquals(String.class, result[0]);
+        assertEquals(Long.class, result[1]);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void getGenericTypes_parameterizedTypes() {
+        // Given
+        final Field mapField = ClassUtils.getField(TestDtoWithMap.class, "mapOfLists");
+
+        // When
+        final Class<?>[] result = ClassUtils.getGenericTypes(mapField);
+
+        // Then
+        assertEquals(2, result.length);
+        assertEquals(String.class, result[0]);
+        assertEquals(List.class, result[1]);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void getGenericTypes_wildcardTypes() {
+        // Given
+        final Field mapField = ClassUtils.getField(TestDtoWithMap.class, "mapOfWildcards");
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getGenericTypes(mapField));
+    }
+
+    @Test
+    void getProperty() {
+        // Given
+        final String propertyName = "name";
+
+        // When
+        final PropertyDescriptor result = ClassUtils.getProperty(TestDto.class, propertyName);
+
+        // Then
+        assertNotNull(result);
+    }
+
+    @Test
+    void getProperty_noGettersOrSetters() {
+        // Given
+        final String propertyName = "age";
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getProperty(TestDto.class, propertyName));
+    }
+
+    @Test
+    void getProperty_notFound() {
+        // Given
+        final String propertyName = "abc123";
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getProperty(TestDto.class, propertyName));
+    }
+
     static class TestDto {
         private String name;
         private int age;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(final String name) {
+            this.name = name;
+        }
     }
 
     static class TestDtoWithList {
         private List<String> list;
         private List rawList;
+    }
+
+    static class TestDtoWithMap {
+        private Map<String, Long> map;
+        private Map<String, List<String>> mapOfLists;
+        private Map<String, ?> mapOfWildcards;
     }
 
     static class ChildTestDto extends TestDto {

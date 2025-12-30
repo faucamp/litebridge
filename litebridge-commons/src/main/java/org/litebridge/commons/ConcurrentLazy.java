@@ -92,11 +92,11 @@ public final class ConcurrentLazy<T> {
     }
 
     /**
-     * Returns {@code true} if the value has already been initialized, or {@code false} otherwise.
+     * Returns {@code true} if the value has already been initialised, or {@code false} otherwise.
      *
-     * @return {@code true} if the value is initialized; {@code false} if it is still uninitialized
+     * @return {@code true} if the value is initialised; {@code false} if it is still uninitialised
      */
-    public boolean isInitialized() {
+    public boolean isInitialised() {
         return value != UNINITIALIZED;
     }
 }

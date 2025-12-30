@@ -125,6 +125,7 @@ public final class ClassUtils {
                         throw new IllegalArgumentException("Cannot determine concrete class for generic type argument '%s' of type '%s'".formatted(argType, genericType.getTypeName()));
                     }
                 }
+
                 return result;
             }
         }

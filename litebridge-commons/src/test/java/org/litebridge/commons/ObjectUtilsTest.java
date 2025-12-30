@@ -57,4 +57,26 @@ class ObjectUtilsTest {
         // Then
         assertEquals(null, exception.getMessage());
     }
+
+    @Test
+    void requireNull() {
+        // Given
+        final Object input = null;
+
+        // When
+        ObjectUtils.requireNull(input, () -> new IllegalArgumentException("Object must be null"));
+    }
+
+    @Test
+    void requireNull_notNull() {
+        // Given
+        final Object input = new Object();
+
+        // When
+        IllegalArgumentException result = assertThrows(IllegalArgumentException.class,
+                () -> ObjectUtils.requireNull(input, () -> new IllegalArgumentException("Test message")));
+
+        // Then
+        assertEquals("Test message", result.getMessage());
+    }
 }

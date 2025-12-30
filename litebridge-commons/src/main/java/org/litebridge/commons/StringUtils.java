@@ -79,8 +79,8 @@ public final class StringUtils {
     }
 
     public static String camelCase(final String str) {
-        if (isEmpty(str)) {
-            return str;
+        if (isEmpty(ObjectUtils.requireNonNull(str, "Input cannot be null"))) {
+            return "";
         }
 
         // Split the string by any non-word characters (including spaces and underscores)

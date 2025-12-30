@@ -37,11 +37,9 @@ public final class ObjectUtils {
         return obj;
     }
 
-    public static <T, X extends Throwable> T requireNull(@Nullable final T obj, final Supplier<? extends X> exceptionSupplier) throws X {
+    public static <X extends Throwable> void requireNull(@Nullable final Object obj, final Supplier<? extends X> exceptionSupplier) throws X {
         if (obj != null) {
             throw exceptionSupplier.get();
         }
-
-        return obj;
     }
 }

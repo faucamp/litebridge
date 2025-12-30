@@ -311,6 +311,18 @@ class StringUtilsTest {
     }
 
     @Test
+    void abbreviate_unicode() {
+        // Given
+        final String input = "Hållø Wørl∂¡ 123";
+
+        // When
+        final String result = StringUtils.abbreviate(input);
+
+        // Then
+        assertEquals("hw123", result);
+    }
+
+    @Test
     void isAscii_true() {
         // Given
         final String input = "Hello World!";
@@ -332,5 +344,89 @@ class StringUtilsTest {
 
         // Then
         assertFalse(result);
+    }
+
+    @Test
+    void blankIfNull() {
+        // Given
+        final String input = null;
+
+        // When
+        final String result = StringUtils.blankIfNull(input);
+
+        // Then
+        assertEquals("", result);
+    }
+
+    @Test
+    void blankIfNull_notNull() {
+        // Given
+        final String input = "Hello World!";
+
+        // When
+        final String result = StringUtils.blankIfNull(input);
+
+        // Then
+        assertEquals("Hello World!", result);
+    }
+
+    @Test
+    void lowerFirst() {
+        // Given
+        final String input = "ABC DEF!";
+
+        // When
+        final String result = StringUtils.lowerFirst(input);
+
+        // Then
+        assertEquals("aBC DEF!", result);
+    }
+
+    @Test
+    void lowerFirst_null() {
+        // Given
+        final String input = null;
+
+        // When
+        assertThrows(IllegalArgumentException.class, () -> StringUtils.lowerFirst(input));
+    }
+
+    @Test
+    void lowerFirst_empty() {
+        // Given
+        final String input = "";
+
+        // When
+        assertThrows(IllegalArgumentException.class, () -> StringUtils.lowerFirst(input));
+    }
+
+    @Test
+    void camelCase() {
+        // Given
+        final String input = "Hello World 123!";
+
+        // When
+        final String result = StringUtils.camelCase(input);
+
+        // Then
+        assertEquals("helloWorld123", result);
+    }
+
+    @Test
+    void camelCase_null() {
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> StringUtils.camelCase(null));
+    }
+
+    @Test
+    void camelCase_empty() {
+        // Given
+        final String input = "";
+
+        // When
+        final String result = StringUtils.camelCase(input);
+
+        // Then
+        assertEquals("", result);
     }
 }
