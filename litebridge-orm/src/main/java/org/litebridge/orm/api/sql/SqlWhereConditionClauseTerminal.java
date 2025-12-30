@@ -5,6 +5,9 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
+import org.litebridge.orm.api.spec.FieldColumnSpec;
+
+import java.util.Arrays;
 
 public final class SqlWhereConditionClauseTerminal
         extends AbstractWhereClauseTerminal<Row, SqlOrderByClause, SqlOrderByClauseChain>
@@ -27,5 +30,13 @@ public final class SqlWhereConditionClauseTerminal
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
         return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+    }
+
+    @Override
+    public SqlOrderByClause orderBy(final FieldColumnSpec... columns) {
+        return new SqlOrderByClause(selectSpec.newOrderBy(Arrays.stream(columns)
+                .map(fieldColumnSpec -> fieldColumnSpec.column().name())
+                .toArray(String[]::new)),
+                (SqlSelector) delegate);
     }
 }

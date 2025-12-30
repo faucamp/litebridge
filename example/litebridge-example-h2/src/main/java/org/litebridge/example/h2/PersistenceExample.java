@@ -34,14 +34,15 @@ public class PersistenceExample extends AbstractExample {
         LOGGER.info("Saved person ID: " + person.getId());
         LOGGER.info("Saved account ID: " + account.getId());
 
-        // Add another account to the person
+        LOGGER.info("[EXAMPLE] Add another account to the person");
         final Account account2 = litebridge.track(new Account());
         account2.setName("Account 2");
         account2.setOwner(person);
+        person.setEyeColour("brown");
         litebridge.save(account2);
 
         // Update a single field of a tracked DTO and update the database accordingly
-        person.setEyeColour("brown");
+
         litebridge.save(person);
     }
 }

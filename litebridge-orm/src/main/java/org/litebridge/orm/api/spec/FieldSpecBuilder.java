@@ -1,31 +1,13 @@
 package org.litebridge.orm.api.spec;
 
-import org.jspecify.annotations.Nullable;
+public interface FieldSpecBuilder<CSB extends ColumnSpecBuilder<CSB>> extends FieldSpec {
 
-public final class FieldSpecBuilder implements FieldSpec {
+    FieldSpecBuilder<CSB> property(boolean property);
 
-    /**
-     * Built FieldSpec instance
-     */
-    @Nullable
-    private FieldSpecImpl fieldSpec;
+    CSB column(String column);
 
-    /**
-     * Field/property name
-     */
-    private final String name;
-    /**
-     * Whether the field is accessed as a property instead of direct field access
-     */
-    private boolean property;
-
-    private FieldSpecBuilder(final String name) {
-        this.name = name;
-    }
-
-    public FieldSpecBuilder property(final boolean property) {
-        this.property = property;
-        return this;
+    default CSB c(String column) {
+        return column(column);
     }
 
     /**
@@ -34,8 +16,9 @@ public final class FieldSpecBuilder implements FieldSpec {
      * @param field the name of the field/property in a class
      * @return this {@code FieldSpecBuilder} for further chaining
      */
-    public static FieldSpecBuilder f(final String field) {
-        return new FieldSpecBuilder(field);
+    @SuppressWarnings("unchecked")
+    static FieldSpecBuilder<FieldColumnSpecBuilder.EmbeddedColumnSpecBuilder> f(final String field) {
+        return (FieldSpecBuilder<FieldColumnSpecBuilder.EmbeddedColumnSpecBuilder>) new FieldColumnSpecBuilder(field).field();
     }
 
     /**
@@ -45,25 +28,7 @@ public final class FieldSpecBuilder implements FieldSpec {
      * @param property the name of the property in a class
      * @return this {@code FieldSpecBuilder} for further chaining
      */
-    public static FieldSpecBuilder p(final String property) {
-        return new FieldSpecBuilder(property).property(true);
-    }
-
-    @Override
-    public String name() {
-        return ensureFieldSpec().name();
-    }
-
-    @Override
-    public boolean property() {
-        return ensureFieldSpec().property();
-    }
-
-    private FieldSpecImpl ensureFieldSpec() {
-        if (fieldSpec == null) {
-            fieldSpec = new FieldSpecImpl(name, property);
-        }
-
-        return fieldSpec;
+    static FieldSpecBuilder<FieldColumnSpecBuilder.EmbeddedColumnSpecBuilder> p(final String property) {
+        return new FieldSpecBuilderImpl(property).property(true);
     }
 }

@@ -5,6 +5,10 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.model.JoinSpec;
+import org.litebridge.orm.api.spec.ColumnSpec;
+import org.litebridge.orm.api.spec.FieldColumnSpec;
+
+import java.util.Arrays;
 
 public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionClauseTerminal<Row,
         SqlJoinConditionClause,
@@ -38,5 +42,12 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
         return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+    }
+
+    public SqlOrderByClause orderBy(final FieldColumnSpec... columns) {
+        return new SqlOrderByClause(selectSpec.newOrderBy(Arrays.stream(columns)
+                .map(fieldColumnSpec -> fieldColumnSpec.column().name())
+                .toArray(String[]::new)),
+                (SqlSelector) delegate);
     }
 }

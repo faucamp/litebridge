@@ -4,6 +4,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
+import org.litebridge.orm.api.spec.FieldColumnSpec;
 import org.litebridge.orm.persistence.Table;
 
 import java.util.Arrays;
@@ -32,12 +33,26 @@ public final class DtoWhereConditionClauseTerminal<DTO>
         return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), this);
     }
 
+    public DtoWhereConditionClause<DTO> and(final FieldColumnSpec field) {
+        return and(field.field().name());
+    }
+
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        final String[] columns = Arrays.stream(fields)
+        return orderByImpl(Arrays.stream(fields)
                 .map(table::getColumnForFieldName)
                 .map(ColumnMetaData::name)
-                .toArray(String[]::new);
+                .toArray(String[]::new));
+    }
+
+    @Override
+    public DtoOrderByClause<DTO> orderBy(final FieldColumnSpec... fields) {
+        return orderByImpl(Arrays.stream(fields)
+                .map(field -> field.column().name())
+                .toArray(String[]::new));
+    }
+
+    private DtoOrderByClause<DTO> orderByImpl(final String[] columns) {
         return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);
     }
 }

@@ -5,9 +5,11 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.orm.api.select.JoinClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.api.select.model.JoinSpec;
+import org.litebridge.orm.api.spec.FieldColumnSpec;
 import org.litebridge.orm.persistence.Table;
 
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 public final class DtoJoinConditionClauseTerminal<DTO>
         extends AbstractJoinConditionClauseTerminal<DTO,
@@ -53,10 +55,19 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        final String[] columns = Arrays.stream(fields)
-                .map(table::getColumnForFieldName)
+        return orderByImpl(Arrays.stream(fields));
+    }
+
+    @Override
+    public DtoOrderByClause<DTO> orderBy(final FieldColumnSpec... fields) {
+        return orderByImpl(Arrays.stream(fields)
+                .map(field -> field.column().name()));
+    }
+
+    private DtoOrderByClause<DTO> orderByImpl(final Stream<String> fields) {
+        final String[] columns = fields.map(table::getColumnForFieldName)
                 .map(ColumnMetaData::name)
                 .toArray(String[]::new);
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), (DtoSelector<DTO>) delegate);
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);
     }
 }

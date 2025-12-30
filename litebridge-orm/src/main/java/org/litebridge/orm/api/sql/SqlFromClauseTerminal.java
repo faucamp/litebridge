@@ -3,6 +3,9 @@ package org.litebridge.orm.api.sql;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
+import org.litebridge.orm.api.spec.FieldColumnSpec;
+
+import java.util.Arrays;
 
 public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
         SqlJoinClause,
@@ -33,5 +36,13 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
         return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+    }
+
+    @Override
+    public SqlOrderByClause orderBy(final FieldColumnSpec... columns) {
+        return new SqlOrderByClause(selectSpec.newOrderBy(Arrays.stream(columns)
+                .map(fieldColumnSpec -> fieldColumnSpec.column().name())
+                .toArray(String[]::new)),
+                (SqlSelector) delegate);
     }
 }

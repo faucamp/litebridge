@@ -47,6 +47,7 @@ public class H2Example {
         new PersistenceExample(litebridge).run();
         new QueryExample(litebridge).run();
         new SqlExample(litebridge).run();
+        new TypeSafeExample(litebridge).run();
     }
 
     private static String configureDatabase(final String url, final String user, final String password) {
