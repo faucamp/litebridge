@@ -10,5 +10,4 @@ public final class BooleanUtils {
     public static boolean toBoolean(final @Nullable Boolean value) {
         return Boolean.TRUE.equals(value);
     }
-
 }

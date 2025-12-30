@@ -80,7 +80,7 @@ public class ChangeTrackerTest {
     public void trackDto_fieldType_invalidField() throws Exception {
         // Given
         final TestDto dto = new TestDto();
-        final Set<Field> invalidFields = Set.of(ContainerDto.class.getDeclaredField("parentField1"));
+        final Set<FieldAccessor> invalidFields = Set.of(new FieldAccessorImpl(ContainerDto.class.getDeclaredField("parentField1")));
 
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> changeTracker.trackDtoFields(dto, invalidFields));
@@ -124,7 +124,7 @@ public class ChangeTrackerTest {
         final TestDto dto = new TestDto();
         final Field field1 = TestDto.getDeclaredField("field1");
         final Field field2 = TestDto.getDeclaredField("field2");
-        final Set<Field> trackedFields = Set.of(field1, field2);
+        final Set<FieldAccessor> trackedFields = Set.of(new FieldAccessorImpl(field1), new FieldAccessorImpl(field2));
 
         // When
         final TestDto result = changeTracker.trackDtoFields(dto, trackedFields);
@@ -156,7 +156,7 @@ public class ChangeTrackerTest {
         final Object dto = null;
         final Field field1 = TestDto.getDeclaredField("field1");
         final Field field2 = TestDto.getDeclaredField("field2");
-        final Set<Field> trackedFields = Set.of(field1, field2);
+        final Set<FieldAccessor> trackedFields = Set.of(new FieldAccessorImpl(field1), new FieldAccessorImpl(field2));
 
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> changeTracker.trackDtoFields(dto, trackedFields));

@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.sql;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.platform.commons.support.HierarchyTraversalMode;
@@ -8,7 +9,6 @@ import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.TableRegistry;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -24,11 +24,15 @@ class SqlSelectorTest {
     @Mock
     private DatabaseProvider databaseProvider;
 
-    @Mock
     private TableRegistry tableRegistry;
 
-    @InjectMocks
     private SqlSelector sqlSelector;
+
+    @BeforeEach
+    void beforeEach() {
+        tableRegistry = new TableRegistry();
+        sqlSelector = new SqlSelector(databaseProvider, tableRegistry);
+    }
 
     @Test
     void select_basic_columnNames() throws Exception {
@@ -58,7 +62,8 @@ class SqlSelectorTest {
 
         assertNotNull(selectSpec.getWhereConditions());
         assertEquals(1, selectSpec.getWhereConditions().size());
-        assertEquals("COL1", selectSpec.getWhereConditions().get(0).getColumn());
+        assertEquals("COL1", selectSpec.getWhereConditions().get(0).getColumn().name());
+        assertEquals(selectSpec.getTable(), selectSpec.getWhereConditions().get(0).getColumn().table());
         assertEquals(Operator.EQ, selectSpec.getWhereConditions().get(0).getOperator());
         assertEquals(123, selectSpec.getWhereConditions().get(0).getValue());
     }

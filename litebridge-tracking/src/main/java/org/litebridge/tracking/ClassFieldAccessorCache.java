@@ -5,6 +5,8 @@ import org.litebridge.commons.ClassUtils;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ClassFieldAccessorCache {
 
@@ -17,13 +19,7 @@ public class ClassFieldAccessorCache {
     }
 
     public static FieldAccessor fieldAccessorOrThrow(final Class<?> dtoClass, final String field) {
-        final Map<String, FieldAccessor> fieldAccessors = classFieldAccessors.get(dtoClass);
-
-        if (fieldAccessors == null) {
-            throw new IllegalArgumentException("No field accessors found for class " + dtoClass.getName());
-        }
-
-        final FieldAccessor fieldAccessor = fieldAccessors.get(field);
+        final FieldAccessor fieldAccessor = ensureFieldAccessors(dtoClass).get(field);
 
         if (fieldAccessor == null) {
             throw new IllegalArgumentException("No field accessor found for field " + field + " in class " + dtoClass.getName());
@@ -33,13 +29,22 @@ public class ClassFieldAccessorCache {
     }
 
     public static Collection<FieldAccessor> fieldAccessors(final Class<?> dtoClass) {
-        return ensureFieldAccessors(dtoClass).values();
+        if (classFieldAccessors.containsKey(dtoClass)) {
+            return classFieldAccessors.get(dtoClass).values();
+        } else {
+            final Map<String, FieldAccessor> fieldAccessors = ensureFieldAccessors(dtoClass);
+            return fieldAccessors.values();
+        }
     }
 
     public static boolean isNestedDtoField(final Class<?> dtoClass, final FieldAccessor field) {
+
         final Map<String, FieldAccessor> fieldAccessors = classFieldAccessors.get(dtoClass);
 
-        if (fieldAccessors == null) {
+        if (fieldAccessors == null
+                || ClassUtils.isBasicType(field.type())
+                || Collection.class.isAssignableFrom(field.type())
+                || Map.class.isAssignableFrom(field.type())) {
             return false;
         }
 
@@ -57,6 +62,13 @@ public class ClassFieldAccessorCache {
     }
 
     private static Map<String, FieldAccessor> ensureFieldAccessors(final Class<?> dtoClass) {
-        return classFieldAccessors.computeIfAbsent(dtoClass, cls -> new ConcurrentHashMap<>());
+        return classFieldAccessors.computeIfAbsent(dtoClass, ClassFieldAccessorCache::createFieldAccessors);
+    }
+
+    private static Map<String, FieldAccessor> createFieldAccessors(final Class<?> dtoClass) {
+        final Map<String, FieldAccessor> fieldAccessors = ClassUtils.getAllFields(dtoClass).stream()
+                .map(FieldAccessorImpl::new)
+                .collect(Collectors.toMap(FieldAccessor::name, Function.identity()));
+        return fieldAccessors;
     }
 }
