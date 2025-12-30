@@ -4,6 +4,7 @@ import org.litebridge.commons.ClassUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,12 +30,10 @@ public final class ClassFieldCache {
     public static Set<Field> nestedDtoFields(final Class<?> dtoClass) {
         return nestedDtoFieldsMap.computeIfAbsent(dtoClass, key ->
                 ClassUtils.getAllFields(dtoClass).stream()
-                        .filter(field -> !ClassUtils.isBasicType(field.getType()))
+                        .filter(field -> !ClassUtils.isBasicType(field.getType())
+                                && !Collection.class.isAssignableFrom(field.getType())
+                                && !Map.class.isAssignableFrom(field.getType()))
                         .collect(Collectors.toSet()));
-    }
-
-    public static boolean isNestedDtoField(final Field field) {
-        return nestedDtoFields(field.getDeclaringClass()).contains(field);
     }
 
     public static Class<?> getGenericType(final Field field) {

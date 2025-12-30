@@ -38,7 +38,6 @@ public class ClassFieldAccessorCache {
     }
 
     public static boolean isNestedDtoField(final Class<?> dtoClass, final FieldAccessor field) {
-
         final Map<String, FieldAccessor> fieldAccessors = classFieldAccessors.get(dtoClass);
 
         if (fieldAccessors == null

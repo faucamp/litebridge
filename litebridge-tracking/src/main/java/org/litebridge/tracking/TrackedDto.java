@@ -1,5 +1,6 @@
 package org.litebridge.tracking;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ObjectUtils;
@@ -20,7 +21,9 @@ public final class TrackedDto<T> {
 
     private final WeakReference<T> dtoRef;
     private final Consumer<Object> trackDtoCallback;
+    @Nullable
     private List<FieldSnapshot> fieldSnapshots;
+    @Nullable
     private ChangedFields changedFields;
 
     public TrackedDto(final T dto, final Consumer<Object> trackDtoCallback) {
@@ -194,5 +197,4 @@ public final class TrackedDto<T> {
     private static Object getFieldValue(final Object instance, final FieldAccessor field) {
         return field.get(instance);
     }
-
 }
