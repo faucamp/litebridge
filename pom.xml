@@ -23,7 +23,7 @@
         <jackson-annotations.version>2.20</jackson-annotations.version>
         <jspecify.version>1.0.0</jspecify.version>
         <junit-jupiter.version>5.14.1</junit-jupiter.version>
-        <mockito-junit-jupiter.version>5.20.0</mockito-junit-jupiter.version>
+        <mockito.version>5.20.0</mockito.version>
         <slf4j.version>2.0.17</slf4j.version>
         <typeconverter.version>1.0</typeconverter.version>
     </properties>
@@ -186,7 +186,7 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-junit-jupiter</artifactId>
-                <version>${mockito-junit-jupiter.version}</version>
+                <version>${mockito.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

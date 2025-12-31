@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
 
@@ -288,9 +286,24 @@ class TimeUtilsTest {
     }
 
     @Test
-    void toLocalDate_string_stringWithTime() {
+    void toLocalDate_string_zonedDateTime() {
         // Given
         final String inputDate = "2011-12-03T10:15:30+01:00";
+
+        // When
+        final LocalDate result = TimeUtils.toLocalDate(inputDate);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(2011, result.getYear());
+        assertEquals(12, result.getMonthValue());
+        assertEquals(3, result.getDayOfMonth());
+    }
+
+    @Test
+    void toLocalDate_string_localDateTime() {
+        // Given
+        final String inputDate = "2011-12-03T10:15:30";
 
         // When
         final LocalDate result = TimeUtils.toLocalDate(inputDate);
@@ -347,7 +360,37 @@ class TimeUtilsTest {
     }
 
     @Test
-    void toLocalDateTime_string() {
+    void toLocalDateTime_string_zonedDateTime() {
+        // Given
+        final String inputDate = "2011-12-03T10:15:30+01:00";
+
+        // When
+        final LocalDateTime result = TimeUtils.toLocalDateTime(inputDate);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(2011, result.getYear());
+        assertEquals(12, result.getMonthValue());
+        assertEquals(3, result.getDayOfMonth());
+    }
+
+    @Test
+    void toLocalDateTime_string_localDateTime() {
+        // Given
+        final String inputDate = "2011-12-03T10:15:30";
+
+        // When
+        final LocalDateTime result = TimeUtils.toLocalDateTime(inputDate);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(2011, result.getYear());
+        assertEquals(12, result.getMonthValue());
+        assertEquals(3, result.getDayOfMonth());
+    }
+
+    @Test
+    void toLocalDateTime_string_localDate() {
         // Given
         final String inputDate = "2023-11-27";
 
