@@ -35,10 +35,10 @@ public sealed class ChangedField permits ChangedMapField {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final @Nullable Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (ChangedField) obj;
+        final ChangedField that = (ChangedField) obj;
         return Objects.equals(this.name, that.name) &&
                 Objects.equals(this.value, that.value);
     }

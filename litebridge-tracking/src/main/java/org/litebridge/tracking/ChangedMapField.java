@@ -1,5 +1,7 @@
 package org.litebridge.tracking;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -19,10 +21,10 @@ public final class ChangedMapField extends ChangedField {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final @Nullable Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (ChangedMapField) obj;
+        final ChangedMapField that = (ChangedMapField) obj;
         return Objects.equals(this.name, that.name) &&
                 Objects.equals(this.value, that.value) &&
                 Objects.equals(this.mapSnapshot, that.mapSnapshot);
