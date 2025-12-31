@@ -131,12 +131,15 @@ The core engine. This is the primary dependency required for all applications us
 
 #### `litebridge-db`
 A collection of database provider modules. You only need to include the specific implementation for your database (or multiple if needed).
-* **`litebridge-db-h2`**: H2 database provider.
+* **`litebridge-db-h2`**:
+
+  H2 database provider.
 * **`litebridge-db-spi`**:
-  The Service Provider Interface (SPI) for implementing custom database providers. Not required for client use.
 
   ![Coverage](.github/badges/litebridge-orm/jacoco.svg)
   ![Branches](.github/badges/litebridge-orm/branches.svg)
+
+  The Service Provider Interface (SPI) for implementing custom database providers. Not required for client use.
 
 #### `litebridge-tracking`
 
