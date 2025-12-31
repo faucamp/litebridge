@@ -19,7 +19,7 @@
         <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
 
         <!-- Library versions -->
-        <h2.version>2.3.232</h2.version>
+        <h2.version>2.4.240</h2.version>
         <jackson-annotations.version>2.20</jackson-annotations.version>
         <jspecify.version>1.0.0</jspecify.version>
         <junit-jupiter.version>6.0.1</junit-jupiter.version>
