@@ -29,7 +29,7 @@ public class DefaultTypeConverter implements org.litebridge.db.spi.convert.TypeC
     }
 
     @Override
-    public @Nullable Object convert(@Nullable final Object value, final Class<?> fieldType) {
+    public @Nullable <T> T convert(@Nullable final Object value, final Class<T> fieldType) {
         return TypeConverter.convert(fieldType, value);
     }
 }

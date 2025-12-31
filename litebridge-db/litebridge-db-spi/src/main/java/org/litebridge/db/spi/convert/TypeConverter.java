@@ -10,5 +10,5 @@ public interface TypeConverter {
     Object convert(@Nullable Object value, int dbDataType);
 
     @Nullable
-    Object convert(@Nullable Object value, Class<?> fieldType);
+    <T> T convert(@Nullable Object value, Class<T> fieldType);
 }
