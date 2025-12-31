@@ -309,7 +309,7 @@ public class ChangeTrackerTest {
         assertNotNull(changedFields);
         assertEquals(1, changedFields.size());
         final ChangedMapField changedMapField = changedFields.get("stringMap").orElseThrow()
-                        .cast(ChangedMapField.class).orElseThrow();
+                .cast(ChangedMapField.class).orElseThrow();
         assertEquals(dto.getStringMap(), changedMapField.value());
 
         assertNotNull(changedMapField.mapSnapshot());

@@ -22,7 +22,7 @@ public class PropertyAccessor implements FieldAccessor {
         try {
             return propertyDescriptor.getReadMethod().invoke(dto);
         } catch (Exception ex) {
-            throw new IllegalStateException("Failed to get property '%s' of DTO: %s".formatted(propertyDescriptor.getName(), dto), ex);
+            throw new IllegalArgumentException("Failed to get property '%s' of DTO: %s".formatted(propertyDescriptor.getName(), dto), ex);
         }
     }
 
@@ -31,7 +31,7 @@ public class PropertyAccessor implements FieldAccessor {
         try {
             propertyDescriptor.getWriteMethod().invoke(dto, value);
         } catch (Exception ex) {
-            throw new IllegalStateException("Failed to set property '%s' of DTO: %s".formatted(propertyDescriptor.getName(), dto), ex);
+            throw new IllegalArgumentException("Failed to set property '%s' of DTO: %s".formatted(propertyDescriptor.getName(), dto), ex);
         }
     }
 

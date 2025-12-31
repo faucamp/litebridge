@@ -54,18 +54,15 @@ public final class TrackedDto<T> {
             } else {
                 throw new IllegalStateException("Field snapshots already taken for object: " + this);
             }
-        } else {
-            fieldSnapshots = new ArrayList<>();
         }
 
         fieldSnapshots = createFieldSnapshots(fields);
     }
 
-    public void snapshotEmpty(final Collection<FieldAccessor> fields) {
+    public void snapshotEmpty() {
         if (fieldSnapshots != null) {
             throw new IllegalStateException("Field snapshots already taken for object: " + this);
         }
-
 
         fieldSnapshots = new ArrayList<>();
         fields.forEach(field -> fieldSnapshots.add(new FieldSnapshot(field, 0)));
@@ -87,35 +84,35 @@ public final class TrackedDto<T> {
                 throw new IllegalStateException("Field snapshots not taken for object: " + dto);
             }
 
-            final Map<String, ChangedField> changedFieldsMap = fieldSnapshots.stream()
+            final Map<String, FieldSnapshot> fieldSnapshotMap = fieldSnapshots.stream()
+                    .collect(Collectors.toMap(fieldSnapshot -> fieldSnapshot.field().name(), Function.identity()));
+
+            final Map<String, ChangedField> changedFieldMap = createFieldSnapshots(this.fields).stream()
                     .filter(fieldSnapshot -> {
-                        final int currentFieldValueHash = getFieldHash(dto, fieldSnapshot.field());
-
-                        if (currentFieldValueHash != fieldSnapshot.hash()) {
-                            // The value has changed; update internal DTO tracking if required
-                            if (currentFieldValueHash != 0 && ClassFieldAccessorCache.isNestedDtoField(dto.getClass(), fieldSnapshot.field())) {
-                                // This nested DTO field was null previously, so we need to track the new value
-                                final Object nestedDto = getFieldValue(dto, fieldSnapshot.field());
-                                trackDtoCallback.accept(nestedDto);
-                            }
+                        // Filter on changed fields by comparing the current field value hash with the previous snapshot hash
+                        final FieldSnapshot oldFieldSnapshot = fieldSnapshotMap.get(fieldSnapshot.field().name());
+                        return fieldSnapshot.hash() != oldFieldSnapshot.hash();
+                    })
+                    .peek(fieldSnapshot -> {
+                        // Update internal DTO tracking if the field is a nested DTO
+                        if (fieldSnapshot.hash() != 0 && ClassFieldAccessorCache.isNestedDtoField(dto.getClass(), fieldSnapshot.field())) {
+                            // This nested DTO field was null previously, so we need to track the new value
+                            final Object nestedDto = getFieldValue(dto, fieldSnapshot.field());
+                            trackDtoCallback.accept(nestedDto);
                         }
-
-                        return currentFieldValueHash != fieldSnapshot.hash();
                     })
                     .map(fieldSnapshot -> {
                         if (fieldSnapshot.isMap()) {
-                            return new ChangedMapField(fieldSnapshot.field().name(), getFieldValue(dto, fieldSnapshot.field()), fieldSnapshot.mapSnapshot());
+                            final FieldSnapshot oldFieldSnapshot = fieldSnapshotMap.get(fieldSnapshot.field().name());
+                            return new ChangedMapField(fieldSnapshot.field().name(), getFieldValue(dto, fieldSnapshot.field()), oldFieldSnapshot.mapSnapshot());
                         } else {
                             return new ChangedField(fieldSnapshot.field().name(), getFieldValue(dto, fieldSnapshot.field()));
                         }
                     })
-                    .collect(Collectors.toMap(
-                            ChangedField::name,
-                            Function.identity(),
+                    .collect(Collectors.toMap(ChangedField::name, Function.identity(),
                             (oldValue, newValue) -> newValue,
                             LinkedHashMap::new));
-
-            changedFields = new ChangedFields(changedFieldsMap);
+            changedFields = new ChangedFields(changedFieldMap);
         }
 
         return changedFields;

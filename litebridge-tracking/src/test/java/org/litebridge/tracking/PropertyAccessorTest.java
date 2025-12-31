@@ -6,6 +6,7 @@ import org.litebridge.commons.ClassUtils;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PropertyAccessorTest {
 
@@ -34,6 +35,16 @@ class PropertyAccessorTest {
     }
 
     @Test
+    void get_exception() {
+        // Given
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+        final TestDto2 testDto2 = new TestDto2();
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> propertyAccessor.get(testDto2));
+    }
+
+    @Test
     void set() {
         // Given
         final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
@@ -44,6 +55,16 @@ class PropertyAccessorTest {
 
         // Then
         assertEquals("testValue2", testDto.getMyVar());
+    }
+
+    @Test
+    void set_exception() {
+        // Given
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+        final TestDto2 testDto2 = new TestDto2();
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> propertyAccessor.set(testDto2, "invalidSetterValue"));
     }
 
     @Test

@@ -108,7 +108,7 @@ public final class ChangeTracker {
 
         if (snapshotEmpty) {
             // Create an empty snapshot (useful for highlighting "all fields are new" in newly created nested DTOs)
-            trackedDto.snapshotEmpty(trackedFields);
+            trackedDto.snapshotEmpty();
         } else {
             // Default behaviour
             trackedDto.snapshot(false);

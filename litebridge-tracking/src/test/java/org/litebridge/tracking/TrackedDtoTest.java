@@ -107,11 +107,11 @@ class TrackedDtoTest {
         final TestDto testDto = new TestDto();
         testDto.string = "value1";
 
-        final TrackedDto<TestDto> trackedDto = new TrackedDto(testDto, dto -> fail());
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "string"));
+        final TrackedDto<TestDto> trackedDto = new TrackedDto(testDto, List.of(fieldAccessor), dto -> fail());
 
         // When
-        trackedDto.snapshotEmpty(List.of(fieldAccessor));
+        trackedDto.snapshotEmpty();
 
         // Then
         assertEquals(1, trackedDto.changedFields().size());
@@ -128,8 +128,8 @@ class TrackedDtoTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "string"));
 
         // When/Then
-        trackedDto.snapshotEmpty(List.of(fieldAccessor));
-        assertThrows(IllegalStateException.class, () -> trackedDto.snapshotEmpty(List.of(fieldAccessor)));
+        trackedDto.snapshotEmpty();
+        assertThrows(IllegalStateException.class, trackedDto::snapshotEmpty);
     }
 
     @Test

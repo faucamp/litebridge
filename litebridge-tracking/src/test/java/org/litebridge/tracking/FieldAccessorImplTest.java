@@ -5,7 +5,8 @@ import org.litebridge.commons.ClassUtils;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class FieldAccessorImplTest {
 
@@ -36,6 +37,16 @@ class FieldAccessorImplTest {
     }
 
     @Test
+    void get_exception() {
+        // Given
+        final FieldAccessorImpl fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+        final TestDto2 testDto2 = new TestDto2();
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> fieldAccessor.get(testDto2));
+    }
+
+    @Test
     void set() {
         // Given
         final FieldAccessorImpl fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
@@ -46,6 +57,16 @@ class FieldAccessorImplTest {
 
         // Then
         assertEquals("testValue2", testDto.myVar);
+    }
+
+    @Test
+    void set_exception() {
+        // Given
+        final FieldAccessorImpl fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+        final TestDto2 testDto2 = new TestDto2();
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> fieldAccessor.set(testDto2, "invalidValue"));
     }
 
     @Test
@@ -76,5 +97,8 @@ class FieldAccessorImplTest {
     private class TestDto {
         private String myVar;
         private List<String> list;
+    }
+
+    private class TestDto2 {
     }
 }
