@@ -51,6 +51,10 @@ public class ClassFieldAccessorCache {
         return fieldAccessors.containsKey(field.name());
     }
 
+    static void clear() {
+        classFieldAccessors.clear();
+    }
+
     protected static FieldAccessor fieldAccessor(final Class<?> dtoClass, final String fieldName) {
         return ensureFieldAccessors(dtoClass)
                 .computeIfAbsent(fieldName, fn -> new FieldAccessorImpl(ClassUtils.getField(dtoClass, fieldName)));
@@ -66,9 +70,8 @@ public class ClassFieldAccessorCache {
     }
 
     private static Map<String, FieldAccessor> createFieldAccessors(final Class<?> dtoClass) {
-        final Map<String, FieldAccessor> fieldAccessors = ClassUtils.getAllFields(dtoClass).stream()
+        return ClassUtils.getAllFields(dtoClass).stream()
                 .map(FieldAccessorImpl::new)
                 .collect(Collectors.toMap(FieldAccessor::name, Function.identity()));
-        return fieldAccessors;
     }
 }

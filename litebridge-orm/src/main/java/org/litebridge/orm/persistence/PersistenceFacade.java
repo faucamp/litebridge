@@ -2,6 +2,7 @@ package org.litebridge.orm.persistence;
 
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
+import org.litebridge.commons.collector.MapCollector;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.tracking.ChangedField;
@@ -17,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class PersistenceFacade {
 
@@ -124,7 +124,7 @@ public class PersistenceFacade {
     private void update(final Object dto, final Table table, final Map<String, Object> columnValues) throws SQLException {
         // Extract the PK
         final LinkedHashMap<String, Object> primaryKey = table.getMetaData().primaryKey().stream()
-                .collect(Collectors.toMap(Function.identity(),
+                .collect(MapCollector.toLinkedHashMap(Function.identity(),
                         pkColumn -> {
                             Object pkValue = columnValues.remove(pkColumn);
 
@@ -134,9 +134,7 @@ public class PersistenceFacade {
                             }
 
                             return pkValue;
-                        },
-                        (oldValue, newValue) -> newValue,
-                        LinkedHashMap::new));
+                        }));
 
         databaseProvider.update(table.getMetaData(), columnValues, primaryKey);
     }

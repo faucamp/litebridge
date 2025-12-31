@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ObjectUtils;
+import org.litebridge.commons.collector.MapCollector;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -87,7 +88,7 @@ public final class TrackedDto<T> {
             final Map<String, FieldSnapshot> fieldSnapshotMap = fieldSnapshots.stream()
                     .collect(Collectors.toMap(fieldSnapshot -> fieldSnapshot.field().name(), Function.identity()));
 
-            final Map<String, ChangedField> changedFieldMap = createFieldSnapshots(this.fields).stream()
+            final LinkedHashMap<String, ChangedField> changedFieldMap = createFieldSnapshots(this.fields).stream()
                     .filter(fieldSnapshot -> {
                         // Filter on changed fields by comparing the current field value hash with the previous snapshot hash
                         final FieldSnapshot oldFieldSnapshot = fieldSnapshotMap.get(fieldSnapshot.field().name());
@@ -109,9 +110,7 @@ public final class TrackedDto<T> {
                             return new ChangedField(fieldSnapshot.field().name(), getFieldValue(dto, fieldSnapshot.field()));
                         }
                     })
-                    .collect(Collectors.toMap(ChangedField::name, Function.identity(),
-                            (oldValue, newValue) -> newValue,
-                            LinkedHashMap::new));
+                    .collect(MapCollector.toLinkedHashMap(ChangedField::name, Function.identity()));
             changedFields = new ChangedFields(changedFieldMap);
         }
 

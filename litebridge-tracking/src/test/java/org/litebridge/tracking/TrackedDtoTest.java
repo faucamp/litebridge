@@ -162,7 +162,7 @@ class TrackedDtoTest {
         testDto.nestedDtoKeyMap = new HashMap<>();
         testDto.nestedDtoKeyMap.put(nestedDtoKeyMapKey, 1L);
         final ChangedFields changedFields = trackedDto.changedFields();
-        //assertTrue(nestedDtosRegistered[3]);
+        assertTrue(nestedDtosRegistered[3]);
 
         // Then 1
         assertEquals(2, changedFields.size());
@@ -176,7 +176,7 @@ class TrackedDtoTest {
         // Then 2
         assertEquals(1, changedFields2.size());
         assertTrue(changedFields2.contains("nestedDto"));
-        //assertTrue(nestedDtosRegistered[0]);
+        assertTrue(nestedDtosRegistered[0]);
     }
 
     @Test
