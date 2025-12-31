@@ -123,22 +123,42 @@ Litebridge is modular, allowing you to include only the components you need.
 ### Core modules
 
 #### `litebridge-orm`
+
+![Coverage](.github/badges/litebridge-orm/jacoco.svg)
+![Branches](.github/badges/litebridge-orm/branches.svg)
+
 The core engine. This is the primary dependency required for all applications using the ORM.
 
 #### `litebridge-db`
 A collection of database provider modules. You only need to include the specific implementation for your database (or multiple if needed).
 * **`litebridge-db-h2`**: H2 database provider.
-* **`litebridge-db-spi`**: The SPI for implementing custom database providers (not required for client use).
+* **`litebridge-db-spi`**:
+  The Service Provider Interface (SPI) for implementing custom database providers. Not required for client use.
+
+  ![Coverage](.github/badges/litebridge-orm/jacoco.svg)
+  ![Branches](.github/badges/litebridge-orm/branches.svg)
 
 #### `litebridge-tracking`
+
+![Coverage](.github/badges/litebridge-tracking/jacoco.svg)
+![Branches](.github/badges/litebridge-tracking/branches.svg)
+
 Exposes the `ChangeTracker` API. This provides lightweight change tracking for arbitrary DTOs. While the ORM uses this internally for SQL optimization, it can be used independently for other state-tracking needs.
 
 ### Supporting modules
 
 #### `litebridge-converter`
+
+![Coverage](.github/badges/litebridge-converter/jacoco.svg)
+![Branches](.github/badges/litebridge-converter/branches.svg)
+
 Simple type conversion support for translating between Java types and SQL-specific types.
 
 #### `litebridge-commons`
+
+![Coverage](.github/badges/litebridge-commons/jacoco.svg)
+![Branches](.github/badges/litebridge-commons/branches.svg)
+
 Internal utilities. Litebridge implements internal versions of common patterns to avoid bloating your project with large 3rd-party utility suites.
 
 ### Documentaion and examples
