@@ -58,21 +58,32 @@ Litebridge provides a fluent API for constructing queries using a familiar SQL-l
 final Optional<Person> alice = litebridge.select(Person.class)
         .where("name").eq("Alice")
         .and("surname").eq("Smith")
-        .one();
+        .orderBy("id").asc()
+        .first();
 ```
 
-Or, if you prefer `null` as an empty response and like to avoid the `Optional` wrapper:
+Or, if you prefer `null` as an empty response and avoid the `Optional` wrapper:
 
 ```java
 final Person alice = litebridge.select(Person.class)
         .where("name").eq("Alice")
         .and("surname").eq("Smith")
-        .oneOrNull();
+        .orderBy("id").asc()
+        .firstOrNull();
+```
+
+If exactly one result is expected from a query, the `one()`, `oneOrNull()` or `oneOrThrow()` terminals avoid boilerplate: 
+
+```java
+final Person alice = litebridge.select(Person.class)
+        .where("id").eq(123)
+        .oneOrThrow(() -> new IllegalArgumentException("No person with ID 123"));
+        // or simply oneOrThrow()
 ```
 
 #### Retrieving multiple DTOs
 
-You can use Java 8 streams to process the results:
+Query results are available as Java 8 streams:
 
 ```java
 litebridge.select(Person.class)
@@ -81,7 +92,7 @@ litebridge.select(Person.class)
         .forEach(p -> logger.info("Person with eye colour (isNotNull): " + p));
 ```
 
-...or just return results as simple `List`:
+Results can also be returned as a `List`:
 
 ```java
 final List<Person> allPersons = litebridge.select(Person.class)
@@ -92,7 +103,7 @@ final List<Person> allPersons = litebridge.select(Person.class)
 
 #### Arbitrary SQL queries
 
-You can use the same fluent API to perform any SQL query, without requiring a DTO mapping:
+The same fluent API can be used to perform any SQL query, without requiring a DTO mapping:
 
 ```java
 litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
@@ -100,21 +111,12 @@ litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
         .and("AGE").lt(25)
         .orderBy("PERSON_ID").asc()
         .stream()
-        .forEach(row -> logger.info("SQL result: Selected data for PERSON row: " + row));
-```
-
-You can also map the result of such a SQL query to a DTO by using `stream().map()`:
-
-```java
-litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
-        .where("AGE").gt(18)
-        .and("AGE").lt(25)
-        .orderBy("PERSON_ID").asc()
-        .stream()
+        // Result rows are generic records containing column metadata and values
+        .peek(row -> row.column("PERSON_ID").ifPresent(column -> logger.info("Found PERSON_ID column: " + column.value())))
+        // SQL result rows can easily be converted to DTOs
         .map(row -> litebridge.toDto(row, Person.class))
         .forEach(p -> logger.info("Person DTO: " + p));
 ```
-
 
 ## Project Structure
 
