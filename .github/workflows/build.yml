@@ -52,7 +52,7 @@ jobs:
       uses: actions/upload-artifact@v6
       with:
         name: jacoco-report
-        path: "**/target/site/jacoco/"
+        path: "jacoco-aggregate-report/target/site/jacoco-aggregate/"
         
     - name: Update dependency graph
       uses: advanced-security/maven-dependency-submission-action@v5

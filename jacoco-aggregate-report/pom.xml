@@ -11,7 +11,9 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>litebridge-orm</artifactId>
+    <groupId>org.litebridge.jacoco</groupId>
+    <artifactId>jacoco-aggregate-report</artifactId>
+    <packaging>pom</packaging>
     <version>0.0.1</version>
 
     <build>
@@ -19,6 +21,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <phase>verify</phase>
@@ -29,7 +32,6 @@
                             <dataFileIncludes>
                                 <dataFileInclude>**/jacoco.exec</dataFileInclude>
                             </dataFileIncludes>
-                            <outputDirectory>${project.reporting.outputDirectory}/jacoco-aggregate</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -40,31 +42,28 @@
     <dependencies>
         <!-- Project dependencies -->
         <dependency>
+            <groupId>org.litebridge</groupId>
+            <artifactId>litebridge-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.litebridge</groupId>
+            <artifactId>litebridge-converter</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.litebridge.db</groupId>
             <artifactId>litebridge-db-spi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.litebridge.db</groupId>
+            <artifactId>litebridge-db-h2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.litebridge</groupId>
+            <artifactId>litebridge-orm</artifactId>
         </dependency>
         <dependency>
             <groupId>org.litebridge</groupId>
             <artifactId>litebridge-tracking</artifactId>
         </dependency>
-
-        <!-- External dependencies -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
-
 </project>

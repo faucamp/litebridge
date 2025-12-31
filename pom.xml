@@ -36,6 +36,7 @@
         <module>litebridge-orm</module>
         <module>litebridge-tracking</module>
         <module>example</module>
+        <module>jacoco-aggregate-report</module>
     </modules>
 
     <build>
