@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -54,6 +55,16 @@ public class ChangeTrackerTest {
                 .ifPresentOrElse(
                         changedField -> assertEquals(42, changedField.value()),
                         Assertions::fail);
+    }
+
+    @Test
+    public void trackDto_trackNestedDto_null() throws Exception {
+        // Given
+        final Method trackNestedDto = ChangeTracker.class.getDeclaredMethod("trackNestedDto", Object.class);
+        trackNestedDto.setAccessible(true);
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> trackNestedDto.invoke(changeTracker, null));
     }
 
     @Test
