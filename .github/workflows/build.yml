@@ -44,15 +44,15 @@ jobs:
     - name: "Generate JaCoCo Badge: litebridge-db-spi"
       uses: cicirello/jacoco-badge-generator@v2
       with:
-        jacoco-csv-file: litebridge-db-spi/target/site/jacoco/jacoco.csv
-        badges-directory: .github/badges/litebridge-db-spi
+        jacoco-csv-file: litebridge-db/litebridge-db-spi/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-db/litebridge-db-spi
         generate-branches-badge: true
 
 #    - name: "Generate JaCoCo Badge: litebridge-db-h2"
 #      uses: cicirello/jacoco-badge-generator@v2
 #      with:
-#        jacoco-csv-file: litebridge-db-h2/target/site/jacoco/jacoco.csv
-#        badges-directory: .github/badges/litebridge-db-h2
+#        jacoco-csv-file: litebridge-db/litebridge-db-h2/target/site/jacoco/jacoco.csv
+#        badges-directory: .github/badges/litebridge-db/litebridge-db-h2
 #        generate-branches-badge: true
 
     - name: "Generate JaCoCo Badge: litebridge-orm"
