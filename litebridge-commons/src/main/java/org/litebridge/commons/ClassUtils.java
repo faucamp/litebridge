@@ -10,6 +10,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public final class ClassUtils {
 
@@ -37,12 +38,12 @@ public final class ClassUtils {
      */
     public static Set<Field> getAllFields(final Class<?> type, final boolean includeStatic) {
         // Add fields declared in the current class
-        final Set<Field> fields = new HashSet<>(Arrays.stream(type.getDeclaredFields())
+        final Set<Field> fields = Arrays.stream(type.getDeclaredFields())
                 .filter(field -> includeStatic || !Modifier.isStatic(field.getModifiers()))
-                .toList());
+                .collect(Collectors.toCollection(HashSet::new));
 
         // Recursively get fields from the superclass
-        if (type.getSuperclass() != null && !type.getSuperclass().equals(Object.class)) {
+        if (!type.getSuperclass().equals(Object.class)) {
             fields.addAll(getAllFields(type.getSuperclass(), includeStatic));
         }
 
@@ -64,7 +65,7 @@ public final class ClassUtils {
         try {
             return type.getDeclaredField(fieldName);
         } catch (NoSuchFieldException ex) {
-            if (type.getSuperclass() != null && !type.getSuperclass().equals(Object.class)) {
+            if (!type.getSuperclass().equals(Object.class)) {
                 return getField(type.getSuperclass(), fieldName);
             } else {
                 throw new IllegalArgumentException("Field '%s' does not exist in DTO class '%s'".formatted(fieldName, type.getName()));
@@ -108,26 +109,24 @@ public final class ClassUtils {
             // Get the actual type arguments (e.g., String)
             final Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
 
-            if (!CollectionUtils.isEmpty(actualTypeArguments)) {
-                // Convert each Type to Class, handling different Type implementations
-                final Class<?>[] result = new Class<?>[actualTypeArguments.length];
+            // Convert each Type to Class, handling different Type implementations
+            final Class<?>[] result = new Class<?>[actualTypeArguments.length];
 
-                for (int i = 0; i < actualTypeArguments.length; i++) {
-                    final Type argType = actualTypeArguments[i];
+            for (int i = 0; i < actualTypeArguments.length; i++) {
+                final Type argType = actualTypeArguments[i];
 
-                    if (argType instanceof Class<?> clazz) {
-                        result[i] = clazz;
-                    } else if (argType instanceof ParameterizedType paramType) {
-                        // For parameterized types like List<String>, get the raw type
-                        result[i] = (Class<?>) paramType.getRawType();
-                    } else {
-                        // For other types (TypeVariable, WildcardType, etc.), we can't determine a concrete class
-                        throw new IllegalArgumentException("Cannot determine concrete class for generic type argument '%s' of type '%s'".formatted(argType, genericType.getTypeName()));
-                    }
+                if (argType instanceof Class<?> clazz) {
+                    result[i] = clazz;
+                } else if (argType instanceof ParameterizedType paramType) {
+                    // For parameterized types like List<String>, get the raw type
+                    result[i] = (Class<?>) paramType.getRawType();
+                } else {
+                    // For other types (TypeVariable, WildcardType, etc.), we can't determine a concrete class
+                    throw new IllegalArgumentException("Cannot determine concrete class for generic type argument '%s' of type '%s'".formatted(argType, genericType.getTypeName()));
                 }
-
-                return result;
             }
+
+            return result;
         }
 
         throw new IllegalArgumentException("Cannot determine generic type for type '%s'".formatted(genericType.getTypeName()));

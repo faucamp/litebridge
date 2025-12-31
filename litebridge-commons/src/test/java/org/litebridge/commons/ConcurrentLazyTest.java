@@ -1,5 +1,6 @@
 package org.litebridge.commons;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -8,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class ConcurrentLazyTest {
 
@@ -34,6 +36,55 @@ class ConcurrentLazyTest {
 
         // Then
         assertEquals("hello", result);
+    }
+
+    @Test
+    void orNull_concurrent() {
+        // Given
+        final int threadCount = 5;
+        final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException ex) {
+                fail(ex.getMessage(), ex);
+            }
+
+            return "hello";
+        });
+
+        final Thread[] threads = new Thread[threadCount];
+        final @Nullable String[] threadResults = new String[threadCount];
+
+        for (int i = 0; i < threadCount; i++) {
+            final int index = i;
+            threads[i] = new Thread(() -> threadResults[index] = concurrentLazy.orNull());
+        }
+
+        for (int i = 0; i < threadCount; i++) {
+            try {
+                threads[i].join(100);
+            } catch (InterruptedException ex) {
+                fail(ex.getMessage(), ex);
+            }
+        }
+
+        // When
+        for (Thread thread : threads) {
+            thread.start();
+        }
+
+        // Then
+        for (int i = 0; i < threadCount; i++) {
+            try {
+                threads[i].join(100);
+            } catch (InterruptedException ex) {
+                fail(ex.getMessage(), ex);
+            }
+
+            assertEquals("hello", threadResults[i]);
+        }
+
+        assertEquals("hello", concurrentLazy.orNull());
     }
 
     @Test

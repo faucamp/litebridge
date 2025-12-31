@@ -32,6 +32,18 @@ class ClassUtilsTest {
     }
 
     @Test
+    void getAllFields_includeStatic() {
+        // When
+        final Set<Field> result = ClassUtils.getAllFields(TestDto.class, true);
+
+        // Then
+        assertEquals(3, result.size());
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("staticField")));
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("name")));
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("age")));
+    }
+
+    @Test
     void getAllFields_inheritance() {
         // When
         final Set<Field> result = ClassUtils.getAllFields(ChildTestDto.class);
@@ -331,6 +343,7 @@ class ClassUtilsTest {
     }
 
     static class TestDto {
+        private static String staticField;
         private String name;
         private int age;
 

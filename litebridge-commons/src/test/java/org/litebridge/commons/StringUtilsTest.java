@@ -265,13 +265,13 @@ class StringUtilsTest {
     @Test
     void abbreviate_spacesAndSpecialChars() {
         // Given
-        final String input = " Hello\t World!";
+        final String input = " Hello\t World! camelCase test~char 123";
 
         // When
         final String result = StringUtils.abbreviate(input);
 
         // Then
-        assertEquals("hw", result);
+        assertEquals("hwcctc123", result);
     }
 
     @Test
@@ -313,13 +313,13 @@ class StringUtilsTest {
     @Test
     void abbreviate_unicode() {
         // Given
-        final String input = "Hållø Wørl∂¡ 123";
+        final String input = "Hållø Wørl∂¡ camelCase 123";
 
         // When
         final String result = StringUtils.abbreviate(input);
 
         // Then
-        assertEquals("hw123", result);
+        assertEquals("hwcc123", result);
     }
 
     @Test

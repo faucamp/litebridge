@@ -90,10 +90,6 @@ public final class StringUtils {
         for (int i = 0; i < words.length; i++) {
             final String word = words[i];
 
-            if (word.isEmpty()) {
-                continue;
-            }
-
             if (i == 0) {
                 // For the first word, convert to lowercase
                 builder.append(word.toLowerCase());
