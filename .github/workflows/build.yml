@@ -26,11 +26,53 @@ jobs:
     
     - name: Build with Maven and generate JaCoCo report
       run: mvn -B clean verify
-    
-    - name: Generate JaCoCo Badge
+
+    - name: "Generate JaCoCo Badge: litebridge-commons"
       uses: cicirello/jacoco-badge-generator@v2
       with:
-        jacoco-csv-file: "jacoco-aggregate-report/target/site/jacoco-aggregate/jacoco.csv"
+        jacoco-csv-file: litebridge-commons/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-commons
+        generate-branches-badge: true
+
+    - name: "Generate JaCoCo Badge: litebridge-converter"
+      uses: cicirello/jacoco-badge-generator@v2
+      with:
+        jacoco-csv-file: litebridge-converter/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-converter
+        generate-branches-badge: true
+
+    - name: "Generate JaCoCo Badge: litebridge-db-spi"
+      uses: cicirello/jacoco-badge-generator@v2
+      with:
+        jacoco-csv-file: litebridge-db-spi/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-db-spi
+        generate-branches-badge: true
+
+#    - name: "Generate JaCoCo Badge: litebridge-db-h2"
+#      uses: cicirello/jacoco-badge-generator@v2
+#      with:
+#        jacoco-csv-file: litebridge-db-h2/target/site/jacoco/jacoco.csv
+#        badges-directory: .github/badges/litebridge-db-h2
+#        generate-branches-badge: true
+
+    - name: "Generate JaCoCo Badge: litebridge-orm"
+      uses: cicirello/jacoco-badge-generator@v2
+      with:
+        jacoco-csv-file: litebridge-orm/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-orm
+        generate-branches-badge: true
+
+    - name: "Generate JaCoCo Badge: litebridge-tracking"
+      uses: cicirello/jacoco-badge-generator@v2
+      with:
+        jacoco-csv-file: litebridge-tracking/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-tracking
+        generate-branches-badge: true
+
+    - name: "Generate JaCoCo Badge: aggregate"
+      uses: cicirello/jacoco-badge-generator@v2
+      with:
+        jacoco-csv-file: jacoco-aggregate-report/target/site/jacoco-aggregate/jacoco.csv
         generate-branches-badge: true
     
     - name: Log coverage percentage
@@ -52,7 +94,7 @@ jobs:
       uses: actions/upload-artifact@v6
       with:
         name: jacoco-report
-        path: "jacoco-aggregate-report/target/site/jacoco-aggregate/"
+        path: jacoco-aggregate-report/target/site/jacoco-aggregate/
         
     - name: Update dependency graph
       uses: advanced-security/maven-dependency-submission-action@v5
