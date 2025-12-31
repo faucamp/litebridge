@@ -6,6 +6,7 @@ public interface FieldAccessor {
 
     String name();
 
+    @Nullable
     Object get(final Object dto);
 
     void set(final Object dto, final @Nullable Object value);

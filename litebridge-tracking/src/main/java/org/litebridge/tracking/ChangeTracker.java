@@ -104,14 +104,14 @@ public final class ChangeTracker {
             return dto;
         }
 
-        final TrackedDto<T> trackedDto = new TrackedDto<>(dto, this::trackNestedDto);
+        final TrackedDto<T> trackedDto = new TrackedDto<>(dto, trackedFields, this::trackNestedDto);
 
         if (snapshotEmpty) {
             // Create an empty snapshot (useful for highlighting "all fields are new" in newly created nested DTOs)
             trackedDto.snapshotEmpty(trackedFields);
         } else {
             // Default behaviour
-            trackedDto.snapshot(trackedFields, false);
+            trackedDto.snapshot(false);
         }
 
         trackedDtos.put(dto, trackedDto);

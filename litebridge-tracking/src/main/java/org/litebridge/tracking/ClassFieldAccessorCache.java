@@ -3,6 +3,7 @@ package org.litebridge.tracking;
 import org.litebridge.commons.ClassUtils;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -28,12 +29,12 @@ public class ClassFieldAccessorCache {
         return fieldAccessor;
     }
 
-    public static Collection<FieldAccessor> fieldAccessors(final Class<?> dtoClass) {
+    public static List<FieldAccessor> fieldAccessors(final Class<?> dtoClass) {
         if (classFieldAccessors.containsKey(dtoClass)) {
-            return classFieldAccessors.get(dtoClass).values();
+            return classFieldAccessors.get(dtoClass).values().stream().toList();
         } else {
             final Map<String, FieldAccessor> fieldAccessors = ensureFieldAccessors(dtoClass);
-            return fieldAccessors.values();
+            return fieldAccessors.values().stream().toList();
         }
     }
 

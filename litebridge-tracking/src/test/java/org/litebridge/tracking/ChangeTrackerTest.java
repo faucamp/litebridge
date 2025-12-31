@@ -43,7 +43,7 @@ public class ChangeTrackerTest {
         final TrackedDto<TestDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
 
-        final ChangedFields changedFields = trackedDto.getChangedFields();
+        final ChangedFields changedFields = trackedDto.changedFields();
         assertNotNull(changedFields);
         assertEquals(2, changedFields.size());
         changedFields.get("field1")
@@ -100,7 +100,7 @@ public class ChangeTrackerTest {
 
         final TrackedDto trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
-        assertTrue(trackedDto.getChangedFields().isEmpty());
+        assertTrue(trackedDto.changedFields().isEmpty());
     }
 
     @Test
@@ -137,7 +137,7 @@ public class ChangeTrackerTest {
         final TrackedDto<TestDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
 
-        final ChangedFields changedFields = trackedDto.getChangedFields();
+        final ChangedFields changedFields = trackedDto.changedFields();
         assertNotNull(changedFields);
         assertEquals(2, changedFields.size());
         changedFields.get("field1")
@@ -185,14 +185,14 @@ public class ChangeTrackerTest {
         final TrackedDto<ContainerDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
 
-        final ChangedFields changedFields = trackedDto.getChangedFields();
+        final ChangedFields changedFields = trackedDto.changedFields();
         assertNotNull(changedFields);
         assertEquals(1, changedFields.size());
         assertTrue(changedFields.contains("nestedDto"));
         assertEquals(nestedDto, changedFields.get("nestedDto").orElseThrow().value());
 
         final TrackedDto<TestDto> nestedTrackedDto = changeTracker.getTrackedDto(nestedDto);
-        final ChangedFields nestedChangedFields = nestedTrackedDto.getChangedFields();
+        final ChangedFields nestedChangedFields = nestedTrackedDto.changedFields();
         assertNotNull(nestedChangedFields);
         assertEquals(1, nestedChangedFields.size());
     }
@@ -220,14 +220,14 @@ public class ChangeTrackerTest {
         final TrackedDto<ContainerDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
 
-        final ChangedFields changedFields = trackedDto.getChangedFields();
+        final ChangedFields changedFields = trackedDto.changedFields();
         assertNotNull(changedFields);
         assertEquals(1, changedFields.size());
         assertTrue(changedFields.contains("nestedDto"));
         assertEquals(nestedDto, changedFields.get("nestedDto").orElseThrow().value());
 
         final TrackedDto<TestDto> nestedTrackedDto = changeTracker.getTrackedDto(nestedDto);
-        final ChangedFields nestedChangedFields = nestedTrackedDto.getChangedFields();
+        final ChangedFields nestedChangedFields = nestedTrackedDto.changedFields();
         assertNotNull(nestedChangedFields);
         assertEquals(1, nestedChangedFields.size());
     }
@@ -249,7 +249,7 @@ public class ChangeTrackerTest {
         final TrackedDto<ContainerDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
 
-        final ChangedFields changedFields = trackedDto.getChangedFields();
+        final ChangedFields changedFields = trackedDto.changedFields();
         assertNotNull(changedFields);
         assertEquals(1, changedFields.size());
         assertTrue(changedFields.contains("basicList"));
@@ -281,7 +281,7 @@ public class ChangeTrackerTest {
         final TrackedDto<ContainerDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
 
-        final ChangedFields changedFields = trackedDto.getChangedFields();
+        final ChangedFields changedFields = trackedDto.changedFields();
         assertNotNull(changedFields);
         assertEquals(1, changedFields.size());
         assertTrue(changedFields.contains("nestedDtoList"));
@@ -305,7 +305,7 @@ public class ChangeTrackerTest {
         final TrackedDto<ContainerDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
 
-        final ChangedFields changedFields = trackedDto.getChangedFields();
+        final ChangedFields changedFields = trackedDto.changedFields();
         assertNotNull(changedFields);
         assertEquals(1, changedFields.size());
         final ChangedMapField changedMapField = changedFields.get("stringMap").orElseThrow()

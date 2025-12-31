@@ -24,7 +24,7 @@ class ClassFieldAccessorCacheTest {
     @Test
     void fieldAccessors() {
         // When
-        final Collection<FieldAccessor> result = ClassFieldAccessorCache.fieldAccessors(TestDto.class);
+        final List<FieldAccessor> result = ClassFieldAccessorCache.fieldAccessors(TestDto.class);
 
         // Then
         assertEquals(2, result.size());

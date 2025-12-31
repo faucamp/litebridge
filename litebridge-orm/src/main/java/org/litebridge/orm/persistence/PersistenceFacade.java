@@ -44,7 +44,7 @@ public class PersistenceFacade {
             throw new IllegalArgumentException("DTO not tracked: '%s'".formatted(dto.toString()));
         }
 
-        final ChangedFields changedFields = trackedDto.getChangedFields();
+        final ChangedFields changedFields = trackedDto.changedFields();
 
         if (changedFields.isEmpty()) {
             LOGGER.debug("No changed fields found for DTO: {}", dto);

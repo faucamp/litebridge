@@ -78,7 +78,7 @@ public class Table {
         }
 
         final TrackedDto<?> trackedDto = changeTracker.getTrackedDto(dto);
-        trackedDto.snapshot(fieldColumnMap.keySet(), true);
+        trackedDto.snapshot(true);
     }
 
     public boolean isPersistedDto(final Object dto) {
