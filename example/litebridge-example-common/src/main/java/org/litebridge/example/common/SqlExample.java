@@ -1,4 +1,4 @@
-package org.litebridge.example.h2;
+package org.litebridge.example.common;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.example.common.dto.Person;
@@ -6,7 +6,6 @@ import org.litebridge.orm.Litebridge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import static org.litebridge.db.spi.Column.c;

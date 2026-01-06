@@ -32,7 +32,7 @@ public class ConditionSpec {
         return value;
     }
 
-    public void setValue(final Object value) {
+    public void setValue(final @Nullable Object value) {
         this.value = value;
     }
 

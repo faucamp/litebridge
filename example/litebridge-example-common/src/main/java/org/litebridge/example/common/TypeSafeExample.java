@@ -1,4 +1,4 @@
-package org.litebridge.example.h2;
+package org.litebridge.example.common;
 
 import org.litebridge.example.common.dto.Person;
 import org.litebridge.example.common.mapping.PersonMapping;

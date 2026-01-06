@@ -109,7 +109,7 @@ public class ConditionClauseImpl<DTO,
      * @param value    The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    private CCT condition(final Operator operator, final Object value) {
+    private CCT condition(final Operator operator, @Nullable final Object value) {
         conditionSpec.setValue(value);
         final Operator translatedOperator;
 

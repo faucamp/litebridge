@@ -10,6 +10,12 @@ import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.update.ColumnValue;
+import org.litebridge.db.spi.update.Insert;
+import org.litebridge.db.spi.update.InsertResult;
+import org.litebridge.db.spi.update.RowValue;
+import org.litebridge.db.spi.update.Update;
+import org.litebridge.db.spi.update.UpdateResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,12 +27,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
@@ -75,39 +79,9 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public @Nullable List<Object> insert(final TableMetaData tableMetaData, final Map<String, Object> columnValueMap) throws SQLException {
-        final StringBuilder sql = new StringBuilder("INSERT INTO ")
-                .append(tableMetaData.schema())
-                .append('.')
-                .append(tableMetaData.name())
-                .append(" (")
-                .append(String.join(", ", columnValueMap.keySet()))
-                .append(") VALUES (");
-
-        final List<BindValue> bindValues = new ArrayList<>();
-
-        for (Map.Entry<String, Object> entry : columnValueMap.entrySet()) {
-            final ColumnMetaData column = tableMetaData.column(entry.getKey());
-            final Object convertedValue = typeConverter.convert(entry.getValue(), column.getDataType());
-
-            if (convertedValue == null) {
-                if (!column.isNullable() && !column.isAutoIncrement() && column.getSequence() == null) {
-                    throw new IllegalArgumentException("Attempting to insert NULL into non-nullable column: '%s'. Possible cause: column spec missing generator such as autoincrement/sequence (schema: '%s', table: '%s')".formatted(column.name(), tableMetaData.schema(), tableMetaData.name()));
-                } else if (column.getSequence() != null) {
-                    // Add the next value in the sequence directly to the statement
-                    sql.append(createSequenceNextValueForDirectInsert(column.getSequence()));
-                }
-            } else {
-                sql.append("?, ");
-                bindValues.add(new BindValue(convertedValue, column.getDataType()));
-            }
-        }
-
-        sql.delete(sql.length() - 2, sql.length());
-        sql.append(")");
-
-        final List<Object> generatedKeys = executeSqlUpdate(sql.toString(), bindValues, tableMetaData, true);
-        return generatedKeys;
+    public InsertResult insert(final Insert insert) throws SQLException {
+        final PreparedSql preparedSql = prepareSql(insert);
+        return executeSqlInsert(preparedSql, insert.table());
     }
 
     /**
@@ -119,37 +93,13 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @return a formatted SQL string representing the next sequence value for direct insertion
      */
     protected static String createSequenceNextValueForDirectInsert(final String sequence) {
-        return "NEXT VALUE FOR %s, ".formatted(sequence);
+        return "NEXT VALUE FOR %s".formatted(sequence);
     }
 
     @Override
-    public @Nullable List<Object> update(final TableMetaData tableMetaData, final Map<String, Object> columnValueMap, final LinkedHashMap<String, Object> primaryKey) throws SQLException {
-        final StringBuilder sql = new StringBuilder("UPDATE ")
-                .append(tableMetaData.schema())
-                .append('.')
-                .append(tableMetaData.name())
-                .append(" SET ");
-
-        columnValueMap.keySet().forEach(columnName -> sql.append(columnName).append(" = ?, "));
-        sql.delete(sql.length() - 2, sql.length());
-        sql.append(" WHERE ");
-        primaryKey.forEach((columnName, value) -> sql.append(columnName).append(" = ? AND "));
-        sql.delete(sql.length() - 5, sql.length());
-
-        final List<BindValue> bindValues = columnValueMap.entrySet().stream()
-                .map(entry -> {
-                    final ColumnMetaData column = tableMetaData.column(entry.getKey());
-                    final Object convertedValue = typeConverter.convert(entry.getValue(), column.getDataType());
-                    return new BindValue(convertedValue, column.getDataType());
-                })
-                .collect(Collectors.toCollection(ArrayList::new));
-        primaryKey.forEach((columnName, value) -> {
-            final ColumnMetaData column = tableMetaData.column(columnName);
-            final Object convertedValue = typeConverter.convert(value, column.getDataType());
-            bindValues.add(new BindValue(convertedValue, column.getDataType()));
-        });
-
-        return executeSqlUpdate(sql.toString(), bindValues, tableMetaData, false);
+    public UpdateResult update(final Update update) throws SQLException {
+        final PreparedSql preparedSql = prepareSql(update);
+        return executeSqlUpdate(preparedSql, update.table());
     }
 
     @Override
@@ -169,7 +119,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
         boolean first = true;
 
-        // Select fields
+        // Select columns
         if (!CollectionUtils.isEmpty(select.columns())) {
             for (final Column column : select.columns()) {
                 if (first) {
@@ -195,6 +145,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             sql.append("*");
         }
 
+        // From table
         sql.append(" FROM ");
 
         if (!StringUtils.isBlank(select.table().schema())) {
@@ -261,6 +212,84 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         });
 
         return sql.toString();
+    }
+
+    protected PreparedSql prepareSql(final Insert insert) {
+        final List<String> columnNames = insert.columns().stream().map(ColumnMetaData::name).toList();
+
+        final StringBuilder sql = new StringBuilder("INSERT INTO ");
+
+        if (!StringUtils.isBlank(insert.table().schema())) {
+            sql.append(insert.table().schema()).append('.');
+        }
+
+        sql.append(insert.table().name()).append(" (")
+                .append(String.join(", ", columnNames))
+                .append(") VALUES ");
+
+        final List<BindValue> bindValues = new ArrayList<>(insert.rows().size() * columnNames.size());
+
+        boolean first = true;
+
+        for (RowValue row : insert.rows()) {
+            final PreparedRow preparedRow = prepareRow(row);
+            sql.append('(').append(String.join(", ", preparedRow.valueSpecifiers())).append(')');
+            bindValues.addAll(preparedRow.bindValues());
+
+            if (first) {
+                first = false;
+            } else {
+                sql.append(", ");
+            }
+        }
+
+        return new PreparedSql(sql.toString(), bindValues);
+    }
+
+    protected PreparedSql prepareSql(final Update update) {
+        final StringBuilder sql = new StringBuilder("UPDATE ");
+
+        if (!StringUtils.isBlank(update.table().schema())) {
+            sql.append(update.table().schema()).append('.');
+        }
+
+        sql.append(update.table().name()).append(" SET ");
+
+        final List<BindValue> bindValues = new ArrayList<>(update.columnValues().size());
+
+        boolean first = true;
+
+        for (ColumnValue columnValue : update.columnValues()) {
+            if (first) {
+                first = false;
+            } else {
+                sql.append(", ");
+            }
+
+            sql.append(columnValue.column().name()).append(" = ?");
+
+            final Object convertedValue = typeConverter.convert(columnValue.value(), columnValue.column().getDataType());
+            bindValues.add(new BindValue(convertedValue, columnValue.column().getDataType()));
+        }
+
+        if (!update.where().isEmpty()) {
+            sql.append(" WHERE ");
+
+            first = true;
+
+            for (Condition condition : update.where()) {
+                if (first) {
+                    first = false;
+                } else {
+                    sql.append(" AND ");
+                }
+
+                sql.append(createCondition(condition));
+                bindValues.add(new BindValue(condition.value(), ((ColumnMetaData) condition.column()).getDataType()));
+            }
+        }
+
+        return new PreparedSql(sql.toString(), bindValues);
     }
 
     protected String createJoin(final Join join) {
@@ -330,14 +359,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         };
     }
 
-    private @Nullable List<Object> executeSqlUpdate(final String sql, final List<BindValue> bindValues, final TableMetaData tableMetaData, final boolean returnGeneratedKeys) throws SQLException {
-        final List<Object> generatedKeys;
-
-        try (final PreparedStatement preparedStatement = createPreparedStatement(sql, bindValues, tableMetaData, true)) {
+    protected InsertResult executeSqlInsert(final PreparedSql preparedSql, final TableMetaData tableMetaData) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, tableMetaData, true)) {
             final int affectedRows = preparedStatement.executeUpdate();
 
-            if (affectedRows > 0 && returnGeneratedKeys) {
-                generatedKeys = new ArrayList<>(tableMetaData.primaryKey().size());
+            if (affectedRows > 0) {
+                final List<Object> generatedKeys = new ArrayList<>(tableMetaData.primaryKey().size());
                 final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
 
                 for (String pkColumnName : tableMetaData.primaryKey()) {
@@ -349,12 +376,18 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 }
 
                 generatedKeysResultSet.close();
+                return new InsertResult(affectedRows, generatedKeys);
             } else {
-                generatedKeys = null;
+                return new InsertResult(0);
             }
         }
+    }
 
-        return generatedKeys;
+    protected UpdateResult executeSqlUpdate(final PreparedSql preparedSql, final TableMetaData tableMetaData) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, tableMetaData, false)) {
+            final int affectedRows = preparedStatement.executeUpdate();
+            return new UpdateResult(affectedRows);
+        }
     }
 
     private List<Row> executeSqlQuery(final String sql, final List<Column> columns, final List<Condition> conditions, final Table table) throws SQLException {
@@ -368,7 +401,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 })
                 .toList();
 
-        try (final PreparedStatement preparedStatement = createPreparedStatement(sql, bindValues, fromTable, false)) {
+        try (final PreparedStatement preparedStatement = prepareStatement(new PreparedSql(sql, bindValues), fromTable, false)) {
             // Execute SQL query
             final ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -458,25 +491,25 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
-    protected PreparedStatement createPreparedStatement(final String sql, final List<BindValue> bindValues, final TableMetaData tableMetaData, final boolean returnGeneratedKeys) throws SQLException {
-        if (LOGGER.isTraceEnabled() && !CollectionUtils.isEmpty(bindValues)) {
-            LOGGER.trace("Generated SQL: {} with bind parameters: {}", sql, bindValues.stream().map(BindValue::value).toList());
+    protected PreparedStatement prepareStatement(final PreparedSql preparedSql, final TableMetaData tableMetaData, final boolean returnGeneratedKeys) throws SQLException {
+        if (LOGGER.isTraceEnabled() && !CollectionUtils.isEmpty(preparedSql.bindValues)) {
+            LOGGER.trace("Generated SQL: {} with bind parameters: {}", preparedSql.sql(), preparedSql.bindValues.stream().map(BindValue::value).toList());
         } else {
-            LOGGER.debug("Generated SQL: {}", sql);
+            LOGGER.debug("Generated SQL: {}", preparedSql.sql());
         }
 
         final PreparedStatement preparedStatement;
 
         if (returnGeneratedKeys) {
-            preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            preparedStatement = connection.prepareStatement(preparedSql.sql(), Statement.RETURN_GENERATED_KEYS);
         } else {
-            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement = connection.prepareStatement(preparedSql.sql());
         }
 
         final int[] ordinal = {1};
 
-        if (!CollectionUtils.isEmpty(bindValues)) {
-            for (BindValue bindValue : bindValues) {
+        if (!CollectionUtils.isEmpty(preparedSql.bindValues())) {
+            for (BindValue bindValue : preparedSql.bindValues()) {
                 if (bindValue == null) {
                     preparedStatement.setString(ordinal[0]++, null);
                     continue;
@@ -501,6 +534,36 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return LOGGER;
     }
 
+    protected PreparedRow prepareRow(final RowValue rowValue) {
+        final List<String> valueSpecifiers = new ArrayList<>(rowValue.columns().size());
+        final List<BindValue> bindValues = new ArrayList<>(rowValue.columns().size());
+
+        for (final ColumnValue columnValue : rowValue.columns()) {
+            final ColumnMetaData column = columnValue.column();
+            final Object convertedValue = typeConverter.convert(columnValue.value(), column.getDataType());
+
+            if (convertedValue == null) {
+                if (!column.isNullable() && !column.isAutoIncrement() && column.getSequence() == null) {
+                    throw new IllegalArgumentException("Attempting to insert NULL into non-nullable column: '%s'. Possible cause: column spec missing generator such as autoincrement/sequence".formatted(column.name()));
+                } else if (column.getSequence() != null) {
+                    // Add the next value in the sequence directly to the statement
+                    valueSpecifiers.add(createSequenceNextValueForDirectInsert(column.getSequence()));
+                }
+            } else {
+                valueSpecifiers.add("?");
+                bindValues.add(new BindValue(convertedValue, column.getDataType()));
+            }
+        }
+
+        return new PreparedRow(valueSpecifiers, bindValues);
+    }
+
     protected record BindValue(Object value, int sqlDataType) {
+    }
+
+    protected record PreparedSql(String sql, List<@Nullable BindValue> bindValues) {
+    }
+
+    protected record PreparedRow(List<String> valueSpecifiers, List<BindValue> bindValues) {
     }
 }

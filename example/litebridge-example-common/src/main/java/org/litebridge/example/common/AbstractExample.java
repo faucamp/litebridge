@@ -1,4 +1,4 @@
-package org.litebridge.example.h2;
+package org.litebridge.example.common;
 
 import org.litebridge.orm.Litebridge;
 
@@ -10,5 +10,5 @@ public abstract class AbstractExample {
         this.litebridge = litebridge;
     }
 
-    abstract void run();
+    public abstract void run();
 }

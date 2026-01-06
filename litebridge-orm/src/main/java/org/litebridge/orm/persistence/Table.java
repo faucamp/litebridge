@@ -1,7 +1,6 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.TableMetaData;
@@ -60,7 +59,7 @@ public class Table {
         return ObjectUtils.requireNonNull(columnMap.get(columnName), "No column '" + columnName + "' in table '" + metaData.name() + "'");
     }
 
-    public <DTO> @Nullable TrackedDto<DTO> getTrackedDto(final DTO dto) {
+    public <DTO> TrackedDto<DTO> getTrackedDto(final DTO dto) {
         return changeTracker.getTrackedDto(dto);
     }
 

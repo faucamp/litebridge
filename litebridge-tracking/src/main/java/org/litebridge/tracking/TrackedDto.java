@@ -39,7 +39,7 @@ public final class TrackedDto<T> {
         this.trackDtoCallback = ObjectUtils.requireNonNull(trackDtoCallback, "No \"track DTO\" callback provided");
     }
 
-    public T getDto() {
+    public T dto() {
         return ObjectUtils.requireNonNull(dtoRef.get(), "DTO object has been garbage collected: " + this);
     }
 
@@ -74,7 +74,7 @@ public final class TrackedDto<T> {
     }
 
     public ChangedFields changedFields(final boolean refresh) {
-        final Object dto = getDto();
+        final Object dto = dto();
 
         if (refresh && changedFields != null && fieldSnapshots != null) {
             updateFieldSnapshotsWithChangedFields();
@@ -118,7 +118,7 @@ public final class TrackedDto<T> {
     }
 
     private List<FieldSnapshot> createFieldSnapshots(final Collection<FieldAccessor> fields) {
-        final T dto = getDto();
+        final T dto = dto();
         final List<FieldSnapshot> fieldSnapshots = new ArrayList<>();
 
         fields.forEach(field -> {

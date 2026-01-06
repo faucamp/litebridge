@@ -1,4 +1,4 @@
-package org.litebridge.example.h2;
+package org.litebridge.example.common;
 
 import org.litebridge.example.common.dto.Account;
 import org.litebridge.example.common.dto.Person;
@@ -15,7 +15,7 @@ public class PersistenceExample extends AbstractExample {
     }
 
     @Override
-    void run() {
+    public void run() {
         LOGGER.info("---======< Persistence example >======---");
 
         // Create DTOs and enable change tracking
@@ -29,7 +29,7 @@ public class PersistenceExample extends AbstractExample {
         account.setName("Account 1");
         account.setOwner(person);
 
-        // Save DTOs ("person" will also be saved due to cascading)
+        LOGGER.info("[EXAMPLE] Save DTOs (\"person\" will also be saved due to cascading)");
         litebridge.save(account);
         LOGGER.info("Saved person ID: " + person.getId());
         LOGGER.info("Saved account ID: " + account.getId());
@@ -38,11 +38,10 @@ public class PersistenceExample extends AbstractExample {
         final Account account2 = litebridge.track(new Account());
         account2.setName("Account 2");
         account2.setOwner(person);
-        person.setEyeColour("brown");
         litebridge.save(account2);
 
-        // Update a single field of a tracked DTO and update the database accordingly
-
+        LOGGER.info("[EXAMPLE] Update a single field of a tracked DTO and update the database");
+        person.setEyeColour("brown");
         litebridge.save(person);
     }
 }

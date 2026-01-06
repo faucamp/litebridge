@@ -19,13 +19,13 @@ import static org.junit.jupiter.api.Assertions.fail;
 class TrackedDtoTest {
 
     @Test
-    void getDto() {
+    void dto() {
         // Given
         final TestDto testDto = new TestDto();
         final TrackedDto<TestDto> trackedDto = new TrackedDto(testDto, dto -> fail());
 
         // When
-        final TestDto result = trackedDto.getDto();
+        final TestDto result = trackedDto.dto();
 
         // Then
         assertEquals(testDto, result);
