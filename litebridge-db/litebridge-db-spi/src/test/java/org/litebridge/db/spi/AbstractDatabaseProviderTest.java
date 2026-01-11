@@ -60,7 +60,7 @@ class AbstractDatabaseProviderTest {
 
         final ResultSet pkResultSet = mock(ResultSet.class);
         when(pkResultSet.next()).thenReturn(true).thenReturn(false);
-        when(pkResultSet.getString("COLUMN_NAME")).thenReturn("TEST_PK_COLUMN");
+        when(pkResultSet.getString("COLUMN_NAME")).thenReturn("TEST_COLUMN");
         when(databaseMetaData.getPrimaryKeys(table.catalog(), table.schema(), table.name())).thenReturn(pkResultSet);
 
         final ResultSet columnResultSet = mock(ResultSet.class);
@@ -80,7 +80,9 @@ class AbstractDatabaseProviderTest {
         assertEquals(true, result.column("TEST_COLUMN").isNullable());
         assertEquals(Types.VARCHAR, result.column("TEST_COLUMN").getDataType());
         assertEquals(10, result.column("TEST_COLUMN").getSize());
-        assertEquals(List.of("TEST_PK_COLUMN"), result.primaryKey());
+        assertNotNull(result.primaryKey());
+        assertEquals(1, result.primaryKey().size());
+        assertEquals("TEST_COLUMN", result.primaryKey().get(0).name());
     }
 
     @Test

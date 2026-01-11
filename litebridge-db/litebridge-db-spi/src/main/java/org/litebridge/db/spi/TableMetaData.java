@@ -29,6 +29,10 @@ public final class TableMetaData extends Table {
         this.primaryKey = columns.stream()
                 .filter(column -> primaryKey.contains(column.name()))
                 .toList();
+
+        if (this.primaryKey.size() != primaryKey.size()) {
+            throw new IllegalArgumentException("All column metadata for PKs not found: " + primaryKey);
+        }
     }
 
     private TableMetaData(final TableMetaData other) {
