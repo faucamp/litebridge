@@ -2,6 +2,10 @@ package org.litebridge.commons;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public final class StringUtils {
 
     private StringUtils() {
@@ -46,6 +50,47 @@ public final class StringUtils {
             final String part2 = str.substring(index + 1);
             return new String[]{part1, part2};
         }
+    }
+
+    /**
+     * Splits a string by a single character. This is significantly faster than
+     * String.split() for single-character delimiters because it avoids regex.
+     *
+     * @param target    The string to split.
+     * @param delimiter The character to split by.
+     * @return A list of strings.
+     */
+    public static List<String> split(@Nullable String target, char delimiter) {
+        if (target == null) {
+            return Collections.emptyList();
+        }
+
+        List<String> result = new ArrayList<>();
+        int start = 0;
+        int end = target.indexOf(delimiter);
+
+        while (end != -1) {
+            result.add(target.substring(start, end));
+            start = end + 1;
+            end = target.indexOf(delimiter, start);
+        }
+
+        // Add the final segment
+        result.add(target.substring(start));
+
+        return result;
+    }
+
+    /**
+     * Splits a string by a single character. This is significantly faster than
+     * String.split() for single-character delimiters because it avoids regex.
+     *
+     * @param target    The string to split.
+     * @param delimiter The character to split by.
+     * @return An array of strings.
+     */
+    public static String[] splitArray(@Nullable String target, char delimiter) {
+        return split(target, delimiter).toArray(new String[0]);
     }
 
     /**

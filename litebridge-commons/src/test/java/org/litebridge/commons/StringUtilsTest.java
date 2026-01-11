@@ -2,9 +2,12 @@ package org.litebridge.commons;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -428,5 +431,76 @@ class StringUtilsTest {
 
         // Then
         assertEquals("", result);
+    }
+
+    @Test
+    void split() {
+        // Given
+        final String input = "aaa.bbb.ccc.ddd";
+
+        // When
+        final List<String> result = StringUtils.split(input, '.');
+
+        // Then
+        assertEquals(4, result.size());
+        assertEquals("aaa", result.get(0));
+        assertEquals("bbb", result.get(1));
+        assertEquals("ccc", result.get(2));
+        assertEquals("ddd", result.get(3));
+    }
+
+    @Test
+    void split_noMatch() {
+        // Given
+        final String input = "aaabbbcccddd";
+
+        // When
+        final List<String> result = StringUtils.split(input, '.');
+
+        // Then
+        assertEquals(1, result.size());
+        assertEquals("aaabbbcccddd", result.getFirst());
+    }
+
+    @Test
+    void split_emptyString() {
+        // Given
+        final String input = "";
+
+        // When
+        final List<String> result = StringUtils.split(input, '.');
+
+        // Then
+        assertEquals(1, result.size());
+        assertEquals("", result.getFirst());
+    }
+
+    @Test
+    void split_null() {
+        // Given
+        final String input = null;
+
+        // When
+        final List<String> result = StringUtils.split(input, '.');
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void splitArray() {
+        // Given
+        final String input = "aaa.bbb.ccc.ddd";
+
+        // When
+        final String[] result = StringUtils.splitArray(input, '.');
+
+        // Then
+        assertEquals(4, result.length);
+        assertEquals("aaa", result[0]);
+        assertEquals("bbb", result[1]);
+        assertEquals("ccc", result[2]);
+        assertEquals("ddd", result[3]);
     }
 }
