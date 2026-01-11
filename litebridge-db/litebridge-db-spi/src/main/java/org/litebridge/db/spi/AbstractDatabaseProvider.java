@@ -367,10 +367,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 final List<Object> generatedKeys = new ArrayList<>(tableMetaData.primaryKey().size());
                 final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
 
-                for (String pkColumnName : tableMetaData.primaryKey()) {
+                for (ColumnMetaData pkColumn : tableMetaData.primaryKey()) {
                     if (generatedKeysResultSet.next()) {
-                        final Object generatedId = generatedKeysResultSet.getObject(pkColumnName);
-                        LOGGER.debug("Generated ID for column '{}': {}", pkColumnName, generatedId);
+                        final Object generatedId = generatedKeysResultSet.getObject(pkColumn.name());
+                        LOGGER.debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
                         generatedKeys.add(generatedId);
                     }
                 }

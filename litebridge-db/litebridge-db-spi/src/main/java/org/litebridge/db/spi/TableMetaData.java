@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 public final class TableMetaData extends Table {
 
-    private final List<String> primaryKey;
+    private final List<ColumnMetaData> primaryKey;
     private final List<ColumnMetaData> columns;
     private final Map<String, ColumnMetaData> columnMap;
 
@@ -22,18 +22,20 @@ public final class TableMetaData extends Table {
 
     public TableMetaData(final String catalog, final String schema, final String table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
         super(catalog, schema, table);
-        this.primaryKey = primaryKey;
         this.columns = Collections.unmodifiableList(columns);
         this.columnMap = columns.stream()
                 .collect(Collectors.toMap(ColumnMetaData::name,
                         Function.identity()));
+        this.primaryKey = columns.stream()
+                .filter(column -> primaryKey.contains(column.name()))
+                .toList();
     }
 
     private TableMetaData(final TableMetaData other) {
-        this(other.catalog(), other.schema(), other.name(), other.primaryKey, other.columns);
+        this(other.catalog(), other.schema(), other.name(), other.primaryKey.stream().map(ColumnMetaData::name).toList(), other.columns);
     }
 
-    public List<String> primaryKey() {
+    public List<ColumnMetaData> primaryKey() {
         return primaryKey;
     }
 

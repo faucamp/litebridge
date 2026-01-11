@@ -2,6 +2,7 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
+import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.tracking.ClassFieldAccessorCache;
@@ -36,6 +37,7 @@ public final class DefaultDtoMapper implements DtoMapper {
 
         // Extract the primary key and re-use already-created DTOs if possible
         final Object[] primaryKeyValues = table.getMetaData().primaryKey().stream()
+                .map(ColumnMetaData::name)
                 .map(row::column)
                 .filter(Optional::isPresent)
                 .map(Optional::get)

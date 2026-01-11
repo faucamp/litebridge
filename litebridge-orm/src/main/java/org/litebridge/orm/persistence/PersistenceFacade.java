@@ -133,9 +133,9 @@ public class PersistenceFacade {
                     }
                 } else {
                     // Get the primary key
-                    final List<String> embeddedDtoPk = embeddedDtoTable.getMetaData().primaryKey();
+                    final List<ColumnMetaData> embeddedDtoPk = embeddedDtoTable.getMetaData().primaryKey();
                     // TODO: composite PK support
-                    final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(embeddedDtoPk.get(0));
+                    final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(embeddedDtoPk.get(0).name());
                     final Object pkValue = field.get(value);
                     columnValues.add(new ColumnValue(column, pkValue));
                 }
@@ -149,15 +149,14 @@ public class PersistenceFacade {
             updateBuilder.setColumnValues(columnValues);
 
             table.getMetaData().primaryKey().forEach(pkColumn -> {
-                final ColumnMetaData column = table.getColumn(pkColumn);
-                final FieldAccessor field = table.getFieldForColumnName(column.name());
+                final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
                 final Object pkValue = field.get(dto);
                 final Condition condition;
 
                 if (pkValue != null) {
-                    condition = new Condition(column, Operator.EQ, pkValue);
+                    condition = new Condition(pkColumn, Operator.EQ, pkValue);
                 } else {
-                    condition = new Condition(column, Operator.IS_NULL);
+                    condition = new Condition(pkColumn, Operator.IS_NULL);
                 }
 
                 updateBuilder.where(condition);
@@ -169,10 +168,12 @@ public class PersistenceFacade {
 
     private void updateDtoPrimaryKey(final Object dto, final Object generatedKey) {
         final Table embeddedDtoTable = tableRegistry.getTableOrThrow(dto.getClass());
-        final List<String> embeddedDtoPk = embeddedDtoTable.getMetaData().primaryKey();
+        final List<ColumnMetaData> embeddedDtoPk = embeddedDtoTable.getMetaData().primaryKey();
         // TODO: composite PK support
-        final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(embeddedDtoPk.get(0));
-        field.set(dto, generatedKey);
+        final ColumnMetaData pkColumn = embeddedDtoPk.get(0);
+        final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(pkColumn.name());
+        final Object convertedValue = databaseProvider.getTypeConverter().convert(generatedKey, pkColumn.getDataType());
+        field.set(dto, convertedValue);
         embeddedDtoTable.syncPersistedDto(dto);
     }
 
