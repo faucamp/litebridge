@@ -3,6 +3,7 @@ package org.litebridge.tracking;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Field;
+import java.util.Objects;
 
 public class FieldAccessorImpl implements FieldAccessor {
 
@@ -44,5 +45,21 @@ public class FieldAccessorImpl implements FieldAccessor {
     @Override
     public Class<?>[] genericTypes() {
         return ClassFieldCache.getGenericTypes(field);
+    }
+
+    @Override
+    public Class<?> dtoClass() {
+        return field.getDeclaringClass();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (!(o instanceof final FieldAccessorImpl that)) return false;
+        return Objects.equals(field, that.field);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(field);
     }
 }

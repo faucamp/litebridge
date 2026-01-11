@@ -2,6 +2,8 @@ package org.litebridge.db.spi;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.Objects;
+
 public class Aliased {
 
     /**
@@ -42,5 +44,16 @@ public class Aliased {
 
     final void setAlias(final String alias) {
         this.alias = alias;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (!(o instanceof final Aliased aliased)) return false;
+        return Objects.equals(name, aliased.name) && Objects.equals(alias, aliased.alias);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, alias);
     }
 }

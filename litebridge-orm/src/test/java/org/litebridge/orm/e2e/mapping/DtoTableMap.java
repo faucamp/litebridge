@@ -11,7 +11,8 @@ import static org.litebridge.orm.api.spec.FieldSpecBuilder.p;
 
 public final class DtoTableMap {
 
-    private DtoTableMap() {}
+    private DtoTableMap() {
+    }
 
     public static final Map<FieldSpec, ColumnSpec> Person = Map.of(
             f("id"), c("PERSON_ID").autoIncrement(true).sequence("LB.PERSON_SEQ"),
@@ -25,5 +26,11 @@ public final class DtoTableMap {
             f("id"), c("ACCOUNT_ID").autoIncrement(true).sequence("LB.ACCOUNT_SEQ"),
             f("name"), c("ACCOUNT_NAME"),
             f("owner"), c("PERSON_ID").joinUsing()
+    );
+
+    public static final Map<FieldSpec, ColumnSpec> SingeTableNestedDto = Map.of(
+            f("parentValue1"), c("PARENT_VALUE1"),
+            f("nestedChild.childValue1"), c("CHILD_VALUE1"),
+            f("nestedChild.grandChild.grandChildValue1"), c("GRANDCHILD_VALUE1")
     );
 }

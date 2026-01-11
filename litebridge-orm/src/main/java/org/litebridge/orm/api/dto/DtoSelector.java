@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.dto;
 
+import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
@@ -13,7 +14,9 @@ import org.litebridge.orm.persistence.DtoAliasRegistry;
 import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.Table;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.ClassFieldCache;
+import org.litebridge.tracking.FieldAccessor;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -65,8 +68,14 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO> {
         selectSpec.setTable(table.getMetaData().as(tableAlias));
         selectSpec.setColumns(columns.map(column -> column.as(dtoAliasRegistry.alias(tableAlias, column))));
 
-        // Calculate and add joins to embedded DTOs
-        ClassFieldCache.nestedDtoFields(dtoClass).forEach(this::addJoinForNestedDto);
+        // Calculate and add joins to embedded DTOs (or flatten them into the current table if no join/subselect is needed)
+        ClassFieldCache.nestedDtoFields(dtoClass).forEach(nestedDtoField -> {
+            if (table.hasColumnForFieldName(nestedDtoField.getName())) {
+                addJoinForNestedDto(nestedDtoField);
+            } else if (!table.hasFieldAccessorChainForFieldName(nestedDtoField.getName())) {
+                throw new IllegalStateException("No column or field accessor chain found for nested DTO field: " + nestedDtoField.getName());
+            }
+        });
 
         return new DtoFromClauseTerminal<>(this);
     }

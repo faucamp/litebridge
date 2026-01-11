@@ -10,6 +10,7 @@ import org.litebridge.db.h2.H2DatabaseProvider;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.e2e.dto.Account;
 import org.litebridge.orm.e2e.dto.Person;
+import org.litebridge.orm.e2e.dto.SingleTableNestedParent;
 import org.litebridge.orm.e2e.mapping.DtoTableMap;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.TrackedDto;
@@ -20,8 +21,11 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.litebridge.orm.api.spec.TableSpec.t;
 
 class LitebridgeE2eTest {
@@ -54,7 +58,7 @@ class LitebridgeE2eTest {
 
     @Test
     void save() throws Exception {
-        // Initialise litebridge and register DTO-table mappings
+        // Register DTO-table mappings
         litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
         litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
 
@@ -89,6 +93,34 @@ class LitebridgeE2eTest {
         person.setEyeColour("brown");
         litebridge.save(person);
     }
+
+    @Test
+    void save_nestedDto_singleTable() throws Exception {
+        // Register DTO-table mapping
+        litebridge.register(SingleTableNestedParent.class, t("LB", "NESTED_DTO", DtoTableMap.SingeTableNestedDto));
+
+        // Create DTOs and enable change tracking
+        final SingleTableNestedParent singleTableNestedParent = litebridge.track(new SingleTableNestedParent());
+        singleTableNestedParent.setParentValue1("testParentValue1");
+        singleTableNestedParent.setNestedChild(new SingleTableNestedParent.NestedChild());
+        singleTableNestedParent.getNestedChild().setChildValue1("testChildValue1");
+        singleTableNestedParent.getNestedChild().setGrandChild(new SingleTableNestedParent.NestedChild.NestedGrandChild());
+        singleTableNestedParent.getNestedChild().getGrandChild().setGrandChildValue1("testGrandChildValue1");
+
+        // Save DTO and load it back
+        litebridge.save(singleTableNestedParent);
+        final SingleTableNestedParent result = litebridge.select(SingleTableNestedParent.class)
+                .oneOrThrow();
+
+        // Then
+        assertTrue(result != singleTableNestedParent);
+        assertEquals("testParentValue1", result.getParentValue1());
+        assertNotNull(result.getNestedChild());
+        assertEquals("testChildValue1", result.getNestedChild().getChildValue1());
+        assertNotNull(result.getNestedChild().getGrandChild());
+        assertEquals("testGrandChildValue1", result.getNestedChild().getGrandChild().getGrandChildValue1());
+    }
+
 
     private Litebridge ensureLitebridge() throws SQLException {
         if (connection == null) {

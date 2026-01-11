@@ -1,6 +1,7 @@
 package org.litebridge.tracking;
 
 import org.litebridge.commons.ClassUtils;
+import org.litebridge.commons.StringUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -56,8 +57,30 @@ public class ClassFieldAccessorCache {
     }
 
     protected static FieldAccessor fieldAccessor(final Class<?> dtoClass, final String fieldName) {
-        return ensureFieldAccessors(dtoClass)
-                .computeIfAbsent(fieldName, fn -> new FieldAccessorImpl(ClassUtils.getField(dtoClass, fieldName)));
+        if (fieldName.indexOf('.') != -1) {
+            // Nested field specification - traverse the field/property path
+            final String[] subFieldAndRestOfPath = StringUtils.splitOnce(fieldName, '.');
+            final FieldAccessor subFieldAccessor = fieldAccessor(dtoClass, subFieldAndRestOfPath[0]);
+            return chain(new FieldAccessorChain(subFieldAccessor, fieldName), subFieldAndRestOfPath[1]);
+        } else {
+            return ensureFieldAccessors(dtoClass)
+                    .computeIfAbsent(fieldName, fn -> new FieldAccessorImpl(ClassUtils.getField(dtoClass, fieldName)));
+        }
+    }
+
+    private static FieldAccessorChain chain(final FieldAccessorChain fieldAccessorChain, final String fieldPath) {
+        final FieldAccessor subFieldAccessor;
+
+        if (fieldPath.indexOf('.') != -1) {
+            // Nested field specification - traverse the field/property path
+            final String[] subFieldAndRestOfPath = StringUtils.splitOnce(fieldPath, '.');
+            subFieldAccessor = fieldAccessor(fieldAccessorChain.type(), subFieldAndRestOfPath[0]);
+            return chain(fieldAccessorChain.add(subFieldAccessor), subFieldAndRestOfPath[1]);
+        } else {
+            // Final field in the chain
+            subFieldAccessor = fieldAccessor(fieldAccessorChain.type(), fieldPath);
+            return fieldAccessorChain.add(subFieldAccessor);
+        }
     }
 
     protected static FieldAccessor propertyAccessor(final Class<?> dtoClass, final String propertyName) {

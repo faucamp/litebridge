@@ -57,5 +57,16 @@ public final class Row {
                 return column.name() + "=" + value();
             }
         }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (!(o instanceof final RowColumn rowColumn)) return false;
+            return Objects.equals(column, rowColumn.column);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(column);
+        }
     }
 }

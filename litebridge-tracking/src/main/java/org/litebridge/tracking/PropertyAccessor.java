@@ -3,6 +3,7 @@ package org.litebridge.tracking;
 import org.jspecify.annotations.Nullable;
 
 import java.beans.PropertyDescriptor;
+import java.util.Objects;
 
 public class PropertyAccessor implements FieldAccessor {
 
@@ -43,5 +44,21 @@ public class PropertyAccessor implements FieldAccessor {
     @Override
     public Class<?>[] genericTypes() {
         return ClassFieldCache.getGenericTypes(propertyDescriptor.getReadMethod().getGenericReturnType());
+    }
+
+    @Override
+    public Class<?> dtoClass() {
+        return propertyDescriptor.getReadMethod().getDeclaringClass();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (!(o instanceof final PropertyAccessor that)) return false;
+        return Objects.equals(propertyDescriptor, that.propertyDescriptor);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(propertyDescriptor);
     }
 }

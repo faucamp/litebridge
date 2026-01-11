@@ -2,14 +2,18 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.NullMarked;
 import org.litebridge.commons.ObjectUtils;
+import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.FieldAccessor;
+import org.litebridge.tracking.FieldAccessorChain;
 import org.litebridge.tracking.TrackedDto;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @NullMarked
@@ -19,6 +23,7 @@ public class Table {
     private final Map<FieldAccessor, ColumnMetaData> fieldColumnMap;
     private final Map<String, ColumnMetaData> columnMap;
     private final Map<String, ColumnMetaData> fieldNameColumnMap;
+    private final Map<String, FieldAccessorChainLink> fieldAccessorChainLinkMap;
     private final Map<String, FieldAccessor> columnNameFieldMap;
     private final ChangeTracker changeTracker;
 
@@ -31,28 +36,42 @@ public class Table {
         final Map<String, ColumnMetaData> columnMap = new HashMap<>(fieldColumnMap.size());
         final Map<String, ColumnMetaData> fieldNameColumnMap = new HashMap<>(fieldColumnMap.size());
         final Map<String, FieldAccessor> columnNameFieldMap = new HashMap<>(fieldColumnMap.size());
+        final Map<String, FieldAccessorChainLink> fieldAccessorChainLinkMap = new HashMap<>();
 
-        fieldColumnMap.forEach(((field, column) -> {
+        fieldColumnMap.forEach(((fieldAccessor, column) -> {
             columnMap.put(column.name(), column);
-            fieldNameColumnMap.put(field.name(), column);
-            columnNameFieldMap.put(column.name(), field);
+            columnNameFieldMap.put(column.name(), fieldAccessor);
+
+            if (fieldAccessor instanceof FieldAccessorChain fieldAccessorChain) {
+                // Nested DTO structure - add chain information for the deserialiser
+                final FieldAccessor firstFieldAccessor = fieldAccessorChain.fieldAccessors().getFirst();
+                final FieldAccessorChainLink fieldAccessorChainLink = fieldAccessorChainLinkMap.computeIfAbsent(firstFieldAccessor.name(), k -> new FieldAccessorChainLink());
+                fieldAccessorChainLink.add(fieldAccessorChain);
+            } else {
+                fieldNameColumnMap.put(fieldAccessor.name(), column);
+            }
         }));
 
         this.columnMap = Collections.unmodifiableMap(columnMap);
         this.fieldNameColumnMap = Collections.unmodifiableMap(fieldNameColumnMap);
         this.columnNameFieldMap = Collections.unmodifiableMap(columnNameFieldMap);
+        this.fieldAccessorChainLinkMap = Collections.unmodifiableMap(fieldAccessorChainLinkMap);
     }
 
     public TableMetaData getMetaData() {
         return metaData;
     }
 
-    public Map<FieldAccessor, ColumnMetaData> getFieldColumnMap() {
-        return fieldColumnMap;
-    }
-
     public ColumnMetaData getColumnForFieldName(final String fieldName) {
         return ObjectUtils.requireNonNull(fieldNameColumnMap.get(fieldName), "No column for field '" + fieldName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
+    }
+
+    public boolean hasColumnForFieldName(final String fieldName) {
+        return fieldNameColumnMap.containsKey(fieldName);
+    }
+
+    public boolean hasFieldAccessorChainForFieldName(final String fieldName) {
+        return fieldAccessorChainLinkMap.containsKey(fieldName);
     }
 
     public ColumnMetaData getColumn(final String columnName) {

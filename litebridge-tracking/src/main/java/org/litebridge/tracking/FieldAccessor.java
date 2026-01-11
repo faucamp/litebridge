@@ -12,12 +12,9 @@ public interface FieldAccessor {
     void set(final Object dto, final @Nullable Object value);
 
     /**
-     * Returns a {@code Class} object that identifies the
-     * declared type for the field represented by this
-     * {@code Field} object.
+     * Returns a {@code Class} object that identifies the declared type for the field represented by this {@code FieldAccessor} object.
      *
-     * @return a {@code Class} object identifying the declared
-     * type of the field represented by this object
+     * @return a {@code Class} object identifying the declared type of the field represented by this object
      */
     Class<?> type();
 
@@ -32,4 +29,6 @@ public interface FieldAccessor {
 
         return genericTypes[0];
     }
+
+    Class<?> dtoClass();
 }
