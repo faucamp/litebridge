@@ -76,7 +76,7 @@ public final class TrackedDto<T> {
     public ChangedFields changedFields(final boolean refresh) {
         final Object dto = dto();
 
-        if (refresh && changedFields != null && fieldSnapshots != null) {
+        if (refresh && changedFields != null) {
             updateFieldSnapshotsWithChangedFields();
         }
 

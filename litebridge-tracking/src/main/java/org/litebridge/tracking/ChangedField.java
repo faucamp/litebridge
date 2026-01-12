@@ -27,11 +27,7 @@ public sealed class ChangedField permits ChangedMapField {
     }
 
     public <T extends ChangedField> Optional<T> cast(Class<T> changedFieldType) {
-        if (changedFieldType.isAssignableFrom(this.getClass())) {
-            return Optional.of(changedFieldType.cast(this));
-        } else {
-            return Optional.empty();
-        }
+        return Optional.of(changedFieldType.cast(this));
     }
 
     @Override

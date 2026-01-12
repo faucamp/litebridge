@@ -188,8 +188,21 @@ class TrackedDtoTest {
                 .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
                 .toList();
 
-        // When
+        // When/Then
         assertThrows(IllegalStateException.class, () -> trackedDto.changedFields());
+    }
+
+    @Test
+    void changedFields_refresh_noSnapshots() {
+        // Given
+        final TestDto testDto = new TestDto();
+        final TrackedDto<TestDto> trackedDto = new TrackedDto(testDto, dto -> fail());
+        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class).stream()
+                .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
+                .toList();
+
+        // When/Then
+        assertThrows(IllegalStateException.class, () -> trackedDto.changedFields(true));
     }
 
     @Nullable
