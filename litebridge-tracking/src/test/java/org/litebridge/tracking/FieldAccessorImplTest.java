@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -49,6 +51,38 @@ class FieldAccessorImplTest {
 
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> fieldAccessor.get(testDto2));
+    }
+
+    @Test
+    void get_privateFieldFromAnotherClass() throws NoSuchFieldException {
+        // Given
+        final FieldAccessorImpl fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+        final TestDifferentClass testDifferentClass = new TestDifferentClass();
+
+        // When
+        assertThrows(IllegalArgumentException.class, () -> fieldAccessor.get(testDifferentClass));
+    }
+
+    @Test
+    void get_nullFieldValue() {
+        // Given
+        final FieldAccessorImpl fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+        final TestDto testDto = new TestDto();
+
+        // When
+        final Object result = fieldAccessor.get(testDto);
+
+        // Then
+        assertEquals(null, result);
+    }
+
+    @Test
+    void get_onNullObject() {
+        // Given
+        final FieldAccessorImpl fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+
+        // When/Then
+        assertThrows(NullPointerException.class, () -> fieldAccessor.get(null));
     }
 
     @Test
@@ -144,6 +178,81 @@ class FieldAccessorImplTest {
         assertThrows(IllegalStateException.class, fieldAccessor::genericType);
     }
 
+    @Test
+    void dtoClass() {// Given
+        final FieldAccessorImpl fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+
+        // When
+        final Class<?> result = fieldAccessor.dtoClass();
+
+        // Then
+        assertEquals(TestDto.class, result);
+    }
+
+    @Test
+    void equals_true_sameField() {
+        // Given
+        final FieldAccessorImpl fieldAccessor1 = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+        final FieldAccessorImpl fieldAccessor2 = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+
+        // When
+        final boolean result = fieldAccessor1.equals(fieldAccessor2);
+
+        // Then
+        assertTrue(result);
+    }
+
+    @Test
+    void equals_false_differentField() {
+        // Given
+        final FieldAccessorImpl fieldAccessor1 = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+        final FieldAccessorImpl fieldAccessor2 = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "list"));
+
+        // When
+        final boolean result = fieldAccessor1.equals(fieldAccessor2);
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
+    void equals_false_null() {
+        // Given
+        final FieldAccessorImpl fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+
+        // When
+        final boolean result = fieldAccessor.equals(null);
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
+    void equals_false_differentType() {
+        // Given
+        final FieldAccessorImpl fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+
+        // When
+        final boolean result = fieldAccessor.equals("not-a-field-accessor");
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
+    void hashCode_sameForEqualObjects() {
+        // Given
+        final FieldAccessorImpl fieldAccessor1 = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+        final FieldAccessorImpl fieldAccessor2 = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+
+        // When
+        final int hash1 = fieldAccessor1.hashCode();
+        final int hash2 = fieldAccessor2.hashCode();
+
+        // Then
+        assertEquals(hash1, hash2);
+    }
+
     private class TestDto {
         private String myVar;
         private List<String> list;
@@ -151,5 +260,9 @@ class FieldAccessorImplTest {
     }
 
     private class TestDto2 {
+    }
+
+    private class TestDifferentClass {
+        private String myVar;
     }
 }

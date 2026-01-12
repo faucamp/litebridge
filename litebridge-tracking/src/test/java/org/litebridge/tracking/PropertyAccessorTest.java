@@ -6,14 +6,19 @@ import org.litebridge.commons.ClassUtils;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PropertyAccessorTest {
 
     @Test
     void name() {
-        // When
+        // Given
         final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+
+        // When
         final String result = propertyAccessor.name();
 
         // Then
@@ -90,8 +95,89 @@ class PropertyAccessorTest {
         assertEquals(Long.class, result[0]);
     }
 
+    @Test
+    void dtoClass() {
+        // Given
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+
+        // When
+        final Class<?> result = propertyAccessor.dtoClass();
+
+        // Then
+        assertEquals(TestDto.class, result);
+    }
+
+    @Test
+    void equals_null() {
+        // Given
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+
+        // When/Then
+        assertFalse(propertyAccessor.equals(null));
+    }
+
+    @Test
+    void equals_differentType() {
+        // Given
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+
+        // When/Then
+        assertFalse(propertyAccessor.equals(new Object()));
+    }
+
+    @Test
+    void equals_samePropertyDescriptorInstance() {
+        // Given
+        final var descriptor = ClassUtils.getProperty(TestDto.class, "myVar");
+        final PropertyAccessor left = new PropertyAccessor(descriptor);
+        final PropertyAccessor right = new PropertyAccessor(descriptor);
+
+        // When/Then
+        assertTrue(left.equals(right));
+        assertTrue(right.equals(left));
+    }
+
+    @Test
+    void equals_differentPropertyDescriptor() {
+        // Given
+        final PropertyAccessor left = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+        final PropertyAccessor right = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "otherVar"));
+
+        // When/Then
+        assertFalse(left.equals(right));
+        assertFalse(right.equals(left));
+    }
+
+    @Test
+    void hashCode_equalWhenDescriptorsEqual() {
+        // Given
+        final var descriptor = ClassUtils.getProperty(TestDto.class, "myVar");
+        final PropertyAccessor left = new PropertyAccessor(descriptor);
+        final PropertyAccessor right = new PropertyAccessor(descriptor);
+
+        // When
+        final int leftHash = left.hashCode();
+        final int rightHash = right.hashCode();
+
+        // Then
+        assertEquals(leftHash, rightHash);
+        assertEquals(descriptor.hashCode(), leftHash);
+    }
+
+    @Test
+    void hashCode_differentWhenDescriptorsDifferent() {
+        // Given
+        final PropertyAccessor left = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+        final PropertyAccessor right = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "otherVar"));
+
+        // When/Then
+        assertNotEquals(left.hashCode(), right.hashCode());
+    }
+
+    // ... existing code ...
     private class TestDto {
         private String myVar;
+        private String otherVar;
 
         public String getMyVar() {
             return myVar;
@@ -99,6 +185,14 @@ class PropertyAccessorTest {
 
         public void setMyVar(final String myVar) {
             this.myVar = myVar;
+        }
+
+        public String getOtherVar() {
+            return otherVar;
+        }
+
+        public void setOtherVar(final String otherVar) {
+            this.otherVar = otherVar;
         }
     }
 
