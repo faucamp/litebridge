@@ -21,13 +21,19 @@ public class ClassFieldAccessorCache {
     }
 
     public static FieldAccessor fieldAccessorOrThrow(final Class<?> dtoClass, final String field) {
-        final FieldAccessor fieldAccessor = ensureFieldAccessors(dtoClass).get(field);
+        if (field.indexOf('.') != -1) {
+            final String[] subFieldAndRestOfPath = StringUtils.splitOnce(field, '.');
+            final FieldAccessor subFieldAccessor = fieldAccessor(dtoClass, subFieldAndRestOfPath[0]);
+            return chain(new FieldAccessorChain(subFieldAccessor, field), subFieldAndRestOfPath[1]);
+        } else {
+            final FieldAccessor fieldAccessor = ensureFieldAccessors(dtoClass).get(field);
 
-        if (fieldAccessor == null) {
-            throw new IllegalArgumentException("No field accessor found for field " + field + " in class " + dtoClass.getName());
+            if (fieldAccessor == null) {
+                throw new IllegalArgumentException("No field accessor found for field " + field + " in class " + dtoClass.getName());
+            }
+
+            return fieldAccessor;
         }
-
-        return fieldAccessor;
     }
 
     public static List<FieldAccessor> fieldAccessors(final Class<?> dtoClass) {

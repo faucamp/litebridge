@@ -25,10 +25,6 @@ public class FieldAccessorChain implements FieldAccessor {
         return fieldPath;
     }
 
-    public String[] fieldPathArray() {
-        return fieldPath.split("\\.");
-    }
-
     public List<FieldAccessor> fieldAccessors() {
         return fieldAccessors;
     }

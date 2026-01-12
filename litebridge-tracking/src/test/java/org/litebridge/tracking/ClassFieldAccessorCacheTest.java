@@ -9,6 +9,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,6 +40,54 @@ class ClassFieldAccessorCacheTest {
     void fieldAccessorOrThrow_invalidField() {
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> ClassFieldAccessorCache.fieldAccessorOrThrow(TestDto.class, "invalid"));
+    }
+
+    @Test
+    void fieldAccessorOrThrow_dotDelimitedPath() {
+        // When
+        final FieldAccessor result = ClassFieldAccessorCache.fieldAccessorOrThrow(TestDto.class, "nestedDto.secondNestedDto.thirdNestedDto.string");
+
+        // Then
+        assertNotNull(result);
+        assertEquals(String.class, result.type());
+        assertEquals(ThirdNestedDto.class, result.dtoClass());
+        assertInstanceOf(FieldAccessorChain.class, result);
+
+        final FieldAccessorChain fieldAccessorChain = (FieldAccessorChain) result;
+        assertEquals("nestedDto.secondNestedDto.thirdNestedDto.string", fieldAccessorChain.fieldPath());
+        assertEquals(4, fieldAccessorChain.fieldAccessors().size());
+
+        assertEquals(NestedDto.class, fieldAccessorChain.fieldAccessors().getFirst().type());
+        assertEquals(TestDto.class, fieldAccessorChain.fieldAccessors().getFirst().dtoClass());
+
+        assertEquals(SecondNestedDto.class, fieldAccessorChain.fieldAccessors().get(1).type());
+        assertEquals(NestedDto.class, fieldAccessorChain.fieldAccessors().get(1).dtoClass());
+
+        assertEquals(ThirdNestedDto.class, fieldAccessorChain.fieldAccessors().get(2).type());
+        assertEquals(SecondNestedDto.class, fieldAccessorChain.fieldAccessors().get(2).dtoClass());
+
+        assertEquals(result, fieldAccessorChain.fieldAccessors().getLast());
+    }
+
+    @Test
+    void fieldAccessor_dotDelimitedPath() {
+        // When
+        final FieldAccessor result = ClassFieldAccessorCache.fieldAccessor(TestDto.class, "nestedDto.secondNestedDto");
+
+        // Then
+        assertNotNull(result);
+        assertEquals(SecondNestedDto.class, result.type());
+        assertEquals(NestedDto.class, result.dtoClass());
+        assertInstanceOf(FieldAccessorChain.class, result);
+
+        final FieldAccessorChain fieldAccessorChain = (FieldAccessorChain) result;
+        assertEquals("nestedDto.secondNestedDto", fieldAccessorChain.fieldPath());
+        assertEquals(2, fieldAccessorChain.fieldAccessors().size());
+
+        assertEquals(NestedDto.class, fieldAccessorChain.fieldAccessors().getFirst().type());
+        assertEquals(TestDto.class, fieldAccessorChain.fieldAccessors().getFirst().dtoClass());
+
+        assertEquals(result, fieldAccessorChain.fieldAccessors().getLast());
     }
 
     @Test
@@ -157,6 +206,21 @@ class ClassFieldAccessorCacheTest {
     }
 
     private class NestedDto {
+        @Nullable
+        private String string;
+
+        @Nullable
+        private SecondNestedDto secondNestedDto;
+    }
+
+    private class SecondNestedDto {
+        @Nullable
+        private String string;
+        @Nullable
+        private ThirdNestedDto thirdNestedDto;
+    }
+
+    private class ThirdNestedDto {
         @Nullable
         private String string;
     }
