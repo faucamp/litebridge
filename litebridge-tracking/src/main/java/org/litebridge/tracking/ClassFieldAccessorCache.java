@@ -69,8 +69,7 @@ public class ClassFieldAccessorCache {
             final FieldAccessor subFieldAccessor = fieldAccessor(dtoClass, subFieldAndRestOfPath[0]);
             return chain(new FieldAccessorChain(subFieldAccessor, fieldName), subFieldAndRestOfPath[1]);
         } else {
-            return ensureFieldAccessors(dtoClass)
-                    .computeIfAbsent(fieldName, fn -> new FieldAccessorImpl(ClassUtils.getField(dtoClass, fieldName)));
+            return ensureFieldAccessors(dtoClass).get(fieldName);
         }
     }
 
@@ -90,8 +89,7 @@ public class ClassFieldAccessorCache {
     }
 
     protected static FieldAccessor propertyAccessor(final Class<?> dtoClass, final String propertyName) {
-        return ensureFieldAccessors(dtoClass)
-                .computeIfAbsent(propertyName, pn -> new PropertyAccessor(ClassUtils.getProperty(dtoClass, propertyName)));
+        return ensureFieldAccessors(dtoClass).get(propertyName);
     }
 
     private static Map<String, FieldAccessor> ensureFieldAccessors(final Class<?> dtoClass) {

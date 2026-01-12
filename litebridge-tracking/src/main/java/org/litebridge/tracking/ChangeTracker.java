@@ -120,7 +120,6 @@ public final class ChangeTracker {
     }
 
     private void trackNestedDto(final Object dto) {
-        ObjectUtils.requireNonNull(dto, () -> new IllegalStateException("trackNestedDto() called with null value"));
         trackImpl(dto, ClassFieldAccessorCache.fieldAccessors(dto.getClass()), true);
     }
 }

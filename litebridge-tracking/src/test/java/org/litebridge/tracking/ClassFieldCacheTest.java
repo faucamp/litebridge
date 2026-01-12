@@ -1,11 +1,13 @@
 package org.litebridge.tracking;
 
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.ClassUtils;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,11 +24,12 @@ class ClassFieldCacheTest {
         final Set<Field> result = ClassFieldCache.getFields(cls);
 
         // Then
-        assertEquals(4, result.size());
+        assertEquals(5, result.size());
         assertTrue(result.stream().anyMatch(field -> field.getName().equals("string")));
         assertTrue(result.stream().anyMatch(field -> field.getName().equals("list")));
         assertTrue(result.stream().anyMatch(field -> field.getName().equals("property")));
         assertTrue(result.stream().anyMatch(field -> field.getName().equals("nestedDto")));
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("map")));
     }
 
     @Test
@@ -38,11 +41,12 @@ class ClassFieldCacheTest {
         final Set<Field> result = ClassFieldCache.getFields(testDto);
 
         // Then
-        assertEquals(4, result.size());
+        assertEquals(5, result.size());
         assertTrue(result.stream().anyMatch(field -> field.getName().equals("string")));
         assertTrue(result.stream().anyMatch(field -> field.getName().equals("list")));
         assertTrue(result.stream().anyMatch(field -> field.getName().equals("property")));
         assertTrue(result.stream().anyMatch(field -> field.getName().equals("nestedDto")));
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("map")));
     }
 
     @Test
@@ -83,12 +87,13 @@ class ClassFieldCacheTest {
         assertEquals(Long.class, result[0]);
     }
 
-    @Nullable
+    @NullUnmarked
     private class TestDto {
         private String string;
         private List<Long> list;
         private String property;
         private NestedDto nestedDto;
+        private Map<String, Long> map;
 
         public String getProperty() {
             return property;
@@ -99,7 +104,7 @@ class ClassFieldCacheTest {
         }
     }
 
-    @Nullable
+    @NullUnmarked
     private class NestedDto {
         private String string;
     }

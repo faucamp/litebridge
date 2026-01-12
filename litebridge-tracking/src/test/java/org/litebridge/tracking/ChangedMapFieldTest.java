@@ -62,6 +62,19 @@ class ChangedMapFieldTest {
     }
 
     @Test
+    void testEquals_false_mapSnapshotDiff() {
+        // Given
+        final ChangedMapField changedField1 = new ChangedMapField("testName", Map.of("testKey", "testValue"), Map.of("testKey", 123));
+        final ChangedMapField changedField2 = new ChangedMapField("testName", Map.of("testKey", "testValue"), Map.of("randomKey", 123));
+
+        // When
+        final boolean result = changedField1.equals(changedField2);
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
     void testEquals_false_nameDiff() {
         // Given
         final ChangedMapField changedField1 = new ChangedMapField("testName1", Map.of("testKey", "testValue"), Map.of("testKey", 123));
