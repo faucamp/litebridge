@@ -32,7 +32,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -78,15 +80,15 @@ class AbstractDatabaseProviderTest {
 
         final ResultSet pkResultSet = mock(ResultSet.class);
         when(pkResultSet.next()).thenReturn(true).thenReturn(false);
-        when(pkResultSet.getString("COLUMN_NAME")).thenReturn("TEST_COLUMN");
+        when(pkResultSet.getString("COLUMN_NAME")).thenReturn("TEST_PK");
         when(databaseMetaData.getPrimaryKeys(table.catalog(), table.schema(), table.name())).thenReturn(pkResultSet);
 
         final ResultSet columnResultSet = mock(ResultSet.class);
-        when(columnResultSet.next()).thenReturn(true).thenReturn(false);
-        when(columnResultSet.getString("COLUMN_NAME")).thenReturn("TEST_COLUMN");
-        when(columnResultSet.getBoolean("IS_NULLABLE")).thenReturn(Boolean.TRUE);
-        when(columnResultSet.getInt("DATA_TYPE")).thenReturn(Types.VARCHAR);
-        when(columnResultSet.getInt("COLUMN_SIZE")).thenReturn(10);
+        when(columnResultSet.next()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(columnResultSet.getString("COLUMN_NAME")).thenReturn("TEST_PK").thenReturn("TEST_COLUMN");
+        when(columnResultSet.getBoolean("IS_NULLABLE")).thenReturn(Boolean.TRUE).thenReturn(Boolean.FALSE);
+        when(columnResultSet.getInt("DATA_TYPE")).thenReturn(Types.VARCHAR).thenReturn(Types.VARCHAR);
+        when(columnResultSet.getInt("COLUMN_SIZE")).thenReturn(10).thenReturn(10);
         when(databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)).thenReturn(columnResultSet);
 
         // When
@@ -94,13 +96,21 @@ class AbstractDatabaseProviderTest {
 
         // Then
         assertNotNull(result);
+        assertEquals(2, result.columns().size());
+
+        assertEquals("TEST_PK", result.column("TEST_PK").name());
+        assertTrue(result.column("TEST_PK").isNullable());
+        assertEquals(Types.VARCHAR, result.column("TEST_PK").getDataType());
+        assertEquals(10, result.column("TEST_PK").getSize());
+
         assertEquals("TEST_COLUMN", result.column("TEST_COLUMN").name());
-        assertEquals(true, result.column("TEST_COLUMN").isNullable());
+        assertFalse(result.column("TEST_COLUMN").isNullable());
         assertEquals(Types.VARCHAR, result.column("TEST_COLUMN").getDataType());
         assertEquals(10, result.column("TEST_COLUMN").getSize());
+
         assertNotNull(result.primaryKey());
         assertEquals(1, result.primaryKey().size());
-        assertEquals("TEST_COLUMN", result.primaryKey().get(0).name());
+        assertEquals("TEST_PK", result.primaryKey().get(0).name());
         return result;
     }
 
@@ -108,7 +118,42 @@ class AbstractDatabaseProviderTest {
     void insert() throws Exception {
         // Given
         final TableMetaData table = getTableMetaDataImpl();
-        final ColumnMetaData column = new ColumnMetaData(table, "TEST_COLUMN", true, Types.VARCHAR, 10);
+        final ColumnMetaData column = table.column("TEST_COLUMN");
+        final ColumnValue columnValue1 = new ColumnValue(column, "testValue1");
+        final ColumnValue columnValue2 = new ColumnValue(column, "testValue2");
+        final RowValue rowValue1 = new RowValue(List.of(columnValue1));
+        final RowValue rowValue2 = new RowValue(List.of(columnValue2));
+
+        final Insert insert = new Insert(table, List.of(column), List.of(rowValue1, rowValue2));
+
+        when(typeConverter.convert("testValue1", Types.VARCHAR)).thenReturn("testValue1");
+        when(typeConverter.convert("testValue2", Types.VARCHAR)).thenReturn("testValue2");
+
+        final ResultSet resultSet = mock(ResultSet.class);
+        when(resultSet.next()).thenReturn(true).thenReturn(false);
+        when(resultSet.getObject(table.primaryKey().get(0).name())).thenReturn("testValue");
+
+        final PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(preparedStatement.executeUpdate()).thenReturn(1);
+        when(preparedStatement.getGeneratedKeys()).thenReturn(resultSet);
+        when(connection.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(preparedStatement);
+
+        // When
+        final InsertResult result = databaseProvider.insert(insert);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.rowsAffected());
+        assertNotNull(result.generatedKeys());
+        assertEquals(1, result.generatedKeys().size());
+        assertEquals("testValue", result.generatedKeys().get(0));
+    }
+
+    @Test
+    void insert_noSchema() throws Exception {
+        // Given
+        final TableMetaData table = getTableMetaDataImpl("");
+        final ColumnMetaData column = table.column("TEST_COLUMN");
         final ColumnValue columnValue = new ColumnValue(column, "testValue");
         final RowValue rowValue = new RowValue(List.of(columnValue));
 
@@ -141,11 +186,13 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData table = getTableMetaDataImpl();
         final ColumnMetaData column = new ColumnMetaData(table, "TEST_COLUMN", true, Types.VARCHAR, 10);
-        final ColumnValue columnValue = new ColumnValue(column, "testValue");
+        final ColumnValue columnValue1 = new ColumnValue(column, "testValue");
+        final ColumnValue columnValue2 = new ColumnValue(column, "testValue");
         final Condition condition1 = new Condition(column, Operator.EQ, "conditionValue");
         final Condition condition2 = new Condition(column, Operator.IS_NOT_NULL);
+        final Condition condition3 = new Condition(column, Operator.IS_NULL);
 
-        final Update update = new Update(table, List.of(columnValue), List.of(condition1, condition2));
+        final Update update = new Update(table, List.of(columnValue1, columnValue2), List.of(condition1, condition2, condition3));
 
         when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
 
