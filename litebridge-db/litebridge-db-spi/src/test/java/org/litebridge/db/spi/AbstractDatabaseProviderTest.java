@@ -157,7 +157,7 @@ class AbstractDatabaseProviderTest {
         final ColumnValue columnValue = new ColumnValue(column, "testValue");
         final RowValue rowValue = new RowValue(List.of(columnValue));
 
-        final Insert insert = new Insert(table, List.of(column), List.of(rowValue));
+        final Insert insert = new Insert(table, rowValue);
 
         when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
 
@@ -189,7 +189,7 @@ class AbstractDatabaseProviderTest {
         final ColumnValue columnValue = new ColumnValue(column, "testValue");
         final RowValue rowValue = new RowValue(List.of(columnValue));
 
-        final Insert insert = new Insert(table, List.of(column), List.of(rowValue));
+        final Insert insert = new Insert(table, List.of(rowValue));
 
         when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
 
