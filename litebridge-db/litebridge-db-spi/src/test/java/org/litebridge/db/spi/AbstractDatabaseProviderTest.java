@@ -9,6 +9,12 @@ import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.update.ColumnValue;
+import org.litebridge.db.spi.update.Insert;
+import org.litebridge.db.spi.update.InsertResult;
+import org.litebridge.db.spi.update.RowValue;
+import org.litebridge.db.spi.update.Update;
+import org.litebridge.db.spi.update.UpdateResult;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,13 +24,17 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -42,8 +52,16 @@ class AbstractDatabaseProviderTest {
 
     @Test
     void getTableMetaData() throws Exception {
+        getTableMetaDataImpl();
+    }
+
+    private TableMetaData getTableMetaDataImpl() throws SQLException {
+        return getTableMetaDataImpl("TEST_SCHEMA");
+    }
+
+    private TableMetaData getTableMetaDataImpl(final String schema) throws SQLException {
         // Given
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final Table table = new Table("TEST_CATALOG", schema, "TEST_TABLE");
 
         final DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
         when(connection.getMetaData()).thenReturn(databaseMetaData);
@@ -83,14 +101,86 @@ class AbstractDatabaseProviderTest {
         assertNotNull(result.primaryKey());
         assertEquals(1, result.primaryKey().size());
         assertEquals("TEST_COLUMN", result.primaryKey().get(0).name());
+        return result;
     }
 
     @Test
-    void insert() {
+    void insert() throws Exception {
+        // Given
+        final TableMetaData table = getTableMetaDataImpl();
+        final ColumnMetaData column = new ColumnMetaData(table, "TEST_COLUMN", true, Types.VARCHAR, 10);
+        final ColumnValue columnValue = new ColumnValue(column, "testValue");
+        final RowValue rowValue = new RowValue(List.of(columnValue));
+
+        final Insert insert = new Insert(table, List.of(column), List.of(rowValue));
+
+        when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
+
+        final ResultSet resultSet = mock(ResultSet.class);
+        when(resultSet.next()).thenReturn(true).thenReturn(false);
+        when(resultSet.getObject(table.primaryKey().get(0).name())).thenReturn("testValue");
+
+        final PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(preparedStatement.executeUpdate()).thenReturn(1);
+        when(preparedStatement.getGeneratedKeys()).thenReturn(resultSet);
+        when(connection.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(preparedStatement);
+
+        // When
+        final InsertResult result = databaseProvider.insert(insert);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.rowsAffected());
+        assertNotNull(result.generatedKeys());
+        assertEquals(1, result.generatedKeys().size());
+        assertEquals("testValue", result.generatedKeys().get(0));
     }
 
     @Test
-    void update() {
+    void update() throws Exception {
+        // Given
+        final TableMetaData table = getTableMetaDataImpl();
+        final ColumnMetaData column = new ColumnMetaData(table, "TEST_COLUMN", true, Types.VARCHAR, 10);
+        final ColumnValue columnValue = new ColumnValue(column, "testValue");
+        final Condition condition1 = new Condition(column, Operator.EQ, "conditionValue");
+        final Condition condition2 = new Condition(column, Operator.IS_NOT_NULL);
+
+        final Update update = new Update(table, List.of(columnValue), List.of(condition1, condition2));
+
+        when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
+
+        final PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(preparedStatement.executeUpdate()).thenReturn(1);
+        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
+
+        // When
+        final UpdateResult result = databaseProvider.update(update);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.rowsAffected());
+    }
+
+    @Test
+    void update_noSchema_noConditions() throws Exception {
+        // Given
+        final TableMetaData table = getTableMetaDataImpl("");
+        final ColumnMetaData column = new ColumnMetaData(table, "TEST_COLUMN", true, Types.VARCHAR, 10);
+        final ColumnValue columnValue = new ColumnValue(column, "testValue");
+
+        final Update update = new Update(table, List.of(columnValue), Collections.emptyList());
+
+        when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
+        final PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(preparedStatement.executeUpdate()).thenReturn(1);
+        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
+
+        // When
+        final UpdateResult result = databaseProvider.update(update);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.rowsAffected());
     }
 
     @Test
@@ -159,6 +249,126 @@ class AbstractDatabaseProviderTest {
         // Then
         assertNotNull(result);
         assertEquals("SELECT TEST_TABLE.TEST_COLUMN FROM TEST_SCHEMA.TEST_TABLE JOIN TEST_SCHEMA.TEST_TABLE ON TEST_COLUMN = ? WHERE TEST_COLUMN = ? ORDER BY TEST_COLUMN ASC LIMIT 10 OFFSET 20", result);
+    }
+
+    @Test
+    void mapOperator_eq() {
+        // Given
+        final Operator operator = Operator.EQ;
+
+        // When
+        final String result = databaseProvider.mapOperator(operator);
+
+        // Then
+        assertEquals("=", result);
+    }
+
+    @Test
+    void mapOperator_neq() {
+        // Given
+        final Operator operator = Operator.NEQ;
+
+        // When
+        final String result = databaseProvider.mapOperator(operator);
+
+        // Then
+        assertEquals("<>", result);
+    }
+
+    @Test
+    void mapOperator_gt() {
+        // Given
+        final Operator operator = Operator.GT;
+
+        // When
+        final String result = databaseProvider.mapOperator(operator);
+
+        // Then
+        assertEquals(">", result);
+    }
+
+    @Test
+    void mapOperator_gte() {
+        // Given
+        final Operator operator = Operator.GTE;
+
+        // When
+        final String result = databaseProvider.mapOperator(operator);
+
+        // Then
+        assertEquals(">=", result);
+    }
+
+    @Test
+    void mapOperator_lt() {
+        // Given
+        final Operator operator = Operator.LT;
+
+        // When
+        final String result = databaseProvider.mapOperator(operator);
+
+        // Then
+        assertEquals("<", result);
+    }
+
+    @Test
+    void mapOperator_lte() {
+        // Given
+        final Operator operator = Operator.LTE;
+
+        // When
+        final String result = databaseProvider.mapOperator(operator);
+
+        // Then
+        assertEquals("<=", result);
+    }
+
+    @Test
+    void mapOperator_in() {
+        // Given
+        final Operator operator = Operator.IN;
+
+        // When
+        final String result = databaseProvider.mapOperator(operator);
+
+        // Then
+        assertEquals("IN", result);
+    }
+
+    @Test
+    void mapOperator_isNull() {
+        // Given
+        final Operator operator = Operator.IS_NULL;
+
+        // When
+        final String result = databaseProvider.mapOperator(operator);
+
+        // Then
+        assertEquals("IS NULL", result);
+    }
+
+    @Test
+    void mapOperator_isNotNull() {
+        // Given
+        final Operator operator = Operator.IS_NOT_NULL;
+
+        // When
+        final String result = databaseProvider.mapOperator(operator);
+
+        // Then
+        assertEquals("IS NOT NULL", result);
+    }
+
+    @Test
+    void mapOperator_using() {
+        // Given
+        final Operator operator = Operator.USING;
+
+        // When
+        final String result = databaseProvider.mapOperator(operator);
+
+        // Then
+        assertEquals("USING", result);
     }
 
     private static class TestDatabaseProvider extends AbstractDatabaseProvider {

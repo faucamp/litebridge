@@ -285,7 +285,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 }
 
                 sql.append(createCondition(condition));
-                bindValues.add(new BindValue(condition.value(), ((ColumnMetaData) condition.column()).getDataType()));
+
+                if (condition.value() != null) {
+                    bindValues.add(new BindValue(condition.value(), ((ColumnMetaData) condition.column()).getDataType()));
+                }
             }
         }
 
@@ -558,7 +561,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return new PreparedRow(valueSpecifiers, bindValues);
     }
 
-    protected record BindValue(Object value, int sqlDataType) {
+    protected record BindValue(@Nullable Object value, int sqlDataType) {
     }
 
     protected record PreparedSql(String sql, List<@Nullable BindValue> bindValues) {
