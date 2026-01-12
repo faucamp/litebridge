@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -136,18 +137,6 @@ class ClassUtilsTest {
     }
 
     @Test
-    void isBasicType_int() {
-        // Given
-        final Field ageField = ClassUtils.getField(TestDto.class, "age");
-
-        // When
-        final boolean result = ClassUtils.isBasicType(ageField.getType());
-
-        // Then
-        assertTrue(result);
-    }
-
-    @Test
     void isBasicType_Long() {
         // Given
         final Long object = Long.valueOf(1);
@@ -226,6 +215,63 @@ class ClassUtilsTest {
 
         // Then
         assertTrue(result);
+    }
+
+    @Test
+    void isBasicType_int() {
+        // When
+        final boolean result = ClassUtils.isBasicType(int.class);
+
+        // Then
+        assertTrue(result);
+    }
+
+    @Test
+    void isBasicType_long() {
+        // When
+        final boolean result = ClassUtils.isBasicType(long.class);
+
+        // Then
+        assertTrue(result);
+    }
+
+    @Test
+    void isBasicType_double() {
+        // When
+        final boolean result = ClassUtils.isBasicType(double.class);
+
+        // Then
+        assertTrue(result);
+    }
+
+    @Test
+    void isBasicType_float() {
+        // When
+        final boolean result = ClassUtils.isBasicType(float.class);
+
+        // Then
+        assertTrue(result);
+    }
+
+    @Test
+    void isBasicType_byte() {
+        // When
+        final boolean result = ClassUtils.isBasicType(byte.class);
+
+        // Then
+        assertTrue(result);
+    }
+
+    @Test
+    void isBasicType_false() {
+        // Given
+        final Object object = new Object();
+
+        // When
+        final boolean result = ClassUtils.isBasicType(object.getClass());
+
+        // Then
+        assertFalse(result);
     }
 
     @Test
