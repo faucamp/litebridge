@@ -1,6 +1,6 @@
 package org.litebridge.tracking;
 
-import org.jspecify.annotations.Nullable;
+import org.jspecify.annotations.NullUnmarked;
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.ClassUtils;
 
@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -22,7 +24,7 @@ class TrackedDtoTest {
     void dto() {
         // Given
         final TestDto testDto = new TestDto();
-        final TrackedDto<TestDto> trackedDto = new TrackedDto(testDto, dto -> fail());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, dto -> fail());
 
         // When
         final TestDto result = trackedDto.dto();
@@ -67,7 +69,7 @@ class TrackedDtoTest {
         final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class).stream()
                 .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
                 .toList();
-        final TrackedDto<TestDto> trackedDto = new TrackedDto(testDto, fieldAccessors, consumer);
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors, consumer);
 
         // When 1
         trackedDto.snapshot(true);
@@ -93,7 +95,7 @@ class TrackedDtoTest {
         testDto.string = "value1";
 
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "string"));
-        final TrackedDto<TestDto> trackedDto = new TrackedDto(testDto, List.of(fieldAccessor), dto -> fail());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, List.of(fieldAccessor), dto -> fail());
 
 
         // When/Then
@@ -108,7 +110,7 @@ class TrackedDtoTest {
         testDto.string = "value1";
 
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "string"));
-        final TrackedDto<TestDto> trackedDto = new TrackedDto(testDto, List.of(fieldAccessor), dto -> fail());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, List.of(fieldAccessor), dto -> fail());
 
         // When
         trackedDto.snapshotEmpty();
@@ -153,7 +155,7 @@ class TrackedDtoTest {
         final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class).stream()
                 .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
                 .toList();
-        final TrackedDto<TestDto> trackedDto = new TrackedDto(testDto, fieldAccessors, consumer);
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors, consumer);
         trackedDto.snapshot(false);
 
         // When 1
@@ -180,10 +182,59 @@ class TrackedDtoTest {
     }
 
     @Test
+    void changedFields_noChanges() {
+        // Given
+        final TestDto testDto = new TestDto();
+
+        final Consumer<Object> consumer = dto -> {
+            // do nothing
+        };
+
+        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class).stream()
+                .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
+                .toList();
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors, consumer);
+        trackedDto.snapshot(false);
+
+        // When
+        final ChangedFields changedFields = trackedDto.changedFields();
+
+        // Then
+        assertTrue(changedFields.isEmpty());
+    }
+
+    @Test
+    void changedFields_nestedDtoToNull() {
+        // Given
+        final TestDto testDto = new TestDto();
+        testDto.nestedDto = new NestedDto();
+
+        final Consumer<Object> consumer = dto -> {
+            // do nothing
+        };
+
+        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class).stream()
+                .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
+                .toList();
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors, consumer);
+        trackedDto.snapshot(false);
+
+        // When
+        testDto.nestedDto = null;
+        final ChangedFields changedFields = trackedDto.changedFields();
+
+        // Then
+        assertFalse(changedFields.isEmpty());
+        assertEquals(1, changedFields.size());
+        assertTrue(changedFields.contains("nestedDto"));
+        assertNull(changedFields.get("nestedDto").orElseThrow().value());
+    }
+
+    @Test
     void changedFields_noSnapshots() {
         // Given
         final TestDto testDto = new TestDto();
-        final TrackedDto<TestDto> trackedDto = new TrackedDto(testDto, dto -> fail());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, dto -> fail());
         final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class).stream()
                 .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
                 .toList();
@@ -196,7 +247,7 @@ class TrackedDtoTest {
     void changedFields_refresh_noSnapshots() {
         // Given
         final TestDto testDto = new TestDto();
-        final TrackedDto<TestDto> trackedDto = new TrackedDto(testDto, dto -> fail());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, dto -> fail());
         final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class).stream()
                 .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
                 .toList();
@@ -205,24 +256,22 @@ class TrackedDtoTest {
         assertThrows(IllegalStateException.class, () -> trackedDto.changedFields(true));
     }
 
-    @Nullable
-    private class TestDto {
+    @NullUnmarked
+    private static class TestDto {
         private String string;
         private NestedDto nestedDto;
         private NestedDto nullNestedDto = null;
         private Map<String, Long> map;
         private Map<?, ?> emptyMap = Collections.emptyMap();
-        @Nullable
         private Map<String, NestedDto> nestedDtoMap;
         private Map<NestedDto, Long> nestedDtoKeyMap;
         private List<String> list;
         private List<?> emptyList = Collections.emptyList();
-        @Nullable
         private List<NestedDto> nestedDtoList;
     }
 
-    @Nullable
-    private class NestedDto {
+    @NullUnmarked
+    private static class NestedDto {
         private String string;
     }
 }
