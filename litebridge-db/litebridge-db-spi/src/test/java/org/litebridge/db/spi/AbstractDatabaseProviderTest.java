@@ -119,15 +119,16 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData table = getTableMetaDataImpl();
         final ColumnMetaData column = table.column("TEST_COLUMN");
+        column.setSequence("TEST_SEQUENCE");
         final ColumnValue columnValue1 = new ColumnValue(column, "testValue1");
-        final ColumnValue columnValue2 = new ColumnValue(column, "testValue2");
+        final ColumnValue columnValue2 = new ColumnValue(column, null);
         final RowValue rowValue1 = new RowValue(List.of(columnValue1));
         final RowValue rowValue2 = new RowValue(List.of(columnValue2));
 
         final Insert insert = new Insert(table, List.of(column), List.of(rowValue1, rowValue2));
 
         when(typeConverter.convert("testValue1", Types.VARCHAR)).thenReturn("testValue1");
-        when(typeConverter.convert("testValue2", Types.VARCHAR)).thenReturn("testValue2");
+        //when(typeConverter.convert("", Types.VARCHAR)).thenReturn("testValue2");
 
         final ResultSet resultSet = mock(ResultSet.class);
         when(resultSet.next()).thenReturn(true).thenReturn(false);
@@ -289,14 +290,16 @@ class AbstractDatabaseProviderTest {
     @Test
     void select() throws Exception {
         // Given
-        getTableMetaData();
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        final Column column = new Column(table, "TEST_COLUMN");
+        final TableMetaData table = getTableMetaDataImpl();
+        final ColumnMetaData column = table.column("TEST_COLUMN");
+        //final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        //final Column column = new Column(table, "TEST_COLUMN");
 
         final Select select = new Select(
                 table,
                 List.of(column),
-                List.of(new Join(table, List.of(new Condition(column, Operator.EQ, "TEST_VALUE")))),
+                List.of(new Join(table, List.of(new Condition(column, Operator.USING, null),
+                        new Condition(column, Operator.EQ, "TEST_VALUE")))),
                 List.of(new OrderBy(column.name(), true)),
                 List.of(new Condition(column, Operator.EQ, "TEST_VALUE")),
                 Optional.of(new Limit(Optional.of(10), Optional.of(20))));
@@ -334,15 +337,18 @@ class AbstractDatabaseProviderTest {
     @Test
     void toSql() throws Exception {
         // Given
-        final TableMetaData table = getTableMetaDataImpl();
-        final Column column = table.column("TEST_COLUMN");
+        final TableMetaData table = getTableMetaDataImpl().as("t1");
+        final Column column1 = table.column("TEST_PK").as("col1");
+        column1.table().setAlias("t1");
+        final Column column2 = table.column("TEST_COLUMN").as("col2");
+        column2.table().setAlias("t1");
 
         final Select select = new Select(
                 table,
-                List.of(column),
-                List.of(new Join(table, List.of(new Condition(column, Operator.EQ, "TEST_VALUE")))),
-                List.of(new OrderBy(column.name(), true)),
-                List.of(new Condition(column, Operator.EQ, "TEST_VALUE")),
+                List.of(column1, column2),
+                List.of(new Join(table, List.of(new Condition(column2, Operator.EQ, "TEST_VALUE")))),
+                List.of(new OrderBy(column1.name(), true)),
+                List.of(new Condition(column2, Operator.EQ, "TEST_VALUE")),
                 Optional.of(new Limit(Optional.of(10), Optional.of(20))));
 
         // When
@@ -350,7 +356,7 @@ class AbstractDatabaseProviderTest {
 
         // Then
         assertNotNull(result);
-        assertEquals("SELECT TEST_TABLE.TEST_COLUMN FROM TEST_SCHEMA.TEST_TABLE JOIN TEST_SCHEMA.TEST_TABLE ON TEST_COLUMN = ? WHERE TEST_COLUMN = ? ORDER BY TEST_COLUMN ASC LIMIT 10 OFFSET 20", result);
+        assertEquals("SELECT t1.TEST_PK AS col1, t1.TEST_COLUMN AS col2 FROM TEST_SCHEMA.TEST_TABLE AS t1 JOIN TEST_SCHEMA.TEST_TABLE AS t1 ON t1.TEST_COLUMN = ? WHERE t1.TEST_COLUMN = ? ORDER BY TEST_PK ASC LIMIT 10 OFFSET 20", result);
     }
 
     @Test

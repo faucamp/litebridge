@@ -56,6 +56,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     private TableMetaData ensureTableMetaData(final Table table) throws SQLException {
+        if (table instanceof TableMetaData tableMetaData) {
+            return tableMetaData;
+        }
+
         TableMetaData tableMetaData = this.tableMetaDataCache.get(table);
 
         if (tableMetaData == null) {
