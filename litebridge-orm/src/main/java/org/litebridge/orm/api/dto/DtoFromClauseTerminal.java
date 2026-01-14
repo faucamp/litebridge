@@ -4,7 +4,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
-import org.litebridge.orm.persistence.Table;
+import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -20,7 +20,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
         implements DtoJoinClassTerminal<DTO> {
 
-    private final Table table;
+    private final OrmTable table;
 
     public DtoFromClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);

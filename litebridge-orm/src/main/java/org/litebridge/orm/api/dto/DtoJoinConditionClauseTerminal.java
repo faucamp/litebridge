@@ -6,7 +6,7 @@ import org.litebridge.orm.api.select.JoinClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
-import org.litebridge.orm.persistence.Table;
+import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -29,7 +29,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
         DtoJoinClassTerminal<DTO> {
 
-    private final Table table;
+    private final OrmTable table;
 
     public DtoJoinConditionClauseTerminal(final JoinSpec joinSpec, final DtoSelector<DTO> delegate) {
         super(joinSpec, delegate);

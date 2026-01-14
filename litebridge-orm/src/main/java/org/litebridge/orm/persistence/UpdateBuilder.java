@@ -16,7 +16,7 @@ final class UpdateBuilder extends AbstractStatementBuilder<Update> {
     private List<ColumnValue> columnValues;
     private List<Condition> conditions = new ArrayList<>();
 
-    public UpdateBuilder(final Table table) {
+    public UpdateBuilder(final OrmTable table) {
         super(table);
     }
 

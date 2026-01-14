@@ -5,7 +5,7 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
-import org.litebridge.orm.persistence.Table;
+import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.Arrays;
 
@@ -20,7 +20,7 @@ public final class DtoWhereConditionClauseTerminal<DTO>
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 
-    private final Table table;
+    private final OrmTable table;
 
     public DtoWhereConditionClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);

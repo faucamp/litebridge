@@ -9,7 +9,7 @@ final class InsertBuilder extends AbstractStatementBuilder<Insert> {
 
     private final List<DtoRowValue> rows = new ArrayList<>();
 
-    public InsertBuilder(final Table table) {
+    public InsertBuilder(final OrmTable table) {
         super(table);
     }
 

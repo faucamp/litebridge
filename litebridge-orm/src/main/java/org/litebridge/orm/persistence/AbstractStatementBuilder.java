@@ -5,10 +5,10 @@ import org.litebridge.db.spi.update.UpdateStatement;
 abstract sealed class AbstractStatementBuilder<US extends UpdateStatement>
         permits InsertBuilder, UpdateBuilder {
 
-    protected final Table table;
+    protected final OrmTable table;
     private final StatementChain statementChain = new StatementChain();
 
-    protected AbstractStatementBuilder(final Table table) {
+    protected AbstractStatementBuilder(final OrmTable table) {
         this.table = table;
     }
 

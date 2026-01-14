@@ -2,7 +2,6 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.NullMarked;
 import org.litebridge.commons.ObjectUtils;
-import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.tracking.ChangeTracker;
@@ -10,14 +9,12 @@ import org.litebridge.tracking.FieldAccessor;
 import org.litebridge.tracking.FieldAccessorChain;
 import org.litebridge.tracking.TrackedDto;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @NullMarked
-public class Table {
+public class OrmTable {
 
     private TableMetaData metaData;
     private final Map<FieldAccessor, ColumnMetaData> fieldColumnMap;
@@ -29,7 +26,7 @@ public class Table {
 
     private final WeakRefSet<Object> persistedDtos = new WeakRefSet<>();
 
-    public Table(final TableMetaData metaData, final Map<FieldAccessor, ColumnMetaData> fieldColumnMap, final ChangeTracker changeTracker) {
+    public OrmTable(final TableMetaData metaData, final Map<FieldAccessor, ColumnMetaData> fieldColumnMap, final ChangeTracker changeTracker) {
         this.metaData = metaData;
         this.fieldColumnMap = fieldColumnMap;
         this.changeTracker = changeTracker;

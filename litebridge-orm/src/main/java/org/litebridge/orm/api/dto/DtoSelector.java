@@ -1,6 +1,5 @@
 package org.litebridge.orm.api.dto;
 
-import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
@@ -12,11 +11,9 @@ import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.DtoAliasRegistry;
 import org.litebridge.orm.persistence.DtoMapper;
-import org.litebridge.orm.persistence.Table;
+import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.ClassFieldCache;
-import org.litebridge.tracking.FieldAccessor;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -24,12 +21,12 @@ import java.util.stream.Stream;
 
 public final class DtoSelector<DTO> extends AbstractSelector<DTO> {
 
-    private final Table table;
+    private final OrmTable table;
     private final TableRegistry tableRegistry;
     private final DtoAliasRegistry dtoAliasRegistry;
 
     public DtoSelector(final Class<DTO> dtoClass,
-                       final Table table,
+                       final OrmTable table,
                        final TableRegistry tableRegistry,
                        final DatabaseProvider databaseProvider,
                        final DtoMapper dtoMapper,
@@ -80,7 +77,7 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO> {
         return new DtoFromClauseTerminal<>(this);
     }
 
-    Table table() {
+    OrmTable table() {
         return table;
     }
 
@@ -91,7 +88,7 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO> {
             throw new IllegalStateException("No join column specified for nested DTO '%s' in field '%s' of DTO '%s'".formatted(nestedDtoField.getType().getName(), nestedDtoField.getName(), dtoClass.getName()));
         }
 
-        final Table joinTable = tableRegistry.getTableOrThrow(nestedDtoField.getType());
+        final OrmTable joinTable = tableRegistry.getTableOrThrow(nestedDtoField.getType());
         final ColumnMetaData targetColumn = joinTable.getColumn(joinColumn.getJoinColumn());
         final String joinAlias = dtoAliasRegistry.alias(joinTable.getMetaData());
 

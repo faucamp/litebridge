@@ -3,13 +3,13 @@ package org.litebridge.orm.api.dto;
 import org.litebridge.db.spi.Column;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
 import org.litebridge.orm.api.select.model.JoinSpec;
-import org.litebridge.orm.persistence.Table;
+import org.litebridge.orm.persistence.OrmTable;
 
 public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         DtoJoinConditionClause<DTO>,
         DtoJoinConditionClauseTerminal<DTO>> {
 
-    private final Table table;
+    private final OrmTable table;
 
     public DtoJoinClause(final JoinSpec joinSpec, final DtoSelector<DTO> delegate) {
         super(joinSpec, delegate);

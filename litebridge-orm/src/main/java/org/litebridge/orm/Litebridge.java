@@ -22,7 +22,7 @@ import org.litebridge.orm.persistence.DtoIntrospector;
 import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.tracking.FieldAccessor;
 import org.litebridge.orm.persistence.PersistenceFacade;
-import org.litebridge.orm.persistence.Table;
+import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ChangeTracker;
 
@@ -56,7 +56,7 @@ public class Litebridge {
             throw new IllegalArgumentException("DTO cannot be null");
         }
 
-        final Table table = tableRegistry.getTable(dto.getClass());
+        final OrmTable table = tableRegistry.getTable(dto.getClass());
 
         if (table == null) {
             throw new IllegalArgumentException("DTO class not registered: '%s'".formatted(dto.getClass().getName()));
@@ -83,7 +83,7 @@ public class Litebridge {
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass) {
-        final Table table = tableRegistry.getTableOrThrow(dtoClass);
+        final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
         final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, databaseProvider.getTypeConverter(), dtoAliasRegistry);
         return new DtoSelector<>(dtoClass, table, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry).select();
@@ -101,7 +101,7 @@ public class Litebridge {
         return new SqlSelector(databaseProvider, tableRegistry).select(ALL_COLUMNS);
     }
 
-    private Table mapToTable(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
+    private OrmTable mapToTable(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
         // Up-front validation
         if (dtoClass == null) {
             throw new IllegalArgumentException("DTO class cannot be null");
@@ -115,7 +115,7 @@ public class Litebridge {
         final TableMetaData tableMetaData = databaseProvider.getTableMetaData(tableSpec);
 
         final Map<FieldAccessor, ColumnMetaData> columnMap = mapFields(dtoClass, tableMetaData, tableSpec.fieldColumnSpecMap());
-        return new Table(tableMetaData, columnMap, changeTracker);
+        return new OrmTable(tableMetaData, columnMap, changeTracker);
     }
 
     private Map<FieldAccessor, ColumnMetaData> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<FieldSpec, ColumnSpec> fieldColumnSpecMap) {

@@ -3,7 +3,7 @@ package org.litebridge.orm.api.dto;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.orm.api.select.OrderByClauseChain;
 import org.litebridge.orm.api.select.impl.OrderByClauseTerminalImpl;
-import org.litebridge.orm.persistence.Table;
+import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.Arrays;
 
@@ -11,7 +11,7 @@ public final class DtoOrderByClauseChain<DTO>
         extends OrderByClauseTerminalImpl<DTO>
         implements OrderByClauseChain<DTO, DtoOrderByClause<DTO>, DtoOrderByClauseChain<DTO>> {
 
-    private final Table table;
+    private final OrmTable table;
 
     public DtoOrderByClauseChain(final DtoSelector<DTO> delegate) {
         super(delegate);

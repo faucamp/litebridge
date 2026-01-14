@@ -10,19 +10,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class TableRegistry {
 
-    private final Map<Class<?>, Table> dtoTableMap = new ConcurrentHashMap<>();
-    private final Map<String, Map<String, Table>> schemaTableMap = new ConcurrentHashMap<>();
+    private final Map<Class<?>, OrmTable> dtoTableMap = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, OrmTable>> schemaTableMap = new ConcurrentHashMap<>();
 
-    public @Nullable Table getTable(final Class<?> dtoClass) {
+    public @Nullable OrmTable getTable(final Class<?> dtoClass) {
         ObjectUtils.requireNonNull(dtoClass, "DTO class cannot be null");
         return dtoTableMap.get(dtoClass);
     }
 
-    public Table getTableOrThrow(final Class<?> dtoClass) throws IllegalArgumentException {
+    public OrmTable getTableOrThrow(final Class<?> dtoClass) throws IllegalArgumentException {
         return ObjectUtils.requireNonNull(getTable(dtoClass), "DTO class not registered: '%s'".formatted(dtoClass.getName()));
     }
 
-    public @Nullable Table getTable(final String schema, final String table) {
+    public @Nullable OrmTable getTable(final String schema, final String table) {
         return schemaTableMap.getOrDefault(schema, Collections.emptyMap())
                 .get(table);
     }
@@ -31,7 +31,7 @@ public final class TableRegistry {
         return dtoTableMap.containsKey(dtoClass);
     }
 
-    public void addTable(final Class<?> dtoClass, final Table table) {
+    public void addTable(final Class<?> dtoClass, final OrmTable table) {
         dtoTableMap.put(dtoClass, table);
         schemaTableMap.computeIfAbsent(table.getMetaData().schema(), k -> new ConcurrentHashMap<>())
                 .put(table.getMetaData().name(), table);
@@ -40,7 +40,7 @@ public final class TableRegistry {
     public org.litebridge.db.spi.Table getOrCreateSpiTable(final String schema, final String table) {
         // If the table has been registered for DTO mapping, use the corresponding Table object, else use the table name directly
         final org.litebridge.db.spi.Table spiTable;
-        final Table tableImpl = getTable(schema, table);
+        final OrmTable tableImpl = getTable(schema, table);
 
         if (tableImpl != null && Objects.equals(schema, tableImpl.getMetaData().schema())) {
             spiTable = tableImpl.getMetaData();

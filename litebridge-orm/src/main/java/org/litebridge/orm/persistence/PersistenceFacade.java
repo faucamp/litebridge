@@ -57,19 +57,19 @@ public class PersistenceFacade {
         }
     }
 
-    private InsertBuilder createInsertBuilder(final Object dto, final Table table) {
+    private InsertBuilder createInsertBuilder(final Object dto, final OrmTable table) {
         final InsertBuilder insertBuilder = new InsertBuilder(table);
         prepareUpdateStatement(dto, table, insertBuilder);
         return insertBuilder;
     }
 
-    private UpdateBuilder createUpdateBuilder(final Object dto, final Table table) {
+    private UpdateBuilder createUpdateBuilder(final Object dto, final OrmTable table) {
         final UpdateBuilder updateBuilder = new UpdateBuilder(table);
         prepareUpdateStatement(dto, table, updateBuilder);
         return updateBuilder;
     }
 
-    private <DTO> @Nullable StatementChain prepareUpdateStatement(final DTO dto, final Table table, final AbstractStatementBuilder<?> statementBuilder) {
+    private <DTO> @Nullable StatementChain prepareUpdateStatement(final DTO dto, final OrmTable table, final AbstractStatementBuilder<?> statementBuilder) {
         final TrackedDto<?> trackedDto = table.getTrackedDto(dto);
         final ChangedFields changedFields = trackedDto.changedFields();
 
@@ -110,7 +110,7 @@ public class PersistenceFacade {
                 columnValues.add(new ColumnValue(column, value));
             } else {
                 // Dealing with an embedded DTO
-                final Table embeddedDtoTable = tableRegistry.getTableOrThrow(value.getClass());
+                final OrmTable embeddedDtoTable = tableRegistry.getTableOrThrow(value.getClass());
 
                 if (!embeddedDtoTable.isPersistedDto(value)) {
                     // Cascade save to the embedded DTO
@@ -167,7 +167,7 @@ public class PersistenceFacade {
     }
 
     private void updateDtoPrimaryKey(final Object dto, final Object generatedKey) {
-        final Table embeddedDtoTable = tableRegistry.getTableOrThrow(dto.getClass());
+        final OrmTable embeddedDtoTable = tableRegistry.getTableOrThrow(dto.getClass());
         final List<ColumnMetaData> embeddedDtoPk = embeddedDtoTable.getMetaData().primaryKey();
         // TODO: composite PK support
         final ColumnMetaData pkColumn = embeddedDtoPk.get(0);
@@ -178,7 +178,7 @@ public class PersistenceFacade {
     }
 
     private AbstractStatementBuilder<?> createStatementBuilder(final Object dto) {
-        final Table table = tableRegistry.getTableOrThrow(dto.getClass());
+        final OrmTable table = tableRegistry.getTableOrThrow(dto.getClass());
 
         if (table.isPersistedDto(dto)) {
             return createUpdateBuilder(dto, table);

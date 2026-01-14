@@ -33,7 +33,7 @@ public final class DefaultDtoMapper implements DtoMapper {
             return null;
         }
 
-        final Table table = tableRegistry.getTableOrThrow(dtoClass);
+        final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
 
         // Extract the primary key and re-use already-created DTOs if possible
         final Object[] primaryKeyValues = table.getMetaData().primaryKey().stream()
@@ -61,7 +61,7 @@ public final class DefaultDtoMapper implements DtoMapper {
 
     private <DTO> DTO createDto(final Class<DTO> dtoClass,
                                 final Row row,
-                                final Table table,
+                                final OrmTable table,
                                 final @Nullable String tableAlias,
                                 final @Nullable DtoCache dtoCache,
                                 final Set<Row.RowColumn> mappedColumns) {
