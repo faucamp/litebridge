@@ -19,6 +19,8 @@ import org.litebridge.db.spi.update.UpdateResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -367,7 +369,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     protected InsertResult executeSqlInsert(final PreparedSql preparedSql, final TableMetaData tableMetaData) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, tableMetaData, true)) {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, true)) {
             final int affectedRows = preparedStatement.executeUpdate();
 
             if (affectedRows > 0) {
@@ -391,7 +393,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     protected UpdateResult executeSqlUpdate(final PreparedSql preparedSql, final TableMetaData tableMetaData) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, tableMetaData, false)) {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false)) {
             final int affectedRows = preparedStatement.executeUpdate();
             return new UpdateResult(affectedRows);
         }
@@ -408,7 +410,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 })
                 .toList();
 
-        try (final PreparedStatement preparedStatement = prepareStatement(new PreparedSql(sql, bindValues), fromTable, false)) {
+        try (final PreparedStatement preparedStatement = prepareStatement(new PreparedSql(sql, bindValues), false)) {
             // Execute SQL query
             final ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -498,7 +500,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
-    protected PreparedStatement prepareStatement(final PreparedSql preparedSql, final TableMetaData tableMetaData, final boolean returnGeneratedKeys) throws SQLException {
+    protected PreparedStatement prepareStatement(final PreparedSql preparedSql, final boolean returnGeneratedKeys) throws SQLException {
         if (LOGGER.isTraceEnabled() && !CollectionUtils.isEmpty(preparedSql.bindValues)) {
             LOGGER.trace("Generated SQL: {} with bind parameters: {}", preparedSql.sql(), preparedSql.bindValues.stream().map(BindValue::value).toList());
         } else {
@@ -520,16 +522,22 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 if (bindValue == null) {
                     preparedStatement.setString(ordinal[0]++, null);
                     continue;
+                } else if (bindValue.value() == null) {
+                    preparedStatement.setNull(ordinal[0]++, bindValue.sqlDataType());
+                    continue;
                 }
 
-                switch (bindValue.value) {
+                switch (bindValue.value()) {
                     case Integer integer -> preparedStatement.setInt(ordinal[0]++, integer);
                     case Long longValue -> preparedStatement.setLong(ordinal[0]++, longValue);
                     case Short shortValue -> preparedStatement.setShort(ordinal[0]++, shortValue);
+                    case Double doubleValue -> preparedStatement.setDouble(ordinal[0]++, doubleValue);
+                    case Float floatValue -> preparedStatement.setFloat(ordinal[0]++, floatValue);
+                    case BigDecimal bigDecimal -> preparedStatement.setBigDecimal(ordinal[0]++, bigDecimal);
                     case Boolean bool -> preparedStatement.setBoolean(ordinal[0]++, bool);
                     case String string -> preparedStatement.setString(ordinal[0]++, string);
                     case Timestamp timestamp -> preparedStatement.setTimestamp(ordinal[0]++, timestamp);
-                    default -> preparedStatement.setObject(ordinal[0]++, bindValue, bindValue.sqlDataType());
+                    default -> preparedStatement.setObject(ordinal[0]++, bindValue.value(), bindValue.sqlDataType());
                 }
             }
         }

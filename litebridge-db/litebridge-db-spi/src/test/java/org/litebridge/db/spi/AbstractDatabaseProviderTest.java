@@ -19,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -26,6 +27,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -348,7 +351,8 @@ class AbstractDatabaseProviderTest {
                 List.of(column1, column2),
                 List.of(new Join(table, List.of(new Condition(column2, Operator.EQ, "TEST_VALUE")))),
                 List.of(new OrderBy(column1.name(), true)),
-                List.of(new Condition(column2, Operator.EQ, "TEST_VALUE")),
+                List.of(new Condition(column2, Operator.EQ, "TEST_VALUE"),
+                        new Condition(column2, Operator.NEQ, "OTHER_VALUE")),
                 Optional.of(new Limit(Optional.of(10), Optional.of(20))));
 
         // When
@@ -356,7 +360,7 @@ class AbstractDatabaseProviderTest {
 
         // Then
         assertNotNull(result);
-        assertEquals("SELECT t1.TEST_PK AS col1, t1.TEST_COLUMN AS col2 FROM TEST_SCHEMA.TEST_TABLE AS t1 JOIN TEST_SCHEMA.TEST_TABLE AS t1 ON t1.TEST_COLUMN = ? WHERE t1.TEST_COLUMN = ? ORDER BY TEST_PK ASC LIMIT 10 OFFSET 20", result);
+        assertEquals("SELECT t1.TEST_PK AS col1, t1.TEST_COLUMN AS col2 FROM TEST_SCHEMA.TEST_TABLE AS t1 JOIN TEST_SCHEMA.TEST_TABLE AS t1 ON t1.TEST_COLUMN = ? WHERE t1.TEST_COLUMN = ? AND t1.TEST_COLUMN <> ? ORDER BY TEST_PK ASC LIMIT 10 OFFSET 20", result);
     }
 
     @Test
@@ -519,6 +523,50 @@ class AbstractDatabaseProviderTest {
         // Then
         assertNotNull(result);
         assertEquals("TEST_COLUMN IS NOT NULL", result);
+    }
+
+    @Test
+    void prepareStatement() throws Exception {
+        // Given
+        final Object objectVal = new Object();
+        final List<AbstractDatabaseProvider.BindValue> bindValues = List.of(
+                new AbstractDatabaseProvider.BindValue(123, Types.INTEGER),
+                new AbstractDatabaseProvider.BindValue(12345L, Types.BIGINT),
+                new AbstractDatabaseProvider.BindValue((short) 3, Types.SMALLINT),
+                new AbstractDatabaseProvider.BindValue(123.45D, Types.DOUBLE),
+                new AbstractDatabaseProvider.BindValue(123.45F, Types.FLOAT),
+                new AbstractDatabaseProvider.BindValue(BigDecimal.valueOf(234L), Types.DECIMAL),
+                new AbstractDatabaseProvider.BindValue(true, Types.BOOLEAN),
+                new AbstractDatabaseProvider.BindValue("Hello World!", Types.VARCHAR),
+                new AbstractDatabaseProvider.BindValue(Timestamp.valueOf("2021-01-01 00:00:00"), Types.TIMESTAMP),
+                new AbstractDatabaseProvider.BindValue(null, Types.NUMERIC),
+                new AbstractDatabaseProvider.BindValue(objectVal, Types.OTHER)
+        );
+        final AbstractDatabaseProvider.PreparedSql preparedSql = new AbstractDatabaseProvider.PreparedSql("SELECT * FROM TEST_TABLE", bindValues);
+
+        final PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(connection.prepareStatement(preparedSql.sql())).thenReturn(preparedStatement);
+
+        // When
+        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, false);
+
+        // Then
+        verify(result).setInt(1, 123);
+        verify(result).setLong(2, 12345L);
+        verify(result).setShort(3, (short) 3);
+        verify(result).setDouble(4, 123.45D);
+        verify(result).setFloat(5, 123.45F);
+        verify(result).setBigDecimal(6, BigDecimal.valueOf(234L));
+        verify(result).setBoolean(7, true);
+        verify(result).setString(8, "Hello World!");
+        verify(result).setTimestamp(9, Timestamp.valueOf("2021-01-01 00:00:00"));
+        verify(result).setNull(10, Types.NUMERIC);
+        verify(result).setObject(11, objectVal, Types.OTHER);
+    }
+
+    @Test
+    void getLogger() {
+        assertNotNull(databaseProvider.getLogger());
     }
 
     private static class TestDatabaseProvider extends AbstractDatabaseProvider {
