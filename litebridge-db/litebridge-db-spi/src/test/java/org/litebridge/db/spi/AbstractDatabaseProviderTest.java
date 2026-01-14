@@ -36,6 +36,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -239,6 +240,20 @@ class AbstractDatabaseProviderTest {
         assertEquals(1, result.rowsAffected());
         assertNotNull(result.generatedKeys());
         assertTrue(result.generatedKeys().isEmpty());
+    }
+
+    @Test
+    void insert_nullValue_notNullColumn() throws Exception {
+        // Given
+        final TableMetaData table = getTableMetaDataImpl();
+        final ColumnMetaData column = table.column("TEST_COLUMN");
+        final ColumnValue columnValue = new ColumnValue(column, null);
+        final RowValue rowValue = new RowValue(List.of(columnValue));
+
+        final Insert insert = new Insert(table, List.of(column), List.of(rowValue));
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> databaseProvider.insert(insert));
     }
 
     @Test
