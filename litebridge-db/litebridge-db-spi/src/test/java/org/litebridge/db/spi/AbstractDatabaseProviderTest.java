@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -577,6 +578,39 @@ class AbstractDatabaseProviderTest {
         verify(result).setTimestamp(9, Timestamp.valueOf("2021-01-01 00:00:00"));
         verify(result).setNull(10, Types.NUMERIC);
         verify(result).setObject(11, objectVal, Types.OTHER);
+    }
+
+    @Test
+    void verifySchemaAndTableExists_tableNotFound() throws Exception {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE_NOT_FOUND");
+        final DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
+
+        final ResultSet schemaResultSet = mock(ResultSet.class);
+        when(schemaResultSet.next()).thenReturn(true);
+        when(schemaResultSet.getString("TABLE_SCHEM")).thenReturn(table.schema());
+        when(databaseMetaData.getSchemas(table.catalog(), table.schema())).thenReturn(schemaResultSet);
+
+        final ResultSet tableResultSet = mock(ResultSet.class);
+        when(tableResultSet.next()).thenReturn(false);
+        when(databaseMetaData.getTables(eq(table.catalog()), eq(table.schema()), eq(table.name()), any(String[].class))).thenReturn(tableResultSet);
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> databaseProvider.verifySchemaAndTableExists(table, databaseMetaData));
+    }
+
+    @Test
+    void verifySchemaAndTableExists_schemaNotFound() throws Exception {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE_NOT_FOUND");
+        final DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
+
+        final ResultSet schemaResultSet = mock(ResultSet.class);
+        when(schemaResultSet.next()).thenReturn(false);
+        when(databaseMetaData.getSchemas(table.catalog(), table.schema())).thenReturn(schemaResultSet);
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> databaseProvider.verifySchemaAndTableExists(table, databaseMetaData));
     }
 
     @Test
