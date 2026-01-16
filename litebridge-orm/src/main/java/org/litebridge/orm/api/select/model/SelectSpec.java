@@ -148,7 +148,7 @@ public class SelectSpec {
         dtoAliases.put(dtoClass, alias);
     }
 
-    public String getDtoAlias(Class<?> dtoClass) {
+    public @Nullable String getDtoAlias(Class<?> dtoClass) {
         if (dtoAliases != null) {
             return dtoAliases.get(dtoClass);
         } else {
