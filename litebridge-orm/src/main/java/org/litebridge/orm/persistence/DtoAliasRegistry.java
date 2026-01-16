@@ -35,24 +35,17 @@ public final class DtoAliasRegistry {
         return tableAliases.computeIfAbsent(table, cls -> createNewAlias(table.name()));
     }
 
-    public @Nullable String aliasOrNull(final Table table) {
-        return tableAliases.get(table);
-    }
-
     public String alias(final String tableAlias, final Column column) {
         return columnAliases.computeIfAbsent(tableAlias, k -> new HashMap<>())
                 .computeIfAbsent(column, col -> tableAlias + createNewAlias(col.name()));
     }
 
-    public String aliasOrNull(final String tableAlias, final Column column) {
-        final String alias = columnAliases.containsKey(tableAlias) ? columnAliases.get(tableAlias).get(column) : null;
+    public @Nullable String aliasOrNull(final Table table) {
+        return tableAliases.get(table);
+    }
 
-        if (alias == null) {
-            LOGGER.error("Column alias not found for table alias: {}, column: {}", tableAlias, column.name());
-            throw new IllegalStateException("Column alias not found for table: " + tableAlias + ", column: " + column.name());
-        }
-
-        return alias;
+    public @Nullable String aliasOrNull(final String tableAlias, final Column column) {
+        return columnAliases.containsKey(tableAlias) ? columnAliases.get(tableAlias).get(column) : null;
     }
 
     public boolean belongsTo(final String tableAlias, final Column column) {
