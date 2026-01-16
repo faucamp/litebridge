@@ -8,6 +8,21 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * The TableRegistry class is a centralized registry responsible for managing the relationship
+ * between Data Transfer Object (DTO) classes and their corresponding ORM table representations
+ * ({@link OrmTable}). This registry allows for efficient management, querying, and consistency of ORM
+ * table mappings within Litebridge.
+ * <p>
+ * This class provides methods to:
+ * - Add and register {@link OrmTable} instances associated with DTO classes.
+ * - Retrieve {@link OrmTable} instances based on DTO class, schema, or table names.
+ * - Check for the existence of tables mapped to specific DTO classes.
+ * - Retrieve or create lightweight SPI table representations for database interactions.
+ * <p>
+ * Instances of this class are immutable with respect to their internal maps, ensuring thread safety
+ * and consistent state across multiple threads.
+ */
 public final class TableRegistry {
 
     private final Map<Class<?>, OrmTable> dtoTableMap = new ConcurrentHashMap<>();
