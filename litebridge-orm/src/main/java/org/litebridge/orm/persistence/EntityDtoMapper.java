@@ -16,14 +16,12 @@ public class EntityDtoMapper<DTO> {
 
     private final Class<DTO> dtoClass;
     private final List<Class<?>> entityClasses;
-    private final Map<FieldAccessor, Map<Class<?>, FieldAccessor>> dtoToEntityFieldMap;
     private final Map<Class<?>, Map<FieldAccessor, FieldAccessor>> entityToDtoFieldMap;
 
     public EntityDtoMapper(final Class<DTO> dtoClass, final List<DtoEntityMapping> dtoEntityMappings) {
         this.dtoClass = dtoClass;
 
         final List<Class<?>> entityClasses = new ArrayList<>();
-        final Map<FieldAccessor, Map<Class<?>, FieldAccessor>> dtoToEntityFieldMap = new HashMap<>();
         final Map<Class<?>, Map<FieldAccessor, FieldAccessor>> entityToDtoFieldMap = new HashMap<>();
 
         for (DtoEntityMapping dtoEntityMapping : dtoEntityMappings) {
@@ -33,16 +31,12 @@ public class EntityDtoMapper<DTO> {
                 final FieldAccessor dtoFieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, dtoField);
                 final FieldAccessor entityFieldAccessor = DtoIntrospector.fieldAccessor(dtoEntityMapping.entityClass(), entityField);
 
-                dtoToEntityFieldMap.computeIfAbsent(dtoFieldAccessor, k -> new HashMap<>())
-                        .put(dtoEntityMapping.entityClass(), entityFieldAccessor);
-
                 entityToDtoFieldMap.computeIfAbsent(dtoEntityMapping.entityClass(), k -> new HashMap<>())
                         .put(entityFieldAccessor, dtoFieldAccessor);
             });
         }
 
         this.entityClasses = Collections.unmodifiableList(entityClasses);
-        this.dtoToEntityFieldMap = Collections.unmodifiableMap(dtoToEntityFieldMap);
         this.entityToDtoFieldMap = Collections.unmodifiableMap(entityToDtoFieldMap);
     }
 
