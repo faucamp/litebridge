@@ -13,6 +13,13 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Default implementation of the {@link DtoMapper} interface. This class provides mechanisms
+ * to map database rows to Data Transfer Object (DTO) instances using metadata from the ORM framework.
+ * <p>
+ * The mapping process includes handling nested DTO relationships, type conversion between database
+ * values and DTO properties, and support for DTO caching to improve performance and maintain referential integrity.
+ */
 public final class DefaultDtoMapper implements DtoMapper {
 
     private final TableRegistry tableRegistry;

@@ -12,6 +12,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Mapper for converting between complex Data Transfer Objects (DTOs) and their corresponding "entity" objects.
+ * Provides functionality for converting a DTO to a list of entities and vice versa, based on a set of field mappings
+ * specified via {@link DtoEntityMapping}.
+ *
+ * @param <DTO> the type parameter of the Data Transfer Object (DTO)
+ */
 public class EntityDtoMapper<DTO> {
 
     private final Class<DTO> dtoClass;
@@ -48,6 +55,15 @@ public class EntityDtoMapper<DTO> {
         return entityClasses;
     }
 
+    /**
+     * Converts the given DTO into a list of entity objects based on the mappings defined in the class.
+     * The entities are constructed and populated with field values fetched from the DTO.
+     * This method ensures that composite relationships and intermediate entities are properly handled.
+     *
+     * @param dto the data transfer object (DTO) to be converted into entities; must not be null
+     * @return a list of constructed and populated entity objects
+     * @throws IllegalArgumentException if {@code dto} is null
+     */
     public List<Object> entities(final DTO dto) {
         ObjectUtils.requireNonNull(dto, "DTO cannot be null");
         final Map<Class<?>, Object> constructedEntities = new HashMap<>();
@@ -100,10 +116,30 @@ public class EntityDtoMapper<DTO> {
         return constructedEntities.values().stream().toList();
     }
 
+    /**
+     * Converts the specified entity objects into a Data Transfer Object (DTO).
+     * Maps the fields of the entities into the corresponding fields of the DTO
+     * based on the predefined entity-to-DTO field mappings. Also handles nested
+     * DTO fields if present.
+     *
+     * @param entities the array of entity objects to be converted; must not be null
+     * @return a DTO populated with field values extracted from the given entities
+     * @throws IllegalArgumentException if {@code entities} is null
+     */
     public DTO dto(final Object... entities) {
         return dto(List.of(entities));
     }
 
+    /**
+     * Converts a list of entity objects into a Data Transfer Object (DTO).
+     * Maps the fields of the entities into the corresponding fields of the DTO
+     * based on the predefined entity-to-DTO field mappings. Also handles nested
+     * DTO fields if present.
+     *
+     * @param entities the list of entity objects to be converted; must not be null
+     * @return a DTO populated with field values extracted from the given entities
+     * @throws IllegalArgumentException if {@code entities} is null
+     */
     public DTO dto(final List<Object> entities) {
         ObjectUtils.requireNonNull(entities, "Entities cannot be null");
         final DTO dto = ClassUtils.newInstance(dtoClass);

@@ -13,6 +13,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Represents an ORM (Object-Relational Mapping) table, facilitating the relationship
+ * between Java objects (DTOs) and database table schema.
+ * <p>
+ * This class maintains metadata and mappings between object field accessors and database columns.
+ * It tracks changes made to objects and their associated database states for ORM operations.
+ */
 @NullMarked
 public class OrmTable {
 
