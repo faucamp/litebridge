@@ -1,8 +1,10 @@
 package org.litebridge.tracking;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.ClassUtils;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class FieldAccessorChain implements FieldAccessor {
@@ -43,6 +45,10 @@ public class FieldAccessorChain implements FieldAccessor {
         return this;
     }
 
+    public boolean isLast(final FieldAccessor fieldAccessor) {
+        return fieldAccessors.getLast().equals(fieldAccessor);
+    }
+
     @Override
     public String name() {
         return fieldAccessors.getLast().name();
@@ -66,7 +72,30 @@ public class FieldAccessorChain implements FieldAccessor {
 
     @Override
     public void set(final Object dto, final @Nullable Object value) {
-        fieldAccessors.getLast().set(dto, value);
+        // Traverse the field accessors and set the chained value
+        Object currentDto = dto;
+        final Iterator<FieldAccessor> fieldAccessorIterator = fieldAccessors.iterator();
+
+        while (fieldAccessorIterator.hasNext()) {
+            final FieldAccessor fieldAccessor = fieldAccessorIterator.next();
+
+            if (fieldAccessorIterator.hasNext() && ClassFieldAccessorCache.isNestedDtoField(currentDto.getClass(), fieldAccessor)) {
+                final Object intermediateValue = fieldAccessor.get(currentDto);
+
+                if (intermediateValue == null) {
+                    // Create intermediate entity and set it
+                    final Object newEntity = ClassUtils.newInstance(fieldAccessor.type());
+                    fieldAccessor.set(currentDto, newEntity);
+                    currentDto = newEntity;
+                } else {
+                    currentDto = intermediateValue;
+                }
+            } else if (fieldAccessor.dtoClass() == currentDto.getClass()) {
+                fieldAccessor.set(currentDto, value);
+            } else {
+                throw new IllegalArgumentException("Cannot set field path '" + fieldPath + "' on DTO of type: " + dto.getClass().getName());
+            }
+        }
     }
 
     @Override

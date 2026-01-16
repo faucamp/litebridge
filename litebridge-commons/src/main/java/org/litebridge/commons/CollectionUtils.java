@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public final class CollectionUtils {
 
@@ -61,12 +62,8 @@ public final class CollectionUtils {
      * @return the validated non-null and non-empty collection
      * @throws IllegalArgumentException if the collection is null or empty
      */
-    public static <T extends Collection<?>> T requireNonEmpty(@Nullable final T collection, final String message) {
-        if (isEmpty(collection)) {
-            throw new IllegalArgumentException(message);
-        }
-
-        return collection;
+    public static <T extends Collection<U>, U> T requireNonEmpty(@Nullable final T collection, final String message) {
+        return requireNonEmpty(collection, () -> new IllegalArgumentException(message));
     }
 
     /**
@@ -104,5 +101,13 @@ public final class CollectionUtils {
         }
 
         return list;
+    }
+
+    public static <T extends Collection<U>, U, X extends Throwable> T requireNonEmpty(@Nullable final T collection, final Supplier<? extends X> exceptionSupplier) throws X {
+        if (isEmpty(collection)) {
+            throw exceptionSupplier.get();
+        } else {
+            return collection;
+        }
     }
 }

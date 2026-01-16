@@ -7,8 +7,11 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -177,7 +180,48 @@ public class FieldAccessorChainTest {
     }
 
     @Test
-    void set_delegatesToLastAccessor() {
+    void set_delegatesToLastAccessorThroughChain() {
+        // Given
+        final TestParentDto testParentDto = new TestParentDto();
+        final TestDto testDto = new TestDto();
+        testParentDto.testDto = testDto;
+        final String value = "testValue";
+
+        final FieldAccessor testDtoAccessor = new FieldAccessorImpl(ClassUtils.getField(TestParentDto.class, "testDto"));
+        final FieldAccessor myVarAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+
+        final FieldAccessorChain chain = new FieldAccessorChain(testDtoAccessor, "testDto.myVar");
+        chain.add(myVarAccessor);
+
+        // When
+        chain.set(testParentDto, value);
+
+        // Then
+        assertEquals(value, testDto.myVar);
+    }
+
+    @Test
+    void set_delegatesToLastAccessorThroughChain_nullIntermediateDto() {
+        // Given
+        final TestParentDto testParentDto = new TestParentDto();
+        final String value = "testValue";
+
+        final FieldAccessor testDtoAccessor = new FieldAccessorImpl(ClassUtils.getField(TestParentDto.class, "testDto"));
+        final FieldAccessor myVarAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
+
+        final FieldAccessorChain chain = new FieldAccessorChain(testDtoAccessor, "testDto.myVar");
+        chain.add(myVarAccessor);
+
+        // When
+        chain.set(testParentDto, value);
+
+        // Then
+        assertNotNull(testParentDto.testDto);
+        assertEquals(value, testParentDto.testDto.myVar);
+    }
+
+    @Test
+    void set_invalidFieldPathForDto() {
         // Given
         Object dto = new Object();
         Object value = new Object();
@@ -188,13 +232,8 @@ public class FieldAccessorChainTest {
         FieldAccessorChain chain = new FieldAccessorChain(parent, "parent.child");
         chain.add(last);
 
-        // When
-        chain.set(dto, value);
-
-        // Then
-        verify(last).set(dto, value);
-        verifyNoMoreInteractions(last);
-        verifyNoInteractions(parent);
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> chain.set(dto, value));
     }
 
     @Test
@@ -285,7 +324,45 @@ public class FieldAccessorChainTest {
         assertEquals(expectedHashCode, result);
     }
 
-    private class TestDto {
+    @Test
+    void isLast_true() {
+        // Given
+        final FieldAccessor parent = mock(FieldAccessor.class);
+        final FieldAccessor last = mock(FieldAccessor.class);
+        doReturn(String.class).when(last).type();
+
+        final FieldAccessorChain fieldAccessorChain = new FieldAccessorChain(parent, "parent.child");
+        fieldAccessorChain.add(last);
+
+        // When
+        final boolean result = fieldAccessorChain.isLast(last);
+
+        // Then
+        assertTrue(result);
+    }
+
+    @Test
+    void isLast_false() {
+        // Given
+        final FieldAccessor parent = mock(FieldAccessor.class);
+        final FieldAccessor last = mock(FieldAccessor.class);
+        doReturn(String.class).when(last).type();
+
+        final FieldAccessorChain fieldAccessorChain = new FieldAccessorChain(parent, "parent.child");
+        fieldAccessorChain.add(last);
+
+        // When
+        final boolean result = fieldAccessorChain.isLast(parent);
+
+        // Then
+        assertFalse(result);
+    }
+
+    private static class TestDto {
         private String myVar;
+    }
+
+    private static class TestParentDto {
+        private TestDto testDto;
     }
 }

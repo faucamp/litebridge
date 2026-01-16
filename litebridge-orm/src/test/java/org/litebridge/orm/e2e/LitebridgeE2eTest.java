@@ -10,8 +10,11 @@ import org.litebridge.db.h2.H2DatabaseProvider;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.e2e.dto.Account;
 import org.litebridge.orm.e2e.dto.Person;
+import org.litebridge.orm.e2e.dto.PersonAccount;
 import org.litebridge.orm.e2e.dto.SingleTableNestedParent;
 import org.litebridge.orm.e2e.mapping.DtoTableMap;
+import org.litebridge.orm.persistence.DtoEntityMapping;
+import org.litebridge.orm.persistence.EntityDtoMapper;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.TrackedDto;
 import org.slf4j.Logger;
@@ -21,11 +24,13 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Optional;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.litebridge.orm.api.spec.FieldSpecBuilder.f;
 import static org.litebridge.orm.api.spec.TableSpec.t;
 
 class LitebridgeE2eTest {
@@ -121,6 +126,49 @@ class LitebridgeE2eTest {
         assertEquals("testGrandChildValue1", result.getNestedChild().getGrandChild().getGrandChildValue1());
     }
 
+    @Test
+    void save_splitCompositeDto() throws Exception {
+        // Create our "original"/unmapped DTO (unmapped since Litebridge expects one table per DTO)
+        final PersonAccount personAccount = new PersonAccount();
+        personAccount.setId(123L);
+        personAccount.setName("Bob");
+        personAccount.setSurname("Smith");
+        personAccount.setAge(35);
+        personAccount.setAccountId(456L);
+        personAccount.setAccountName("Test Account");
+
+        // Register DTO-table mappings (a client using the above "PersonMapping" DTO would need
+        // to create these "entities", as the query API would not make sense for multi-table DTOs)
+        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+
+        // Create entity-DTO mapper
+        final EntityDtoMapper<PersonAccount> entityDtoMapper = new EntityDtoMapper(PersonAccount.class,
+                List.of(new DtoEntityMapping(Person.class,
+                                Map.of(
+                                        f("id"), f("id"),
+                                        f("name"), f("name"),
+                                        f("surname"), f("surname"),
+                                        f("age"), f("age")
+                                )),
+                        new DtoEntityMapping(Account.class,
+                                Map.of(
+                                        f("accountId"), f("id"),
+                                        f("accountName"), f("name"),
+                                        f("id"), f("owner.id")
+                                ))));
+
+        // Split the multi-table DTO into two single-table DTOs and save them separately
+        entityDtoMapper.entities(personAccount).forEach(litebridge::save);
+
+        // Load the indidual entities and reconstruct the composite DTO
+        final Person person = litebridge.select(Person.class).where("id").eq(personAccount.getId()).oneOrThrow();
+        final Account account = litebridge.select(Account.class).where("id").eq(personAccount.getAccountId()).oneOrThrow();
+        final PersonAccount result = entityDtoMapper.dto(person, account);
+
+        // Then
+        assertEquals(personAccount, result);
+    }
 
     private Litebridge ensureLitebridge() throws SQLException {
         if (connection == null) {

@@ -1,5 +1,6 @@
 package org.litebridge.tracking;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 
 import java.util.Collection;
@@ -46,7 +47,7 @@ public final class ChangeTracker {
      */
     private final Map<Object, TrackedDto<?>> trackedDtos = Collections.synchronizedMap(new WeakHashMap<>());
 
-    public <T> T trackDto(final T dto) {
+    public <DTO> DTO trackDto(final DTO dto) {
         ObjectUtils.requireNonNull(dto, "DTO cannot be null");
         return trackImpl(dto, ClassFieldAccessorCache.fieldAccessors(dto.getClass()), false);
     }
@@ -56,14 +57,14 @@ public final class ChangeTracker {
      * This method identifies and stores a snapshot of the fields provided in the {@code trackedFieldNames} set,
      * enabling monitoring of modifications during the lifecycle of the DTO.
      *
-     * @param <T>               the type of the DTO being tracked
+     * @param <DTO>               the type of the DTO being tracked
      * @param dto               the Data Transfer Object (DTO) to be tracked; must not be null
      * @param trackedFieldNames the set of field names in the DTO to be tracked; each field name must exist in the DTO
      * @return the tracked instance of the provided DTO
      * @throws IllegalArgumentException if {@code dto} is null
      * @throws IllegalArgumentException if any field name in {@code trackedFieldNames} does not exist in the DTO
      */
-    public <T> T trackDto(final T dto, final Set<String> trackedFieldNames) {
+    public <DTO> DTO trackDto(final DTO dto, final Set<String> trackedFieldNames) {
         ObjectUtils.requireNonNull(dto, "DTO cannot be null");
         final Map<String, FieldAccessor> allFields = ClassFieldAccessorCache.fieldAccessors(dto.getClass()).stream()
                 .collect(Collectors.toMap(FieldAccessor::name, Function.identity()));
@@ -77,15 +78,19 @@ public final class ChangeTracker {
      * Tracks the specified fields of a given Data Transfer Object (DTO) for detecting changes.
      * This method allows monitoring of specific fields within the DTO by capturing their initial state.
      *
-     * @param <T>           the type of the DTO being tracked
+     * @param <DTO>           the type of the DTO being tracked
      * @param dto           the Data Transfer Object (DTO) to be tracked; must not be null
      * @param trackedFields the set of fields in the DTO to be tracked; each field must belong to the DTO
      * @return the tracked instance of the provided DTO
      * @throws IllegalArgumentException if {@code dto} is null
      */
-    public <T> T trackDtoFields(final T dto, final Set<FieldAccessor> trackedFields) {
+    public <DTO> DTO trackDtoFields(final DTO dto, final Set<FieldAccessor> trackedFields) {
+        return trackDtoFields(dto, trackedFields, false);
+    }
+
+    public <DTO> DTO trackDtoFields(final DTO dto, final Set<FieldAccessor> trackedFields, final boolean snapshotEmpty) {
         ObjectUtils.requireNonNull(dto, "DTO cannot be null");
-        return trackImpl(dto, trackedFields, false);
+        return trackImpl(dto, trackedFields, snapshotEmpty);
     }
 
     /**
@@ -95,17 +100,21 @@ public final class ChangeTracker {
      * @param dto the Data Transfer Object (DTO) whose tracked version is to be retrieved; can be null
      * @return the tracked version of the specified DTO, or null if no tracked version exists
      */
-    @SuppressWarnings("unchecked")
-    public <T> TrackedDto<T> getTrackedDto(final T dto) {
-        return (TrackedDto<T>) ObjectUtils.requireNonNull(trackedDtos.get(dto), "DTO is not tracked: " + dto);
+    public <DTO> TrackedDto<DTO> getTrackedDto(final DTO dto) {
+        return ObjectUtils.requireNonNull(getTrackedDtoOrNull(dto), "DTO is not tracked: " + dto);
     }
 
-    private <T> T trackImpl(final T dto, final Collection<FieldAccessor> trackedFields, final boolean snapshotEmpty) {
+    @SuppressWarnings("unchecked")
+    public <DTO> @Nullable TrackedDto<DTO> getTrackedDtoOrNull(final DTO dto) {
+        return (TrackedDto<DTO>) trackedDtos.get(dto);
+    }
+
+    private <DTO> DTO trackImpl(final DTO dto, final Collection<FieldAccessor> trackedFields, final boolean snapshotEmpty) {
         if (trackedDtos.containsKey(dto)) {
             return dto;
         }
 
-        final TrackedDto<T> trackedDto = new TrackedDto<>(dto, trackedFields, this::trackNestedDto);
+        final TrackedDto<DTO> trackedDto = new TrackedDto<>(dto, trackedFields, this::trackNestedDto);
 
         if (snapshotEmpty) {
             // Create an empty snapshot (useful for highlighting "all fields are new" in newly created nested DTOs)

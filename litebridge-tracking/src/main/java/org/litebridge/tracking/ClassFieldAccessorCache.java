@@ -46,16 +46,15 @@ public class ClassFieldAccessorCache {
     }
 
     public static boolean isNestedDtoField(final Class<?> dtoClass, final FieldAccessor field) {
-        final Map<String, FieldAccessor> fieldAccessors = classFieldAccessors.get(dtoClass);
-
-        if (fieldAccessors == null
+        if (field == null
+                || field.dtoClass() != dtoClass
                 || ClassUtils.isBasicType(field.type())
                 || Collection.class.isAssignableFrom(field.type())
                 || Map.class.isAssignableFrom(field.type())) {
             return false;
         }
 
-        return fieldAccessors.containsKey(field.name());
+        return ensureFieldAccessors(dtoClass).containsKey(field.name());
     }
 
     static void clear() {

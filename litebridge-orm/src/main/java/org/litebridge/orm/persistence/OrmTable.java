@@ -79,6 +79,16 @@ public class OrmTable {
         return changeTracker.getTrackedDto(dto);
     }
 
+    public <DTO> TrackedDto<DTO> ensureTrackedDto(final DTO dto) {
+        final TrackedDto<DTO> trackedDto = changeTracker.getTrackedDtoOrNull(dto);
+
+        if (trackedDto == null) {
+            return changeTracker.getTrackedDto(changeTracker.trackDtoFields(dto, fieldColumnMap.keySet(), true));
+        } else {
+            return trackedDto;
+        }
+    }
+
     public void trackDto(final Object dto) {
         changeTracker.trackDtoFields(dto, fieldColumnMap.keySet());
     }

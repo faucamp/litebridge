@@ -70,7 +70,7 @@ public class PersistenceFacade {
     }
 
     private <DTO> @Nullable StatementChain prepareUpdateStatement(final DTO dto, final OrmTable table, final AbstractStatementBuilder<?> statementBuilder) {
-        final TrackedDto<?> trackedDto = table.getTrackedDto(dto);
+        final TrackedDto<?> trackedDto = table.ensureTrackedDto(dto);
         final ChangedFields changedFields = trackedDto.changedFields();
 
         if (changedFields.isEmpty()) {
@@ -194,7 +194,14 @@ public class PersistenceFacade {
             pipedStatement.valuePipe().accept(dependencyResult);
         }
 
-        final UpdateStatement updateStatement = statementBuilder.build();
+        final UpdateStatement updateStatement;
+
+        try {
+            updateStatement = statementBuilder.build();
+        } catch (final IllegalArgumentException ex) {
+            // No columns to update
+            return new UpdateResult(0);
+        }
 
         if (updateStatement instanceof Insert insert) {
             return databaseProvider.insert(insert);

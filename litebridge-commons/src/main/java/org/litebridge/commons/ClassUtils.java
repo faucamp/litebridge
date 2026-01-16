@@ -3,6 +3,7 @@ package org.litebridge.commons;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -140,6 +141,16 @@ public final class ClassUtils {
                     .orElseThrow(() -> new IllegalArgumentException("Property '%s' not found in class: %s".formatted(propertyName, dtoClass.getName())));
         } catch (IntrospectionException ex) {
             throw new IllegalStateException("Failed to introspect class: " + dtoClass.getName(), ex);
+        }
+    }
+
+    public static <DTO> DTO newInstance(final Class<DTO> dtoClass) {
+        try {
+            final Constructor<DTO> constructor = dtoClass.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            return constructor.newInstance();
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to instantiate class: " + dtoClass.getName(), ex);
         }
     }
 }

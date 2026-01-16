@@ -1,5 +1,6 @@
 package org.litebridge.db.spi.update;
 
+import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.TableMetaData;
 
@@ -13,6 +14,6 @@ public record Insert(TableMetaData table, List<ColumnMetaData> columns, List<Row
     }
 
     public Insert(final TableMetaData table, final List<RowValue> rows) {
-        this(table, rows.get(0).columns().stream().map(ColumnValue::column).toList(), rows);
+        this(table, CollectionUtils.requireNonEmpty(rows, "No rows to insert for table: " + table.name()).getFirst().columns().stream().map(ColumnValue::column).toList(), rows);
     }
 }

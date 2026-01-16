@@ -92,7 +92,7 @@ public final class DefaultDtoMapper implements DtoMapper {
                                     .orElse(null);
                             sameTableNestedDto = field != null;
                         } else {
-                            field = tableField;
+                            field = fieldAccessorChain.fieldAccessors().getLast();
                             sameTableNestedDto = false;
                         }
                     } else {
