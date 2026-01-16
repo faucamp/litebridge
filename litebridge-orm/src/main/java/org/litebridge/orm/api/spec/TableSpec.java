@@ -6,6 +6,7 @@ import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Table;
 
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -29,7 +30,7 @@ public final class TableSpec extends Table {
         super(StringUtils.blankIfNull(catalog),
                 StringUtils.blankIfNull(schema),
                 StringUtils.requireNonBlank(table, "Table name cannot be blank"));
-        this.fieldColumnSpecMap = CollectionUtils.requireNonEmpty(fieldColumnSpecMap, "Field-column map cannot be null");
+        this.fieldColumnSpecMap = Collections.unmodifiableMap(CollectionUtils.requireNonEmpty(fieldColumnSpecMap, "Field-column map cannot be null"));
     }
 
     /**

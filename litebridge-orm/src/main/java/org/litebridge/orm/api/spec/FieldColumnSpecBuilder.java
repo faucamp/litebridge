@@ -29,7 +29,7 @@ public final class FieldColumnSpecBuilder implements FieldColumnSpec {
 
     @Override
     public ColumnSpec column() {
-        return ObjectUtils.requireNonNull(columnSpecBuilder, "Column spec not set");
+        return ObjectUtils.requireNonNull(columnSpecBuilder, () -> new IllegalStateException("Column spec not set"));
     }
 
     public final class EmbeddedColumnSpecBuilder
