@@ -85,7 +85,7 @@ class ColumnMetaDataTest {
     }
 
     @Test
-    void copyConstructor_copiesCoreFieldsButNotJoinColumn() {
+    void copyConstructor() {
         // Given
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnMetaData original = new ColumnMetaData(table, "id", false, 1, 20, 0, true, "SEQ_ID");
@@ -106,9 +106,7 @@ class ColumnMetaDataTest {
         assertEquals(original.getDecimalDigits(), copy.getDecimalDigits());
         assertEquals(original.isAutoIncrement(), copy.isAutoIncrement());
         assertEquals(original.getSequence(), copy.getSequence());
-
-        // joinColumn is not copied by the copy constructor (only present on the original instance)
-        assertNull(copy.getJoinColumn());
+        assertEquals(original.getJoinColumn(), copy.getJoinColumn());
     }
 
     @Test
@@ -133,9 +131,7 @@ class ColumnMetaDataTest {
         assertEquals(original.getDecimalDigits(), aliased.getDecimalDigits());
         assertEquals(original.isAutoIncrement(), aliased.isAutoIncrement());
         assertEquals(original.getSequence(), aliased.getSequence());
-
-        // joinColumn is not part of copy ctor used by as()
-        assertNull(aliased.getJoinColumn());
+        assertEquals(original.getJoinColumn(), aliased.getJoinColumn());
     }
 
     @Test
