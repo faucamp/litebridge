@@ -7,7 +7,6 @@ import org.litebridge.orm.api.spec.FieldColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal<DTO,
         DtoJoinClause<DTO>,
@@ -44,18 +43,17 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return orderByImpl(Arrays.stream(fields));
+        final String[] columns = Arrays.stream(fields)
+                .map(table::getColumnForFieldName)
+                .map(ColumnMetaData::name)
+                .toArray(String[]::new);
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final FieldColumnSpec... fields) {
-        return orderByImpl(Arrays.stream(fields)
-                .map(field -> field.column().name()));
-    }
-
-    private DtoOrderByClause<DTO> orderByImpl(final Stream<String> fields) {
-        final String[] columns = fields.map(table::getColumnForFieldName)
-                .map(ColumnMetaData::name)
+        final String[] columns = Arrays.stream(fields)
+                .map(fieldColumnSpec -> fieldColumnSpec.column().name())
                 .toArray(String[]::new);
         return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);
     }
