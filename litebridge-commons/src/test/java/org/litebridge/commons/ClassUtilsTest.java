@@ -388,6 +388,20 @@ class ClassUtilsTest {
         }
     }
 
+    @Test
+    void newInstance() {
+        // When
+        final TestDto result = ClassUtils.newInstance(TestDto.class);
+
+        // Then
+        assertNotNull(result);
+    }
+
+    @Test
+    void newInstance_failure() {
+        assertThrows(IllegalStateException.class, () -> ClassUtils.newInstance(UnsupportedConstructorClass.class));
+    }
+
     static class TestDto {
         private static String staticField;
         private String name;
@@ -402,23 +416,28 @@ class ClassUtilsTest {
         }
     }
 
-    static class TestDtoWithList {
+    private static class TestDtoWithList {
         private List<String> list;
         private List rawList;
     }
 
-    static class TestDtoWithMap {
+    private static class TestDtoWithMap {
         private Map<String, Long> map;
         private Map<String, List<String>> mapOfLists;
         private Map<String, ?> mapOfWildcards;
     }
 
-    static class ChildTestDto extends TestDto {
+    private static class ChildTestDto extends TestDto {
         private boolean active;
     }
 
-    enum TestEnum {
+    private enum TestEnum {
         VALUE_A,
         VALUE_B
+    }
+
+    private static class UnsupportedConstructorClass {
+        private UnsupportedConstructorClass(final String param) {
+        }
     }
 }
