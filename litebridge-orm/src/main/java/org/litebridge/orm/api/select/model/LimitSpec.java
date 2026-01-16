@@ -5,6 +5,14 @@ import org.litebridge.db.spi.query.Limit;
 
 import java.util.Optional;
 
+/**
+ * Specification for limiting and offsetting the results of a database query.
+ * <p>
+ * This class contains optional properties for specifying a limit and an offset
+ * to control the number of records returned and the starting point for the result set.
+ * The limit specifies the maximum number of records to return, while the offset specifies
+ * the number of records to skip before starting to return results.
+ */
 public final class LimitSpec {
 
     private Optional<Integer> limit = Optional.empty();

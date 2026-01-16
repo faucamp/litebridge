@@ -13,7 +13,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * This class provides functionality to track field-level changes of Data Transfer Objects (DTOs)
+ * This class provides functionality to track field-level changes of data transfer objects (DTOs)
  * by maintaining a snapshot of their specified fields. It allows identifying changes made to
  * the tracked fields during the object's lifecycle.
  * <p>

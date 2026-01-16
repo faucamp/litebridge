@@ -16,6 +16,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * Specification for constructing a SQL SELECT statement.
+ * <p>
+ * This class encapsulates table, column, join, condition, order by,
+ * and limit specifications for building a query.
+ */
 public class SelectSpec {
 
     @Nullable

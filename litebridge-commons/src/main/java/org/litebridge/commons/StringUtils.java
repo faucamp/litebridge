@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Utility class for working with strings.
+ */
 public final class StringUtils {
 
     private StringUtils() {
@@ -110,10 +113,23 @@ public final class StringUtils {
         return str;
     }
 
+    /**
+     * Returns an empty string if the given string is null; otherwise, returns the input string.
+     *
+     * @param str the input string; may be null
+     * @return an empty string if {@code str} is null; otherwise, the input string
+     */
     public static String blankIfNull(final @Nullable String str) {
         return str == null ? "" : str;
     }
 
+    /**
+     * Converts the first character of the given string to lowercase.
+     *
+     * @param str the input string; must not be null or empty
+     * @return a new string with the first character converted to lowercase
+     * @throws IllegalArgumentException if the input string is null or empty
+     */
     public static String lowerFirst(final String str) {
         if (isEmpty(str)) {
             throw new IllegalArgumentException("Empty or null input string");
@@ -123,6 +139,14 @@ public final class StringUtils {
         return firstChar + str.substring(1);
     }
 
+    /**
+     * Converts the given string into camelCase format by removing non-word characters,
+     * lowercasing the first word, and capitalizing the first letter of subsequent words.
+     *
+     * @param str the input string to be converted; must not be null
+     * @return the camelCase formatted string, or an empty string if the input is empty or contains only non-word characters
+     * @throws NullPointerException if the input string is null
+     */
     public static String camelCase(final String str) {
         if (isEmpty(ObjectUtils.requireNonNull(str, "Input cannot be null"))) {
             return "";
@@ -148,6 +172,14 @@ public final class StringUtils {
         return builder.toString();
     }
 
+    /**
+     * Checks if the given string contains only ASCII characters.
+     * <p>
+     * An ASCII character is defined as a character with a value less than or equal to 0x7F.
+     *
+     * @param str the string to check; must not be null
+     * @return true if the string contains only ASCII characters; false otherwise
+     */
     public static boolean isAsciiOnly(final String str) {
         final int len = str.length();
 

@@ -7,6 +7,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Represents a chain of {@link FieldAccessor} instances, allowing the traversal and manipulation of nested fields
+ * of a data transfer object (DTO).
+ * <p>
+ * This class provides mechanisms to navigate nested structures while enabling read/write access to the chained fields.
+ */
 public class FieldAccessorChain implements FieldAccessor {
 
     private final String fieldPath;

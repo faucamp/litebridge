@@ -5,6 +5,15 @@ import org.jspecify.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.util.Objects;
 
+/**
+ * Direct field access {@code FieldAccessor} implementation.
+ * <p>
+ * Provides functionality for accessing and manipulating fields of a data transfer object (DTO) directly
+ * using Java Reflection.
+ * <p>
+ * This class enables retrieving field names, types, generic types, and the declaring class.
+ * It also supports getting and setting field values within a given DTO instance.
+ */
 public class FieldAccessorImpl implements FieldAccessor {
 
     private final Field field;

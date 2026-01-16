@@ -10,6 +10,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * A utility class that facilitates caching and retrieving {@link FieldAccessor} instances for DTO classes.
+ * <p>
+ * The cache is organized by class type and field name for efficient lookup and reuse of {@link FieldAccessor} instances.
+ */
 public class ClassFieldAccessorCache {
 
     /**

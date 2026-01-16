@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 /**
- * Represents a provider for interacting with a database.
+ * Main interface for interacting with a database.
  * <p>
  * This interface defines the operations for retrieving metadata, executing SQL queries, and managing
  * data within a specific database backend.
@@ -19,7 +19,7 @@ import java.util.List;
 public interface DatabaseProvider {
 
     /**
-     * Retrieves metadata for the specified table.
+     * Retrieve metadata for the specified table.
      *
      * @param table the {@link Table} object representing the table for which metadata is to be retrieved.
      * @return a {@link TableMetaData} object containing metadata information about the specified table,
@@ -29,7 +29,7 @@ public interface DatabaseProvider {
     TableMetaData getTableMetaData(Table table) throws SQLException;
 
     /**
-     * Executes an INSERT operation in the database using the provided {@link Insert} statement.
+     * Execute an INSERT operation in the database using the provided {@link Insert} statement.
      *
      * @param insert the {@link Insert} statement containing the table, columns, and rows to insert.
      * @return an {@link InsertResult} containing the number of rows affected and any generated keys.
@@ -38,7 +38,7 @@ public interface DatabaseProvider {
     InsertResult insert(Insert insert) throws SQLException;
 
     /**
-     * Executes an UPDATE operation in the database using the provided {@link Update} statement.
+     * Execute an UPDATE operation in the database using the provided {@link Update} statement.
      *
      * @param update the {@link Update} statement containing the table, columns, and rows to update.
      * @return an {@link UpdateResult} containing the number of rows affected.
@@ -47,7 +47,7 @@ public interface DatabaseProvider {
     UpdateResult update(Update update) throws SQLException;
 
     /**
-     * Executes a SELECT operation in the database using the provided {@link Select} statement.
+     * Execute a SELECT operation in the database using the provided {@link Select} statement.
      *
      * @param select the {@link Select} statement containing information about the table, columns,
      *               joins, conditions, ordering, and optional limits for the query.
@@ -59,7 +59,8 @@ public interface DatabaseProvider {
     String toSql(Select select);
 
     /**
-     * Retrieves the {@link TypeConverter} instance associated with the database provider.
+     * Retrieve the {@link TypeConverter} instance associated with the database provider.
+     * <p>
      * The {@code TypeConverter} is used for converting objects between different types,
      * typically for database data type conversions and mapping domain-specific representations.
      *

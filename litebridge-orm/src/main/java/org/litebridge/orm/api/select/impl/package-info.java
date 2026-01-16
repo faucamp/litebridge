@@ -1,3 +1,6 @@
+/**
+ * Common implementation classes for select operations.
+ */
 @NullMarked
 package org.litebridge.orm.api.select.impl;
 

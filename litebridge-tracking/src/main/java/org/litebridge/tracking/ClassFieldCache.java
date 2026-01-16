@@ -10,6 +10,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+/**
+ * A utility class that provides caching for fields and generic types of classes.
+ * This class is thread-safe and utilizes `ConcurrentHashMap` for caching operations.
+ * <p>
+ * It cannot be instantiated.
+ */
 public final class ClassFieldCache {
 
     private static final Map<Class<?>, Set<Field>> fieldMap = new ConcurrentHashMap<>();

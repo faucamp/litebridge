@@ -5,6 +5,15 @@ import org.jspecify.annotations.Nullable;
 import java.beans.PropertyDescriptor;
 import java.util.Objects;
 
+/**
+ * Property-based {@code FieldAccessor} implementation.
+ * <p>
+ * A concrete implementation of the {@code FieldAccessor} interface that provides access
+ * to a property of a data transfer object (DTO) using JavaBeans {@code PropertyDescriptor}.
+ * <p>
+ * This class allows retrieval and manipulation of a property’s value, as well as access
+ * to its metadata, such as name, type, and declaring class.
+ */
 public class PropertyAccessor implements FieldAccessor {
 
     private final PropertyDescriptor propertyDescriptor;

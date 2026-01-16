@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+/**
+ * Utility class for working with collections.
+ */
 public final class CollectionUtils {
 
     private CollectionUtils() {
@@ -54,8 +57,9 @@ public final class CollectionUtils {
     }
 
     /**
-     * Ensures that the provided collection is not null or empty. If the collection is null or empty,
-     * an {@link IllegalArgumentException} is thrown with the given message.
+     * Ensures that the provided collection is not null or empty.
+     * <p>
+     * If the collection is null or empty, an {@link IllegalArgumentException} is thrown with the given message.
      *
      * @param collection the collection to validate; may be null
      * @param message    the exception message to use if the validation fails
@@ -67,8 +71,9 @@ public final class CollectionUtils {
     }
 
     /**
-     * Ensures that the provided map is not null or empty. If the map is null or empty,
-     * an {@link IllegalArgumentException} is thrown with the given message.
+     * Ensures that the provided map is not null or empty.
+     * <p>
+     * If the map is null or empty, an {@link IllegalArgumentException} is thrown with the given message.
      *
      * @param map     the map to validate; may be null
      * @param message the exception message to use if the validation fails
@@ -84,9 +89,10 @@ public final class CollectionUtils {
     }
 
     /**
-     * Converts the given array to a {@link List}. If the array is null or empty,
-     * an immutable empty list is returned. Otherwise, a list containing the
-     * elements of the array is returned.
+     * Converts the given array to a {@link List}.
+     * <p>
+     * If the array is null or empty, an immutable empty list is returned.
+     * Otherwise, a list containing the elements of the array is returned.
      *
      * @param array the array to convert to a list; may be null
      * @return a non-null list containing the elements of the array, or an immutable empty list if the array is null or empty
@@ -103,6 +109,19 @@ public final class CollectionUtils {
         return list;
     }
 
+    /**
+     * Ensures that the provided collection is not null or empty.
+     * <p>
+     * If the collection is null or empty,the supplied exception is thrown.
+     *
+     * @param <T>               the type of the collection
+     * @param <U>               the type of the elements in the collection
+     * @param <X>               the type of exception to be thrown
+     * @param collection        the collection to validate; may be null
+     * @param exceptionSupplier a supplier that provides the exception to be thrown if the validation fails
+     * @return the validated non-null and non-empty collection
+     * @throws X if the collection is null or empty
+     */
     public static <T extends Collection<U>, U, X extends Throwable> T requireNonEmpty(@Nullable final T collection, final Supplier<? extends X> exceptionSupplier) throws X {
         if (isEmpty(collection)) {
             throw exceptionSupplier.get();

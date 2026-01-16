@@ -9,6 +9,11 @@ import org.litebridge.db.spi.query.Operator;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Specification for a JOIN operation in a database query.
+ * <p>
+ * This class includes the table to be joined and the conditions that establish the relationship between the tables.
+ */
 public class JoinSpec {
 
     private final Table table;

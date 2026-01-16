@@ -1,3 +1,6 @@
+/**
+ * Litebridge Commons: general utilities
+ */
 @NullMarked
 package org.litebridge.commons;
 

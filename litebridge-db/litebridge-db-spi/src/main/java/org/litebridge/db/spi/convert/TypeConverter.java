@@ -20,7 +20,8 @@ import org.jspecify.annotations.Nullable;
 public interface TypeConverter {
 
     /**
-     * Converts the given value into a different object type based on the specified database data type.
+     * Convert the given value into a different object type based on the specified database data type.
+     * <p>
      * This method is used for mapping application-level objects to database-specific representations
      * or vice versa.
      *
@@ -32,7 +33,8 @@ public interface TypeConverter {
     Object convert(@Nullable Object value, int dbDataType);
 
     /**
-     * Converts the given input object to an instance of the specified type.
+     * Convert the given input object to an instance of the specified type.
+     * <p>
      * The conversion process depends on the provided target class and may return
      * a {@code null} value if the input is {@code null} or conversion is not possible.
      *

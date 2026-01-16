@@ -4,6 +4,12 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 
+/**
+ * A name and an optional alias.
+ * <p>
+ * This class provides functionality to create and manage aliased entities.
+ * It is designed to be extended by other classes that require naming and optional aliasing.
+ */
 public class Aliased {
 
     /**
@@ -25,23 +31,52 @@ public class Aliased {
         this.alias = alias;
     }
 
+    /**
+     * Retrieve the name of the aliased entity.
+     *
+     * @return the name of the aliased entity
+     */
     public String name() {
         return name;
     }
 
+    /**
+     * Retrieve the alias of the aliased entity.
+     *
+     * @return the alias of the aliased entity, or {@code null} if no alias is set
+     */
     public @Nullable String alias() {
         return alias;
     }
 
+    /**
+     * Set the alias for this entity and return the updated instance.
+     *
+     * @param alias the alias to assign to this entity; must not be null
+     * @return the updated instance of {@code Aliased} with the specified alias set
+     */
     public Aliased as(final String alias) {
         setAlias(alias);
         return this;
     }
 
+    /**
+     * Create a new instance of {@code Aliased} with the specified name.
+     * <p>
+     * This is shorthand for {@code new Aliased(name)}.
+     *
+     * @param name the target name for the aliased entity, must not be null
+     * @return a new {@code Aliased} instance initialized with the given name
+     */
     public static Aliased a(final String name) {
         return new Aliased(name);
     }
 
+    /**
+     * Set the alias for this entity.
+     *
+     * @param alias the alias to assign to this entity; must not be null
+     */
     final void setAlias(final String alias) {
         this.alias = alias;
     }

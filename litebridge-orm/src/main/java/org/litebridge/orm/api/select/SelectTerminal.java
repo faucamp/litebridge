@@ -9,6 +9,15 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+/**
+ * Interface for executing and retrieving results from a select query.
+ * <p>
+ * This interface provides methods for retrieving results such as a single row, the first row,
+ * all rows, or as a stream of data. It supports various handling mechanisms for
+ * situations like no result, multiple results, or custom exception throwing.
+ *
+ * @param <DTO> the type of the result object
+ */
 public interface SelectTerminal<DTO> {
 
     /**

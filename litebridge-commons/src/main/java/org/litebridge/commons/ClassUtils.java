@@ -13,6 +13,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Utility class for working with Java reflection.
+ */
 public final class ClassUtils {
 
     private ClassUtils() {
@@ -97,14 +100,43 @@ public final class ClassUtils {
                 || byte[].class.equals(type);
     }
 
+    /**
+     * Retrieves the first generic type argument of a given {@link Field}, if the field is parameterized.
+     * <p>
+     * For example, if the field is of type {@code List<String>}, this method will return {@code String.class}.
+     * However, if the field is of type {@code Map<Long, String>}, it will return {@code Long.class}.
+     *
+     * @param field the field from which to retrieve the first generic type argument
+     * @return the {@code Class<?>} object representing the first generic type argument of the field
+     */
     public static Class<?> getGenericType(final Field field) {
         return getGenericTypes(field)[0];
     }
 
+    /**
+     * Retrieves the generic type arguments of a given {@link Field}, if the field is parameterized.
+     * <p>
+     * For example, if the field is of type {@code List<String>}, this method will return
+     * an array containing {@code String.class}.
+     *
+     * @param field the field from which to retrieve the generic type arguments
+     * @return an array of {@code Class<?>} objects representing the generic type arguments of the field
+     */
     public static Class<?>[] getGenericTypes(final Field field) {
         return getGenericTypes(field.getGenericType());
     }
 
+    /**
+     * Retrieves the generic type arguments of a given {@link Type}, if it is parameterized.
+     * <p>
+     * For example, if the generic type is {@code List<String>}, this method will return
+     * an array containing {@code String.class}.
+     *
+     * @param genericType the type for which to retrieve the generic type arguments
+     * @return an array of {@code Class<?>} objects representing the generic type arguments
+     * @throws IllegalArgumentException if the generic type is not parameterized
+     *                                  or if a concrete class cannot be determined for one of the arguments
+     */
     public static Class<?>[] getGenericTypes(final Type genericType) {
         if (genericType instanceof final ParameterizedType parameterizedType) {
             // Get the actual type arguments (e.g., String)
@@ -133,6 +165,15 @@ public final class ClassUtils {
         throw new IllegalArgumentException("Cannot determine generic type for type '%s'".formatted(genericType.getTypeName()));
     }
 
+    /**
+     * Retrieves the property descriptor for a specific property of the given class.
+     *
+     * @param dtoClass     the class for which the property descriptor is to be retrieved
+     * @param propertyName the name of the property whose descriptor is to be retrieved
+     * @return the {@code PropertyDescriptor} for the specified property
+     * @throws IllegalArgumentException if the specified property is not found in the class
+     * @throws IllegalStateException    if an introspection error occurs while retrieving the property information
+     */
     public static PropertyDescriptor getProperty(final Class<?> dtoClass, final String propertyName) {
         try {
             return Arrays.stream(Introspector.getBeanInfo(dtoClass).getPropertyDescriptors())
@@ -144,6 +185,16 @@ public final class ClassUtils {
         }
     }
 
+    /**
+     * Creates a new instance of the specified class type using its no-argument constructor.
+     * <p>
+     * This method allows instantiating classes even if their constructors are not publicly accessible.
+     *
+     * @param <DTO>    the type of the object to be created
+     * @param dtoClass the class object representing the type to instantiate
+     * @return a new instance of the specified class type
+     * @throws IllegalStateException if the instantiation fails due to an exception (e.g., no accessible constructor, security restriction)
+     */
     public static <DTO> DTO newInstance(final Class<DTO> dtoClass) {
         try {
             final Constructor<DTO> constructor = dtoClass.getDeclaredConstructor();

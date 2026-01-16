@@ -5,6 +5,12 @@ import org.jspecify.annotations.Nullable;
 import java.util.Objects;
 import java.util.StringJoiner;
 
+/**
+ * A database table with an associated catalog, schema, name, and optional alias.
+ * <p>
+ * This class provides functionality for handling table-related metadata
+ * and supports aliasing for the table name.
+ */
 public class Table extends Aliased {
 
     /**

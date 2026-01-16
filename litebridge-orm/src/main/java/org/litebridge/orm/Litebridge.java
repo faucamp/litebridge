@@ -57,13 +57,20 @@ public class Litebridge {
     private final DatabaseProvider databaseProvider;
     private final PersistenceFacade persistenceFacade;
 
+    /**
+     * Constructs a Litebridge instance with the specified database provider.
+     *
+     * @param databaseProvider the database provider to be used by Litebridge.
+     *                         This parameter is required to set up database operations
+     *                         and facilitate persistence functionalities. Must not be null.
+     */
     public Litebridge(final DatabaseProvider databaseProvider) {
         this.databaseProvider = databaseProvider;
         this.persistenceFacade = new PersistenceFacade(tableRegistry, databaseProvider);
     }
 
     /**
-     * Registers a Data Transfer Object (DTO) class with its corresponding table specification.
+     * Register a Data Transfer Object (DTO) class with its corresponding table specification.
      * This method maps the DTO class to a database table and stores the association
      * in the table registry to enable database operations such as insert, update, or query.
      *
@@ -76,7 +83,7 @@ public class Litebridge {
     }
 
     /**
-     * Initiates change tracking for the given Data Transfer Object (DTO).
+     * Initiate change tracking for the given Data Transfer Object (DTO).
      * <p>
      * This process involves associating the DTO with its corresponding ORM table
      * and enabling change tracking for the object's fields.
@@ -103,7 +110,7 @@ public class Litebridge {
     }
 
     /**
-     * Saves the given Data Transfer Object (DTO) to the database, via a SQL INSERT or UPDATE statement.
+     * Save the given Data Transfer Object (DTO) to the database, via a SQL INSERT or UPDATE statement.
      * <p>
      * This method utilises the persistence facade to perform the save operation. It handles SQL exceptions
      * and ensures the integrity of the save process.
@@ -121,7 +128,7 @@ public class Litebridge {
     }
 
     /**
-     * Inserts the specified Data Transfer Object (DTO) into the database via a SQL INSERT statement.
+     * Insert the specified Data Transfer Object (DTO) into the database via a SQL INSERT statement.
      * <p>
      * This method uses the persistence facade to perform the insertion
      * and handles any SQL exceptions that might occur during the process.
@@ -139,7 +146,7 @@ public class Litebridge {
     }
 
     /**
-     * Updates the specified Data Transfer Object (DTO) in the database via a SQL UPDATE statement.
+     * Update the specified Data Transfer Object (DTO) in the database via a SQL UPDATE statement.
      * <p>
      * This method utilises the persistence facade to perform the update operation
      * and handles any SQL exceptions that might occur during the process.
@@ -157,7 +164,7 @@ public class Litebridge {
     }
 
     /**
-     * Selects a registered Data Transfer Object (DTO) type for database query operations.
+     * Select a registered Data Transfer Object (DTO) type for database query operations.
      *
      * @param <DTO>    The type of the DTO to select.
      * @param dtoClass The class of the DTO to be queried, which must already be registered.
@@ -172,7 +179,11 @@ public class Litebridge {
     }
 
     /**
-     * Initiates the creation of a SQL SELECT statement with the specified columns.
+     * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
+     * <p>
+     * Creates a SQL SELECT statement with the specified columns; the source table is specified
+     * via a chained {@code from()} call.
+     * <p>
      * This method constructs a {@link SqlFromClause} for further query composition
      * by specifying the columns to be included in the SELECT clause.
      *
@@ -186,7 +197,11 @@ public class Litebridge {
     }
 
     /**
-     * Creates a SQL SELECT statement with the specified columns.
+     * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
+     * <p>
+     * Creates a SQL SELECT statement with the specified columns the source table is specified
+     * via a chained {@code from()} call.
+     * <p>
      * This method constructs a {@link SqlFromClause} to enable further query composition.
      *
      * @param columns An array of {@link Aliased} objects representing the columns
@@ -200,7 +215,10 @@ public class Litebridge {
     }
 
     /**
-     * Creates a SQL SELECT statement with all columns.
+     * Query data from the database, without mapping results to Data Transfer Object (DTOs).
+     * <p>
+     * Creates a SQL SELECT statement with all columns. The source table is specified
+     * via a chained {@code from()} call.
      * This method constructs a {@link SqlFromClause} to enable further query composition.
      *
      * @return A {@link SqlFromClause} instance that allows further refinement
@@ -211,7 +229,7 @@ public class Litebridge {
     }
 
     /**
-     * Converts a given data row into a Data Transfer Object (DTO) of the specified type.
+     * Convert a given result row into a Data Transfer Object (DTO) of the specified type.
      *
      * @param <DTO>    The type of the Data Transfer Object to be created.
      * @param row      The data row to map, containing column-value pairs. Must not be null.

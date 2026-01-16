@@ -1,7 +1,7 @@
 /**
- * Query-related models
+ * Update-related models
  */
 @NullMarked
-package org.litebridge.db.spi.query;
+package org.litebridge.db.spi.update;
 
 import org.jspecify.annotations.NullMarked;

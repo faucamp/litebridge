@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -34,6 +33,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * An abstract implementation of the {@link DatabaseProvider} interface that provides a framework for interacting
+ * with a database by managing SQL queries, metadata retrieval, and type conversions. This class serves as a base
+ * for specific database implementations, handling common functionality while leaving database-specific details
+ * to subclasses.
+ * <p>
+ * This class includes utility methods for preparing and executing SQL statements, fetching table metadata, and
+ * performing insert, update, and select operations. It uses a caching mechanism for table metadata to improve
+ * efficiency and ensures type conversion using a pluggable {@link TypeConverter}.
+ */
 public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     static final String[] TYPES_TABLE = {"TABLE"};
@@ -72,6 +81,15 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return tableMetaData;
     }
 
+    /**
+     * Retrieve metadata for the specified table, including its primary keys and columns.
+     * <p>
+     * This executes a database query to fetch database metadata.
+     *
+     * @param table the table for which metadata is being fetched, containing schema, catalog, and table name details
+     * @return a {@code TableMetaData} object containing details about the table's structure, primary keys, and column metadata
+     * @throws SQLException if an error occurs while fetching database metadata
+     */
     protected TableMetaData fetchTableMetaData(final Table table) throws SQLException {
         final DatabaseMetaData databaseMetaData = connection.getMetaData();
 
@@ -88,18 +106,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     public InsertResult insert(final Insert insert) throws SQLException {
         final PreparedSql preparedSql = prepareSql(insert);
         return executeSqlInsert(preparedSql, insert.table());
-    }
-
-    /**
-     * Generates a SQL fragment to retrieve the next value from a sequence for direct use in an INSERT or UPDATE statement,
-     * e.g. to generate "INSERT INTO LB.ACCOUNT(ACCOUNT_ID, ACCOUNT_NAME) VALUES (NEXT VALUE FOR sequence_name, ?)",
-     * this method returns "NEXT VALUE FOR sequence_name".
-     *
-     * @param sequence the name of the database sequence to generate the next value from
-     * @return a formatted SQL string representing the next sequence value for direct insertion
-     */
-    protected static String createSequenceNextValueForDirectInsert(final String sequence) {
-        return "NEXT VALUE FOR %s".formatted(sequence);
     }
 
     @Override
@@ -220,6 +226,28 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return sql.toString();
     }
 
+    /**
+     * Generate a SQL fragment to retrieve the next value from a sequence for direct use in an INSERT or UPDATE statement,
+     * e.g. to generate "INSERT INTO LB.ACCOUNT(ACCOUNT_ID, ACCOUNT_NAME) VALUES (NEXT VALUE FOR sequence_name, ?)",
+     * this method returns "NEXT VALUE FOR sequence_name".
+     *
+     * @param sequence the name of the database sequence to generate the next value from
+     * @return a formatted SQL string representing the next sequence value for direct insertion
+     */
+    protected static String createSequenceNextValueForDirectInsert(final String sequence) {
+        return "NEXT VALUE FOR %s".formatted(sequence);
+    }
+
+    /**
+     * Prepare a SQL INSERT statement along with its bind values for execution.
+     * <p>
+     * This method constructs the SQL query string based on the provided {@link Insert} object,
+     * which contains the table's metadata, columns, and rows to be inserted.
+     * The bind values are derived from the rows and included in the returned {@link  PreparedSql}.
+     *
+     * @param insert the {@link Insert} object containing the table metadata, columns, and rows for the SQL INSERT operation
+     * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values
+     */
     protected PreparedSql prepareSql(final Insert insert) {
         final List<String> columnNames = insert.columns().stream().map(ColumnMetaData::name).toList();
 
@@ -252,6 +280,18 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return new PreparedSql(sql.toString(), bindValues);
     }
 
+    /**
+     * Prepare a SQL UPDATE statement along with its bind values for execution.
+     * <p>
+     * This method constructs the SQL query string based on the provided {@link Update} object,
+     * which contains the table's metadata, column-value pairs, and conditions for the WHERE clause.
+     * It ensures proper formatting of the SQL query and converts values as needed using a type converter.
+     * The resulting SQL query and its associated bind values are encapsulated in a {@link PreparedSql} object.
+     *
+     * @param update the {@link Update} object containing table metadata, column-value pairs for the SET clause,
+     *               and conditions for the WHERE clause to specify target rows.
+     * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values.
+     */
     protected PreparedSql prepareSql(final Update update) {
         final StringBuilder sql = new StringBuilder("UPDATE ");
 
@@ -301,6 +341,17 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return new PreparedSql(sql.toString(), bindValues);
     }
 
+    /**
+     * Create a SQL JOIN clause based on the provided {@link Join} object.
+     * <p>
+     * The join clause is constructed by specifying the target table, optional schema,
+     * and any associated conditions for the join operation. Conditional logic is applied
+     * to determine the join type (e.g., ON or USING) and format the resulting SQL string.
+     *
+     * @param join the {@link Join} object containing the target table information and the list
+     *             of conditions defining the join relationship
+     * @return a {@code String} representing the constructed SQL join clause
+     */
     protected String createJoin(final Join join) {
         final StringBuilder sb = new StringBuilder();
 
@@ -335,6 +386,15 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return sb.toString();
     }
 
+    /**
+     * Generate a SQL condition string based on the given {@link Condition}.
+     * This method constructs the SQL fragment by combining the column, operator,
+     * and value (if applicable) for the provided condition.
+     *
+     * @param condition the {@link Condition} object specifying the column, operator,
+     *                  and value for the SQL condition
+     * @return a {@code String} representing the constructed SQL condition fragment
+     */
     protected String createCondition(final Condition condition) {
         final String column;
 
@@ -353,6 +413,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
+    /**
+     * Map an {@link Operator} enum to its corresponding string representation used in logical or database operations.
+     *
+     * @param operator the Operator enum to be mapped
+     * @return the string representation of the provided Operator
+     */
     protected String mapOperator(final Operator operator) {
         return switch (operator) {
             case EQ -> "=";
@@ -368,6 +434,17 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         };
     }
 
+    /**
+     * Execute a SQL INSERT operation using the provided prepared SQL statement and table metadata.
+     * <p>
+     * This method executes the prepared statement, retrieves any generated primary key values,
+     * and wraps the results in an {@link InsertResult} object.
+     *
+     * @param preparedSql   the {@link PreparedSql} object containing the SQL query string and bind values to be executed
+     * @param tableMetaData the {@link TableMetaData} object containing the metadata of the target table, including primary key information
+     * @return an {@link InsertResult} object encapsulating the number of affected rows and a list of generated keys (if any)
+     * @throws SQLException if an error occurs while executing the SQL insert or retrieving the generated keys
+     */
     protected InsertResult executeSqlInsert(final PreparedSql preparedSql, final TableMetaData tableMetaData) throws SQLException {
         try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, true)) {
             final int affectedRows = preparedStatement.executeUpdate();
@@ -392,6 +469,17 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
+    /**
+     * Execute a SQL UPDATE operation using the provided prepared SQL statement and table metadata.
+     * <p>
+     * This method performs the execution of a prepared update statement and wraps the number
+     * of affected rows in an {@link UpdateResult} object.
+     *
+     * @param preparedSql   the {@link PreparedSql} object containing the SQL query string and bind values to be executed
+     * @param tableMetaData the {@link TableMetaData} object containing the metadata of the target table
+     * @return an {@link UpdateResult} object encapsulating the number of rows affected by the update operation
+     * @throws SQLException if an error occurs while executing the SQL update
+     */
     protected UpdateResult executeSqlUpdate(final PreparedSql preparedSql, final TableMetaData tableMetaData) throws SQLException {
         try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false)) {
             final int affectedRows = preparedStatement.executeUpdate();
@@ -399,6 +487,16 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
+    /**
+     * Execute the given SQL query with specified columns, conditions, and table, and returns the result as a list of rows.
+     *
+     * @param sql        the SQL query to be executed
+     * @param columns    the list of columns to include in the query
+     * @param conditions the list of conditions to apply in the WHERE clause of the query
+     * @param table      the table from which data is queried
+     * @return a list of {@code Row} objects representing the query results
+     * @throws SQLException if an SQL error occurs while executing the query
+     */
     private List<Row> executeSqlQuery(final String sql, final List<Column> columns, final List<Condition> conditions, final Table table) throws SQLException {
         final TableMetaData fromTable = ensureTableMetaData(table);
         final List<BindValue> bindValues = conditions.stream()
@@ -500,6 +598,18 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
+    /**
+     * Prepare a {@link PreparedStatement} object based on the provided SQL and bind values.
+     * <p>
+     * Optionally, the statement can be configured to return generated keys.
+     *
+     * @param preparedSql         the {@link PreparedSql} object containing the SQL query and associated bind values.
+     * @param returnGeneratedKeys a boolean indicating whether the statement should return generated keys.
+     *                            Pass {@code true} to configure the statement to return generated keys,
+     *                            or {@code false} otherwise.
+     * @return a {@link PreparedStatement} that is ready to be executed based on the provided SQL and bind values.
+     * @throws SQLException if a database access error occurs or the preparation of the SQL statement fails.
+     */
     protected PreparedStatement prepareStatement(final PreparedSql preparedSql, final boolean returnGeneratedKeys) throws SQLException {
         if (LOGGER.isTraceEnabled() && !CollectionUtils.isEmpty(preparedSql.bindValues)) {
             LOGGER.trace("Generated SQL: {} with bind parameters: {}", preparedSql.sql(), preparedSql.bindValues.stream().map(BindValue::value).toList());
@@ -545,10 +655,25 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return preparedStatement;
     }
 
+    /**
+     * Return the logger instance for this database provider.
+     *
+     * @return the logger instance
+     */
     protected Logger getLogger() {
         return LOGGER;
     }
 
+    /**
+     * Prepare a row for insertion based on the provided row value. This includes
+     * processing column values, converting them to a suitable format, and generating
+     * value specifiers and bind values for the prepared row. Handles nullable columns,
+     * auto-increment columns, and sequence-based value generation as necessary.
+     *
+     * @param rowValue the row value object containing the column definitions and their values
+     * @return a PreparedRow instance containing processed value specifiers and bind values
+     * @throws IllegalArgumentException if a non-nullable column without an auto-increment or sequence value is attempted to be set to NULL
+     */
     protected PreparedRow prepareRow(final RowValue rowValue) {
         final List<String> valueSpecifiers = new ArrayList<>(rowValue.columns().size());
         final List<BindValue> bindValues = new ArrayList<>(rowValue.columns().size());
@@ -573,12 +698,60 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return new PreparedRow(valueSpecifiers, bindValues);
     }
 
+    /**
+     * A binding value and its associated SQL data type.
+     * <p>
+     * This record is used to pair a value with its corresponding SQL type,
+     * ensuring that the value can be appropriately converted in database operations.
+     *
+     * @param value       The object value to be bound, which may be null if representing a SQL NULL.
+     * @param sqlDataType The integer value indicating the SQL data type of the bound value,
+     *                    corresponding to values in {@link java.sql.Types}.
+     */
     protected record BindValue(@Nullable Object value, int sqlDataType) {
     }
 
+    /**
+     * A prepared SQL statement along with its associated bind values.
+     * <p>
+     * This record encapsulates the SQL query string and the list of values to be
+     * bound to the query parameters.
+     * <p>
+     * Instances of this record are immutable and can be used to safely pass
+     * SQL queries and their bindings within the application.
+     *
+     * @param sql        The SQL query string that may contain placeholders for
+     *                   parameterized values.
+     * @param bindValues The list of bind values corresponding to the placeholders
+     *                   in the SQL query. Each value can be nullable, represented
+     *                   by the {@link BindValue} type.
+     */
     protected record PreparedSql(String sql, List<@Nullable BindValue> bindValues) {
     }
 
+    /**
+     * A prepared row with associated value specifiers and bound values.
+     * <p>
+     * This record is a data structure that holds information about a row in which
+     * each element is defined by a list of value specifiers and a corresponding
+     * list of bind values. Commonly used in scenarios involving prepared statements
+     * or database row mappings.
+     * <p>
+     * The {@code valueSpecifiers} list contains the string representations or placeholders
+     * defining the schema or format for the data in the row.
+     * <p>
+     * The {@code bindValues} list contains the bound or parameterized values that align
+     * with the associated specifiers.
+     * <p>
+     * It is the caller's responsibility to ensure that the {@code valueSpecifiers} and
+     * {@code bindValues} lists are properly aligned, with each value specifier corresponding
+     * to its respective bind value.
+     * <p>
+     * This class is immutable and thread-safe by design.
+     *
+     * @param valueSpecifiers the list of specifiers defining data format or schema
+     * @param bindValues      the list of bound values corresponding to the specifiers
+     */
     protected record PreparedRow(List<String> valueSpecifiers, List<BindValue> bindValues) {
     }
 }

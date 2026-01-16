@@ -2,6 +2,17 @@ package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
 
+/**
+ * Generic condition clause for building conditional expressions in a fluent and type-safe manner.
+ * <p>
+ * This interface defines a set of methods for specifying various relational conditions such as equality,
+ * inequality, comparison, and null checks. These methods return instances of {@link ConditionClauseTerminal}
+ * to allow further chaining and construction of compound conditions.
+ *
+ * @param <DTO>  the type of the data transfer object associated with the query
+ * @param <SELF> the type of the implementing subclass to allow type-safe chaining
+ * @param <CCT>  the type of the terminal condition clause returned for further chaining
+ */
 public interface ConditionClause<DTO,
         SELF extends ConditionClause<DTO, SELF, CCT>,
         CCT extends ConditionClauseTerminal<DTO, SELF, CCT>> {
