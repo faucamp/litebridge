@@ -68,7 +68,7 @@ public final class DefaultDtoMapper implements DtoMapper {
         final DTO dto;
 
         try {
-            dto = dtoClass.getDeclaredConstructor().newInstance();
+            dto = ClassUtils.newInstance(dtoClass);
         } catch (final Exception ex) {
             throw new IllegalStateException("Failed to instantiate DTO: " + dtoClass, ex);
         }

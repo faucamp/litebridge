@@ -2,6 +2,7 @@ package org.litebridge.commons;
 
 import org.jspecify.annotations.Nullable;
 
+import java.lang.reflect.Field;
 import java.util.function.Supplier;
 
 public final class ObjectUtils {
@@ -40,6 +41,17 @@ public final class ObjectUtils {
     public static <X extends Throwable> void requireNull(@Nullable final Object obj, final Supplier<? extends X> exceptionSupplier) throws X {
         if (obj != null) {
             throw exceptionSupplier.get();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T getFieldValue(final Object dto, final String fieldName, final Class<T> fieldType) {
+        final Field field = ClassUtils.getField(dto.getClass(), fieldName);
+        field.setAccessible(true);
+        try {
+            return (T) field.get(dto);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException("Failed to get field " + field + " on object: " + dto);
         }
     }
 }

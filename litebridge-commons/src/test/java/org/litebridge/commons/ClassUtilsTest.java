@@ -402,7 +402,7 @@ class ClassUtilsTest {
         assertThrows(IllegalStateException.class, () -> ClassUtils.newInstance(UnsupportedConstructorClass.class));
     }
 
-    static class TestDto {
+    private static class TestDto {
         private static String staticField;
         private String name;
         private int age;

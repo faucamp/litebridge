@@ -57,19 +57,19 @@ public final class ClassUtils {
      * This method attempts to find a field in the given class by its name. If the field is not
      * found in the current class, it recursively checks the superclasses up to (but not including) the `Object` class.
      *
-     * @param type      the class to search for the field
+     * @param cls       the class to search for the field
      * @param fieldName the name of the field to retrieve
      * @return the {@code Field} object representing the specified field if found
      * @throws IllegalArgumentException if the field cannot be found in the specified class or its superclasses
      */
-    public static Field getField(final Class<?> type, final String fieldName) {
+    public static Field getField(final Class<?> cls, final String fieldName) {
         try {
-            return type.getDeclaredField(fieldName);
+            return cls.getDeclaredField(fieldName);
         } catch (NoSuchFieldException ex) {
-            if (!type.getSuperclass().equals(Object.class)) {
-                return getField(type.getSuperclass(), fieldName);
+            if (!cls.getSuperclass().equals(Object.class)) {
+                return getField(cls.getSuperclass(), fieldName);
             } else {
-                throw new IllegalArgumentException("Field '%s' does not exist in DTO class '%s'".formatted(fieldName, type.getName()));
+                throw new IllegalArgumentException("Field '%s' does not exist in DTO class '%s'".formatted(fieldName, cls.getName()));
             }
         }
     }
