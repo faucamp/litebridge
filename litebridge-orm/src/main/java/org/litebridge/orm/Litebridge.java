@@ -286,12 +286,17 @@ public class Litebridge {
             final FieldAccessor fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
             final ColumnMetaData column = ObjectUtils.requireNonNull(tableMetaData.column(columnSpec.name()), "Column metadata not found: " + columnSpec.name());
 
-            if (!StringUtils.isBlank(columnSpec.sequence())) {
-                column.setSequence(columnSpec.sequence());
+            if (columnSpec.autoIncrement()) {
+                column.setAutoIncrement(true);
+
+                if (!StringUtils.isBlank(columnSpec.sequence())) {
+                    column.setSequence(columnSpec.sequence());
+                }
             }
 
             if (!ClassUtils.isBasicType(fieldAccessor.type())) {
-                if (!tableRegistry.containsTable(fieldAccessor.type())) {
+                // Check for self-referencing DTOs, then if we know how to persist the nested DTO
+                if (fieldAccessor.type() != dtoClass && !tableRegistry.containsTable(fieldAccessor.type())) {
                     // Cascading child DTO, but no table mapping exists
                     throw new IllegalArgumentException(String.format("Sub-DTO '%s' in field '%s' of DTO '%s' is not registered", fieldAccessor.type().getName(), fieldSpec.name(), dtoClass.getName()));
                 }
