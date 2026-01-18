@@ -32,6 +32,10 @@ public class Table extends Aliased {
         this.schema = schema;
     }
 
+    public Table(final Table other) {
+        this(other.catalog(), other.schema(), other.name(), other.alias());
+    }
+
     public String catalog() {
         return catalog;
     }

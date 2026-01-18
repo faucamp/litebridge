@@ -50,6 +50,15 @@ public class Aliased {
     }
 
     /**
+     * Retrieve the alias if it is set; otherwise, return the name.
+     *
+     * @return the alias of the entity if it exists, or the name if no alias is set
+     */
+    public String aliasOrName() {
+        return alias != null ? alias : name;
+    }
+
+    /**
      * Set the alias for this entity and return the updated instance.
      *
      * @param alias the alias to assign to this entity; must not be null

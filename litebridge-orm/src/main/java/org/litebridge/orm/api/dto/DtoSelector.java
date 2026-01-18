@@ -17,6 +17,7 @@ import org.litebridge.tracking.ClassFieldCache;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 public final class DtoSelector<DTO> extends AbstractSelector<DTO> {
@@ -60,7 +61,7 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO> {
     }
 
     private DtoFromClauseTerminal<DTO> selectImpl(final Stream<Column> columns) {
-        final String tableAlias = dtoAliasRegistry.alias(table.getMetaData());
+        final String tableAlias = dtoAliasRegistry.newAlias(table.getMetaData());
 
         selectSpec.setTable(table.getMetaData().as(tableAlias));
         selectSpec.setColumns(columns.map(column -> column.as(dtoAliasRegistry.alias(tableAlias, column))));
@@ -82,30 +83,37 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO> {
     }
 
     private void addJoinForNestedDto(final Field nestedDtoField) {
-        final ColumnMetaData joinColumn = table.getColumnForFieldName(nestedDtoField.getName());
+        final ColumnMetaData joinColumnMetaData = table.getColumnForFieldName(nestedDtoField.getName());
 
-        if (joinColumn.getJoinColumn() == null) {
+        if (joinColumnMetaData.getJoinColumn() == null) {
             throw new IllegalStateException("No join column specified for nested DTO '%s' in field '%s' of DTO '%s'".formatted(nestedDtoField.getType().getName(), nestedDtoField.getName(), dtoClass.getName()));
         }
 
         final OrmTable joinTable = tableRegistry.getTableOrThrow(nestedDtoField.getType());
-        final ColumnMetaData targetColumn = joinTable.getColumn(joinColumn.getJoinColumn());
-        final String joinAlias = dtoAliasRegistry.alias(joinTable.getMetaData());
-
-        // Extend selects
-        selectSpec.addColumns(joinTable.getMetaData().columns().stream()
+        final ColumnMetaData targetColumnMetaData = joinTable.getColumn(joinColumnMetaData.getJoinColumn());
+        final String joinAlias = dtoAliasRegistry.newAlias(joinTable.getMetaData());
+        final List<Column> joinSelectColumns = joinTable.getMetaData().columns().stream()
                 .map(columnMetaData ->
                         new Column(joinTable.getMetaData().as(joinAlias), columnMetaData.name(), dtoAliasRegistry.alias(joinAlias, columnMetaData)))
-                .toList());
+                .toList();
+
+        // Extend selects
+        selectSpec.addColumns(joinSelectColumns);
 
         // Create JOIN clause
         final JoinSpec joinSpec = selectSpec.newJoinSpec(table.getMetaData().schema(), joinTable.getMetaData().name());
         joinSpec.table().as(joinAlias);
+
+        final ColumnMetaData joinColumn = new ColumnMetaData(joinColumnMetaData);
+        joinColumn.table().as(selectSpec.getTable().alias());
         final ConditionSpec conditionSpec = joinSpec.newCondition(joinColumn);
 
-        if (joinColumn.name().equals(targetColumn.name())) {
+        if (joinColumnMetaData.name().equals(targetColumnMetaData.name())) {
             conditionSpec.setOperator(Operator.USING);
         } else {
+            final Column targetColumn = joinSelectColumns.stream()
+                    .filter(column -> column.name().equals(targetColumnMetaData.name()))
+                    .findFirst().orElseThrow();
             conditionSpec.setOperator(Operator.EQ);
             conditionSpec.setValue(targetColumn);
         }

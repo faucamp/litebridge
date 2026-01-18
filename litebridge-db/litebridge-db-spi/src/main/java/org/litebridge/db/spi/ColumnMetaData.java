@@ -89,11 +89,14 @@ public final class ColumnMetaData extends Column {
      * <p>
      * Creates a new instance of {@code ColumnMetaData} by copying the properties of another
      * {@code ColumnMetaData} object.
+     * <p>
+     * Creates a copy of the other column's {@link Table} instance,
+     * so it can be safely aliased independently of the original column.
      *
      * @param other the {@code ColumnMetaData} object to copy; must not be null
      */
     public ColumnMetaData(final ColumnMetaData other) {
-        super(other.table(), other.name(), other.alias());
+        super(new Table(other.table()), other.name(), other.alias());
         this.nullable = other.nullable;
         this.dataType = other.dataType;
         this.size = other.size;

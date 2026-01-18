@@ -38,10 +38,4 @@ public class OrderBySpec {
     public void setAsc(final boolean asc) {
         this.asc = asc;
     }
-
-    public List<OrderBy> toOrderBys() {
-        return Arrays.stream(columns)
-                .map(column -> new OrderBy(column, asc))
-                .toList();
-    }
 }

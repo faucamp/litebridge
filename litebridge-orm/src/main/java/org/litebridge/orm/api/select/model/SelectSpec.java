@@ -4,9 +4,11 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -173,7 +175,11 @@ public class SelectSpec {
                         .map(JoinSpec::toJoin)
                         .toList() : Collections.emptyList(),
                 orderBys != null ? orderBys.stream()
-                        .flatMap(orderBySpec -> orderBySpec.toOrderBys().stream())
+                        .flatMap(orderBySpec -> Arrays.stream(orderBySpec.columns())
+                                .map(columnName -> this.columns.stream()
+                                        .filter(column -> Objects.equals(column.name(), columnName))
+                                        .findFirst().orElseThrow())
+                                .map(column -> new OrderBy(column, orderBySpec.isAsc())))
                         .toList() : Collections.emptyList(),
                 whereConditions != null ? whereConditions.stream()
                         .map(ConditionSpec::toCondition)

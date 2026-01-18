@@ -9,13 +9,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class DtoAliasRegistryTest {
 
     @Test
-    void alias() {
+    void newAlias() {
         // Given
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
 
         // When
-        final String result = dtoAliasRegistry.alias(table);
+        final String result = dtoAliasRegistry.newAlias(table);
 
         // Then
         assertNotNull(result);
@@ -39,13 +39,13 @@ class DtoAliasRegistryTest {
     }
 
     @Test
-    void aliasOrNull_null() {
+    void newAliasOrNull_null() {
         // Given
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
 
         // When
-        final String result = dtoAliasRegistry.aliasOrNull(table);
+        final String result = dtoAliasRegistry.aliasOrNull(table, 0);
 
         // Then
         assertNull(result);
@@ -72,7 +72,7 @@ class DtoAliasRegistryTest {
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final Column column = new Column(table, "TEST_COLUMN");
-        final String tableAlias = dtoAliasRegistry.alias(table);
+        final String tableAlias = dtoAliasRegistry.newAlias(table);
         dtoAliasRegistry.alias(tableAlias, column);
 
         // When

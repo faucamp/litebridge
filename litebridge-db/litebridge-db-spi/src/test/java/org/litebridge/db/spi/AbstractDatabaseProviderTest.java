@@ -130,7 +130,7 @@ class AbstractDatabaseProviderTest {
         final RowValue rowValue1 = new RowValue(List.of(columnValue1));
         final RowValue rowValue2 = new RowValue(List.of(columnValue2));
 
-        final Insert insert = new Insert(table, List.of(column), List.of(rowValue1, rowValue2));
+        final Insert insert = new Insert(table, List.of(column), List.of(rowValue1, rowValue2), true);
 
         when(typeConverter.convert("testValue1", Types.VARCHAR)).thenReturn("testValue1");
         //when(typeConverter.convert("", Types.VARCHAR)).thenReturn("testValue2");
@@ -163,7 +163,7 @@ class AbstractDatabaseProviderTest {
         final ColumnValue columnValue = new ColumnValue(column, "testValue");
         final RowValue rowValue = new RowValue(List.of(columnValue));
 
-        final Insert insert = new Insert(table, rowValue);
+        final Insert insert = new Insert(table, rowValue, true);
 
         when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
 
@@ -195,7 +195,7 @@ class AbstractDatabaseProviderTest {
         final ColumnValue columnValue = new ColumnValue(column, "testValue");
         final RowValue rowValue = new RowValue(List.of(columnValue));
 
-        final Insert insert = new Insert(table, List.of(rowValue));
+        final Insert insert = new Insert(table, List.of(rowValue), true);
 
         when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
 
@@ -221,7 +221,7 @@ class AbstractDatabaseProviderTest {
         final ColumnValue columnValue = new ColumnValue(column, "testValue");
         final RowValue rowValue = new RowValue(List.of(columnValue));
 
-        final Insert insert = new Insert(table, List.of(column), List.of(rowValue));
+        final Insert insert = new Insert(table, List.of(column), List.of(rowValue), true);
 
         when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
 
@@ -251,7 +251,7 @@ class AbstractDatabaseProviderTest {
         final ColumnValue columnValue = new ColumnValue(column, null);
         final RowValue rowValue = new RowValue(List.of(columnValue));
 
-        final Insert insert = new Insert(table, List.of(column), List.of(rowValue));
+        final Insert insert = new Insert(table, List.of(column), List.of(rowValue), true);
 
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> databaseProvider.insert(insert));
@@ -319,7 +319,7 @@ class AbstractDatabaseProviderTest {
                 List.of(column),
                 List.of(new Join(table, List.of(new Condition(column, Operator.USING, null),
                         new Condition(column, Operator.EQ, "TEST_VALUE")))),
-                List.of(new OrderBy(column.name(), true)),
+                List.of(new OrderBy(column, true)),
                 List.of(new Condition(column, Operator.EQ, "TEST_VALUE")),
                 Optional.of(new Limit(Optional.of(10), Optional.of(20))));
 
@@ -366,7 +366,7 @@ class AbstractDatabaseProviderTest {
                 table,
                 List.of(column1, column2),
                 List.of(new Join(table, List.of(new Condition(column2, Operator.EQ, "TEST_VALUE")))),
-                List.of(new OrderBy(column1.name(), true)),
+                List.of(new OrderBy(column1, true)),
                 List.of(new Condition(column2, Operator.EQ, "TEST_VALUE"),
                         new Condition(column2, Operator.NEQ, "OTHER_VALUE")),
                 Optional.of(new Limit(Optional.of(10), Optional.of(20))));
@@ -376,7 +376,7 @@ class AbstractDatabaseProviderTest {
 
         // Then
         assertNotNull(result);
-        assertEquals("SELECT t1.TEST_PK AS col1, t1.TEST_COLUMN AS col2 FROM TEST_SCHEMA.TEST_TABLE AS t1 JOIN TEST_SCHEMA.TEST_TABLE AS t1 ON t1.TEST_COLUMN = ? WHERE t1.TEST_COLUMN = ? AND t1.TEST_COLUMN <> ? ORDER BY TEST_PK ASC LIMIT 10 OFFSET 20", result);
+        assertEquals("SELECT t1.TEST_PK AS col1, t1.TEST_COLUMN AS col2 FROM TEST_SCHEMA.TEST_TABLE AS t1 JOIN TEST_SCHEMA.TEST_TABLE AS t1 ON t1.TEST_COLUMN = ? WHERE t1.TEST_COLUMN = ? AND t1.TEST_COLUMN <> ? ORDER BY t1.TEST_PK ASC LIMIT 10 OFFSET 20", result);
     }
 
     @Test

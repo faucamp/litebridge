@@ -105,7 +105,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     @Override
     public InsertResult insert(final Insert insert) throws SQLException {
         final PreparedSql preparedSql = prepareSql(insert);
-        return executeSqlInsert(preparedSql, insert.table());
+        return executeSqlInsert(preparedSql, insert.table(), insert.returnGeneratedKeys());
     }
 
     @Override
@@ -214,7 +214,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                     sql.append(", ");
                 }
 
-                sql.append(orderBy.column()).append(orderBy.asc() ? " ASC" : " DESC");
+                if (orderBy.column().table().alias() != null) {
+                    sql.append(orderBy.column().table().alias()).append('.');
+                }
+
+                sql.append(orderBy.column().name()).append(orderBy.asc() ? " ASC" : " DESC");
             }
         }
 
@@ -409,7 +413,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         } else if (condition.operator() == Operator.USING) {
             return "%s (%s)".formatted(mapOperator(condition.operator()), condition.column().name());
         } else {
-            return "%s %s ?".formatted(column, mapOperator(condition.operator()));
+            // If the target value is a column, reference that
+            if (condition.value() instanceof Column targetColumn) {
+                return "%s %s %s.%s".formatted(column, mapOperator(condition.operator()), targetColumn.table().aliasOrName(), targetColumn.name());
+            } else {
+                return "%s %s ?".formatted(column, mapOperator(condition.operator()));
+            }
         }
     }
 
@@ -440,16 +449,19 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * This method executes the prepared statement, retrieves any generated primary key values,
      * and wraps the results in an {@link InsertResult} object.
      *
-     * @param preparedSql   the {@link PreparedSql} object containing the SQL query string and bind values to be executed
-     * @param tableMetaData the {@link TableMetaData} object containing the metadata of the target table, including primary key information
+     * @param preparedSql         the {@link PreparedSql} object containing the SQL query string and bind values to be executed
+     * @param tableMetaData       the {@link TableMetaData} object containing the metadata of the target table, including primary key information
+     * @param returnGeneratedKeys a boolean indicating whether the statement should return generated keys.
+     *                            Pass {@code true} to configure the statement to return generated keys,
+     *                            or {@code false} otherwise.
      * @return an {@link InsertResult} object encapsulating the number of affected rows and a list of generated keys (if any)
      * @throws SQLException if an error occurs while executing the SQL insert or retrieving the generated keys
      */
-    protected InsertResult executeSqlInsert(final PreparedSql preparedSql, final TableMetaData tableMetaData) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, true)) {
+    protected InsertResult executeSqlInsert(final PreparedSql preparedSql, final TableMetaData tableMetaData, final boolean returnGeneratedKeys) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, returnGeneratedKeys)) {
             final int affectedRows = preparedStatement.executeUpdate();
 
-            if (affectedRows > 0) {
+            if (returnGeneratedKeys && affectedRows > 0) {
                 final List<Object> generatedKeys = new ArrayList<>(tableMetaData.primaryKey().size());
                 final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
 
@@ -464,7 +476,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 generatedKeysResultSet.close();
                 return new InsertResult(affectedRows, generatedKeys);
             } else {
-                return new InsertResult(0);
+                return new InsertResult(affectedRows);
             }
         }
     }

@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.spec;
 
-public sealed interface ColumnSpecBuilder<SELF extends ColumnSpecBuilder<SELF>> extends ColumnSpec
+public sealed interface ColumnSpecBuilder<SELF extends ColumnSpecBuilder<SELF>>
+        extends ColumnSpec
         permits AbstractColumnSpecBuilder {
 
     SELF autoIncrement(boolean autoIncrement);

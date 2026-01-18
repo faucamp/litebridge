@@ -4,12 +4,15 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 import org.litebridge.tracking.FieldAccessorChain;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -34,8 +37,15 @@ public final class DefaultDtoMapper implements DtoMapper {
         this.dtoAliasRegistry = dtoAliasRegistry;
     }
 
-    @SuppressWarnings("unchecked")
     public <DTO> @Nullable DTO toDto(final @Nullable Row row, final Class<DTO> dtoClass, final @Nullable DtoCache dtoCache) {
+        return toDto(row, dtoClass, dtoCache, new TableAliasIndexer());
+    }
+
+    @SuppressWarnings("unchecked")
+    private <DTO> @Nullable DTO toDto(final @Nullable Row row,
+                                      final Class<DTO> dtoClass,
+                                      final @Nullable DtoCache dtoCache,
+                                      final TableAliasIndexer tableAliasIndexer) {
         if (row == null) {
             return null;
         }
@@ -58,9 +68,9 @@ public final class DefaultDtoMapper implements DtoMapper {
         }
 
         // Filter results for this DTO
-        final String tableAlias = dtoAliasRegistry.aliasOrNull(table.getMetaData());
+        final String tableAlias = dtoAliasRegistry.aliasOrNull(table.getMetaData(), tableAliasIndexer.nextIndex(table.getMetaData()));
         // Create a new DTO instance
-        final DTO dto = createDto(dtoClass, row, table, tableAlias, dtoCache, new HashSet<>());
+        final DTO dto = createDto(dtoClass, row, table, tableAlias, dtoCache, new HashSet<>(), tableAliasIndexer);
 
         dtoCache.put(primaryKeyValues, dto);
         return dto;
@@ -71,7 +81,8 @@ public final class DefaultDtoMapper implements DtoMapper {
                                 final OrmTable table,
                                 final @Nullable String tableAlias,
                                 final @Nullable DtoCache dtoCache,
-                                final Set<Row.RowColumn> mappedColumns) {
+                                final Set<Row.RowColumn> mappedColumns,
+                                final TableAliasIndexer tableAliasIndexer) {
         final DTO dto;
 
         try {
@@ -115,7 +126,7 @@ public final class DefaultDtoMapper implements DtoMapper {
 
                     if (sameTableNestedDto) {
                         // Nested DTO built up from the same table
-                        convertedValue = createDto(field.type(), row, table, tableAlias, dtoCache, mappedColumns);
+                        convertedValue = createDto(field.type(), row, table, tableAlias, dtoCache, mappedColumns, tableAliasIndexer);
                     } else {
                         if (!ClassFieldAccessorCache.fieldAccessors(dtoClass).contains(field)) {
                             // Skip fields that are not mapped by the DTO
@@ -127,7 +138,7 @@ public final class DefaultDtoMapper implements DtoMapper {
                         if (ClassUtils.isBasicType(field.type())) {
                             convertedValue = typeConverter.convert(rowColumn.value(), field.type());
                         } else {
-                            convertedValue = toDto(row, field.type(), dtoCache);
+                            convertedValue = toDto(row, field.type(), dtoCache, tableAliasIndexer);
                         }
                     }
 
@@ -135,5 +146,13 @@ public final class DefaultDtoMapper implements DtoMapper {
                 });
 
         return dto;
+    }
+
+    private static final class TableAliasIndexer {
+        private final Map<Table, Integer> tableAliasCurrentIndex = new HashMap<>();
+
+        public int nextIndex(final Table table) {
+            return tableAliasCurrentIndex.merge(table,  0, (key, value) -> value + 1);
+        }
     }
 }

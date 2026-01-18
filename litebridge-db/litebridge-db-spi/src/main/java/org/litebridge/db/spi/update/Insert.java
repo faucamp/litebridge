@@ -26,14 +26,22 @@ import java.util.List;
  * @param columns The list of columns involved in the insertion operation.
  * @param rows    The list of rows to be inserted.
  */
-public record Insert(TableMetaData table, List<ColumnMetaData> columns, List<RowValue> rows)
+public record Insert(TableMetaData table, List<ColumnMetaData> columns, List<RowValue> rows,
+                     boolean returnGeneratedKeys)
         implements UpdateStatement {
 
-    public Insert(final TableMetaData table, final RowValue row) {
-        this(table, row.columns().stream().map(ColumnValue::column).toList(), List.of(row));
+    public Insert(final TableMetaData table, final RowValue row, final boolean returnGeneratedKeys) {
+        this(table, row.columns().stream().map(ColumnValue::column).toList(), List.of(row), returnGeneratedKeys);
     }
 
-    public Insert(final TableMetaData table, final List<RowValue> rows) {
-        this(table, CollectionUtils.requireNonEmpty(rows, "No rows to insert for table: " + table.name()).getFirst().columns().stream().map(ColumnValue::column).toList(), rows);
+    public Insert(final TableMetaData table, final List<RowValue> rows, final boolean returnGeneratedKeys) {
+        this(table,
+                CollectionUtils.requireNonEmpty(rows, "No rows to insert for table: " + table.name())
+                        .getFirst()
+                        .columns().stream()
+                        .map(ColumnValue::column)
+                        .toList(),
+                rows,
+                returnGeneratedKeys);
     }
 }

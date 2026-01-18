@@ -79,13 +79,17 @@ public class PersistenceFacade {
      */
     public <DTO> void save(DTO dto) throws SQLException {
         final AbstractStatementBuilder<?> statementBuilder = createStatementBuilder(dto);
-        final UpdateResult updateResult = executeUpdateStatement(statementBuilder);
+        final CompositeUpdateResult compositeUpdateResult = executeUpdateStatement(dto, statementBuilder);
 
-        if (updateResult instanceof InsertResult insertResult
-                && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-            // TODO: composite PK support
-            updateDtoPrimaryKey(dto, insertResult.generatedKeys().getFirst());
-        }
+        compositeUpdateResult.results().forEach(dtoUpdateResult -> {
+            if (dtoUpdateResult.updateResult() instanceof InsertResult insertResult
+                    && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
+                // TODO: composite PK support
+                updateDtoPrimaryKey(dto, insertResult.generatedKeys().getFirst());
+            } else {
+                tableRegistry.getTableOrThrow(dtoUpdateResult.dto().getClass()).syncPersistedDto(dtoUpdateResult.dto());
+            }
+        });
     }
 
     /**
@@ -100,12 +104,18 @@ public class PersistenceFacade {
      */
     public void insert(final Object dto) throws SQLException {
         final InsertBuilder statementBuilder = createInsertBuilder(dto, tableRegistry.getTableOrThrow(dto.getClass()));
-        final InsertResult insertResult = (InsertResult) executeUpdateStatement(statementBuilder);
+        final CompositeUpdateResult compositeUpdateResult = executeUpdateStatement(dto, statementBuilder);
 
-        if (!CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-            // TODO: composite PK support
-            updateDtoPrimaryKey(dto, insertResult.generatedKeys().getFirst());
-        }
+        compositeUpdateResult.results().forEach(dtoUpdateResult -> {
+            if (dtoUpdateResult.updateResult() instanceof InsertResult insertResult) {
+                if (!CollectionUtils.isEmpty(insertResult.generatedKeys())) {
+                    // TODO: composite PK support
+                    updateDtoPrimaryKey(dtoUpdateResult.dto(), insertResult.generatedKeys().getFirst());
+                }
+            } else {
+                tableRegistry.getTableOrThrow(dtoUpdateResult.dto().getClass()).syncPersistedDto(dtoUpdateResult.dto());
+            }
+        });
     }
 
     /**
@@ -121,7 +131,7 @@ public class PersistenceFacade {
      */
     public void update(final Object dto) throws SQLException {
         final UpdateBuilder statementBuilder = createUpdateBuilder(dto, tableRegistry.getTableOrThrow(dto.getClass()));
-        executeUpdateStatement(statementBuilder);
+        executeUpdateStatement(dto, statementBuilder);
     }
 
     private InsertBuilder createInsertBuilder(final Object dto, final OrmTable table) {
@@ -146,8 +156,8 @@ public class PersistenceFacade {
         }
 
         if (LOGGER.isTraceEnabled()) {
-            final StringJoiner sj = new StringJoiner(",", "[", "]");
-            changedFields.forEach(changedField -> sj.add(changedField.name() + " = " + changedField.value()));
+            final StringJoiner sj = new StringJoiner(", ", "[", "]");
+            changedFields.forEach(changedField -> sj.add(changedField.name() + "=" + changedField.value()));
             LOGGER.trace("Changed fields for DTO: {}: {}", dto, sj);
         }
 
@@ -186,17 +196,30 @@ public class PersistenceFacade {
                     if (existingStatement == null) {
                         final AbstractStatementBuilder<?> dependencyStatementBuilder = createStatementBuilder(value);
 
-                        final PipedStatement dependencyPipe = new PipedStatement(dependencyStatementBuilder, updateResult -> {
-                            if (updateResult instanceof InsertResult insertResult
-                                    && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-                                // TODO: composite PK support
-                                final Object pkValue = insertResult.generatedKeys().getFirst();
-                                columnValues.add(new ColumnValue(column, pkValue));
-                                updateDtoPrimaryKey(value, pkValue);
-                            }
-                        });
+                        // Check if the nested DTO's PK is set
+                        // TODO: composite PK support
+                        final FieldAccessor embeddedDtoPkAccessor = embeddedDtoTable.getFieldForColumnName(embeddedDtoTable.getMetaData().primaryKey().getFirst().name());
+                        final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
 
-                        statementChain.addDependency(value, dependencyPipe);
+                        if (embeddedDtoPkValue == null) {
+                            // PK not yet set - pipe the generated key back to the parent DTO
+                            final PipedStatement dependencyPipe = new PipedStatement(dependencyStatementBuilder, value, updateResult -> {
+                                if (updateResult instanceof InsertResult insertResult
+                                        && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
+                                    // TODO: composite PK support
+                                    final Object pkValue = insertResult.generatedKeys().getFirst();
+                                    columnValues.add(new ColumnValue(column, pkValue));
+                                    updateDtoPrimaryKey(value, pkValue);
+                                }
+                            });
+                            statementChain.addDependency(value, dependencyPipe);
+                        } else {
+                            // PK already set - set the PK value on the current DTO and ensure the embedded DTO is persisted
+                            columnValues.add(new ColumnValue(column, embeddedDtoPkValue));
+                            statementChain.addDependency(value, new PipedStatement(dependencyStatementBuilder, value));
+                        }
+
+
                     }
                 } else {
                     // Get the primary key
@@ -267,11 +290,14 @@ public class PersistenceFacade {
      * including the number of rows affected
      * @throws SQLException if a database access error occurs during statement execution
      */
-    private UpdateResult executeUpdateStatement(final AbstractStatementBuilder<?> statementBuilder) throws SQLException {
+    private CompositeUpdateResult executeUpdateStatement(final Object dto, final AbstractStatementBuilder<?> statementBuilder) throws SQLException {
+        final CompositeUpdateResult result = new CompositeUpdateResult();
+
         for (Map.Entry<Object, PipedStatement> entry : statementBuilder.statementChain().getDependencies().entrySet()) {
             final PipedStatement pipedStatement = entry.getValue();
-            final UpdateResult dependencyResult = executeUpdateStatement(pipedStatement.statementBuilder());
-            pipedStatement.valuePipe().accept(dependencyResult);
+            final CompositeUpdateResult dependencyResult = executeUpdateStatement(pipedStatement.dto(), pipedStatement.statementBuilder());
+            result.merge(dependencyResult);
+            pipedStatement.valuePipe().accept(dependencyResult.primary().updateResult());
         }
 
         final UpdateStatement updateStatement;
@@ -281,17 +307,17 @@ public class PersistenceFacade {
         } catch (final IllegalArgumentException ex) {
             // No columns to update
             if (statementBuilder instanceof InsertBuilder) {
-                return new InsertResult(0);
+                return result.add(new DtoUpdateResult(dto, new InsertResult(0)));
             } else {
-                return new UpdateResult(0);
+                return result.add(new DtoUpdateResult(dto, new UpdateResult(0)));
             }
         }
 
         if (updateStatement instanceof Insert insert) {
-            return databaseProvider.insert(insert);
+            return result.add(new DtoUpdateResult(dto, databaseProvider.insert(insert)));
         } else {
             final Update update = (Update) updateStatement;
-            return databaseProvider.update(update);
+            return result.add(new DtoUpdateResult(dto, databaseProvider.update(update)));
         }
     }
 }

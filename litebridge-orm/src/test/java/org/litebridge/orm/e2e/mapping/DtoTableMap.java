@@ -33,4 +33,10 @@ public final class DtoTableMap {
             f("nestedChild.childValue1"), c("CHILD_VALUE1"),
             f("nestedChild.grandChild.grandChildValue1"), c("GRANDCHILD_VALUE1")
     );
+
+    public static final Map<FieldSpec, ColumnSpec> SelfReferencingDto = Map.of(
+            f("id"), c("ID"),
+            f("myVar"), c("MY_VAR"),
+            f("parent"), c("PARENT_ID").joinOn("ID")
+    );
 }

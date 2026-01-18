@@ -8,6 +8,8 @@ import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.FieldAccessor;
 import org.litebridge.tracking.FieldAccessorChain;
 import org.litebridge.tracking.TrackedDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,6 +24,8 @@ import java.util.Map;
  */
 @NullMarked
 public class OrmTable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrmTable.class);
 
     private TableMetaData metaData;
     private final Map<FieldAccessor, ColumnMetaData> fieldColumnMap;
@@ -106,10 +110,13 @@ public class OrmTable {
 
     public void syncPersistedDto(final Object dto) {
         if (!persistedDtos.contains(dto)) {
+            LOGGER.trace("Adding persisted DTO: {}", dto);
             persistedDtos.add(dto);
         }
 
+
         final TrackedDto<?> trackedDto = changeTracker.getTrackedDto(dto);
+        LOGGER.trace("Creating new snapshot for DTO: {}", dto);
         trackedDto.snapshot(true);
     }
 
