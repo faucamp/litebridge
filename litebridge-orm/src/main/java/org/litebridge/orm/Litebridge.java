@@ -27,6 +27,7 @@ import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -115,15 +116,32 @@ public class Litebridge {
      * This method utilises the persistence facade to perform the save operation. It handles SQL exceptions
      * and ensures the integrity of the save process.
      *
-     * @param dto the Data Transfer Object to be saved in the database. It must
-     *            be a valid and properly configured DTO.
+     * @param dtos the Data Transfer Object(s) to be saved in the database.
      * @throws IllegalStateException if an error occurs during the save operation.
      */
-    public void save(final Object dto) {
+    public void save(final Object... dtos) {
         try {
-            persistenceFacade.save(dto);
+            if (dtos.length == 1) {
+                persistenceFacade.save(dtos[0]);
+            } else {
+                save(List.of(dtos));
+            }
         } catch (SQLException ex) {
-            throw new IllegalStateException("Failed to save DTO: " + dto, ex);
+            throw new IllegalStateException("Failed to save DTO: " + dtos[0], ex);
+        }
+    }
+
+    /**
+     * Saves a collection of Data Transfer Objects (DTOs) to the database.
+     *
+     * @param dtos a collection of objects to save in the database; must not be null.
+     * @throws IllegalStateException if an error occurs during the save operation.
+     */
+    public void save(final Collection<Object> dtos) {
+        try {
+            persistenceFacade.save(dtos);
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to save DTOs: " + dtos, ex);
         }
     }
 
