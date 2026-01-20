@@ -70,8 +70,6 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO> {
         ClassFieldCache.nestedDtoFields(dtoClass).forEach(nestedDtoField -> {
             if (table.hasColumnForFieldName(nestedDtoField.getName())) {
                 addJoinForNestedDto(nestedDtoField);
-            } else if (!table.hasFieldAccessorChainForFieldName(nestedDtoField.getName())) {
-                throw new IllegalStateException("No column or field accessor chain found for nested DTO field: " + nestedDtoField.getName());
             }
         });
 

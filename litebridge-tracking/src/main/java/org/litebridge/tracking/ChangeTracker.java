@@ -99,6 +99,7 @@ public final class ChangeTracker {
      *
      * @param dto the Data Transfer Object (DTO) whose tracked version is to be retrieved; can be null
      * @return the tracked version of the specified DTO, or null if no tracked version exists
+     * @throws IllegalArgumentException if the specified DTO is not tracked
      */
     public <DTO> TrackedDto<DTO> getTrackedDto(final DTO dto) {
         return ObjectUtils.requireNonNull(getTrackedDtoOrNull(dto), "DTO is not tracked: " + dto);

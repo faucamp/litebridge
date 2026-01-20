@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 public class Person {
 
@@ -14,6 +15,7 @@ public class Person {
     private String surname;
     private int age;
     private String eyeColour;
+    private Address address;
 
     public Long getId() {
         return id;
@@ -57,6 +59,14 @@ public class Person {
         this.eyeColour = eyeColour;
     }
 
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(final Address address) {
+        this.address = address;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof final Person person)) return false;
@@ -70,12 +80,13 @@ public class Person {
 
     @Override
     public String toString() {
-        return "Person{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", surname='" + surname + '\'' +
-                ", age=" + age +
-                ", eyeColour='" + eyeColour + '\'' +
-                '}';
+        return new StringJoiner(", ", Person.class.getSimpleName() + "[", "]")
+                .add("id=" + id)
+                .add("name='" + name + "'")
+                .add("surname='" + surname + "'")
+                .add("age=" + age)
+                .add("eyeColour='" + eyeColour + "'")
+                .add("address=" + address)
+                .toString();
     }
 }
