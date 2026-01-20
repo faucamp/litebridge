@@ -2,7 +2,7 @@ package org.litebridge.tracking;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
-import org.litebridge.commons.WeakIdentityMap;
+import org.litebridge.commons.type.WeakIdentityMap;
 
 import java.util.Collection;
 import java.util.Collections;

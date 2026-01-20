@@ -1,6 +1,6 @@
 package org.litebridge.orm.persistence;
 
-import org.litebridge.commons.WeakIdentityMap;
+import org.litebridge.commons.type.WeakIdentityMap;
 
 import java.util.Collections;
 import java.util.Set;

@@ -1,4 +1,4 @@
-package org.litebridge.commons;
+package org.litebridge.commons.type;
 
 import org.junit.jupiter.api.Test;
 
