@@ -136,6 +136,18 @@ public final class WeakIdentityMap<K, V> implements Map<K, V> {
             return WeakIdentityMap.this.containsKey(o);
         }
 
+        /**
+         * Returns an iterator over the elements of the set, allowing traversal of the elements while
+         * cleaning up any stale entries. This iterator supports the {@code remove()} operation to
+         * remove the currently returned element from the set, but makes no guarantees about the order
+         * in which elements are returned.
+         * <p>
+         * The iterator ensures that only non-stale elements, whose keys are still strongly reachable,
+         * are available for iteration. Stale entries whose references have been garbage-collected
+         * are removed as part of the iteration process.
+         *
+         * @return an {@code Iterator<K>} over the elements of the set
+         */
         @Override
         public Iterator<K> iterator() {
             expungeStaleEntries();
