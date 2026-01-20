@@ -2,6 +2,7 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.NullMarked;
 import org.litebridge.commons.ObjectUtils;
+import org.litebridge.commons.type.WeakIdentitySet;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.tracking.ChangeTracker;
@@ -35,7 +36,7 @@ public class OrmTable {
     private final Map<String, FieldAccessor> columnNameFieldMap;
     private final ChangeTracker changeTracker;
 
-    private final WeakRefSet<Object> persistedDtos = new WeakRefSet<>();
+    private final WeakIdentitySet<Object> persistedDtos = new WeakIdentitySet<>();
 
     public OrmTable(final TableMetaData metaData, final Map<FieldAccessor, ColumnMetaData> fieldColumnMap, final ChangeTracker changeTracker) {
         this.metaData = metaData;

@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
  *
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
+ * @see WeakIdentitySet
  */
 public final class WeakIdentityMap<K, V> implements Map<K, V> {
 
