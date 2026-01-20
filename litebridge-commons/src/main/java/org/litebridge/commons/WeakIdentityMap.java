@@ -14,11 +14,26 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public final class WeakIdentityHashMap<K, V> implements Map<K, V> {
+/**
+ * A Map implementation that uses weak references for keys and compares keys using identity comparison (==).
+ * This implementation automatically removes entries when their keys are no longer strongly reachable.
+ * <p>
+ * This is useful for caching scenarios where:
+ * - Keys should be automatically removed when they're no longer referenced elsewhere
+ * - Key equality should be based on identity rather than equals()
+ *
+ * @param <K> the type of keys maintained by this map
+ * @param <V> the type of mapped values
+ */
+public final class WeakIdentityMap<K, V> implements Map<K, V> {
 
     private final ReferenceQueue<K> queue = new ReferenceQueue<>();
-    private final Map<IdentityWeakReference<K>, V> innerMap = new HashMap<>();
+    private final Map<IdentityWeakReference<K>, @Nullable V> innerMap = new HashMap<>();
 
+    /**
+     * Removes any stale entries whose keys have been garbage collected.
+     * This method is called automatically before most map operations.
+     */
     private void expungeStaleEntries() {
         IdentityWeakReference<?> ref;
 
@@ -28,25 +43,25 @@ public final class WeakIdentityHashMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public V put(K key, V value) {
+    public V put(final K key, final @Nullable V value) {
         expungeStaleEntries();
         return innerMap.put(new IdentityWeakReference<>(key, queue), value);
     }
 
     @Override
-    public V get(Object key) {
+    public @Nullable V get(final Object key) {
         expungeStaleEntries();
         return innerMap.get(new IdentityLookupWrapper(key));
     }
 
     @Override
-    public V remove(Object key) {
+    public @Nullable V remove(final Object key) {
         expungeStaleEntries();
         return innerMap.remove(new IdentityLookupWrapper(key));
     }
 
     @Override
-    public boolean containsKey(Object key) {
+    public boolean containsKey(final Object key) {
         expungeStaleEntries();
         return innerMap.containsKey(new IdentityLookupWrapper(key));
     }
@@ -70,14 +85,14 @@ public final class WeakIdentityHashMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> m) {
+    public void putAll(final Map<? extends K, ? extends V> m) {
         for (Entry<? extends K, ? extends V> entry : m.entrySet()) {
             put(entry.getKey(), entry.getValue());
         }
     }
 
     @Override
-    public boolean containsValue(Object value) {
+    public boolean containsValue(final Object value) {
         expungeStaleEntries();
         return innerMap.containsValue(value);
     }
@@ -88,7 +103,7 @@ public final class WeakIdentityHashMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public Collection<V> values() {
+    public Collection<@Nullable V> values() {
         expungeStaleEntries();
         return innerMap.values();
     }
@@ -99,20 +114,25 @@ public final class WeakIdentityHashMap<K, V> implements Map<K, V> {
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * A Set view of the keys contained in this map.
+     * The set is backed by the map, so changes to the map are reflected in the set, and vice-versa.
+     */
     private final class WeakKeySet implements Set<K> {
+
         @Override
         public int size() {
-            return WeakIdentityHashMap.this.size();
+            return WeakIdentityMap.this.size();
         }
 
         @Override
         public boolean isEmpty() {
-            return WeakIdentityHashMap.this.isEmpty();
+            return WeakIdentityMap.this.isEmpty();
         }
 
         @Override
-        public boolean contains(Object o) {
-            return WeakIdentityHashMap.this.containsKey(o);
+        public boolean contains(final Object o) {
+            return WeakIdentityMap.this.containsKey(o);
         }
 
         @Override
@@ -204,21 +224,24 @@ public final class WeakIdentityHashMap<K, V> implements Map<K, V> {
                     list.add(key);
                 }
             }
+
             return list;
         }
 
         @Override
-        public boolean add(K e) {
-            throw new UnsupportedOperationException();
+        public boolean add(final K e) {
+            boolean modified = !WeakIdentityMap.this.containsKey(e);
+            WeakIdentityMap.this.put(e, null);
+            return modified;
         }
 
         @Override
-        public boolean remove(Object o) {
-            return WeakIdentityHashMap.this.remove(o) != null;
+        public boolean remove(final Object o) {
+            return WeakIdentityMap.this.remove(o) != null;
         }
 
         @Override
-        public boolean containsAll(Collection<?> c) {
+        public boolean containsAll(final Collection<?> c) {
             for (Object e : c) {
                 if (!contains(e)) {
                     return false;
@@ -229,17 +252,36 @@ public final class WeakIdentityHashMap<K, V> implements Map<K, V> {
         }
 
         @Override
-        public boolean addAll(Collection<? extends K> c) {
-            throw new UnsupportedOperationException();
+        public boolean addAll(final Collection<? extends K> c) {
+            boolean modified = false;
+
+            for (K e : c) {
+                modified |= add(e);
+            }
+
+            return modified;
         }
 
         @Override
-        public boolean retainAll(Collection<?> c) {
-            throw new UnsupportedOperationException();
+        public boolean retainAll(final Collection<?> c) {
+            expungeStaleEntries();
+            boolean modified = false;
+            final Iterator<K> it = iterator();
+
+            while (it.hasNext()) {
+                final Object next = it.next();
+
+                if (c.stream().noneMatch(e -> e == next)) {
+                    it.remove();
+                    modified = true;
+                }
+            }
+
+            return modified;
         }
 
         @Override
-        public boolean removeAll(Collection<?> c) {
+        public boolean removeAll(final Collection<?> c) {
             boolean modified = false;
 
             for (Object e : c) {
@@ -251,10 +293,16 @@ public final class WeakIdentityHashMap<K, V> implements Map<K, V> {
 
         @Override
         public void clear() {
-            WeakIdentityHashMap.this.clear();
+            WeakIdentityMap.this.clear();
         }
     }
 
+    /**
+     * A WeakReference that uses identity-based equality and hashing.
+     * This class maintains the identity hash code of the referent even after it has been garbage collected.
+     *
+     * @param <T> the type of the referent
+     */
     static final class IdentityWeakReference<T> extends WeakReference<T> {
         private final int hash;
 
@@ -276,6 +324,10 @@ public final class WeakIdentityHashMap<K, V> implements Map<K, V> {
         }
     }
 
+    /**
+     * A wrapper class used for looking up entries in the map.
+     * This class uses identity-based equality and hashing to match IdentityWeakReference behavior.
+     */
     static final class IdentityLookupWrapper {
         private final Object obj;
         private final int hash;

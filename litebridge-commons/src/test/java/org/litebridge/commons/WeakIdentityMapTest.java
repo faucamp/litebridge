@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class WeakIdentityHashMapTest {
+class WeakIdentityMapTest {
 
     /**
      * Test that put adds a key-value pair into the map and allows retrieval of that value using the key.
@@ -29,7 +29,7 @@ class WeakIdentityHashMapTest {
     @Test
     void put() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         final Object key = new Object();
         final String value = "Value1";
 
@@ -47,7 +47,7 @@ class WeakIdentityHashMapTest {
     @Test
     void put_updateExisting() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         final Object key = new Object();
         final String initialValue = "InitialValue";
         final String updatedValue = "UpdatedValue";
@@ -68,7 +68,7 @@ class WeakIdentityHashMapTest {
     @Test
     void put_multiple() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         final Object key1 = new Object();
         final Object key2 = new Object();
         final String value1 = "Value1";
@@ -89,7 +89,7 @@ class WeakIdentityHashMapTest {
     @Test
     void put_usesIdentityForKeys() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         final ConstantHashObject key1 = new ConstantHashObject();
         final ConstantHashObject key2 = new ConstantHashObject();
         final String value1 = "Value1";
@@ -113,7 +113,7 @@ class WeakIdentityHashMapTest {
     @Test
     void put_removesKeyWhenGarbageCollected() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         final String value = "Value";
 
         // Put the key in a nested scope to reduce the chance the JIT keeps it alive
@@ -147,7 +147,7 @@ class WeakIdentityHashMapTest {
     @Test
     void put_handlesStaleEntries() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         // Put the key in a nested scope to reduce the chance the JIT keeps it alive
         final WeakReference<Object> keyRef = new WeakReference<>(new ConstantHashObject());
         Object key = keyRef.get();
@@ -173,7 +173,7 @@ class WeakIdentityHashMapTest {
     @Test
     void remove() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         final Object key = new Object();
         final String value = "Value";
         map.put(key, value);
@@ -189,7 +189,7 @@ class WeakIdentityHashMapTest {
     @Test
     void containsKey() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         final Object key = new Object();
         final String value = "Value";
         map.put(key, value);
@@ -202,7 +202,7 @@ class WeakIdentityHashMapTest {
     @Test
     void size() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         final Object key = new Object();
         final String value = "Value";
         map.put(key, value);
@@ -214,7 +214,7 @@ class WeakIdentityHashMapTest {
     @Test
     void isEmpty() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
 
         // When/Then
         assertTrue(map.isEmpty());
@@ -225,7 +225,7 @@ class WeakIdentityHashMapTest {
     @Test
     void clear() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         final Object key = new Object();
         final String value = "Value";
         map.put(key, value);
@@ -240,8 +240,8 @@ class WeakIdentityHashMapTest {
     @Test
     void putAll() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
-        final WeakIdentityHashMap<Object, String> otherMap = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
+        final WeakIdentityMap<Object, String> otherMap = new WeakIdentityMap<>();
         final Object key = new Object();
         final String value = "Value";
         otherMap.put(key, value);
@@ -256,7 +256,7 @@ class WeakIdentityHashMapTest {
     @Test
     void containsValue() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         final Object key = new Object();
         final String value = "Value";
         map.put(key, value);
@@ -269,7 +269,7 @@ class WeakIdentityHashMapTest {
     @Test
     void keySet() {
         // Given
-        final WeakIdentityHashMap<ConstantHashObject, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<ConstantHashObject, String> map = new WeakIdentityMap<>();
         final ConstantHashObject key1 = new ConstantHashObject();
         final ConstantHashObject key2 = new ConstantHashObject();
         final ConstantHashObject key3 = new ConstantHashObject();
@@ -302,10 +302,6 @@ class WeakIdentityHashMapTest {
         assertEquals(4, objectResultArray.length);
         assertTrue(result.containsAll(List.of(objectResultArray)));
 
-        assertThrows(UnsupportedOperationException.class, () -> result.add(new ConstantHashObject()));
-        assertThrows(UnsupportedOperationException.class, () -> result.addAll(List.of()));
-        assertThrows(UnsupportedOperationException.class, () -> result.retainAll(List.of()));
-
         result.remove(key1);
         assertEquals(3, result.size());
         assertFalse(result.contains(key1));
@@ -316,12 +312,34 @@ class WeakIdentityHashMapTest {
 
         result.clear();
         assertTrue(result.isEmpty());
+
+        final ConstantHashObject testObject = new ConstantHashObject();
+        assertTrue(result.add(testObject));
+        assertEquals(1, result.size());
+        assertFalse(result.add(testObject));
+        assertEquals(1, result.size());
+
+        ConstantHashObject tempObject1 = new ConstantHashObject();
+        ConstantHashObject tempObject2 = new ConstantHashObject();
+        final WeakReference<ConstantHashObject> tempObject1Ref = new WeakReference<>(tempObject1);
+        final WeakReference<ConstantHashObject> tempObject2Ref = new WeakReference<>(tempObject2);
+        assertTrue(result.addAll(List.of(tempObject1, tempObject2, testObject)));
+        assertEquals(3, result.size());
+
+        tempObject1 = null;
+        awaitCollected(tempObject1Ref);
+        assertEquals(2, result.size());
+
+        assertFalse(result.retainAll(List.of(testObject, tempObject2)));
+        tempObject1 = new ConstantHashObject();
+        tempObject2 = new ConstantHashObject();
+        assertTrue(result.retainAll(List.of(tempObject1, tempObject2)));
     }
 
     @Test
     void keySet_iterator() {
         // Given
-        final WeakIdentityHashMap<ConstantHashObject, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<ConstantHashObject, String> map = new WeakIdentityMap<>();
         final ConstantHashObject key1 = new ConstantHashObject();
         final ConstantHashObject key2 = new ConstantHashObject();
         final ConstantHashObject key3 = new ConstantHashObject();
@@ -363,7 +381,7 @@ class WeakIdentityHashMapTest {
     @Test
     void values() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         final ConstantHashObject key1 = new ConstantHashObject();
         final String value1 = "Value";
         final ConstantHashObject key2 = new ConstantHashObject();
@@ -383,7 +401,7 @@ class WeakIdentityHashMapTest {
     @Test
     void entrySet() {
         // Given
-        final WeakIdentityHashMap<Object, String> map = new WeakIdentityHashMap<>();
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         final ConstantHashObject key1 = new ConstantHashObject();
         final String value1 = "Value";
         final ConstantHashObject key2 = new ConstantHashObject();
@@ -409,6 +427,11 @@ class WeakIdentityHashMapTest {
         @Override
         public boolean equals(Object obj) {
             return obj instanceof ConstantHashObject;
+        }
+
+        @Override
+        public String toString() {
+            return "ConstantHashObject@" + System.identityHashCode(this);
         }
     }
 

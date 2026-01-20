@@ -2,14 +2,13 @@ package org.litebridge.tracking;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
-import org.litebridge.commons.WeakIdentityHashMap;
+import org.litebridge.commons.WeakIdentityMap;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -30,7 +29,7 @@ public final class ChangeTracker {
      * and their respective {@link TrackedDto} instances. The map serves as the internal state for maintaining
      * change tracking data across multiple DTO objects.
      * <p>
-     * This map uses a {@link WeakIdentityHashMap} to allow garbage collection of DTOs that are no longer in use, thereby
+     * This map uses a {@link WeakIdentityMap} to allow garbage collection of DTOs that are no longer in use, thereby
      * preventing memory leaks in cases where the tracked DTOs are no longer referenced elsewhere in the application.
      * The use of {@link Collections#synchronizedMap(Map)} ensures thread-safety when accessing or modifying the map.
      * <p>
@@ -46,7 +45,7 @@ public final class ChangeTracker {
      * the underlying infrastructure for supporting functionalities such as change detection, auditing, or monitoring
      * modifications to fields over an object's lifecycle.
      */
-    private final Map<Object, TrackedDto<?>> trackedDtos = Collections.synchronizedMap(new WeakIdentityHashMap<>());
+    private final Map<Object, TrackedDto<?>> trackedDtos = Collections.synchronizedMap(new WeakIdentityMap<>());
 
     public <DTO> DTO trackDto(final DTO dto) {
         ObjectUtils.requireNonNull(dto, "DTO cannot be null");

@@ -16,8 +16,8 @@ class IdentityLookupWrapperTest {
     void testEquals_sameReference() {
         // Given
         final Object obj = new Object();
-        final WeakIdentityHashMap.IdentityLookupWrapper wrapper1 = new WeakIdentityHashMap.IdentityLookupWrapper(obj);
-        final WeakIdentityHashMap.IdentityLookupWrapper wrapper2 = new WeakIdentityHashMap.IdentityLookupWrapper(obj);
+        final WeakIdentityMap.IdentityLookupWrapper wrapper1 = new WeakIdentityMap.IdentityLookupWrapper(obj);
+        final WeakIdentityMap.IdentityLookupWrapper wrapper2 = new WeakIdentityMap.IdentityLookupWrapper(obj);
 
         // When/Then
         assertNotEquals(wrapper1, wrapper2);
@@ -31,8 +31,8 @@ class IdentityLookupWrapperTest {
         // Given
         final Object obj1 = new Object();
         final Object obj2 = new Object();
-        final WeakIdentityHashMap.IdentityLookupWrapper wrapper1 = new WeakIdentityHashMap.IdentityLookupWrapper(obj1);
-        final WeakIdentityHashMap.IdentityLookupWrapper wrapper2 = new WeakIdentityHashMap.IdentityLookupWrapper(obj2);
+        final WeakIdentityMap.IdentityLookupWrapper wrapper1 = new WeakIdentityMap.IdentityLookupWrapper(obj1);
+        final WeakIdentityMap.IdentityLookupWrapper wrapper2 = new WeakIdentityMap.IdentityLookupWrapper(obj2);
 
         // When/Then
         assertFalse(wrapper1.equals(wrapper2));
@@ -45,9 +45,9 @@ class IdentityLookupWrapperTest {
     void testEquals_withIdentityWeakReference() {
         // Given
         final Object obj = new Object();
-        final WeakIdentityHashMap.IdentityLookupWrapper wrapper = new WeakIdentityHashMap.IdentityLookupWrapper(obj);
-        final WeakIdentityHashMap.IdentityWeakReference<Object> weakRef =
-                new WeakIdentityHashMap.IdentityWeakReference<>(obj, null);
+        final WeakIdentityMap.IdentityLookupWrapper wrapper = new WeakIdentityMap.IdentityLookupWrapper(obj);
+        final WeakIdentityMap.IdentityWeakReference<Object> weakRef =
+                new WeakIdentityMap.IdentityWeakReference<>(obj, null);
 
         // When/Then
         assertTrue(wrapper.equals(weakRef));
@@ -61,9 +61,9 @@ class IdentityLookupWrapperTest {
         // Given
         final Object obj1 = new Object();
         final Object obj2 = new Object();
-        final WeakIdentityHashMap.IdentityLookupWrapper wrapper = new WeakIdentityHashMap.IdentityLookupWrapper(obj1);
-        final WeakIdentityHashMap.IdentityWeakReference<Object> weakRef =
-                new WeakIdentityHashMap.IdentityWeakReference<>(obj2, null);
+        final WeakIdentityMap.IdentityLookupWrapper wrapper = new WeakIdentityMap.IdentityLookupWrapper(obj1);
+        final WeakIdentityMap.IdentityWeakReference<Object> weakRef =
+                new WeakIdentityMap.IdentityWeakReference<>(obj2, null);
 
         // When/Then
         assertFalse(wrapper.equals(weakRef));
@@ -76,7 +76,7 @@ class IdentityLookupWrapperTest {
     void testEquals_differentClass() {
         // Given
         final Object obj = new Object();
-        final WeakIdentityHashMap.IdentityLookupWrapper wrapper = new WeakIdentityHashMap.IdentityLookupWrapper(obj);
+        final WeakIdentityMap.IdentityLookupWrapper wrapper = new WeakIdentityMap.IdentityLookupWrapper(obj);
 
         // When/Then
         assertFalse(wrapper.equals("Some String"));
@@ -89,7 +89,7 @@ class IdentityLookupWrapperTest {
     void testHashCode_matchesObjectIdentityHashCode() {
         // Given
         final Object obj = new Object();
-        final WeakIdentityHashMap.IdentityLookupWrapper wrapper = new WeakIdentityHashMap.IdentityLookupWrapper(obj);
+        final WeakIdentityMap.IdentityLookupWrapper wrapper = new WeakIdentityMap.IdentityLookupWrapper(obj);
 
         // When/Then
         assertEquals(System.identityHashCode(obj), wrapper.hashCode());

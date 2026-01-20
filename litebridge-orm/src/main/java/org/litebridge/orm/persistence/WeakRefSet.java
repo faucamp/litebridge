@@ -1,17 +1,16 @@
 package org.litebridge.orm.persistence;
 
-import org.litebridge.commons.WeakIdentityHashMap;
+import org.litebridge.commons.WeakIdentityMap;
 
 import java.util.Collections;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 final class WeakRefSet<T> {
 
     private final Set<T> set;
 
     public WeakRefSet() {
-        this.set = Collections.synchronizedSet(Collections.newSetFromMap(new WeakIdentityHashMap<>()));
+        this.set = Collections.synchronizedSet(Collections.newSetFromMap(new WeakIdentityMap<>()));
     }
 
     public boolean add(T element) {
