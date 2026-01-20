@@ -1,5 +1,7 @@
 package org.litebridge.orm.e2e.dto;
 
+import java.util.Objects;
+
 public class Account {
 
     private Long id;
@@ -28,6 +30,17 @@ public class Account {
 
     public void setOwner(Person owner) {
         this.owner = owner;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (!(o instanceof final Account account)) return false;
+        return Objects.equals(id, account.id) && Objects.equals(name, account.name) && Objects.equals(owner, account.owner);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, owner);
     }
 
     @Override

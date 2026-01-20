@@ -3,6 +3,7 @@ package org.litebridge.orm.e2e;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.h2.H2DatabaseProvider;
@@ -54,7 +55,8 @@ class LitebridgeE2eTest {
     }
 
     @Test
-    void save_cascadingNestedDto() throws Exception {
+    @DisplayName("Nested DTOs mapped to separate tables, cascading save")
+    void nestedDtos_oneTablePerDto_cascadeSave() throws Exception {
         // Register DTO-table mappings
         litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
         litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
@@ -89,10 +91,19 @@ class LitebridgeE2eTest {
 
         person.setEyeColour("brown");
         litebridge.save(person);
+
+        // Then
+        final Account result = litebridge.select(Account.class).where("id").eq(account2.getId()).oneOrThrow();
+        assertEquals("Account 2", result.getName());
+        assertEquals(person, result.getOwner());
     }
 
     @Test
-    void save_nestedDto_singleTable() throws Exception {
+    @DisplayName("Nested DTOs mapped to a single table")
+    void nestedDtos_singleTable() throws Exception {
+        assumeTrue(litebridge.select().from("LB", "PERSON").list().isEmpty());
+        assumeTrue(litebridge.select().from("LB", "ACCOUNT").list().isEmpty());
+
         // Register DTO-table mapping
         litebridge.register(SingleTableNestedParent.class, t("LB", "NESTED_DTO", DtoTableMap.SingeTableNestedDto));
 
@@ -119,7 +130,8 @@ class LitebridgeE2eTest {
     }
 
     @Test
-    void save_splitCompositeDto() throws Exception {
+    @DisplayName("Single DTO mapped to multiple tables")
+    void singleDto_multipleTables() throws Exception {
         // Create our "original"/unmapped DTO (unmapped since Litebridge expects one table per DTO)
         final PersonAccount personAccount = new PersonAccount();
         personAccount.setId(123L);
@@ -154,16 +166,17 @@ class LitebridgeE2eTest {
         entityDtoMapper.entities(personAccount).forEach(litebridge::save);
 
         // Load the indidual entities and reconstruct the composite DTO
-        //final Person person = litebridge.select(Person.class).where("id").eq(personAccount.getId()).oneOrThrow();
+        final Person person = litebridge.select(Person.class).where("id").eq(personAccount.getId()).oneOrThrow();
         final Account account = litebridge.select(Account.class).where("id").eq(personAccount.getAccountId()).oneOrThrow();
-        //final PersonAccount result = entityDtoMapper.dto(person, account);
+        final PersonAccount result = entityDtoMapper.dto(person, account);
 
         // Then
-        // assertEquals(personAccount, result);
+        assertEquals(personAccount, result);
     }
 
     @Test
-    void save_selfReferencingDto_cascadingSave() throws Exception {
+    @DisplayName("Single self-referencing DTO mapped to a single table, cascading save")
+    void selfReferencingDto_cascadeSave() throws Exception {
         // Register DTO-table mappings
         litebridge.register(SelfReferencingDto.class, t("LB", "SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
 
@@ -198,8 +211,8 @@ class LitebridgeE2eTest {
     }
 
     @Test
-    void save_selfReferencingDto_saveAll() throws Exception {
-        LOGGER.info("Current person records: {}", litebridge.select().from("LB", "PERSON").list());
+    @DisplayName("Single self-referencing DTO mapped to a single table, save all individual DTOs in one call")
+    void selfReferencingDto_saveAll() throws Exception {
         assumeTrue(litebridge.select().from("LB", "PERSON").stream().findAny().isEmpty());
 
         // Register DTO-table mappings
@@ -236,7 +249,8 @@ class LitebridgeE2eTest {
     }
 
     @Test
-    void save_selfReferencingDto_saveIndividually() throws Exception {
+    @DisplayName("Single self-referencing DTO mapped to a single table, save each DTO individually")
+    void selfReferencingDto_saveIndividually() throws Exception {
         assumeTrue(litebridge.select().from("LB", "PERSON").stream().findAny().isEmpty());
 
         // Register DTO-table mappings
@@ -284,31 +298,53 @@ class LitebridgeE2eTest {
         return litebridge;
     }
 
+    /**
+     * Resets the Litebridge instance by shutting down the in-memory H2 database and ensuring a new connection.
+     *
+     * @return Litebridge instance
+     * @throws SQLException if shutdown or connection creation fails
+     */
     private Litebridge resetLiteBridge() throws SQLException {
         shutdownInMemoryH2();
         return ensureLitebridge();
     }
 
+    /**
+     * Creates an H2 in-memory database connection.
+     *
+     * @return H2 database connection
+     * @throws SQLException if connection creation fails
+     */
     private Connection createH2Connection() throws SQLException {
-        // Setup H2 in-memory database
         final String url = "jdbc:h2:mem:lb;DB_CLOSE_DELAY=-1";
         final String user = "sa";
         final String password = "";
-        configureDatabase(url, user, password);
+        runFlywayMigration(url, user, password);
         return DriverManager.getConnection(url, user, password);
     }
 
-    private static void configureDatabase(final String url, final String user, final String password) {
-        // Configure Flyway
+    /**
+     * Runs Flyway migration on the supplied database connection.
+     *
+     * @param url      Database connection URL
+     * @param user     Database user name
+     * @param password Database user password
+     */
+    private static void runFlywayMigration(final String url, final String user, final String password) {
+        // Configure and run Flyway migration
         final Flyway flyway = Flyway.configure()
-                .dataSource(url, user, password) // Replace with your database details
-                .locations("classpath:db/migration") // Specify the location of your migration scripts
+                .dataSource(url, user, password)
+                .locations("classpath:db/migration")
                 .load();
 
-        // Run the migration
         flyway.migrate();
     }
 
+    /**
+     * Shuts down the in-memory H2 database connection.
+     *
+     * @throws SQLException if shutdown fails
+     */
     private static void shutdownInMemoryH2() throws SQLException {
         if (connection != null) {
             Statement statement = connection.createStatement();

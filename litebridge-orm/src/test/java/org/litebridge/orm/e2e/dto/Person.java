@@ -3,6 +3,8 @@ package org.litebridge.orm.e2e.dto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
+
 public class Person {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Person.class.getName());
@@ -53,6 +55,17 @@ public class Person {
     public void setEyeColour(String eyeColour) {
         LOGGER.debug("setEyeColour(): {}", eyeColour);
         this.eyeColour = eyeColour;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (!(o instanceof final Person person)) return false;
+        return age == person.age && Objects.equals(id, person.id) && Objects.equals(name, person.name) && Objects.equals(surname, person.surname) && Objects.equals(eyeColour, person.eyeColour);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, surname, age, eyeColour);
     }
 
     @Override
