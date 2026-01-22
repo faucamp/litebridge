@@ -1,5 +1,6 @@
 package org.litebridge.orm.e2e.dto;
 
+import java.math.BigInteger;
 import java.util.Objects;
 
 public class PersonAccount {
@@ -9,6 +10,7 @@ public class PersonAccount {
     private String surname;
     private int age;
     private Long accountId;
+    private BigInteger accountBalance;
     private String accountName;
 
     public Long getId() {
@@ -57,6 +59,14 @@ public class PersonAccount {
 
     public void setAccountName(final String accountName) {
         this.accountName = accountName;
+    }
+
+    public BigInteger getAccountBalance() {
+        return accountBalance;
+    }
+
+    public void setAccountBalance(final BigInteger accountBalance) {
+        this.accountBalance = accountBalance;
     }
 
     @Override

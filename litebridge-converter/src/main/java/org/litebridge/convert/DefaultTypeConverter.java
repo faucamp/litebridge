@@ -3,6 +3,7 @@ package org.litebridge.convert;
 import com.toddfast.util.convert.TypeConverter;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.litebridge.convert.conversion.BigIntegerTypeConversion;
 import org.litebridge.convert.conversion.SqlTimestampTypeConversion;
 
 import java.sql.Types;
@@ -12,6 +13,7 @@ public class DefaultTypeConverter implements org.litebridge.db.spi.convert.TypeC
 
     static {
         TypeConverter.registerTypeConversion(new SqlTimestampTypeConversion());
+        TypeConverter.registerTypeConversion(new BigIntegerTypeConversion());
     }
 
     @Override

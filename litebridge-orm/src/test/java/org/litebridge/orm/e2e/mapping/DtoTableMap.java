@@ -25,6 +25,7 @@ public final class DtoTableMap {
     public static final Map<FieldSpec, ColumnSpec> Account = Map.of(
             f("id"), c("ACCOUNT_ID").autoIncrement(true).sequence("LB.ACCOUNT_SEQ"),
             f("name"), c("ACCOUNT_NAME"),
+            f("balance"), c("BALANCE"),
             f("owner"), c("PERSON_ID").joinUsing()
     );
 

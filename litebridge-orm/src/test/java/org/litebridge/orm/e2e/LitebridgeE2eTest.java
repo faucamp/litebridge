@@ -21,6 +21,7 @@ import org.litebridge.tracking.TrackedDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -70,6 +71,7 @@ class LitebridgeE2eTest {
 
         final Account account = litebridge.track(new Account());
         account.setName("Account 1");
+        account.setBalance(BigInteger.valueOf(1000));
         account.setOwner(person);
 
         // Save DTOs ("person" will also be saved due to cascading)
@@ -86,6 +88,7 @@ class LitebridgeE2eTest {
         // When
         final Account account2 = litebridge.track(new Account());
         account2.setName("Account 2");
+        account2.setBalance(BigInteger.valueOf(2000));
         account2.setOwner(person);
         litebridge.save(account2);
 
@@ -140,6 +143,7 @@ class LitebridgeE2eTest {
         personAccount.setAge(35);
         personAccount.setAccountId(456L);
         personAccount.setAccountName("Test Account");
+        personAccount.setAccountBalance(new BigInteger("1000000"));
 
         // Register DTO-table mappings (a client using the above "PersonMapping" DTO would need
         // to create these "entities", as the query API would not make sense for multi-table DTOs)
@@ -159,6 +163,7 @@ class LitebridgeE2eTest {
                                 Map.of(
                                         f("accountId"), f("id"),
                                         f("accountName"), f("name"),
+                                        f("accountBalance"), f("balance"),
                                         f("id"), f("owner.id")
                                 ))));
 
