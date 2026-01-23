@@ -53,7 +53,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     @Override
     public DtoOrderByClause<DTO> orderBy(final FieldColumnSpec... fields) {
         final String[] columns = Arrays.stream(fields)
-                .map(fieldColumnSpec -> fieldColumnSpec.column().name())
+                .map(fieldColumnSpec -> fieldColumnSpec.columnSpec().name())
                 .toArray(String[]::new);
         return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);
     }

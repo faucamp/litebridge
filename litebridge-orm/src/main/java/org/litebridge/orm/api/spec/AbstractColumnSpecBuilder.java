@@ -5,14 +5,8 @@ import org.litebridge.commons.BooleanUtils;
 import org.litebridge.commons.ObjectUtils;
 
 public abstract sealed class AbstractColumnSpecBuilder<SELF extends AbstractColumnSpecBuilder<SELF>>
-        implements ColumnSpec, ColumnSpecBuilder<SELF>
+        implements ColumnSpecBuilder<SELF>
         permits ColumnSpecBuilderImpl, FieldColumnSpecBuilder.EmbeddedColumnSpecBuilder {
-
-    /**
-     * Built ColumnSpec instance
-     */
-    @Nullable
-    private ColumnSpecImpl columnSpec;
 
     /**
      * Database column name
@@ -28,7 +22,6 @@ public abstract sealed class AbstractColumnSpecBuilder<SELF extends AbstractColu
      */
     @Nullable
     private String sequence;
-
     /**
      * Field name of the nested DTO to join on
      */
@@ -41,17 +34,9 @@ public abstract sealed class AbstractColumnSpecBuilder<SELF extends AbstractColu
 
     @Override
     @SuppressWarnings("unchecked")
-    public SELF autoIncrement(final boolean autoIncrement) {
-        this.autoIncrement = autoIncrement;
-        return (SELF) this;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SELF sequence(final String sequence) {
-        ObjectUtils.requireNull(this.sequence, () -> new IllegalArgumentException("Sequence already specified for column '" + name + "'"));
-        this.sequence = ObjectUtils.requireNonNull(sequence, () -> new IllegalArgumentException("No sequence specified for column '" + name + "'"));
-        return (SELF) this;
+    public ColumnSpecAutoIncrementTerminal<SELF> autoIncrement() {
+        this.autoIncrement = true;
+        return new ColumnSpecAutoIncrementTerminal<>((SELF) this);
     }
 
     @Override
@@ -68,31 +53,12 @@ public abstract sealed class AbstractColumnSpecBuilder<SELF extends AbstractColu
         return (SELF) this;
     }
 
-    @Override
-    public String name() {
-        return ensureColumnSpec().name();
+    public ColumnSpec build() {
+        return new ColumnSpec(name, BooleanUtils.toBoolean(autoIncrement), sequence, joinColumn);
     }
 
-    @Override
-    public boolean autoIncrement() {
-        return ensureColumnSpec().autoIncrement();
-    }
-
-    @Override
-    public @Nullable String sequence() {
-        return ensureColumnSpec().sequence();
-    }
-
-    @Override
-    public @Nullable String joinColumn() {
-        return ensureColumnSpec().joinColumn();
-    }
-
-    private ColumnSpecImpl ensureColumnSpec() {
-        if (columnSpec == null) {
-            columnSpec = new ColumnSpecImpl(name, BooleanUtils.toBoolean(autoIncrement), sequence, joinColumn);
-        }
-
-        return columnSpec;
+    void setSequence(final String sequence) {
+        ObjectUtils.requireNull(this.sequence, () -> new IllegalArgumentException("Sequence already specified for column '" + name + "'"));
+        this.sequence = ObjectUtils.requireNonNull(sequence, () -> new IllegalArgumentException("No sequence specified for column '" + name + "'"));
     }
 }

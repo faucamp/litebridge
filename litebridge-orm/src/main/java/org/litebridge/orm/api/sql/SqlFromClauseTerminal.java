@@ -41,7 +41,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     @Override
     public SqlOrderByClause orderBy(final FieldColumnSpec... columns) {
         return new SqlOrderByClause(selectSpec.newOrderBy(Arrays.stream(columns)
-                .map(fieldColumnSpec -> fieldColumnSpec.column().name())
+                .map(fieldColumnSpec -> fieldColumnSpec.columnSpec().name())
                 .toArray(String[]::new)),
                 (SqlSelector) delegate);
     }

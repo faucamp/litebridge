@@ -15,45 +15,32 @@ class ColumnSpecBuilderImplTest {
         final ColumnSpecBuilderImpl columnSpecBuilder = new ColumnSpecBuilderImpl("TEST_COLUMN");
 
         // When
-        final String result = columnSpecBuilder.name();
+        final String result = columnSpecBuilder.build().name();
 
         // Then
         assertEquals("TEST_COLUMN", result);
     }
 
     @Test
-    void autoIncrement_true() {
+    void isAutoIncrement_true() {
         // Given
         final ColumnSpecBuilderImpl columnSpecBuilder = new ColumnSpecBuilderImpl("TEST_COLUMN")
-                .autoIncrement(true);
+                .autoIncrement().natively();
 
         // When
-        final boolean result = columnSpecBuilder.autoIncrement();
+        final boolean result = columnSpecBuilder.build().isAutoIncrement();
 
         // Then
         assertTrue(result);
     }
 
     @Test
-    void autoIncrement_false() {
-        // Given
-        final ColumnSpecBuilderImpl columnSpecBuilder = new ColumnSpecBuilderImpl("TEST_COLUMN")
-                .autoIncrement(false);
-
-        // When
-        final boolean result = columnSpecBuilder.autoIncrement();
-
-        // Then
-        assertFalse(result);
-    }
-
-    @Test
-    void autoIncrement_false_notSet() {
+    void isAutoIncrement_false() {
         // Given
         final ColumnSpecBuilderImpl columnSpecBuilder = new ColumnSpecBuilderImpl("TEST_COLUMN");
 
         // When
-        final boolean result = columnSpecBuilder.autoIncrement();
+        final boolean result = columnSpecBuilder.build().isAutoIncrement();
 
         // Then
         assertFalse(result);
@@ -63,10 +50,10 @@ class ColumnSpecBuilderImplTest {
     void sequence() {
         // Given
         final ColumnSpecBuilderImpl columnSpecBuilder = new ColumnSpecBuilderImpl("TEST_COLUMN")
-                .sequence("TEST_SEQUENCE");
+                .autoIncrement().usingSequence("TEST_SEQUENCE");
 
         // When
-        final String result = columnSpecBuilder.sequence();
+        final String result = columnSpecBuilder.build().sequence();
 
         // Then
         assertEquals("TEST_SEQUENCE", result);
@@ -78,7 +65,7 @@ class ColumnSpecBuilderImplTest {
         final ColumnSpecBuilderImpl columnSpecBuilder = new ColumnSpecBuilderImpl("testColumn");
 
         // When
-        final String result = columnSpecBuilder.sequence();
+        final String result = columnSpecBuilder.build().sequence();
 
         // Then
         assertNull(result);
@@ -91,7 +78,7 @@ class ColumnSpecBuilderImplTest {
                 .joinOn("TEST_JOIN_COLUMN");
 
         // When
-        final String result = columnSpecBuilder.joinColumn();
+        final String result = columnSpecBuilder.build().joinColumn();
 
         // Then
         assertEquals("TEST_JOIN_COLUMN", result);
@@ -106,6 +93,6 @@ class ColumnSpecBuilderImplTest {
         columnSpecBuilder.joinUsing();
 
         // Then
-        assertEquals("TEST_COLUMN", columnSpecBuilder.joinColumn());
+        assertEquals("TEST_COLUMN", columnSpecBuilder.build().joinColumn());
     }
 }

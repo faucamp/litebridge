@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.litebridge.orm.api.spec.FieldSpecBuilder.f;
+import static org.litebridge.orm.api.spec.FieldMapping.f;
 import static org.litebridge.orm.api.spec.TableSpec.t;
 
 class LitebridgeE2eTest {

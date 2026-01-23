@@ -1,20 +1,19 @@
 package org.litebridge.orm.api.spec;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.commons.ObjectUtils;
 
-public final class FieldColumnSpecBuilder implements FieldColumnSpec {
+public final class FieldColumnSpecBuilder {
 
-    private final FieldSpecBuilder<EmbeddedColumnSpecBuilder> fieldSpecBuilder;
+    private final FieldSpec fieldSpec;
     @Nullable
     private EmbeddedColumnSpecBuilder columnSpecBuilder;
 
-    FieldColumnSpecBuilder(final String field) {
-        this.fieldSpecBuilder = new FieldSpecBuilderImpl(field);
+    FieldColumnSpecBuilder(final FieldSpec fieldSpec) {
+        this.fieldSpec = fieldSpec;
     }
 
-    FieldColumnSpecBuilder(final FieldSpecBuilder<EmbeddedColumnSpecBuilder> fieldSpecBuilder) {
-        this.fieldSpecBuilder = fieldSpecBuilder;
+    public EmbeddedColumnSpecBuilder c(final String column) {
+        return column(column);
     }
 
     public EmbeddedColumnSpecBuilder column(final String column) {
@@ -22,14 +21,12 @@ public final class FieldColumnSpecBuilder implements FieldColumnSpec {
         return columnSpecBuilder;
     }
 
-    @Override
-    public FieldSpec field() {
-        return fieldSpecBuilder;
-    }
+    public FieldColumnSpec build() {
+        if (columnSpecBuilder == null) {
+            throw new IllegalStateException("Column not specified");
+        }
 
-    @Override
-    public ColumnSpec column() {
-        return ObjectUtils.requireNonNull(columnSpecBuilder, () -> new IllegalStateException("Column spec not set"));
+        return new FieldColumnSpecImpl(fieldSpec, columnSpecBuilder.build());
     }
 
     public final class EmbeddedColumnSpecBuilder
@@ -42,12 +39,12 @@ public final class FieldColumnSpecBuilder implements FieldColumnSpec {
 
         @Override
         public FieldSpec field() {
-            return FieldColumnSpecBuilder.this.field();
+            return FieldColumnSpecBuilder.this.fieldSpec;
         }
 
         @Override
-        public ColumnSpec column() {
-            return FieldColumnSpecBuilder.this.column();
+        public ColumnMapping column() {
+            return build();
         }
     }
 }

@@ -1,9 +1,10 @@
 package org.litebridge.orm.api.spec;
 
-public sealed interface FieldColumnSpec
-        permits FieldColumnSpecBuilder, FieldColumnSpecBuilder.EmbeddedColumnSpecBuilder {
-
+public interface FieldColumnSpec {
     FieldSpec field();
+    ColumnMapping column();
 
-    ColumnSpec column();
+    default ColumnSpec columnSpec() {
+        return (ColumnSpec) column();
+    }
 }

@@ -11,8 +11,11 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelector;
+import org.litebridge.orm.api.spec.AbstractColumnSpecBuilder;
+import org.litebridge.orm.api.spec.ColumnMapping;
 import org.litebridge.orm.api.spec.ColumnSpec;
 import org.litebridge.orm.api.spec.FieldSpec;
+import org.litebridge.orm.api.spec.OneToMany;
 import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.api.sql.SqlFromClause;
 import org.litebridge.orm.api.sql.SqlSelector;
@@ -266,68 +269,33 @@ public class Litebridge {
             throw new IllegalArgumentException("DTO class cannot be null");
         } else if (ClassUtils.isBasicType(dtoClass)) {
             throw new IllegalArgumentException("Not a DTO: " + dtoClass.getName());
-        } else if (CollectionUtils.isEmpty(tableSpec.fieldColumnSpecMap())) {
+        } else if (CollectionUtils.isEmpty(tableSpec.fieldColumnMap())) {
             throw new IllegalArgumentException("No field-column map provided");
         }
 
         // Read the table metadata
         final TableMetaData tableMetaData = databaseProvider.getTableMetaData(tableSpec);
 
-        final Map<FieldAccessor, ColumnMetaData> columnMap = mapFields(dtoClass, tableMetaData, tableSpec.fieldColumnSpecMap());
+        final Map<FieldAccessor, ColumnMetaData> columnMap = mapFields(dtoClass, tableMetaData, tableSpec.fieldColumnMap());
         return new OrmTable(tableMetaData, columnMap, changeTracker);
     }
 
-    private Map<FieldAccessor, ColumnMetaData> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<FieldSpec, ColumnSpec> fieldColumnSpecMap) {
+    private Map<FieldAccessor, ColumnMetaData> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<FieldSpec, ColumnMapping> fieldColumnSpecMap) {
         final Set<String> unmappedColumns = tableMetaData.columns().stream()
                 .map(ColumnMetaData::name)
                 .collect(Collectors.toSet());
         final Map<FieldAccessor, ColumnMetaData> mappedFields = new HashMap<>();
 
         // Validate and formalise field mapping
-        fieldColumnSpecMap.forEach((fieldSpec, columnSpec) -> {
-            if (!tableMetaData.hasColumn(columnSpec.name())) {
-                throw new IllegalArgumentException(String.format("Column '%s', mapped by field spec '%s' of DTO '%s', does not exist in table: '%s'", columnSpec, fieldSpec, dtoClass, tableMetaData.name()));
+        fieldColumnSpecMap.forEach((fieldSpec, columnMapping) -> {
+            if (columnMapping instanceof AbstractColumnSpecBuilder columnSpecBuilder) {
+                final ColumnSpec columnSpec = columnSpecBuilder.build();
+                mapColumnSpec(columnSpec, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
+            } else if (columnMapping instanceof ColumnSpec columnSpec) {
+                mapColumnSpec(columnSpec, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
+            } else if (columnMapping instanceof OneToMany) {
+                throw new UnsupportedOperationException("One-to-many reverse mapping not yet implemented");
             }
-
-            if (!unmappedColumns.contains(columnSpec.name())) {
-                // Column is already mapped
-                final String conflictingFieldName = mappedFields.entrySet().stream()
-                        .filter(fieldColumnEntry -> fieldColumnEntry.getValue().name().equals(columnSpec.name()))
-                        .map(Map.Entry::getKey)
-                        .map(FieldAccessor::name)
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException("Conflicting field for column '%s' not found; current field spec: '%s'".formatted(columnSpec, fieldSpec)));
-                throw new IllegalArgumentException(String.format("Column '%s' is already mapped by field '%s'", columnSpec, conflictingFieldName));
-            }
-
-            // Add field-column mapping
-            final FieldAccessor fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
-            final ColumnMetaData column = ObjectUtils.requireNonNull(tableMetaData.column(columnSpec.name()), "Column metadata not found: " + columnSpec.name());
-
-            if (columnSpec.autoIncrement()) {
-                column.setAutoIncrement(true);
-
-                if (!StringUtils.isBlank(columnSpec.sequence())) {
-                    column.setSequence(columnSpec.sequence());
-                }
-            }
-
-            if (!ClassUtils.isBasicType(fieldAccessor.type())) {
-                // Check for self-referencing DTOs, then if we know how to persist the nested DTO
-                if (fieldAccessor.type() != dtoClass && !tableRegistry.containsTable(fieldAccessor.type())) {
-                    // Cascading child DTO, but no table mapping exists
-                    throw new IllegalArgumentException(String.format("Sub-DTO '%s' in field '%s' of DTO '%s' is not registered", fieldAccessor.type().getName(), fieldSpec.name(), dtoClass.getName()));
-                }
-
-                if (columnSpec.joinColumn() == null) {
-                    throw new IllegalArgumentException(String.format("No \"join on\" field specified for sub-DTO '%s' in field '%s' of DTO '%s'", fieldAccessor.type().getName(), fieldSpec.name(), dtoClass.getName()));
-                }
-
-                column.setJoinColumn(columnSpec.joinColumn());
-            }
-
-            mappedFields.put(fieldAccessor, column);
-            unmappedColumns.remove(columnSpec.name());
         });
 
         // Check for unmapped columns
@@ -343,5 +311,56 @@ public class Litebridge {
         }
 
         return mappedFields;
+    }
+
+    private void mapColumnSpec(final ColumnSpec columnSpec,
+                               final FieldSpec fieldSpec,
+                               final Class<?> dtoClass,
+                               final TableMetaData tableMetaData,
+                               final Set<String> unmappedColumns,
+                               final Map<FieldAccessor, ColumnMetaData> mappedFields) {
+        if (!tableMetaData.hasColumn(columnSpec.name())) {
+            throw new IllegalArgumentException(String.format("Column '%s', mapped by field spec '%s' of DTO '%s', does not exist in table: '%s'", columnSpec, fieldSpec, dtoClass, tableMetaData.name()));
+        }
+
+        if (!unmappedColumns.contains(columnSpec.name())) {
+            // Column is already mapped
+            final String conflictingFieldName = mappedFields.entrySet().stream()
+                    .filter(fieldColumnEntry -> fieldColumnEntry.getValue().name().equals(columnSpec.name()))
+                    .map(Map.Entry::getKey)
+                    .map(FieldAccessor::name)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Conflicting field for column '%s' not found; current field spec: '%s'".formatted(columnSpec, fieldSpec)));
+            throw new IllegalArgumentException(String.format("Column '%s' is already mapped by field '%s'", columnSpec, conflictingFieldName));
+        }
+
+        // Add field-column mapping
+        final FieldAccessor fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
+        final ColumnMetaData column = ObjectUtils.requireNonNull(tableMetaData.column(columnSpec.name()), "Column metadata not found: " + columnSpec.name());
+
+        if (columnSpec.isAutoIncrement()) {
+            column.setAutoIncrement(true);
+
+            if (!StringUtils.isBlank(columnSpec.sequence())) {
+                column.setSequence(columnSpec.sequence());
+            }
+        }
+
+        if (!ClassUtils.isBasicType(fieldAccessor.type())) {
+            // Check for self-referencing DTOs, then if we know how to persist the nested DTO
+            if (fieldAccessor.type() != dtoClass && !tableRegistry.containsTable(fieldAccessor.type())) {
+                // Cascading child DTO, but no table mapping exists
+                throw new IllegalArgumentException(String.format("Sub-DTO '%s' in field '%s' of DTO '%s' is not registered", fieldAccessor.type().getName(), fieldSpec.name(), dtoClass.getName()));
+            }
+
+            if (columnSpec.joinColumn() == null) {
+                throw new IllegalArgumentException(String.format("No \"join on\" field specified for sub-DTO '%s' in field '%s' of DTO '%s'", fieldAccessor.type().getName(), fieldSpec.name(), dtoClass.getName()));
+            }
+
+            column.setJoinColumn(columnSpec.joinColumn());
+        }
+
+        mappedFields.put(fieldAccessor, column);
+        unmappedColumns.remove(columnSpec.name());
     }
 }

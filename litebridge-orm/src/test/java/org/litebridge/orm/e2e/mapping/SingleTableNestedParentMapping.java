@@ -2,7 +2,7 @@ package org.litebridge.orm.e2e.mapping;
 
 import org.litebridge.orm.api.spec.FieldColumnSpec;
 
-import static org.litebridge.orm.api.spec.FieldSpecBuilder.f;
+import static org.litebridge.orm.api.spec.FieldColumnMapping.f;
 
 public class SingleTableNestedParentMapping {
 

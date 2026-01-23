@@ -2,13 +2,13 @@ package org.litebridge.orm.e2e.mapping;
 
 import org.litebridge.orm.api.spec.FieldColumnSpec;
 
-import static org.litebridge.orm.api.spec.FieldSpecBuilder.f;
-import static org.litebridge.orm.api.spec.FieldSpecBuilder.p;
+import static org.litebridge.orm.api.spec.FieldColumnMapping.f;
+import static org.litebridge.orm.api.spec.FieldColumnMapping.p;
 
 public class PersonMapping {
 
     public static final FieldColumnSpec id = f("id")
-            .c("PERSON_ID").autoIncrement(true).sequence("LB.PERSON_SEQ");
+            .c("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ");
 
     public static final FieldColumnSpec name = f("name")
             .c("FIRST_NAME");

@@ -48,7 +48,7 @@ public final class DtoWhereConditionClauseTerminal<DTO>
     @Override
     public DtoOrderByClause<DTO> orderBy(final FieldColumnSpec... fields) {
         return orderByImpl(Arrays.stream(fields)
-                .map(field -> field.column().name())
+                .map(field -> field.columnSpec().name())
                 .toArray(String[]::new));
     }
 

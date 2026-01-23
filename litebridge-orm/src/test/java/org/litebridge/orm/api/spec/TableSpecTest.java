@@ -14,26 +14,26 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class TableSpecTest {
 
     @Test
-    void fieldColumnSpecMap() {
+    void fieldColumnMap() {
         // Given
-        final Map<FieldSpec, ColumnSpec> fieldColumnSpecMap = new HashMap<>();
-        fieldColumnSpecMap.put(new FieldSpecImpl("testField", false), new ColumnSpecImpl("testColumn", false, null, null));
-        final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnSpecMap);
+        final Map<FieldSpec, ColumnMapping> fieldColumnMap = new HashMap<>();
+        fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn", false, null, null));
+        final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
 
         // When
-        final Map<FieldSpec, ColumnSpec> result = tableSpec.fieldColumnSpecMap();
+        final Map<FieldSpec, ColumnMapping> result = tableSpec.fieldColumnMap();
 
         // Then
-        assertNotSame(fieldColumnSpecMap, result);
-        assertEquals(fieldColumnSpecMap, result);
+        assertNotSame(fieldColumnMap, result);
+        assertEquals(fieldColumnMap, result);
     }
 
     @Test
     void constructor_nullCatalogAndSchema() {
         // When
-        final Map<FieldSpec, ColumnSpec> fieldColumnSpecMap = new HashMap<>();
-        fieldColumnSpecMap.put(new FieldSpecImpl("testField", false), new ColumnSpecImpl("testColumn", false, null, null));
-        final TableSpec result = new TableSpec(null, null, "users", fieldColumnSpecMap);
+        final Map<FieldSpec, ColumnMapping> fieldColumnMap = new HashMap<>();
+        fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn", false, null, null));
+        final TableSpec result = new TableSpec(null, null, "users", fieldColumnMap);
 
         // Then
         assertEquals("", result.catalog());
@@ -58,52 +58,52 @@ class TableSpecTest {
 
     @Test
     void t() {
-        final Map<FieldSpec, ColumnSpec> fieldColumnSpecMap = new HashMap<>();
-        fieldColumnSpecMap.put(new FieldSpecImpl("testField", false), new ColumnSpecImpl("testColumn", false, null, null));
+        final Map<FieldSpec, ColumnMapping> fieldColumnMap = new HashMap<>();
+        fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn", false, null, null));
 
         // When
-        final TableSpec result = TableSpec.t("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnSpecMap);
+        final TableSpec result = TableSpec.t("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
 
         // Then
         assertNotNull(result);
         assertEquals("TEST_CATALOG", result.catalog());
         assertEquals("TEST_SCHEMA", result.schema());
         assertEquals("TEST_TABLE", result.name());
-        assertNotSame(fieldColumnSpecMap, result.fieldColumnSpecMap());
-        assertEquals(fieldColumnSpecMap, result.fieldColumnSpecMap());
+        assertNotSame(fieldColumnMap, result.fieldColumnMap());
+        assertEquals(fieldColumnMap, result.fieldColumnMap());
     }
 
     @Test
     void t_noCatalog() {
-        final Map<FieldSpec, ColumnSpec> fieldColumnSpecMap = new HashMap<>();
-        fieldColumnSpecMap.put(new FieldSpecImpl("testField", false), new ColumnSpecImpl("testColumn", false, null, null));
+        final Map<FieldSpec, ColumnMapping> fieldColumnMap = new HashMap<>();
+        fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn", false, null, null));
 
         // When
-        final TableSpec result = TableSpec.t("TEST_SCHEMA", "TEST_TABLE", fieldColumnSpecMap);
+        final TableSpec result = TableSpec.t("TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
 
         // Then
         assertNotNull(result);
         assertEquals("", result.catalog());
         assertEquals("TEST_SCHEMA", result.schema());
         assertEquals("TEST_TABLE", result.name());
-        assertNotSame(fieldColumnSpecMap, result.fieldColumnSpecMap());
-        assertEquals(fieldColumnSpecMap, result.fieldColumnSpecMap());
+        assertNotSame(fieldColumnMap, result.fieldColumnMap());
+        assertEquals(fieldColumnMap, result.fieldColumnMap());
     }
 
     @Test
     void t_noCatalogOrSchema() {
-        final Map<FieldSpec, ColumnSpec> fieldColumnSpecMap = new HashMap<>();
-        fieldColumnSpecMap.put(new FieldSpecImpl("testField", false), new ColumnSpecImpl("testColumn", false, null, null));
+        final Map<FieldSpec, ColumnMapping> fieldColumnMap = new HashMap<>();
+        fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn", false, null, null));
 
         // When
-        final TableSpec result = TableSpec.t("TEST_TABLE", fieldColumnSpecMap);
+        final TableSpec result = TableSpec.t("TEST_TABLE", fieldColumnMap);
 
         // Then
         assertNotNull(result);
         assertEquals("", result.catalog());
         assertEquals("", result.schema());
         assertEquals("TEST_TABLE", result.name());
-        assertNotSame(fieldColumnSpecMap, result.fieldColumnSpecMap());
-        assertEquals(fieldColumnSpecMap, result.fieldColumnSpecMap());
+        assertNotSame(fieldColumnMap, result.fieldColumnMap());
+        assertEquals(fieldColumnMap, result.fieldColumnMap());
     }
 }

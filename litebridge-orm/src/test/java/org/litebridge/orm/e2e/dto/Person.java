@@ -3,6 +3,7 @@ package org.litebridge.orm.e2e.dto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
 
@@ -15,7 +16,7 @@ public class Person {
     private String surname;
     private int age;
     private String eyeColour;
-    private Address address;
+    private List<Account> accounts;
 
     public Long getId() {
         return id;
@@ -59,12 +60,12 @@ public class Person {
         this.eyeColour = eyeColour;
     }
 
-    public Address getAddress() {
-        return address;
+    public List<Account> getAccounts() {
+        return accounts;
     }
 
-    public void setAddress(final Address address) {
-        this.address = address;
+    public void setAccounts(final List<Account> accounts) {
+        this.accounts = accounts;
     }
 
     @Override
@@ -86,7 +87,7 @@ public class Person {
                 .add("surname='" + surname + "'")
                 .add("age=" + age)
                 .add("eyeColour='" + eyeColour + "'")
-                .add("address=" + address)
+                .add("accounts=" + accounts)
                 .toString();
     }
 }

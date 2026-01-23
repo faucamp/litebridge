@@ -11,8 +11,8 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.api.spec.FieldColumnMapping;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
-import org.litebridge.orm.api.spec.FieldSpecBuilder;
 import org.litebridge.orm.persistence.DefaultDtoMapper;
 import org.litebridge.orm.persistence.DtoAliasRegistry;
 import org.litebridge.orm.persistence.DtoMapper;
@@ -137,7 +137,7 @@ class DtoJoinConditionClauseTerminalTest {
         final JoinSpec joinSpec = new JoinSpec("TEST_SCHEMA", "TEST_TABLE");
 
         final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector);
-        final FieldColumnSpec fieldColumnSpec = FieldSpecBuilder.f("myVar").c("MY_VAR");
+        final FieldColumnSpec fieldColumnSpec = FieldColumnMapping.f("myVar").c("MY_VAR");
 
         // When
         final DtoOrderByClause<TestDto> result = dtoDtoJoinConditionClauseTerminal.orderBy(fieldColumnSpec);

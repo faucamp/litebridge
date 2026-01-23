@@ -8,7 +8,7 @@ import static org.litebridge.orm.api.spec.FieldSpecBuilder.p;
 public class PersonMapping {
 
     public static final FieldColumnSpec id = f("id")
-            .c("PERSON_ID").autoIncrement(true).sequence("LB.PERSON_SEQ");
+            .c("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ");
 
     public static final FieldColumnSpec name = f("name")
             .c("FIRST_NAME");
