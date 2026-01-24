@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.function.Supplier;
 
 /**
  * The PersistenceFacade class provides an abstraction layer for managing the persistence
@@ -82,6 +83,8 @@ public class PersistenceFacade {
         final CompositeUpdateResult compositeUpdateResult = executeUpdateStatement(dto, statementBuilder);
 
         compositeUpdateResult.results().forEach(dtoUpdateResult -> {
+            updateOneToManyReverseMappings(dtoUpdateResult.dto(), compositeUpdateResult);
+
             if (dtoUpdateResult.updateResult() instanceof InsertResult insertResult
                     && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
                 // TODO: composite PK support
@@ -107,6 +110,8 @@ public class PersistenceFacade {
         final CompositeUpdateResult compositeUpdateResult = executeUpdateStatement(dto, statementBuilder);
 
         compositeUpdateResult.results().forEach(dtoUpdateResult -> {
+            updateOneToManyReverseMappings(dto, compositeUpdateResult);
+
             if (dtoUpdateResult.updateResult() instanceof InsertResult insertResult) {
                 if (!CollectionUtils.isEmpty(insertResult.generatedKeys())) {
                     // TODO: composite PK support
@@ -265,6 +270,51 @@ public class PersistenceFacade {
         final Object convertedValue = databaseProvider.getTypeConverter().convert(generatedKey, pkColumn.getDataType());
         field.set(dto, convertedValue);
         embeddedDtoTable.syncPersistedDto(dto);
+    }
+
+    private void updateOneToManyReverseMappings(final Object dto, final DtoUpdateResult dtoUpdateResult) {
+        updateOneToManyReverseMappings(dto, () -> List.of(dtoUpdateResult));
+    }
+
+    private void updateOneToManyReverseMappings(final Object dto, final CompositeUpdateResult compositeUpdateResult) {
+        updateOneToManyReverseMappings(dto, compositeUpdateResult::results);
+    }
+
+
+    private void updateOneToManyReverseMappings(final Object dto, final Supplier<List<DtoUpdateResult>> dtoUpdateResultSupplier) {
+        final OrmTable table = tableRegistry.getTableOrThrow(dto.getClass());
+        final List<MappedOneToMany> mappedOneToManyList = table.getOneToManyMappings();
+
+        if (CollectionUtils.isEmpty(mappedOneToManyList)) {
+            // No reverse mappings to update
+            return;
+        }
+
+        mappedOneToManyList.forEach(mappedOneToMany -> {
+            LOGGER.trace("Updating reverse mapping for field '{}' of DTO: {}", mappedOneToMany.reverseMappingCollection().name(), dto);
+            // Get the current value of the mapping
+            final FieldAccessor reverseMappingCollection = mappedOneToMany.reverseMappingCollection();
+            final Collection<Object> currentCollection;
+            final Collection<Object> dtoCollection = (Collection<Object>) reverseMappingCollection.get(dto);
+
+            if (dtoCollection != null) {
+                currentCollection = dtoCollection;
+            } else {
+                currentCollection = (Collection<Object>) ClassUtils.newInstance(reverseMappingCollection.type());
+                reverseMappingCollection.set(dto, currentCollection);
+            }
+
+            dtoUpdateResultSupplier.get().forEach(dtoUpdateResult -> {
+                if (dtoUpdateResult.dto().getClass() == reverseMappingCollection.genericType()) {
+                    // Matching collection class - add the updated value to the collection if necessary
+                    //TODO: support for multiple collections of the same type in the parent DTO
+                    if (!currentCollection.contains(dtoUpdateResult.dto())) {
+                        LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", mappedOneToMany.reverseMappingCollection().name(), dtoUpdateResult.dto());
+                        currentCollection.add(dtoUpdateResult.dto());
+                    }
+                }
+            });
+        });
     }
 
     private AbstractStatementBuilder<?> createStatementBuilder(final Object dto) {

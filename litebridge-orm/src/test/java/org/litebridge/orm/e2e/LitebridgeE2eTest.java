@@ -79,11 +79,9 @@ class LitebridgeE2eTest {
 
         // Then
         assertNotNull(person.getId(), "Person ID should be set after save");
-        final TrackedDto<Person> personTrackedDto = changeTracker.getTrackedDto(person);
-        //assertTrue(personTrackedDto.changedFields().isEmpty(), "No fields should be changed after save");
         assertNotNull(account.getId(), "Account ID should be set after save");
-        final TrackedDto<Account> accountTrackedDto = changeTracker.getTrackedDto(account);
-        //assertTrue(accountTrackedDto.changedFields().isEmpty(), "No fields should be changed after save");
+        assertNotNull(person.getAccounts(), "Person should have a list of accounts");
+        assertEquals(1, person.getAccounts().size(), "Person should have exactly one account");
 
         // When
         final Account account2 = litebridge.track(new Account());
@@ -99,6 +97,8 @@ class LitebridgeE2eTest {
         final Account result = litebridge.select(Account.class).where("id").eq(account2.getId()).oneOrThrow();
         assertEquals("Account 2", result.getName());
         assertEquals(person, result.getOwner());
+        assertNotNull(result.getOwner().getAccounts(), "Person should have a list of accounts");
+        assertEquals(2, result.getOwner().getAccounts().size(), "Person should have exactly 2 accounts");
     }
 
     @Test

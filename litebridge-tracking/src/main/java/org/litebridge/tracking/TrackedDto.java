@@ -5,6 +5,9 @@ import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.collector.MapCollector;
+import org.litebridge.commons.type.WeakIdentitySet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -15,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -33,6 +37,7 @@ import java.util.stream.Collectors;
  */
 public final class TrackedDto<DTO> {
 
+    private static Logger LOGGER = LoggerFactory.getLogger(TrackedDto.class);
     private final WeakReference<DTO> dtoRef;
     private final Collection<FieldAccessor> fields;
     private final Consumer<Object> trackDtoCallback;
@@ -154,11 +159,7 @@ public final class TrackedDto<DTO> {
     public ChangedFields changedFields(final boolean refresh) {
         final Object dto = dto();
 
-        if (refresh && changedFields != null) {
-            updateFieldSnapshotsWithChangedFields();
-        }
-
-        if (changedFields == null) {
+        if (changedFields == null || refresh) {
             if (fieldSnapshots == null) {
                 throw new IllegalStateException("Field snapshots not taken for object: " + dto);
             }
@@ -198,19 +199,20 @@ public final class TrackedDto<DTO> {
     private List<FieldSnapshot> createFieldSnapshots(final Collection<FieldAccessor> fields) {
         final DTO dto = dto();
         final List<FieldSnapshot> fieldSnapshots = new ArrayList<>();
+        final WeakIdentitySet<Object> dtosVisited = new WeakIdentitySet<>();
 
         fields.forEach(field -> {
             if (Map.class.isAssignableFrom(field.type())) {
                 // To track changes in a map, we need to snapshot the current map values
                 final Map<?, ?> currentMap = (Map<?, ?>) getFieldValue(dto, field);
-                final int overallFieldHash = getFieldHash(dto, field);
+                final int overallFieldHash = getFieldHash(dto, field, dtosVisited);
 
                 final Map<?, Integer> mapSnapshot;
 
                 if (!CollectionUtils.isEmpty(currentMap)) {
                     // Create snapshot of current map contents
                     mapSnapshot = currentMap.entrySet().stream()
-                            .collect(Collectors.toMap(Map.Entry::getKey, entry -> getValueHash(entry.getValue())));
+                            .collect(Collectors.toMap(Map.Entry::getKey, entry -> getValueHash(entry.getValue(), dtosVisited)));
 
                     // Track changes to its keys/values if they are nested DTOs
                     final Class<?>[] genericTypes = field.genericTypes();
@@ -228,7 +230,7 @@ public final class TrackedDto<DTO> {
 
                 fieldSnapshots.add(new FieldSnapshot(field, overallFieldHash, mapSnapshot));
             } else {
-                fieldSnapshots.add(new FieldSnapshot(field, getFieldHash(dto, field)));
+                fieldSnapshots.add(new FieldSnapshot(field, getFieldHash(dto, field, dtosVisited)));
 
                 if (Collection.class.isAssignableFrom(field.type())) {
                     // Snapshot nested collection
@@ -257,13 +259,14 @@ public final class TrackedDto<DTO> {
 
     private void updateFieldSnapshotsWithChangedFields() {
         final ListIterator<FieldSnapshot> fieldSnapshotIterator = fieldSnapshots.listIterator();
+        final Set<Object> dtosVisited = new WeakIdentitySet<>();
 
         while (fieldSnapshotIterator.hasNext()) {
             final FieldSnapshot oldFieldSnapshot = fieldSnapshotIterator.next();
             changedFields.get(oldFieldSnapshot.field().name())
                     .ifPresent(changedField -> {
                         // Replace the old snapshot with a new one based on the changed field - this avoids the previously-detected change from being seen again
-                        final FieldSnapshot newFieldSnapshot = toFieldSnapshot(oldFieldSnapshot.field(), changedField);
+                        final FieldSnapshot newFieldSnapshot = toFieldSnapshot(oldFieldSnapshot.field(), changedField, dtosVisited);
                         fieldSnapshotIterator.set(newFieldSnapshot);
                     });
         }
@@ -272,15 +275,15 @@ public final class TrackedDto<DTO> {
         changedFields = null;
     }
 
-    private static int getFieldHash(final Object instance, final FieldAccessor field) {
-        return getValueHash(getFieldValue(instance, field));
+    private static int getFieldHash(final Object instance, final FieldAccessor field, final Set<Object> dtosVisited) {
+        return getValueHash(getFieldValue(instance, field), dtosVisited);
     }
 
-    private static int getFieldHash(final Object instance, final Field field) {
-        return getValueHash(getFieldValue(instance, ClassFieldAccessorCache.fieldAccessorOrThrow(instance.getClass(), field.getName())));
+    private static int getFieldHash(final Object instance, final Field field, final Set<Object> dtosVisited) {
+        return getValueHash(getFieldValue(instance, ClassFieldAccessorCache.fieldAccessorOrThrow(instance.getClass(), field.getName())), dtosVisited);
     }
 
-    private static int getValueHash(final Object fieldValue) {
+    private static int getValueHash(final @Nullable Object fieldValue, final Set<Object> dtosVisited) {
         if (fieldValue == null) {
             return 0;
         } else if (ClassUtils.isBasicType(fieldValue.getClass())) {
@@ -290,7 +293,7 @@ public final class TrackedDto<DTO> {
                 return 0;
             } else {
                 return collection.stream()
-                        .map(TrackedDto::getValueHash)
+                        .map(item -> getValueHash(item, dtosVisited))
                         .reduce(0, Integer::sum);
             }
         } else if (fieldValue instanceof Map<?, ?> map) {
@@ -298,24 +301,30 @@ public final class TrackedDto<DTO> {
                 return 0;
             } else {
                 return map.entrySet().stream()
-                        .map(entry -> getValueHash(entry.getKey()) + getValueHash(entry.getValue()))
+                        .map(entry -> getValueHash(entry.getKey(), dtosVisited) + getValueHash(entry.getValue(), dtosVisited))
                         .reduce(0, Integer::sum);
             }
         } else {
-            return getDtoHash(fieldValue);
+            return getDtoHash(fieldValue, dtosVisited);
         }
     }
 
-    private static int getDtoHash(final Object dto) {
+    private static int getDtoHash(final Object dto, final Set<Object> dtosVisited) {
+        if (dtosVisited.contains(dto)) {
+            LOGGER.warn("Circular reference detected in DTO: {}", dto);
+            return 1;
+        }
+
+        dtosVisited.add(dto);
         return ClassFieldCache.getFields(dto).stream()
-                .reduce(1, (hash, field) -> hash + getFieldHash(dto, field), Integer::sum);
+                .reduce(1, (hash, field) -> hash + getFieldHash(dto, field, dtosVisited), Integer::sum);
     }
 
     private static @Nullable Object getFieldValue(final Object instance, final FieldAccessor field) {
         return field.get(instance);
     }
 
-    private FieldSnapshot toFieldSnapshot(final FieldAccessor fieldAccessor, final ChangedField changedField) {
-        return new FieldSnapshot(fieldAccessor, getValueHash(changedField.value()));
+    private FieldSnapshot toFieldSnapshot(final FieldAccessor fieldAccessor, final ChangedField changedField, final Set<Object> dtosVisited) {
+        return new FieldSnapshot(fieldAccessor, getValueHash(changedField.value(), dtosVisited));
     }
 }

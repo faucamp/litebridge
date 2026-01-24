@@ -8,8 +8,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -197,11 +200,19 @@ public final class ClassUtils {
      */
     public static <DTO> DTO newInstance(final Class<DTO> dtoClass) {
         try {
-            final Constructor<DTO> constructor = dtoClass.getDeclaredConstructor();
+            final Constructor<DTO> constructor = getConcreteClass(dtoClass).getDeclaredConstructor();
             constructor.setAccessible(true);
             return constructor.newInstance();
         } catch (Exception ex) {
             throw new IllegalStateException("Failed to instantiate class: " + dtoClass.getName(), ex);
+        }
+    }
+
+    private static <T> Class<T> getConcreteClass(final Class<T> type) {
+        if (Collection.class.isAssignableFrom(type)) {
+            return (Class<T>) ArrayList.class;
+        } else {
+            return type;
         }
     }
 }

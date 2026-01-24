@@ -6,6 +6,7 @@ import org.litebridge.commons.ObjectUtils;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
@@ -38,7 +39,7 @@ class DtoJoinConditionClauseTerminalTest {
         final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
         final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", List.of("MY_VAR"), List.of(columnMetaData));
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
-        final Map<FieldAccessor, ColumnMetaData> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
+        final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
         final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
@@ -66,7 +67,7 @@ class DtoJoinConditionClauseTerminalTest {
         final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
         final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", List.of("MY_VAR"), List.of(columnMetaData));
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
-        final Map<FieldAccessor, ColumnMetaData> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
+        final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
         final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
@@ -96,7 +97,7 @@ class DtoJoinConditionClauseTerminalTest {
         final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
         final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", List.of("MY_VAR"), List.of(columnMetaData));
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
-        final Map<FieldAccessor, ColumnMetaData> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
+        final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
         final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
@@ -124,7 +125,7 @@ class DtoJoinConditionClauseTerminalTest {
         final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
         final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", List.of("MY_VAR"), List.of(columnMetaData));
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
-        final Map<FieldAccessor, ColumnMetaData> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
+        final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
         final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();

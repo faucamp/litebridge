@@ -14,7 +14,7 @@ import java.util.StringJoiner;
  * Instances of this class are immutable except for specific mutable fields like auto-increment, sequence,
  * and joinColumn, which can be modified after initialization.
  */
-public final class ColumnMetaData extends Column {
+public final class ColumnMetaData extends Column implements MappedFieldTarget {
 
     private final boolean nullable;
     private final int dataType;

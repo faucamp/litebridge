@@ -7,6 +7,7 @@ import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
@@ -23,6 +24,7 @@ import org.litebridge.orm.persistence.DefaultDtoMapper;
 import org.litebridge.orm.persistence.DtoAliasRegistry;
 import org.litebridge.orm.persistence.DtoIntrospector;
 import org.litebridge.orm.persistence.DtoMapper;
+import org.litebridge.orm.persistence.MappedOneToMany;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -276,15 +278,15 @@ public class Litebridge {
         // Read the table metadata
         final TableMetaData tableMetaData = databaseProvider.getTableMetaData(tableSpec);
 
-        final Map<FieldAccessor, ColumnMetaData> columnMap = mapFields(dtoClass, tableMetaData, tableSpec.fieldColumnMap());
+        final Map<FieldAccessor, MappedFieldTarget> columnMap = mapFields(dtoClass, tableMetaData, tableSpec.fieldColumnMap());
         return new OrmTable(tableMetaData, columnMap, changeTracker);
     }
 
-    private Map<FieldAccessor, ColumnMetaData> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<FieldSpec, ColumnMapping> fieldColumnSpecMap) {
+    private Map<FieldAccessor, MappedFieldTarget> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<FieldSpec, ColumnMapping> fieldColumnSpecMap) {
         final Set<String> unmappedColumns = tableMetaData.columns().stream()
                 .map(ColumnMetaData::name)
                 .collect(Collectors.toSet());
-        final Map<FieldAccessor, ColumnMetaData> mappedFields = new HashMap<>();
+        final Map<FieldAccessor, MappedFieldTarget> mappedFields = new HashMap<>();
 
         // Validate and formalise field mapping
         fieldColumnSpecMap.forEach((fieldSpec, columnMapping) -> {
@@ -293,8 +295,8 @@ public class Litebridge {
                 mapColumnSpec(columnSpec, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
             } else if (columnMapping instanceof ColumnSpec columnSpec) {
                 mapColumnSpec(columnSpec, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
-            } else if (columnMapping instanceof OneToMany) {
-                throw new UnsupportedOperationException("One-to-many reverse mapping not yet implemented");
+            } else if (columnMapping instanceof OneToMany oneToMany) {
+                mapOneToMany(oneToMany, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
             }
         });
 
@@ -318,7 +320,7 @@ public class Litebridge {
                                final Class<?> dtoClass,
                                final TableMetaData tableMetaData,
                                final Set<String> unmappedColumns,
-                               final Map<FieldAccessor, ColumnMetaData> mappedFields) {
+                               final Map<FieldAccessor, MappedFieldTarget> mappedFields) {
         if (!tableMetaData.hasColumn(columnSpec.name())) {
             throw new IllegalArgumentException(String.format("Column '%s', mapped by field spec '%s' of DTO '%s', does not exist in table: '%s'", columnSpec, fieldSpec, dtoClass, tableMetaData.name()));
         }
@@ -326,7 +328,8 @@ public class Litebridge {
         if (!unmappedColumns.contains(columnSpec.name())) {
             // Column is already mapped
             final String conflictingFieldName = mappedFields.entrySet().stream()
-                    .filter(fieldColumnEntry -> fieldColumnEntry.getValue().name().equals(columnSpec.name()))
+                    .filter(fieldColumnEntry -> fieldColumnEntry.getValue() instanceof ColumnMetaData)
+                    .filter(fieldColumnEntry -> ((ColumnMetaData) fieldColumnEntry.getValue()).name().equals(columnSpec.name()))
                     .map(Map.Entry::getKey)
                     .map(FieldAccessor::name)
                     .findFirst()
@@ -362,5 +365,31 @@ public class Litebridge {
 
         mappedFields.put(fieldAccessor, column);
         unmappedColumns.remove(columnSpec.name());
+    }
+
+    private void mapOneToMany(final OneToMany oneToMany,
+                              final FieldSpec fieldSpec,
+                              final Class<?> dtoClass,
+                              final TableMetaData tableMetaData,
+                              final Set<String> unmappedColumns,
+                              final Map<FieldAccessor, MappedFieldTarget> mappedFields) {
+        // Verify we are dealing with a collection
+        final FieldAccessor fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
+
+        if (!Collection.class.isAssignableFrom(fieldAccessor.type())) {
+            throw new IllegalArgumentException(String.format("Field '%s' of DTO '%s' is not a collection; cannot apply reverse one-to-many mapping. Field type: %s", fieldAccessor.name(), dtoClass.getName(), fieldAccessor.type()));
+        }
+
+        // Get the generic type of the collection to detect the target DTO
+        final Class<?> targetDto = fieldAccessor.genericType();
+
+        if (ClassUtils.isBasicType(targetDto)) {
+            throw new IllegalArgumentException(String.format("Field '%s' of DTO '%s' is a collection of basic type '%s'; cannot apply reverse one-to-many mapping", fieldAccessor.name(), dtoClass.getName(), targetDto.getName()));
+        }
+
+        // Get the "mapped by" field from the target DTO of the collection wrapped by the field spec
+        final FieldAccessor mappeByField = DtoIntrospector.fieldAccessor(targetDto, new FieldSpec(oneToMany.mappedByField(), false));
+        final MappedOneToMany mappedOneToMany = new MappedOneToMany(mappeByField, fieldAccessor);
+        mappedFields.put(fieldAccessor, mappedOneToMany);
     }
 }

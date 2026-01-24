@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 public class Person {
 
@@ -87,7 +88,7 @@ public class Person {
                 .add("surname='" + surname + "'")
                 .add("age=" + age)
                 .add("eyeColour='" + eyeColour + "'")
-                .add("accounts=" + accounts)
+                .add("accounts=" + (accounts != null ? accounts.stream().map(Account::getId).toList().toString() : null))
                 .toString();
     }
 }

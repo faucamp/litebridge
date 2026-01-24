@@ -3,6 +3,8 @@ package org.litebridge.tracking;
 import org.jspecify.annotations.NullUnmarked;
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.ClassUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class TrackedDtoTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrackedDtoTest.class.getName());
 
     @Test
     void dto() {
@@ -135,6 +139,44 @@ class TrackedDtoTest {
     }
 
     @Test
+    void snapshot_circularReference() {
+        // Given
+        final OneToManyParentDto parent = new OneToManyParentDto();
+        parent.id = 1L;
+        parent.children = new ArrayList<>();
+
+        final ManyToOneChildDto child1 = new ManyToOneChildDto();
+        child1.id = 2L;
+        child1.name = "child1";
+        child1.parent = parent;
+        parent.children.add(child1);
+
+        final ManyToOneChildDto child2 = new ManyToOneChildDto();
+        child2.id = 3L;
+        child2.name = "child2";
+        child2.parent = parent;
+        parent.children.add(child2);
+
+        final TrackedDto<OneToManyParentDto> trackedDto = new TrackedDto<>(parent, dto -> {
+            LOGGER.debug("Snapshotting DTO: {}", dto);
+        });
+
+        // When
+        trackedDto.snapshot(true);
+
+        // Then
+        assertTrue(trackedDto.changedFields().isEmpty());
+
+        // When
+        LOGGER.debug("Updating child1");
+        child1.name = "updatedChild1";
+
+        // Then
+        assertEquals(1, trackedDto.changedFields(true).size());
+        assertTrue(trackedDto.changedFields().contains("children"));
+    }
+
+    @Test
     void changedFields() {
         // Given
         final TestDto testDto = new TestDto();
@@ -172,8 +214,9 @@ class TrackedDtoTest {
         assertTrue(changedFields.contains("nestedDtoKeyMap"));
 
         // When 2
+        trackedDto.snapshot(true);
         testDto.nestedDto = new NestedDto();
-        final ChangedFields changedFields2 = trackedDto.changedFields(true);
+        final ChangedFields changedFields2 = trackedDto.changedFields();
 
         // Then 2
         assertEquals(1, changedFields2.size());
@@ -273,5 +316,17 @@ class TrackedDtoTest {
     @NullUnmarked
     private static class NestedDto {
         private String string;
+    }
+
+
+    private class OneToManyParentDto {
+        private Long id;
+        private List<ManyToOneChildDto> children;
+    }
+
+    private class ManyToOneChildDto {
+        private Long id;
+        private String name;
+        private OneToManyParentDto parent;
     }
 }
