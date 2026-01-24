@@ -2,6 +2,8 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.List;
+
 /**
  * A no-operation implementation of the {@link DtoCache} interface.
  * This implementation does not perform any caching and is designed
@@ -38,5 +40,10 @@ public final class NoOpDtoCache implements DtoCache {
 
     @Override
     public void put(final Object[] id, @Nullable final Object dto) {
+    }
+
+    @Override
+    public @Nullable <DTO> List<DTO> getAll(final Class<DTO> dtoClass) {
+        return null;
     }
 }

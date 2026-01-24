@@ -2,6 +2,8 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.List;
+
 /**
  * The DtoCache interface defines methods for caching Data Transfer Objects (DTOs). It provides functionality
  * for retrieving and storing DTOs using their class type and an identifier. Implementations of this interface
@@ -21,4 +23,6 @@ public sealed interface DtoCache permits NoOpDtoCache, DtoCacheImpl {
     <DTO> @Nullable DTO get(Class<DTO> dtoClass, Object[] id);
 
     void put(Object[] id, @Nullable Object dto);
+
+    <DTO> @Nullable List<DTO> getAll(Class<DTO> dtoClass);
 }

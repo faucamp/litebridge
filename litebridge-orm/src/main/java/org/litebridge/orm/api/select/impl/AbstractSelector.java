@@ -47,7 +47,7 @@ public abstract class AbstractSelector<DTO> implements SelectTerminal<DTO> {
 
     @Override
     public @Nullable DTO oneOrNull() {
-        return dtoMapper.toDto(fetchOneRecord(false), dtoClass);
+        return dtoMapper.toDto(fetchOneRecord(false), dtoClass, new DtoCacheImpl());
     }
 
     @Override

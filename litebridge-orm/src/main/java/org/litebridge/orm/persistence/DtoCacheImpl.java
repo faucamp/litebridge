@@ -1,14 +1,16 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.type.WeakIdentityMap;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class DtoCacheImpl implements DtoCache {
 
-    private final Map<Class<?>, Map<Integer, Object>> cache = new HashMap<>();
+    private final Map<Class<?>, Map<Integer, Object>> cache = new WeakIdentityMap<>();
 
     @SuppressWarnings("unchecked")
     @Override
@@ -25,5 +27,17 @@ public final class DtoCacheImpl implements DtoCache {
 
         cache.computeIfAbsent(dto.getClass(), cls -> new HashMap<>())
                 .put(Arrays.hashCode(id), dto);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public @Nullable <DTO> List<DTO> getAll(final Class<DTO> dtoClass) {
+        final Map<Integer, Object> idHashDtoMap = cache.get(dtoClass);
+
+        if (idHashDtoMap == null) {
+            return null;
+        }
+
+        return (List<DTO>) idHashDtoMap.values().stream().toList();
     }
 }

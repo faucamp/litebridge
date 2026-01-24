@@ -210,4 +210,18 @@ public class OrmTable {
                 .map(MappedOneToMany.class::cast)
                 .toList();
     }
+
+    public boolean hasOneToManyMapping(final FieldAccessor field) {
+        return fieldTargetMap.containsKey(field) && fieldTargetMap.get(field) instanceof MappedOneToMany;
+    }
+
+    public MappedOneToMany getOneToManyMappingForFiel(final FieldAccessor field) {
+        final MappedFieldTarget mappedFieldTarget = fieldTargetMap.get(field);
+
+        if (mappedFieldTarget instanceof MappedOneToMany mappedOneToMany) {
+            return mappedOneToMany;
+        } else {
+            throw new IllegalArgumentException("Field '" + field.name() + "' is not a mapped one-to-many relationship.");
+        }
+    }
 }

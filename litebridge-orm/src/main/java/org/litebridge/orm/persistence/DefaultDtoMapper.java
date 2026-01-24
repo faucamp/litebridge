@@ -10,8 +10,10 @@ import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 import org.litebridge.tracking.FieldAccessorChain;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -38,7 +40,12 @@ public final class DefaultDtoMapper implements DtoMapper {
     }
 
     public <DTO> @Nullable DTO toDto(final @Nullable Row row, final Class<DTO> dtoClass, final @Nullable DtoCache dtoCache) {
-        return toDto(row, dtoClass, dtoCache, new TableAliasIndexer());
+        final DTO dto = toDto(row, dtoClass, dtoCache, new TableAliasIndexer());
+
+        // Populate reverse mappings for one-to-many relationships
+        populateReverseOneToManyMappings(dto, dtoCache);
+
+        return dto;
     }
 
     @SuppressWarnings("unchecked")
@@ -146,6 +153,27 @@ public final class DefaultDtoMapper implements DtoMapper {
                 });
 
         return dto;
+    }
+
+    private <DTO> void populateReverseOneToManyMappings(@Nullable final DTO dto, @Nullable final DtoCache dtoCache) {
+        if (dto == null || dtoCache == null) {
+            return;
+        }
+
+        final Class<DTO> dtoClass = (Class<DTO>) dto.getClass();
+        final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
+
+        ClassFieldAccessorCache.fieldAccessors(dtoClass).forEach(field -> {
+            if (ClassFieldAccessorCache.isNestedDtoField(dtoClass, field)) {
+                // Populate reverse mappings for nested DTOs
+                populateReverseOneToManyMappings(field.get(dto), dtoCache);
+            } else if (Collection.class.isAssignableFrom(field.type()) && table.hasOneToManyMapping(field)) {
+                final MappedOneToMany mappedOneToMany = table.getOneToManyMappingForFiel(field);
+                //TODO: support for multiple relationships to the same DTO type
+                final List<?> reverseMappingCollection = dtoCache.getAll(mappedOneToMany.mappedByField().dtoClass());
+                mappedOneToMany.reverseMappingCollection().set(dto, reverseMappingCollection);
+            }
+        });
     }
 
     private static final class TableAliasIndexer {
