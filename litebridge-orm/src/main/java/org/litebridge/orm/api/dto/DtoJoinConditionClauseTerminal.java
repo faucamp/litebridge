@@ -15,7 +15,8 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         DtoJoinConditionClause<DTO>,
         DtoJoinConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
-        DtoOrderByClauseChain<DTO>>
+        DtoOrderByClauseChain<DTO>,
+        DtoSelectSpec>
 
         implements JoinClauseTerminal<DTO,
         DtoJoinClause<DTO>,

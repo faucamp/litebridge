@@ -1,24 +1,24 @@
 package org.litebridge.orm.api.sql;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.model.SelectSpec;
-import org.litebridge.orm.persistence.DtoMapper;
-import org.litebridge.orm.persistence.DtoCache;
 import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.Arrays;
+import java.util.List;
 
-public final class SqlSelector extends AbstractSelector<Row> {
+public final class SqlSelector extends AbstractSelector<Row, SelectSpec> {
 
     private final TableRegistry tableRegistry;
 
     public SqlSelector(final DatabaseProvider databaseProvider,
                        final TableRegistry tableRegistry) {
-        super(new SelectSpec(), databaseProvider, new NoOpDtoMapper(), Row.class);
+        super(new SelectSpec(), databaseProvider, Row.class);
         this.tableRegistry = tableRegistry;
     }
 
@@ -30,12 +30,37 @@ public final class SqlSelector extends AbstractSelector<Row> {
         return new SqlFromClause(columns, selectSpec, tableRegistry, this);
     }
 
-    private static final class NoOpDtoMapper implements DtoMapper {
+    @Override
+    public @Nullable Row oneOrNull() {
+        return fetchOneRecord(false);
+    }
 
-        @Override
-        @SuppressWarnings("unchecked")
-        public <DTO> @Nullable DTO toDto(final @Nullable Row row, final Class<DTO> dtoClass, final @Nullable DtoCache dtoCache) {
-            return (DTO) row;
+    @Override
+    public @Nullable Row firstOrNull() {
+        return fetchOneRecord(true);
+    }
+
+    @Override
+    public List<Row> list() {
+        return executeQuery();
+    }
+
+    private @Nullable Row fetchOneRecord(final boolean first) {
+        if (first) {
+            // Set LIMIT since we are only interested in the first record
+            selectSpec.ensureLimit().setLimit(1);
         }
+
+        final List<Row> resultList = executeQuery();
+
+        if (CollectionUtils.isEmpty(resultList)) {
+            return null;
+        }
+
+        if (!first && resultList.size() > 1) {
+            throw new IllegalStateException("Expected exactly one result, but got %d".formatted(resultList.size()));
+        }
+
+        return resultList.getFirst();
     }
 }

@@ -1,5 +1,8 @@
 package org.litebridge.db.spi;
 
+import org.litebridge.db.spi.query.Result;
+import org.slf4j.Logger;
+
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Optional;
@@ -12,8 +15,9 @@ import java.util.stream.Stream;
  * This class provides methods to add columns with associated values,
  * retrieve specific columns, and stream through all columns in the row.
  */
-public final class Row {
+public final class Row implements Result {
 
+    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Row.class);
     private final LinkedHashMap<Column, Object> columns = new LinkedHashMap<>();
 
     /**
@@ -25,7 +29,19 @@ public final class Row {
      * @param value  the value associated with the specified column; may be null
      * @return the updated {@code Row} instance with the new column-value pair added
      */
+    private Column last = null;
+
     public Row withColumn(final Column column, final Object value) {
+        if (column.name().equals("ID")) {
+            LOGGER.info("Adding ID column with alias: {}, hash: {}", column.alias(), column.hashCode());
+
+            if (last != null) {
+                LOGGER.info("Equals previous: " + (last.equals(column)));
+            }
+
+            last = column;
+        }
+
         columns.put(column, value);
         return this;
     }
@@ -51,6 +67,19 @@ public final class Row {
     public Optional<RowColumn> column(final String column) {
         return columnStream()
                 .filter(rc -> Objects.equals(rc.column().name(), column))
+                .findFirst();
+    }
+
+    /**
+     * Retrieve a column from the row by its name if it exists.
+     *
+     * @param alias the alias of the column to retrieve; must not be null
+     * @return an {@code Optional} containing the {@code RowColumn} associated with the specified column name
+     * if it exists, or an empty {@code Optional} if no match is found
+     */
+    public Optional<RowColumn> columnForAlias(final String alias) {
+        return columnStream()
+                .filter(rc -> Objects.equals(rc.column().alias(), alias))
                 .findFirst();
     }
 

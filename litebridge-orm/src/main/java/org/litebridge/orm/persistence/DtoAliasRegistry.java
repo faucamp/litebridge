@@ -41,8 +41,16 @@ public final class DtoAliasRegistry {
     }
 
     public String alias(final String tableAlias, final Column column) {
+        if (column.alias() != null) {
+            return column.alias();
+        }
+
+        // Create a new alias
+        final String columnAlias = tableAlias + newAlias(column.name());
+        final Column columnKey = new Column(column.table(), column.name(), columnAlias);
+
         return columnAliases.computeIfAbsent(tableAlias, k -> new HashMap<>())
-                .computeIfAbsent(column, col -> tableAlias + newAlias(col.name()));
+                .computeIfAbsent(columnKey, col -> columnAlias);
     }
 
     public @Nullable String aliasOrNull(final Table table, final int index) {
@@ -60,17 +68,18 @@ public final class DtoAliasRegistry {
     }
 
     public boolean belongsTo(final String tableAlias, final Column column) {
-        if (columnAliases.containsKey(tableAlias)) {
-            final String columnAlias = columnAliases.get(tableAlias).get(column);
+        final Map<Column, String> tableColumnAliases = columnAliases.get(tableAlias);
 
-            if (columnAlias != null) {
-                return column.alias() == null || columnAlias.equalsIgnoreCase(column.alias());
-            } else {
-                return false;
-            }
+        if (tableColumnAliases != null) {
+            final Column columnKey = new Column(column.table(), column.name(), column.alias());
+            return tableColumnAliases.containsKey(columnKey);
         } else {
             return false;
         }
+    }
+
+    public boolean isEmpty() {
+        return aliasMap.isEmpty();
     }
 
     private String newAlias(final String name) {

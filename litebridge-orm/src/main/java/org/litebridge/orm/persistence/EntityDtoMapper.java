@@ -1,5 +1,6 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.tracking.ClassFieldAccessorCache;
@@ -152,10 +153,38 @@ public class EntityDtoMapper<DTO> {
                     return;
                 }
 
-                dtoField.set(dto, entityField.get(entity));
+                // Composite DTO fields may be mapped to multiple entities via nested DTOs (e.g. one-to-many relationships).
+                // The combination of differently-selected DTOs in this combination may cause set values to be overridden with nulls (such as when a JOIN was left out but still mapped here)
+                if (isFieldSet(dtoField, dtoField.get(dto))) {
+                    dtoField.set(dto, entityField.get(entity));
+                }
             });
         });
 
         return dto;
+    }
+
+    private static boolean isFieldSet(final FieldAccessor field, final @Nullable Object value) {
+        if (value == null) {
+            return true;
+        }
+
+        final Class<?> fieldType = field.type();
+
+        if (fieldType.isPrimitive()) {
+            if (Boolean.TYPE == fieldType) {
+                return !((boolean) value);
+            } else if (Character.TYPE == fieldType
+                    || Byte.TYPE == fieldType
+                    || Short.TYPE == fieldType
+                    || Integer.TYPE == fieldType
+                    || Long.TYPE == fieldType
+                    || Float.TYPE == fieldType
+                    || Double.TYPE == fieldType) {
+                return value.equals(0);
+            }
+        }
+
+        return false;
     }
 }

@@ -7,7 +7,6 @@ import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.Select;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -37,15 +36,12 @@ class SelectSpecTest {
         // Given
         final SelectSpec selectSpec = new SelectSpec();
 
-        // When
-        final Table result = selectSpec.getTable();
-
-        // Then
-        assertNull(result);
+        // When/Then
+        assertThrows(IllegalStateException.class, () -> selectSpec.getTable());
     }
 
     @Test
-    void setColumns_list() {
+    void setColumns() {
         // Given
         final SelectSpec selectSpec = new SelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
@@ -54,24 +50,6 @@ class SelectSpecTest {
 
         // When
         selectSpec.setColumns(List.of(column));
-        final List<Column> result = selectSpec.getColumns();
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertSame(column, result.getFirst());
-    }
-
-    @Test
-    void setColumns_stream() {
-        // Given
-        final SelectSpec selectSpec = new SelectSpec();
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
-        final Column column = new Column(table, "TEST_COLUMN");
-
-        // When
-        selectSpec.setColumns(Stream.of(column));
         final List<Column> result = selectSpec.getColumns();
 
         // Then

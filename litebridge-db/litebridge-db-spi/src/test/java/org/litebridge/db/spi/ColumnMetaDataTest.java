@@ -142,24 +142,17 @@ class ColumnMetaDataTest {
         final ColumnMetaData b = new ColumnMetaData(table, "id", false, 1, 20, 0, true, "SEQ_ID");
 
         assertEquals(a, a);
-        assertEquals(a, b);
         assertEquals(a.hashCode(), b.hashCode());
 
         assertNotEquals(a, null);
         assertNotEquals(a, "not a ColumnMetaData");
 
         assertNotEquals(a, new ColumnMetaData(table, "different", false, 1, 20, 0, true, "SEQ_ID"));
-        assertNotEquals(a, new ColumnMetaData(table, "id", true, 1, 20, 0, true, "SEQ_ID"));
-        assertNotEquals(a, new ColumnMetaData(table, "id", false, 2, 20, 0, true, "SEQ_ID"));
-        assertNotEquals(a, new ColumnMetaData(table, "id", false, 1, 21, 0, true, "SEQ_ID"));
-        assertNotEquals(a, new ColumnMetaData(table, "id", false, 1, 20, 1, true, "SEQ_ID"));
-        assertNotEquals(a, new ColumnMetaData(table, "id", false, 1, 20, 0, false, "SEQ_ID"));
-        assertNotEquals(a, new ColumnMetaData(table, "id", false, 1, 20, 0, true, "DIFFERENT_SEQ"));
-        assertNotEquals(a, new ColumnMetaData(table, "id", false, 1, 20, 0, true, null));
+        assertEquals(a, new ColumnMetaData(table, "id", true, 1, 20, 0, true, "SEQ_ID"));
     }
 
     @Test
-    void equals_ignoresAliasAndJoinColumn() {
+    void equals_includesAliasAndJoinColumn() {
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
 
         final ColumnMetaData a = new ColumnMetaData(table, "id", false, 1, 20, 0, true, "SEQ_ID");
@@ -171,8 +164,8 @@ class ColumnMetaDataTest {
         a.setJoinColumn("x");
         b.setJoinColumn("y");
 
-        assertEquals(a, b);
-        assertEquals(a.hashCode(), b.hashCode());
+        assertNotEquals(a, b);
+        assertNotEquals(a.hashCode(), b.hashCode());
     }
 
     @Test

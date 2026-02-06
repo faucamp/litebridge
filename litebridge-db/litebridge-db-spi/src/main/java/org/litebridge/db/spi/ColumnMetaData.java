@@ -2,7 +2,6 @@ package org.litebridge.db.spi;
 
 import org.jspecify.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
@@ -187,13 +186,12 @@ public final class ColumnMetaData extends Column implements MappedFieldTarget {
 
     @Override
     public boolean equals(final Object o) {
-        if (!(o instanceof final ColumnMetaData column)) return false;
-        return nullable == column.nullable && dataType == column.dataType && size == column.size && decimalDigits == column.decimalDigits && autoIncrement == column.autoIncrement && Objects.equals(name(), column.name()) && Objects.equals(sequence, column.sequence);
+        return super.equals(o);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name(), nullable, dataType, size, decimalDigits, autoIncrement, sequence);
+        return super.hashCode();
     }
 
     @Override

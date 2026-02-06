@@ -11,12 +11,9 @@ import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.orm.api.select.model.SelectSpec;
-import org.litebridge.orm.persistence.DefaultDtoMapper;
 import org.litebridge.orm.persistence.DtoAliasRegistry;
-import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ChangeTracker;
@@ -53,15 +50,13 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
 
         // When
         final DtoFromClauseTerminal<TestDto> result = dtoSelector.select("myVar");
@@ -79,15 +74,13 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
         final Aliased aliased = new Aliased("myVar", "myVarAlias");
 
         // When
@@ -106,15 +99,13 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
 
         // When
         final OrmTable result = dtoSelector.table();
@@ -132,19 +123,19 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(tableMetaData);
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row = new Row().withColumn(columnMetaData, "testValue");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
         // When
         final Optional<TestDto> result = dtoSelector.one();
@@ -163,20 +154,20 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(tableMetaData);
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row1 = new Row().withColumn(columnMetaData, "testValue1");
         final Row row2 = new Row().withColumn(columnMetaData, "testValue2");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row1, row2));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
         // When/Then
         assertThrows(IllegalStateException.class, dtoSelector::one);
@@ -191,15 +182,13 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(tableMetaData);
         when(databaseProvider.select(any(Select.class))).thenReturn(Collections.emptyList());
@@ -220,19 +209,19 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(tableMetaData);
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row = new Row().withColumn(columnMetaData, "testValue");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
         // When
         final TestDto result = dtoSelector.oneOrThrow();
@@ -250,15 +239,13 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(tableMetaData);
         when(databaseProvider.select(any(Select.class))).thenReturn(Collections.emptyList());
@@ -276,19 +263,19 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(tableMetaData);
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row = new Row().withColumn(columnMetaData, "testValue");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
         // When
         final Optional<TestDto> result = dtoSelector.first();
@@ -307,15 +294,13 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(tableMetaData);
         when(databaseProvider.select(any(Select.class))).thenReturn(Collections.emptyList());
@@ -336,20 +321,20 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(tableMetaData);
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row1 = new Row().withColumn(columnMetaData, "testValue1");
         final Row row2 = new Row().withColumn(columnMetaData, "testValue2");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row1, row2));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
         // When
         final Optional<TestDto> result = dtoSelector.first();
@@ -368,19 +353,19 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(tableMetaData);
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row = new Row().withColumn(columnMetaData, "testValue");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
         // When
         final TestDto result = dtoSelector.firstOrThrow();
@@ -398,15 +383,13 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(tableMetaData);
         when(databaseProvider.select(any(Select.class))).thenReturn(Collections.emptyList());
@@ -424,20 +407,20 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(tableMetaData);
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row1 = new Row().withColumn(columnMetaData, "testValue1");
         final Row row2 = new Row().withColumn(columnMetaData, "testValue2");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row1, row2));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
         // When
         final List<TestDto> result = dtoSelector.list();
@@ -457,20 +440,20 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(tableMetaData);
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row1 = new Row().withColumn(columnMetaData, "testValue1");
         final Row row2 = new Row().withColumn(columnMetaData, "testValue2");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row1, row2));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
         // When
         final Stream<TestDto> result = dtoSelector.stream();
@@ -491,15 +474,13 @@ class DtoSelectorTest {
         final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker();
-        final OrmTable ormTable = new OrmTable(tableMetaData, fieldColumnMap, changeTracker);
+        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, typeConverter, dtoAliasRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(tableMetaData);
 

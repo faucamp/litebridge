@@ -5,19 +5,19 @@ import org.litebridge.tracking.FieldAccessor;
 
 public class MappedOneToMany implements MappedFieldTarget {
 
-    private final FieldAccessor reverseMappingCollection;
+    private final FieldAccessor collection;
     private final FieldAccessor mappedByField;
 
     public MappedOneToMany(final FieldAccessor mappedByField, final FieldAccessor reverseMappingCollection) {
         this.mappedByField = mappedByField;
-        this.reverseMappingCollection = reverseMappingCollection;
+        this.collection = reverseMappingCollection;
     }
 
     public FieldAccessor mappedByField() {
         return mappedByField;
     }
 
-    public FieldAccessor reverseMappingCollection() {
-        return reverseMappingCollection;
+    public FieldAccessor collection() {
+        return collection;
     }
 }

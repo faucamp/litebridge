@@ -20,11 +20,7 @@ public class JoinSpec {
     private final List<ConditionSpec> conditions = new ArrayList<>();
 
     public JoinSpec(final String schema, final String table) {
-        this(new Table("", schema, table));
-    }
-
-    private JoinSpec(final Table table) {
-        this.table = table;
+        this.table = new Table("", schema, table);
     }
 
     public Table table() {

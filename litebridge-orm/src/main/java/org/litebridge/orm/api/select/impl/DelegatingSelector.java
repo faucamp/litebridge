@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.select.SelectTerminal;
+import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.exception.NonUniqueResultException;
 
 import java.util.List;
@@ -10,11 +11,11 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public class DelegatingSelector<DTO> implements SelectTerminal<DTO> {
+public class DelegatingSelector<DTO, SSP extends SelectSpec> implements SelectTerminal<DTO> {
 
-    protected final AbstractSelector<DTO> delegate;
+    protected final AbstractSelector<DTO, SSP> delegate;
 
-    public DelegatingSelector(final AbstractSelector<DTO> delegate) {
+    public DelegatingSelector(final AbstractSelector<DTO, SSP> delegate) {
         this.delegate = delegate;
     }
 

@@ -5,23 +5,38 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.model.JoinSpec;
+import org.litebridge.orm.api.select.model.SelectSpec;
 
 public final class SqlJoinClause extends AbstractJoinClause<Row,
         SqlJoinConditionClause,
-        SqlJoinConditionClauseTerminal> {
+        SqlJoinConditionClauseTerminal,
+        SelectSpec> {
 
-    public SqlJoinClause(final JoinSpec joinSpec, final AbstractSelector<Row> delegate) {
+    public SqlJoinClause(final JoinSpec joinSpec, final AbstractSelector<Row, SelectSpec> delegate) {
         super(joinSpec, delegate);
     }
 
-    @Override
+    /**
+     * Adds a join ON condition to the current join clause based on the specified column.
+     * The join condition constrains the relationship between the tables being joined.
+     *
+     * @param column the name of the column to be used in the join condition
+     * @return an instance of the join condition clause to allow further configuration
+     */
     public SqlJoinConditionClause on(final String column) {
         final Column spiColumn = new Column(joinSpec.table(), column);
         final SqlJoinConditionClauseTerminal joinConditionClauseTerminal = new SqlJoinConditionClauseTerminal(joinSpec, delegate);
         return new SqlJoinConditionClause(joinSpec.newCondition(spiColumn), joinConditionClauseTerminal);
     }
 
-    @Override
+    /**
+     * Adds a join USING condition to the current join clause using the specified column.
+     * This method simplifies the join condition by specifying a single column that is
+     * shared between two tables in the join.
+     *
+     * @param column the name of the column to be used for the join condition
+     * @return an instance of the terminal join condition clause to finalize the join conditions
+     */
     public SqlJoinConditionClauseTerminal using(final String column) {
         joinSpec.using(column);
         return new SqlJoinConditionClauseTerminal(joinSpec, delegate);

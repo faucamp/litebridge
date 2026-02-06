@@ -2,6 +2,8 @@ package org.litebridge.orm.persistence;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
@@ -12,10 +14,10 @@ class DtoCacheImplTest {
         // Given
         final DtoCacheImpl dtoCache = new DtoCacheImpl();
         final TestDto testDto = new TestDto();
-        dtoCache.put(new Object[]{"test"}, testDto);
+        dtoCache.put(List.of("test"), testDto);
 
         // When
-        final TestDto result = dtoCache.get(TestDto.class, new Object[]{"test"});
+        final TestDto result = dtoCache.get(TestDto.class, List.of("test"));
 
         // Then
         assertSame(testDto, result);
@@ -27,7 +29,7 @@ class DtoCacheImplTest {
         final DtoCacheImpl dtoCache = new DtoCacheImpl();
 
         // When
-        final TestDto result = dtoCache.get(TestDto.class, new Object[]{"test"});
+        final TestDto result = dtoCache.get(TestDto.class, List.of("test"));
 
         // Then
         assertNull(result);
@@ -39,10 +41,10 @@ class DtoCacheImplTest {
         final DtoCacheImpl dtoCache = new DtoCacheImpl();
 
         // When
-        dtoCache.put(new Object[]{"test"}, null);
+        dtoCache.put(List.of("test"), null);
 
         // Then
-        assertNull(dtoCache.get(TestDto.class, new Object[]{"test"}));
+        assertNull(dtoCache.get(TestDto.class, List.of("test")));
     }
 
     private static class TestDto {

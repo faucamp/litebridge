@@ -2,9 +2,13 @@ package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
+import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
+import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.Arrays;
 
@@ -15,14 +19,17 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         DtoWhereConditionClause<DTO>,
         DtoWhereConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
-        DtoOrderByClauseChain<DTO>>
+        DtoOrderByClauseChain<DTO>,
+        DtoSelectSpec>
 
         implements DtoJoinClassTerminal<DTO> {
 
+    private final TableRegistry tableRegistry;
     private final OrmTable table;
 
     public DtoFromClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);
+        tableRegistry = delegate.tableRegistry();
         table = delegate.table();
     }
 
@@ -38,7 +45,8 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     @Override
     public DtoJoinClause<DTO> join(final Class<?> dtoClass) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        final Table joinTable = tableRegistry.getTableOrThrow(dtoClass).getMetaData();
+        return new DtoJoinClause<>(dtoClass, selectSpec.newJoinSpec(dtoClass, joinTable), (DtoSelector<DTO>) delegate);
     }
 
     @Override

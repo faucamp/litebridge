@@ -85,7 +85,12 @@ public class Litebridge {
      * @throws SQLException if an error occurs during the mapping or registration process.
      */
     public void register(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
-        tableRegistry.addTable(dtoClass, mapToTable(dtoClass, tableSpec));
+        final OrmTable table = mapToTable(dtoClass, tableSpec);
+        tableRegistry.addTable(dtoClass, table);
+
+        if (!table.getNestedDtoClasses().isEmpty()) {
+            table.getNestedDtoClasses().forEach(nestedDtoClass -> tableRegistry.addTable(nestedDtoClass, table));
+        }
     }
 
     /**
@@ -198,7 +203,7 @@ public class Litebridge {
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
         final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, databaseProvider.getTypeConverter(), dtoAliasRegistry);
-        return new DtoSelector<>(dtoClass, table, tableRegistry, databaseProvider, dtoMapper, dtoAliasRegistry).select();
+        return new DtoSelector<>(dtoClass, table, tableRegistry, databaseProvider, dtoAliasRegistry).select();
     }
 
     /**
@@ -279,7 +284,7 @@ public class Litebridge {
         final TableMetaData tableMetaData = databaseProvider.getTableMetaData(tableSpec);
 
         final Map<FieldAccessor, MappedFieldTarget> columnMap = mapFields(dtoClass, tableMetaData, tableSpec.fieldColumnMap());
-        return new OrmTable(tableMetaData, columnMap, changeTracker);
+        return new OrmTable(dtoClass, tableMetaData, columnMap, changeTracker);
     }
 
     private Map<FieldAccessor, MappedFieldTarget> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<FieldSpec, ColumnMapping> fieldColumnSpecMap) {

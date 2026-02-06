@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * Specification for constructing a SQL SELECT statement.
@@ -27,22 +26,22 @@ import java.util.stream.Stream;
 public class SelectSpec {
 
     @Nullable
-    private Table table;
+    protected Table table;
     @Nullable
-    private List<Column> columns;
+    protected List<Column> columns;
     @Nullable
-    private List<JoinSpec> joins;
+    protected List<JoinSpec> joins;
     @Nullable
-    private List<ConditionSpec> whereConditions;
+    protected List<ConditionSpec> whereConditions;
     @Nullable
-    private List<OrderBySpec> orderBys;
+    protected List<OrderBySpec> orderBys;
     @Nullable
-    private LimitSpec limit;
+    protected LimitSpec limit;
     @Nullable
-    private Map<Class<?>, String> dtoAliases;
+    protected Map<Class<?>, String> dtoAliases;
 
-    public @Nullable Table getTable() {
-        return table;
+    public Table getTable() {
+        return ObjectUtils.requireNonNull(table, () -> new IllegalStateException("SelectSpec.table not set"));
     }
 
     public void setTable(final Table table) {
@@ -54,7 +53,7 @@ public class SelectSpec {
     }
 
     public void setColumns(final List<Column> columns) {
-        setColumns(columns.stream());
+        this.columns = sanitise(columns);
     }
 
     public void addColumns(final Collection<? extends Column> columns) {
@@ -64,11 +63,7 @@ public class SelectSpec {
             this.columns = new ArrayList<>(this.columns);
         }
 
-        this.columns.addAll(sanitise(((List<Column>) columns).stream()));
-    }
-
-    public void setColumns(final Stream<Column> columns) {
-        this.columns = sanitise(columns);
+        this.columns.addAll(sanitise(((List<Column>) columns)));
     }
 
     public @Nullable List<JoinSpec> getJoins() {
@@ -77,6 +72,10 @@ public class SelectSpec {
 
     public void setJoins(@Nullable final List<JoinSpec> joins) {
         this.joins = joins;
+    }
+
+    public JoinSpec newJoinSpec(final Table table) {
+        return newJoinSpec(table.schema(), table.name());
     }
 
     public JoinSpec newJoinSpec(final String table) {
@@ -187,9 +186,9 @@ public class SelectSpec {
                 limit != null ? limit.toLimit() : Optional.empty());
     }
 
-    private List<Column> sanitise(final Stream<Column> columns) {
+    private List<Column> sanitise(final List<Column> columns) {
         // Ensure just one instance of the same table is used
-        return columns
+        return columns.stream()
                 .map(this::sanitise)
                 .toList();
     }

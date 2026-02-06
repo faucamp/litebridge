@@ -6,6 +6,8 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.query.Result;
+import org.litebridge.orm.api.dto.DtoRows;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 import org.litebridge.tracking.FieldAccessorChain;
@@ -27,6 +29,7 @@ import java.util.Set;
  */
 public final class DefaultDtoMapper implements DtoMapper {
 
+    private static final String NO_ALIAS = "<NO ALIAS>";
     private final TableRegistry tableRegistry;
     private final TypeConverter typeConverter;
     private final DtoAliasRegistry dtoAliasRegistry;
@@ -39,8 +42,17 @@ public final class DefaultDtoMapper implements DtoMapper {
         this.dtoAliasRegistry = dtoAliasRegistry;
     }
 
-    public <DTO> @Nullable DTO toDto(final @Nullable Row row, final Class<DTO> dtoClass, final @Nullable DtoCache dtoCache) {
-        final DTO dto = toDto(row, dtoClass, dtoCache, new TableAliasIndexer());
+    @Override
+    public <DTO, R extends Result> @Nullable DTO toDto(final @Nullable R result, final Class<DTO> dtoClass, final @Nullable DtoCache dtoCache) {
+        final DTO dto;
+
+        if (result instanceof DtoRows dtoRows) {
+            dto = toDtos(dtoRows, dtoClass, dtoCache, new TableAliasIndexer()).getFirst();
+        } else if (result instanceof Row row) {
+            dto = toDto(row, dtoClass, dtoCache, new TableAliasIndexer());
+        } else {
+            throw new IllegalArgumentException("Unsupported result type: " + result.getClass());
+        }
 
         // Populate reverse mappings for one-to-many relationships
         populateReverseOneToManyMappings(dto, dtoCache);
@@ -48,37 +60,67 @@ public final class DefaultDtoMapper implements DtoMapper {
         return dto;
     }
 
-    @SuppressWarnings("unchecked")
-    private <DTO> @Nullable DTO toDto(final @Nullable Row row,
-                                      final Class<DTO> dtoClass,
-                                      final @Nullable DtoCache dtoCache,
-                                      final TableAliasIndexer tableAliasIndexer) {
-        if (row == null) {
+    private <DTO> @Nullable List<DTO> toDtos(final @Nullable DtoRows dtoRows,
+                                             final Class<DTO> dtoClass,
+                                             final DtoCache dtoCache,
+                                             final TableAliasIndexer tableAliasIndexer) {
+        if (dtoRows == null) {
             return null;
         }
+
+        // Map the requested DTOs (will be picked up from cache)
+        final List<DTO> result = dtoRows.rows(dtoClass).stream()
+                .map(row -> toDto(row, dtoClass, dtoCache, tableAliasIndexer))
+                .toList();
+
+        // Map rows to other/related DTOs (caching them in the process, making them usable for populating one-to-many mappings)
+        dtoRows.streamOmit(dtoClass)
+                .forEach(dtoClassRows -> dtoClassRows.rows()
+                        .forEach(row -> toDto(row, dtoClassRows.dtoClass(), dtoCache, tableAliasIndexer)));
+
+        return result;
+    }
+
+
+    @SuppressWarnings("unchecked")
+    private <DTO> @Nullable DTO toDto(final Row row,
+                                      final Class<DTO> dtoClass,
+                                      final DtoCache dtoCache,
+                                      final TableAliasIndexer tableAliasIndexer) {
 
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
 
         // Extract the primary key and re-use already-created DTOs if possible
-        final Object[] primaryKeyValues = table.getMetaData().primaryKey().stream()
+        final List<Object> primaryKeyValues = table.getMetaData().primaryKey().stream()
                 .map(ColumnMetaData::name)
                 .map(row::column)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .map(Row.RowColumn::value)
-                .toArray(Object[]::new);
+                .toList();
 
-        final DTO cachedDto = primaryKeyValues.length > 0 ? dtoCache.get(dtoClass, primaryKeyValues) : null;
+        final DTO cachedDto = !primaryKeyValues.isEmpty() ? dtoCache.get(dtoClass, primaryKeyValues) : null;
 
         if (cachedDto != null) {
             return cachedDto;
         }
 
         // Filter results for this DTO
-        final String tableAlias = dtoAliasRegistry.aliasOrNull(table.getMetaData(), tableAliasIndexer.nextIndex(table.getMetaData()));
+        final String tableAlias;
+
+        if (dtoAliasRegistry.isEmpty()) {
+            tableAlias = NO_ALIAS;
+        } else {
+            tableAlias = dtoAliasRegistry.aliasOrNull(table.getMetaData(), tableAliasIndexer.nextIndex(table.getMetaData()));
+
+            if (tableAlias == null) {
+                // Aliases for other DTOs exist, but not for this one, so results will not contain any data for this DTO
+                return null;
+            }
+        }
+
         // Create a new DTO instance
         final DTO dto = createDto(dtoClass, row, table, tableAlias, dtoCache, new HashSet<>(), tableAliasIndexer);
-
         dtoCache.put(primaryKeyValues, dto);
         return dto;
     }
@@ -86,7 +128,7 @@ public final class DefaultDtoMapper implements DtoMapper {
     private <DTO> DTO createDto(final Class<DTO> dtoClass,
                                 final Row row,
                                 final OrmTable table,
-                                final @Nullable String tableAlias,
+                                final String tableAlias,
                                 final @Nullable DtoCache dtoCache,
                                 final Set<Row.RowColumn> mappedColumns,
                                 final TableAliasIndexer tableAliasIndexer) {
@@ -101,7 +143,7 @@ public final class DefaultDtoMapper implements DtoMapper {
         // Map results to DTO
         row.columnStream()
                 .filter(rowColumn -> !mappedColumns.contains(rowColumn))
-                .filter(rowColumn -> tableAlias == null || dtoAliasRegistry.belongsTo(tableAlias, rowColumn.column()))
+                .filter(rowColumn -> NO_ALIAS.equals(tableAlias) || dtoAliasRegistry.belongsTo(tableAlias, rowColumn.column()))
                 .forEach(rowColumn -> {
                     final FieldAccessor tableField = table.getFieldForColumnName(rowColumn.column().name());
                     final FieldAccessor field;
@@ -168,10 +210,10 @@ public final class DefaultDtoMapper implements DtoMapper {
                 // Populate reverse mappings for nested DTOs
                 populateReverseOneToManyMappings(field.get(dto), dtoCache);
             } else if (Collection.class.isAssignableFrom(field.type()) && table.hasOneToManyMapping(field)) {
-                final MappedOneToMany mappedOneToMany = table.getOneToManyMappingForFiel(field);
+                final MappedOneToMany mappedOneToMany = table.getOneToManyMappingForField(field);
                 //TODO: support for multiple relationships to the same DTO type
                 final List<?> reverseMappingCollection = dtoCache.getAll(mappedOneToMany.mappedByField().dtoClass());
-                mappedOneToMany.reverseMappingCollection().set(dto, reverseMappingCollection);
+                mappedOneToMany.collection().set(dto, reverseMappingCollection);
             }
         });
     }
@@ -180,7 +222,11 @@ public final class DefaultDtoMapper implements DtoMapper {
         private final Map<Table, Integer> tableAliasCurrentIndex = new HashMap<>();
 
         public int nextIndex(final Table table) {
-            return tableAliasCurrentIndex.merge(table,  0, (key, value) -> value + 1);
+            return tableAliasCurrentIndex.merge(table, 0, (key, value) -> value + 1);
+        }
+
+        public int currentIndex(final Table table) {
+            return tableAliasCurrentIndex.getOrDefault(table, 0);
         }
     }
 }

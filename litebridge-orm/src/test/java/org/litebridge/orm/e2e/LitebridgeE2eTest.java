@@ -17,7 +17,6 @@ import org.litebridge.orm.e2e.mapping.DtoTableMap;
 import org.litebridge.orm.persistence.DtoEntityMapping;
 import org.litebridge.orm.persistence.EntityDtoMapper;
 import org.litebridge.tracking.ChangeTracker;
-import org.litebridge.tracking.TrackedDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +30,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.litebridge.orm.api.spec.FieldMapping.f;
@@ -53,6 +53,67 @@ class LitebridgeE2eTest {
         if (connection != null) {
             shutdownInMemoryH2();
         }
+    }
+
+    @Test
+    @DisplayName("Select DTO and join fetch related DTOs")
+    void nestedDtos_fetchRelatedDtos() throws Exception {
+        // Given
+        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+
+        final Person person = new Person();
+        person.setName("Alice");
+        person.setSurname("Smith");
+        person.setAge(20);
+        person.setEyeColour("blue");
+
+        final Account account = new Account();
+        account.setName("Account 1");
+        account.setBalance(BigInteger.valueOf(1000));
+        account.setOwner(person);
+
+        litebridge.save(person);
+        litebridge.save(account);
+
+        // When
+        final Account result = litebridge.select(Account.class)
+                .join(Person.class).on("owner")
+                .where("id").eq(person.getId())
+                .oneOrThrow();
+
+        // Then
+        assertEquals(person, result.getOwner());
+    }
+
+    @Test
+    @DisplayName("Select DTO without related DTOs")
+    void nestedDtos_dontfetchRelatedDtos() throws Exception {
+        // Given
+        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+
+        final Person person = new Person();
+        person.setName("Alice");
+        person.setSurname("Smith");
+        person.setAge(20);
+        person.setEyeColour("blue");
+
+        final Account account = new Account();
+        account.setName("Account 1");
+        account.setBalance(BigInteger.valueOf(1000));
+        account.setOwner(person);
+
+        litebridge.save(person);
+        litebridge.save(account);
+
+        // When
+        final Account result = litebridge.select(Account.class)
+                .where("id").eq(person.getId())
+                .oneOrThrow();
+
+        // Then
+        assertNull(result.getOwner());
     }
 
     @Test
@@ -94,11 +155,25 @@ class LitebridgeE2eTest {
         litebridge.save(person);
 
         // Then
-        final Account result = litebridge.select(Account.class).where("id").eq(account2.getId()).oneOrThrow();
-        assertEquals("Account 2", result.getName());
-        assertEquals(person, result.getOwner());
-        assertNotNull(result.getOwner().getAccounts(), "Person should have a list of accounts");
-        assertEquals(2, result.getOwner().getAccounts().size(), "Person should have exactly 2 accounts");
+        final Person fetchedPerson = litebridge.select(Person.class)
+                .join(Account.class).on("accounts")
+                .where("id").eq(person.getId())
+                .oneOrThrow();
+        assertEquals("Alice", fetchedPerson.getName());
+        assertNotNull(fetchedPerson.getAccounts());
+        assertEquals(2, fetchedPerson.getAccounts().size());
+        assertTrue(fetchedPerson.getAccounts().contains(account));
+        assertTrue(fetchedPerson.getAccounts().contains(account2));
+
+        final Account fetchedAccount = litebridge.select(Account.class)
+                .join(Person.class).on("owner")
+                .where("id").eq(account2.getId())
+                .oneOrThrow();
+
+        assertEquals("Account 2", fetchedAccount.getName());
+        assertEquals(person, fetchedAccount.getOwner());
+        assertNotNull(fetchedAccount.getOwner().getAccounts(), "Person should have a list of accounts");
+        assertEquals(1, fetchedAccount.getOwner().getAccounts().size(), "Only 1 account should be present since we selected a single Account from the Account side");
     }
 
     @Test
@@ -208,11 +283,19 @@ class LitebridgeE2eTest {
         final List<SelfReferencingDto> result = litebridge.select(SelfReferencingDto.class)
                 .orderBy("id").asc()
                 .list();
-        // TODO: this is broken - should be 3 results, but currently broken because of using a default JOIN
-        assertEquals(2, result.size());
-        //assertEquals("parent", result.get(0).getMyVar());
-        assertEquals("middle", result.get(0).getMyVar());
-        assertEquals("child", result.get(1).getMyVar());
+
+        assertEquals(3, result.size());
+
+        assertEquals(1, result.get(0).getId());
+        assertEquals("parent", result.get(0).getMyVar());
+
+        assertEquals(2, result.get(1).getId());
+        assertEquals("middle", result.get(1).getMyVar());
+        assertEquals(result.get(0), result.get(1).getParent());
+
+        assertEquals(3, result.get(2).getId());
+        assertEquals("child", result.get(2).getMyVar());
+        assertEquals(result.get(1), result.get(2).getParent());
     }
 
     @Test
@@ -246,18 +329,24 @@ class LitebridgeE2eTest {
         final List<SelfReferencingDto> result = litebridge.select(SelfReferencingDto.class)
                 .orderBy("id").asc()
                 .list();
-        // TODO: this is broken - should be 3 results, but currently broken because of using a default JOIN
-        assertEquals(2, result.size());
-        //assertEquals("parent", result.get(0).getMyVar());
-        assertEquals("middle", result.get(0).getMyVar());
-        assertEquals("child", result.get(1).getMyVar());
+
+        assertEquals(3, result.size());
+
+        assertEquals(1, result.get(0).getId());
+        assertEquals("parent", result.get(0).getMyVar());
+
+        assertEquals(2, result.get(1).getId());
+        assertEquals("middle", result.get(1).getMyVar());
+        assertEquals(result.get(0), result.get(1).getParent());
+
+        assertEquals(3, result.get(2).getId());
+        assertEquals("child", result.get(2).getMyVar());
+        assertEquals(result.get(1), result.get(2).getParent());
     }
 
     @Test
     @DisplayName("Single self-referencing DTO mapped to a single table, save each DTO individually")
     void selfReferencingDto_saveIndividually() throws Exception {
-        assumeTrue(litebridge.select().from("LB", "PERSON").stream().findAny().isEmpty());
-
         // Register DTO-table mappings
         litebridge.register(SelfReferencingDto.class, t("LB", "SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
 
@@ -284,6 +373,7 @@ class LitebridgeE2eTest {
         // Then
         litebridge.select().from("LB", "SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
         final List<SelfReferencingDto> result = litebridge.select(SelfReferencingDto.class)
+                .join(SelfReferencingDto.class).on("parent")
                 .orderBy("id").asc()
                 .list();
         // TODO: this is broken - should be 3 results, but currently broken because of using a default JOIN

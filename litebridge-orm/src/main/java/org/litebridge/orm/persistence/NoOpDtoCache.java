@@ -34,12 +34,12 @@ public final class NoOpDtoCache implements DtoCache {
     }
 
     @Override
-    public <DTO> @Nullable DTO get(final Class<DTO> dtoClass, final Object[] id) {
+    public <DTO> @Nullable DTO get(final Class<DTO> dtoClass, final List<Object> id) {
         return null;
     }
 
     @Override
-    public void put(final Object[] id, @Nullable final Object dto) {
+    public void put(final List<Object> id, @Nullable final Object dto) {
     }
 
     @Override

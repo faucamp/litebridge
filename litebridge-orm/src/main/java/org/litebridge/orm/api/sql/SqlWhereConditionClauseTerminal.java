@@ -5,19 +5,20 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
+import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
 
 import java.util.Arrays;
 
 public final class SqlWhereConditionClauseTerminal
-        extends AbstractWhereClauseTerminal<Row, SqlOrderByClause, SqlOrderByClauseChain>
+        extends AbstractWhereClauseTerminal<Row, SqlOrderByClause, SqlOrderByClauseChain, SelectSpec>
         implements WhereConditionClauseTerminal<Row,
         SqlWhereConditionClause,
         SqlWhereConditionClauseTerminal,
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
-    public SqlWhereConditionClauseTerminal(final AbstractSelector<Row> delegate) {
+    public SqlWhereConditionClauseTerminal(final AbstractSelector<Row, SelectSpec> delegate) {
         super(delegate);
     }
 

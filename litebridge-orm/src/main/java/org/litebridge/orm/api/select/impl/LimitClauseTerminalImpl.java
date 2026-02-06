@@ -4,13 +4,13 @@ import org.litebridge.orm.api.select.LimitClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.model.SelectSpec;
 
-public class LimitClauseTerminalImpl<DTO>
-        extends DelegatingSelector<DTO>
+public class LimitClauseTerminalImpl<DTO, SSP extends SelectSpec>
+        extends DelegatingSelector<DTO, SSP>
         implements LimitClauseTerminal<DTO> {
 
-    protected final SelectSpec selectSpec;
+    protected final SSP selectSpec;
 
-    public LimitClauseTerminalImpl(final AbstractSelector<DTO> delegate) {
+    public LimitClauseTerminalImpl(final AbstractSelector<DTO, SSP> delegate) {
         super(delegate);
         selectSpec = delegate.selectSpec();
     }
@@ -21,7 +21,7 @@ public class LimitClauseTerminalImpl<DTO>
         return this;
     }
 
-    protected final SelectSpec selectSpec() {
+    protected SelectSpec selectSpec() {
         return selectSpec;
     }
 }

@@ -3,9 +3,10 @@ package org.litebridge.orm.api.sql;
 import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.OrderByClauseChain;
 import org.litebridge.orm.api.select.impl.OrderByClauseTerminalImpl;
+import org.litebridge.orm.api.select.model.SelectSpec;
 
 public final class SqlOrderByClauseChain
-        extends OrderByClauseTerminalImpl<Row>
+        extends OrderByClauseTerminalImpl<Row, SelectSpec>
         implements OrderByClauseChain<Row, SqlOrderByClause, SqlOrderByClauseChain> {
 
     public SqlOrderByClauseChain(final SqlSelector delegate) {

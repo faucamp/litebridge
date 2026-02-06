@@ -5,6 +5,7 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.model.JoinSpec;
+import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.api.spec.ColumnSpec;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
 
@@ -14,11 +15,12 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal,
         SqlOrderByClause,
-        SqlOrderByClauseChain>
+        SqlOrderByClauseChain,
+        SelectSpec>
 
         implements SqlJoinClauseTerminal {
 
-    public SqlJoinConditionClauseTerminal(final JoinSpec joinSpec, final AbstractSelector<Row> delegate) {
+    public SqlJoinConditionClauseTerminal(final JoinSpec joinSpec, final AbstractSelector<Row, SelectSpec> delegate) {
         super(joinSpec, delegate);
     }
 

@@ -2,8 +2,8 @@ package org.litebridge.example.common.mapping;
 
 import org.litebridge.orm.api.spec.FieldColumnSpec;
 
-import static org.litebridge.orm.api.spec.FieldSpecBuilder.f;
-import static org.litebridge.orm.api.spec.FieldSpecBuilder.p;
+import static org.litebridge.orm.api.spec.FieldColumnMapping.f;
+import static org.litebridge.orm.api.spec.FieldColumnMapping.p;
 
 public class PersonMapping {
 

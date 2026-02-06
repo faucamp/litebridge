@@ -62,46 +62,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return ensureTableMetaData(table);
     }
 
-    private TableMetaData ensureTableMetaData(final String catalog, final String schema, final String table) throws SQLException {
-        return ensureTableMetaData(new Table(catalog, schema, table));
-    }
-
-    private TableMetaData ensureTableMetaData(final Table table) throws SQLException {
-        if (table instanceof TableMetaData tableMetaData) {
-            return tableMetaData;
-        }
-
-        TableMetaData tableMetaData = this.tableMetaDataCache.get(table);
-
-        if (tableMetaData == null) {
-            tableMetaData = fetchTableMetaData(table);
-            tableMetaDataCache.put(table, tableMetaData);
-        }
-
-        return tableMetaData;
-    }
-
-    /**
-     * Retrieve metadata for the specified table, including its primary keys and columns.
-     * <p>
-     * This executes a database query to fetch database metadata.
-     *
-     * @param table the table for which metadata is being fetched, containing schema, catalog, and table name details
-     * @return a {@code TableMetaData} object containing details about the table's structure, primary keys, and column metadata
-     * @throws SQLException if an error occurs while fetching database metadata
-     */
-    protected TableMetaData fetchTableMetaData(final Table table) throws SQLException {
-        final DatabaseMetaData databaseMetaData = connection.getMetaData();
-
-        // Verify basic details
-        verifySchemaAndTableExists(table, databaseMetaData);
-
-        // Load table metadata
-        final List<String> primaryKeys = getPrimaryKeyColumnNames(table, databaseMetaData);
-        final List<ColumnMetaData> columns = getColumnNames(table, databaseMetaData);
-        return new TableMetaData(table, primaryKeys, columns);
-    }
-
     @Override
     public InsertResult insert(final Insert insert) throws SQLException {
         final PreparedSql preparedSql = prepareSql(insert);
@@ -536,7 +496,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                     final String tableName = resultSet.getMetaData().getTableName(i);
                     final TableMetaData columnTable = ensureTableMetaData(fromTable.catalog(), schemaName, tableName);
                     final String columnName = resultSet.getMetaData().getColumnName(i);
-                    final String alias = resultSet.getMetaData().getColumnLabel(i);
+                    final String alias = transformAlias(resultSet.getMetaData().getColumnLabel(i));
                     final ColumnMetaData column = columnTable.column(columnName).as(alias);
 
                     final Object value = typeConverter.convert(resultSet.getObject(columnName), column.getDataType());
@@ -548,6 +508,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
             return rows;
         }
+    }
+
+    protected @Nullable String transformAlias(final @Nullable String dbAlias) {
+        return dbAlias;
     }
 
     protected List<ColumnMetaData> getColumnNames(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
@@ -708,6 +672,46 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
 
         return new PreparedRow(valueSpecifiers, bindValues);
+    }
+
+    private TableMetaData ensureTableMetaData(final String catalog, final String schema, final String table) throws SQLException {
+        return ensureTableMetaData(new Table(catalog, schema, table));
+    }
+
+    private TableMetaData ensureTableMetaData(final Table table) throws SQLException {
+        if (table instanceof TableMetaData tableMetaData) {
+            return tableMetaData;
+        }
+
+        TableMetaData tableMetaData = this.tableMetaDataCache.get(table);
+
+        if (tableMetaData == null) {
+            tableMetaData = fetchTableMetaData(table);
+            tableMetaDataCache.put(table, tableMetaData);
+        }
+
+        return tableMetaData;
+    }
+
+    /**
+     * Retrieve metadata for the specified table, including its primary keys and columns.
+     * <p>
+     * This executes a database query to fetch database metadata.
+     *
+     * @param table the table for which metadata is being fetched, containing schema, catalog, and table name details
+     * @return a {@code TableMetaData} object containing details about the table's structure, primary keys, and column metadata
+     * @throws SQLException if an error occurs while fetching database metadata
+     */
+    protected TableMetaData fetchTableMetaData(final Table table) throws SQLException {
+        final DatabaseMetaData databaseMetaData = connection.getMetaData();
+
+        // Verify basic details
+        verifySchemaAndTableExists(table, databaseMetaData);
+
+        // Load table metadata
+        final List<String> primaryKeys = getPrimaryKeyColumnNames(table, databaseMetaData);
+        final List<ColumnMetaData> columns = getColumnNames(table, databaseMetaData);
+        return new TableMetaData(table, primaryKeys, columns);
     }
 
     /**

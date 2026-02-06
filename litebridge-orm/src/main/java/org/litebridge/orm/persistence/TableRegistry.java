@@ -2,6 +2,7 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
+import org.litebridge.db.spi.Table;
 
 import java.util.Collections;
 import java.util.Map;
@@ -40,6 +41,10 @@ public final class TableRegistry {
     public @Nullable OrmTable getTable(final String schema, final String table) {
         return schemaTableMap.getOrDefault(schema, Collections.emptyMap())
                 .get(table);
+    }
+
+    public @Nullable OrmTable getTable(final Table table) {
+        return getTable(table.schema(), table.name());
     }
 
     public boolean containsTable(final Class<?> dtoClass) {

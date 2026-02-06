@@ -12,7 +12,8 @@ import java.util.Arrays;
 public final class DtoWhereConditionClauseTerminal<DTO>
         extends AbstractWhereClauseTerminal<DTO,
         DtoOrderByClause<DTO>,
-        DtoOrderByClauseChain<DTO>>
+        DtoOrderByClauseChain<DTO>,
+        DtoSelectSpec>
 
         implements WhereConditionClauseTerminal<DTO,
         DtoWhereConditionClause<DTO>,

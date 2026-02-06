@@ -73,10 +73,10 @@ class DtoAliasRegistryTest {
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final Column column = new Column(table, "TEST_COLUMN");
         final String tableAlias = dtoAliasRegistry.newAlias(table);
-        dtoAliasRegistry.alias(tableAlias, column);
+        final String columnAlias = dtoAliasRegistry.alias(tableAlias, column);
 
         // When
-        final boolean result = dtoAliasRegistry.belongsTo(tableAlias, column);
+        final boolean result = dtoAliasRegistry.belongsTo(tableAlias, column.as(columnAlias));
 
         // Then
         assertTrue(result);

@@ -10,9 +10,9 @@ import java.util.List;
  * can manage caching strategies for efficient reuse of DTO instances.
  * <p>
  * This interface has the following key methods:
- * - {@link #get(Class, Object[])}: Retrieves a cached DTO of the specified class type and identifier, or
+ * - {@link #get(Class, List)}: Retrieves a cached DTO of the specified class type and identifier, or
  * {@code null} if no matching DTO is found in the cache.
- * - {@link #put(Object[], Object)}: Stores a new DTO in the cache associated with the provided identifier.
+ * - {@link #put(List, Object)}: Stores a new DTO in the cache associated with the provided identifier.
  * <p>
  * The interface is designed as a sealed interface with two implementations:
  * - {@code NoOpDtoCache}: A no-operation implementation that does not perform any actual caching.
@@ -20,9 +20,9 @@ import java.util.List;
  */
 public sealed interface DtoCache permits NoOpDtoCache, DtoCacheImpl {
 
-    <DTO> @Nullable DTO get(Class<DTO> dtoClass, Object[] id);
+    <DTO> @Nullable DTO get(Class<DTO> dtoClass, List<Object> id);
 
-    void put(Object[] id, @Nullable Object dto);
+    void put(List<Object> id, @Nullable Object dto);
 
     <DTO> @Nullable List<DTO> getAll(Class<DTO> dtoClass);
 }

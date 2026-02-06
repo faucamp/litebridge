@@ -291,9 +291,9 @@ public class PersistenceFacade {
         }
 
         mappedOneToManyList.forEach(mappedOneToMany -> {
-            LOGGER.trace("Updating reverse mapping for field '{}' of DTO: {}", mappedOneToMany.reverseMappingCollection().name(), dto);
+            LOGGER.trace("Updating reverse mapping for field '{}' of DTO: {}", mappedOneToMany.collection().name(), dto);
             // Get the current value of the mapping
-            final FieldAccessor reverseMappingCollection = mappedOneToMany.reverseMappingCollection();
+            final FieldAccessor reverseMappingCollection = mappedOneToMany.collection();
             final Collection<Object> currentCollection;
             final Collection<Object> dtoCollection = (Collection<Object>) reverseMappingCollection.get(dto);
 
@@ -309,7 +309,7 @@ public class PersistenceFacade {
                     // Matching collection class - add the updated value to the collection if necessary
                     //TODO: support for multiple collections of the same type in the parent DTO
                     if (!currentCollection.contains(dtoUpdateResult.dto())) {
-                        LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", mappedOneToMany.reverseMappingCollection().name(), dtoUpdateResult.dto());
+                        LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", mappedOneToMany.collection().name(), dtoUpdateResult.dto());
                         currentCollection.add(dtoUpdateResult.dto());
                     }
                 }

@@ -1,5 +1,6 @@
 package org.litebridge.db.h2;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.AbstractDatabaseProvider;
 
@@ -22,5 +23,13 @@ public class H2DatabaseProvider extends AbstractDatabaseProvider {
 
     public H2DatabaseProvider(final Connection connection) {
         super(connection, new DefaultTypeConverter());
+    }
+
+    protected @Nullable String transformAlias(final @Nullable String dbAlias) {
+        if (dbAlias == null) {
+            return dbAlias;
+        } else {
+            return dbAlias.toLowerCase();
+        }
     }
 }
