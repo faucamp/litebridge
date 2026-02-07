@@ -35,6 +35,8 @@ jobs:
         generate-branches-badge: true
 
     - name: "Generate JaCoCo Badge: litebridge-converter"
+      # Run on main branch only
+      if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
         jacoco-csv-file: litebridge-converter/target/site/jacoco/jacoco.csv
@@ -42,6 +44,8 @@ jobs:
         generate-branches-badge: true
 
     - name: "Generate JaCoCo Badge: litebridge-db-spi"
+      # Run on main branch only
+      if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
         jacoco-csv-file: litebridge-db/litebridge-db-spi/target/site/jacoco/jacoco.csv
@@ -49,6 +53,8 @@ jobs:
         generate-branches-badge: true
 
     - name: "Generate JaCoCo Badge: litebridge-db-h2"
+      # Run on main branch only
+      if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
         jacoco-csv-file: litebridge-db/litebridge-db-h2/target/site/jacoco/jacoco.csv
@@ -56,6 +62,8 @@ jobs:
         generate-branches-badge: true
 
     - name: "Generate JaCoCo Badge: litebridge-orm"
+      # Run on main branch only
+      if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
         jacoco-csv-file: litebridge-orm/target/site/jacoco/jacoco.csv
@@ -63,6 +71,8 @@ jobs:
         generate-branches-badge: true
 
     - name: "Generate JaCoCo Badge: litebridge-tracking"
+      # Run on main branch only
+      if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
         jacoco-csv-file: litebridge-tracking/target/site/jacoco/jacoco.csv
@@ -70,6 +80,8 @@ jobs:
         generate-branches-badge: true
 
     - name: "Generate JaCoCo Badge: aggregate"
+      # Run on main branch only
+      if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
         jacoco-csv-file: jacoco-aggregate-report/target/site/jacoco-aggregate/jacoco.csv
@@ -81,6 +93,8 @@ jobs:
         echo "Branch coverage = ${{ steps.jacoco.outputs.branches }}"
 
     - name: Commit JaCoCo badge (if it changed)
+      # Run on main branch only
+      if: github.ref == 'refs/heads/main'
       run: |
         if [[ `git status --porcelain` ]]; then
           git config --global user.name 'Francois Aucamp'
