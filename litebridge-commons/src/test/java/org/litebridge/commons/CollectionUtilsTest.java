@@ -28,6 +28,7 @@ class CollectionUtilsTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     void isEmpty_collection_null() {
         // Given
         final Collection<?> collection = null;
@@ -64,6 +65,7 @@ class CollectionUtilsTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     void isEmpty_map_null() {
         // Given
         final Map<?, ?> map = null;
@@ -100,6 +102,7 @@ class CollectionUtilsTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     void isEmpty_iterable_null() {
         // Given
         final Iterable<?> iterable = null;
@@ -136,6 +139,7 @@ class CollectionUtilsTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     void isEmpty_array_null() {
         // Given
         final Object[] array = null;

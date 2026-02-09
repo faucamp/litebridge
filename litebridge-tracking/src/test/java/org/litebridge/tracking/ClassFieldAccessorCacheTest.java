@@ -154,15 +154,6 @@ class ClassFieldAccessorCacheTest {
     }
 
     @Test
-    void isNestedDtoField_false_null() {
-        // When
-        final boolean result = ClassFieldAccessorCache.isNestedDtoField(TestDto.class, null);
-
-        // Then
-        assertFalse(result);
-    }
-
-    @Test
     void fieldAccessor() {
         // When
         final FieldAccessor fieldAccessor = ClassFieldAccessorCache.fieldAccessor(TestDto.class, "string");

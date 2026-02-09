@@ -22,7 +22,7 @@ public final class CollectionUtils {
      * @param array the array to check; may be null
      * @return true if the array is null or empty; false otherwise
      */
-    public static boolean isEmpty(@Nullable final Object[] array) {
+    public static boolean isEmpty(final Object @Nullable [] array) {
         return array == null || array.length == 0;
     }
 
@@ -97,6 +97,7 @@ public final class CollectionUtils {
      * @param array the array to convert to a list; may be null
      * @return a non-null list containing the elements of the array, or an immutable empty list if the array is null or empty
      */
+    @SafeVarargs
     public static <T> List<T> toList(final T... array) {
         final List<T> list;
 

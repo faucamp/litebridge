@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.Objects;
 
 public class SqlTimestampTypeConversion extends com.toddfast.util.convert.conversion.SqlTimestampTypeConversion {
 
@@ -22,7 +23,7 @@ public class SqlTimestampTypeConversion extends com.toddfast.util.convert.conver
             case LocalDate localDate -> Timestamp.valueOf(localDate.atStartOfDay());
             case Date date -> new Timestamp(date.getTime());
             case Number number -> new Timestamp(number.longValue());
-            case String string -> Timestamp.from(TimeUtils.toZonedDateTime(string).toInstant());
+            case String string -> Timestamp.from(Objects.requireNonNull(TimeUtils.toZonedDateTime(string)).toInstant());
             default -> throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName());
         };
     }

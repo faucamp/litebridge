@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.dto;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.model.JoinSpec;
@@ -10,6 +11,7 @@ import org.litebridge.tracking.FieldAccessor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
 
@@ -43,7 +45,7 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
     }
 
     public List<FieldColumn> getFieldColumns() {
-        return fieldColumns;
+        return ObjectUtils.requireNonNull(fieldColumns, () -> new IllegalStateException("DtoSelectSpec.fieldColumns not set"));
     }
 
     public void setFieldColumns(final List<FieldColumn> fieldColumns) {
