@@ -1,5 +1,6 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.ColumnMetaData;
@@ -269,7 +270,7 @@ public class SelectSpecDtoMapper {
     private static final class PartiallyConstructedDtoCache {
         private final Map<Class<?>, Map<List<Object>, SelectSpecDtoMapper.PartiallyConstructedDto>> cache = new IdentityHashMap<>();
 
-        public SelectSpecDtoMapper.PartiallyConstructedDto get(final Class<?> dtoClass, final List<Object> id) {
+        public @Nullable PartiallyConstructedDto get(final Class<?> dtoClass, final List<Object> id) {
             return cache.computeIfAbsent(dtoClass, cls -> new HashMap<>())
                     .get(id);
         }

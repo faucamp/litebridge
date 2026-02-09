@@ -39,9 +39,9 @@ public final class TableMapper {
 
     public OrmTable mapToTable(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
         // Up-front validation
-        if (dtoClass == null) {
-            throw new IllegalArgumentException("DTO class cannot be null");
-        } else if (ClassUtils.isBasicType(dtoClass)) {
+        Objects.requireNonNull("DTO class cannot be null");
+
+        if (ClassUtils.isBasicType(dtoClass)) {
             throw new IllegalArgumentException("Not a DTO: " + dtoClass.getName());
         } else if (CollectionUtils.isEmpty(tableSpec.fieldColumnMap())) {
             throw new IllegalArgumentException("No field-column map provided");

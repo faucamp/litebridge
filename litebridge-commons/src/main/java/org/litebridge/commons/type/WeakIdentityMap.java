@@ -154,6 +154,7 @@ public final class WeakIdentityMap<K, V> implements Map<K, V> {
             return new Iterator<K>() {
                 private final Iterator<IdentityWeakReference<K>> it = innerMap.keySet().iterator();
 
+                @Nullable
                 private K nextKey;
                 private boolean nextReady = false;
                 private boolean canRemove = false;
