@@ -110,6 +110,7 @@ public class SelectSpecDtoMapper {
         return partialDto;
     }
 
+    @SuppressWarnings("unchecked")
     private PartiallyConstructedDto createDto(final Class<?> dtoClass, final OrmTable table, final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
         final List<Object> primaryKey = dtoData.primaryKey();
         final Row row = dtoData.row();

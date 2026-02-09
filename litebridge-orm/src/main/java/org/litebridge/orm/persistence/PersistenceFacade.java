@@ -277,9 +277,7 @@ public class PersistenceFacade {
         embeddedDtoTable.syncPersistedDto(dto);
     }
 
-
-
-
+    @SuppressWarnings("unchecked")
     private void updateOneToManyReverseMappings(final DtoUpdateResult dtoUpdateResult, final CompositeUpdateResult compositeUpdateResult) {
         tableProvider.pushContext(dtoUpdateResult, new HashSet<>());
         final Object dto = dtoUpdateResult.getDto();
@@ -380,7 +378,7 @@ public class PersistenceFacade {
 
     private static class TableProvider {
 
-        private Deque<TableRegistry> contextStack = new ArrayDeque<>();
+        private final Deque<TableRegistry> contextStack = new ArrayDeque<>();
 
         private TableProvider(final TableRegistry rootTableRegistry) {
             contextStack.push(rootTableRegistry);

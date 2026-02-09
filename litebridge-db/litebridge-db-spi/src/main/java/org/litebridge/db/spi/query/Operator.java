@@ -62,5 +62,5 @@ public enum Operator {
     /**
      * Used to specify columns for joining tables.
      */
-    USING;
+    USING
 }

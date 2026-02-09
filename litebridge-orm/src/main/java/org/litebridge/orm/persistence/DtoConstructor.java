@@ -17,9 +17,9 @@ import java.util.stream.Collectors;
 public final class DtoConstructor {
 
     static final Object NO_CONSTRUCTOR = new Object();
-    private static Map<Class<?>, Object> defaultConstructorCache = new ConcurrentHashMap<>();
-    private static Map<Class<?>, Object> canonicalConstructorCache = new ConcurrentHashMap<>();
-    private static Map<Class<?>, List<FieldAccessor>> canonicalConstructorFieldAccessorCache = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Object> defaultConstructorCache = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Object> canonicalConstructorCache = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, List<FieldAccessor>> canonicalConstructorFieldAccessorCache = new ConcurrentHashMap<>();
 
     private DtoConstructor() {
     }

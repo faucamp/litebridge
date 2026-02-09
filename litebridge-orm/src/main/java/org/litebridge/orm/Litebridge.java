@@ -41,7 +41,6 @@ public class Litebridge {
     private static final Aliased[] ALL_COLUMNS = new Aliased[0];
 
     private final TableRegistry tableRegistry = new TableRegistry();
-    private final ChangeTracker changeTracker = new ChangeTracker();
     private final DatabaseProvider databaseProvider;
     private final PersistenceFacade persistenceFacade;
     private final TableMapper tableMapper;
@@ -56,7 +55,7 @@ public class Litebridge {
     public Litebridge(final DatabaseProvider databaseProvider) {
         this.databaseProvider = databaseProvider;
         this.persistenceFacade = new PersistenceFacade(tableRegistry, databaseProvider);
-        this.tableMapper = new TableMapper(databaseProvider, tableRegistry, changeTracker);
+        this.tableMapper = new TableMapper(databaseProvider, tableRegistry, new ChangeTracker());
     }
 
     /**

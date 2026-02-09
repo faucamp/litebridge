@@ -30,7 +30,7 @@ public class DtoBlueprint {
     }
 
     public static abstract class DtoData<S extends DtoDataSpec> {
-        protected S spec;
+        protected final S spec;
         private final List<Object> primaryKey;
         private final Row row;
 

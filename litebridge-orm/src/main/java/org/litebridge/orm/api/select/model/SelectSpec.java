@@ -9,7 +9,6 @@ import org.litebridge.db.spi.query.Select;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -56,14 +55,14 @@ public class SelectSpec {
         this.columns = sanitise(columns);
     }
 
-    public void addColumns(final Collection<? extends Column> columns) {
+    public void addColumns(final List<Column> columns) {
         if (this.columns == null) {
             this.columns = new ArrayList<>();
         } else if (!(columns instanceof ArrayList)) {
             this.columns = new ArrayList<>(this.columns);
         }
 
-        this.columns.addAll(sanitise(((List<Column>) columns)));
+        this.columns.addAll(sanitise((columns)));
     }
 
     public @Nullable List<JoinSpec> getJoins() {

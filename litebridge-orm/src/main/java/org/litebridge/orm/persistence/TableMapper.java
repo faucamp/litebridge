@@ -67,12 +67,10 @@ public final class TableMapper {
                     final ColumnSpec columnSpec = columnSpecBuilder.build();
                     mapColumnSpec(columnSpec, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
                 }
-                case ColumnSpec columnSpec -> {
-                    mapColumnSpec(columnSpec, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
-                }
-                case OneToMany oneToMany -> {
-                    mapOneToMany(oneToMany, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
-                }
+                case ColumnSpec columnSpec ->
+                        mapColumnSpec(columnSpec, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
+                case OneToMany oneToMany ->
+                        mapOneToMany(oneToMany, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
             }
         });
 

@@ -35,7 +35,7 @@ public class SqlExample extends AbstractExample {
                 .where("AGE").gt(18)
                 .and("AGE").lt(25)
                 .stream()
-                .forEach(record -> LOGGER.info("SQL result: Selected data for PERSON record: " + record));
+                .forEach(record -> LOGGER.info("SQL result: Selected data for PERSON record: {}", record));
 
         LOGGER.info("[EXAMPLE] Retrieve persons using SQL and map results to a DTO");
         litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
@@ -44,7 +44,7 @@ public class SqlExample extends AbstractExample {
                 .orderBy("PERSON_ID").asc()
                 .stream()
                 .map(row -> litebridge.toDto(row, Person.class))
-                .forEach(p -> LOGGER.info("SQL result: Mapped Person object: " + p));
+                .forEach(p -> LOGGER.info("SQL result: Mapped Person object: {}", p));
 
         LOGGER.info("[EXAMPLE] Using joins");
         litebridge.select(
@@ -56,7 +56,7 @@ public class SqlExample extends AbstractExample {
                 .from("LB", "PERSON")
                 .join("LB", "ACCOUNT").using("PERSON_ID")
                 .stream()
-                .forEach(p -> LOGGER.info("Joined result: " + p));
+                .forEach(p -> LOGGER.info("Joined result: {}", p));
     }
 
 }

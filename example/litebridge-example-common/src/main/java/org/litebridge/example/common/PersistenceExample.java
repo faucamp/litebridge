@@ -31,8 +31,8 @@ public class PersistenceExample extends AbstractExample {
 
         LOGGER.info("[EXAMPLE] Save DTOs (\"person\" will also be saved due to cascading)");
         litebridge.save(account);
-        LOGGER.info("Saved person ID: " + person.getId());
-        LOGGER.info("Saved account ID: " + account.getId());
+        LOGGER.info("Saved person ID: {}", person.getId());
+        LOGGER.info("Saved account ID: {}", account.getId());
 
         LOGGER.info("[EXAMPLE] Add another account to the person");
         final Account account2 = litebridge.track(new Account());

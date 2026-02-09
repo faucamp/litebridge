@@ -9,7 +9,6 @@ import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
@@ -75,11 +74,6 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
         super.addColumns(fieldColumns.stream()
                 .map(FieldColumn::column)
                 .toList());
-    }
-
-    @Override
-    public void addColumns(final Collection<? extends Column> columns) {
-
     }
 
     @Override

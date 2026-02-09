@@ -33,7 +33,7 @@ public class OrmTable {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrmTable.class);
 
     private final Class<?> dtoClass;
-    private TableMetaData metaData;
+    private final TableMetaData metaData;
     private final Map<FieldAccessor, MappedFieldTarget> fieldTargetMap;
     private final Map<String, ColumnMetaData> columnMap;
     private final Map<String, ColumnMetaData> fieldNameColumnMap;

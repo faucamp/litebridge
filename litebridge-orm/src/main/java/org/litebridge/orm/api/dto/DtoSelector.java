@@ -76,14 +76,6 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
         selectSpec.setTable(table);
         selectSpec.setDtoAlias(table.alias());
         selectSpec.setFieldColumns(fieldColumns.toList());
-
-        // Calculate and add joins to embedded DTOs (or flatten them into the current table if no join/subselect is needed)
-//        ClassFieldCache.nestedDtoFields(dtoClass).forEach(nestedDtoField -> {
-//            if (table.hasColumnForFieldName(nestedDtoField.getName())) {
-//                addJoinForNestedDto(nestedDtoField);
-//            }
-//        });
-
         return new DtoFromClauseTerminal<>(this);
     }
 
@@ -98,49 +90,6 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
     DtoAliasRegistry dtoAliasRegistry() {
         return dtoAliasRegistry;
     }
-
-//    private void addJoinForNestedDto(final FieldAccessor nestedDtoField) {
-//        final ColumnMetaData joinColumnMetaData = table.getColumnForFieldName(nestedDtoField.name());
-//
-//        if (joinColumnMetaData.getJoinColumn() == null) {
-//            throw new IllegalStateException("No join column specified for nested DTO '%s' in field '%s' of DTO '%s'"
-//                    .formatted(nestedDtoField.type().getName(), nestedDtoField.name(), dtoClass.getName()));
-//        }
-//
-//        final OrmTable joinTable = tableRegistry.getTableOrThrow(nestedDtoField.type());
-//        final ColumnMetaData targetColumnMetaData = joinTable.getColumn(joinColumnMetaData.getJoinColumn());
-//        final String joinAlias = dtoAliasRegistry.newAlias(joinTable.getMetaData());
-//
-//        final List<DtoSelectSpec.FieldColumn> joinFieldColumns = joinTable.getMetaData().columns().stream()
-//                .map(columnMetaData -> {
-//                    final FieldAccessor fieldAccessor = joinTable.getFieldForColumnName(columnMetaData.name());
-//                    return new DtoSelectSpec.FieldColumn(fieldAccessor, new Column(joinTable.getMetaData(), columnMetaData.name(), dtoAliasRegistry.alias(joinAlias, columnMetaData)));
-//                })
-//                .toList();
-//
-//        // Extend selects
-//        selectSpec.addFieldColumns(joinFieldColumns);
-//
-//        // Create JOIN clause
-//        final JoinSpec joinSpec = selectSpec.newJoinSpec(table.getMetaData().schema(), joinTable.getMetaData().name());
-//        joinSpec.table().as(joinAlias);
-//
-//        final ColumnMetaData joinColumn = new ColumnMetaData(joinColumnMetaData);
-//        joinColumn.table().as(selectSpec.getTable().alias());
-//        final ConditionSpec conditionSpec = joinSpec.newCondition(joinColumn);
-//
-//        if (joinColumnMetaData.name().equals(targetColumnMetaData.name())) {
-//            conditionSpec.setOperator(Operator.USING);
-//        } else {
-//            final Column targetColumn = joinFieldColumns.stream()
-//                    .map(DtoSelectSpec.FieldColumn::column)
-//                    .filter(column -> column.name().equals(targetColumnMetaData.name()))
-//                    .findFirst().orElseThrow();
-//            conditionSpec.setOperator(Operator.EQ);
-//            conditionSpec.setValue(targetColumn);
-//        }
-//    }
-
 
     @Override
     public @Nullable DTO oneOrNull() {

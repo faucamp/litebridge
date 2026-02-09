@@ -311,8 +311,6 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData table = getTableMetaDataImpl();
         final ColumnMetaData column = table.column("TEST_COLUMN");
-        //final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        //final Column column = new Column(table, "TEST_COLUMN");
 
         final Select select = new Select(
                 table,

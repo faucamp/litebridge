@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  */
 public final class TrackedDto<DTO> {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(TrackedDto.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrackedDto.class);
     private final WeakReference<DTO> dtoRef;
     private final Collection<FieldAccessor> fields;
     private final Consumer<Object> trackDtoCallback;

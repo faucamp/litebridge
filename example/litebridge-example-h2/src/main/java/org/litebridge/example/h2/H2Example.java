@@ -32,8 +32,8 @@ public class H2Example {
 
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             runExamples(connection);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            LOGGER.error("An error occurred during H2 example execution", ex);
         }
     }
 

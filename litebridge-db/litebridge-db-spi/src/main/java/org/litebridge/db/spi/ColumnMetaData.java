@@ -190,11 +190,6 @@ public final class ColumnMetaData extends Column implements MappedFieldTarget {
     }
 
     @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    @Override
     public String toString() {
         return new StringJoiner(", ", ColumnMetaData.class.getSimpleName() + "[", "]")
                 .add("name='" + name() + "'")

@@ -24,7 +24,7 @@ public class TypeSafeExample extends AbstractExample {
                 .and(PersonMapping.surname).eq("Smith")
                 .orderBy(PersonMapping.id).asc()
                 .oneOrNull();
-        LOGGER.info("Retrieved person (nullable): " + alice);
+        LOGGER.info("Retrieved person (nullable): {}", alice);
 
     }
 }

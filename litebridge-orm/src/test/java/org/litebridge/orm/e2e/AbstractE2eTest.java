@@ -3,12 +3,8 @@ package org.litebridge.orm.e2e;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.h2.H2DatabaseProvider;
 import org.litebridge.orm.Litebridge;
-import org.litebridge.tracking.ChangeTracker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -19,7 +15,6 @@ public abstract class AbstractE2eTest {
 
     private static Connection connection;
     protected Litebridge litebridge;
-    protected ChangeTracker changeTracker;
 
     @BeforeEach
     void beforeEach() throws SQLException {
@@ -37,7 +32,6 @@ public abstract class AbstractE2eTest {
         if (connection == null) {
             connection = createH2Connection();
             litebridge = new Litebridge(new H2DatabaseProvider(connection));
-            changeTracker = ObjectUtils.getFieldValue(litebridge, "changeTracker", ChangeTracker.class);
         }
 
         return litebridge;
