@@ -1,4 +1,4 @@
-package org.litebridge.orm.e2e.dto;
+package org.litebridge.orm.e2e.basic.dto;
 
 import java.util.List;
 import java.util.StringJoiner;

@@ -1,4 +1,4 @@
-package org.litebridge.orm.e2e.dto;
+package org.litebridge.orm.e2e.basic.dto;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 public class Person {
 

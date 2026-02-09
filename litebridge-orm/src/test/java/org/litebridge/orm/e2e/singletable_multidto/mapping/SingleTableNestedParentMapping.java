@@ -1,4 +1,4 @@
-package org.litebridge.orm.e2e.mapping;
+package org.litebridge.orm.e2e.singletable_multidto.mapping;
 
 import org.litebridge.orm.api.spec.FieldColumnSpec;
 

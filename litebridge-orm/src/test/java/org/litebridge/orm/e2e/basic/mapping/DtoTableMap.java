@@ -1,4 +1,4 @@
-package org.litebridge.orm.e2e.mapping;
+package org.litebridge.orm.e2e.basic.mapping;
 
 import org.litebridge.orm.api.spec.ColumnMapping;
 import org.litebridge.orm.api.spec.FieldSpec;
@@ -29,17 +29,5 @@ public final class DtoTableMap {
             f("name"), c("ACCOUNT_NAME"),
             f("balance"), c("BALANCE"),
             f("owner"), c("PERSON_ID").joinUsing()
-    );
-
-    public static final Map<FieldSpec, ColumnMapping> SingeTableNestedDto = Map.of(
-            f("parentValue1"), c("PARENT_VALUE1"),
-            f("nestedChild.childValue1"), c("CHILD_VALUE1"),
-            f("nestedChild.grandChild.grandChildValue1"), c("GRANDCHILD_VALUE1")
-    );
-
-    public static final Map<FieldSpec, ColumnMapping> SelfReferencingDto = Map.of(
-            f("id"), c("ID"),
-            f("myVar"), c("MY_VAR"),
-            f("parent"), c("PARENT_ID").joinOn("ID")
     );
 }

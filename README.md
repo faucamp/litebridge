@@ -43,7 +43,7 @@ public class Account {
 }
 ```
 
-### Setup: Register a DTO-table mapping
+### Setup: Register DTO-table mappings
 
 ```java
 // Create a litebridge instance
@@ -202,7 +202,7 @@ If exactly one result is expected from a query, the `one()`, `oneOrNull()` or `o
 ```java
 final Person alice = litebridge.select(Person.class)
         .where("surname").eq("Smith")
-        .oneOrThrow(() -> new IllegalStateException("More than one person with ID 123"));
+        .oneOrThrow(() -> new IllegalStateException("More than one person with surname 'Smith'"));
         // or simply oneOrThrow()
 ```
 
@@ -250,6 +250,9 @@ Account account = litebridge.select(Account.class)
         .join(Person.class).on("owner")
         .where("id").eq(234L)
         .oneOrThrow();
+
+// account.owner contains the related Person object 
+// and its "accounts" field will contain this Account object
 ```
 
 Retrieving the reverse (a `Person` and their collection of associated `Accounts`) works the same way:
@@ -259,6 +262,8 @@ Person person = litebridge.select(Person.class)
         .join(Account.class).on("accounts")
         .where("id").eq(123L)
         .oneOrThrow();
+
+// person.accounts is null
 ```
 
 #### Arbitrary SQL queries

@@ -1,13 +1,12 @@
-package org.litebridge.orm.e2e;
+package org.litebridge.orm.e2e.basic;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.litebridge.orm.e2e.dto.Account;
-import org.litebridge.orm.e2e.dto.Person;
-import org.litebridge.orm.e2e.dto.PersonAccount;
-import org.litebridge.orm.e2e.dto.SelfReferencingDto;
-import org.litebridge.orm.e2e.dto.SingleTableNestedParent;
-import org.litebridge.orm.e2e.mapping.DtoTableMap;
+import org.litebridge.orm.e2e.AbstractE2eTest;
+import org.litebridge.orm.e2e.basic.dto.Account;
+import org.litebridge.orm.e2e.basic.dto.Person;
+import org.litebridge.orm.e2e.basic.dto.PersonAccount;
+import org.litebridge.orm.e2e.basic.mapping.DtoTableMap;
 import org.litebridge.orm.persistence.DtoEntityMapping;
 import org.litebridge.orm.persistence.EntityDtoMapper;
 import org.slf4j.Logger;
@@ -21,13 +20,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.litebridge.orm.api.spec.FieldMapping.f;
 import static org.litebridge.orm.api.spec.TableSpec.t;
 
-class LitebridgeE2eTest extends AbstractE2eTest {
+class BasicE2eTest extends AbstractE2eTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LitebridgeE2eTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BasicE2eTest.class);
 
     @Test
     @DisplayName("Select DTO and join fetch related DTOs")
@@ -151,37 +149,6 @@ class LitebridgeE2eTest extends AbstractE2eTest {
     }
 
     @Test
-    @DisplayName("Nested DTOs mapped to a single table")
-    void nestedDtos_singleTable() throws Exception {
-        assumeTrue(litebridge.select().from("LB", "PERSON").list().isEmpty());
-        assumeTrue(litebridge.select().from("LB", "ACCOUNT").list().isEmpty());
-
-        // Register DTO-table mapping
-        litebridge.register(SingleTableNestedParent.class, t("LB", "NESTED_DTO", DtoTableMap.SingeTableNestedDto));
-
-        // Create DTOs and enable change tracking
-        final SingleTableNestedParent singleTableNestedParent = litebridge.track(new SingleTableNestedParent());
-        singleTableNestedParent.setParentValue1("testParentValue1");
-        singleTableNestedParent.setNestedChild(new SingleTableNestedParent.NestedChild());
-        singleTableNestedParent.getNestedChild().setChildValue1("testChildValue1");
-        singleTableNestedParent.getNestedChild().setGrandChild(new SingleTableNestedParent.NestedChild.NestedGrandChild());
-        singleTableNestedParent.getNestedChild().getGrandChild().setGrandChildValue1("testGrandChildValue1");
-
-        // Save DTO and load it back
-        litebridge.save(singleTableNestedParent);
-        final SingleTableNestedParent result = litebridge.select(SingleTableNestedParent.class)
-                .oneOrThrow();
-
-        // Then
-        assertTrue(result != singleTableNestedParent);
-        assertEquals("testParentValue1", result.getParentValue1());
-        assertNotNull(result.getNestedChild());
-        assertEquals("testChildValue1", result.getNestedChild().getChildValue1());
-        assertNotNull(result.getNestedChild().getGrandChild());
-        assertEquals("testGrandChildValue1", result.getNestedChild().getGrandChild().getGrandChildValue1());
-    }
-
-    @Test
     @DisplayName("Single DTO mapped to multiple tables")
     void singleDto_multipleTables() throws Exception {
         // Create our "original"/unmapped DTO (unmapped since Litebridge expects one table per DTO)
@@ -226,134 +193,5 @@ class LitebridgeE2eTest extends AbstractE2eTest {
 
         // Then
         assertEquals(personAccount, result);
-    }
-
-    @Test
-    @DisplayName("Single self-referencing DTO mapped to a single table, cascading save")
-    void selfReferencingDto_cascadeSave() throws Exception {
-        // Register DTO-table mappings
-        litebridge.register(SelfReferencingDto.class, t("LB", "SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
-
-        // Create nested DTOs
-        final SelfReferencingDto dto1 = new SelfReferencingDto();
-        dto1.setId(1L);
-        dto1.setMyVar("parent");
-
-        final SelfReferencingDto dto2 = new SelfReferencingDto();
-        dto2.setId(2L);
-        dto2.setMyVar("middle");
-        dto2.setParent(dto1);
-
-        final SelfReferencingDto dto3 = new SelfReferencingDto();
-        dto3.setId(3L);
-        dto3.setMyVar("child");
-        dto3.setParent(dto2);
-
-        // When
-        litebridge.save(dto3);
-
-        // Then
-        litebridge.select().from("LB", "SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
-        final List<SelfReferencingDto> result = litebridge.select(SelfReferencingDto.class)
-                .orderBy("id").asc()
-                .list();
-
-        assertEquals(3, result.size());
-
-        assertEquals(1, result.get(0).getId());
-        assertEquals("parent", result.get(0).getMyVar());
-
-        assertEquals(2, result.get(1).getId());
-        assertEquals("middle", result.get(1).getMyVar());
-        assertEquals(result.get(0), result.get(1).getParent());
-
-        assertEquals(3, result.get(2).getId());
-        assertEquals("child", result.get(2).getMyVar());
-        assertEquals(result.get(1), result.get(2).getParent());
-    }
-
-    @Test
-    @DisplayName("Single self-referencing DTO mapped to a single table, save all individual DTOs in one call")
-    void selfReferencingDto_saveAll() throws Exception {
-        assumeTrue(litebridge.select().from("LB", "PERSON").stream().findAny().isEmpty());
-
-        // Register DTO-table mappings
-        litebridge.register(SelfReferencingDto.class, t("LB", "SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
-
-        // Create nested DTOs
-        final SelfReferencingDto dto1 = new SelfReferencingDto();
-        dto1.setId(1L);
-        dto1.setMyVar("parent");
-
-        final SelfReferencingDto dto2 = new SelfReferencingDto();
-        dto2.setId(2L);
-        dto2.setMyVar("middle");
-        dto2.setParent(dto1);
-
-        final SelfReferencingDto dto3 = new SelfReferencingDto();
-        dto3.setId(3L);
-        dto3.setMyVar("child");
-        dto3.setParent(dto2);
-
-        // When
-        litebridge.save(dto1, dto2, dto3);
-
-        // Then
-        litebridge.select().from("LB", "SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
-        final List<SelfReferencingDto> result = litebridge.select(SelfReferencingDto.class)
-                .orderBy("id").asc()
-                .list();
-
-        assertEquals(3, result.size());
-
-        assertEquals(1, result.get(0).getId());
-        assertEquals("parent", result.get(0).getMyVar());
-
-        assertEquals(2, result.get(1).getId());
-        assertEquals("middle", result.get(1).getMyVar());
-        assertEquals(result.get(0), result.get(1).getParent());
-
-        assertEquals(3, result.get(2).getId());
-        assertEquals("child", result.get(2).getMyVar());
-        assertEquals(result.get(1), result.get(2).getParent());
-    }
-
-    @Test
-    @DisplayName("Single self-referencing DTO mapped to a single table, save each DTO individually")
-    void selfReferencingDto_saveIndividually() throws Exception {
-        // Register DTO-table mappings
-        litebridge.register(SelfReferencingDto.class, t("LB", "SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
-
-        // Create nested DTOs
-        final SelfReferencingDto dto1 = new SelfReferencingDto();
-        dto1.setId(1L);
-        dto1.setMyVar("parent");
-
-        final SelfReferencingDto dto2 = new SelfReferencingDto();
-        dto2.setId(2L);
-        dto2.setMyVar("middle");
-        dto2.setParent(dto1);
-
-        final SelfReferencingDto dto3 = new SelfReferencingDto();
-        dto3.setId(3L);
-        dto3.setMyVar("child");
-        dto3.setParent(dto2);
-
-        // When
-        litebridge.save(dto1);
-        litebridge.save(dto2);
-        litebridge.save(dto3);
-
-        // Then
-        litebridge.select().from("LB", "SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
-        final List<SelfReferencingDto> result = litebridge.select(SelfReferencingDto.class)
-                .join(SelfReferencingDto.class).on("parent")
-                .orderBy("id").asc()
-                .list();
-        // TODO: this is broken - should be 3 results, but currently broken because of using a default JOIN
-        assertEquals(2, result.size());
-        //assertEquals("parent", result.get(0).getMyVar());
-        assertEquals("middle", result.get(0).getMyVar());
-        assertEquals("child", result.get(1).getMyVar());
     }
 }
