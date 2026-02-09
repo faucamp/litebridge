@@ -1,5 +1,6 @@
 package org.litebridge.db.spi;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.Result;
 import org.slf4j.Logger;
 
@@ -19,7 +20,8 @@ public final class Row implements Result {
 
     private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Row.class);
     private final LinkedHashMap<Column, Object> columns = new LinkedHashMap<>();
-    private Column last = null;
+    @Nullable
+    private Column last;
 
     /**
      * Add a new column-value pair to the row and return the updated instance.

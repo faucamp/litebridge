@@ -1,10 +1,10 @@
 package org.litebridge.tracking;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.commons.ObjectUtils;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -30,7 +30,7 @@ public final class ChangedFields {
      * @throws IllegalArgumentException if {@code changedFieldMap} is {@code null}
      */
     public ChangedFields(final Map<String, ChangedField> changedFieldMap) {
-        this.changedFieldMap = Collections.unmodifiableMap(ObjectUtils.requireNonNull(changedFieldMap, "Changed fields map cannot be null"));
+        this.changedFieldMap = Collections.unmodifiableMap(Objects.requireNonNull(changedFieldMap, "Changed fields map cannot be null"));
     }
 
     /**

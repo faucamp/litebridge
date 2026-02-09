@@ -27,7 +27,7 @@ public class H2DatabaseProvider extends AbstractDatabaseProvider {
 
     protected @Nullable String transformAlias(final @Nullable String dbAlias) {
         if (dbAlias == null) {
-            return dbAlias;
+            return null;
         } else {
             return dbAlias.toLowerCase();
         }

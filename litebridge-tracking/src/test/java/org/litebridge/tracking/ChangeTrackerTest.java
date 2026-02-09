@@ -3,8 +3,10 @@ package org.litebridge.tracking;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.shadow.de.siegmar.fastcsv.util.Nullable;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,23 +60,30 @@ public class ChangeTrackerTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void trackDto_trackNestedDto_null() throws Exception {
         // Given
         final Method trackNestedDto = ChangeTracker.class.getDeclaredMethod("trackNestedDto", Object.class);
         trackNestedDto.setAccessible(true);
+        final TestDto dto = null;
 
-        // When/Then
-        assertThrows(IllegalArgumentException.class, () -> trackNestedDto.invoke(changeTracker, null));
+        // When
+        final InvocationTargetException result = assertThrows(InvocationTargetException.class, () -> trackNestedDto.invoke(changeTracker, dto));
+
+        // Then
+        assertEquals(NullPointerException.class, result.getCause().getClass());
+        assertEquals("Nested DTO is null", result.getCause().getMessage());
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void trackDto_null() {
         // Given
         final Object dto = null;
         final Set<String> trackedFields = Set.of("field1", "field2");
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> changeTracker.trackDto(dto, trackedFields));
+        assertThrows(NullPointerException.class, () -> changeTracker.trackDto(dto, trackedFields));
     }
 
     @Test
@@ -109,7 +118,7 @@ public class ChangeTrackerTest {
         // Then
         assertEquals(dto, result);
 
-        final TrackedDto trackedDto = changeTracker.getTrackedDto(dto);
+        final TrackedDto<TestDto> trackedDto = changeTracker.getTrackedDto(dto);
         assertNotNull(trackedDto);
         assertTrue(trackedDto.changedFields().isEmpty());
     }
@@ -162,6 +171,7 @@ public class ChangeTrackerTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void trackDtoFields_null() {
         // Given
         final Object dto = null;
@@ -170,7 +180,7 @@ public class ChangeTrackerTest {
         final Set<FieldAccessor> trackedFields = Set.of(new FieldAccessorImpl(field1), new FieldAccessorImpl(field2));
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> changeTracker.trackDtoFields(dto, trackedFields));
+        assertThrows(NullPointerException.class, () -> changeTracker.trackDtoFields(dto, trackedFields));
     }
 
     /**
@@ -330,7 +340,9 @@ public class ChangeTrackerTest {
 
     // Helper DTO class for testing
     static class TestDto {
+        @Nullable
         private String field1;
+        @Nullable
         private Integer field2;
 
         public String getField1() {
@@ -362,9 +374,13 @@ public class ChangeTrackerTest {
     static class ContainerDto {
 
         private long parentField1;
+        @Nullable
         private TestDto nestedDto;
+        @Nullable
         private List<String> basicList;
+        @Nullable
         private List<TestDto> nestedDtoList;
+        @Nullable
         private Map<String, String> stringMap;
 
         public long getParentField1() {

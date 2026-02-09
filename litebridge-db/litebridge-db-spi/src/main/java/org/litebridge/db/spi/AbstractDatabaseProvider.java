@@ -2,7 +2,6 @@ package org.litebridge.db.spi;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
-import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Condition;
@@ -54,7 +53,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     public AbstractDatabaseProvider(final Connection connection,
                                     final TypeConverter typeConverter) {
         this.connection = connection;
-        this.typeConverter = ObjectUtils.requireNonNull(typeConverter, "No TypeConverter provided");
+        this.typeConverter = Objects.requireNonNull(typeConverter, "No TypeConverter provided");
     }
 
     @Override

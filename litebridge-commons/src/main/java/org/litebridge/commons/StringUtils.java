@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Utility class for working with strings.
@@ -70,17 +71,17 @@ public final class StringUtils {
     /**
      * Splits the given string by the specified delimiter, with optional padding and size constraints.
      *
-     * @param target            The string to split; may be null. If null, an empty list is returned.
-     * @param delimiter         The character to use as the delimiter for splitting the string.
-     * @param setSize           The desired number of elements in the result. If greater than 0,
-     *                          the resulting list will be padded or validated to match this size.
-     *                          If padding is required, empty strings will be used.
-     * @param padEmptyAtStart   If true, padding is added at the start of the list to meet the required size.
-     *                          If false, padding is added at the end of the list.
+     * @param target          The string to split; may be null. If null, an empty list is returned.
+     * @param delimiter       The character to use as the delimiter for splitting the string.
+     * @param setSize         The desired number of elements in the result. If greater than 0,
+     *                        the resulting list will be padded or validated to match this size.
+     *                        If padding is required, empty strings will be used.
+     * @param padEmptyAtStart If true, padding is added at the start of the list to meet the required size.
+     *                        If false, padding is added at the end of the list.
      * @return A list of substrings resulting from the split. If the setSize parameter is provided and
-     *         greater than 0, the list will be adjusted to match the desired size. If the input string
-     *         is null, an empty list is returned. Throws {@code IllegalArgumentException} if the number
-     *         of segments exceeds the specified setSize.
+     * greater than 0, the list will be adjusted to match the desired size. If the input string
+     * is null, an empty list is returned. Throws {@code IllegalArgumentException} if the number
+     * of segments exceeds the specified setSize.
      */
     public static List<String> split(@Nullable String target, char delimiter, final int setSize, final boolean padEmptyAtStart) {
         if (target == null) {
@@ -131,16 +132,16 @@ public final class StringUtils {
      * Splits a given string into an array of substrings based on a specified delimiter,
      * with optional size constraints and padding for the resulting array.
      *
-     * @param target            The string to split; may be null. If null, an empty array is returned.
-     * @param delimiter         The character used as the delimiter for splitting the string.
-     * @param setSize           The desired number of elements in the result. If greater than 0,
-     *                          the resulting array will be padded or validated to match this size.
-     *                          If padding is required, empty strings will be used.
-     * @param padEmptyAtStart   If true, padding is added at the start of the array to meet the required size.
-     *                          If false, padding is added at the end of the array.
+     * @param target          The string to split; may be null. If null, an empty array is returned.
+     * @param delimiter       The character used as the delimiter for splitting the string.
+     * @param setSize         The desired number of elements in the result. If greater than 0,
+     *                        the resulting array will be padded or validated to match this size.
+     *                        If padding is required, empty strings will be used.
+     * @param padEmptyAtStart If true, padding is added at the start of the array to meet the required size.
+     *                        If false, padding is added at the end of the array.
      * @return An array of substrings resulting from the split. If the setSize parameter is provided
-     *         and greater than 0, the array will be adjusted to match the desired size.
-     *         If the input string is null, an empty array is returned.
+     * and greater than 0, the array will be adjusted to match the desired size.
+     * If the input string is null, an empty array is returned.
      * @throws IllegalArgumentException if the number of segments exceeds the specified setSize.
      */
     public static String[] splitArray(@Nullable String target, char delimiter, final int setSize, final boolean padEmptyAtStart) {
@@ -199,7 +200,7 @@ public final class StringUtils {
      * @throws NullPointerException if the input string is null
      */
     public static String camelCase(final String str) {
-        if (isEmpty(ObjectUtils.requireNonNull(str, "Input cannot be null"))) {
+        if (isEmpty(Objects.requireNonNull(str, "Input cannot be null"))) {
             return "";
         }
 

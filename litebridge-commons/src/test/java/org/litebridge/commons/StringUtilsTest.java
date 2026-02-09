@@ -27,6 +27,7 @@ class StringUtilsTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     void isBlank_null() {
         // Given
         String input = null;
@@ -87,6 +88,7 @@ class StringUtilsTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     void isEmpty_null() {
         // Given
         final String input = null;
@@ -387,6 +389,7 @@ class StringUtilsTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     void lowerFirst_null() {
         // Given
         final String input = null;
@@ -417,9 +420,10 @@ class StringUtilsTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     void camelCase_null() {
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> StringUtils.camelCase(null));
+        assertThrows(NullPointerException.class, () -> StringUtils.camelCase(null));
     }
 
     @Test

@@ -119,7 +119,7 @@ public class SelectSpec {
     }
 
     public OrderBySpec newOrderBy(final String... columns) {
-        ObjectUtils.requireNonNull(columns, "No column(s) specified for ORDER BY");
+        Objects.requireNonNull(columns, "No column(s) specified for ORDER BY");
 
         if (this.orderBys == null) {
             orderBys = new ArrayList<>();

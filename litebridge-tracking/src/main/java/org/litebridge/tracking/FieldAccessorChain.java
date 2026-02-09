@@ -67,7 +67,7 @@ public class FieldAccessorChain implements FieldAccessor {
         // Traverse the field accessors and get the chained value
         for (FieldAccessor fieldAccessor : fieldAccessors) {
             if (value == null) {
-                return value;
+                return null;
             }
 
             value = fieldAccessor.get(value);
@@ -121,6 +121,7 @@ public class FieldAccessorChain implements FieldAccessor {
 
     @Override
     public boolean equals(final Object o) {
+        if (!(o instanceof FieldAccessor)) return false;
         return fieldAccessors.getLast().equals(o);
     }
 

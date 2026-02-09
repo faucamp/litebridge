@@ -27,9 +27,9 @@ public final class TableMetaData extends Table {
     /**
      * Construct a {@code TableMetaData} instance using the provided table, primary key, and column metadata.
      *
-     * @param table the {@code Table} object representing the database table; must not be {@code null}
+     * @param table      the {@code Table} object representing the database table; must not be {@code null}
      * @param primaryKey a list of column names representing the primary key of the table; must not be {@code null}
-     * @param columns a list of {@code ColumnMetaData} objects representing the columns of the table; must not be {@code null}
+     * @param columns    a list of {@code ColumnMetaData} objects representing the columns of the table; must not be {@code null}
      * @throws IllegalArgumentException if any primary key column metadata is not found in the provided column metadata
      */
     public TableMetaData(final Table table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
@@ -39,11 +39,11 @@ public final class TableMetaData extends Table {
     /**
      * Construct a {@code TableMetaData} object representing metadata for a database table.
      *
-     * @param catalog the catalog name of the table; may be {@code null} if not applicable
-     * @param schema the schema name of the table; may be {@code null} if not applicable
-     * @param table the name of the table; must not be {@code null}
+     * @param catalog    the catalog name of the table; may be {@code null} if not applicable
+     * @param schema     the schema name of the table; may be {@code null} if not applicable
+     * @param table      the name of the table; must not be {@code null}
      * @param primaryKey a list of column names representing the primary key of the table; must not be {@code null}
-     * @param columns a list of {@link ColumnMetaData} objects representing the columns of the table; must not be {@code null}
+     * @param columns    a list of {@link ColumnMetaData} objects representing the columns of the table; must not be {@code null}
      * @throws IllegalArgumentException if any primary key column metadata is not found in the provided column metadata
      */
     public TableMetaData(final String catalog, final String schema, final String table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
@@ -95,7 +95,7 @@ public final class TableMetaData extends Table {
      * @throws IllegalArgumentException if the column is not found or if the provided name is null
      */
     public ColumnMetaData column(final String columnName) {
-        return ObjectUtils.requireNonNull(columnMap.get(columnName), "Column metadata not found: " + columnName);
+        return ObjectUtils.requireNonNull(columnMap.get(columnName), () -> new IllegalArgumentException("Column metadata not found: " + columnName));
     }
 
     /**

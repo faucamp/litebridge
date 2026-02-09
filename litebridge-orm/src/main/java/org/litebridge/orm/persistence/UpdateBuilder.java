@@ -1,7 +1,6 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Update;
@@ -9,6 +8,7 @@ import org.litebridge.db.spi.update.Update;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 final class UpdateBuilder extends AbstractStatementBuilder<Update> {
 
@@ -36,7 +36,7 @@ final class UpdateBuilder extends AbstractStatementBuilder<Update> {
 
     @Override
     public Update build() {
-        ObjectUtils.requireNonNull(columnValues, "No column values specified for UPDATE");
+        Objects.requireNonNull(columnValues, "No column values specified for UPDATE");
         return new Update(table.getMetaData(), columnValues, conditions);
     }
 }

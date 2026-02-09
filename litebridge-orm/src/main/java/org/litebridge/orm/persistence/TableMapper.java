@@ -2,7 +2,6 @@ package org.litebridge.orm.persistence;
 
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
-import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
@@ -22,6 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -113,7 +113,7 @@ public final class TableMapper {
 
         // Add field-column mapping
         final FieldAccessor fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
-        final ColumnMetaData column = ObjectUtils.requireNonNull(tableMetaData.column(columnSpec.name()), "Column metadata not found: " + columnSpec.name());
+        final ColumnMetaData column = Objects.requireNonNull(tableMetaData.column(columnSpec.name()), "Column metadata not found: " + columnSpec.name());
 
         if (columnSpec.isAutoIncrement()) {
             column.setAutoIncrement(true);

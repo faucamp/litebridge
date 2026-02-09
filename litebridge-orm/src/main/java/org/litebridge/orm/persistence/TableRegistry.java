@@ -1,7 +1,6 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Table;
 
 import java.util.Collections;
@@ -30,12 +29,12 @@ public final class TableRegistry {
     private final Map<String, Map<String, OrmTable>> schemaTableMap = new ConcurrentHashMap<>();
 
     public @Nullable OrmTable getTable(final Class<?> dtoClass) {
-        ObjectUtils.requireNonNull(dtoClass, "DTO class cannot be null");
+        Objects.requireNonNull(dtoClass, "DTO class cannot be null");
         return dtoTableMap.get(dtoClass);
     }
 
     public OrmTable getTableOrThrow(final Class<?> dtoClass) throws IllegalArgumentException {
-        return ObjectUtils.requireNonNull(getTable(dtoClass), "DTO class not registered: '%s'".formatted(dtoClass.getName()));
+        return Objects.requireNonNull(getTable(dtoClass), "DTO class not registered: '%s'".formatted(dtoClass.getName()));
     }
 
     public OrmTable getTableInContextOrThrow(final Class<?> dtoClass, final Class<?> contextClass) {

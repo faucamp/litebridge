@@ -18,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -65,9 +66,9 @@ public final class TrackedDto<DTO> {
      * @throws IllegalArgumentException if any of the parameters are null
      */
     public TrackedDto(final DTO dto, final Collection<FieldAccessor> fields, final Consumer<Object> trackDtoCallback) {
-        this.dtoRef = new WeakReference<>(ObjectUtils.requireNonNull(dto, "DTO cannot be null"));
-        this.fields = ObjectUtils.requireNonNull(fields, "No tracked fields provided");
-        this.trackDtoCallback = ObjectUtils.requireNonNull(trackDtoCallback, "No \"track DTO\" callback provided");
+        this.dtoRef = new WeakReference<>(Objects.requireNonNull(dto, "DTO cannot be null"));
+        this.fields = Objects.requireNonNull(fields, "No tracked fields provided");
+        this.trackDtoCallback = Objects.requireNonNull(trackDtoCallback, "No \"track DTO\" callback provided");
     }
 
     /**

@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Mapper for converting between complex Data Transfer Objects (DTOs) and their corresponding "entity" objects.
@@ -66,7 +67,7 @@ public class EntityDtoMapper<DTO> {
      * @throws IllegalArgumentException if {@code dto} is null
      */
     public List<Object> entities(final DTO dto) {
-        ObjectUtils.requireNonNull(dto, "DTO cannot be null");
+        Objects.requireNonNull(dto, "DTO cannot be null");
         final Map<Class<?>, Object> constructedEntities = new HashMap<>();
         final Map<FieldAccessor, FieldAccessor> postProcessQueue = new HashMap<>();
 
@@ -142,7 +143,7 @@ public class EntityDtoMapper<DTO> {
      * @throws IllegalArgumentException if {@code entities} is null
      */
     public DTO dto(final List<Object> entities) {
-        ObjectUtils.requireNonNull(entities, "Entities cannot be null");
+        Objects.requireNonNull(entities, "Entities cannot be null");
         final DTO dto = ClassUtils.newInstance(dtoClass);
 
         entities.forEach(entity -> {

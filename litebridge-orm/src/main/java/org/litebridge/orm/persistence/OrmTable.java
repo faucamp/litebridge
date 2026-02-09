@@ -1,7 +1,6 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.NullMarked;
-import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.type.WeakIdentitySet;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
@@ -18,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
@@ -122,7 +122,7 @@ public class OrmTable {
      * @return the column metadata for the specified field name, or null if not found
      */
     public ColumnMetaData getColumnForFieldName(final String fieldName) {
-        return ObjectUtils.requireNonNull(fieldNameColumnMap.get(fieldName), "No column for field '" + fieldName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
+        return Objects.requireNonNull(fieldNameColumnMap.get(fieldName), "No column for field '" + fieldName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
     }
 
     public List<Class<?>> getNestedDtoClasses() {
@@ -136,7 +136,7 @@ public class OrmTable {
      * @return the column metadata for the specified column name, or null if not found
      */
     public ColumnMetaData getColumn(final String columnName) {
-        return ObjectUtils.requireNonNull(columnMap.get(columnName), "No column '" + columnName + "' in table '" + metaData.name() + "'");
+        return Objects.requireNonNull(columnMap.get(columnName), "No column '" + columnName + "' in table '" + metaData.name() + "'");
     }
 
     /**
@@ -185,7 +185,7 @@ public class OrmTable {
      * @throws IllegalArgumentException if the specified column name is null or empty
      */
     public FieldAccessor getFieldForColumnName(final String columnName) {
-        return ObjectUtils.requireNonNull(columnNameFieldMap.get(columnName), "No field for column '" + columnName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
+        return Objects.requireNonNull(columnNameFieldMap.get(columnName), "No field for column '" + columnName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
     }
 
     public Stream<FieldAccessor> fieldAcessorStream() {

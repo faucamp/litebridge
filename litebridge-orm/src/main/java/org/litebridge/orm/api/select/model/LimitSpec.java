@@ -15,26 +15,28 @@ import java.util.Optional;
  */
 public final class LimitSpec {
 
-    private Optional<Integer> limit = Optional.empty();
-    private Optional<Integer> offset = Optional.empty();
+    @Nullable
+    private Integer limit;
+    @Nullable
+    private Integer offset;
 
     public Optional<Integer> getLimit() {
-        return limit;
+        return Optional.ofNullable(limit);
     }
 
     public void setLimit(final @Nullable Integer limit) {
-        this.limit = Optional.ofNullable(limit);
+        this.limit = limit;
     }
 
     public Optional<Integer> getOffset() {
-        return offset;
+        return Optional.ofNullable(offset);
     }
 
     public void setOffset(final @Nullable Integer offset) {
-        this.offset = Optional.ofNullable(offset);
+        this.offset = offset;
     }
 
     Optional<Limit> toLimit() {
-        return Optional.of(new Limit(limit, offset));
+        return Optional.of(new Limit(getLimit(), getOffset()));
     }
 }

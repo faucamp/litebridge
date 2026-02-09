@@ -20,6 +20,7 @@ import org.litebridge.tracking.ChangeTracker;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Primary entry point for Litebridge.
@@ -93,11 +94,7 @@ public class Litebridge {
      * @throws IllegalArgumentException if the DTO is null or if its class is not registered.
      */
     public <T> T track(final T dto) {
-        if (dto == null) {
-            throw new IllegalArgumentException("DTO cannot be null");
-        }
-
-        final OrmTable table = tableRegistry.getTable(dto.getClass());
+        final OrmTable table = tableRegistry.getTable(Objects.requireNonNull(dto, "DTO cannot be null").getClass());
 
         if (table == null) {
             throw new IllegalArgumentException("DTO class not registered: '%s'".formatted(dto.getClass().getName()));
