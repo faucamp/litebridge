@@ -1,13 +1,7 @@
 package org.litebridge.orm.e2e;
 
-import org.flywaydb.core.Flyway;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.litebridge.commons.ObjectUtils;
-import org.litebridge.db.h2.H2DatabaseProvider;
-import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.e2e.dto.Account;
 import org.litebridge.orm.e2e.dto.Person;
 import org.litebridge.orm.e2e.dto.PersonAccount;
@@ -16,15 +10,10 @@ import org.litebridge.orm.e2e.dto.SingleTableNestedParent;
 import org.litebridge.orm.e2e.mapping.DtoTableMap;
 import org.litebridge.orm.persistence.DtoEntityMapping;
 import org.litebridge.orm.persistence.EntityDtoMapper;
-import org.litebridge.tracking.ChangeTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 
@@ -36,24 +25,9 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.litebridge.orm.api.spec.FieldMapping.f;
 import static org.litebridge.orm.api.spec.TableSpec.t;
 
-class LitebridgeE2eTest {
+class LitebridgeE2eTest extends AbstractE2eTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LitebridgeE2eTest.class);
-    private static Connection connection;
-    private Litebridge litebridge;
-    private ChangeTracker changeTracker;
-
-    @BeforeEach
-    void beforeEach() throws SQLException {
-        litebridge = resetLiteBridge();
-    }
-
-    @AfterAll
-    static void afterAll() throws SQLException {
-        if (connection != null) {
-            shutdownInMemoryH2();
-        }
-    }
 
     @Test
     @DisplayName("Select DTO and join fetch related DTOs")
@@ -381,71 +355,5 @@ class LitebridgeE2eTest {
         //assertEquals("parent", result.get(0).getMyVar());
         assertEquals("middle", result.get(0).getMyVar());
         assertEquals("child", result.get(1).getMyVar());
-    }
-
-    private Litebridge ensureLitebridge() throws SQLException {
-        if (connection == null) {
-            connection = createH2Connection();
-            litebridge = new Litebridge(new H2DatabaseProvider(connection));
-            changeTracker = ObjectUtils.getFieldValue(litebridge, "changeTracker", ChangeTracker.class);
-        }
-
-        return litebridge;
-    }
-
-    /**
-     * Resets the Litebridge instance by shutting down the in-memory H2 database and ensuring a new connection.
-     *
-     * @return Litebridge instance
-     * @throws SQLException if shutdown or connection creation fails
-     */
-    private Litebridge resetLiteBridge() throws SQLException {
-        shutdownInMemoryH2();
-        return ensureLitebridge();
-    }
-
-    /**
-     * Creates an H2 in-memory database connection.
-     *
-     * @return H2 database connection
-     * @throws SQLException if connection creation fails
-     */
-    private Connection createH2Connection() throws SQLException {
-        final String url = "jdbc:h2:mem:lb;DB_CLOSE_DELAY=-1";
-        final String user = "sa";
-        final String password = "";
-        runFlywayMigration(url, user, password);
-        return DriverManager.getConnection(url, user, password);
-    }
-
-    /**
-     * Runs Flyway migration on the supplied database connection.
-     *
-     * @param url      Database connection URL
-     * @param user     Database user name
-     * @param password Database user password
-     */
-    private static void runFlywayMigration(final String url, final String user, final String password) {
-        // Configure and run Flyway migration
-        final Flyway flyway = Flyway.configure()
-                .dataSource(url, user, password)
-                .locations("classpath:db/migration")
-                .load();
-
-        flyway.migrate();
-    }
-
-    /**
-     * Shuts down the in-memory H2 database connection.
-     *
-     * @throws SQLException if shutdown fails
-     */
-    private static void shutdownInMemoryH2() throws SQLException {
-        if (connection != null) {
-            Statement statement = connection.createStatement();
-            statement.execute("SHUTDOWN");
-            connection.close();
-            connection = null;
-        }
     }
 }

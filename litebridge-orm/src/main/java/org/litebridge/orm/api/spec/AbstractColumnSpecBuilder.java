@@ -27,6 +27,11 @@ public abstract sealed class AbstractColumnSpecBuilder<SELF extends AbstractColu
      */
     @Nullable
     private String joinColumn;
+    /**
+     * In-line mapped table that is
+     */
+    @Nullable
+    private TableMapping mappedTable;
 
     AbstractColumnSpecBuilder(final String name) {
         this.name = name;
@@ -53,8 +58,14 @@ public abstract sealed class AbstractColumnSpecBuilder<SELF extends AbstractColu
         return (SELF) this;
     }
 
+    @SuppressWarnings("unchecked")
+    public SELF withMappedTable(final Class<?> dtoClass, final TableSpec mappedTable) {
+        this.mappedTable = new TableMapping(dtoClass, mappedTable);
+        return (SELF) this;
+    }
+
     public ColumnSpec build() {
-        return new ColumnSpec(name, BooleanUtils.toBoolean(autoIncrement), sequence, joinColumn);
+        return new ColumnSpec(name, BooleanUtils.toBoolean(autoIncrement), sequence, joinColumn, mappedTable);
     }
 
     void setSequence(final String sequence) {

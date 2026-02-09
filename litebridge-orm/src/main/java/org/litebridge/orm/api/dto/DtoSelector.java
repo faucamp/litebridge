@@ -26,12 +26,12 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
     private final DtoAliasRegistry dtoAliasRegistry;
 
     public DtoSelector(final Class<DTO> dtoClass,
-                       final OrmTable table,
+                       final OrmTable dtoTable,
                        final TableRegistry tableRegistry,
                        final DatabaseProvider databaseProvider,
                        final DtoAliasRegistry dtoAliasRegistry) {
-        super(new DtoSelectSpec(dtoClass), databaseProvider, dtoClass);
-        this.table = table;
+        super(new DtoSelectSpec(dtoClass, dtoTable), databaseProvider, dtoClass);
+        this.table = dtoTable;
         this.tableRegistry = tableRegistry;
         this.dtoAliasRegistry = dtoAliasRegistry;
     }
@@ -159,7 +159,7 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
 
     @Override
     public List<DTO> list() {
-        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, tableRegistry, databaseProvider.getTypeConverter());
+        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter());
         return selectSpecDtoMapper.toDtos(dtoClass, executeQuery());
     }
 

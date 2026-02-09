@@ -1,0 +1,30 @@
+-- Tables for test where a DTO is shared between two other DTOs,
+-- and the shared DTO is persisted to different tables as a result
+
+-- Status associated with an application instance
+CREATE TABLE LB.APPLICATION_STATUS
+(
+    CODE NUMBER(10) NOT NULL PRIMARY KEY,
+    MESSAGE VARCHAR2(255)
+);
+
+-- Application instance
+CREATE TABLE LB.APPLICATION
+(
+    NAME VARCHAR2(255) NOT NULL PRIMARY KEY,
+    STATUS_CODE NUMBER(10) REFERENCES LB.APPLICATION_STATUS(CODE)
+);
+
+-- Status associated with a server instance
+CREATE TABLE LB.SERVER_STATUS
+(
+    STATUS_CODE NUMBER(10) NOT NULL PRIMARY KEY,
+    MESSAGE VARCHAR2(255)
+);
+
+-- Server instance
+CREATE TABLE LB.SERVER
+(
+    HOST VARCHAR2(255) NOT NULL PRIMARY KEY,
+    SERVER_STATUS_CODE NUMBER(10) REFERENCES LB.SERVER_STATUS(STATUS_CODE)
+);

@@ -64,6 +64,25 @@ public final class StringUtils {
      * @return A list of strings.
      */
     public static List<String> split(@Nullable String target, char delimiter) {
+        return split(target, delimiter, -1, false);
+    }
+
+    /**
+     * Splits the given string by the specified delimiter, with optional padding and size constraints.
+     *
+     * @param target            The string to split; may be null. If null, an empty list is returned.
+     * @param delimiter         The character to use as the delimiter for splitting the string.
+     * @param setSize           The desired number of elements in the result. If greater than 0,
+     *                          the resulting list will be padded or validated to match this size.
+     *                          If padding is required, empty strings will be used.
+     * @param padEmptyAtStart   If true, padding is added at the start of the list to meet the required size.
+     *                          If false, padding is added at the end of the list.
+     * @return A list of substrings resulting from the split. If the setSize parameter is provided and
+     *         greater than 0, the list will be adjusted to match the desired size. If the input string
+     *         is null, an empty list is returned. Throws {@code IllegalArgumentException} if the number
+     *         of segments exceeds the specified setSize.
+     */
+    public static List<String> split(@Nullable String target, char delimiter, final int setSize, final boolean padEmptyAtStart) {
         if (target == null) {
             return Collections.emptyList();
         }
@@ -81,6 +100,18 @@ public final class StringUtils {
         // Add the final segment
         result.add(target.substring(start));
 
+        if (setSize > 0) {
+            if (result.size() < setSize) {
+                if (padEmptyAtStart) {
+                    result.addAll(0, Collections.nCopies(setSize - result.size(), ""));
+                } else {
+                    result.addAll(Collections.nCopies(setSize - result.size(), ""));
+                }
+            } else if (result.size() > setSize) {
+                throw new IllegalArgumentException("Could not parse string: '" + target + "'; expected " + setSize + " parts, got: " + result.size());
+            }
+        }
+
         return result;
     }
 
@@ -94,6 +125,26 @@ public final class StringUtils {
      */
     public static String[] splitArray(@Nullable String target, char delimiter) {
         return split(target, delimiter).toArray(new String[0]);
+    }
+
+    /**
+     * Splits a given string into an array of substrings based on a specified delimiter,
+     * with optional size constraints and padding for the resulting array.
+     *
+     * @param target            The string to split; may be null. If null, an empty array is returned.
+     * @param delimiter         The character used as the delimiter for splitting the string.
+     * @param setSize           The desired number of elements in the result. If greater than 0,
+     *                          the resulting array will be padded or validated to match this size.
+     *                          If padding is required, empty strings will be used.
+     * @param padEmptyAtStart   If true, padding is added at the start of the array to meet the required size.
+     *                          If false, padding is added at the end of the array.
+     * @return An array of substrings resulting from the split. If the setSize parameter is provided
+     *         and greater than 0, the array will be adjusted to match the desired size.
+     *         If the input string is null, an empty array is returned.
+     * @throws IllegalArgumentException if the number of segments exceeds the specified setSize.
+     */
+    public static String[] splitArray(@Nullable String target, char delimiter, final int setSize, final boolean padEmptyAtStart) {
+        return split(target, delimiter, setSize, padEmptyAtStart).toArray(new String[0]);
     }
 
     /**

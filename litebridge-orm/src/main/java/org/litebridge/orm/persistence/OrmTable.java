@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * A table known by/registered with the ORM, facilitating the relationship between Java objects (DTOs)
@@ -40,6 +41,7 @@ public class OrmTable {
     private final ChangeTracker changeTracker;
     private final WeakIdentitySet<Object> persistedDtos = new WeakIdentitySet<>();
     private final List<Class<?>> nestedDtoClasses;
+    private final TableRegistry contextTableRegistry = new TableRegistry();
 
     /**
      * Constructs a new {@code OrmTable} instance, initializing table metadata, field-to-column mappings,
@@ -53,15 +55,27 @@ public class OrmTable {
     public OrmTable(final Class<?> dtoClass, final TableMetaData metaData, final Map<FieldAccessor, MappedFieldTarget> fieldTargetMap, final ChangeTracker changeTracker) {
         this.dtoClass = dtoClass;
         this.metaData = metaData;
-        this.fieldTargetMap = fieldTargetMap;
+
         this.changeTracker = changeTracker;
         final Map<String, ColumnMetaData> columnMap = new HashMap<>(fieldTargetMap.size());
         final Map<String, ColumnMetaData> fieldNameColumnMap = new HashMap<>(fieldTargetMap.size());
         final Map<String, FieldAccessor> columnNameFieldMap = new HashMap<>(fieldTargetMap.size());
+        final Map<FieldAccessor, MappedFieldTarget> processedFieldTargetMap = new HashMap<>(fieldTargetMap.size());
         final List<Class<?>> nestedDtoClasses = new ArrayList<>();
 
         fieldTargetMap.forEach(((fieldAccessor, mappedFieldTarget) -> {
-            if (mappedFieldTarget instanceof ColumnMetaData column) {
+            final MappedFieldTarget preprocessedTarget;
+
+            if (mappedFieldTarget instanceof ColumnAndInlineTable(ColumnMetaData column, OrmTable tableSpec)) {
+                contextTableRegistry.addTable(fieldAccessor.type(), tableSpec);
+                preprocessedTarget = column;
+            } else {
+                preprocessedTarget = mappedFieldTarget;
+            }
+
+            processedFieldTargetMap.put(fieldAccessor, preprocessedTarget);
+
+            if (preprocessedTarget instanceof ColumnMetaData column) {
                 columnMap.put(column.name(), column);
                 columnNameFieldMap.put(column.name(), fieldAccessor);
 
@@ -79,6 +93,7 @@ public class OrmTable {
         this.columnMap = Collections.unmodifiableMap(columnMap);
         this.fieldNameColumnMap = Collections.unmodifiableMap(fieldNameColumnMap);
         this.columnNameFieldMap = Collections.unmodifiableMap(columnNameFieldMap);
+        this.fieldTargetMap = Collections.unmodifiableMap(processedFieldTargetMap);
         this.nestedDtoClasses = nestedDtoClasses.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(nestedDtoClasses);
     }
 
@@ -173,6 +188,10 @@ public class OrmTable {
         return ObjectUtils.requireNonNull(columnNameFieldMap.get(columnName), "No field for column '" + columnName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
     }
 
+    public Stream<FieldAccessor> fieldAcessorStream() {
+        return fieldTargetMap.keySet().stream();
+    }
+
     /**
      * Mark the specified DTO as persisted, creating a snapshot for tracking changes.
      *
@@ -220,5 +239,9 @@ public class OrmTable {
         } else {
             throw new IllegalArgumentException("Field '" + field.name() + "' is not a mapped one-to-many relationship.");
         }
+    }
+
+    public TableRegistry getContextTableRegistry() {
+        return contextTableRegistry;
     }
 }

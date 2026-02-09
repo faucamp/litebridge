@@ -18,17 +18,16 @@ public interface FieldAccessor {
     String name();
 
     /**
-     * Returns a {@code Class} object that identifies the declared type for the field represented by this {@code FieldAccessor} object.
+     * Returns the declared type for the field represented by this {@code FieldAccessor}.
      *
-     * @return a {@code Class} object identifying the declared type of the field represented by this object
+     * @return the field type
      */
     Class<?> type();
 
     /**
-     * Retrieves the {@code Class} object representing the data transfer object (DTO) type
-     * associated with this {@code FieldAccessor}.
+     * Retrieves the parent {@code Class} of the DTO containing the field targeted by this {@code FieldAccessor}.
      *
-     * @return a {@code Class} object representing the data transfer object type
+     * @return The parent DTO type
      */
     Class<?> dtoClass();
 

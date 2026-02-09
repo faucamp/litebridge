@@ -38,6 +38,12 @@ public final class TableRegistry {
         return ObjectUtils.requireNonNull(getTable(dtoClass), "DTO class not registered: '%s'".formatted(dtoClass.getName()));
     }
 
+    public OrmTable getTableInContextOrThrow(final Class<?> dtoClass, final Class<?> contextClass) {
+        return getTableOrThrow(contextClass)
+                .getContextTableRegistry()
+                .getTableOrThrow(dtoClass);
+    }
+
     public @Nullable OrmTable getTable(final String schema, final String table) {
         return schemaTableMap.getOrDefault(schema, Collections.emptyMap())
                 .get(table);

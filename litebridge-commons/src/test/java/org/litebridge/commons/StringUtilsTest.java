@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -502,5 +503,125 @@ class StringUtilsTest {
         assertEquals("bbb", result[1]);
         assertEquals("ccc", result[2]);
         assertEquals("ddd", result[3]);
+    }
+
+    @Test
+    void split_setSize_truncate() {
+        // Given
+        final String input = "a.b.c.d";
+        final int setSize = 2;
+        final char delimiter = '.';
+
+        // When
+        final IllegalArgumentException exception =
+                assertThrows(IllegalArgumentException.class, () -> StringUtils.split(input, delimiter, setSize, false));
+
+        // Then
+        assertEquals("Could not parse string: 'a.b.c.d'; expected 2 parts, got: 4", exception.getMessage());
+    }
+
+    @Test
+    void split_setSize_padEmpty_start() {
+        // Given
+        final String input = "a.b";
+        final int setSize = 4;
+        final char delimiter = '.';
+        final boolean padEmptyAtStart = true;
+
+        // When
+        final List<String> result = StringUtils.split(input, delimiter, setSize, padEmptyAtStart);
+
+        // Then
+        assertEquals(List.of("", "", "a", "b"), result);
+    }
+
+    @Test
+    void split_setSize_padEmpty_end() {
+        // Given
+        final String input = "a.b";
+        final int setSize = 4;
+        final char delimiter = '.';
+        final boolean padEmptyAtStart = false;
+
+        // When
+        final List<String> result = StringUtils.split(input, delimiter, setSize, padEmptyAtStart);
+
+        // Then
+        assertEquals(List.of("a", "b", "", ""), result);
+    }
+
+    @Test
+    void split_setSize_noPadding() {
+        // Given
+        final String input = "a.b.c";
+        final int setSize = 3;
+        final char delimiter = '.';
+        final boolean padEmptyAtStart = false;
+
+        // When
+        final List<String> result = StringUtils.split(input, delimiter, setSize, padEmptyAtStart);
+
+        // Then
+        assertEquals(List.of("a", "b", "c"), result);
+    }
+
+    @Test
+    void splitArray_setSize_truncate() {
+        // Given
+        final String input = "a.b.c.d";
+        final int setSize = 2;
+        final char delimiter = '.';
+
+        // When
+        final IllegalArgumentException exception =
+                assertThrows(IllegalArgumentException.class, () -> StringUtils.splitArray(input, delimiter, setSize, false));
+
+        // Then
+        assertEquals("Could not parse string: 'a.b.c.d'; expected 2 parts, got: 4", exception.getMessage());
+    }
+
+    @Test
+    void splitArray_setSize_padEmpty_start() {
+        // Given
+        final String input = "a.b";
+        final int setSize = 4;
+        final char delimiter = '.';
+        final boolean padEmptyAtStart = true;
+
+        // When
+        final String[] result = StringUtils.splitArray(input, delimiter, setSize, padEmptyAtStart);
+
+        // Then
+        assertArrayEquals(new String[]{"", "", "a", "b"}, result);
+    }
+
+    @Test
+    void splitArray_setSize_padEmpty_end() {
+        // Given
+        final String input = "a.b";
+        final int setSize = 4;
+        final char delimiter = '.';
+        final boolean padEmptyAtStart = false;
+
+        // When
+        final String[] result = StringUtils.splitArray(input, delimiter, setSize, padEmptyAtStart);
+
+        // Then
+        assertArrayEquals(new String[]{"a", "b", "", ""}, result);
+    }
+
+    @Test
+    void splitArray_setSize_noPadding() {
+        // Given
+        final String input = "a.b.c";
+        final int setSize = 3;
+        final char delimiter = '.';
+        final boolean padEmptyAtStart = false;
+
+        // When
+        final String[] result = StringUtils.splitArray(input, delimiter, setSize, padEmptyAtStart);
+
+        // Then
+        assertArrayEquals(new String[]{"a", "b", "c"}, result);
     }
 }

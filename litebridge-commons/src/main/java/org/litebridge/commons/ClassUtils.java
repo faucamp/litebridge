@@ -208,6 +208,20 @@ public final class ClassUtils {
         }
     }
 
+    public static <DTO> DTO newInstance(final Class<DTO> dtoClass, final Constructor<DTO> constructor, final Object... args) {
+        try {
+            constructor.setAccessible(true);
+            return constructor.newInstance(args);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to instantiate class: " + dtoClass.getName() + " with constructor: " + constructor, ex);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <DTO> Constructor<DTO>[] getConstructors(final Class<DTO> dtoClass) {
+        return (Constructor<DTO>[]) getConcreteClass(dtoClass).getDeclaredConstructors();
+    }
+
     private static <T> Class<T> getConcreteClass(final Class<T> type) {
         if (Collection.class.isAssignableFrom(type)) {
             return (Class<T>) ArrayList.class;

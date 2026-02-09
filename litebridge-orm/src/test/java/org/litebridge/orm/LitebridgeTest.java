@@ -22,6 +22,7 @@ import org.litebridge.orm.persistence.TableRegistry;
 import org.mockito.ArgumentCaptor;
 
 import java.sql.Types;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -99,6 +100,7 @@ class LitebridgeTest {
         final ColumnMetaData columnMetaDataMyVar = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
         final TableMetaData tableMetaData = new TableMetaData(tableSpec, List.of("MY_ID"), List.of(columnMetaDataMyId, columnMetaDataMyVar));
         when(databaseProvider.getTableMetaData(tableSpec)).thenReturn(tableMetaData);
+        when(databaseProvider.insert(any(Insert.class))).thenReturn(new InsertResult(1, Collections.emptyList()));
 
         litebridge.register(TestDto.class, tableSpec);
         final TestDto testDto = new TestDto();

@@ -1,43 +1,25 @@
 package org.litebridge.orm;
 
-import org.litebridge.commons.ClassUtils;
-import org.litebridge.commons.CollectionUtils;
-import org.litebridge.commons.ObjectUtils;
-import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Aliased;
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
-import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Row;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelector;
-import org.litebridge.orm.api.spec.AbstractColumnSpecBuilder;
-import org.litebridge.orm.api.spec.ColumnMapping;
-import org.litebridge.orm.api.spec.ColumnSpec;
-import org.litebridge.orm.api.spec.FieldSpec;
-import org.litebridge.orm.api.spec.OneToMany;
+import org.litebridge.orm.api.spec.TableMapping;
 import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.api.sql.SqlFromClause;
 import org.litebridge.orm.api.sql.SqlSelector;
 import org.litebridge.orm.persistence.DefaultDtoMapper;
 import org.litebridge.orm.persistence.DtoAliasRegistry;
-import org.litebridge.orm.persistence.DtoIntrospector;
-import org.litebridge.orm.persistence.DtoMapper;
-import org.litebridge.orm.persistence.MappedOneToMany;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.PersistenceFacade;
+import org.litebridge.orm.persistence.TableMapper;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ChangeTracker;
-import org.litebridge.tracking.FieldAccessor;
 
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Primary entry point for Litebridge.
@@ -62,6 +44,7 @@ public class Litebridge {
     private final ChangeTracker changeTracker = new ChangeTracker();
     private final DatabaseProvider databaseProvider;
     private final PersistenceFacade persistenceFacade;
+    private final TableMapper tableMapper;
 
     /**
      * Constructs a Litebridge instance with the specified database provider.
@@ -73,6 +56,7 @@ public class Litebridge {
     public Litebridge(final DatabaseProvider databaseProvider) {
         this.databaseProvider = databaseProvider;
         this.persistenceFacade = new PersistenceFacade(tableRegistry, databaseProvider);
+        this.tableMapper = new TableMapper(databaseProvider, tableRegistry, changeTracker);
     }
 
     /**
@@ -85,12 +69,16 @@ public class Litebridge {
      * @throws SQLException if an error occurs during the mapping or registration process.
      */
     public void register(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
-        final OrmTable table = mapToTable(dtoClass, tableSpec);
+        final OrmTable table = tableMapper.mapToTable(dtoClass, tableSpec);
         tableRegistry.addTable(dtoClass, table);
 
         if (!table.getNestedDtoClasses().isEmpty()) {
             table.getNestedDtoClasses().forEach(nestedDtoClass -> tableRegistry.addTable(nestedDtoClass, table));
         }
+    }
+
+    public void register(final TableMapping tableMapping) throws SQLException {
+        register(tableMapping.dtoClass(), tableMapping.tableSpec());
     }
 
     /**
@@ -202,7 +190,12 @@ public class Litebridge {
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass) {
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoMapper dtoMapper = new DefaultDtoMapper(tableRegistry, databaseProvider.getTypeConverter(), dtoAliasRegistry);
+        return new DtoSelector<>(dtoClass, table, tableRegistry, databaseProvider, dtoAliasRegistry).select();
+    }
+
+    public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
+        final OrmTable table = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
+        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
         return new DtoSelector<>(dtoClass, table, tableRegistry, databaseProvider, dtoAliasRegistry).select();
     }
 
@@ -268,133 +261,5 @@ public class Litebridge {
     public <DTO> DTO toDto(final Row row, final Class<DTO> dtoClass) {
         return new DefaultDtoMapper(tableRegistry, databaseProvider.getTypeConverter(), new DtoAliasRegistry())
                 .toDto(row, dtoClass);
-    }
-
-    private OrmTable mapToTable(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
-        // Up-front validation
-        if (dtoClass == null) {
-            throw new IllegalArgumentException("DTO class cannot be null");
-        } else if (ClassUtils.isBasicType(dtoClass)) {
-            throw new IllegalArgumentException("Not a DTO: " + dtoClass.getName());
-        } else if (CollectionUtils.isEmpty(tableSpec.fieldColumnMap())) {
-            throw new IllegalArgumentException("No field-column map provided");
-        }
-
-        // Read the table metadata
-        final TableMetaData tableMetaData = databaseProvider.getTableMetaData(tableSpec);
-
-        final Map<FieldAccessor, MappedFieldTarget> columnMap = mapFields(dtoClass, tableMetaData, tableSpec.fieldColumnMap());
-        return new OrmTable(dtoClass, tableMetaData, columnMap, changeTracker);
-    }
-
-    private Map<FieldAccessor, MappedFieldTarget> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<FieldSpec, ColumnMapping> fieldColumnSpecMap) {
-        final Set<String> unmappedColumns = tableMetaData.columns().stream()
-                .map(ColumnMetaData::name)
-                .collect(Collectors.toSet());
-        final Map<FieldAccessor, MappedFieldTarget> mappedFields = new HashMap<>();
-
-        // Validate and formalise field mapping
-        fieldColumnSpecMap.forEach((fieldSpec, columnMapping) -> {
-            if (columnMapping instanceof AbstractColumnSpecBuilder columnSpecBuilder) {
-                final ColumnSpec columnSpec = columnSpecBuilder.build();
-                mapColumnSpec(columnSpec, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
-            } else if (columnMapping instanceof ColumnSpec columnSpec) {
-                mapColumnSpec(columnSpec, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
-            } else if (columnMapping instanceof OneToMany oneToMany) {
-                mapOneToMany(oneToMany, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
-            }
-        });
-
-        // Check for unmapped columns
-        if (!unmappedColumns.isEmpty()) {
-            // Check if any non-nullable columns are missing
-            final List<String> missingColumns = unmappedColumns.stream()
-                    .filter(columnName -> !tableMetaData.column(columnName).isNullable())
-                    .toList();
-
-            if (!missingColumns.isEmpty()) {
-                throw new IllegalArgumentException(String.format("Unmapped non-nullable columns for table '%s': %s; DTO class: '%s'", tableMetaData.name(), missingColumns, dtoClass.getName()));
-            }
-        }
-
-        return mappedFields;
-    }
-
-    private void mapColumnSpec(final ColumnSpec columnSpec,
-                               final FieldSpec fieldSpec,
-                               final Class<?> dtoClass,
-                               final TableMetaData tableMetaData,
-                               final Set<String> unmappedColumns,
-                               final Map<FieldAccessor, MappedFieldTarget> mappedFields) {
-        if (!tableMetaData.hasColumn(columnSpec.name())) {
-            throw new IllegalArgumentException(String.format("Column '%s', mapped by field spec '%s' of DTO '%s', does not exist in table: '%s'", columnSpec, fieldSpec, dtoClass, tableMetaData.name()));
-        }
-
-        if (!unmappedColumns.contains(columnSpec.name())) {
-            // Column is already mapped
-            final String conflictingFieldName = mappedFields.entrySet().stream()
-                    .filter(fieldColumnEntry -> fieldColumnEntry.getValue() instanceof ColumnMetaData)
-                    .filter(fieldColumnEntry -> ((ColumnMetaData) fieldColumnEntry.getValue()).name().equals(columnSpec.name()))
-                    .map(Map.Entry::getKey)
-                    .map(FieldAccessor::name)
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("Conflicting field for column '%s' not found; current field spec: '%s'".formatted(columnSpec, fieldSpec)));
-            throw new IllegalArgumentException(String.format("Column '%s' is already mapped by field '%s'", columnSpec, conflictingFieldName));
-        }
-
-        // Add field-column mapping
-        final FieldAccessor fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
-        final ColumnMetaData column = ObjectUtils.requireNonNull(tableMetaData.column(columnSpec.name()), "Column metadata not found: " + columnSpec.name());
-
-        if (columnSpec.isAutoIncrement()) {
-            column.setAutoIncrement(true);
-
-            if (!StringUtils.isBlank(columnSpec.sequence())) {
-                column.setSequence(columnSpec.sequence());
-            }
-        }
-
-        if (!ClassUtils.isBasicType(fieldAccessor.type())) {
-            // Check for self-referencing DTOs, then if we know how to persist the nested DTO
-            if (fieldAccessor.type() != dtoClass && !tableRegistry.containsTable(fieldAccessor.type())) {
-                // Cascading child DTO, but no table mapping exists
-                throw new IllegalArgumentException(String.format("Sub-DTO '%s' in field '%s' of DTO '%s' is not registered", fieldAccessor.type().getName(), fieldSpec.name(), dtoClass.getName()));
-            }
-
-            if (columnSpec.joinColumn() == null) {
-                throw new IllegalArgumentException(String.format("No \"join on\" field specified for sub-DTO '%s' in field '%s' of DTO '%s'", fieldAccessor.type().getName(), fieldSpec.name(), dtoClass.getName()));
-            }
-
-            column.setJoinColumn(columnSpec.joinColumn());
-        }
-
-        mappedFields.put(fieldAccessor, column);
-        unmappedColumns.remove(columnSpec.name());
-    }
-
-    private void mapOneToMany(final OneToMany oneToMany,
-                              final FieldSpec fieldSpec,
-                              final Class<?> dtoClass,
-                              final TableMetaData tableMetaData,
-                              final Set<String> unmappedColumns,
-                              final Map<FieldAccessor, MappedFieldTarget> mappedFields) {
-        // Verify we are dealing with a collection
-        final FieldAccessor fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
-
-        if (!Collection.class.isAssignableFrom(fieldAccessor.type())) {
-            throw new IllegalArgumentException(String.format("Field '%s' of DTO '%s' is not a collection; cannot apply reverse one-to-many mapping. Field type: %s", fieldAccessor.name(), dtoClass.getName(), fieldAccessor.type()));
-        }
-
-        // Get the generic type of the collection to detect the target DTO
-        final Class<?> targetDto = fieldAccessor.genericType();
-
-        if (ClassUtils.isBasicType(targetDto)) {
-            throw new IllegalArgumentException(String.format("Field '%s' of DTO '%s' is a collection of basic type '%s'; cannot apply reverse one-to-many mapping", fieldAccessor.name(), dtoClass.getName(), targetDto.getName()));
-        }
-
-        // Get the "mapped by" field from the target DTO of the collection wrapped by the field spec
-        final FieldAccessor mappeByField = DtoIntrospector.fieldAccessor(targetDto, new FieldSpec(oneToMany.mappedByField(), false));
-        final MappedOneToMany mappedOneToMany = new MappedOneToMany(mappeByField, fieldAccessor);
-        mappedFields.put(fieldAccessor, mappedOneToMany);
     }
 }

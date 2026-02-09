@@ -45,8 +45,8 @@ class DtoJoinClauseTest {
         final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
         dtoSelector.select();
-        final JoinSpec joinSpec = new DtoJoinSpec(TestDto.class, tableMetaData);
-        final DtoJoinClause<TestDto> dtoJoinClause = new DtoJoinClause<>(TestDto.class, joinSpec, dtoSelector);
+        final JoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable);
+        final DtoJoinClause<TestDto> dtoJoinClause = new DtoJoinClause<>(joinSpec, dtoSelector);
 
         // When
         final DtoJoinConditionClauseTerminal<TestDto> result = dtoJoinClause.on("myVar");

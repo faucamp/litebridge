@@ -10,7 +10,6 @@ import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.persistence.DtoAliasRegistry;
 import org.litebridge.orm.persistence.MappedOneToMany;
 import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 
@@ -21,22 +20,17 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         DtoJoinConditionClauseTerminal<DTO>,
         DtoSelectSpec> {
 
-    private final TableRegistry tableRegistry;
     private final OrmTable table;
     private final DtoAliasRegistry dtoAliasRegistry;
-    /**
-     * The target DTO class to be joined.
-     */
-    private final Class<?> joinDtoClass;
     private final DtoSelectSpec selectSpec;
+    private final DtoJoinSpec joinSpec;
 
-    public DtoJoinClause(final Class<?> joinDtoClass, final JoinSpec joinSpec, final DtoSelector<DTO> delegate) {
+    public DtoJoinClause(final JoinSpec joinSpec, final DtoSelector<DTO> delegate) {
         super(joinSpec, delegate);
         table = delegate.table();
-        tableRegistry = delegate.tableRegistry();
-        this.joinDtoClass = joinDtoClass;
         this.dtoAliasRegistry = delegate.dtoAliasRegistry();
         this.selectSpec = delegate.selectSpec();
+        this.joinSpec = (DtoJoinSpec) joinSpec;
     }
 
     /**
@@ -53,8 +47,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         if (table.hasOneToManyMapping(fieldAccessor)) {
             // Inverse join
             final MappedOneToMany mappedOneToMany = table.getOneToManyMappingForField(fieldAccessor);
-            final OrmTable joinTable = tableRegistry.getTableOrThrow(mappedOneToMany.mappedByField().dtoClass());
-            return joinOn(joinTable, mappedOneToMany.mappedByField());
+            return joinOn(joinSpec.dtoTable(), mappedOneToMany.mappedByField());
         } else {
             // Regular join
             return joinOn(table, fieldAccessor);
@@ -68,7 +61,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
             throw new IllegalStateException("No join column specified for column '%s' mapped to field '%s'".formatted(column.name(), field));
         }
 
-        final OrmTable joinTable = tableRegistry.getTableOrThrow(joinDtoClass);
+        final OrmTable joinTable = joinSpec.dtoTable();
         final ColumnMetaData targetColumnMetaData = joinTable.getColumn(column.getJoinColumn());
         final String joinAlias = dtoAliasRegistry.newAlias(joinTable.getMetaData());
         final List<DtoSelectSpec.FieldColumn> joinFieldColumns = joinTable.getMetaData().columns().stream()
@@ -84,7 +77,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
 
         // Create JOIN clause
         joinSpec.table().as(joinAlias);
-        ((DtoJoinSpec) joinSpec).setFieldColumns(joinFieldColumns);
+        joinSpec.setFieldColumns(joinFieldColumns);
 
         final ColumnMetaData joinColumn = new ColumnMetaData(column);
         joinColumn.table().as(selectSpec.getTable().alias());

@@ -45,8 +45,19 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     @Override
     public DtoJoinClause<DTO> join(final Class<?> dtoClass) {
-        final Table joinTable = tableRegistry.getTableOrThrow(dtoClass).getMetaData();
-        return new DtoJoinClause<>(dtoClass, selectSpec.newJoinSpec(dtoClass, joinTable), (DtoSelector<DTO>) delegate);
+        final OrmTable joinTable;
+
+        // First check for inline/contextually-registered tables
+        final OrmTable contextScopedTable = table.getContextTableRegistry().getTable(dtoClass);
+
+        if (contextScopedTable != null) {
+            joinTable = contextScopedTable;
+        } else {
+            joinTable = tableRegistry.getTableOrThrow(dtoClass);
+        }
+
+        final DtoJoinSpec joinSpec = selectSpec.newJoinSpec(dtoClass, joinTable);
+        return new DtoJoinClause<>(joinSpec, (DtoSelector<DTO>) delegate);
     }
 
     @Override

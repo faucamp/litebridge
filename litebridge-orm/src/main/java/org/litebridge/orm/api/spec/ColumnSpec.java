@@ -22,5 +22,14 @@ public record ColumnSpec(
         @Nullable
         String sequence,
         @Nullable
-        String joinColumn) implements ColumnMapping {
+        String joinColumn,
+        @Nullable
+        TableMapping mappedTable) implements ColumnMapping {
+
+    public ColumnSpec(final String name,
+                      final boolean isAutoIncrement,
+                      final @Nullable String sequence,
+                      final @Nullable String joinColumn) {
+        this(name, isAutoIncrement, sequence, joinColumn, null);
+    }
 }

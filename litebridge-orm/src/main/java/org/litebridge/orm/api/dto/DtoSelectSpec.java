@@ -5,23 +5,34 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class DtoSelectSpec extends SelectSpec {
+public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
 
     private final Class<?> dtoClass;
+    private final OrmTable dtoTable;
     @Nullable
     private String dtoAlias;
     @Nullable
     private List<FieldColumn> fieldColumns;
 
-    public DtoSelectSpec(final Class<?> dtoClass) {
+    public DtoSelectSpec(final Class<?> dtoClass, final OrmTable dtoTable) {
         this.dtoClass = dtoClass;
-        setTable(table);
+        this.dtoTable = dtoTable;
+    }
+
+    public Class<?> dtoClass() {
+        return dtoClass;
+    }
+
+    @Override
+    public OrmTable dtoTable() {
+        return dtoTable;
     }
 
     public @Nullable String getDtoAlias() {
@@ -30,10 +41,6 @@ public class DtoSelectSpec extends SelectSpec {
 
     public void setDtoAlias(final @Nullable String dtoAlias) {
         this.dtoAlias = dtoAlias;
-    }
-
-    public Class<?> dtoClass() {
-        return dtoClass;
     }
 
     public List<FieldColumn> getFieldColumns() {
@@ -80,7 +87,7 @@ public class DtoSelectSpec extends SelectSpec {
         throw methodNotSupported("setFieldColumns(List<FieldColumn> fieldColumns)");
     }
 
-    public DtoJoinSpec newJoinSpec(final Class<?> dtoClass, final Table table) {
+    public DtoJoinSpec newJoinSpec(final Class<?> dtoClass, final OrmTable table) {
         if (this.joins == null) {
             joins = new ArrayList<>();
         }

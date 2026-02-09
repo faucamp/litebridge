@@ -7,7 +7,6 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.dto.DtoJoinSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
-import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.tracking.FieldAccessor;
 import org.litebridge.tracking.FieldAccessorChain;
 import org.slf4j.Logger;
@@ -27,18 +26,15 @@ import java.util.stream.Stream;
 public class SelectSpecDtoMapper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SelectSpecDtoMapper.class);
-    private final TableRegistry tableRegistry;
     private final PartiallyConstructedDtoCache dtoCache;
     private final TypeConverter typeConverter;
     private final DtoSelectSpec selectSpec;
 
 
     public SelectSpecDtoMapper(final DtoSelectSpec dtoSelectSpec,
-                               final TableRegistry tableRegistry,
                                final TypeConverter typeConverter) {
         this.dtoCache = new PartiallyConstructedDtoCache();
         this.typeConverter = typeConverter;
-        this.tableRegistry = tableRegistry;
         this.selectSpec = dtoSelectSpec;
     }
 
@@ -85,7 +81,7 @@ public class SelectSpecDtoMapper {
             }
         }
 
-        updateOneToManyCollectionMappings(partialDto.dto());
+        updateOneToManyCollectionMappings(partialDto);
         resolvedDtos.add(partialDto);
         return partialDto.dto();
     }
@@ -99,9 +95,7 @@ public class SelectSpecDtoMapper {
     }
 
     private PartiallyConstructedDto toDto(final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
-        final Class<?> dtoClass = dtoData.dtoClass();
-        final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
-        return toDto(dtoClass, table, dtoData, fieldColumns);
+        return toDto(dtoData.dtoClass(), dtoData.spec().dtoTable(), dtoData, fieldColumns);
     }
 
     private PartiallyConstructedDto toDto(final Class<?> dtoClass, final OrmTable table, final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
@@ -119,14 +113,7 @@ public class SelectSpecDtoMapper {
     private PartiallyConstructedDto createDto(final Class<?> dtoClass, final OrmTable table, final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
         final List<Object> primaryKey = dtoData.primaryKey();
         final Row row = dtoData.row();
-        final Object dto;
-
-        try {
-            dto = ClassUtils.newInstance(dtoClass);
-        } catch (final Exception ex) {
-            throw new IllegalStateException("Failed to instantiate DTO: " + dtoClass, ex);
-        }
-
+        final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues = new ArrayList<>(row.size());
         final List<DtoDependency> dependencies = new ArrayList<>();
 
         fieldColumns.forEach(fieldColumn -> {
@@ -159,13 +146,13 @@ public class SelectSpecDtoMapper {
                 // Nested DTO built up from the same table
                 //TODO: may need to filter the field columns; perhaps during pre-processing (which would require explicit support for this scenario, kinda lke here)
                 final Object nestedDto = toDto(field.type(), table, dtoData, fieldColumns).dto();
-                field.set(dto, nestedDto);
+                fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, nestedDto));
             } else if (ClassUtils.isBasicType(field.type())) {
                 // Standard column: find the value, convert it to target DTO's field type, and set the field
                 final Row.RowColumn rowColumn = row.columnForAlias(fieldColumn.column().alias())
                         .orElseThrow(() -> new IllegalStateException("No column found for alias '%s' in row: %s".formatted(fieldColumn.column().alias(), row)));
                 final Object convertedValue = typeConverter.convert(rowColumn.value(), field.type());
-                field.set(dto, convertedValue);
+                fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, convertedValue));
             } else {
                 // Related DTO: note dependency and allow outer process populate these
                 final Row.RowColumn rowColumn = row.columnForAlias(fieldColumn.column().alias())
@@ -176,11 +163,19 @@ public class SelectSpecDtoMapper {
             }
         });
 
-        return new PartiallyConstructedDto(dto, dependencies);
+        final DtoConstructor.ConstructionResult<?> constructionResult = DtoConstructor.newInstance(dtoClass, fieldAccessorValues);
+        final Object dto = constructionResult.dto();
+
+        if (constructionResult.defaultConstructorUsed()) {
+            // Set the fields via field accessors since the default constructor was used
+            fieldAccessorValues.forEach(fieldAccessorValue -> fieldAccessorValue.field().set(dto, fieldAccessorValue.value()));
+        }
+
+        return new PartiallyConstructedDto(constructionResult.dto(), table, dependencies);
     }
 
     private List<DtoBlueprint> createDtoBlueprints(final List<Row> rows) {
-        final OrmTable table = tableRegistry.getTable(selectSpec.getTable());
+        final OrmTable table = selectSpec.dtoTable();
 
         // Group rows by the DTO table's primary key value for DTO assembly
         final List<ColumnMetaData> pkColumns = table.getMetaData().primaryKey();
@@ -206,25 +201,25 @@ public class SelectSpecDtoMapper {
             final DtoBlueprint blueprint = new DtoBlueprint(selectSpec, entry.getKey(), rowGroup.getFirst());
 
             if (hasJoins) {
-                for (final JoinSpec joinSpec : selectSpec.getJoins()) {
-                    final DtoJoinSpec dtoJoinSpec = (DtoJoinSpec) joinSpec;
-                    final OrmTable joinTable = tableRegistry.getTable(dtoJoinSpec.table());
-                    final List<ColumnMetaData> joinPkColumns = joinTable.getMetaData().primaryKey();
-                    final Map<List<Object>, Row> relatedDtoRows = new LinkedHashMap<>();
+                selectSpec.getJoins().stream()
+                        .map(DtoJoinSpec.class::cast)
+                        .forEach(dtoJoinSpec -> {
+                            final List<ColumnMetaData> joinPkColumns = dtoJoinSpec.dtoTable().getMetaData().primaryKey();
+                            final Map<List<Object>, Row> relatedDtoRows = new LinkedHashMap<>();
 
-                    for (final Row row : rowGroup) {
-                        final List<Object> joinPkValues = joinPkColumns.stream()
-                                .map(pkColumn -> row.column(pkColumn.name())
-                                        .orElseThrow(() -> new IllegalStateException("No primary key column found for join table '%s' in row: %s".formatted(table.getMetaData().name(), row)))
-                                        .value())
-                                .toList();
+                            for (final Row row : rowGroup) {
+                                final List<Object> joinPkValues = joinPkColumns.stream()
+                                        .map(pkColumn -> row.column(pkColumn.name())
+                                                .orElseThrow(() -> new IllegalStateException("No primary key column found for join table '%s' in row: %s".formatted(table.getMetaData().name(), row)))
+                                                .value())
+                                        .toList();
 
-                        relatedDtoRows.computeIfAbsent(joinPkValues, k -> row);
-                    }
+                                relatedDtoRows.computeIfAbsent(joinPkValues, k -> row);
+                            }
 
-                    relatedDtoRows.forEach(
-                            (pkValues, row) -> blueprint.addJoinedDtoData(dtoJoinSpec, pkValues, row));
-                }
+                            relatedDtoRows.forEach(
+                                    (pkValues, row) -> blueprint.addJoinedDtoData(dtoJoinSpec, pkValues, row));
+                        });
             }
 
             blueprints.add(blueprint);
@@ -233,8 +228,9 @@ public class SelectSpecDtoMapper {
         return blueprints;
     }
 
-    private void updateOneToManyCollectionMappings(final Object dto) {
-        final OrmTable table = tableRegistry.getTable(dto.getClass());
+    private void updateOneToManyCollectionMappings(final PartiallyConstructedDto partialDto) {
+        final Object dto = partialDto.dto();
+        final OrmTable table = partialDto.dtoTable();
 
         final List<MappedOneToMany> mappedOneToManyList = table.getOneToManyMappings();
 
@@ -263,7 +259,7 @@ public class SelectSpecDtoMapper {
         });
     }
 
-    private record PartiallyConstructedDto(Object dto, List<DtoDependency> dependencies) {
+    private record PartiallyConstructedDto(Object dto, OrmTable dtoTable, List<DtoDependency> dependencies) {
     }
 
     private record DtoDependency(FieldAccessor field, Class<?> targetDtoClass, List<Object> targetPrimaryKey) {

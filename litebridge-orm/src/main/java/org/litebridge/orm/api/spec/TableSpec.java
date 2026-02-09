@@ -8,8 +8,6 @@ import org.litebridge.db.spi.Table;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Specification of a database tab, used to map DTO instances to to target tables.
@@ -35,6 +33,14 @@ public final class TableSpec extends Table {
         this.fieldColumnMap = Collections.unmodifiableMap(CollectionUtils.requireNonEmpty(fieldColumnMap, "Field-column map cannot be null"));
     }
 
+    public TableSpec(final String name, final Map<FieldSpec, ColumnMapping> fieldColumnMap) {
+        this(StringUtils.splitArray(name, '.', 3, true), fieldColumnMap);
+    }
+
+    private TableSpec(final String[] catalogSchemaTable, final Map<FieldSpec, ColumnMapping> fieldColumnMap) {
+        this(catalogSchemaTable[0], catalogSchemaTable[1], catalogSchemaTable[2], fieldColumnMap);
+    }
+
     /**
      * Field name to {@link ColumnSpec} map; key is field name, value is the column definition
      *
@@ -53,6 +59,6 @@ public final class TableSpec extends Table {
     }
 
     public static TableSpec t(final String table, final Map<FieldSpec, ColumnMapping> fieldColumnSpecMap) {
-        return new TableSpec(null, null, table, fieldColumnSpecMap);
+        return new TableSpec(table, fieldColumnSpecMap);
     }
 }

@@ -83,6 +83,15 @@ public final class Row implements Result {
                 .findFirst();
     }
 
+    /**
+     * Returns the total number of columns in the current row.
+     *
+     * @return the size of the column collection for the row
+     */
+    public int size() {
+        return columns.size();
+    }
+
     @Override
     public String toString() {
         final StringJoiner sj = new StringJoiner(", ", "{", "}");

@@ -1,6 +1,7 @@
 package org.litebridge.db.spi;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.StringUtils;
 
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -30,6 +31,14 @@ public class Table extends Aliased {
         super(name, alias);
         this.catalog = catalog;
         this.schema = schema;
+    }
+
+    public Table(final String name, final @Nullable String alias) {
+        this(StringUtils.splitArray(name, '.', 3, true), alias);
+    }
+
+    private Table(final String[] catalogSchemaTable, final @Nullable String alias) {
+        this(catalogSchemaTable[0], catalogSchemaTable[1], catalogSchemaTable[2], alias);
     }
 
     public Table(final Table other) {

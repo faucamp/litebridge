@@ -22,12 +22,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
-import java.util.function.Supplier;
 
 /**
  * The PersistenceFacade class provides an abstraction layer for managing the persistence
@@ -43,12 +47,12 @@ import java.util.function.Supplier;
 public class PersistenceFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PersistenceFacade.class);
-    private final TableRegistry tableRegistry;
+    private final TableProvider tableProvider;
     private final DatabaseProvider databaseProvider;
 
     public PersistenceFacade(final TableRegistry tableRegistry,
                              final DatabaseProvider databaseProvider) {
-        this.tableRegistry = tableRegistry;
+        this.tableProvider = new TableProvider(tableRegistry);
         this.databaseProvider = databaseProvider;
     }
 
@@ -80,17 +84,17 @@ public class PersistenceFacade {
      */
     public <DTO> void save(DTO dto) throws SQLException {
         final AbstractStatementBuilder<?> statementBuilder = createStatementBuilder(dto);
-        final CompositeUpdateResult compositeUpdateResult = executeUpdateStatement(dto, statementBuilder);
+        final CompositeUpdateResult compositeUpdateResult = executeUpdateStatement(dto, null, statementBuilder);
 
         compositeUpdateResult.results().forEach(dtoUpdateResult -> {
-            updateOneToManyReverseMappings(dtoUpdateResult.dto(), compositeUpdateResult);
+            updateOneToManyReverseMappings(dtoUpdateResult, compositeUpdateResult);
 
-            if (dtoUpdateResult.updateResult() instanceof InsertResult insertResult
+            if (dtoUpdateResult.getUpdateResult() instanceof InsertResult insertResult
                     && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
                 // TODO: composite PK support
                 updateDtoPrimaryKey(dto, insertResult.generatedKeys().getFirst());
             } else {
-                tableRegistry.getTableOrThrow(dtoUpdateResult.dto().getClass()).syncPersistedDto(dtoUpdateResult.dto());
+                tableProvider.getTableOrThrow(dtoUpdateResult.getDto().getClass()).syncPersistedDto(dtoUpdateResult.getDto());
             }
         });
     }
@@ -106,19 +110,19 @@ public class PersistenceFacade {
      * @throws SQLException if a database access error occurs during the insertion process.
      */
     public void insert(final Object dto) throws SQLException {
-        final InsertBuilder statementBuilder = createInsertBuilder(dto, tableRegistry.getTableOrThrow(dto.getClass()));
-        final CompositeUpdateResult compositeUpdateResult = executeUpdateStatement(dto, statementBuilder);
+        final InsertBuilder statementBuilder = createInsertBuilder(dto, tableProvider.getTableOrThrow(dto.getClass()));
+        final CompositeUpdateResult compositeUpdateResult = executeUpdateStatement(dto, null, statementBuilder);
 
         compositeUpdateResult.results().forEach(dtoUpdateResult -> {
-            updateOneToManyReverseMappings(dto, compositeUpdateResult);
+            updateOneToManyReverseMappings(dtoUpdateResult, compositeUpdateResult);
 
-            if (dtoUpdateResult.updateResult() instanceof InsertResult insertResult) {
+            if (dtoUpdateResult.getUpdateResult() instanceof InsertResult insertResult) {
                 if (!CollectionUtils.isEmpty(insertResult.generatedKeys())) {
                     // TODO: composite PK support
-                    updateDtoPrimaryKey(dtoUpdateResult.dto(), insertResult.generatedKeys().getFirst());
+                    updateDtoPrimaryKey(dtoUpdateResult.getDto(), insertResult.generatedKeys().getFirst());
                 }
             } else {
-                tableRegistry.getTableOrThrow(dtoUpdateResult.dto().getClass()).syncPersistedDto(dtoUpdateResult.dto());
+                tableProvider.getTableOrThrow(dtoUpdateResult.getDto().getClass()).syncPersistedDto(dtoUpdateResult.getDto());
             }
         });
     }
@@ -135,8 +139,8 @@ public class PersistenceFacade {
      * @throws SQLException if a database access error occurs during the update process.
      */
     public void update(final Object dto) throws SQLException {
-        final UpdateBuilder statementBuilder = createUpdateBuilder(dto, tableRegistry.getTableOrThrow(dto.getClass()));
-        executeUpdateStatement(dto, statementBuilder);
+        final UpdateBuilder statementBuilder = createUpdateBuilder(dto, tableProvider.getTableOrThrow(dto.getClass()));
+        executeUpdateStatement(dto, null, statementBuilder);
     }
 
     private InsertBuilder createInsertBuilder(final Object dto, final OrmTable table) {
@@ -191,10 +195,11 @@ public class PersistenceFacade {
             if (basicType) {
                 columnValues.add(new ColumnValue(column, value));
             } else {
-                // Dealing with an embedded DTO
-                final OrmTable embeddedDtoTable = tableRegistry.getTableOrThrow(value.getClass());
+                // Dealing with an embedded DTO - add the context to the table provider
+                tableProvider.pushContext(table.getContextTableRegistry());
+                final OrmTable nestedDtoTable = tableProvider.getTableOrThrow(value.getClass());
 
-                if (!embeddedDtoTable.isPersistedDto(value)) {
+                if (!nestedDtoTable.isPersistedDto(value)) {
                     // Cascade save to the embedded DTO
                     final PipedStatement existingStatement = statementChain.getDependency(value);
 
@@ -203,7 +208,7 @@ public class PersistenceFacade {
 
                         // Check if the nested DTO's PK is set
                         // TODO: composite PK support
-                        final FieldAccessor embeddedDtoPkAccessor = embeddedDtoTable.getFieldForColumnName(embeddedDtoTable.getMetaData().primaryKey().getFirst().name());
+                        final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(nestedDtoTable.getMetaData().primaryKey().getFirst().name());
                         final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
 
                         if (embeddedDtoPkValue == null) {
@@ -224,13 +229,13 @@ public class PersistenceFacade {
                             statementChain.addDependency(value, new PipedStatement(dependencyStatementBuilder, value));
                         }
 
-
+                        tableProvider.popContext();
                     }
                 } else {
                     // Get the primary key
-                    final List<ColumnMetaData> embeddedDtoPk = embeddedDtoTable.getMetaData().primaryKey();
+                    final List<ColumnMetaData> embeddedDtoPk = nestedDtoTable.getMetaData().primaryKey();
                     // TODO: composite PK support
-                    final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(embeddedDtoPk.get(0).name());
+                    final FieldAccessor field = nestedDtoTable.getFieldForColumnName(embeddedDtoPk.get(0).name());
                     final Object pkValue = field.get(value);
                     columnValues.add(new ColumnValue(column, pkValue));
                 }
@@ -262,7 +267,7 @@ public class PersistenceFacade {
     }
 
     private void updateDtoPrimaryKey(final Object dto, final Object generatedKey) {
-        final OrmTable embeddedDtoTable = tableRegistry.getTableOrThrow(dto.getClass());
+        final OrmTable embeddedDtoTable = tableProvider.getTableOrThrow(dto.getClass());
         final List<ColumnMetaData> embeddedDtoPk = embeddedDtoTable.getMetaData().primaryKey();
         // TODO: composite PK support
         final ColumnMetaData pkColumn = embeddedDtoPk.get(0);
@@ -272,17 +277,14 @@ public class PersistenceFacade {
         embeddedDtoTable.syncPersistedDto(dto);
     }
 
-    private void updateOneToManyReverseMappings(final Object dto, final DtoUpdateResult dtoUpdateResult) {
-        updateOneToManyReverseMappings(dto, () -> List.of(dtoUpdateResult));
-    }
-
-    private void updateOneToManyReverseMappings(final Object dto, final CompositeUpdateResult compositeUpdateResult) {
-        updateOneToManyReverseMappings(dto, compositeUpdateResult::results);
-    }
 
 
-    private void updateOneToManyReverseMappings(final Object dto, final Supplier<List<DtoUpdateResult>> dtoUpdateResultSupplier) {
-        final OrmTable table = tableRegistry.getTableOrThrow(dto.getClass());
+
+    private void updateOneToManyReverseMappings(final DtoUpdateResult dtoUpdateResult, final CompositeUpdateResult compositeUpdateResult) {
+        tableProvider.pushContext(dtoUpdateResult, new HashSet<>());
+        final Object dto = dtoUpdateResult.getDto();
+
+        final OrmTable table = tableProvider.getTableOrThrow(dto.getClass());
         final List<MappedOneToMany> mappedOneToManyList = table.getOneToManyMappings();
 
         if (CollectionUtils.isEmpty(mappedOneToManyList)) {
@@ -304,13 +306,13 @@ public class PersistenceFacade {
                 reverseMappingCollection.set(dto, currentCollection);
             }
 
-            dtoUpdateResultSupplier.get().forEach(dtoUpdateResult -> {
-                if (dtoUpdateResult.dto().getClass() == reverseMappingCollection.genericType()) {
+            compositeUpdateResult.results().forEach(updateResult -> {
+                if (updateResult.getDto().getClass() == reverseMappingCollection.genericType()) {
                     // Matching collection class - add the updated value to the collection if necessary
                     //TODO: support for multiple collections of the same type in the parent DTO
-                    if (!currentCollection.contains(dtoUpdateResult.dto())) {
-                        LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", mappedOneToMany.collection().name(), dtoUpdateResult.dto());
-                        currentCollection.add(dtoUpdateResult.dto());
+                    if (!currentCollection.contains(updateResult.getDto())) {
+                        LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", mappedOneToMany.collection().name(), updateResult.getDto());
+                        currentCollection.add(updateResult.getDto());
                     }
                 }
             });
@@ -318,7 +320,7 @@ public class PersistenceFacade {
     }
 
     private AbstractStatementBuilder<?> createStatementBuilder(final Object dto) {
-        final OrmTable table = tableRegistry.getTableOrThrow(dto.getClass());
+        final OrmTable table = tableProvider.getTableOrThrow(dto.getClass());
 
         if (table.isPersistedDto(dto)) {
             return createUpdateBuilder(dto, table);
@@ -340,14 +342,15 @@ public class PersistenceFacade {
      * including the number of rows affected
      * @throws SQLException if a database access error occurs during statement execution
      */
-    private CompositeUpdateResult executeUpdateStatement(final Object dto, final AbstractStatementBuilder<?> statementBuilder) throws SQLException {
+    private CompositeUpdateResult executeUpdateStatement(final Object dto, final @Nullable DtoUpdateResult parentResult, final AbstractStatementBuilder<?> statementBuilder) throws SQLException {
         final CompositeUpdateResult result = new CompositeUpdateResult();
+        final DtoUpdateResult dtoUpdateResult = new DtoUpdateResult(dto, parentResult);
 
         for (Map.Entry<Object, PipedStatement> entry : statementBuilder.statementChain().getDependencies().entrySet()) {
             final PipedStatement pipedStatement = entry.getValue();
-            final CompositeUpdateResult dependencyResult = executeUpdateStatement(pipedStatement.dto(), pipedStatement.statementBuilder());
+            final CompositeUpdateResult dependencyResult = executeUpdateStatement(pipedStatement.dto(), dtoUpdateResult, pipedStatement.statementBuilder());
             result.merge(dependencyResult);
-            pipedStatement.valuePipe().accept(dependencyResult.primary().updateResult());
+            pipedStatement.valuePipe().accept(dependencyResult.primary().getUpdateResult());
         }
 
         final UpdateStatement updateStatement;
@@ -357,17 +360,75 @@ public class PersistenceFacade {
         } catch (final IllegalArgumentException ex) {
             // No columns to update
             if (statementBuilder instanceof InsertBuilder) {
-                return result.add(new DtoUpdateResult(dto, new InsertResult(0)));
+                dtoUpdateResult.setUpdateResult(new InsertResult(0));
             } else {
-                return result.add(new DtoUpdateResult(dto, new UpdateResult(0)));
+                dtoUpdateResult.setUpdateResult(new UpdateResult(0));
             }
+
+            return result.add(dtoUpdateResult);
         }
 
         if (updateStatement instanceof Insert insert) {
-            return result.add(new DtoUpdateResult(dto, databaseProvider.insert(insert)));
+            dtoUpdateResult.setUpdateResult(databaseProvider.insert(insert));
         } else {
             final Update update = (Update) updateStatement;
-            return result.add(new DtoUpdateResult(dto, databaseProvider.update(update)));
+            dtoUpdateResult.setUpdateResult(databaseProvider.update(update));
+        }
+
+        return result.add(dtoUpdateResult);
+    }
+
+    private static class TableProvider {
+
+        private Deque<TableRegistry> contextStack = new ArrayDeque<>();
+
+        private TableProvider(final TableRegistry rootTableRegistry) {
+            contextStack.push(rootTableRegistry);
+        }
+
+        public void pushContext(final TableRegistry tableRegistry) {
+            contextStack.push(tableRegistry);
+        }
+
+        private void pushContext(final DtoUpdateResult dtoUpdateResult, final Set<DtoUpdateResult> visitedResults) {
+            if (visitedResults.contains(dtoUpdateResult)) {
+                return;
+            }
+
+            visitedResults.add(dtoUpdateResult);
+
+            if (dtoUpdateResult.getParentResult() != null) {
+                pushContext(dtoUpdateResult.getParentResult(), visitedResults);
+            }
+
+            final OrmTable table = getTableOrThrow(dtoUpdateResult.getDto().getClass());
+            pushContext(table.getContextTableRegistry());
+        }
+
+        public void popContext() {
+            contextStack.pop();
+        }
+
+        public OrmTable getTableOrThrow(final Class<?> dtoClass) {
+            final Iterator<TableRegistry> iterator = contextStack.iterator();
+
+            while (iterator.hasNext()) {
+                final TableRegistry tableRegistry = iterator.next();
+                final OrmTable table;
+
+                if (iterator.hasNext()) {
+                    table = tableRegistry.getTable(dtoClass);
+                } else {
+                    // Root table registry - if not found, throw an exception
+                    table = tableRegistry.getTableOrThrow(dtoClass);
+                }
+
+                if (table != null) {
+                    return table;
+                }
+            }
+
+            throw new IllegalArgumentException("No table found for DTO class: " + dtoClass);
         }
     }
 }

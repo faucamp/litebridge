@@ -1,6 +1,7 @@
 package org.litebridge.orm.persistence;
 
 import org.litebridge.db.spi.Row;
+import org.litebridge.orm.api.dto.DtoDataSpec;
 import org.litebridge.orm.api.dto.DtoJoinSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 
@@ -28,7 +29,7 @@ public class DtoBlueprint {
         joinedDtoData.add(new JoinDtoData(dtoJoinSpec, primaryKey, dtoRow));
     }
 
-    public static abstract class DtoData<S> {
+    public static abstract class DtoData<S extends DtoDataSpec> {
         protected S spec;
         private final List<Object> primaryKey;
         private final Row row;
