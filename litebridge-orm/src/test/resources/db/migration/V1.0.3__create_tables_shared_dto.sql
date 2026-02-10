@@ -1,5 +1,7 @@
 -- Tables for test where a DTO is shared between two other DTOs,
 -- and the shared DTO is persisted to different tables as a result
+CREATE SEQUENCE LB.APPLICATION_SEQ START WITH 1 MAXVALUE 999 INCREMENT BY 1;
+CREATE SEQUENCE LB.SERVER_SEQ START WITH 1 MAXVALUE 999 INCREMENT BY 1;
 
 -- Status associated with an application instance
 CREATE TABLE LB.APPLICATION_STATUS
