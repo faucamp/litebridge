@@ -1,6 +1,6 @@
 package org.litebridge.orm.api.spec;
 
-public sealed interface ColumnMapping permits ColumnSpec, ColumnSpecBuilder, OneToMany {
+public sealed interface ColumnMapping permits ColumnSpec, ColumnSpecBuilder, OneToMany, ManyToMany {
 
     /**
      * Shortcut for {@link #column(String)}.
@@ -23,7 +23,11 @@ public sealed interface ColumnMapping permits ColumnSpec, ColumnSpecBuilder, One
         return new ColumnSpecBuilderImpl(column);
     }
 
-    static OneToMany oneToMany(final String mappedByField) {
+    static OneToMany oneToMany(final FieldSpec mappedByField) {
         return new OneToMany(mappedByField);
+    }
+
+    static ManyToMany manyToMany(final String joinTable, final String joinColumn, final String inverseJoinColumn) {
+        return new ManyToMany(joinTable, joinColumn, inverseJoinColumn);
     }
 }

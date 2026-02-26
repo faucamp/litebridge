@@ -9,8 +9,7 @@ import org.litebridge.orm.api.spec.TableMapping;
 import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.api.sql.SqlFromClause;
 import org.litebridge.orm.api.sql.SqlSelector;
-import org.litebridge.orm.persistence.DefaultDtoMapper;
-import org.litebridge.orm.persistence.DtoAliasRegistry;
+import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.orm.persistence.TableMapper;
@@ -18,6 +17,7 @@ import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ChangeTracker;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -68,9 +68,10 @@ public class Litebridge {
      * @param tableSpec the table specification defining the mapping of the DTO class to the database table; must not be null.
      * @throws SQLException if an error occurs during the mapping or registration process.
      */
-    public void register(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
+    public void register(final Class<?> dtoClass, final TableSpec tableSpec, final Class<?>... dtoInterfaces) throws SQLException {
         final OrmTable table = tableMapper.mapToTable(dtoClass, tableSpec);
         tableRegistry.addTable(dtoClass, table);
+        Arrays.stream(dtoInterfaces).forEach(dtoInterface -> tableRegistry.addTable(dtoInterface, table));
 
         if (!table.getNestedDtoClasses().isEmpty()) {
             table.getNestedDtoClasses().forEach(nestedDtoClass -> tableRegistry.addTable(nestedDtoClass, table));
@@ -184,15 +185,15 @@ public class Litebridge {
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass) {
+        final AliasGenerator aliasGenerator = new AliasGenerator();
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        return new DtoSelector<>(dtoClass, table, tableRegistry, databaseProvider, dtoAliasRegistry).select();
+        return new DtoSelector<>(dtoClass, table, tableRegistry, databaseProvider, aliasGenerator).select();
     }
 
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
         final OrmTable table = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        return new DtoSelector<>(dtoClass, table, tableRegistry, databaseProvider, dtoAliasRegistry).select();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
+        return new DtoSelector<>(dtoClass, table, tableRegistry, databaseProvider, aliasGenerator).select();
     }
 
     /**
@@ -255,7 +256,6 @@ public class Litebridge {
      * @throws IllegalArgumentException if the row or dtoClass is null, or if mapping fails due to type mismatches or invalid configurations.
      */
     public <DTO> DTO toDto(final Row row, final Class<DTO> dtoClass) {
-        return new DefaultDtoMapper(tableRegistry, databaseProvider.getTypeConverter(), new DtoAliasRegistry())
-                .toDto(row, dtoClass);
+        throw new UnsupportedOperationException("Regression");
     }
 }

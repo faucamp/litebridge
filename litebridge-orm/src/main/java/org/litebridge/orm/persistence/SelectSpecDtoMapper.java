@@ -21,6 +21,7 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -44,13 +45,18 @@ public class SelectSpecDtoMapper {
 
         return blueprints.stream()
                 .map(this::toDto)
+                .filter(Objects::nonNull)
                 .map(dtoClass::cast)
                 .toList();
     }
 
-    private Object toDto(final DtoBlueprint blueprint) {
+    private @Nullable Object toDto(final DtoBlueprint blueprint) {
         // Construct the primary DTO
         final PartiallyConstructedDto partialDto = toDto(blueprint.dtoData());
+
+        if (partialDto == null) {
+            return null;
+        }
 
         // Construct related DTOs, caching them
         blueprint.joinedDtoData().forEach(this::toDto);
@@ -83,23 +89,28 @@ public class SelectSpecDtoMapper {
         }
 
         updateOneToManyCollectionMappings(partialDto);
+        updateManyToManyCollectionMappings(partialDto);
         resolvedDtos.add(partialDto);
         return partialDto.dto();
     }
 
-    private PartiallyConstructedDto toDto(final DtoBlueprint.SelectDtoData dtoData) {
+    private @Nullable PartiallyConstructedDto toDto(final DtoBlueprint.SelectDtoData dtoData) {
         return toDto(dtoData, dtoData.spec().getFieldColumns());
     }
 
-    private PartiallyConstructedDto toDto(final DtoBlueprint.JoinDtoData dtoData) {
+    private @Nullable PartiallyConstructedDto toDto(final DtoBlueprint.JoinDtoData dtoData) {
         return toDto(dtoData, dtoData.spec().getFieldColumns());
     }
 
-    private PartiallyConstructedDto toDto(final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
+    private @Nullable PartiallyConstructedDto toDto(final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
         return toDto(dtoData.dtoClass(), dtoData.spec().dtoTable(), dtoData, fieldColumns);
     }
 
-    private PartiallyConstructedDto toDto(final Class<?> dtoClass, final OrmTable table, final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
+    private @Nullable PartiallyConstructedDto toDto(final Class<?> dtoClass, final OrmTable table, final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
+        if (CollectionUtils.isEmpty(fieldColumns)) {
+            return null;
+        }
+
         final PartiallyConstructedDto cachedDto = dtoData.primaryKey().isEmpty() ? null : dtoCache.get(dtoClass, dtoData.primaryKey());
 
         if (cachedDto != null) {
@@ -113,7 +124,6 @@ public class SelectSpecDtoMapper {
 
     @SuppressWarnings("unchecked")
     private PartiallyConstructedDto createDto(final Class<?> dtoClass, final OrmTable table, final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
-        final List<Object> primaryKey = dtoData.primaryKey();
         final Row row = dtoData.row();
         final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues = new ArrayList<>(row.size());
         final List<DtoDependency> dependencies = new ArrayList<>();
@@ -140,7 +150,7 @@ public class SelectSpecDtoMapper {
                 sameTableNestedDto = false;
             }
 
-            if (field == null || field.dtoClass() != dtoClass) {
+            if (field == null || !field.dtoClass().isAssignableFrom(dtoClass)) {
                 return;
             }
 
@@ -173,7 +183,7 @@ public class SelectSpecDtoMapper {
             fieldAccessorValues.forEach(fieldAccessorValue -> fieldAccessorValue.field().set(dto, fieldAccessorValue.value()));
         }
 
-        return new PartiallyConstructedDto(constructionResult.dto(), table, dependencies);
+        return new PartiallyConstructedDto(dto, table, dependencies);
     }
 
     private List<DtoBlueprint> createDtoBlueprints(final List<Row> rows) {
@@ -261,6 +271,37 @@ public class SelectSpecDtoMapper {
         });
     }
 
+    private void updateManyToManyCollectionMappings(final PartiallyConstructedDto partialDto) {
+        final Object dto = partialDto.dto();
+        final OrmTable table = partialDto.dtoTable();
+
+        final List<MappedManyToMany> mappedManyToManyList = table.getManyToManyMappings();
+
+        if (CollectionUtils.isEmpty(mappedManyToManyList)) {
+            // No one-to-many collection mappings to update
+            return;
+        }
+
+        mappedManyToManyList.forEach(mappedOneToMany -> {
+            LOGGER.trace("Updating many-to-many mapping for field '{}' of DTO: {}", mappedOneToMany.collection().name(), dto);
+            // Get the current value of the mapping
+            final FieldAccessor collection = mappedOneToMany.collection();
+            final Collection<Object> currentCollection;
+            final Collection<Object> dtoCollection = (Collection<Object>) collection.get(dto);
+
+            if (dtoCollection != null) {
+                //TODO: handle immutable collections
+                currentCollection = dtoCollection;
+            } else {
+                currentCollection = (Collection<Object>) ClassUtils.newInstance(collection.type());
+                collection.set(dto, currentCollection);
+            }
+
+            final Class<?> targetClass = collection.genericType();
+            dtoCache.stream(targetClass).forEach(currentCollection::add);
+        });
+    }
+
     private record PartiallyConstructedDto(Object dto, OrmTable dtoTable, List<DtoDependency> dependencies) {
     }
 
@@ -293,7 +334,12 @@ public class SelectSpecDtoMapper {
                         .map(PartiallyConstructedDto::dto)
                         .map(dtoClass::cast);
             } else {
-                return Stream.empty();
+                // Look for interfaces
+                return cache.entrySet().stream()
+                        .filter(entry -> dtoClass.isAssignableFrom(entry.getKey()))
+                        .flatMap(entry -> entry.getValue().values().stream())
+                        .map(PartiallyConstructedDto::dto)
+                        .map(dtoClass::cast);
             }
         }
     }

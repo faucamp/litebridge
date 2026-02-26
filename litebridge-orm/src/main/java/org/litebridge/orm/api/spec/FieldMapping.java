@@ -1,9 +1,6 @@
 package org.litebridge.orm.api.spec;
 
-public final class FieldMapping {
-
-    private FieldMapping() {
-    }
+public sealed interface FieldMapping permits FieldSpec, NoFieldMapping {
 
     /**
      * Shortcut for {@link #field(String)}.
@@ -12,7 +9,7 @@ public final class FieldMapping {
      * @param field the name of the field/property in a class
      * @return this {@code FieldSpecBuilder} for further chaining
      */
-    public static FieldSpec f(final String field) {
+    static FieldSpec f(final String field) {
         return field(field);
     }
 
@@ -22,7 +19,7 @@ public final class FieldMapping {
      * @param field the name of the field/property in a class
      * @return this {@code FieldSpecBuilder} for further chaining
      */
-    public static FieldSpec field(final String field) {
+    static FieldSpec field(final String field) {
         return new FieldSpec(field, false);
     }
 
@@ -33,7 +30,7 @@ public final class FieldMapping {
      * @param property the name of the property in a class
      * @return this {@code FieldSpecBuilder} for further chaining
      */
-    public static FieldSpec p(final String property) {
+    static FieldSpec p(final String property) {
         return property(property);
     }
 
@@ -43,7 +40,7 @@ public final class FieldMapping {
      * @param property the name of the property in a class
      * @return this {@code FieldSpecBuilder} for further chaining
      */
-    public static FieldSpec property(final String property) {
+    static FieldSpec property(final String property) {
         return new FieldSpec(property, true);
     }
 }

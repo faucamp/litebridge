@@ -172,7 +172,8 @@ class TrackedDtoTest {
         child1.name = "updatedChild1";
 
         // Then
-        assertEquals(1, trackedDto.changedFields(true).size());
+        final ChangedFields updatedChangedFields = trackedDto.changedFields(true);
+        assertEquals(1, updatedChangedFields.size());
         assertTrue(trackedDto.changedFields().contains("children"));
     }
 

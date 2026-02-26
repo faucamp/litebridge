@@ -94,8 +94,8 @@ public final class ColumnMetaData extends Column implements MappedFieldTarget {
      *
      * @param other the {@code ColumnMetaData} object to copy; must not be null
      */
-    public ColumnMetaData(final ColumnMetaData other) {
-        super(new Table(other.table()), other.name(), other.alias());
+    public ColumnMetaData(final ColumnMetaData other, final String tableAlias) {
+        super(new Table(other.table().as(tableAlias)), other.name(), tableAlias);
         this.nullable = other.nullable;
         this.dataType = other.dataType;
         this.size = other.size;
@@ -179,7 +179,13 @@ public final class ColumnMetaData extends Column implements MappedFieldTarget {
      */
     @Override
     public ColumnMetaData as(final String alias) {
-        final ColumnMetaData copy = new ColumnMetaData(this);
+        final ColumnMetaData copy = new ColumnMetaData(this, null);
+        copy.setAlias(alias);
+        return copy;
+    }
+
+    public ColumnMetaData as(final String alias, final String tableAlias) {
+        final ColumnMetaData copy = new ColumnMetaData(this, tableAlias);
         copy.setAlias(alias);
         return copy;
     }

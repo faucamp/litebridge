@@ -59,18 +59,6 @@ class TableTest {
     }
 
     @Test
-    void isTableMetaData() {
-        // Given
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-
-        // When
-        final boolean result = table.isTableMetaData();
-
-        // Then
-        assertFalse(result);
-    }
-
-    @Test
     void testEquals_true() {
         // Given
         final Table table1 = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");

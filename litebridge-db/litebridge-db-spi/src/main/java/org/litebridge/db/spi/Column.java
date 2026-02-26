@@ -121,6 +121,13 @@ public class Column extends Aliased {
     }
 
     @Override
+    public boolean equalsIgnoreAlias(final Aliased aliased) {
+        if (!(aliased instanceof final Column column)) return false;
+        if (!super.equalsIgnoreAlias(column)) return false;
+        return table.equalsIgnoreAlias(table);
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), table);
     }

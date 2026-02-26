@@ -1,10 +1,14 @@
-package org.litebridge.orm.api.select.model;
+package org.litebridge.orm.api.sql;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.orm.api.select.model.ConditionSpec;
+import org.litebridge.orm.api.select.model.JoinSpec;
+import org.litebridge.orm.api.select.model.LimitSpec;
+import org.litebridge.orm.api.select.model.OrderBySpec;
 
 import java.util.List;
 
@@ -15,17 +19,17 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class SelectSpecTest {
+class SqlSelectSpecTest {
 
     @Test
     void getTable() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
 
         // When
-        final Table result = selectSpec.getTable();
+        final Table result = sqlSelectSpec.getTable();
 
         // Then
         assertSame(table, result);
@@ -34,23 +38,23 @@ class SelectSpecTest {
     @Test
     void getTable_null() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
 
         // When/Then
-        assertThrows(IllegalStateException.class, () -> selectSpec.getTable());
+        assertThrows(IllegalStateException.class, () -> sqlSelectSpec.getTable());
     }
 
     @Test
     void setColumns() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
 
         // When
-        selectSpec.setColumns(List.of(column));
-        final List<Column> result = selectSpec.getColumns();
+        sqlSelectSpec.setColumns(List.of(column));
+        final List<Column> result = sqlSelectSpec.getColumns();
 
         // Then
         assertNotNull(result);
@@ -61,14 +65,14 @@ class SelectSpecTest {
     @Test
     void addColumns() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
 
         // When
-        selectSpec.addColumns(List.of(column));
-        final List<Column> result = selectSpec.getColumns();
+        sqlSelectSpec.addColumns(List.of(column));
+        final List<Column> result = sqlSelectSpec.getColumns();
 
         // Then
         assertNotNull(result);
@@ -79,16 +83,16 @@ class SelectSpecTest {
     @Test
     void getJoins() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        selectSpec.setColumns(List.of(column));
-        final JoinSpec joinSpec = selectSpec.newJoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        sqlSelectSpec.setColumns(List.of(column));
+        final JoinSpec joinSpec = sqlSelectSpec.newJoinSpec("TEST_SCHEMA", "TEST_TABLE");
 
         // When
-        selectSpec.setJoins(List.of(joinSpec));
-        final List<JoinSpec> result = selectSpec.getJoins();
+        sqlSelectSpec.setJoins(List.of(joinSpec));
+        final List<JoinSpec> result = sqlSelectSpec.getJoins();
 
         // Then
         assertNotNull(result);
@@ -99,57 +103,57 @@ class SelectSpecTest {
     @Test
     void newJoinSpec() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        selectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setColumns(List.of(column));
 
         // When
-        final JoinSpec result = selectSpec.newJoinSpec("TEST_SCHEMA", "TEST_TABLE2");
+        final JoinSpec result = sqlSelectSpec.newJoinSpec("TEST_SCHEMA", "TEST_TABLE2");
 
         // Then
         assertNotNull(result);
-        assertNotNull(selectSpec.getJoins());
-        assertEquals(1, selectSpec.getJoins().size());
-        assertSame(result, selectSpec.getJoins().getFirst());
+        assertNotNull(sqlSelectSpec.getJoins());
+        assertEquals(1, sqlSelectSpec.getJoins().size());
+        assertSame(result, sqlSelectSpec.getJoins().getFirst());
     }
 
     @Test
     void newJoinSpec_noSchema() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        selectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setColumns(List.of(column));
 
         // When
-        final JoinSpec result = selectSpec.newJoinSpec("TEST_TABLE2");
+        final JoinSpec result = sqlSelectSpec.newJoinSpec("TEST_TABLE2");
 
         // Then
         assertNotNull(result);
-        assertNotNull(selectSpec.getJoins());
-        assertEquals(1, selectSpec.getJoins().size());
-        assertSame(result, selectSpec.getJoins().getFirst());
+        assertNotNull(sqlSelectSpec.getJoins());
+        assertEquals(1, sqlSelectSpec.getJoins().size());
+        assertSame(result, sqlSelectSpec.getJoins().getFirst());
     }
 
     @Test
     void setWhereConditions() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        selectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setColumns(List.of(column));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
 
         // When
-        selectSpec.setWhereConditions(List.of(conditionSpec));
-        final List<ConditionSpec> result = selectSpec.getWhereConditions();
+        sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
+        final List<ConditionSpec> result = sqlSelectSpec.getWhereConditions();
 
         // Then
         assertNotNull(result);
@@ -160,44 +164,44 @@ class SelectSpecTest {
     @Test
     void newWhereCondition() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        selectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setColumns(List.of(column));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
 
         // When
-        final ConditionSpec result = selectSpec.newWhereCondition(column);
+        final ConditionSpec result = sqlSelectSpec.newWhereCondition(column);
 
         // Then
         assertNotNull(result);
-        assertNotNull(selectSpec.getWhereConditions());
-        assertEquals(1, selectSpec.getWhereConditions().size());
-        assertSame(result, selectSpec.getWhereConditions().getFirst());
+        assertNotNull(sqlSelectSpec.getWhereConditions());
+        assertEquals(1, sqlSelectSpec.getWhereConditions().size());
+        assertSame(result, sqlSelectSpec.getWhereConditions().getFirst());
     }
 
     @Test
     void setOrderBys() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        selectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setColumns(List.of(column));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
-        selectSpec.setWhereConditions(List.of(conditionSpec));
+        sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
         final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"TEST_COLUMN"});
 
         // When
-        selectSpec.setOrderBys(List.of(orderBySpec));
-        final List<OrderBySpec> result = selectSpec.getOrderBys();
+        sqlSelectSpec.setOrderBys(List.of(orderBySpec));
+        final List<OrderBySpec> result = sqlSelectSpec.getOrderBys();
 
         // Then
         assertNotNull(result);
@@ -208,49 +212,49 @@ class SelectSpecTest {
     @Test
     void newOrderBy() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        selectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setColumns(List.of(column));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
-        selectSpec.setWhereConditions(List.of(conditionSpec));
+        sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
 
         // When
-        final OrderBySpec result = selectSpec.newOrderBy("TEST_COLUMN");
+        final OrderBySpec result = sqlSelectSpec.newOrderBy("TEST_COLUMN");
 
         // Then
         assertNotNull(result);
-        assertNotNull(selectSpec.getOrderBys());
-        assertEquals(1, selectSpec.getOrderBys().size());
-        assertSame(result, selectSpec.getOrderBys().getFirst());
+        assertNotNull(sqlSelectSpec.getOrderBys());
+        assertEquals(1, sqlSelectSpec.getOrderBys().size());
+        assertSame(result, sqlSelectSpec.getOrderBys().getFirst());
     }
 
     @Test
     void setLimit() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        selectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setColumns(List.of(column));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
-        selectSpec.setWhereConditions(List.of(conditionSpec));
+        sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
         final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"TEST_COLUMN"});
-        selectSpec.setOrderBys(List.of(orderBySpec));
+        sqlSelectSpec.setOrderBys(List.of(orderBySpec));
         final LimitSpec limitSpec = new LimitSpec();
         limitSpec.setOffset(100);
         limitSpec.setLimit(200);
 
         // When
-        selectSpec.setLimit(limitSpec);
-        final LimitSpec result = selectSpec.getLimit();
+        sqlSelectSpec.setLimit(limitSpec);
+        final LimitSpec result = sqlSelectSpec.getLimit();
 
         // Then
         assertSame(limitSpec, result);
@@ -259,21 +263,21 @@ class SelectSpecTest {
     @Test
     void ensureLimit() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        selectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setColumns(List.of(column));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
-        selectSpec.setWhereConditions(List.of(conditionSpec));
+        sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
         final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"TEST_COLUMN"});
-        selectSpec.setOrderBys(List.of(orderBySpec));
+        sqlSelectSpec.setOrderBys(List.of(orderBySpec));
 
         // When
-        final LimitSpec result = selectSpec.ensureLimit();
+        final LimitSpec result = sqlSelectSpec.ensureLimit();
 
         // Then
         assertNotNull(result);
@@ -282,11 +286,11 @@ class SelectSpecTest {
     @Test
     void setDtoAlias() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
-        selectSpec.setDtoAlias(TestDto.class, "TEST_ALIAS");
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        sqlSelectSpec.setDtoAlias(TestDto.class, "TEST_ALIAS");
 
         // When
-        final String result = selectSpec.getDtoAlias(TestDto.class);
+        final String result = sqlSelectSpec.getDtoAlias(TestDto.class);
 
         // Then
         assertEquals("TEST_ALIAS", result);
@@ -295,10 +299,10 @@ class SelectSpecTest {
     @Test
     void getDtoAlias_null() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
 
         // When
-        final String result = selectSpec.getDtoAlias(TestDto.class);
+        final String result = sqlSelectSpec.getDtoAlias(TestDto.class);
 
         // Then
         assertNull(result);
@@ -307,25 +311,25 @@ class SelectSpecTest {
     @Test
     void toSelect() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        selectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setColumns(List.of(column));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
-        selectSpec.setWhereConditions(List.of(conditionSpec));
+        sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
         final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"TEST_COLUMN"});
-        selectSpec.setOrderBys(List.of(orderBySpec));
+        sqlSelectSpec.setOrderBys(List.of(orderBySpec));
         final LimitSpec limitSpec = new LimitSpec();
         limitSpec.setOffset(100);
         limitSpec.setLimit(200);
-        selectSpec.setLimit(limitSpec);
+        sqlSelectSpec.setLimit(limitSpec);
 
         // When
-        final Select result = selectSpec.toSelect();
+        final Select result = sqlSelectSpec.toSelect();
 
         // Then
         assertNotNull(result);
@@ -338,12 +342,12 @@ class SelectSpecTest {
     @Test
     void toSelect_columnsNotSet() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        selectSpec.setTable(table);
+        sqlSelectSpec.setTable(table);
 
         // When
-        final Select result = selectSpec.toSelect();
+        final Select result = sqlSelectSpec.toSelect();
 
         // Then
         assertNotNull(result);
@@ -355,10 +359,10 @@ class SelectSpecTest {
     @Test
     void toSelect_tableNotSet() {
         // Given
-        final SelectSpec selectSpec = new SelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
 
         // When/Then
-        assertThrows(IllegalStateException.class, selectSpec::toSelect);
+        assertThrows(IllegalStateException.class, sqlSelectSpec::toSelect);
     }
 
     private static class TestDto {

@@ -5,6 +5,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.orm.api.sql.SqlJoinSpec;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ class JoinSpecTest {
     @Test
     void table() {
         // Given
-        final JoinSpec joinSpec = new JoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        final JoinSpec joinSpec = new SqlJoinSpec("TEST_SCHEMA", "TEST_TABLE");
 
         // When
         final Table table = joinSpec.table();
@@ -31,7 +32,7 @@ class JoinSpecTest {
     @Test
     void newCondition() {
         // Given
-        final JoinSpec joinSpec = new JoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        final SqlJoinSpec joinSpec = new SqlJoinSpec("TEST_SCHEMA", "TEST_TABLE");
         final Table table = joinSpec.table();
 
         // When
@@ -49,7 +50,7 @@ class JoinSpecTest {
     @Test
     void using() {
         // Given
-        final JoinSpec joinSpec = new JoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        final SqlJoinSpec joinSpec = new SqlJoinSpec("TEST_SCHEMA", "TEST_TABLE");
         final Table table = joinSpec.table();
 
         // When
@@ -65,7 +66,7 @@ class JoinSpecTest {
     @Test
     void toJoin() {
         // Given
-        final JoinSpec joinSpec = new JoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        final SqlJoinSpec joinSpec = new SqlJoinSpec("TEST_SCHEMA", "TEST_TABLE");
         final Table table = joinSpec.table();
         final ConditionSpec conditionSpec = joinSpec.newCondition(new Column(table, "TEST_COLUMN"));
         conditionSpec.setOperator(Operator.LT);

@@ -7,9 +7,8 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
-import org.litebridge.orm.persistence.DtoAliasRegistry;
+import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.SelectSpecDtoMapper;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -17,78 +16,73 @@ import org.litebridge.tracking.ClassFieldAccessorCache;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec> {
 
-    private final OrmTable table;
     private final TableRegistry tableRegistry;
-    private final DtoAliasRegistry dtoAliasRegistry;
+    private final AliasGenerator aliasGenerator;
 
     public DtoSelector(final Class<DTO> dtoClass,
                        final OrmTable dtoTable,
                        final TableRegistry tableRegistry,
                        final DatabaseProvider databaseProvider,
-                       final DtoAliasRegistry dtoAliasRegistry) {
-        super(new DtoSelectSpec(dtoClass, dtoTable), databaseProvider, dtoClass);
-        this.table = dtoTable;
+                       final AliasGenerator aliasGenerator) {
+        super(new DtoSelectSpec(dtoClass, dtoTable, aliasGenerator), databaseProvider, dtoClass);
         this.tableRegistry = tableRegistry;
-        this.dtoAliasRegistry = dtoAliasRegistry;
+        this.aliasGenerator = aliasGenerator;
     }
 
     public DtoFromClauseTerminal<DTO> select(final String... fields) {
-        final String tableAlias = dtoAliasRegistry.newAlias(table.getMetaData());
-        final TableMetaData aliasedTable = table.getMetaData().as(tableAlias);
-
-        return selectImpl(aliasedTable, Arrays.stream(fields)
+        return selectImpl(selectSpec.getTable(), Arrays.stream(fields)
                 .map(field -> {
                     // Map the input DTO field names to database column names
-                    final ColumnMetaData column = table.getColumnForFieldName(field);
-                    return new DtoSelectSpec.FieldColumn(ClassFieldAccessorCache.fieldAccessorOrThrow(dtoClass, field),
-                            new Column(table.getMetaData().as(tableAlias), column.name(), dtoAliasRegistry.alias(tableAlias, column)));
-                }));
+                    final ColumnMetaData columnMetaData = selectSpec.dtoTable().getColumnForFieldName(field);
+                    return new DtoSelectSpec.FieldColumn(ClassFieldAccessorCache.fieldAccessorOrThrow(dtoClass, field), aliasGenerator.aliasColumn(selectSpec.getTable(), columnMetaData));
+                })
+                .toList());
     }
 
     public DtoFromClauseTerminal<DTO> select(final Aliased... fields) {
-        final String tableAlias = dtoAliasRegistry.newAlias(table.getMetaData());
-        final TableMetaData aliasedTable = table.getMetaData().as(tableAlias);
-
-        return selectImpl(aliasedTable, Arrays.stream(fields)
+        return selectImpl(selectSpec.getTable(), Arrays.stream(fields)
                 .map(field -> {
                     // Map the input DTO field names to database column names
-                    final ColumnMetaData column = table.getColumnForFieldName(field.name());
-                    return new DtoSelectSpec.FieldColumn(ClassFieldAccessorCache.fieldAccessorOrThrow(dtoClass, field.name()),
-                            new Column(aliasedTable, column.name(), dtoAliasRegistry.alias(tableAlias, column)));
-                }));
+                    final ColumnMetaData columnMetaData = selectSpec.dtoTable().getColumnForFieldName(field.name());
+                    return new DtoSelectSpec.FieldColumn(ClassFieldAccessorCache.fieldAccessorOrThrow(dtoClass, field.name()), aliasGenerator.aliasColumn(selectSpec.getTable(), columnMetaData));
+                })
+                .toList());
     }
 
     public DtoFromClauseTerminal<DTO> select() {
-        final String tableAlias = dtoAliasRegistry.newAlias(table.getMetaData());
-        final TableMetaData aliasedTable = table.getMetaData().as(tableAlias);
-
-        return selectImpl(aliasedTable, table.getMetaData().columns().stream()
-                .map(column ->
-                        new DtoSelectSpec.FieldColumn(table.getFieldForColumnName(column.name()),
-                                new Column(aliasedTable, column.name(), dtoAliasRegistry.alias(tableAlias, column)))));
+        return selectImpl(selectSpec.getTable(), selectSpec.dtoTable().mappedFieldTargets().stream()
+                .filter(entry -> entry.getValue() instanceof ColumnMetaData)
+                .map(entry -> (ColumnMetaData) entry.getValue())
+                .map(columnMetaData -> {
+                    final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), columnMetaData);
+                    return new DtoSelectSpec.FieldColumn(selectSpec.dtoTable().getFieldForColumnName(column.name()), column);
+                })
+                .toList());
     }
 
-    private DtoFromClauseTerminal<DTO> selectImpl(final Table table, final Stream<DtoSelectSpec.FieldColumn> fieldColumns) {
+    private DtoFromClauseTerminal<DTO> selectImpl(final Table table, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
+        assert table.alias() != null;
         selectSpec.setTable(table);
-        selectSpec.setDtoAlias(table.alias());
-        selectSpec.setFieldColumns(fieldColumns.toList());
+        selectSpec.setDtoAlias(selectSpec.dtoClass(), Objects.requireNonNull(table.alias()));
+        selectSpec.setFieldColumns(fieldColumns);
         return new DtoFromClauseTerminal<>(this);
     }
 
     OrmTable table() {
-        return table;
+        return selectSpec.dtoTable();
     }
 
     TableRegistry tableRegistry() {
         return tableRegistry;
     }
 
-    DtoAliasRegistry dtoAliasRegistry() {
-        return dtoAliasRegistry;
+    AliasGenerator dtoAliasRegistry() {
+        return aliasGenerator;
     }
 
     @Override

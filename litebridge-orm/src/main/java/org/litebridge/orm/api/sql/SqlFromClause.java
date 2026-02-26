@@ -5,7 +5,6 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.FromClause;
-import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.Arrays;
@@ -21,12 +20,12 @@ public final class SqlFromClause implements FromClause<Row,
         SqlOrderByClauseChain> {
 
     private final Aliased[] columns;
-    private final SelectSpec selectSpec;
+    private final SqlSelectSpec selectSpec;
     private final TableRegistry tableRegistry;
     private final SqlSelector delegate;
 
     public SqlFromClause(final Aliased[] columns,
-                         final SelectSpec selectSpec,
+                         final SqlSelectSpec selectSpec,
                          final TableRegistry tableRegistry,
                          final SqlSelector delegate) {
         this.columns = columns;

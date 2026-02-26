@@ -15,6 +15,7 @@ import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.RowValue;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.db.spi.util.SqlReservedWords;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,12 +119,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
         // From table
         sql.append(" FROM ");
-
-        if (!StringUtils.isBlank(select.table().schema())) {
-            sql.append(select.table().schema()).append('.');
-        }
-
-        sql.append(select.table().name());
+        appendTable(sql, select.table());
 
         if (select.table().alias() != null) {
             sql.append(" AS ").append(select.table().alias());
@@ -131,16 +127,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
         // Joins
         if (!CollectionUtils.isEmpty(select.joins())) {
-            sql.append(" JOIN ");
-            first = true;
-
             for (Join join : select.joins()) {
-                if (first) {
-                    first = false;
-                } else {
-                    sql.append(", ");
-                }
-
                 sql.append(createJoin(join));
             }
         }
@@ -214,13 +201,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     protected PreparedSql prepareSql(final Insert insert) {
         final List<String> columnNames = insert.columns().stream().map(ColumnMetaData::name).toList();
 
-        final StringBuilder sql = new StringBuilder("INSERT INTO ");
-
-        if (!StringUtils.isBlank(insert.table().schema())) {
-            sql.append(insert.table().schema()).append('.');
-        }
-
-        sql.append(insert.table().name()).append(" (")
+        final StringBuilder sql = appendTable(new StringBuilder("INSERT INTO "), insert.table())
+                .append(" (")
                 .append(String.join(", ", columnNames))
                 .append(") VALUES ");
 
@@ -256,13 +238,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values.
      */
     protected PreparedSql prepareSql(final Update update) {
-        final StringBuilder sql = new StringBuilder("UPDATE ");
-
-        if (!StringUtils.isBlank(update.table().schema())) {
-            sql.append(update.table().schema()).append('.');
-        }
-
-        sql.append(update.table().name()).append(" SET ");
+        final StringBuilder sql = appendTable(new StringBuilder("UPDATE "), update.table())
+                .append(" SET ");
 
         final List<BindValue> bindValues = new ArrayList<>(update.columnValues().size());
 
@@ -316,13 +293,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @return a {@code String} representing the constructed SQL join clause
      */
     protected String createJoin(final Join join) {
-        final StringBuilder sb = new StringBuilder();
-
-        if (!StringUtils.isBlank(join.table().schema())) {
-            sb.append(join.table().schema()).append('.');
-        }
-
-        sb.append(join.table().name());
+        final StringBuilder sb = appendTable(new StringBuilder(" JOIN "), join.table());
 
         if (join.table().alias() != null) {
             sb.append(" AS ").append(join.table().alias());
@@ -379,6 +350,23 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 return "%s %s ?".formatted(column, mapOperator(condition.operator()));
             }
         }
+    }
+
+    protected StringBuilder appendTable(final StringBuilder sql, final Table table) {
+        return appendTable(sql, table.schema(), table.name());
+    }
+
+    protected StringBuilder appendTable(final StringBuilder sql, final TableMetaData table) {
+        return appendTable(sql, table.schema(), table.name());
+    }
+
+    protected StringBuilder appendTable(final StringBuilder sql, final String schema, final String table) {
+        if (!StringUtils.isBlank(schema)) {
+            sql.append(quoteIdentifier(schema)).append('.');
+        }
+
+        sql.append(quoteIdentifier(table));
+        return sql;
     }
 
     /**
@@ -678,10 +666,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     private TableMetaData ensureTableMetaData(final Table table) throws SQLException {
-        if (table instanceof TableMetaData tableMetaData) {
-            return tableMetaData;
-        }
-
         TableMetaData tableMetaData = this.tableMetaDataCache.get(table);
 
         if (tableMetaData == null) {
@@ -711,6 +695,14 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final List<String> primaryKeys = getPrimaryKeyColumnNames(table, databaseMetaData);
         final List<ColumnMetaData> columns = getColumnNames(table, databaseMetaData);
         return new TableMetaData(table, primaryKeys, columns);
+    }
+
+    protected String quoteIdentifier(final String identifier) {
+        if (SqlReservedWords.contains(identifier)) {
+            return "\"%s\"".formatted(identifier);
+        } else {
+            return identifier;
+        }
     }
 
     /**

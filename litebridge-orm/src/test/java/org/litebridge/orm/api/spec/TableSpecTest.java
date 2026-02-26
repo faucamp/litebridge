@@ -16,12 +16,12 @@ class TableSpecTest {
     @Test
     void fieldColumnMap() {
         // Given
-        final Map<FieldSpec, ColumnMapping> fieldColumnMap = new HashMap<>();
+        final Map<FieldMapping, ColumnMapping> fieldColumnMap = new HashMap<>();
         fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn", false, null, null));
         final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
 
         // When
-        final Map<FieldSpec, ColumnMapping> result = tableSpec.fieldColumnMap();
+        final Map<FieldMapping, ColumnMapping> result = tableSpec.fieldColumnMap();
 
         // Then
         assertNotSame(fieldColumnMap, result);
@@ -31,7 +31,7 @@ class TableSpecTest {
     @Test
     void constructor_nullCatalogAndSchema() {
         // When
-        final Map<FieldSpec, ColumnMapping> fieldColumnMap = new HashMap<>();
+        final Map<FieldMapping, ColumnMapping> fieldColumnMap = new HashMap<>();
         fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn", false, null, null));
         final TableSpec result = new TableSpec(null, null, "users", fieldColumnMap);
 
@@ -58,7 +58,7 @@ class TableSpecTest {
 
     @Test
     void t() {
-        final Map<FieldSpec, ColumnMapping> fieldColumnMap = new HashMap<>();
+        final Map<FieldMapping, ColumnMapping> fieldColumnMap = new HashMap<>();
         fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn", false, null, null));
 
         // When
@@ -75,7 +75,7 @@ class TableSpecTest {
 
     @Test
     void t_noCatalog() {
-        final Map<FieldSpec, ColumnMapping> fieldColumnMap = new HashMap<>();
+        final Map<FieldMapping, ColumnMapping> fieldColumnMap = new HashMap<>();
         fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn", false, null, null));
 
         // When
@@ -92,7 +92,7 @@ class TableSpecTest {
 
     @Test
     void t_noCatalogOrSchema() {
-        final Map<FieldSpec, ColumnMapping> fieldColumnMap = new HashMap<>();
+        final Map<FieldMapping, ColumnMapping> fieldColumnMap = new HashMap<>();
         fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn", false, null, null));
 
         // When

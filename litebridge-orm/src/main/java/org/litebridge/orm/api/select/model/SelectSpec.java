@@ -17,17 +17,18 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Specification for constructing a SQL SELECT statement.
+ * Base specification for constructing a SQL SELECT statement.
  * <p>
  * This class encapsulates table, column, join, condition, order by,
  * and limit specifications for building a query.
+ * <p>
+ * Its subclasses {@link org.litebridge.orm.api.dto.DtoSelectSpec} and {@link org.litebridge.orm.api.sql.SqlSelectSpec}
+ * specialise in dealing with DTOs and SQL-specific constructs, respectively.
  */
-public class SelectSpec {
+public abstract class SelectSpec {
 
     @Nullable
     protected Table table;
-    @Nullable
-    protected List<Column> columns;
     @Nullable
     protected List<JoinSpec> joins;
     @Nullable
@@ -47,48 +48,12 @@ public class SelectSpec {
         this.table = table;
     }
 
-    public @Nullable List<Column> getColumns() {
-        return columns;
-    }
-
-    public void setColumns(final List<Column> columns) {
-        this.columns = sanitise(columns);
-    }
-
-    public void addColumns(final List<Column> columns) {
-        if (this.columns == null) {
-            this.columns = new ArrayList<>();
-        } else if (!(columns instanceof ArrayList)) {
-            this.columns = new ArrayList<>(this.columns);
-        }
-
-        this.columns.addAll(sanitise((columns)));
-    }
-
     public @Nullable List<JoinSpec> getJoins() {
         return joins;
     }
 
     public void setJoins(@Nullable final List<JoinSpec> joins) {
         this.joins = joins;
-    }
-
-    public JoinSpec newJoinSpec(final Table table) {
-        return newJoinSpec(table.schema(), table.name());
-    }
-
-    public JoinSpec newJoinSpec(final String table) {
-        return newJoinSpec("", table);
-    }
-
-    public JoinSpec newJoinSpec(final String schema, final String table) {
-        if (this.joins == null) {
-            joins = new ArrayList<>();
-        }
-
-        final JoinSpec joinSpec = new JoinSpec(schema, table);
-        joins.add(joinSpec);
-        return joinSpec;
     }
 
     public @Nullable List<ConditionSpec> getWhereConditions() {
@@ -162,10 +127,14 @@ public class SelectSpec {
         }
     }
 
+    protected abstract List<Column> columns();
+
     public Select toSelect() {
         if (table == null) {
             throw new IllegalStateException("Table not specified");
         }
+
+        final List<Column> columns = columns();
 
         return new Select(table,
                 columns != null ? Collections.unmodifiableList(columns) : Collections.emptyList(),
@@ -174,7 +143,7 @@ public class SelectSpec {
                         .toList() : Collections.emptyList(),
                 orderBys != null ? orderBys.stream()
                         .flatMap(orderBySpec -> Arrays.stream(orderBySpec.columns())
-                                .map(columnName -> this.columns.stream()
+                                .map(columnName -> columns.stream()
                                         .filter(column -> Objects.equals(column.name(), columnName))
                                         .findFirst().orElseThrow())
                                 .map(column -> new OrderBy(column, orderBySpec.isAsc())))
@@ -183,13 +152,6 @@ public class SelectSpec {
                         .map(ConditionSpec::toCondition)
                         .toList() : Collections.emptyList(),
                 limit != null ? limit.toLimit() : Optional.empty());
-    }
-
-    private List<Column> sanitise(final List<Column> columns) {
-        // Ensure just one instance of the same table is used
-        return columns.stream()
-                .map(this::sanitise)
-                .toList();
     }
 
     private Column sanitise(final Column column) {

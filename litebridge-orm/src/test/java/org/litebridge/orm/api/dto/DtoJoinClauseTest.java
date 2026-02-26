@@ -7,8 +7,7 @@ import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.orm.api.select.model.JoinSpec;
-import org.litebridge.orm.persistence.DtoAliasRegistry;
+import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ChangeTracker;
@@ -42,11 +41,10 @@ class DtoJoinClauseTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final AliasGenerator aliasGenerator = new AliasGenerator();
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         dtoSelector.select();
-        final JoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable);
-        final DtoJoinClause<TestDto> dtoJoinClause = new DtoJoinClause<>(joinSpec, dtoSelector);
+        final DtoJoinClause<TestDto> dtoJoinClause = new DtoJoinClause<>(TestDto.class, ormTable, dtoSelector);
 
         // When
         final DtoJoinConditionClauseTerminal<TestDto> result = dtoJoinClause.on("myVar");

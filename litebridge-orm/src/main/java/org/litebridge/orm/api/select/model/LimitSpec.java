@@ -36,7 +36,7 @@ public final class LimitSpec {
         this.offset = offset;
     }
 
-    Optional<Limit> toLimit() {
+    public Optional<Limit> toLimit() {
         return Optional.of(new Limit(getLimit(), getOffset()));
     }
 }

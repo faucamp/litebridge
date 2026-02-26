@@ -11,7 +11,7 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.api.spec.FieldColumnMapping;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
-import org.litebridge.orm.persistence.DtoAliasRegistry;
+import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ChangeTracker;
@@ -40,10 +40,10 @@ class DtoWhereConditionClauseTerminalTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final AliasGenerator aliasGenerator = new AliasGenerator();
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
 
         final DtoWhereConditionClauseTerminal<TestDto> dtoWhereConditionClauseTerminal = new DtoWhereConditionClauseTerminal<>(dtoSelector);
 
@@ -67,10 +67,10 @@ class DtoWhereConditionClauseTerminalTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final AliasGenerator aliasGenerator = new AliasGenerator();
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
 
         final DtoWhereConditionClauseTerminal<TestDto> dtoWhereConditionClauseTerminal = new DtoWhereConditionClauseTerminal<>(dtoSelector);
         final FieldColumnSpec fieldColumnSpec = FieldColumnMapping.f("myVar").c("MY_VAR");
@@ -95,8 +95,8 @@ class DtoWhereConditionClauseTerminalTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final AliasGenerator aliasGenerator = new AliasGenerator();
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
 
         final DtoWhereConditionClauseTerminal<TestDto> dtoWhereConditionClauseTerminal = new DtoWhereConditionClauseTerminal<>(dtoSelector);
 
@@ -120,10 +120,10 @@ class DtoWhereConditionClauseTerminalTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final AliasGenerator aliasGenerator = new AliasGenerator();
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
 
         final DtoWhereConditionClauseTerminal<TestDto> dtoWhereConditionClauseTerminal = new DtoWhereConditionClauseTerminal<>(dtoSelector);
         final FieldColumnSpec fieldColumnSpec = FieldColumnMapping.f("myVar").c("MY_VAR");

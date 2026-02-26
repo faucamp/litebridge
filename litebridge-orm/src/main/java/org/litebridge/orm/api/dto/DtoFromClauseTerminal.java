@@ -2,10 +2,7 @@ package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
-import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -56,8 +53,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
             joinTable = tableRegistry.getTableOrThrow(dtoClass);
         }
 
-        final DtoJoinSpec joinSpec = selectSpec.newJoinSpec(dtoClass, joinTable);
-        return new DtoJoinClause<>(joinSpec, (DtoSelector<DTO>) delegate);
+        return new DtoJoinClause<>(dtoClass, joinTable, (DtoSelector<DTO>) delegate);
     }
 
     @Override

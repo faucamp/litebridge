@@ -1,15 +1,10 @@
 package org.litebridge.orm.e2e.basic.dto;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
 
 public class Person {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(Person.class.getName());
 
     private Long id;
     private String name;
@@ -51,12 +46,10 @@ public class Person {
     }
 
     public String getEyeColour() {
-        LOGGER.debug("getEyeColour(): {}", eyeColour);
         return eyeColour;
     }
 
     public void setEyeColour(String eyeColour) {
-        LOGGER.debug("setEyeColour(): {}", eyeColour);
         this.eyeColour = eyeColour;
     }
 

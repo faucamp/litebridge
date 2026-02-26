@@ -44,7 +44,7 @@ public class ConditionSpec {
         this.value = value;
     }
 
-    Condition toCondition() {
+    public Condition toCondition() {
         return new Condition(column, operator, value);
     }
 }

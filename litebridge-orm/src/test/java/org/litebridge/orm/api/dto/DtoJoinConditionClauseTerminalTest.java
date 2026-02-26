@@ -8,11 +8,10 @@ import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.api.spec.FieldColumnMapping;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
-import org.litebridge.orm.persistence.DtoAliasRegistry;
+import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ChangeTracker;
@@ -41,9 +40,9 @@ class DtoJoinConditionClauseTerminalTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
-        final JoinSpec joinSpec = new JoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        final AliasGenerator aliasGenerator = new AliasGenerator();
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
+        final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasGenerator.aliasTable(ormTable));
 
         final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector);
 
@@ -67,11 +66,12 @@ class DtoJoinConditionClauseTerminalTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final AliasGenerator aliasGenerator = new AliasGenerator();
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
-        final JoinSpec joinSpec = new JoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
+        selectSpec.setTable(aliasedTable);
+        final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasedTable);
 
         final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector);
 
@@ -95,9 +95,9 @@ class DtoJoinConditionClauseTerminalTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
-        final JoinSpec joinSpec = new JoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        final AliasGenerator aliasGenerator = new AliasGenerator();
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
+        final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasGenerator.aliasTable(ormTable));
 
         final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector);
 
@@ -121,9 +121,9 @@ class DtoJoinConditionClauseTerminalTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
-        final JoinSpec joinSpec = new JoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        final AliasGenerator aliasGenerator = new AliasGenerator();
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
+        final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasGenerator.aliasTable(ormTable));
 
         final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector);
         final FieldColumnSpec fieldColumnSpec = FieldColumnMapping.f("myVar").c("MY_VAR");

@@ -1,6 +1,7 @@
 package org.litebridge.orm.e2e.basic.mapping;
 
 import org.litebridge.orm.api.spec.ColumnMapping;
+import org.litebridge.orm.api.spec.FieldMapping;
 import org.litebridge.orm.api.spec.FieldSpec;
 
 import java.util.Map;
@@ -15,16 +16,16 @@ public final class DtoTableMap {
     private DtoTableMap() {
     }
 
-    public static final Map<FieldSpec, ColumnMapping> Person = Map.of(
+    public static final Map<FieldMapping, ColumnMapping> Person = Map.of(
             f("id"), c("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ"),
             f("name"), c("FIRST_NAME"),
             f("surname"), c("SURNAME"),
             f("age"), c("AGE"),
             p("eyeColour"), c("EYE_COLOUR"),
-            f("accounts"), oneToMany("owner")
+            f("accounts"), oneToMany(f("owner"))
     );
 
-    public static final Map<FieldSpec, ColumnMapping> Account = Map.of(
+    public static final Map<FieldMapping, ColumnMapping> Account = Map.of(
             f("id"), c("ACCOUNT_ID").autoIncrement().usingSequence("LB.ACCOUNT_SEQ"),
             f("name"), c("ACCOUNT_NAME"),
             f("balance"), c("BALANCE"),

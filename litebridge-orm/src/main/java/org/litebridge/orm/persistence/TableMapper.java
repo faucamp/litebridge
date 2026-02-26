@@ -3,6 +3,7 @@ package org.litebridge.orm.persistence;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
+import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.MappedFieldTarget;
@@ -10,12 +11,18 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.spec.AbstractColumnSpecBuilder;
 import org.litebridge.orm.api.spec.ColumnMapping;
 import org.litebridge.orm.api.spec.ColumnSpec;
+import org.litebridge.orm.api.spec.FieldMapping;
 import org.litebridge.orm.api.spec.FieldSpec;
+import org.litebridge.orm.api.spec.ManyToMany;
+import org.litebridge.orm.api.spec.NoFieldMapping;
 import org.litebridge.orm.api.spec.OneToMany;
 import org.litebridge.orm.api.spec.TableSpec;
+import org.litebridge.orm.persistence.manytomany.HiddenJoinEntity;
+import org.litebridge.orm.persistence.manytomany.NoOpFieldAccessor;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.FieldAccessor;
 
+import java.lang.reflect.Proxy;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -54,23 +61,25 @@ public final class TableMapper {
         return new OrmTable(dtoClass, tableMetaData, columnMap, changeTracker);
     }
 
-    private Map<FieldAccessor, MappedFieldTarget> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<FieldSpec, ColumnMapping> fieldColumnSpecMap) {
+    private Map<FieldAccessor, MappedFieldTarget> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<FieldMapping, ColumnMapping> fieldColumnSpecMap) {
         final Set<String> unmappedColumns = tableMetaData.columns().stream()
                 .map(ColumnMetaData::name)
                 .collect(Collectors.toSet());
         final Map<FieldAccessor, MappedFieldTarget> mappedFields = new HashMap<>();
 
         // Validate and formalise field mapping
-        fieldColumnSpecMap.forEach((fieldSpec, columnMapping) -> {
+        fieldColumnSpecMap.forEach((fieldMapping, columnMapping) -> {
             switch (columnMapping) {
                 case AbstractColumnSpecBuilder<?> columnSpecBuilder -> {
                     final ColumnSpec columnSpec = columnSpecBuilder.build();
-                    mapColumnSpec(columnSpec, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
+                    mapColumnSpec(columnSpec, fieldMapping, dtoClass, tableMetaData, unmappedColumns, mappedFields);
                 }
                 case ColumnSpec columnSpec ->
-                        mapColumnSpec(columnSpec, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
+                        mapColumnSpec(columnSpec, fieldMapping, dtoClass, tableMetaData, unmappedColumns, mappedFields);
                 case OneToMany oneToMany ->
-                        mapOneToMany(oneToMany, fieldSpec, dtoClass, tableMetaData, unmappedColumns, mappedFields);
+                        mapOneToMany(oneToMany, (FieldSpec) fieldMapping, dtoClass, tableMetaData, unmappedColumns, mappedFields);
+                case ManyToMany manyToMany ->
+                        mapManyToMany(manyToMany, (FieldSpec) fieldMapping, dtoClass, tableMetaData, unmappedColumns, mappedFields);
             }
         });
 
@@ -90,13 +99,17 @@ public final class TableMapper {
     }
 
     private void mapColumnSpec(final ColumnSpec columnSpec,
-                               final FieldSpec fieldSpec,
+                               final FieldMapping fieldMapping,
                                final Class<?> dtoClass,
                                final TableMetaData tableMetaData,
                                final Set<String> unmappedColumns,
                                final Map<FieldAccessor, MappedFieldTarget> mappedFields) {
         if (!tableMetaData.hasColumn(columnSpec.name())) {
-            throw new IllegalArgumentException(String.format("Column '%s', mapped by " + (fieldSpec.property() ? "property" : "field") + " '%s' of DTO '%s', does not exist in table: '%s'", columnSpec.name(), fieldSpec.name(), dtoClass, tableMetaData.name()));
+            if (fieldMapping instanceof FieldSpec fieldSpec) {
+                throw new IllegalArgumentException(String.format("Column '%s', mapped by %s '%s' of DTO '%s', does not exist in table: '%s'", (fieldSpec.property() ? "property" : "field"), columnSpec.name(), fieldSpec.name(), dtoClass, tableMetaData.name()));
+            } else {
+                throw new IllegalArgumentException(String.format("Column '%s', mapped by '%s' of DTO '%s', does not exist in table: '%s'", columnSpec.name(), fieldMapping, dtoClass, tableMetaData.name()));
+            }
         }
 
         if (!unmappedColumns.contains(columnSpec.name())) {
@@ -107,12 +120,19 @@ public final class TableMapper {
                     .map(Map.Entry::getKey)
                     .map(FieldAccessor::name)
                     .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("Conflicting field for column '%s' not found; current field spec: '%s'".formatted(columnSpec, fieldSpec)));
+                    .orElseThrow(() -> new IllegalStateException("Conflicting field for column '%s' not found; current field mapping: '%s'".formatted(columnSpec, fieldMapping)));
             throw new IllegalArgumentException(String.format("Column '%s' is already mapped by field '%s'", columnSpec, conflictingFieldName));
         }
 
         // Add field-column mapping
-        final FieldAccessor fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
+        final FieldAccessor fieldAccessor;
+
+        if (fieldMapping instanceof FieldSpec fieldSpec) {
+            fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
+        } else {
+            fieldAccessor = new NoOpFieldAccessor();
+        }
+
         final ColumnMetaData column = Objects.requireNonNull(tableMetaData.column(columnSpec.name()), "Column metadata not found: " + columnSpec.name());
 
         if (columnSpec.isAutoIncrement()) {
@@ -125,7 +145,7 @@ public final class TableMapper {
 
         OrmTable nestedTable = null;
 
-        if (!ClassUtils.isBasicType(fieldAccessor.type())) {
+        if (!(fieldAccessor instanceof NoOpFieldAccessor) && !ClassUtils.isBasicType(fieldAccessor.type())) {
             // Check for self-referencing DTOs, then if we know how to persist the nested DTO
             if (fieldAccessor.type() != dtoClass) {
                 if (columnSpec.mappedTable() != null) {
@@ -137,14 +157,16 @@ public final class TableMapper {
                     }
                 } else if (!tableRegistry.containsTable(fieldAccessor.type())) {
                     // Nested child DTO, but no table mapping exists
-                    throw new IllegalArgumentException(String.format("Sub-DTO '%s' in field '%s' of DTO '%s' is not registered", fieldAccessor.type().getName(), fieldSpec.name(), dtoClass.getName()));
+                    throw new IllegalArgumentException(String.format("Sub-DTO '%s' in field '%s' of DTO '%s' is not registered", fieldAccessor.type().getName(), fieldAccessor.name(), dtoClass.getName()));
                 }
             }
 
             if (columnSpec.joinColumn() == null) {
-                throw new IllegalArgumentException(String.format("No \"join on\" field specified for sub-DTO '%s' in field '%s' of DTO '%s'", fieldAccessor.type().getName(), fieldSpec.name(), dtoClass.getName()));
+                throw new IllegalArgumentException(String.format("No \"join on\" field specified for sub-DTO '%s' in field '%s' of DTO '%s'", fieldAccessor.type().getName(), fieldAccessor.name(), dtoClass.getName()));
             }
 
+            column.setJoinColumn(columnSpec.joinColumn());
+        } else {
             column.setJoinColumn(columnSpec.joinColumn());
         }
 
@@ -165,7 +187,34 @@ public final class TableMapper {
                               final Map<FieldAccessor, MappedFieldTarget> mappedFields) {
         // Verify we are dealing with a collection
         final FieldAccessor fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
+        final Class<?> targetDto = getJoinTargetDto(dtoClass, fieldAccessor);
 
+        // Get the "mapped by" field from the target DTO of the collection wrapped by the field spec
+        final FieldAccessor mappedByField = DtoIntrospector.fieldAccessor(targetDto, oneToMany.mappedByField());
+        final MappedOneToMany mappedOneToMany = new MappedOneToMany(mappedByField, fieldAccessor);
+        mappedFields.put(fieldAccessor, mappedOneToMany);
+    }
+
+    private void mapManyToMany(final ManyToMany manyToMany,
+                               final FieldSpec fieldSpec,
+                               final Class<?> dtoClass,
+                               final TableMetaData tableMetaData,
+                               final Set<String> unmappedColumns,
+                               final Map<FieldAccessor, MappedFieldTarget> mappedFields) {
+        // Verify we are dealing with a collection
+        final FieldAccessor fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
+        final OrmTable joinTable = ensureManyToManyJoinTable(manyToMany);
+
+        final Class<?> targetDto = getJoinTargetDto(dtoClass, fieldAccessor);
+        final ConcurrentLazy<OrmTable> targetTable = new ConcurrentLazy<>(() -> tableRegistry.getTableOrThrow(targetDto));
+
+        final MappedManyToMany mappedManyToMany = new MappedManyToMany(
+                joinTable, manyToMany.joinColumn(), fieldAccessor,
+                targetTable, manyToMany.inverseJoinColumn());
+        mappedFields.put(fieldAccessor, mappedManyToMany);
+    }
+
+    private static Class<?> getJoinTargetDto(final Class<?> dtoClass, final FieldAccessor fieldAccessor) {
         if (!Collection.class.isAssignableFrom(fieldAccessor.type())) {
             throw new IllegalArgumentException(String.format("Field '%s' of DTO '%s' is not a collection; cannot apply reverse one-to-many mapping. Field type: %s", fieldAccessor.name(), dtoClass.getName(), fieldAccessor.type()));
         }
@@ -177,9 +226,33 @@ public final class TableMapper {
             throw new IllegalArgumentException(String.format("Field '%s' of DTO '%s' is a collection of basic type '%s'; cannot apply reverse one-to-many mapping", fieldAccessor.name(), dtoClass.getName(), targetDto.getName()));
         }
 
-        // Get the "mapped by" field from the target DTO of the collection wrapped by the field spec
-        final FieldAccessor mappeByField = DtoIntrospector.fieldAccessor(targetDto, new FieldSpec(oneToMany.mappedByField(), false));
-        final MappedOneToMany mappedOneToMany = new MappedOneToMany(mappeByField, fieldAccessor);
-        mappedFields.put(fieldAccessor, mappedOneToMany);
+        return targetDto;
+    }
+
+    private OrmTable ensureManyToManyJoinTable(final ManyToMany manyToMany) {
+        final OrmTable joinTable = tableRegistry.getTable(manyToMany.joinTable());
+
+        if (joinTable != null) {
+            return joinTable;
+        } else {
+            return mapManyToManyJoinTable(manyToMany);
+        }
+    }
+
+    private OrmTable mapManyToManyJoinTable(final ManyToMany manyToMany) {
+        final ColumnSpec joinColumnSpec = new ColumnSpec(manyToMany.joinColumn(), false, null, manyToMany.joinColumn());
+        final ColumnSpec inverseJoinColumnSpec = new ColumnSpec(manyToMany.inverseJoinColumn(), false, null, manyToMany.inverseJoinColumn());
+
+        final TableSpec tableSpec = TableSpec.t(manyToMany.joinTable(), Map.of(
+                new NoFieldMapping(), joinColumnSpec,
+                new NoFieldMapping(), inverseJoinColumnSpec));
+
+        final Class<?> hiddenJoinClass = Proxy.getProxyClass(HiddenJoinEntity.class.getClassLoader(), HiddenJoinEntity.class);
+
+        try {
+            return mapToTable(hiddenJoinClass, tableSpec);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to map many-to-many join table from spec: " + manyToMany, ex);
+        }
     }
 }

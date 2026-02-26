@@ -45,7 +45,11 @@ class BasicE2eTest extends AbstractE2eTest {
         account.setBalance(BigInteger.valueOf(1000));
         account.setOwner(person);
 
+        person.setAccounts(List.of(account));
+
+        // Insert the person record and cascade save to linked accounts
         litebridge.save(person);
+        // This save is unnecessary; it should not result in any db updates
         litebridge.save(account);
 
         // When

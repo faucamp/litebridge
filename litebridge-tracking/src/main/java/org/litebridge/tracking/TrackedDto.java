@@ -186,6 +186,9 @@ public final class TrackedDto<DTO> {
                         if (fieldSnapshot.isMap()) {
                             final FieldSnapshot oldFieldSnapshot = fieldSnapshotMap.get(fieldSnapshot.field().name());
                             return new ChangedMapField(fieldSnapshot.field().name(), getFieldValue(dto, fieldSnapshot.field()), oldFieldSnapshot.mapSnapshot());
+                        } else if (fieldSnapshot.isCollection()) {
+                            final FieldSnapshot oldFieldSnapshot = fieldSnapshotMap.get(fieldSnapshot.field().name());
+                            return new ChangedCollectionField(fieldSnapshot.field().name(), getFieldValue(dto, fieldSnapshot.field()), fieldSnapshot.listSnapshot(), oldFieldSnapshot.listSnapshot());
                         } else {
                             return new ChangedField(fieldSnapshot.field().name(), getFieldValue(dto, fieldSnapshot.field()));
                         }
@@ -231,26 +234,39 @@ public final class TrackedDto<DTO> {
 
                 fieldSnapshots.add(new FieldSnapshot(field, overallFieldHash, mapSnapshot));
             } else {
-                fieldSnapshots.add(new FieldSnapshot(field, getFieldHash(dto, field, dtosVisited)));
-
                 if (Collection.class.isAssignableFrom(field.type())) {
                     // Snapshot nested collection
                     final Collection<?> collection = (Collection<?>) getFieldValue(dto, field);
+                    final int overallFieldHash = getFieldHash(dto, field, dtosVisited);
+                    final List<Integer> listSnapshot;
 
                     if (!CollectionUtils.isEmpty(collection)) {
+                        listSnapshot = collection.stream()
+                                .map(item -> getValueHash(item, dtosVisited))
+                                .toList();
+
+                        // Track changes to its values if they are nested DTOs
                         final Class<?> genericType = field.genericType();
 
                         if (!ClassUtils.isBasicType(genericType)) {
                             collection.forEach(trackDtoCallback);
                         }
+                    } else {
+                        listSnapshot = Collections.emptyList();
                     }
-                } else if (!ClassUtils.isBasicType(field.type())) {
-                    // Snapshot nested DTO
-                    final Object nestedDto = getFieldValue(dto, field);
 
-                    if (nestedDto != null) {
-                        trackDtoCallback.accept(nestedDto);
+                    fieldSnapshots.add(new FieldSnapshot(field, overallFieldHash, listSnapshot));
+                } else {
+                    if (!ClassUtils.isBasicType(field.type())) {
+                        // Snapshot nested DTO
+                        final Object nestedDto = getFieldValue(dto, field);
+
+                        if (nestedDto != null) {
+                            trackDtoCallback.accept(nestedDto);
+                        }
                     }
+
+                    fieldSnapshots.add(new FieldSnapshot(field, getFieldHash(dto, field, dtosVisited)));
                 }
             }
         });

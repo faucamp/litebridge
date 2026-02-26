@@ -13,7 +13,7 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.orm.api.select.model.SelectSpec;
-import org.litebridge.orm.persistence.DtoAliasRegistry;
+import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ChangeTracker;
@@ -31,7 +31,6 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,9 +53,9 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
 
         // When
         final DtoFromClauseTerminal<TestDto> result = dtoSelector.select("myVar");
@@ -78,9 +77,9 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final Aliased aliased = new Aliased("myVar", "myVarAlias");
 
         // When
@@ -103,15 +102,16 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
 
         // When
         final OrmTable result = dtoSelector.table();
 
         // Then
-        assertSame(ormTable, result);
+        assertEquals(ormTable.dtoClass(), result.dtoClass());
+        assertEquals(ormTable.getMetaData(), result.getMetaData());
     }
 
     @Test
@@ -127,11 +127,11 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
         selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row = new Row().withColumn(columnMetaData, "testValue");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row));
@@ -158,11 +158,11 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
         selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row1 = new Row().withColumn(columnMetaData, "testValue1");
         final Row row2 = new Row().withColumn(columnMetaData, "testValue2");
@@ -186,11 +186,11 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
         when(databaseProvider.select(any(Select.class))).thenReturn(Collections.emptyList());
 
         // When
@@ -213,11 +213,11 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
         selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row = new Row().withColumn(columnMetaData, "testValue");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row));
@@ -243,11 +243,11 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
         when(databaseProvider.select(any(Select.class))).thenReturn(Collections.emptyList());
 
         // When/Then
@@ -267,11 +267,11 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
         selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row = new Row().withColumn(columnMetaData, "testValue");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row));
@@ -298,11 +298,11 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
         when(databaseProvider.select(any(Select.class))).thenReturn(Collections.emptyList());
 
         // When
@@ -325,11 +325,11 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
         selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row1 = new Row().withColumn(columnMetaData, "testValue1");
         final Row row2 = new Row().withColumn(columnMetaData, "testValue2");
@@ -357,11 +357,11 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
         selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row = new Row().withColumn(columnMetaData, "testValue");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row));
@@ -387,11 +387,11 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
         when(databaseProvider.select(any(Select.class))).thenReturn(Collections.emptyList());
 
         // When/Then
@@ -411,11 +411,11 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
         selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row1 = new Row().withColumn(columnMetaData, "testValue1");
         final Row row2 = new Row().withColumn(columnMetaData, "testValue2");
@@ -444,11 +444,11 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
         selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
         final Row row1 = new Row().withColumn(columnMetaData, "testValue1");
         final Row row2 = new Row().withColumn(columnMetaData, "testValue2");
@@ -478,11 +478,11 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoAliasRegistry dtoAliasRegistry = new DtoAliasRegistry();
+        final AliasGenerator aliasGenerator = new AliasGenerator();
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, dtoAliasRegistry);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(tableMetaData);
+        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
 
         // When
         final String result = dtoSelector.toSql();

@@ -102,12 +102,12 @@ There are different mechanisms available for registering a DTO
 ### Persisting a DTO:
 
 ```java
-final Person person = new Person();
-person.setName("Alice");
-person.setSurname("Smith");
+final Person groupedPerson = new Person();
+groupedPerson.setName("Alice");
+groupedPerson.setSurname("Smith");
         
 // Executes an INSERT statement for PERSON_ID, FIRST_NAME and SURNAME columns
-litebridge.save(person);
+litebridge.save(groupedPerson);
 ```
 
 Change tracking is initialised for the persisted DTO after the initial call to `save()` (if it wasn't already).
@@ -118,37 +118,37 @@ It allows manipulation of how Litebridge determines which SQL statement to use f
 while avoiding the overhead of requiring a database round-trip:
 
 ```java
-final Person person = new Person();
-person.setId(123L);
-person.setName("Alice");
-person.setSurname("Smith");
+final Person groupedPerson = new Person();
+groupedPerson.setId(123L);
+groupedPerson.setName("Alice");
+groupedPerson.setSurname("Smith");
 
 // Start tracking changes to the Person DTO
-litebridge.track(person);
+litebridge.track(groupedPerson);
 
-person.setName("Bob");
+groupedPerson.setName("Bob");
 
 // Executes an UPDATE statement to set FIRST_NAME to 'Bob'
-litebridge.save(person);
+litebridge.save(groupedPerson);
 
-person.setAge(30);
-person.setEyeColour("brown");
+groupedPerson.setAge(30);
+groupedPerson.setEyeColour("brown");
 
 // Executes an UPDATE statement to set AGE to 30 and EYE_COLOUR to 'brown'
-litebridge.save(person);
+litebridge.save(groupedPerson);
 ```
 
 Given it's "SQL-first" nature and focus on programmer intent, Litebridge allows explicitly inserting/updating a record,
 instead of the default `save()`:
 
 ```java
-final Person person = new Person();
-person.setId(123L);
-person.setName("Alice");
-person.setSurname("Smith");
+final Person groupedPerson = new Person();
+groupedPerson.setId(123L);
+groupedPerson.setName("Alice");
+groupedPerson.setSurname("Smith");
 
 // Executes an INSERT statement for the populated DTO fields
-litebridge.insert(person);
+litebridge.insert(groupedPerson);
 ```
 
 Similarly, an `update()` method is available to explicitly specify the use of an `UPDATE` statement.
@@ -158,18 +158,18 @@ Similarly, an `update()` method is available to explicitly specify the use of an
 Litebridge automatically cascades saves to related DTOs:
 
 ```java
-Person person = new Person();
-person.setName("Alice");
-person.setSurname("Smith");
-person.setAge(20);
-person.setEyeColour("blue");
+Person groupedPerson = new Person();
+groupedPerson.setName("Alice");
+groupedPerson.setSurname("Smith");
+groupedPerson.setAge(20);
+groupedPerson.setEyeColour("blue");
 
 Account account = new Account();
 account.setName("Account 1");
 account.setBalance(BigInteger.valueOf(1000));
-account.setOwner(person);
+account.setOwner(groupedPerson);
 
-// Save DTOs ("person" will also be saved due to cascading)
+// Save DTOs ("groupedPerson" will also be saved due to cascading)
 litebridge.save(account);
 ```
 
@@ -202,7 +202,7 @@ If exactly one result is expected from a query, the `one()`, `oneOrNull()` or `o
 ```java
 final Person alice = litebridge.select(Person.class)
         .where("surname").eq("Smith")
-        .oneOrThrow(() -> new IllegalStateException("More than one person with surname 'Smith'"));
+        .oneOrThrow(() -> new IllegalStateException("More than one groupedPerson with surname 'Smith'"));
         // or simply oneOrThrow()
 ```
 
@@ -214,7 +214,7 @@ Query results are available as streams:
 litebridge.select(Person.class)
         .where("eyeColour").isNull()
         .stream()
-        .map(person -> person.setEyeColour("unknown"))
+        .map(groupedPerson -> groupedPerson.setEyeColour("unknown"))
         // etc
 ```
 
@@ -231,7 +231,7 @@ Or they can be looped through directly:
 ```java
 litebridge.select(Person.class)
         .orderBy("id").asc()
-        .forEach(person -> logger.info("Found person: {}", person));
+        .forEach(groupedPerson -> logger.info("Found groupedPerson: {}", groupedPerson));
 ```
 
 #### Retrieving related DTOs
@@ -258,12 +258,12 @@ Account account = litebridge.select(Account.class)
 Retrieving the reverse (a `Person` and their collection of associated `Accounts`) works the same way:
 
 ```java
-Person person = litebridge.select(Person.class)
+Person groupedPerson = litebridge.select(Person.class)
         .join(Account.class).on("accounts")
         .where("id").eq(123L)
         .oneOrThrow();
 
-// person.accounts is null
+// groupedPerson.accounts is null
 ```
 
 #### Arbitrary SQL queries

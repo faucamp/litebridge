@@ -15,7 +15,7 @@ import java.util.StringJoiner;
  * The class stores the name of the changed field and its value, and provides
  * utilities for accessing and comparing these fields.
  */
-public sealed class ChangedField permits ChangedMapField {
+public sealed class ChangedField permits ChangedCollectionField, ChangedMapField {
 
     protected final String name;
 

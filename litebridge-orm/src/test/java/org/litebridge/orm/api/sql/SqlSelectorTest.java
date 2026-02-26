@@ -8,7 +8,6 @@ import org.junit.platform.commons.support.ReflectionSupport;
 import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -44,11 +43,11 @@ class SqlSelectorTest {
 
         // Then
         final Field selectSpecField = ReflectionSupport.streamFields(result.getClass(),
-                        field -> field.getType() == SelectSpec.class,
+                        field -> field.getType() == SqlSelectSpec.class,
                         HierarchyTraversalMode.BOTTOM_UP)
                 .findFirst().orElseThrow();
         ReflectionSupport.makeAccessible(selectSpecField);
-        final SelectSpec selectSpec = (SelectSpec) ReflectionSupport.tryToReadFieldValue(selectSpecField, result).get();
+        final SqlSelectSpec selectSpec = (SqlSelectSpec) ReflectionSupport.tryToReadFieldValue(selectSpecField, result).get();
 
         assertNotNull(selectSpec);
         assertNotNull(selectSpec.getTable());
@@ -78,11 +77,11 @@ class SqlSelectorTest {
 
         // Then
         final Field selectSpecField = ReflectionSupport.streamFields(result.getClass(),
-                        field -> field.getType() == SelectSpec.class,
+                        field -> field.getType() == SqlSelectSpec.class,
                         HierarchyTraversalMode.BOTTOM_UP)
                 .findFirst().orElseThrow();
         ReflectionSupport.makeAccessible(selectSpecField);
-        final SelectSpec selectSpec = (SelectSpec) ReflectionSupport.tryToReadFieldValue(selectSpecField, result).get();
+        final SqlSelectSpec selectSpec = (SqlSelectSpec) ReflectionSupport.tryToReadFieldValue(selectSpecField, result).get();
 
         assertNotNull(selectSpec);
         assertNotNull(selectSpec.getTable());

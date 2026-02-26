@@ -4,7 +4,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.orm.api.select.JoinClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
-import org.litebridge.orm.api.select.model.JoinSpec;
+import org.litebridge.orm.api.sql.SqlJoinSpec;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
@@ -16,7 +16,8 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         DtoJoinConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>,
-        DtoSelectSpec>
+        DtoSelectSpec,
+        DtoJoinSpec>
 
         implements JoinClauseTerminal<DTO,
         DtoJoinClause<DTO>,
@@ -31,7 +32,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     private final OrmTable table;
 
-    public DtoJoinConditionClauseTerminal(final JoinSpec joinSpec, final DtoSelector<DTO> delegate) {
+    public DtoJoinConditionClauseTerminal(final DtoJoinSpec joinSpec, final DtoSelector<DTO> delegate) {
         super(joinSpec, delegate);
         this.table = delegate.table();
     }

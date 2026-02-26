@@ -2,7 +2,7 @@ package org.litebridge.orm.persistence;
 
 import org.litebridge.db.spi.update.UpdateStatement;
 
-public abstract sealed class AbstractStatementBuilder<US extends UpdateStatement>
+public abstract sealed class AbstractStatementBuilder<US extends UpdateStatement> implements StatementBuilder<US>
         permits InsertBuilder, UpdateBuilder {
 
     protected final OrmTable table;

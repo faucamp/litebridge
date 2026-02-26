@@ -4,15 +4,14 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
-import org.litebridge.orm.api.select.model.JoinSpec;
-import org.litebridge.orm.api.select.model.SelectSpec;
 
 public final class SqlJoinClause extends AbstractJoinClause<Row,
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal,
-        SelectSpec> {
+        SqlSelectSpec,
+        SqlJoinSpec> {
 
-    public SqlJoinClause(final JoinSpec joinSpec, final AbstractSelector<Row, SelectSpec> delegate) {
+    public SqlJoinClause(final SqlJoinSpec joinSpec, final AbstractSelector<Row, SqlSelectSpec> delegate) {
         super(joinSpec, delegate);
     }
 

@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -18,8 +19,20 @@ import java.util.stream.Collectors;
  * <p>
  * This class is immutable and thread-safe.
  */
-public final class TableMetaData extends Table {
+public final class TableMetaData {
 
+    /**
+     * Database catalog name
+     */
+    private final String catalog;
+    /**
+     * Database schema name
+     */
+    private final String schema;
+    /**
+     * Database table name
+     */
+    private final String name;
     private final List<ColumnMetaData> primaryKey;
     private final List<ColumnMetaData> columns;
     private final Map<String, ColumnMetaData> columnMap;
@@ -47,7 +60,9 @@ public final class TableMetaData extends Table {
      * @throws IllegalArgumentException if any primary key column metadata is not found in the provided column metadata
      */
     public TableMetaData(final String catalog, final String schema, final String table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
-        super(catalog, schema, table);
+        this.catalog = catalog;
+        this.schema = schema;
+        this.name = table;
         this.columns = Collections.unmodifiableList(columns);
         this.columnMap = columns.stream()
                 .collect(Collectors.toMap(ColumnMetaData::name,
@@ -63,6 +78,18 @@ public final class TableMetaData extends Table {
 
     private TableMetaData(final TableMetaData other) {
         this(other.catalog(), other.schema(), other.name(), other.primaryKey.stream().map(ColumnMetaData::name).toList(), other.columns);
+    }
+
+    public String catalog() {
+        return catalog;
+    }
+
+    public String schema() {
+        return schema;
+    }
+
+    public String name() {
+        return name;
     }
 
     /**
@@ -108,18 +135,6 @@ public final class TableMetaData extends Table {
         return columnMap.containsKey(columnName);
     }
 
-    /**
-     * Create a copy of this {@code TableMetaData} object with a specified alias.
-     *
-     * @param alias the alias to assign to the new {@code TableMetaData} object; must not be null
-     * @return a new {@code TableMetaData} instance with the specified alias
-     */
-    public TableMetaData as(final String alias) {
-        final TableMetaData copy = new TableMetaData(this);
-        copy.setAlias(alias);
-        return copy;
-    }
-
     @Override
     public boolean equals(@Nullable Object obj) {
         if (obj == this) return true;
@@ -139,11 +154,12 @@ public final class TableMetaData extends Table {
 
     @Override
     public String toString() {
-        return "TableMetaData[" +
-                "catalog=" + catalog() + ", " +
-                "schema=" + schema() + ", " +
-                "table=" + name() + ", " +
-                "primaryKey=" + primaryKey + ", " +
-                "columns=" + columns + ']';
+        return new StringJoiner(", ", TableMetaData.class.getSimpleName() + "[", "]")
+                .add("catalog='" + catalog + "'")
+                .add("schema='" + schema + "'")
+                .add("name='" + name + "'")
+                .add("primaryKey=" + primaryKey)
+                .add("columns=" + columns)
+                .toString();
     }
 }

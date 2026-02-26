@@ -1,12 +1,14 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Table;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * The TableRegistry class is a centralized registry responsible for managing the relationship
@@ -43,6 +45,11 @@ public final class TableRegistry {
                 .getTableOrThrow(dtoClass);
     }
 
+    public @Nullable OrmTable getTable(final String table) {
+        final String[] catalogSchemaTable = StringUtils.splitArray(table, '.', 3, true);
+        return getTable(catalogSchemaTable[1], catalogSchemaTable[2]);
+    }
+
     public @Nullable OrmTable getTable(final String schema, final String table) {
         return schemaTableMap.getOrDefault(schema, Collections.emptyMap())
                 .get(table);
@@ -62,13 +69,19 @@ public final class TableRegistry {
                 .put(table.getMetaData().name(), table);
     }
 
+    public Stream<OrmTable> tableStream() {
+        return schemaTableMap.values().stream()
+                .flatMap(tableMap ->
+                        tableMap.values().stream());
+    }
+
     public org.litebridge.db.spi.Table getOrCreateSpiTable(final String schema, final String table) {
         // If the table has been registered for DTO mapping, use the corresponding Table object, else use the table name directly
         final org.litebridge.db.spi.Table spiTable;
-        final OrmTable tableImpl = getTable(schema, table);
+        final OrmTable ormTable = getTable(schema, table);
 
-        if (tableImpl != null && Objects.equals(schema, tableImpl.getMetaData().schema())) {
-            spiTable = tableImpl.getMetaData();
+        if (ormTable != null) {
+            spiTable = new Table(ormTable.getMetaData().catalog(), ormTable.getMetaData().schema(), ormTable.getMetaData().name());
         } else {
             spiTable = new org.litebridge.db.spi.Table("", schema, table);
         }

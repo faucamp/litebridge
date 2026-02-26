@@ -3,10 +3,11 @@ package org.litebridge.orm.api.sql;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
-import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
 
 import java.util.Arrays;
+
+;
 
 public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
         SqlJoinClause,
@@ -16,7 +17,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
         SqlWhereConditionClauseTerminal,
         SqlOrderByClause,
         SqlOrderByClauseChain,
-        SelectSpec>
+        SqlSelectSpec>
 
         implements SqlJoinClauseTerminal {
 

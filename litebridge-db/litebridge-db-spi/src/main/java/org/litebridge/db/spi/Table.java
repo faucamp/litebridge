@@ -58,14 +58,16 @@ public class Table extends Aliased {
         return (Table) super.as(alias);
     }
 
-    public final boolean isTableMetaData() {
-        return this instanceof TableMetaData;
+    @Override
+    public boolean equals(final Object o) {
+        if (!(o instanceof final Table table)) return false;
+        return equalsIgnoreAlias(table) && Objects.equals(alias(), table.alias());
     }
 
     @Override
-    public boolean equals(final Object o) {
-        if (!(o instanceof final Table table1)) return false;
-        return Objects.equals(catalog, table1.catalog) && Objects.equals(schema, table1.schema) && Objects.equals(name(), table1.name());
+    public boolean equalsIgnoreAlias(final Aliased o) {
+        if (!(o instanceof final Table table)) return false;
+        return Objects.equals(catalog, table.catalog) && Objects.equals(schema, table.schema) && Objects.equals(name(), table.name());
     }
 
     @Override
@@ -79,6 +81,7 @@ public class Table extends Aliased {
                 .add("catalog='" + catalog + "'")
                 .add("schema='" + schema + "'")
                 .add("name='" + name() + "'")
+                .add("alias='" + alias() + "'")
                 .toString();
     }
 }

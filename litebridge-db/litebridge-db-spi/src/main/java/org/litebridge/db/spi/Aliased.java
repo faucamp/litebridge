@@ -93,7 +93,11 @@ public class Aliased {
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof final Aliased aliased)) return false;
-        return Objects.equals(name, aliased.name) && Objects.equals(alias, aliased.alias);
+        return equalsIgnoreAlias(aliased) && Objects.equals(alias, aliased.alias);
+    }
+
+    public boolean equalsIgnoreAlias(final Aliased aliased) {
+        return Objects.equals(name, aliased.name);
     }
 
     @Override

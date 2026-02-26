@@ -30,9 +30,9 @@ public final class ChangedMapField extends ChangedField {
      * @param value       the new value of the field
      * @param mapSnapshot the original state of the map field, stored as an immutable map
      */
-    public ChangedMapField(final String fieldName, final Object value, final Map<?, Integer> mapSnapshot) {
+    public ChangedMapField(final String fieldName, @Nullable final Object value, @Nullable final Map<?, Integer> mapSnapshot) {
         super(fieldName, value);
-        this.mapSnapshot = Collections.unmodifiableMap(mapSnapshot);
+        this.mapSnapshot = mapSnapshot != null ? Collections.unmodifiableMap(mapSnapshot) : Collections.emptyMap();
     }
 
     /**
