@@ -15,7 +15,6 @@ import java.util.List;
  * <p>
  * This class is immutable and serves as part of the structure for creating and representing
  * SQL UPDATE operations in a database context.
- * <p>
  *
  * @param table        {@link TableMetaData} provides metadata about the table being updated, including its structure.
  * @param columnValues The {@link ColumnValue} pairs a column with its new value, ensuring clear definition of updates.

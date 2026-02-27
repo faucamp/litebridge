@@ -28,9 +28,10 @@ public final class ChangedCollectionField extends ChangedField {
      * Construct a {@code ChangedMapField} instance representing a change in a map field,
      * including a snapshot of its original state as an immutable map.
      *
-     * @param fieldName    the name of the field being tracked
-     * @param value        the new value of the field
-     * @param listSnapshot the original state of the map field, stored as an immutable map
+     * @param fieldName        the name of the field being tracked
+     * @param value            the new value of the field
+     * @param listSnapshot     the original state of the map field, stored as an immutable map
+     * @param prevListSnapshot the previous state of the list
      */
     public ChangedCollectionField(final String fieldName, final @Nullable Object value, @Nullable final List<Integer> listSnapshot, @Nullable final List<Integer> prevListSnapshot) {
         super(fieldName, value);

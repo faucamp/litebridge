@@ -22,11 +22,14 @@ import java.util.List;
  * Instances of this class are immutable and serve as part of the structure for building SQL
  * update operations targeting a database.
  *
- * @param table   The target table for the insertion operation.
- * @param columns The list of columns involved in the insertion operation.
- * @param rows    The list of rows to be inserted.
+ * @param table               The target table for the insertion operation.
+ * @param columns             The list of columns involved in the insertion operation.
+ * @param rows                The list of rows to be inserted.
+ * @param returnGeneratedKeys If true, generated keys will be returned after the insert operation.
  */
-public record Insert(TableMetaData table, List<ColumnMetaData> columns, List<RowValue> rows,
+public record Insert(TableMetaData table,
+                     List<ColumnMetaData> columns,
+                     List<RowValue> rows,
                      boolean returnGeneratedKeys)
         implements UpdateStatement {
 

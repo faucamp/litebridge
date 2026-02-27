@@ -13,6 +13,7 @@ import org.jspecify.annotations.Nullable;
  * @param isAutoIncrement Whether column is set to auto-increment
  * @param sequence        Name of the sequence used to generate values for this column
  * @param joinColumn      Field name of the nested DTO to join on
+ * @param mappedTable     In-line mapped table specification
  *
  */
 @NullMarked
