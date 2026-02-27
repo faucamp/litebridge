@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class TimeUtils {
 
+    @SuppressWarnings("SuspiciousDateFormat")
     private static final DateTimeFormatter LOOSE_ISO_DATE_TIME_ZONE_PARSER = DateTimeFormatter.ofPattern("[yyyyMMdd][yyyy-MM-dd][yyyy-DDD]['T'[HHmmss][HHmm][HH:mm:ss][HH:mm][.SSSSSSSSS][.SSSSSSS][.SSSSSS][.SSSSS][.SSSS][.SSS][.SS][.S][Z]][' 'HH:mm:ss][.SSS][OOOO][O][z][XXXXX][XXXX]['['VV']']");
     private static final DateTimeFormatter DATE_FORMAT_WITH_SLASHES = DateTimeFormatter.ofPattern("[yyyy/MM/dd][dd/MM/yyyy][M[M]/d[d]/yyyy][M[M]/d[d]/yy][, HH:mm[:ss]]");
     private static final Map<String, DateTimeFormatter> CACHED_DATE_TIME_FORMATTERS = new ConcurrentHashMap<>();

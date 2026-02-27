@@ -179,7 +179,10 @@ public final class TrackedDto<DTO> {
                         if (fieldSnapshot.hash() != 0 && ClassFieldAccessorCache.isNestedDtoField(dto.getClass(), fieldSnapshot.field())) {
                             // This nested DTO field was null previously, so we need to track the new value
                             final Object nestedDto = getFieldValue(dto, fieldSnapshot.field());
-                            trackDtoCallback.accept(nestedDto);
+
+                            if (nestedDto != null) {
+                                trackDtoCallback.accept(nestedDto);
+                            }
                         }
                     })
                     .map(fieldSnapshot -> {

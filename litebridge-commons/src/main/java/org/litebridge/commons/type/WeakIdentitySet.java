@@ -49,6 +49,7 @@ public final class WeakIdentitySet<E> extends AbstractSet<E> {
     }
 
     @Override
+    @SuppressWarnings("SuspiciousMethodCalls")
     public boolean contains(final Object o) {
         return map.containsKey(o);
     }

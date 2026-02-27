@@ -61,9 +61,9 @@ public final class ChangedCollectionField extends ChangedField {
 
     @SuppressWarnings("unchecked")
     public List<Object> updatedValues() {
-        final List<Object> values = (List<Object>) value;
+        final List<Object> values = (List<Object>) Objects.requireNonNull(value);
         return updatedIndices().stream()
-                .map(index -> values.get(index))
+                .map(values::get)
                 .toList();
     }
 

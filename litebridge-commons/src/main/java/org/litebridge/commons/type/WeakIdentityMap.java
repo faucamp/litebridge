@@ -79,6 +79,7 @@ public final class WeakIdentityMap<K, V> implements Map<K, V> {
     }
 
     @Override
+    @SuppressWarnings("StatementWithEmptyBody")
     public void clear() {
         innerMap.clear();
         // Clear the queue
