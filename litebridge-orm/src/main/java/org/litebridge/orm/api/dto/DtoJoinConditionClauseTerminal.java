@@ -6,6 +6,7 @@ import org.litebridge.orm.api.select.JoinClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.api.sql.SqlJoinSpec;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
+import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.Arrays;
@@ -31,21 +32,23 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         DtoJoinClassTerminal<DTO> {
 
     private final OrmTable table;
+    private final AliasGenerator aliasGenerator;
 
-    public DtoJoinConditionClauseTerminal(final DtoJoinSpec joinSpec, final DtoSelector<DTO> delegate) {
+    public DtoJoinConditionClauseTerminal(final DtoJoinSpec joinSpec, final DtoSelector<DTO> delegate, final AliasGenerator aliasGenerator) {
         super(joinSpec, delegate);
         this.table = delegate.table();
+        this.aliasGenerator = aliasGenerator;
     }
 
     @Override
     public DtoJoinConditionClause<DTO> and(final String field) {
-        final Column column = table.getColumnForFieldName(field);
+        final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), table.getColumnForFieldName(field));
         return new DtoJoinConditionClause<>(joinSpec.newCondition(column), this);
     }
 
     @Override
     public DtoWhereConditionClause<DTO> where(final String field) {
-        final Column column = table.getColumnForFieldName(field);
+        final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), table.getColumnForFieldName(field));
         return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate));
     }
 

@@ -3,10 +3,7 @@ package org.litebridge.orm.api.sql;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
-import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.JoinSpec;
-import org.litebridge.orm.api.select.model.LimitSpec;
-import org.litebridge.orm.api.select.model.OrderBySpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
 
 import java.util.ArrayList;
@@ -23,17 +20,7 @@ import java.util.Objects;
 public class SqlSelectSpec extends SelectSpec {
 
     @Nullable
-    protected Table table;
-    @Nullable
     protected List<Column> columns;
-    @Nullable
-    protected List<JoinSpec> joins;
-    @Nullable
-    protected List<ConditionSpec> whereConditions;
-    @Nullable
-    protected List<OrderBySpec> orderBys;
-    @Nullable
-    protected LimitSpec limit;
 
     public @Nullable List<Column> getColumns() {
         return columns;
@@ -84,7 +71,7 @@ public class SqlSelectSpec extends SelectSpec {
     }
 
     private Column sanitise(final Column column) {
-        if (column.table() != table
+        if (table != null && column.table() != table
                 && column.table().alias() == null
                 && Objects.equals(column.table().schema(), table.schema())
                 && Objects.equals(column.table().name(), table.name())) {

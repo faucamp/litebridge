@@ -43,7 +43,7 @@ class SqlSelectorTest {
 
         // Then
         final Field selectSpecField = ReflectionSupport.streamFields(result.getClass(),
-                        field -> field.getType() == SqlSelectSpec.class,
+                        field -> field.getName().equals("selectSpec"),
                         HierarchyTraversalMode.BOTTOM_UP)
                 .findFirst().orElseThrow();
         ReflectionSupport.makeAccessible(selectSpecField);
@@ -77,7 +77,7 @@ class SqlSelectorTest {
 
         // Then
         final Field selectSpecField = ReflectionSupport.streamFields(result.getClass(),
-                        field -> field.getType() == SqlSelectSpec.class,
+                        field -> field.getName().equals("selectSpec"),
                         HierarchyTraversalMode.BOTTOM_UP)
                 .findFirst().orElseThrow();
         ReflectionSupport.makeAccessible(selectSpecField);

@@ -44,7 +44,7 @@ class DtoJoinConditionClauseTerminalTest {
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasGenerator.aliasTable(ormTable));
 
-        final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector);
+        final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector, aliasGenerator);
 
         // When
         final DtoJoinConditionClause<TestDto> result = dtoDtoJoinConditionClauseTerminal.and("myVar");
@@ -73,7 +73,7 @@ class DtoJoinConditionClauseTerminalTest {
         selectSpec.setTable(aliasedTable);
         final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasedTable);
 
-        final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector);
+        final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector, aliasGenerator);
 
         // When
         final DtoWhereConditionClause<TestDto> result = dtoDtoJoinConditionClauseTerminal.where("myVar");
@@ -99,7 +99,7 @@ class DtoJoinConditionClauseTerminalTest {
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasGenerator.aliasTable(ormTable));
 
-        final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector);
+        final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector, aliasGenerator);
 
         // When
         final DtoOrderByClause<TestDto> result = dtoDtoJoinConditionClauseTerminal.orderBy("myVar");
@@ -125,7 +125,7 @@ class DtoJoinConditionClauseTerminalTest {
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasGenerator.aliasTable(ormTable));
 
-        final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector);
+        final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector, aliasGenerator);
         final FieldColumnSpec fieldColumnSpec = FieldColumnMapping.f("myVar").c("MY_VAR");
 
         // When

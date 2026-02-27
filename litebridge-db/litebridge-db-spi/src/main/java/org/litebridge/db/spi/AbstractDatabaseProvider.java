@@ -100,17 +100,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                     sql.append(", ");
                 }
 
-                if (!StringUtils.isEmpty(column.table().alias())) {
-                    sql.append(column.table().alias());
-                } else {
-                    sql.append(column.table().name());
-                }
-
-                sql.append('.').append(column.name());
-
-                if (!StringUtils.isBlank(column.alias())) {
-                    sql.append(" AS ").append(column.alias());
-                }
+                appendColumn(sql, column);
             }
         } else {
             // Empty select clause; return all columns
@@ -122,7 +112,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         appendTable(sql, select.table());
 
         if (select.table().alias() != null) {
-            sql.append(" AS ").append(select.table().alias());
+            sql.append(" AS ").append(quoteIdentifier(select.table().alias()));
         }
 
         // Joins
@@ -161,10 +151,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 }
 
                 if (orderBy.column().table().alias() != null) {
-                    sql.append(orderBy.column().table().alias()).append('.');
+                    sql.append(quoteIdentifier(orderBy.column().table().alias())).append('.');
                 }
 
-                sql.append(orderBy.column().name()).append(orderBy.asc() ? " ASC" : " DESC");
+                sql.append(quoteIdentifier(orderBy.column().name())).append(orderBy.asc() ? " ASC" : " DESC");
             }
         }
 
@@ -203,7 +193,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
         final StringBuilder sql = appendTable(new StringBuilder("INSERT INTO "), insert.table())
                 .append(" (")
-                .append(String.join(", ", columnNames))
+                .append(String.join(", ", columnNames.stream().map(this::quoteIdentifier).toList()))
                 .append(") VALUES ");
 
         final List<BindValue> bindValues = new ArrayList<>(insert.rows().size() * columnNames.size());
@@ -252,7 +242,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 sql.append(", ");
             }
 
-            sql.append(columnValue.column().name()).append(" = ?");
+            sql.append(quoteIdentifier(columnValue.column().name())).append(" = ?");
 
             final Object convertedValue = typeConverter.convert(columnValue.value(), columnValue.column().getDataType());
             bindValues.add(new BindValue(convertedValue, columnValue.column().getDataType()));
@@ -296,7 +286,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final StringBuilder sb = appendTable(new StringBuilder(" JOIN "), join.table());
 
         if (join.table().alias() != null) {
-            sb.append(" AS ").append(join.table().alias());
+            sb.append(" AS ").append(quoteIdentifier(join.table().alias()));
         }
 
         if (join.conditions().getFirst().operator() != Operator.USING) {
@@ -333,9 +323,9 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final String column;
 
         if (!StringUtils.isEmpty(condition.column().table().alias())) {
-            column = condition.column().table().alias() + '.' + condition.column().name();
+            column = quoteIdentifier(condition.column().table().alias()) + '.' + quoteIdentifier(condition.column().name());
         } else {
-            column = condition.column().name();
+            column = quoteIdentifier(condition.column().name());
         }
 
         if (condition.operator() == Operator.IS_NULL || condition.operator() == Operator.IS_NOT_NULL) {
@@ -345,7 +335,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         } else {
             // If the target value is a column, reference that
             if (condition.value() instanceof Column targetColumn) {
-                return "%s %s %s.%s".formatted(column, mapOperator(condition.operator()), targetColumn.table().aliasOrName(), targetColumn.name());
+                return "%s %s %s.%s".formatted(column, mapOperator(condition.operator()), quoteIdentifier(targetColumn.table().aliasOrName()), quoteIdentifier(targetColumn.name()));
             } else {
                 return "%s %s ?".formatted(column, mapOperator(condition.operator()));
             }
@@ -367,6 +357,20 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
         sql.append(quoteIdentifier(table));
         return sql;
+    }
+
+    private void appendColumn(final StringBuilder sql, final Column column) {
+        if (!StringUtils.isEmpty(column.table().alias())) {
+            sql.append(quoteIdentifier(column.table().alias()));
+        } else {
+            sql.append(quoteIdentifier(column.table().name()));
+        }
+
+        sql.append('.').append(quoteIdentifier(column.name()));
+
+        if (!StringUtils.isBlank(column.alias())) {
+            sql.append(" AS ").append(quoteIdentifier(column.alias()));
+        }
     }
 
     /**
@@ -697,7 +701,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return new TableMetaData(table, primaryKeys, columns);
     }
 
-    protected String quoteIdentifier(final String identifier) {
+    protected @Nullable String quoteIdentifier(final @Nullable String identifier) {
+        if (identifier == null) {
+            return null;
+        }
+
         if (SqlReservedWords.contains(identifier)) {
             return "\"%s\"".formatted(identifier);
         } else {

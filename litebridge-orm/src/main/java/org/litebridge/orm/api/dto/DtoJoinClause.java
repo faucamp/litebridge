@@ -95,7 +95,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
             conditionSpec.setValue(targetColumn);
         }
 
-        return new DtoJoinConditionClauseTerminal<>(joinSpec, (DtoSelector<DTO>) delegate);
+        return new DtoJoinConditionClauseTerminal<>(joinSpec, (DtoSelector<DTO>) delegate, aliasGenerator);
     }
 
     private DtoJoinConditionClauseTerminal<DTO> manyToManyJoin(MappedManyToMany mappedManyToMany) {
@@ -130,7 +130,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         conditionSpec.setOperator(Operator.EQ);
         conditionSpec.setValue(rightColumn);
 
-        return new DtoJoinConditionClauseTerminal<>(intermediateJoinSpec, (DtoSelector<DTO>) delegate);
+        return new DtoJoinConditionClauseTerminal<>(intermediateJoinSpec, (DtoSelector<DTO>) delegate, aliasGenerator);
     }
 
     private DtoJoinSpec createIntermediateJoinSpec(final MappedManyToMany mappedManyToMany) {
