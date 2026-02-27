@@ -184,12 +184,6 @@ public final class ColumnMetaData extends Column implements MappedFieldTarget {
         return copy;
     }
 
-    public ColumnMetaData as(final String alias, final String tableAlias) {
-        final ColumnMetaData copy = new ColumnMetaData(this, tableAlias);
-        copy.setAlias(alias);
-        return copy;
-    }
-
     @Override
     public boolean equals(final Object o) {
         return super.equals(o);

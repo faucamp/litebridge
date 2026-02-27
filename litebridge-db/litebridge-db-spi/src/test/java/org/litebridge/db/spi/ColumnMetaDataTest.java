@@ -93,7 +93,7 @@ class ColumnMetaDataTest {
         original.setAlias("c");
 
         // When
-        final ColumnMetaData copy = new ColumnMetaData(original);
+        final ColumnMetaData copy = new ColumnMetaData(original, "c");
 
         // Then
         assertEquals(original.table(), copy.table());

@@ -53,6 +53,10 @@ public class Table extends Aliased {
         return schema;
     }
 
+    public String qualifiedName() {
+        return schema + "." + name();
+    }
+
     @Override
     public Table as(final String alias) {
         return (Table) super.as(alias);

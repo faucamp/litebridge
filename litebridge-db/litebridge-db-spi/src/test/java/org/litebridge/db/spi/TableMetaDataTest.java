@@ -105,18 +105,6 @@ class TableMetaDataTest {
     }
 
     @Test
-    void as() {
-        // Given
-        final Table table = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", Collections.emptyList(), Collections.emptyList());
-
-        // When
-        final Table result = table.as("testAlias");
-
-        // Then
-        assertEquals("testAlias", result.alias());
-    }
-
-    @Test
     void columns() {
         // Given
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");

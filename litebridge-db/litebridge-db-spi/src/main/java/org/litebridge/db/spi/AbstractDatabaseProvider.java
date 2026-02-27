@@ -49,7 +49,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDatabaseProvider.class);
     private final Connection connection;
     private final TypeConverter typeConverter;
-    private final Map<Table, TableMetaData> tableMetaDataCache = new ConcurrentHashMap<>();
+    /**
+     * Map of qualified table name -> table metadata.
+     */
+    private final Map<String, TableMetaData> tableMetaDataCache = new ConcurrentHashMap<>();
 
     public AbstractDatabaseProvider(final Connection connection,
                                     final TypeConverter typeConverter) {
@@ -670,11 +673,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     private TableMetaData ensureTableMetaData(final Table table) throws SQLException {
-        TableMetaData tableMetaData = this.tableMetaDataCache.get(table);
+        TableMetaData tableMetaData = this.tableMetaDataCache.get(table.qualifiedName());
 
         if (tableMetaData == null) {
             tableMetaData = fetchTableMetaData(table);
-            tableMetaDataCache.put(table, tableMetaData);
+            tableMetaDataCache.put(table.qualifiedName(), tableMetaData);
         }
 
         return tableMetaData;

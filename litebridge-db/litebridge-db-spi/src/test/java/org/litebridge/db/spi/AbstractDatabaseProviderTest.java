@@ -309,8 +309,9 @@ class AbstractDatabaseProviderTest {
     @Test
     void select() throws Exception {
         // Given
-        final TableMetaData table = getTableMetaDataImpl();
-        final ColumnMetaData column = table.column("TEST_COLUMN");
+        final TableMetaData tableMetaData = getTableMetaDataImpl();
+        final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), "t1");
+        final ColumnMetaData column = tableMetaData.column("TEST_COLUMN");
 
         final Select select = new Select(
                 table,
@@ -328,8 +329,8 @@ class AbstractDatabaseProviderTest {
         when(resultSet.next()).thenReturn(true).thenReturn(false);
         final ResultSetMetaData resultSetMetaData = mock(ResultSetMetaData.class);
         when(resultSetMetaData.getColumnCount()).thenReturn(1);
-        when(resultSetMetaData.getSchemaName(1)).thenReturn(table.schema());
-        when(resultSetMetaData.getTableName(1)).thenReturn(table.name());
+        when(resultSetMetaData.getSchemaName(1)).thenReturn(tableMetaData.schema());
+        when(resultSetMetaData.getTableName(1)).thenReturn(tableMetaData.name());
         when(resultSetMetaData.getColumnName(1)).thenReturn(column.name());
         when(resultSet.getMetaData()).thenReturn(resultSetMetaData);
 
@@ -354,10 +355,11 @@ class AbstractDatabaseProviderTest {
     @Test
     void toSql() throws Exception {
         // Given
-        final TableMetaData table = getTableMetaDataImpl().as("t1");
-        final Column column1 = table.column("TEST_PK").as("col1");
+        final TableMetaData tableMetaData = getTableMetaDataImpl();
+        final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), "t1");
+        final Column column1 = tableMetaData.column("TEST_PK").as("col1");
         column1.table().setAlias("t1");
-        final Column column2 = table.column("TEST_COLUMN").as("col2");
+        final Column column2 = tableMetaData.column("TEST_COLUMN").as("col2");
         column2.table().setAlias("t1");
 
         final Select select = new Select(
