@@ -70,7 +70,7 @@ public abstract class SelectSpec {
         }
 
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setColumn(sanitise(column));
+        conditionSpec.setColumn(column);
         whereConditions.add(conditionSpec);
         return conditionSpec;
     }
@@ -137,7 +137,7 @@ public abstract class SelectSpec {
         final List<Column> columns = columns();
 
         return new Select(table,
-                columns != null ? Collections.unmodifiableList(columns) : Collections.emptyList(),
+                Collections.unmodifiableList(columns),
                 joins != null ? joins.stream()
                         .map(JoinSpec::toJoin)
                         .toList() : Collections.emptyList(),
@@ -152,16 +152,5 @@ public abstract class SelectSpec {
                         .map(ConditionSpec::toCondition)
                         .toList() : Collections.emptyList(),
                 limit != null ? limit.toLimit() : Optional.empty());
-    }
-
-    private Column sanitise(final Column column) {
-        if (column.table() != table
-                && column.table().alias() == null
-                && Objects.equals(column.table().schema(), table.schema())
-                && Objects.equals(column.table().name(), table.name())) {
-            return new Column(table, column.name(), column.alias());
-        } else {
-            return column;
-        }
     }
 }

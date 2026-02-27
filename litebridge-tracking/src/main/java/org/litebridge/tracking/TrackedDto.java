@@ -16,7 +16,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -275,24 +274,6 @@ public final class TrackedDto<DTO> {
         });
 
         return fieldSnapshots;
-    }
-
-    private void updateFieldSnapshotsWithChangedFields() {
-        final ListIterator<FieldSnapshot> fieldSnapshotIterator = fieldSnapshots.listIterator();
-        final Set<Object> dtosVisited = new WeakIdentitySet<>();
-
-        while (fieldSnapshotIterator.hasNext()) {
-            final FieldSnapshot oldFieldSnapshot = fieldSnapshotIterator.next();
-            changedFields.get(oldFieldSnapshot.field().name())
-                    .ifPresent(changedField -> {
-                        // Replace the old snapshot with a new one based on the changed field - this avoids the previously-detected change from being seen again
-                        final FieldSnapshot newFieldSnapshot = toFieldSnapshot(oldFieldSnapshot.field(), changedField, dtosVisited);
-                        fieldSnapshotIterator.set(newFieldSnapshot);
-                    });
-        }
-
-        // Reset changed fields
-        changedFields = null;
     }
 
     private static int getFieldHash(final Object instance, final FieldAccessor field, final Set<Object> dtosVisited) {

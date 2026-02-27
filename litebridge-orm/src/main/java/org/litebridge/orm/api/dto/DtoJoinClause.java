@@ -106,7 +106,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         final Table leftTable = intermediateJoinSpec.table();
         final Column leftColumn = aliasGenerator.aliasColumn(leftTable, mappedManyToMany.joinTable().getColumn(mappedManyToMany.inverseJoinColumn()));
 
-        final OrmTable rightOrmTable = mappedManyToMany.targetTable().optional().get();
+        final OrmTable rightOrmTable = mappedManyToMany.targetTable().optional().orElseThrow();
         final Table rightTable = joinSpec.table();
 
         final List<DtoSelectSpec.FieldColumn> joinFieldColumns = rightOrmTable.mappedFieldTargets().stream()
