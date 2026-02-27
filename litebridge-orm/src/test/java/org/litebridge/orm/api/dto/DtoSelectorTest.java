@@ -5,6 +5,7 @@ import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.Aliased;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.MappedFieldTarget;
@@ -128,12 +129,13 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final AliasGenerator aliasGenerator = new AliasGenerator();
+        final Column column = columnMetaData.toColumn();
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
-        final Row row = new Row().withColumn(columnMetaData, "testValue");
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        final Row row = new Row().withColumn(column, "testValue");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
@@ -159,13 +161,14 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final AliasGenerator aliasGenerator = new AliasGenerator();
+        final Column column = columnMetaData.toColumn();
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
-        final Row row1 = new Row().withColumn(columnMetaData, "testValue1");
-        final Row row2 = new Row().withColumn(columnMetaData, "testValue2");
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        final Row row1 = new Row().withColumn(column, "testValue1");
+        final Row row2 = new Row().withColumn(column, "testValue2");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row1, row2));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
@@ -214,12 +217,13 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final AliasGenerator aliasGenerator = new AliasGenerator();
+        final Column column = columnMetaData.toColumn();
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
-        final Row row = new Row().withColumn(columnMetaData, "testValue");
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        final Row row = new Row().withColumn(column, "testValue");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
@@ -268,12 +272,13 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final AliasGenerator aliasGenerator = new AliasGenerator();
+        final Column column = columnMetaData.toColumn();
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
-        final Row row = new Row().withColumn(columnMetaData, "testValue");
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        final Row row = new Row().withColumn(column, "testValue");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
@@ -326,13 +331,14 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final AliasGenerator aliasGenerator = new AliasGenerator();
+        final Column column = columnMetaData.toColumn();
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
-        final Row row1 = new Row().withColumn(columnMetaData, "testValue1");
-        final Row row2 = new Row().withColumn(columnMetaData, "testValue2");
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        final Row row1 = new Row().withColumn(column, "testValue1");
+        final Row row2 = new Row().withColumn(column, "testValue2");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row1, row2));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
@@ -358,12 +364,13 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final AliasGenerator aliasGenerator = new AliasGenerator();
+        final Column column = columnMetaData.toColumn();
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
-        final Row row = new Row().withColumn(columnMetaData, "testValue");
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        final Row row = new Row().withColumn(column, "testValue");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
@@ -412,13 +419,14 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final AliasGenerator aliasGenerator = new AliasGenerator();
+        final Column column = columnMetaData.toColumn();
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
-        final Row row1 = new Row().withColumn(columnMetaData, "testValue1");
-        final Row row2 = new Row().withColumn(columnMetaData, "testValue2");
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        final Row row1 = new Row().withColumn(column, "testValue1");
+        final Row row2 = new Row().withColumn(column, "testValue2");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row1, row2));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
@@ -445,13 +453,14 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final AliasGenerator aliasGenerator = new AliasGenerator();
+        final Column column = columnMetaData.toColumn();
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, columnMetaData)));
-        final Row row1 = new Row().withColumn(columnMetaData, "testValue1");
-        final Row row2 = new Row().withColumn(columnMetaData, "testValue2");
+        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        final Row row1 = new Row().withColumn(column, "testValue1");
+        final Row row2 = new Row().withColumn(column, "testValue2");
         when(databaseProvider.select(any(Select.class))).thenReturn(List.of(row1, row2));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 

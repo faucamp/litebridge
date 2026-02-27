@@ -32,7 +32,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     @Override
     public DtoWhereConditionClause<DTO> where(final String field) {
-        final Column column = table.getColumnForFieldName(field);
+        final Column column = table.getColumnForFieldName(field).toColumn();
         return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate));
     }
 

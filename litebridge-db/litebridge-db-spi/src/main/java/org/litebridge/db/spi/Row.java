@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 public final class Row implements Result {
 
     private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Row.class);
-    private final LinkedHashMap<Column, Object> columns = new LinkedHashMap<>();
+    private final LinkedHashMap<Column, @Nullable Object> columns = new LinkedHashMap<>();
     @Nullable
     private Column last;
 
@@ -32,7 +32,7 @@ public final class Row implements Result {
      * @param value  the value associated with the specified column; may be null
      * @return the updated {@code Row} instance with the new column-value pair added
      */
-    public Row withColumn(final Column column, final Object value) {
+    public Row withColumn(final Column column, final @Nullable Object value) {
         if (column.name().equals("ID")) {
             LOGGER.info("Adding ID column with alias: {}, hash: {}", column.alias(), column.hashCode());
 
@@ -137,7 +137,7 @@ public final class Row implements Result {
          *
          * @return the value corresponding to the associated {@code Column}
          */
-        public Object value() {
+        public @Nullable Object value() {
             return columns.get(column);
         }
 

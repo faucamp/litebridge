@@ -2,6 +2,7 @@ package org.litebridge.db.spi;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
@@ -13,8 +14,10 @@ import java.util.StringJoiner;
  * Instances of this class are immutable except for specific mutable fields like auto-increment, sequence,
  * and joinColumn, which can be modified after initialization.
  */
-public final class ColumnMetaData extends Column implements MappedFieldTarget {
+public final class ColumnMetaData implements MappedFieldTarget {
 
+    private final Table table;
+    private final String name;
     private final boolean nullable;
     private final int dataType;
     private final int size;
@@ -45,7 +48,8 @@ public final class ColumnMetaData extends Column implements MappedFieldTarget {
                           final int decimalDigits,
                           final boolean autoIncrement,
                           final @Nullable String sequence) {
-        super(table, name);
+        this.table = table;
+        this.name = name;
         this.nullable = nullable;
         this.dataType = dataType;
         this.size = size;
@@ -83,26 +87,12 @@ public final class ColumnMetaData extends Column implements MappedFieldTarget {
         this(table, name, nullable, dataType, 0);
     }
 
-    /**
-     * Copy constructor.
-     * <p>
-     * Creates a new instance of {@code ColumnMetaData} by copying the properties of another
-     * {@code ColumnMetaData} object.
-     * <p>
-     * Creates a copy of the other column's {@link Table} instance,
-     * so it can be safely aliased independently of the original column.
-     *
-     * @param other the {@code ColumnMetaData} object to copy; must not be null
-     */
-    public ColumnMetaData(final ColumnMetaData other, final String tableAlias) {
-        super(new Table(other.table().as(tableAlias)), other.name(), tableAlias);
-        this.nullable = other.nullable;
-        this.dataType = other.dataType;
-        this.size = other.size;
-        this.decimalDigits = other.decimalDigits;
-        this.autoIncrement = other.autoIncrement;
-        this.sequence = other.sequence;
-        this.joinColumn = other.joinColumn;
+    public String name() {
+        return name;
+    }
+
+    public Table table() {
+        return table;
     }
 
     /**
@@ -171,34 +161,25 @@ public final class ColumnMetaData extends Column implements MappedFieldTarget {
         this.joinColumn = joinColumn;
     }
 
-    /**
-     * Create a copy of this {@code ColumnMetaData} object with a specified alias.
-     *
-     * @param alias the alias to be assigned; must not be null
-     * @return a new {@code ColumnMetaData} instance with the specified alias
-     */
-    @Override
-    public ColumnMetaData as(final String alias) {
-        final ColumnMetaData copy = new ColumnMetaData(this, null);
-        copy.setAlias(alias);
-        return copy;
+    public Column toColumn() {
+        return new Column(table, name);
     }
 
     @Override
     public boolean equals(final Object o) {
-        return super.equals(o);
+        if (!(o instanceof final ColumnMetaData that)) return false;
+        return nullable == that.nullable && dataType == that.dataType && size == that.size && decimalDigits == that.decimalDigits && autoIncrement == that.autoIncrement && Objects.equals(table, that.table) && Objects.equals(name, that.name) && Objects.equals(sequence, that.sequence) && Objects.equals(joinColumn, that.joinColumn);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(table, name, nullable, dataType, size, decimalDigits, autoIncrement, sequence, joinColumn);
     }
 
     @Override
     public String toString() {
         return new StringJoiner(", ", ColumnMetaData.class.getSimpleName() + "[", "]")
-                .add("name='" + name() + "'")
-                .add("nullable=" + nullable)
-                .add("dataType=" + dataType)
-                .add("size=" + size)
-                .add("decimalDigits=" + decimalDigits)
-                .add("autoIncrement=" + autoIncrement)
-                .add("sequenceName='" + sequence + "'")
+                .add("name='" + name + "'")
                 .toString();
     }
 }

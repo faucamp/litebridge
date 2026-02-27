@@ -2,6 +2,7 @@ package org.litebridge.orm.persistence;
 
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 
@@ -25,11 +26,7 @@ public final class AliasGenerator {
         return new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), tableAlias);
     }
 
-    public Column aliasColumn(final Table table, final Column column) {
-        if (column.alias() != null) {
-            return column;
-        }
-
+    public Column aliasColumn(final Table table, final ColumnMetaData column) {
         // Create a new alias
         final String columnAlias = table.alias() + newAlias(column.name());
         return new Column(table, column.name(), columnAlias);

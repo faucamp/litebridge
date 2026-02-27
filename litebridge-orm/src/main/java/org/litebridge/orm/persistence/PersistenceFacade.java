@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ObjectUtils;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.MappedFieldTarget;
@@ -34,7 +35,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -364,7 +364,8 @@ public class PersistenceFacade {
             final UpdateBuilder updateBuilder = (UpdateBuilder) statementBuilder;
             updateBuilder.setColumnValues(columnValues);
 
-            table.getMetaData().primaryKey().forEach(pkColumn -> {
+            table.getMetaData().primaryKey().forEach(columnMetaData -> {
+                final Column pkColumn = columnMetaData.toColumn();
                 final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
                 final Object pkValue = field.get(dto);
                 final Condition condition;

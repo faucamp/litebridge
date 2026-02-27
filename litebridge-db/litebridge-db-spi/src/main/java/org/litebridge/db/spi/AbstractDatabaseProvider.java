@@ -266,7 +266,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 sql.append(createCondition(condition));
 
                 if (condition.value() != null) {
-                    bindValues.add(new BindValue(condition.value(), ((ColumnMetaData) condition.column()).getDataType()));
+                    bindValues.add(new BindValue(condition.value(),
+                            ensureTableMetaData(condition.column().table())
+                                    .column(condition.column().name())
+                                    .getDataType()));
                 }
             }
         }
@@ -491,9 +494,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                     final TableMetaData columnTable = ensureTableMetaData(fromTable.catalog(), schemaName, tableName);
                     final String columnName = resultSet.getMetaData().getColumnName(i);
                     final String alias = transformAlias(resultSet.getMetaData().getColumnLabel(i));
-                    final ColumnMetaData column = columnTable.column(columnName).as(alias);
+                    final ColumnMetaData columnMetaData = columnTable.column(columnName);
+                    final Column column = columnMetaData.toColumn().as(alias);
 
-                    final Object value = typeConverter.convert(resultSet.getObject(columnName), column.getDataType());
+                    final Object value = typeConverter.convert(resultSet.getObject(columnName), columnMetaData.getDataType());
                     row.withColumn(column, value);
                 }
 
@@ -673,11 +677,16 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return ensureTableMetaData(new Table(catalog, schema, table));
     }
 
-    private TableMetaData ensureTableMetaData(final Table table) throws SQLException {
+    private TableMetaData ensureTableMetaData(final Table table) {
         TableMetaData tableMetaData = this.tableMetaDataCache.get(table.qualifiedName());
 
         if (tableMetaData == null) {
-            tableMetaData = fetchTableMetaData(table);
+            try {
+                tableMetaData = fetchTableMetaData(table);
+            } catch (SQLException ex) {
+                throw new IllegalStateException("Failed to get table metadata for table: " + table, ex);
+            }
+
             tableMetaDataCache.put(table.qualifiedName(), tableMetaData);
         }
 

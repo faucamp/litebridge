@@ -30,7 +30,7 @@ public final class DtoWhereConditionClauseTerminal<DTO>
 
     @Override
     public DtoWhereConditionClause<DTO> and(final String field) {
-        final Column column = table.getColumnForFieldName(field);
+        final Column column = table.getColumnForFieldName(field).toColumn();
         return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), this);
     }
 

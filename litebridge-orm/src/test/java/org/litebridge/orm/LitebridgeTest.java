@@ -350,7 +350,7 @@ class LitebridgeTest {
         litebridge.register(TestDto.class, tableSpec);
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
-        final Row row = new Row().withColumn(columnMetaData, "testValue");
+        final Row row = new Row().withColumn(columnMetaData.toColumn(), "testValue");
 
         // When
         final TestDto result = litebridge.toDto(row, TestDto.class);

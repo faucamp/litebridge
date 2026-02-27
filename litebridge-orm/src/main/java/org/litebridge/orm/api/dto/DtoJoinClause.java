@@ -74,11 +74,12 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
 
         // Create JOIN clause
         joinSpec.setFieldColumns(joinFieldColumns);
+        final Column rightColumn = rightColumnMetaData.toColumn();
 
         final Column leftColumn = selectSpec.getFieldColumns().stream()
                 .map(DtoSelectSpec.FieldColumn::column)
                 .filter(column -> column.table().equalsIgnoreAlias(rightColumnMetaData.table())
-                        && column.equalsIgnoreAlias(rightColumnMetaData))
+                        && column.equalsIgnoreAlias(rightColumn))
                 .findFirst().orElseThrow(() -> new IllegalArgumentException("Left JOIN column not found"));
 
         final ConditionSpec conditionSpec = joinSpec.newCondition(leftColumn);

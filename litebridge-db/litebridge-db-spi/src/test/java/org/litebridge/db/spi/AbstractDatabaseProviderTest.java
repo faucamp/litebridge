@@ -264,9 +264,9 @@ class AbstractDatabaseProviderTest {
         final ColumnMetaData column = table.column("TEST_COLUMN");
         final ColumnValue columnValue1 = new ColumnValue(column, "testValue");
         final ColumnValue columnValue2 = new ColumnValue(column, "testValue");
-        final Condition condition1 = new Condition(column, Operator.EQ, "conditionValue");
-        final Condition condition2 = new Condition(column, Operator.IS_NOT_NULL);
-        final Condition condition3 = new Condition(column, Operator.IS_NULL);
+        final Condition condition1 = new Condition(column.toColumn(), Operator.EQ, "conditionValue");
+        final Condition condition2 = new Condition(column.toColumn(), Operator.IS_NOT_NULL);
+        final Condition condition3 = new Condition(column.toColumn(), Operator.IS_NULL);
 
         final Update update = new Update(table, List.of(columnValue1, columnValue2), List.of(condition1, condition2, condition3));
 
@@ -311,7 +311,7 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData tableMetaData = getTableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), "t1");
-        final ColumnMetaData column = tableMetaData.column("TEST_COLUMN");
+        final Column column = tableMetaData.column("TEST_COLUMN").toColumn();
 
         final Select select = new Select(
                 table,
@@ -357,9 +357,9 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData tableMetaData = getTableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), "t1");
-        final Column column1 = tableMetaData.column("TEST_PK").as("col1");
+        final Column column1 = tableMetaData.column("TEST_PK").toColumn().as("col1");
         column1.table().setAlias("t1");
-        final Column column2 = tableMetaData.column("TEST_COLUMN").as("col2");
+        final Column column2 = tableMetaData.column("TEST_COLUMN").toColumn().as("col2");
         column2.table().setAlias("t1");
 
         final Select select = new Select(
@@ -502,7 +502,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void createCondition() throws Exception {
         // Given
-        final ColumnMetaData column = getTableMetaDataImpl().column("TEST_COLUMN");
+        final Column column = getTableMetaDataImpl().column("TEST_COLUMN").toColumn();
         final Condition condition = new Condition(column, Operator.EQ, "testValue");
 
         // When
@@ -516,7 +516,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void createCondition_isNull() throws Exception {
         // Given
-        final ColumnMetaData column = getTableMetaDataImpl().column("TEST_COLUMN");
+        final Column column = getTableMetaDataImpl().column("TEST_COLUMN").toColumn();
         final Condition condition = new Condition(column, Operator.IS_NULL);
 
         // When
@@ -530,7 +530,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void createCondition_isNotNull() throws Exception {
         // Given
-        final ColumnMetaData column = getTableMetaDataImpl().column("TEST_COLUMN");
+        final Column column = getTableMetaDataImpl().column("TEST_COLUMN").toColumn();
         final Condition condition = new Condition(column, Operator.IS_NOT_NULL);
 
         // When

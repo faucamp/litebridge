@@ -2,7 +2,6 @@ package org.litebridge.db.spi.query;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
 
 /**
  * A condition in a database query, specifying a column, operator, and value/operand.
@@ -24,7 +23,7 @@ public record Condition(Column column, Operator operator, @Nullable Object value
      * @param operator {@code IS_NULL} or {@code IS_NOT_NULL} operator
      * @throws IllegalArgumentException if {@code operator} is not {@code IS_NULL} or {@code IS_NOT_NULL}
      */
-    public Condition(final ColumnMetaData column, final Operator operator) {
+    public Condition(final Column column, final Operator operator) {
         this(column, operator, null);
 
         if (operator != Operator.IS_NULL && operator != Operator.IS_NOT_NULL) {
