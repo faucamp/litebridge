@@ -13,6 +13,8 @@ module litebridge.orm {
     requires litebridge.tracking;
 
     exports org.litebridge.orm;
+    exports org.litebridge.orm.api.spec;
+    exports org.litebridge.orm.api.sql;
 
     // Unit test support
     opens org.litebridge.orm to litebridge.tracking;
