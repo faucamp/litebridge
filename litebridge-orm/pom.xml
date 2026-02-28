@@ -14,6 +14,36 @@
     <artifactId>litebridge-orm</artifactId>
     <version>0.0.1</version>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>
+                        --add-opens litebridge.orm/org.litebridge.orm=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridge.orm=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridge.orm.api.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridge.orm.api.select=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridge.orm.api.select.impl=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridge.orm.api.select.impl=ALL-UNNAMED
+                        --add-opens litebridge.orm/org.litebridge.orm.persistence=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridge.orm.e2e.basic.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridge.orm.e2e.basic.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridge.orm.e2e.manytomany.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridge.orm.e2e.manytomany.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridge.orm.e2e.selfref.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridge.orm.e2e.selfref.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridge.orm.e2e.shareddto.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridge.orm.e2e.shareddto.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridge.orm.e2e.singletable_multidto.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridge.orm.e2e.singletable_multidto.dto=litebridge.tracking
+                    </argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <!-- Project dependencies -->
         <dependency>

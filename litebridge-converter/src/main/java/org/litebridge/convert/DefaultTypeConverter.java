@@ -1,14 +1,12 @@
 package org.litebridge.convert;
 
 import com.toddfast.util.convert.TypeConverter;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.convert.conversion.BigIntegerTypeConversion;
 import org.litebridge.convert.conversion.SqlTimestampTypeConversion;
 
 import java.sql.Types;
 
-@NullMarked
 public class DefaultTypeConverter implements org.litebridge.db.spi.convert.TypeConverter {
 
     static {

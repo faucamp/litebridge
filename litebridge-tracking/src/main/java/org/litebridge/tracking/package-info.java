@@ -1,7 +1,6 @@
 /**
- * Change tracker for data transfer objects (DTOs)
+ * Litebridge Change Tracker
+ * <p>
+ * Provides field change tracking for plain Java objects.
  */
-@NullMarked
 package org.litebridge.tracking;
-
-import org.jspecify.annotations.NullMarked;
