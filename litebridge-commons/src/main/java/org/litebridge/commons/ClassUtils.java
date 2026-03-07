@@ -1,8 +1,5 @@
 package org.litebridge.commons;
 
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -171,26 +168,6 @@ public final class ClassUtils {
         }
 
         throw new IllegalArgumentException("Cannot determine generic type for type '%s'".formatted(genericType.getTypeName()));
-    }
-
-    /**
-     * Retrieves the property descriptor for a specific property of the given class.
-     *
-     * @param dtoClass     the class for which the property descriptor is to be retrieved
-     * @param propertyName the name of the property whose descriptor is to be retrieved
-     * @return the {@code PropertyDescriptor} for the specified property
-     * @throws IllegalArgumentException if the specified property is not found in the class
-     * @throws IllegalStateException    if an introspection error occurs while retrieving the property information
-     */
-    public static PropertyDescriptor getProperty(final Class<?> dtoClass, final String propertyName) {
-        try {
-            return Arrays.stream(Introspector.getBeanInfo(dtoClass).getPropertyDescriptors())
-                    .filter(propertyDescriptor -> propertyName.equals(propertyDescriptor.getName()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Property '%s' not found in class: %s".formatted(propertyName, dtoClass.getName())));
-        } catch (IntrospectionException ex) {
-            throw new IllegalStateException("Failed to introspect class: " + dtoClass.getName(), ex);
-        }
     }
 
     /**

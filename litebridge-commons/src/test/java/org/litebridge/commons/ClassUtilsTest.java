@@ -1,11 +1,7 @@
 package org.litebridge.commons;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -17,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mockStatic;
 
 class ClassUtilsTest {
 
@@ -342,50 +337,6 @@ class ClassUtilsTest {
 
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> ClassUtils.getGenericTypes(mapField));
-    }
-
-    @Test
-    void getProperty() {
-        // Given
-        final String propertyName = "name";
-
-        // When
-        final PropertyDescriptor result = ClassUtils.getProperty(TestDto.class, propertyName);
-
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
-    void getProperty_noGettersOrSetters() {
-        // Given
-        final String propertyName = "age";
-
-        // When/Then
-        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getProperty(TestDto.class, propertyName));
-    }
-
-    @Test
-    void getProperty_notFound() {
-        // Given
-        final String propertyName = "abc123";
-
-        // When/Then
-        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getProperty(TestDto.class, propertyName));
-    }
-
-    @Test
-    void getProperty_introSpectionException() {
-        // Given
-        final String propertyName = "name";
-
-        try (final MockedStatic<Introspector> mockedIntrospector = mockStatic(Introspector.class)) {
-            mockedIntrospector.when(() -> Introspector.getBeanInfo(TestDto.class))
-                    .thenThrow(new IntrospectionException("test exception"));
-
-            // When/Then
-            assertThrows(IllegalStateException.class, () -> ClassUtils.getProperty(TestDto.class, propertyName));
-        }
     }
 
     @Test

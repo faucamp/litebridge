@@ -7,7 +7,6 @@ import org.jspecify.annotations.NullMarked;
  */
 @NullMarked
 module litebridge.commons {
-    requires java.desktop;
     requires org.jspecify;
 
     exports org.litebridge.commons;

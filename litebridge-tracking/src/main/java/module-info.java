@@ -7,7 +7,6 @@ import org.jspecify.annotations.NullMarked;
  */
 @NullMarked
 module litebridge.tracking {
-    requires java.desktop;
     requires org.jspecify;
     requires org.slf4j;
     requires litebridge.commons;
