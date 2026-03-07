@@ -22,15 +22,18 @@ import java.util.stream.Stream;
 public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec> {
 
     private final TableRegistry tableRegistry;
+    private final ClassFieldAccessorCache classFieldAccessorCache;
     private final AliasGenerator aliasGenerator;
 
     public DtoSelector(final Class<DTO> dtoClass,
                        final OrmTable dtoTable,
                        final TableRegistry tableRegistry,
+                       final ClassFieldAccessorCache classFieldAccessorCache,
                        final DatabaseProvider databaseProvider,
                        final AliasGenerator aliasGenerator) {
         super(new DtoSelectSpec(dtoClass, dtoTable, aliasGenerator), databaseProvider, dtoClass);
         this.tableRegistry = tableRegistry;
+        this.classFieldAccessorCache = classFieldAccessorCache;
         this.aliasGenerator = aliasGenerator;
     }
 
@@ -39,7 +42,7 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
                 .map(field -> {
                     // Map the input DTO field names to database column names
                     final ColumnMetaData columnMetaData = selectSpec.dtoTable().getColumnForFieldName(field);
-                    return new DtoSelectSpec.FieldColumn(ClassFieldAccessorCache.fieldAccessorOrThrow(dtoClass, field), aliasGenerator.aliasColumn(selectSpec.getTable(), columnMetaData));
+                    return new DtoSelectSpec.FieldColumn(classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, field), aliasGenerator.aliasColumn(selectSpec.getTable(), columnMetaData));
                 })
                 .toList());
     }
@@ -49,7 +52,7 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
                 .map(field -> {
                     // Map the input DTO field names to database column names
                     final ColumnMetaData columnMetaData = selectSpec.dtoTable().getColumnForFieldName(field.name());
-                    return new DtoSelectSpec.FieldColumn(ClassFieldAccessorCache.fieldAccessorOrThrow(dtoClass, field.name()), aliasGenerator.aliasColumn(selectSpec.getTable(), columnMetaData));
+                    return new DtoSelectSpec.FieldColumn(classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, field.name()), aliasGenerator.aliasColumn(selectSpec.getTable(), columnMetaData));
                 })
                 .toList());
     }
@@ -109,6 +112,10 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
     @Override
     protected DtoSelectSpec selectSpec() {
         return super.selectSpec();
+    }
+
+    public ClassFieldAccessorCache classFieldAccessorCache() {
+        return classFieldAccessorCache;
     }
 
     private @Nullable DTO fetchOneDto(final boolean first) {

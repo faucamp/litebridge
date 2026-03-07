@@ -24,12 +24,14 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
     private final OrmTable table;
     private final AliasGenerator aliasGenerator;
     private final DtoSelectSpec selectSpec;
+    private final ClassFieldAccessorCache classFieldAccessorCache;
 
     public DtoJoinClause(final Class<?> dtoClass, final OrmTable joinTable, final DtoSelector<DTO> delegate) {
         super(delegate.selectSpec().newJoinSpec(dtoClass, joinTable, delegate.dtoAliasRegistry().aliasTable(joinTable)), delegate);
         table = delegate.table();
         this.aliasGenerator = delegate.dtoAliasRegistry();
         this.selectSpec = delegate.selectSpec();
+        this.classFieldAccessorCache = delegate.classFieldAccessorCache();
     }
 
     /**
@@ -41,7 +43,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
      */
     public DtoJoinConditionClauseTerminal<DTO> on(final String field) {
         // Check if this is an inverse join
-        final FieldAccessor fieldAccessor = ClassFieldAccessorCache.fieldAccessorOrThrow(table.dtoClass(), field);
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(table.dtoClass(), field);
 
         return table.getOneToManyMappingForField(fieldAccessor)
                 // Inverse join

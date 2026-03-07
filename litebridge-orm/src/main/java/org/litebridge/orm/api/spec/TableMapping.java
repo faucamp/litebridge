@@ -1,4 +1,10 @@
 package org.litebridge.orm.api.spec;
 
-public record TableMapping(Class<?> dtoClass, TableSpec tableSpec)  {
+import java.lang.invoke.MethodHandles;
+
+public record TableMapping(MethodHandles.Lookup lookup, Class<?> dtoClass, TableSpec tableSpec) {
+
+    public TableMapping(Class<?> dtoClass, TableSpec tableSpec) {
+        this(MethodHandles.publicLookup(), dtoClass, tableSpec);
+    }
 }

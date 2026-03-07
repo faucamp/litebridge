@@ -6,6 +6,7 @@ import org.litebridge.commons.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,7 +29,7 @@ class TrackedDtoTest {
     void dto() {
         // Given
         final TestDto testDto = new TestDto();
-        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, dto -> fail());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, new ClassFieldAccessorCache(MethodHandles.lookup()), dto -> fail());
 
         // When
         final TestDto result = trackedDto.dto();
@@ -70,10 +71,11 @@ class TrackedDtoTest {
             }
         };
 
-        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class).stream()
-                .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class, MethodHandles.lookup()).stream()
+                .map(field -> (FieldAccessor) new DirectFieldAccessor(field, MethodHandles.lookup()))
                 .toList();
-        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors, consumer);
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors, classFieldAccessorCache, consumer);
 
         // When 1
         trackedDto.snapshot(true);
@@ -98,8 +100,9 @@ class TrackedDtoTest {
         final TestDto testDto = new TestDto();
         testDto.string = "value1";
 
-        final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "string"));
-        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, List.of(fieldAccessor), dto -> fail());
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final FieldAccessor fieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "string"), MethodHandles.lookup());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, List.of(fieldAccessor), classFieldAccessorCache, dto -> fail());
 
 
         // When/Then
@@ -113,8 +116,9 @@ class TrackedDtoTest {
         final TestDto testDto = new TestDto();
         testDto.string = "value1";
 
-        final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "string"));
-        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, List.of(fieldAccessor), dto -> fail());
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final FieldAccessor fieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "string"), MethodHandles.lookup());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, List.of(fieldAccessor), classFieldAccessorCache, dto -> fail());
 
         // When
         trackedDto.snapshotEmpty();
@@ -130,8 +134,9 @@ class TrackedDtoTest {
         final TestDto testDto = new TestDto();
         testDto.string = "updatedValue";
 
-        final TrackedDto<TestDto> trackedDto = new TrackedDto(testDto, dto -> fail());
-        final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "string"));
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto(testDto, classFieldAccessorCache, dto -> fail());
+        final FieldAccessor fieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "string"), MethodHandles.lookup());
 
         // When/Then
         trackedDto.snapshotEmpty();
@@ -157,7 +162,8 @@ class TrackedDtoTest {
         child2.parent = parent;
         parent.children.add(child2);
 
-        final TrackedDto<OneToManyParentDto> trackedDto = new TrackedDto<>(parent, dto -> {
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final TrackedDto<OneToManyParentDto> trackedDto = new TrackedDto<>(parent, classFieldAccessorCache, dto -> {
             LOGGER.debug("Snapshotting DTO: {}", dto);
         });
 
@@ -195,10 +201,11 @@ class TrackedDtoTest {
             }
         };
 
-        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class).stream()
-                .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
+        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class, MethodHandles.lookup()).stream()
+                .map(field -> (FieldAccessor) new DirectFieldAccessor(field, MethodHandles.lookup()))
                 .toList();
-        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors, consumer);
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors, classFieldAccessorCache, consumer);
         trackedDto.snapshot(false);
 
         // When 1
@@ -234,10 +241,11 @@ class TrackedDtoTest {
             // do nothing
         };
 
-        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class).stream()
-                .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
+        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class, MethodHandles.lookup()).stream()
+                .map(field -> (FieldAccessor) new DirectFieldAccessor(field, MethodHandles.lookup()))
                 .toList();
-        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors, consumer);
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors, classFieldAccessorCache, consumer);
         trackedDto.snapshot(false);
 
         // When
@@ -257,10 +265,11 @@ class TrackedDtoTest {
             // do nothing
         };
 
-        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class).stream()
-                .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
+        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class, MethodHandles.lookup()).stream()
+                .map(field -> (FieldAccessor) new DirectFieldAccessor(field, MethodHandles.lookup()))
                 .toList();
-        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors, consumer);
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors, classFieldAccessorCache, consumer);
         trackedDto.snapshot(false);
 
         // When
@@ -278,9 +287,10 @@ class TrackedDtoTest {
     void changedFields_noSnapshots() {
         // Given
         final TestDto testDto = new TestDto();
-        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, dto -> fail());
-        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class).stream()
-                .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, classFieldAccessorCache, dto -> fail());
+        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class, MethodHandles.lookup()).stream()
+                .map(field -> (FieldAccessor) new DirectFieldAccessor(field, MethodHandles.lookup()))
                 .toList();
 
         // When/Then
@@ -291,9 +301,10 @@ class TrackedDtoTest {
     void changedFields_refresh_noSnapshots() {
         // Given
         final TestDto testDto = new TestDto();
-        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, dto -> fail());
-        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class).stream()
-                .map(field -> (FieldAccessor) new FieldAccessorImpl(field))
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, classFieldAccessorCache, dto -> fail());
+        final List<FieldAccessor> fieldAccessors = ClassUtils.getAllFields(TestDto.class, MethodHandles.lookup()).stream()
+                .map(field -> (FieldAccessor) new DirectFieldAccessor(field, MethodHandles.lookup()))
                 .toList();
 
         // When/Then

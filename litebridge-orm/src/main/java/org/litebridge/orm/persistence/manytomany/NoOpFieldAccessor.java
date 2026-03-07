@@ -3,7 +3,7 @@ package org.litebridge.orm.persistence.manytomany;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.tracking.FieldAccessor;
 
-public class NoOpFieldAccessor implements FieldAccessor {
+public final class NoOpFieldAccessor implements FieldAccessor {
 
     @Override
     public String name() {

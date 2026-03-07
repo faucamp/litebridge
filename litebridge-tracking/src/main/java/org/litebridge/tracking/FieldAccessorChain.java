@@ -13,20 +13,23 @@ import java.util.List;
  * <p>
  * This class provides mechanisms to navigate nested structures while enabling read/write access to the chained fields.
  */
-public class FieldAccessorChain implements FieldAccessor {
+public final class FieldAccessorChain implements FieldAccessor {
 
     private final String fieldPath;
     private final List<FieldAccessor> fieldAccessors;
+    private final ClassFieldAccessorCache classFieldAccessorCache;
 
-    public FieldAccessorChain(final FieldAccessor parent, final String fieldPath) {
+    public FieldAccessorChain(final FieldAccessor parent, final String fieldPath, final ClassFieldAccessorCache classFieldAccessorCache) {
         this.fieldPath = fieldPath;
         this.fieldAccessors = new ArrayList<>();
         this.fieldAccessors.add(parent);
+        this.classFieldAccessorCache = classFieldAccessorCache;
     }
 
-    private FieldAccessorChain(final List<FieldAccessor> fieldAccessors, final String fieldPath) {
+    private FieldAccessorChain(final List<FieldAccessor> fieldAccessors, final String fieldPath, final ClassFieldAccessorCache classFieldAccessorCache) {
         this.fieldAccessors = fieldAccessors;
         this.fieldPath = fieldPath;
+        this.classFieldAccessorCache = classFieldAccessorCache;
     }
 
     public String fieldPath() {
@@ -38,7 +41,7 @@ public class FieldAccessorChain implements FieldAccessor {
     }
 
     public FieldAccessorChain subChain() {
-        return new FieldAccessorChain(fieldAccessors.subList(1, fieldAccessors.size()), fieldPath.substring(fieldPath.lastIndexOf('.') + 1));
+        return new FieldAccessorChain(fieldAccessors.subList(1, fieldAccessors.size()), fieldPath.substring(fieldPath.lastIndexOf('.') + 1), classFieldAccessorCache);
     }
 
     public FieldAccessorChain add(final FieldAccessor fieldAccessor) {
@@ -85,7 +88,7 @@ public class FieldAccessorChain implements FieldAccessor {
         while (fieldAccessorIterator.hasNext()) {
             final FieldAccessor fieldAccessor = fieldAccessorIterator.next();
 
-            if (fieldAccessorIterator.hasNext() && ClassFieldAccessorCache.isNestedDtoField(currentDto.getClass(), fieldAccessor)) {
+            if (fieldAccessorIterator.hasNext() && classFieldAccessorCache.isNestedDtoField(currentDto.getClass(), fieldAccessor)) {
                 final Object intermediateValue = fieldAccessor.get(currentDto);
 
                 if (intermediateValue == null) {

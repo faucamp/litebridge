@@ -3,6 +3,9 @@ package org.litebridge.tracking;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.StringUtils;
 
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -20,16 +23,19 @@ public class ClassFieldAccessorCache {
     /**
      * Map of class -> field name -> field accessor
      */
-    private static final Map<Class<?>, Map<String, FieldAccessor>> classFieldAccessors = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Map<String, FieldAccessor>> classFieldAccessors = new ConcurrentHashMap<>();
+    private final Map<Type, Class<?>[]> genericTypesMap = new ConcurrentHashMap<>();
+    private final MethodHandles.Lookup lookup;
 
-    protected ClassFieldAccessorCache() {
+    public ClassFieldAccessorCache(final MethodHandles.Lookup lookup) {
+        this.lookup = lookup;
     }
 
-    public static FieldAccessor fieldAccessorOrThrow(final Class<?> dtoClass, final String field) {
+    public FieldAccessor fieldAccessorOrThrow(final Class<?> dtoClass, final String field) {
         if (field.indexOf('.') != -1) {
             final String[] subFieldAndRestOfPath = StringUtils.splitOnce(field, '.');
             final FieldAccessor subFieldAccessor = fieldAccessor(dtoClass, subFieldAndRestOfPath[0]);
-            return chain(new FieldAccessorChain(subFieldAccessor, field), subFieldAndRestOfPath[1]);
+            return chain(new FieldAccessorChain(subFieldAccessor, field, this), subFieldAndRestOfPath[1]);
         } else {
             final FieldAccessor fieldAccessor = ensureFieldAccessors(dtoClass).get(field);
 
@@ -41,7 +47,7 @@ public class ClassFieldAccessorCache {
         }
     }
 
-    public static List<FieldAccessor> fieldAccessors(final Class<?> dtoClass) {
+    public List<FieldAccessor> fieldAccessors(final Class<?> dtoClass) {
         if (classFieldAccessors.containsKey(dtoClass)) {
             return classFieldAccessors.get(dtoClass).values().stream().toList();
         } else {
@@ -50,7 +56,7 @@ public class ClassFieldAccessorCache {
         }
     }
 
-    public static boolean isNestedDtoField(final Class<?> dtoClass, final FieldAccessor field) {
+    public boolean isNestedDtoField(final Class<?> dtoClass, final FieldAccessor field) {
         if (field.dtoClass() != dtoClass
                 || ClassUtils.isBasicType(field.type())
                 || Collection.class.isAssignableFrom(field.type())
@@ -61,7 +67,7 @@ public class ClassFieldAccessorCache {
         return ensureFieldAccessors(dtoClass).containsKey(field.name());
     }
 
-    public static List<FieldAccessor> nestedDtoFields(final Class<?> dtoClass) {
+    public List<FieldAccessor> nestedDtoFields(final Class<?> dtoClass) {
         return ensureFieldAccessors(dtoClass).values().stream()
                 .filter(field -> !ClassUtils.isBasicType(field.type())
                         && !Collection.class.isAssignableFrom(field.type())
@@ -69,22 +75,18 @@ public class ClassFieldAccessorCache {
                 .toList();
     }
 
-    static void clear() {
-        classFieldAccessors.clear();
-    }
-
-    protected static FieldAccessor fieldAccessor(final Class<?> dtoClass, final String fieldName) {
+    public FieldAccessor fieldAccessor(final Class<?> dtoClass, final String fieldName) {
         if (fieldName.indexOf('.') != -1) {
             // Nested field specification - traverse the field/property path
             final String[] subFieldAndRestOfPath = StringUtils.splitOnce(fieldName, '.');
             final FieldAccessor subFieldAccessor = fieldAccessor(dtoClass, subFieldAndRestOfPath[0]);
-            return chain(new FieldAccessorChain(subFieldAccessor, fieldName), subFieldAndRestOfPath[1]);
+            return chain(new FieldAccessorChain(subFieldAccessor, fieldName, this), subFieldAndRestOfPath[1]);
         } else {
             return ensureFieldAccessors(dtoClass).get(fieldName);
         }
     }
 
-    private static FieldAccessorChain chain(final FieldAccessorChain fieldAccessorChain, final String fieldPath) {
+    private FieldAccessorChain chain(final FieldAccessorChain fieldAccessorChain, final String fieldPath) {
         final FieldAccessor subFieldAccessor;
 
         if (fieldPath.indexOf('.') != -1) {
@@ -99,17 +101,42 @@ public class ClassFieldAccessorCache {
         }
     }
 
-    protected static FieldAccessor propertyAccessor(final Class<?> dtoClass, final String propertyName) {
+    public FieldAccessor propertyAccessor(final Class<?> dtoClass, final String propertyName) {
         return ensureFieldAccessors(dtoClass).get(propertyName);
     }
 
-    private static Map<String, FieldAccessor> ensureFieldAccessors(final Class<?> dtoClass) {
-        return classFieldAccessors.computeIfAbsent(dtoClass, ClassFieldAccessorCache::createFieldAccessors);
+    private Map<String, FieldAccessor> ensureFieldAccessors(final Class<?> dtoClass) {
+        return classFieldAccessors.computeIfAbsent(dtoClass, this::createFieldAccessors);
     }
 
-    private static Map<String, FieldAccessor> createFieldAccessors(final Class<?> dtoClass) {
-        return ClassUtils.getAllFields(dtoClass).stream()
-                .map(FieldAccessorImpl::new)
+    private Map<String, FieldAccessor> createFieldAccessors(final Class<?> dtoClass) {
+        final List<Field> fields = ClassUtils.getAllFields(dtoClass, lookup);
+
+        return fields.stream()
+                .map(field -> {
+                    final MethodHandles.Lookup declaringClassLookup;
+
+                    try {
+                        declaringClassLookup = MethodHandles.privateLookupIn(field.getDeclaringClass(), lookup);
+                    } catch (IllegalAccessException ex) {
+                        throw new IllegalArgumentException(
+                                "Cannot create private lookup for declaring class: " + field.getDeclaringClass().getName() +
+                                        " while building accessors for DTO: " + dtoClass.getName() +
+                                        ". Ensure the module is open to litebridge or use register(Lookup, Class, TableSpec)",
+                                ex
+                        );
+                    }
+
+                    return new DirectFieldAccessor(field, declaringClassLookup);
+                })
                 .collect(Collectors.toMap(FieldAccessor::name, Function.identity()));
+    }
+
+    public Class<?>[] getGenericTypes(final Field field) {
+        return getGenericTypes(field.getGenericType());
+    }
+
+    private Class<?>[] getGenericTypes(final Type genericType) {
+        return genericTypesMap.computeIfAbsent(genericType, ClassUtils::getGenericTypes);
     }
 }

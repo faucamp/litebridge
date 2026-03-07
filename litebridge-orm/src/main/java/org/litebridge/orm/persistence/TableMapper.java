@@ -2,6 +2,7 @@ package org.litebridge.orm.persistence;
 
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
+import org.litebridge.commons.ModuleUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.ColumnMetaData;
@@ -20,8 +21,10 @@ import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.persistence.manytomany.HiddenJoinEntity;
 import org.litebridge.orm.persistence.manytomany.NoOpFieldAccessor;
 import org.litebridge.tracking.ChangeTracker;
+import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Proxy;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -37,16 +40,26 @@ public final class TableMapper {
     private final DatabaseProvider databaseProvider;
     private final TableRegistry tableRegistry;
     private final ChangeTracker changeTracker;
+    private final ClassFieldAccessorCache classFieldAccessorCache;
 
-    public TableMapper(final DatabaseProvider databaseProvider, final TableRegistry tableRegistry, final ChangeTracker changeTracker) {
+    public TableMapper(final DatabaseProvider databaseProvider,
+                       final TableRegistry tableRegistry,
+                       final ChangeTracker changeTracker) {
         this.databaseProvider = databaseProvider;
         this.tableRegistry = tableRegistry;
         this.changeTracker = changeTracker;
+        this.classFieldAccessorCache = changeTracker.classFieldAccessorCache();
     }
 
-    public OrmTable mapToTable(final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
+    public OrmTable mapToTable(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
         // Up-front validation
-        Objects.requireNonNull("DTO class cannot be null");
+        Objects.requireNonNull(lookup, "MethodHandles lookup is required for reflection");
+        Objects.requireNonNull(dtoClass, "DTO class cannot be null");
+
+        // HiddenJoinEntity is used for intermediate join tables and is a JDK proxy - don't check module accessiblity for those
+        if (!HiddenJoinEntity.class.isAssignableFrom(dtoClass)) {
+            ModuleUtils.requireAccessible(dtoClass);
+        }
 
         if (ClassUtils.isBasicType(dtoClass)) {
             throw new IllegalArgumentException("Not a DTO: " + dtoClass.getName());
@@ -57,11 +70,11 @@ public final class TableMapper {
         // Read the table metadata
         final TableMetaData tableMetaData = databaseProvider.getTableMetaData(tableSpec);
 
-        final Map<FieldAccessor, MappedFieldTarget> columnMap = mapFields(dtoClass, tableMetaData, tableSpec.fieldColumnMap());
+        final Map<FieldAccessor, MappedFieldTarget> columnMap = mapFields(lookup, dtoClass, tableMetaData, tableSpec.fieldColumnMap());
         return new OrmTable(dtoClass, tableMetaData, columnMap, changeTracker);
     }
 
-    private Map<FieldAccessor, MappedFieldTarget> mapFields(final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<FieldMapping, ColumnMapping> fieldColumnSpecMap) {
+    private Map<FieldAccessor, MappedFieldTarget> mapFields(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final TableMetaData tableMetaData, final Map<FieldMapping, ColumnMapping> fieldColumnSpecMap) {
         final Set<String> unmappedColumns = tableMetaData.columns().stream()
                 .map(ColumnMetaData::name)
                 .collect(Collectors.toSet());
@@ -72,14 +85,14 @@ public final class TableMapper {
             switch (columnMapping) {
                 case AbstractColumnSpecBuilder<?> columnSpecBuilder -> {
                     final ColumnSpec columnSpec = columnSpecBuilder.build();
-                    mapColumnSpec(columnSpec, fieldMapping, dtoClass, tableMetaData, unmappedColumns, mappedFields);
+                    mapColumnSpec(columnSpec, fieldMapping, lookup, dtoClass, tableMetaData, unmappedColumns, mappedFields);
                 }
                 case ColumnSpec columnSpec ->
-                        mapColumnSpec(columnSpec, fieldMapping, dtoClass, tableMetaData, unmappedColumns, mappedFields);
+                        mapColumnSpec(columnSpec, fieldMapping, lookup, dtoClass, tableMetaData, unmappedColumns, mappedFields);
                 case OneToMany oneToMany ->
                         mapOneToMany(oneToMany, (FieldSpec) fieldMapping, dtoClass, tableMetaData, unmappedColumns, mappedFields);
                 case ManyToMany manyToMany ->
-                        mapManyToMany(manyToMany, (FieldSpec) fieldMapping, dtoClass, tableMetaData, unmappedColumns, mappedFields);
+                        mapManyToMany(manyToMany, (FieldSpec) fieldMapping, lookup, dtoClass, tableMetaData, unmappedColumns, mappedFields);
             }
         });
 
@@ -100,7 +113,7 @@ public final class TableMapper {
 
     private void mapColumnSpec(final ColumnSpec columnSpec,
                                final FieldMapping fieldMapping,
-                               final Class<?> dtoClass,
+                               final MethodHandles.Lookup lookup, final Class<?> dtoClass,
                                final TableMetaData tableMetaData,
                                final Set<String> unmappedColumns,
                                final Map<FieldAccessor, MappedFieldTarget> mappedFields) {
@@ -128,7 +141,7 @@ public final class TableMapper {
         final FieldAccessor fieldAccessor;
 
         if (fieldMapping instanceof FieldSpec fieldSpec) {
-            fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
+            fieldAccessor = fieldAccessor(dtoClass, fieldSpec);
         } else {
             fieldAccessor = new NoOpFieldAccessor();
         }
@@ -151,7 +164,7 @@ public final class TableMapper {
                 if (columnSpec.mappedTable() != null) {
                     // In-line DTO-table mapping
                     try {
-                        nestedTable = mapToTable(columnSpec.mappedTable().dtoClass(), columnSpec.mappedTable().tableSpec());
+                        nestedTable = mapToTable(lookup, columnSpec.mappedTable().dtoClass(), columnSpec.mappedTable().tableSpec());
                     } catch (SQLException ex) {
                         throw new IllegalStateException("Failed to map nested DTO class '" + columnSpec.mappedTable().dtoClass() + "' to table: " + columnSpec.mappedTable().tableSpec(), ex);
                     }
@@ -186,24 +199,25 @@ public final class TableMapper {
                               final Set<String> unmappedColumns,
                               final Map<FieldAccessor, MappedFieldTarget> mappedFields) {
         // Verify we are dealing with a collection
-        final FieldAccessor fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
+        final FieldAccessor fieldAccessor = fieldAccessor(dtoClass, fieldSpec);
         final Class<?> targetDto = getJoinTargetDto(dtoClass, fieldAccessor);
 
         // Get the "mapped by" field from the target DTO of the collection wrapped by the field spec
-        final FieldAccessor mappedByField = DtoIntrospector.fieldAccessor(targetDto, oneToMany.mappedByField());
+        final FieldAccessor mappedByField = fieldAccessor(targetDto, oneToMany.mappedByField());
         final MappedOneToMany mappedOneToMany = new MappedOneToMany(mappedByField, fieldAccessor);
         mappedFields.put(fieldAccessor, mappedOneToMany);
     }
 
     private void mapManyToMany(final ManyToMany manyToMany,
                                final FieldSpec fieldSpec,
+                               final MethodHandles.Lookup lookup,
                                final Class<?> dtoClass,
                                final TableMetaData tableMetaData,
                                final Set<String> unmappedColumns,
                                final Map<FieldAccessor, MappedFieldTarget> mappedFields) {
         // Verify we are dealing with a collection
-        final FieldAccessor fieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, fieldSpec);
-        final OrmTable joinTable = ensureManyToManyJoinTable(manyToMany);
+        final FieldAccessor fieldAccessor = fieldAccessor(dtoClass, fieldSpec);
+        final OrmTable joinTable = ensureManyToManyJoinTable(manyToMany, lookup);
 
         final Class<?> targetDto = getJoinTargetDto(dtoClass, fieldAccessor);
         final ConcurrentLazy<OrmTable> targetTable = new ConcurrentLazy<>(() -> tableRegistry.getTableOrThrow(targetDto));
@@ -229,17 +243,17 @@ public final class TableMapper {
         return targetDto;
     }
 
-    private OrmTable ensureManyToManyJoinTable(final ManyToMany manyToMany) {
+    private OrmTable ensureManyToManyJoinTable(final ManyToMany manyToMany, final MethodHandles.Lookup lookup) {
         final OrmTable joinTable = tableRegistry.getTable(manyToMany.joinTable());
 
         if (joinTable != null) {
             return joinTable;
         } else {
-            return mapManyToManyJoinTable(manyToMany);
+            return mapManyToManyJoinTable(manyToMany, lookup);
         }
     }
 
-    private OrmTable mapManyToManyJoinTable(final ManyToMany manyToMany) {
+    private OrmTable mapManyToManyJoinTable(final ManyToMany manyToMany, final MethodHandles.Lookup lookup) {
         final ColumnSpec joinColumnSpec = new ColumnSpec(manyToMany.joinColumn(), false, null, manyToMany.joinColumn());
         final ColumnSpec inverseJoinColumnSpec = new ColumnSpec(manyToMany.inverseJoinColumn(), false, null, manyToMany.inverseJoinColumn());
 
@@ -250,9 +264,17 @@ public final class TableMapper {
         final Class<?> hiddenJoinClass = Proxy.getProxyClass(HiddenJoinEntity.class.getClassLoader(), HiddenJoinEntity.class);
 
         try {
-            return mapToTable(hiddenJoinClass, tableSpec);
+            return mapToTable(lookup, hiddenJoinClass, tableSpec);
         } catch (Exception ex) {
             throw new IllegalStateException("Failed to map many-to-many join table from spec: " + manyToMany, ex);
+        }
+    }
+
+    private FieldAccessor fieldAccessor(final Class<?> dtoClass, final FieldSpec fieldSpec) {
+        if (fieldSpec.property()) {
+            return classFieldAccessorCache.propertyAccessor(dtoClass, fieldSpec.name());
+        } else {
+            return classFieldAccessorCache.fieldAccessor(dtoClass, fieldSpec.name());
         }
     }
 }

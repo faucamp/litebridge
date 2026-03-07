@@ -1,9 +1,10 @@
 package org.litebridge.tracking;
 
 import org.jspecify.annotations.Nullable;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Map;
 
@@ -16,21 +17,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ClassFieldAccessorCacheTest {
 
-    @AfterEach
-    void afterEach() {
-        ClassFieldAccessorCache.clear();
+    private ClassFieldAccessorCache classFieldAccessorCache;
+
+    @BeforeEach
+    void beforeEach() {
+        classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
     }
 
     @Test
     void fieldAccessorOrThrow() {
         // When
-        final FieldAccessor result = ClassFieldAccessorCache.fieldAccessorOrThrow(TestDto.class, "string");
+        final FieldAccessor result = classFieldAccessorCache.fieldAccessorOrThrow(TestDto.class, "string");
 
         // Then
         assertNotNull(result);
 
         // When 2
-        final FieldAccessor result2 = ClassFieldAccessorCache.fieldAccessorOrThrow(TestDto.class, "string");
+        final FieldAccessor result2 = classFieldAccessorCache.fieldAccessorOrThrow(TestDto.class, "string");
 
         // Then 2
         assertEquals(result, result2);
@@ -39,13 +42,13 @@ class ClassFieldAccessorCacheTest {
     @Test
     void fieldAccessorOrThrow_invalidField() {
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> ClassFieldAccessorCache.fieldAccessorOrThrow(TestDto.class, "invalid"));
+        assertThrows(IllegalArgumentException.class, () -> classFieldAccessorCache.fieldAccessorOrThrow(TestDto.class, "invalid"));
     }
 
     @Test
     void fieldAccessorOrThrow_dotDelimitedPath() {
         // When
-        final FieldAccessor result = ClassFieldAccessorCache.fieldAccessorOrThrow(TestDto.class, "nestedDto.secondNestedDto.thirdNestedDto.string");
+        final FieldAccessor result = classFieldAccessorCache.fieldAccessorOrThrow(TestDto.class, "nestedDto.secondNestedDto.thirdNestedDto.string");
 
         // Then
         assertNotNull(result);
@@ -72,7 +75,7 @@ class ClassFieldAccessorCacheTest {
     @Test
     void fieldAccessor_dotDelimitedPath() {
         // When
-        final FieldAccessor result = ClassFieldAccessorCache.fieldAccessor(TestDto.class, "nestedDto.secondNestedDto");
+        final FieldAccessor result = classFieldAccessorCache.fieldAccessor(TestDto.class, "nestedDto.secondNestedDto");
 
         // Then
         assertNotNull(result);
@@ -93,13 +96,13 @@ class ClassFieldAccessorCacheTest {
     @Test
     void fieldAccessors() {
         // When
-        final List<FieldAccessor> result = ClassFieldAccessorCache.fieldAccessors(TestDto.class);
+        final List<FieldAccessor> result = classFieldAccessorCache.fieldAccessors(TestDto.class);
 
         // Then
         assertEquals(4, result.size());
 
         // When 2
-        final List<FieldAccessor> result2 = ClassFieldAccessorCache.fieldAccessors(TestDto.class);
+        final List<FieldAccessor> result2 = classFieldAccessorCache.fieldAccessors(TestDto.class);
 
         // Then 2
         assertEquals(result, result2);
@@ -108,10 +111,10 @@ class ClassFieldAccessorCacheTest {
     @Test
     void isNestedDtoField_true() {
         // Given
-        final FieldAccessor fieldAccessor = ClassFieldAccessorCache.fieldAccessor(TestDto.class, "nestedDto");
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessor(TestDto.class, "nestedDto");
 
         // When
-        final boolean result = ClassFieldAccessorCache.isNestedDtoField(TestDto.class, fieldAccessor);
+        final boolean result = classFieldAccessorCache.isNestedDtoField(TestDto.class, fieldAccessor);
 
         // Then
         assertTrue(result);
@@ -120,10 +123,10 @@ class ClassFieldAccessorCacheTest {
     @Test
     void isNestedDtoField_false_basicType() {
         // Given
-        final FieldAccessor fieldAccessor = ClassFieldAccessorCache.fieldAccessor(TestDto.class, "string");
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessor(TestDto.class, "string");
 
         // When
-        final boolean result = ClassFieldAccessorCache.isNestedDtoField(TestDto.class, fieldAccessor);
+        final boolean result = classFieldAccessorCache.isNestedDtoField(TestDto.class, fieldAccessor);
 
         // Then
         assertFalse(result);
@@ -132,10 +135,10 @@ class ClassFieldAccessorCacheTest {
     @Test
     void isNestedDtoField_false_list() {
         // Given
-        final FieldAccessor fieldAccessor = ClassFieldAccessorCache.fieldAccessor(TestDto.class, "list");
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessor(TestDto.class, "list");
 
         // When
-        final boolean result = ClassFieldAccessorCache.isNestedDtoField(TestDto.class, fieldAccessor);
+        final boolean result = classFieldAccessorCache.isNestedDtoField(TestDto.class, fieldAccessor);
 
         // Then
         assertFalse(result);
@@ -144,10 +147,10 @@ class ClassFieldAccessorCacheTest {
     @Test
     void isNestedDtoField_false_map() {
         // Given
-        final FieldAccessor fieldAccessor = ClassFieldAccessorCache.fieldAccessor(TestDto.class, "map");
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessor(TestDto.class, "map");
 
         // When
-        final boolean result = ClassFieldAccessorCache.isNestedDtoField(TestDto.class, fieldAccessor);
+        final boolean result = classFieldAccessorCache.isNestedDtoField(TestDto.class, fieldAccessor);
 
         // Then
         assertFalse(result);
@@ -156,7 +159,7 @@ class ClassFieldAccessorCacheTest {
     @Test
     void fieldAccessor() {
         // When
-        final FieldAccessor fieldAccessor = ClassFieldAccessorCache.fieldAccessor(TestDto.class, "string");
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessor(TestDto.class, "string");
 
         // Then
         assertNotNull(fieldAccessor);
@@ -165,19 +168,38 @@ class ClassFieldAccessorCacheTest {
     @Test
     void propertyAccessor() {
         // When
-        final FieldAccessor fieldAccessor = ClassFieldAccessorCache.propertyAccessor(TestDto.class, "string");
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.propertyAccessor(TestDto.class, "string");
 
         // Then
         assertNotNull(fieldAccessor);
     }
 
     @Test
-    void constructor() {
-        final TestClassFieldAccessorCache result = new TestClassFieldAccessorCache();
-        assertNotNull(result);
+    void fieldAccessor_canAccessPrivateInheritedField() {
+        // Given
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final ChildDto dto = new ChildDto();
+
+        // When
+        final FieldAccessor ageAccessor = cache.fieldAccessorOrThrow(ChildDto.class, "age");
+        ageAccessor.set(dto, 42);
+
+        // Then
+        assertNotNull(ageAccessor);
+        assertEquals(42, ageAccessor.get(dto));
+        assertEquals(ParentDto.class, ageAccessor.dtoClass());
+        assertEquals(int.class, ageAccessor.type());
     }
 
-    private class TestDto {
+    private static class ParentDto {
+        private int age;
+    }
+
+    private static class ChildDto extends ParentDto {
+        private String name;
+    }
+
+    private static class TestDto {
         @Nullable
         private String string;
         @Nullable
@@ -196,7 +218,7 @@ class ClassFieldAccessorCacheTest {
         }
     }
 
-    private class NestedDto {
+    private static class NestedDto {
         @Nullable
         private String string;
 
@@ -204,18 +226,15 @@ class ClassFieldAccessorCacheTest {
         private SecondNestedDto secondNestedDto;
     }
 
-    private class SecondNestedDto {
+    private static class SecondNestedDto {
         @Nullable
         private String string;
         @Nullable
         private ThirdNestedDto thirdNestedDto;
     }
 
-    private class ThirdNestedDto {
+    private static class ThirdNestedDto {
         @Nullable
         private String string;
-    }
-
-    class TestClassFieldAccessorCache extends ClassFieldAccessorCache {
     }
 }

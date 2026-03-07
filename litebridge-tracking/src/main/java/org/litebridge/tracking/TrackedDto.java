@@ -41,19 +41,20 @@ public final class TrackedDto<DTO> {
     private final WeakReference<DTO> dtoRef;
     private final Collection<FieldAccessor> fields;
     private final Consumer<Object> trackDtoCallback;
+    private final ClassFieldAccessorCache classFieldAccessorCache;
     @Nullable
     private List<FieldSnapshot> fieldSnapshots;
     @Nullable
     private ChangedFields changedFields;
 
     /**
-     * Construct a {@code TrackedDto} instance that tracks the given DTO object.
+     * Construct a {@code TrackedDto} instance that tracks all fields of the given DTO object.
      *
      * @param dto              the data transfer object (DTO) to be wrapped and tracked; must not be null
      * @param trackDtoCallback the callback function to be triggered when tracking changes
      */
-    public TrackedDto(final DTO dto, final Consumer<Object> trackDtoCallback) {
-        this(dto, ClassFieldAccessorCache.fieldAccessors(dto.getClass()), trackDtoCallback);
+    public TrackedDto(final DTO dto, final ClassFieldAccessorCache classFieldAccessorCache, final Consumer<Object> trackDtoCallback) {
+        this(dto, classFieldAccessorCache.fieldAccessors(dto.getClass()), classFieldAccessorCache, trackDtoCallback);
     }
 
     /**
@@ -64,10 +65,11 @@ public final class TrackedDto<DTO> {
      * @param trackDtoCallback the callback function to be triggered when tracking changes; must not be null
      * @throws IllegalArgumentException if any of the parameters are null
      */
-    public TrackedDto(final DTO dto, final Collection<FieldAccessor> fields, final Consumer<Object> trackDtoCallback) {
+    public TrackedDto(final DTO dto, final Collection<FieldAccessor> fields, final ClassFieldAccessorCache classFieldAccessorCache, final Consumer<Object> trackDtoCallback) {
         this.dtoRef = new WeakReference<>(Objects.requireNonNull(dto, "DTO cannot be null"));
         this.fields = Objects.requireNonNull(fields, "No tracked fields provided");
         this.trackDtoCallback = Objects.requireNonNull(trackDtoCallback, "No \"track DTO\" callback provided");
+        this.classFieldAccessorCache = Objects.requireNonNull(classFieldAccessorCache, "No ClassFieldAccessorCache provided");
     }
 
     /**
@@ -175,7 +177,7 @@ public final class TrackedDto<DTO> {
                     })
                     .peek(fieldSnapshot -> {
                         // Update internal DTO tracking if the field is a nested DTO
-                        if (fieldSnapshot.hash() != 0 && ClassFieldAccessorCache.isNestedDtoField(dto.getClass(), fieldSnapshot.field())) {
+                        if (fieldSnapshot.hash() != 0 && classFieldAccessorCache.isNestedDtoField(dto.getClass(), fieldSnapshot.field())) {
                             // This nested DTO field was null previously, so we need to track the new value
                             final Object nestedDto = getFieldValue(dto, fieldSnapshot.field());
 
@@ -276,15 +278,15 @@ public final class TrackedDto<DTO> {
         return fieldSnapshots;
     }
 
-    private static int getFieldHash(final Object instance, final FieldAccessor field, final Set<Object> dtosVisited) {
+    private int getFieldHash(final Object instance, final FieldAccessor field, final Set<Object> dtosVisited) {
         return getValueHash(getFieldValue(instance, field), dtosVisited);
     }
 
-    private static int getFieldHash(final Object instance, final Field field, final Set<Object> dtosVisited) {
-        return getValueHash(getFieldValue(instance, ClassFieldAccessorCache.fieldAccessorOrThrow(instance.getClass(), field.getName())), dtosVisited);
+    private int getFieldHash(final Object instance, final Field field, final Set<Object> dtosVisited) {
+        return getValueHash(getFieldValue(instance, classFieldAccessorCache.fieldAccessorOrThrow(instance.getClass(), field.getName())), dtosVisited);
     }
 
-    private static int getValueHash(final @Nullable Object fieldValue, final Set<Object> dtosVisited) {
+    private int getValueHash(final @Nullable Object fieldValue, final Set<Object> dtosVisited) {
         if (fieldValue == null) {
             return 0;
         } else if (ClassUtils.isBasicType(fieldValue.getClass())) {
@@ -310,14 +312,14 @@ public final class TrackedDto<DTO> {
         }
     }
 
-    private static int getDtoHash(final Object dto, final Set<Object> dtosVisited) {
+    private int getDtoHash(final Object dto, final Set<Object> dtosVisited) {
         if (dtosVisited.contains(dto)) {
             LOGGER.warn("Circular reference detected in DTO: {}", dto);
             return 1;
         }
 
         dtosVisited.add(dto);
-        return ClassFieldCache.getFields(dto).stream()
+        return classFieldAccessorCache.fieldAccessors(dto.getClass()).stream()
                 .reduce(1, (hash, field) -> hash + getFieldHash(dto, field, dtosVisited), Integer::sum);
     }
 

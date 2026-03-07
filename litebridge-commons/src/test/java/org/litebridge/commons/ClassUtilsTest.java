@@ -6,11 +6,11 @@ import org.mockito.MockedStatic;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -24,7 +24,7 @@ class ClassUtilsTest {
     @Test
     void getAllFields() {
         // When
-        final Set<Field> result = ClassUtils.getAllFields(TestDto.class);
+        final List<Field> result = ClassUtils.getAllFields(TestDto.class, MethodHandles.lookup());
 
         // Then
         assertEquals(2, result.size());
@@ -35,7 +35,7 @@ class ClassUtilsTest {
     @Test
     void getAllFields_includeStatic() {
         // When
-        final Set<Field> result = ClassUtils.getAllFields(TestDto.class, true);
+        final List<Field> result = ClassUtils.getAllFields(TestDto.class, true, MethodHandles.lookup());
 
         // Then
         assertEquals(3, result.size());
@@ -47,7 +47,7 @@ class ClassUtilsTest {
     @Test
     void getAllFields_inheritance() {
         // When
-        final Set<Field> result = ClassUtils.getAllFields(ChildTestDto.class);
+        final List<Field> result = ClassUtils.getAllFields(ChildTestDto.class, MethodHandles.lookup());
 
         // Then
         assertEquals(3, result.size());

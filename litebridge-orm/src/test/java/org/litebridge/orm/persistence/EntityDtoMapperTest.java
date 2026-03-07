@@ -1,7 +1,9 @@
 package org.litebridge.orm.persistence;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.tracking.ClassFieldAccessorCache;
 
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,6 +15,7 @@ class EntityDtoMapperTest {
     @Test
     void dtoClass() {
         // Given
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
         final EntityDtoMapper<TestDto> entityDtoMapper = new EntityDtoMapper<>(TestDto.class,
                 List.of(new DtoEntityMapping(TestEntity1.class,
                                 java.util.Map.of(
@@ -21,7 +24,8 @@ class EntityDtoMapperTest {
                         new DtoEntityMapping(TestEntity2.class,
                                 java.util.Map.of(
                                         f("dtoValue2"), f("entityValue2")
-                                ))));
+                                ))),
+                classFieldAccessorCache);
 
         // When
         final Class<TestDto> result = entityDtoMapper.dtoClass();
@@ -33,6 +37,7 @@ class EntityDtoMapperTest {
     @Test
     void entityClasses() {
         // Given
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
         final EntityDtoMapper<TestDto> entityDtoMapper = new EntityDtoMapper<>(TestDto.class,
                 List.of(new DtoEntityMapping(TestEntity1.class,
                                 java.util.Map.of(
@@ -41,7 +46,8 @@ class EntityDtoMapperTest {
                         new DtoEntityMapping(TestEntity2.class,
                                 java.util.Map.of(
                                         f("dtoValue2"), f("entityValue2")
-                                ))));
+                                ))),
+                classFieldAccessorCache);
 
         // When
         final List<Class<?>> result = entityDtoMapper.entityClasses();
@@ -55,6 +61,7 @@ class EntityDtoMapperTest {
     @Test
     void entities() {
         // Given
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
         final EntityDtoMapper<TestDto> entityDtoMapper = new EntityDtoMapper<>(TestDto.class,
                 List.of(new DtoEntityMapping(TestEntity1.class,
                                 java.util.Map.of(
@@ -63,7 +70,8 @@ class EntityDtoMapperTest {
                         new DtoEntityMapping(TestEntity2.class,
                                 java.util.Map.of(
                                         f("dtoValue2"), f("entityValue2")
-                                ))));
+                                ))),
+                classFieldAccessorCache);
 
         final TestDto testDto = new TestDto();
         testDto.dtoValue1 = "testValue1";
@@ -89,6 +97,7 @@ class EntityDtoMapperTest {
     @Test
     void dto() {
         // Given
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
         final EntityDtoMapper<TestDto> entityDtoMapper = new EntityDtoMapper<>(TestDto.class,
                 List.of(new DtoEntityMapping(TestEntity1.class,
                                 java.util.Map.of(
@@ -97,7 +106,8 @@ class EntityDtoMapperTest {
                         new DtoEntityMapping(TestEntity2.class,
                                 java.util.Map.of(
                                         f("dtoValue2"), f("entityValue2")
-                                ))));
+                                ))),
+                classFieldAccessorCache);
 
         final TestEntity1 testEntity1 = new TestEntity1();
         testEntity1.entityValue1 = "testValue1";

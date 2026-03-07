@@ -2,6 +2,7 @@ package org.litebridge.commons.type;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -43,6 +44,21 @@ public final class ConcurrentLazy<T> {
      */
     public Optional<T> optional() {
         return Optional.ofNullable(orNull());
+    }
+
+
+    public T orThrow() {
+        return orThrow(NoSuchElementException::new);
+    }
+
+    public <X extends Exception> T orThrow(Supplier<X> exceptionSupplier) throws X {
+        final T result = orNull();
+
+        if (result == null) {
+            throw exceptionSupplier.get();
+        }
+
+        return result;
     }
 
     /**

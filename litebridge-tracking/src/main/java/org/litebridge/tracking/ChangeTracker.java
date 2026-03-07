@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.type.WeakIdentityMap;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -47,10 +48,15 @@ public final class ChangeTracker {
      * modifications to fields over an object's lifecycle.
      */
     private final Map<Object, TrackedDto<?>> trackedDtos = Collections.synchronizedMap(new WeakIdentityMap<>());
+    private final ClassFieldAccessorCache classFieldAccessorCache;
+
+    public ChangeTracker(final MethodHandles.Lookup lookup) {
+        this.classFieldAccessorCache = new ClassFieldAccessorCache(lookup);
+    }
 
     public <DTO> DTO trackDto(final DTO dto) {
         Objects.requireNonNull(dto, "DTO cannot be null");
-        return trackImpl(dto, ClassFieldAccessorCache.fieldAccessors(dto.getClass()), false);
+        return trackImpl(dto, classFieldAccessorCache.fieldAccessors(dto.getClass()), false);
     }
 
     /**
@@ -67,7 +73,7 @@ public final class ChangeTracker {
      */
     public <DTO> DTO trackDto(final DTO dto, final Set<String> trackedFieldNames) {
         Objects.requireNonNull(dto, "DTO cannot be null");
-        final Map<String, FieldAccessor> allFields = ClassFieldAccessorCache.fieldAccessors(dto.getClass()).stream()
+        final Map<String, FieldAccessor> allFields = classFieldAccessorCache.fieldAccessors(dto.getClass()).stream()
                 .collect(Collectors.toMap(FieldAccessor::name, Function.identity()));
         final List<FieldAccessor> trackedFields = trackedFieldNames.stream()
                 .map(fieldName -> ObjectUtils.requireNonNull(allFields.get(fieldName), () -> new IllegalArgumentException("Field '%s' does not exist in DTO '%s'".formatted(fieldName, dto.getClass().getName()))))
@@ -111,12 +117,16 @@ public final class ChangeTracker {
         return (TrackedDto<DTO>) trackedDtos.get(dto);
     }
 
+    public ClassFieldAccessorCache classFieldAccessorCache() {
+        return classFieldAccessorCache;
+    }
+
     private <DTO> DTO trackImpl(final DTO dto, final Collection<FieldAccessor> trackedFields, final boolean snapshotEmpty) {
         if (trackedDtos.containsKey(dto)) {
             return dto;
         }
 
-        final TrackedDto<DTO> trackedDto = new TrackedDto<>(dto, trackedFields, this::trackNestedDto);
+        final TrackedDto<DTO> trackedDto = new TrackedDto<>(dto, trackedFields, classFieldAccessorCache, this::trackNestedDto);
 
         if (snapshotEmpty) {
             // Create an empty snapshot (useful for highlighting "all fields are new" in newly created nested DTOs)
@@ -131,6 +141,6 @@ public final class ChangeTracker {
     }
 
     private void trackNestedDto(final Object dto) {
-        trackImpl(dto, ClassFieldAccessorCache.fieldAccessors(Objects.requireNonNull(dto, "Nested DTO is null").getClass()), true);
+        trackImpl(dto, classFieldAccessorCache.fieldAccessors(Objects.requireNonNull(dto, "Nested DTO is null").getClass()), true);
     }
 }

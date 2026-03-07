@@ -3,6 +3,7 @@ package org.litebridge.orm.persistence;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.ObjectUtils;
+import org.litebridge.orm.api.spec.FieldSpec;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 import org.litebridge.tracking.FieldAccessorChain;
@@ -26,9 +27,11 @@ public class EntityDtoMapper<DTO> {
     private final Class<DTO> dtoClass;
     private final List<Class<?>> entityClasses;
     private final Map<Class<?>, Map<FieldAccessor, FieldAccessor>> entityToDtoFieldMap;
+    private final ClassFieldAccessorCache classFieldAccessorCache;
 
-    public EntityDtoMapper(final Class<DTO> dtoClass, final List<DtoEntityMapping> dtoEntityMappings) {
+    public EntityDtoMapper(final Class<DTO> dtoClass, final List<DtoEntityMapping> dtoEntityMappings, final ClassFieldAccessorCache classFieldAccessorCache) {
         this.dtoClass = dtoClass;
+        this.classFieldAccessorCache = classFieldAccessorCache;
 
         final List<Class<?>> entityClasses = new ArrayList<>();
         final Map<Class<?>, Map<FieldAccessor, FieldAccessor>> entityToDtoFieldMap = new HashMap<>();
@@ -37,8 +40,8 @@ public class EntityDtoMapper<DTO> {
             entityClasses.add(dtoEntityMapping.entityClass());
 
             dtoEntityMapping.dtoEntityFieldMap().forEach((dtoField, entityField) -> {
-                final FieldAccessor dtoFieldAccessor = DtoIntrospector.fieldAccessor(dtoClass, dtoField);
-                final FieldAccessor entityFieldAccessor = DtoIntrospector.fieldAccessor(dtoEntityMapping.entityClass(), entityField);
+                final FieldAccessor dtoFieldAccessor = fieldAccessor(dtoClass, dtoField);
+                final FieldAccessor entityFieldAccessor = fieldAccessor(dtoEntityMapping.entityClass(), entityField);
 
                 entityToDtoFieldMap.computeIfAbsent(dtoEntityMapping.entityClass(), k -> new HashMap<>())
                         .put(entityFieldAccessor, dtoFieldAccessor);
@@ -96,7 +99,7 @@ public class EntityDtoMapper<DTO> {
                                     constructedEntities.put(intermediateFieldAccessor.type(), intermediateEntity);
                                 } else {
                                     // Merge the intermediate entity with the constructed entity
-                                    ClassFieldAccessorCache.fieldAccessors(intermediateFieldAccessor.type()).forEach(fieldAccessor -> {
+                                    classFieldAccessorCache.fieldAccessors(intermediateFieldAccessor.type()).forEach(fieldAccessor -> {
                                                 if (fieldAccessor.get(constructedIntermediateEntity) == null) {
                                                     final Object intermediateFieldValue = fieldAccessor.get(intermediateEntity);
 
@@ -148,7 +151,7 @@ public class EntityDtoMapper<DTO> {
 
         entities.forEach(entity -> {
             entityToDtoFieldMap.get(entity.getClass()).forEach((entityField, dtoField) -> {
-                if (dtoField.type() != entityField.type() && ClassFieldAccessorCache.isNestedDtoField(entityField.dtoClass(), entityField)) {
+                if (dtoField.type() != entityField.type() && classFieldAccessorCache.isNestedDtoField(entityField.dtoClass(), entityField)) {
                     // Nested entity - get the PK and add that to the DTO field
                     final Object nestedDto = entityField.get(entity);
                     return;
@@ -187,5 +190,13 @@ public class EntityDtoMapper<DTO> {
         }
 
         return false;
+    }
+
+    private FieldAccessor fieldAccessor(final Class<?> dtoClass, final FieldSpec fieldSpec) {
+        if (fieldSpec.property()) {
+            return classFieldAccessorCache.propertyAccessor(dtoClass, fieldSpec.name());
+        } else {
+            return classFieldAccessorCache.fieldAccessor(dtoClass, fieldSpec.name());
+        }
     }
 }

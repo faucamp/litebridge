@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.shadow.de.siegmar.fastcsv.util.Nullable;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -26,7 +27,7 @@ public class ChangeTrackerTest {
 
     @BeforeEach
     public void beforeEach() {
-        changeTracker = new ChangeTracker();
+        changeTracker = new ChangeTracker(MethodHandles.lookup());
     }
 
     @Test
@@ -100,7 +101,7 @@ public class ChangeTrackerTest {
     public void trackDto_fieldType_invalidField() throws Exception {
         // Given
         final TestDto dto = new TestDto();
-        final Set<FieldAccessor> invalidFields = Set.of(new FieldAccessorImpl(ContainerDto.class.getDeclaredField("parentField1")));
+        final Set<FieldAccessor> invalidFields = Set.of(new DirectFieldAccessor(ContainerDto.class.getDeclaredField("parentField1"), MethodHandles.lookup()));
 
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> changeTracker.trackDtoFields(dto, invalidFields));
@@ -144,7 +145,7 @@ public class ChangeTrackerTest {
         final TestDto dto = new TestDto();
         final Field field1 = TestDto.getDeclaredField("field1");
         final Field field2 = TestDto.getDeclaredField("field2");
-        final Set<FieldAccessor> trackedFields = Set.of(new FieldAccessorImpl(field1), new FieldAccessorImpl(field2));
+        final Set<FieldAccessor> trackedFields = Set.of(new DirectFieldAccessor(field1, MethodHandles.lookup()), new DirectFieldAccessor(field2, MethodHandles.lookup()));
 
         // When
         final TestDto result = changeTracker.trackDtoFields(dto, trackedFields);
@@ -177,7 +178,7 @@ public class ChangeTrackerTest {
         final Object dto = null;
         final Field field1 = TestDto.getDeclaredField("field1");
         final Field field2 = TestDto.getDeclaredField("field2");
-        final Set<FieldAccessor> trackedFields = Set.of(new FieldAccessorImpl(field1), new FieldAccessorImpl(field2));
+        final Set<FieldAccessor> trackedFields = Set.of(new DirectFieldAccessor(field1, MethodHandles.lookup()), new DirectFieldAccessor(field2, MethodHandles.lookup()));
 
         // When/Then
         assertThrows(NullPointerException.class, () -> changeTracker.trackDtoFields(dto, trackedFields));

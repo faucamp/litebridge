@@ -10,12 +10,15 @@ import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.api.sql.SqlFromClause;
 import org.litebridge.orm.api.sql.SqlSelector;
 import org.litebridge.orm.persistence.AliasGenerator;
+import org.litebridge.orm.persistence.DtoEntityMapping;
+import org.litebridge.orm.persistence.EntityDtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.orm.persistence.TableMapper;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ChangeTracker;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,6 +48,7 @@ public class Litebridge {
     private final DatabaseProvider databaseProvider;
     private final PersistenceFacade persistenceFacade;
     private final TableMapper tableMapper;
+    private final ChangeTracker changeTracker;
 
     /**
      * Constructs a Litebridge instance with the specified database provider.
@@ -54,9 +58,14 @@ public class Litebridge {
      *                         and facilitate persistence functionalities. Must not be null.
      */
     public Litebridge(final DatabaseProvider databaseProvider) {
+        this(databaseProvider, MethodHandles.lookup());
+    }
+
+    public Litebridge(final DatabaseProvider databaseProvider, final MethodHandles.Lookup lookup) {
         this.databaseProvider = databaseProvider;
         this.persistenceFacade = new PersistenceFacade(tableRegistry, databaseProvider);
-        this.tableMapper = new TableMapper(databaseProvider, tableRegistry, new ChangeTracker());
+        this.changeTracker = new ChangeTracker(lookup);
+        this.tableMapper = new TableMapper(databaseProvider, tableRegistry, changeTracker);
     }
 
     /**
@@ -68,8 +77,8 @@ public class Litebridge {
      * @param tableSpec the table specification defining the mapping of the DTO class to the database table; must not be null.
      * @throws SQLException if an error occurs during the mapping or registration process.
      */
-    public void register(final Class<?> dtoClass, final TableSpec tableSpec, final Class<?>... dtoInterfaces) throws SQLException {
-        final OrmTable table = tableMapper.mapToTable(dtoClass, tableSpec);
+    public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final TableSpec tableSpec, final Class<?>... dtoInterfaces) throws SQLException {
+        final OrmTable table = tableMapper.mapToTable(lookup, dtoClass, tableSpec);
         tableRegistry.addTable(dtoClass, table);
         Arrays.stream(dtoInterfaces).forEach(dtoInterface -> tableRegistry.addTable(dtoInterface, table));
 
@@ -78,8 +87,12 @@ public class Litebridge {
         }
     }
 
+    public void register(final Class<?> dtoClass, final TableSpec tableSpec, final Class<?>... dtoInterfaces) throws SQLException {
+        register(MethodHandles.lookup(), dtoClass, tableSpec, dtoInterfaces);
+    }
+
     public void register(final TableMapping tableMapping) throws SQLException {
-        register(tableMapping.dtoClass(), tableMapping.tableSpec());
+        register(tableMapping.lookup(), tableMapping.dtoClass(), tableMapping.tableSpec());
     }
 
     /**
@@ -187,13 +200,13 @@ public class Litebridge {
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass) {
         final AliasGenerator aliasGenerator = new AliasGenerator();
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
-        return new DtoSelector<>(dtoClass, table, tableRegistry, databaseProvider, aliasGenerator).select();
+        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator).select();
     }
 
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
         final OrmTable table = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
         final AliasGenerator aliasGenerator = new AliasGenerator();
-        return new DtoSelector<>(dtoClass, table, tableRegistry, databaseProvider, aliasGenerator).select();
+        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator).select();
     }
 
     /**
@@ -257,5 +270,9 @@ public class Litebridge {
      */
     public <DTO> DTO toDto(final Row row, final Class<DTO> dtoClass) {
         throw new UnsupportedOperationException("Regression");
+    }
+
+    public <DTO> EntityDtoMapper<DTO> entityDtoMapper(final Class<DTO> dtoClass, final List<DtoEntityMapping> dtoEntityMappings) {
+        return new EntityDtoMapper<>(dtoClass, dtoEntityMappings, changeTracker.classFieldAccessorCache());
     }
 }

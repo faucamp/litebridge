@@ -171,7 +171,7 @@ class BasicE2eTest extends AbstractE2eTest {
         litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
 
         // Create entity-DTO mapper
-        final EntityDtoMapper<PersonAccount> entityDtoMapper = new EntityDtoMapper(PersonAccount.class,
+        final EntityDtoMapper<PersonAccount> entityDtoMapper = litebridge.entityDtoMapper(PersonAccount.class,
                 List.of(new DtoEntityMapping(Person.class,
                                 Map.of(
                                         f("id"), f("id"),

@@ -11,9 +11,10 @@ import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ChangeTracker;
+import org.litebridge.tracking.DirectFieldAccessor;
 import org.litebridge.tracking.FieldAccessor;
-import org.litebridge.tracking.FieldAccessorImpl;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
@@ -31,18 +32,18 @@ class DtoJoinClauseTest {
         final ColumnMetaData joinColumnMetaData = new ColumnMetaData(table, "JOIN_COLUMN", false, Types.VARCHAR);
         columnMetaData.setJoinColumn(columnMetaData.name());
         final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", List.of("MY_VAR"), List.of(columnMetaData));
-        final FieldAccessor fieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "myVar"));
-        final FieldAccessor joinFieldAccessor = new FieldAccessorImpl(ClassUtils.getField(TestDto.class, "joinColumn"));
+        final FieldAccessor fieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup());
+        final FieldAccessor joinFieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "joinColumn"), MethodHandles.lookup());
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(
                 fieldAccessor, columnMetaData,
                 joinFieldAccessor, joinColumnMetaData);
-        final ChangeTracker changeTracker = new ChangeTracker();
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final AliasGenerator aliasGenerator = new AliasGenerator();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, databaseProvider, aliasGenerator);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator);
         dtoSelector.select();
         final DtoJoinClause<TestDto> dtoJoinClause = new DtoJoinClause<>(TestDto.class, ormTable, dtoSelector);
 

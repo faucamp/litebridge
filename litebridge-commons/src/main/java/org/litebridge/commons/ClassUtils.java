@@ -3,6 +3,7 @@ package org.litebridge.commons;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -11,9 +12,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -32,8 +31,8 @@ public final class ClassUtils {
      * @param type the class from which to retrieve all declared fields
      * @return a set of all fields declared in the given class and its superclasses
      */
-    public static Set<Field> getAllFields(final Class<?> type) {
-        return getAllFields(type, false);
+    public static List<Field> getAllFields(final Class<?> type, final MethodHandles.Lookup lookup) {
+        return getAllFields(type, false, lookup);
     }
 
     /**
@@ -41,17 +40,23 @@ public final class ClassUtils {
      * (except for fields of the `Object` class) and (optionally) static fields.
      *
      * @param type the class from which to retrieve all declared fields
-     * @return a set of all fields declared in the given class and its superclasses
+     * @return a list of all fields declared in the given class and its superclasses
      */
-    public static Set<Field> getAllFields(final Class<?> type, final boolean includeStatic) {
+    public static List<Field> getAllFields(final Class<?> type, final boolean includeStatic, final MethodHandles.Lookup lookup) {
+        try {
+            lookup.accessClass(type);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException("No access to class: %s. Please provide a suitable MethodHandles.Lookup or 'opens %s to %s;' to your module-info.java\",".formatted(type.getName(), lookup.getClass().getModule().getName(), ClassUtils.class.getModule().getName()), e);
+        }
+
         // Add fields declared in the current class
-        final Set<Field> fields = Arrays.stream(type.getDeclaredFields())
+        final List<Field> fields = Arrays.stream(type.getDeclaredFields())
                 .filter(field -> includeStatic || !Modifier.isStatic(field.getModifiers()))
-                .collect(Collectors.toCollection(HashSet::new));
+                .collect(Collectors.toCollection(ArrayList::new));
 
         // Recursively get fields from the superclass
         if (!type.getSuperclass().equals(Object.class)) {
-            fields.addAll(getAllFields(type.getSuperclass(), includeStatic));
+            fields.addAll(getAllFields(type.getSuperclass(), includeStatic, lookup));
         }
 
         return fields;

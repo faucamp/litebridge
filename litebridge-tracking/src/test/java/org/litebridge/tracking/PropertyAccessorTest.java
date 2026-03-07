@@ -3,6 +3,8 @@ package org.litebridge.tracking;
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.ClassUtils;
 
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,7 +18,8 @@ class PropertyAccessorTest {
     @Test
     void name() {
         // Given
-        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
 
         // When
         final String result = propertyAccessor.name();
@@ -28,7 +31,8 @@ class PropertyAccessorTest {
     @Test
     void get() {
         // Given
-        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
         final TestDto testDto = new TestDto();
         testDto.setMyVar("testValue");
 
@@ -42,7 +46,8 @@ class PropertyAccessorTest {
     @Test
     void get_exception() {
         // Given
-        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
         final TestDto2 testDto2 = new TestDto2();
 
         // When/Then
@@ -52,7 +57,8 @@ class PropertyAccessorTest {
     @Test
     void set() {
         // Given
-        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
         final TestDto testDto = new TestDto();
 
         // When
@@ -65,7 +71,8 @@ class PropertyAccessorTest {
     @Test
     void set_exception() {
         // Given
-        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
         final TestDto2 testDto2 = new TestDto2();
 
         // When/Then
@@ -75,7 +82,8 @@ class PropertyAccessorTest {
     @Test
     void type() {
         // When
-        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
         final Class<?> result = propertyAccessor.type();
 
         // Then
@@ -85,7 +93,8 @@ class PropertyAccessorTest {
     @Test
     void genericTypes() throws Exception {
         // Given
-        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto2.class, "list"));
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getField(TestDto2.class, "list"), MethodHandles.lookup(), classFieldAccessorCache);
 
         // When
         final Class<?>[] result = propertyAccessor.genericTypes();
@@ -98,7 +107,8 @@ class PropertyAccessorTest {
     @Test
     void dtoClass() {
         // Given
-        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
 
         // When
         final Class<?> result = propertyAccessor.dtoClass();
@@ -110,7 +120,8 @@ class PropertyAccessorTest {
     @Test
     void equals_null() {
         // Given
-        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
 
         // When/Then
         assertFalse(propertyAccessor.equals(null));
@@ -119,7 +130,8 @@ class PropertyAccessorTest {
     @Test
     void equals_differentType() {
         // Given
-        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
 
         // When/Then
         assertFalse(propertyAccessor.equals(new Object()));
@@ -128,9 +140,10 @@ class PropertyAccessorTest {
     @Test
     void equals_samePropertyDescriptorInstance() {
         // Given
-        final var descriptor = ClassUtils.getProperty(TestDto.class, "myVar");
-        final PropertyAccessor left = new PropertyAccessor(descriptor);
-        final PropertyAccessor right = new PropertyAccessor(descriptor);
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final Field field = ClassUtils.getField(TestDto.class, "myVar");
+        final PropertyAccessor left = new PropertyAccessor(field, MethodHandles.lookup(), classFieldAccessorCache);
+        final PropertyAccessor right = new PropertyAccessor(field, MethodHandles.lookup(), classFieldAccessorCache);
 
         // When/Then
         assertTrue(left.equals(right));
@@ -140,8 +153,9 @@ class PropertyAccessorTest {
     @Test
     void equals_differentPropertyDescriptor() {
         // Given
-        final PropertyAccessor left = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
-        final PropertyAccessor right = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "otherVar"));
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final PropertyAccessor left = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
+        final PropertyAccessor right = new PropertyAccessor(ClassUtils.getField(TestDto.class, "otherVar"), MethodHandles.lookup(), classFieldAccessorCache);
 
         // When/Then
         assertFalse(left.equals(right));
@@ -151,9 +165,10 @@ class PropertyAccessorTest {
     @Test
     void hashCode_equalWhenDescriptorsEqual() {
         // Given
-        final var descriptor = ClassUtils.getProperty(TestDto.class, "myVar");
-        final PropertyAccessor left = new PropertyAccessor(descriptor);
-        final PropertyAccessor right = new PropertyAccessor(descriptor);
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final Field field = ClassUtils.getField(TestDto.class, "myVar");
+        final PropertyAccessor left = new PropertyAccessor(field, MethodHandles.lookup(), classFieldAccessorCache);
+        final PropertyAccessor right = new PropertyAccessor(field, MethodHandles.lookup(), classFieldAccessorCache);
 
         // When
         final int leftHash = left.hashCode();
@@ -161,14 +176,15 @@ class PropertyAccessorTest {
 
         // Then
         assertEquals(leftHash, rightHash);
-        assertEquals(descriptor.hashCode(), leftHash);
+        assertEquals(field.hashCode(), leftHash);
     }
 
     @Test
     void hashCode_differentWhenDescriptorsDifferent() {
         // Given
-        final PropertyAccessor left = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "myVar"));
-        final PropertyAccessor right = new PropertyAccessor(ClassUtils.getProperty(TestDto.class, "otherVar"));
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final PropertyAccessor left = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
+        final PropertyAccessor right = new PropertyAccessor(ClassUtils.getField(TestDto.class, "otherVar"), MethodHandles.lookup(), classFieldAccessorCache);
 
         // When/Then
         assertNotEquals(left.hashCode(), right.hashCode());

@@ -4,9 +4,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.ClassUtils;
+import org.litebridge.tracking.DirectFieldAccessor;
 import org.litebridge.tracking.FieldAccessor;
-import org.litebridge.tracking.FieldAccessorImpl;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -76,7 +77,7 @@ class DtoConstructorTest {
     @SuppressWarnings("unchecked")
     void newInstance_canonicalConstructor() throws Exception {
         // Given
-        final FieldAccessor fieldAccessor = new FieldAccessorImpl(CanonicalConstructorDto.class.getDeclaredField("id"));
+        final FieldAccessor fieldAccessor = new DirectFieldAccessor(CanonicalConstructorDto.class.getDeclaredField("id"), MethodHandles.lookup());
         final DtoConstructor.FieldAccessorValue fieldAccessorValue = new DtoConstructor.FieldAccessorValue(fieldAccessor, 42);
 
         // When
@@ -96,7 +97,7 @@ class DtoConstructorTest {
     @SuppressWarnings("unchecked")
     void newInstance_recordCanonicalConstructor() throws Exception {
         // Given
-        final FieldAccessor fieldAccessor = new FieldAccessorImpl(RecordDto.class.getDeclaredField("value"));
+        final FieldAccessor fieldAccessor = new DirectFieldAccessor(RecordDto.class.getDeclaredField("value"), MethodHandles.lookup());
         final DtoConstructor.FieldAccessorValue fieldAccessorValue = new DtoConstructor.FieldAccessorValue(fieldAccessor, "Hello world!");
 
         // When
@@ -119,7 +120,7 @@ class DtoConstructorTest {
         final Constructor<NoArgAndOtherConstructorDto> defaultConstructor = NoArgAndOtherConstructorDto.class.getDeclaredConstructor();
         defaultConstructor.setAccessible(true);
 
-        final FieldAccessor fieldAccessor = new FieldAccessorImpl(NoArgAndOtherConstructorDto.class.getDeclaredField("intField"));
+        final FieldAccessor fieldAccessor = new DirectFieldAccessor(NoArgAndOtherConstructorDto.class.getDeclaredField("intField"), MethodHandles.lookup());
         final DtoConstructor.FieldAccessorValue fieldAccessorValue = new DtoConstructor.FieldAccessorValue(fieldAccessor, 42);
 
         // When
