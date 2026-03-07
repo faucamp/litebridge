@@ -34,7 +34,6 @@
         <module>litebridge-commons</module>
         <module>litebridge-converter</module>
         <module>litebridge-db</module>
-        <module>litebridge-dto</module>
         <module>litebridge-orm</module>
         <module>litebridge-tracking</module>
         <module>example</module>
