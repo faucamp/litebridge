@@ -42,6 +42,34 @@ class RowTest {
     }
 
     @Test
+    void column_spiColumn() {
+        // Given
+        final Column column = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "TEST_COLUMN");
+        final Row row = new Row().withColumn(column, "testValue");
+        final Column queryColumn = new Column(column.table(), "TEST_COLUMN");
+
+        // When
+        final Row.RowColumn result = row.column(queryColumn).orElseThrow();
+
+        // Then
+        assertEquals(column, result.column());
+    }
+
+    @Test
+    void column_spiColumn_aliased() {
+        // Given
+        final Column column = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "TEST_COLUMN");
+        final Row row = new Row().withColumn(column.as("c1"), "testValue");
+        final Column queryColumn = new Column(column.table(), "TEST_COLUMN").as("c1");
+
+        // When
+        final Row.RowColumn result = row.column(queryColumn).orElseThrow();
+
+        // Then
+        assertEquals(column, result.column());
+    }
+
+    @Test
     void testToString() {
         // Given
         final Column column = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "TEST_COLUMN");

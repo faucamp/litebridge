@@ -71,6 +71,15 @@ public final class Row implements Result {
                 .findFirst();
     }
 
+    @SuppressWarnings("ConstantConditions")
+    public Optional<RowColumn> column(final Column column) {
+        if (column.alias() != null) {
+            return columnForAlias(column.alias());
+        } else {
+            return column(column.name());
+        }
+    }
+
     /**
      * Returns the total number of columns in the current row.
      *

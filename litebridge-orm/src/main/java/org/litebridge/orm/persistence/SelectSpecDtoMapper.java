@@ -161,13 +161,13 @@ public class SelectSpecDtoMapper {
                 fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, nestedDto));
             } else if (ClassUtils.isBasicType(field.type())) {
                 // Standard column: find the value, convert it to target DTO's field type, and set the field
-                final Row.RowColumn rowColumn = row.columnForAlias(fieldColumn.column().alias())
+                final Row.RowColumn rowColumn = row.column(fieldColumn.column())
                         .orElseThrow(() -> new IllegalStateException("No column found for alias '%s' in row: %s".formatted(fieldColumn.column().alias(), row)));
                 final Object convertedValue = typeConverter.convert(rowColumn.value(), field.type());
                 fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, convertedValue));
             } else {
                 // Related DTO: note dependency and allow outer process populate these
-                final Row.RowColumn rowColumn = row.columnForAlias(fieldColumn.column().alias())
+                final Row.RowColumn rowColumn = row.column(fieldColumn.column())
                         .orElseThrow(() -> new IllegalStateException("No column found for alias '%s' in row: %s".formatted(fieldColumn.column().alias(), row)));
                 final Object targetPkValue = rowColumn.value();
                 final List<Object> targetPk = targetPkValue instanceof List<?> ? (List<Object>) targetPkValue : Collections.singletonList(targetPkValue);
