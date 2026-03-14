@@ -119,6 +119,6 @@ target DTO.
 If the DTO itself is garbage collected, the corresponding `TrackedDto` is removed from the `ChangeTracker` instance
 automatically as well. 
 
-Additionally, calling `TrackedDto.dto()` in a scenario (where a reference to a `TrackedDto` still exists, but 
-the underlying DTO has since been garbage collected) will result in an `IllegalStateException` with
+Additionally, calling `TrackedDto.dto()` in a scenario where a reference to a `TrackedDto` still exists, but 
+the underlying DTO has since been garbage collected, will result in an `IllegalStateException` with
 the reason "DTO object has been garbage collected".
