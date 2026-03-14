@@ -23,7 +23,9 @@ import java.sql.Types;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 class DtoJoinConditionClauseTerminalTest {
@@ -31,24 +33,10 @@ class DtoJoinConditionClauseTerminalTest {
     @Test
     void and() {
         // Given
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
-        final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", List.of("MY_VAR"), List.of(columnMetaData));
-        final FieldAccessor fieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup());
-        final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
-        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
-        final TableRegistry tableRegistry = new TableRegistry();
-        tableRegistry.addTable(TestDto.class, ormTable);
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new AliasGenerator();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator);
-        final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasGenerator.aliasTable(ormTable));
-
-        final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector, aliasGenerator);
+        final TestContext<TestDto> context = testContext();
 
         // When
-        final DtoJoinConditionClause<TestDto> result = dtoDtoJoinConditionClauseTerminal.and("myVar");
+        final DtoJoinConditionClause<TestDto> result = context.terminal().and("myVar");
 
         // Then
         assertNotNull(result);
@@ -57,27 +45,18 @@ class DtoJoinConditionClauseTerminalTest {
     @Test
     void where() {
         // Given
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
-        final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", List.of("MY_VAR"), List.of(columnMetaData));
-        final FieldAccessor fieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup());
-        final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
-        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
-        final TableRegistry tableRegistry = new TableRegistry();
-        tableRegistry.addTable(TestDto.class, ormTable);
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new AliasGenerator();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator);
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
+        final TestContext<TestDto> context = testContext();
+        final SelectSpec selectSpec = ObjectUtils.getFieldValue(context.dtoSelector(), "selectSpec", SelectSpec.class);
+        final Table aliasedTable = context.aliasGenerator().aliasTable(context.ormTable());
         selectSpec.setTable(aliasedTable);
-        final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasedTable);
 
-        final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector, aliasGenerator);
+        final DtoJoinConditionClauseTerminal<TestDto> terminal = new DtoJoinConditionClauseTerminal<>(
+                new DtoJoinSpec(TestDto.class, context.ormTable(), aliasedTable),
+                context.dtoSelector(),
+                context.aliasGenerator());
 
         // When
-        final DtoWhereConditionClause<TestDto> result = dtoDtoJoinConditionClauseTerminal.where("myVar");
+        final DtoWhereConditionClause<TestDto> result = terminal.where("myVar");
 
         // Then
         assertNotNull(result);
@@ -86,24 +65,10 @@ class DtoJoinConditionClauseTerminalTest {
     @Test
     void orderBy() {
         // Given
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
-        final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", List.of("MY_VAR"), List.of(columnMetaData));
-        final FieldAccessor fieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup());
-        final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
-        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
-        final TableRegistry tableRegistry = new TableRegistry();
-        tableRegistry.addTable(TestDto.class, ormTable);
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new AliasGenerator();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator);
-        final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasGenerator.aliasTable(ormTable));
-
-        final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector, aliasGenerator);
+        final TestContext<TestDto> context = testContext();
 
         // When
-        final DtoOrderByClause<TestDto> result = dtoDtoJoinConditionClauseTerminal.orderBy("myVar");
+        final DtoOrderByClause<TestDto> result = context.terminal().orderBy("myVar");
 
         // Then
         assertNotNull(result);
@@ -112,10 +77,28 @@ class DtoJoinConditionClauseTerminalTest {
     @Test
     void orderBy_fieldColumnSpec() {
         // Given
+        final TestContext<TestDto> context = testContext();
+        final FieldColumnSpec fieldColumnSpec = FieldColumnMapping.f("myVar").c("MY_VAR");
+
+        // When
+        final DtoOrderByClause<TestDto> result = context.terminal().orderBy(fieldColumnSpec);
+
+        // Then
+        assertNotNull(result);
+    }
+
+    private static TestContext<TestDto> testContext() {
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
-        final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", List.of("MY_VAR"), List.of(columnMetaData));
-        final FieldAccessor fieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup());
+        final TableMetaData tableMetaData = new TableMetaData(
+                "TEST_CATALOG",
+                "TEST_SCHEMA",
+                "TEST_TABLE",
+                List.of("MY_VAR"),
+                List.of(columnMetaData));
+        final FieldAccessor fieldAccessor = new DirectFieldAccessor(
+                ClassUtils.getField(TestDto.class, "myVar"),
+                MethodHandles.lookup());
         final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
@@ -123,17 +106,27 @@ class DtoJoinConditionClauseTerminalTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final AliasGenerator aliasGenerator = new AliasGenerator();
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator);
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(
+                TestDto.class,
+                ormTable,
+                tableRegistry,
+                changeTracker.classFieldAccessorCache(),
+                databaseProvider,
+                aliasGenerator);
         final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasGenerator.aliasTable(ormTable));
+        final DtoJoinConditionClauseTerminal<TestDto> terminal = new DtoJoinConditionClauseTerminal<>(
+                joinSpec,
+                dtoSelector,
+                aliasGenerator);
 
-        final DtoJoinConditionClauseTerminal<TestDto> dtoDtoJoinConditionClauseTerminal = new DtoJoinConditionClauseTerminal<>(joinSpec, dtoSelector, aliasGenerator);
-        final FieldColumnSpec fieldColumnSpec = FieldColumnMapping.f("myVar").c("MY_VAR");
+        return new TestContext<>(ormTable, aliasGenerator, dtoSelector, terminal);
+    }
 
-        // When
-        final DtoOrderByClause<TestDto> result = dtoDtoJoinConditionClauseTerminal.orderBy(fieldColumnSpec);
-
-        // Then
-        assertNotNull(result);
+    private record TestContext<DTO>(
+            OrmTable ormTable,
+            AliasGenerator aliasGenerator,
+            DtoSelector<DTO> dtoSelector,
+            DtoJoinConditionClauseTerminal<DTO> terminal) {
     }
 
     private static class TestDto {
