@@ -33,8 +33,4 @@ public record ColumnSpec(
                       final @Nullable String joinColumn) {
         this(name, isAutoIncrement, sequence, joinColumn, null);
     }
-
-    public ColumnSpec(final String name) {
-        this(name, false, null, null, null);
-    }
 }
