@@ -142,10 +142,13 @@ public abstract class SelectSpec {
                         .map(JoinSpec::toJoin)
                         .toList() : Collections.emptyList(),
                 orderBys != null ? orderBys.stream()
+                        // Resolves order-by columns from select list or synthesizes new ones
                         .flatMap(orderBySpec -> Arrays.stream(orderBySpec.columns())
                                 .map(columnName -> columns.stream()
                                         .filter(column -> Objects.equals(column.name(), columnName))
-                                        .findFirst().orElseThrow())
+                                        .findFirst()
+                                        // Column not specified in select list
+                                        .orElseGet(() -> new Column(table, columnName)))
                                 .map(column -> new OrderBy(column, orderBySpec.isAsc())))
                         .toList() : Collections.emptyList(),
                 whereConditions != null ? whereConditions.stream()

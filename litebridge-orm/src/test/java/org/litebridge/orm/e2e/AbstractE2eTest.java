@@ -28,6 +28,10 @@ public abstract class AbstractE2eTest {
         }
     }
 
+    protected Connection connection() {
+        return connection;
+    }
+
     private Litebridge ensureLitebridge() throws SQLException {
         if (connection == null) {
             connection = createH2Connection();
