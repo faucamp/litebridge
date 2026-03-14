@@ -47,6 +47,36 @@ class DtoCacheImplTest {
         assertNull(dtoCache.get(TestDto.class, List.of("test")));
     }
 
+    @Test
+    void getAll_withEmptyCache() {
+        // Given
+        final DtoCacheImpl dtoCache = new DtoCacheImpl();
+
+        // When
+        final List<TestDto> result = dtoCache.getAll(TestDto.class);
+
+        // Then
+        assertNull(result);
+    }
+
+    @Test
+    void getAll_withData() {
+        // Given
+        final DtoCacheImpl dtoCache = new DtoCacheImpl();
+        final TestDto testDto1 = new TestDto();
+        final TestDto testDto2 = new TestDto();
+        dtoCache.put(List.of("id1"), testDto1);
+        dtoCache.put(List.of("id2"), testDto2);
+
+        // When
+        final List<TestDto> result = dtoCache.getAll(TestDto.class);
+
+        // Then
+        assertSame(2, result.size());
+        assertSame(testDto1, result.get(0));
+        assertSame(testDto2, result.get(1));
+    }
+
     private static class TestDto {
         private String myVar;
     }

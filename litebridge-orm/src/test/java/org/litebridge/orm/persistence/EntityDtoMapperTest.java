@@ -9,6 +9,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.litebridge.orm.api.spec.FieldMapping.f;
+import static org.litebridge.orm.api.spec.FieldMapping.p;
 
 class EntityDtoMapperTest {
 
@@ -69,7 +70,7 @@ class EntityDtoMapperTest {
                                 )),
                         new DtoEntityMapping(TestEntity2.class,
                                 java.util.Map.of(
-                                        f("dtoValue2"), f("entityValue2")
+                                        p("dtoValue2"), f("entityValue2")
                                 ))),
                 classFieldAccessorCache);
 
@@ -126,6 +127,14 @@ class EntityDtoMapperTest {
     public static class TestDto {
         private String dtoValue1;
         private Long dtoValue2;
+
+        public Long getDtoValue2() {
+            return dtoValue2;
+        }
+
+        public void setDtoValue2(final Long dtoValue2) {
+            this.dtoValue2 = dtoValue2;
+        }
     }
 
     public static class TestEntity1 {
