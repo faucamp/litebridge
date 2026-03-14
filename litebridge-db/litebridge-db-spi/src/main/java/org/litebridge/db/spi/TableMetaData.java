@@ -76,10 +76,6 @@ public final class TableMetaData {
         }
     }
 
-    private TableMetaData(final TableMetaData other) {
-        this(other.catalog(), other.schema(), other.name(), other.primaryKey.stream().map(ColumnMetaData::name).toList(), other.columns);
-    }
-
     public String catalog() {
         return catalog;
     }
