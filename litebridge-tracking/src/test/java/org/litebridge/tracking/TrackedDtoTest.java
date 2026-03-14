@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,7 +18,9 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -36,6 +40,36 @@ class TrackedDtoTest {
 
         // Then
         assertEquals(testDto, result);
+    }
+
+    @Test
+    void dto_garbageCollected_throwsIllegalStateException() throws Exception {
+        // Given
+        final TestDto testDto = new TestDto();
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, new ClassFieldAccessorCache(MethodHandles.lookup()), dto -> fail());
+        final Field dtoRefField = TrackedDto.class.getDeclaredField("dtoRef");
+        dtoRefField.setAccessible(true);
+        dtoRefField.set(trackedDto, new WeakReference<>(null));
+
+        // When
+        final IllegalStateException ex = assertThrows(IllegalStateException.class, trackedDto::dto);
+
+        // Then
+        assertTrue(ex.getMessage().contains("DTO object has been garbage collected"));
+    }
+
+    @Test
+    void constructor_nullArguments() {
+        // Given
+        final TestDto testDto = new TestDto();
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final List<FieldAccessor> fieldAccessors = fieldAccessors();
+
+        // When/Then
+        assertThrows(NullPointerException.class, () -> new TrackedDto<>(null, classFieldAccessorCache, dto -> fail()));
+        assertThrows(NullPointerException.class, () -> new TrackedDto<>(testDto, null, classFieldAccessorCache, dto -> fail()));
+        assertThrows(NullPointerException.class, () -> new TrackedDto<>(testDto, fieldAccessors, null, dto -> fail()));
+        assertThrows(NullPointerException.class, () -> new TrackedDto<>(testDto, fieldAccessors, classFieldAccessorCache, null));
     }
 
     @Test
@@ -92,6 +126,27 @@ class TrackedDtoTest {
         for (int i = 0; i < nestedDtosRegistered.length; i++) {
             assertTrue(nestedDtosRegistered[i], "Nested DTO not registered at index " + i);
         }
+    }
+
+    @Test
+    void snapshot_overwriteTrue_clearsCachedChangedFields() {
+        // Given
+        final TestDto testDto = new TestDto();
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors(), classFieldAccessorCache, dto -> fail());
+
+        trackedDto.snapshot(false);
+        testDto.string = "value1";
+        final ChangedFields firstChangedFields = trackedDto.changedFields();
+        assertTrue(firstChangedFields.contains("string"));
+
+        // When
+        trackedDto.snapshot(true);
+
+        // Then
+        final ChangedFields changedFieldsAfterOverwrite = trackedDto.changedFields();
+        assertTrue(changedFieldsAfterOverwrite.isEmpty());
+        assertNotSame(firstChangedFields, changedFieldsAfterOverwrite);
     }
 
     @Test
@@ -233,6 +288,78 @@ class TrackedDtoTest {
     }
 
     @Test
+    void changedFields_nestedDtoBranch_skipsCallbackWhenFieldValueBecomesNull() {
+        // Given
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessor(TestDto.class, "nestedDto");
+        final boolean[] callbackInvoked = {false};
+
+        final TestDto testDto = new TestDto();
+        testDto.nestedDto = new NestedDto();
+
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, List.of(fieldAccessor), classFieldAccessorCache, dto -> {
+            callbackInvoked[0] = true;
+        });
+
+        trackedDto.snapshot(true);
+        assertTrue(callbackInvoked[0]);
+        callbackInvoked[0] = false;
+        testDto.nestedDto = null;
+
+        // When
+        final ChangedFields changedFields = trackedDto.changedFields();
+
+        // Then
+        assertEquals(1, changedFields.size());
+        assertTrue(changedFields.contains("nestedDto"));
+        assertNull(changedFields.get("nestedDto").orElseThrow().value());
+        assertFalse(callbackInvoked[0]);
+    }
+
+    @Test
+    void changedFields_isCachedUntilRefresh() {
+        // Given
+        final TestDto testDto = new TestDto();
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors(), classFieldAccessorCache, dto -> fail());
+        trackedDto.snapshot(false);
+        testDto.string = "value1";
+
+        // When
+        final ChangedFields first = trackedDto.changedFields();
+        testDto.string = "value2";
+        final ChangedFields second = trackedDto.changedFields();
+
+        // Then
+        assertSame(first, second);
+        assertEquals(1, second.size());
+        assertTrue(second.contains("string"));
+    }
+
+    @Test
+    void changedFields_refresh_recomputesResult() {
+        // Given
+        final TestDto testDto = new TestDto();
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final TrackedDto<TestDto> trackedDto = new TrackedDto<>(testDto, fieldAccessors(), classFieldAccessorCache, dto -> fail());
+        trackedDto.snapshot(false);
+
+        testDto.string = "value1";
+        final ChangedFields cached = trackedDto.changedFields();
+
+        // When
+        testDto.map = new HashMap<>();
+        testDto.map.put("key1", 1L);
+        final ChangedFields refreshed = trackedDto.changedFields(true);
+
+        // Then
+        assertNotSame(cached, refreshed);
+        assertEquals(2, refreshed.size());
+        assertTrue(refreshed.contains("string"));
+        assertTrue(refreshed.contains("map"));
+    }
+
+    @Test
     void changedFields_noChanges() {
         // Given
         final TestDto testDto = new TestDto();
@@ -309,6 +436,12 @@ class TrackedDtoTest {
 
         // When/Then
         assertThrows(IllegalStateException.class, () -> trackedDto.changedFields(true));
+    }
+
+    private static List<FieldAccessor> fieldAccessors() {
+        return ClassUtils.getAllFields(TestDto.class, MethodHandles.lookup()).stream()
+                .map(field -> (FieldAccessor) new DirectFieldAccessor(field, MethodHandles.lookup()))
+                .toList();
     }
 
     @NullUnmarked

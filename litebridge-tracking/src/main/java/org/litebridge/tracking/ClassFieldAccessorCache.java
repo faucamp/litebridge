@@ -67,14 +67,6 @@ public class ClassFieldAccessorCache {
         return ensureFieldAccessors(dtoClass).containsKey(field.name());
     }
 
-    public List<FieldAccessor> nestedDtoFields(final Class<?> dtoClass) {
-        return ensureFieldAccessors(dtoClass).values().stream()
-                .filter(field -> !ClassUtils.isBasicType(field.type())
-                        && !Collection.class.isAssignableFrom(field.type())
-                        && !Map.class.isAssignableFrom(field.type()))
-                .toList();
-    }
-
     public FieldAccessor fieldAccessor(final Class<?> dtoClass, final String fieldName) {
         if (fieldName.indexOf('.') != -1) {
             // Nested field specification - traverse the field/property path

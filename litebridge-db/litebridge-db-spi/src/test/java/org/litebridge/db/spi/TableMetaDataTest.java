@@ -126,6 +126,43 @@ class TableMetaDataTest {
     }
 
     @Test
+    void constructor_withExplicitCatalogSchemaAndName() {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final ColumnMetaData id = new ColumnMetaData(table, "id", false, 1);
+        final ColumnMetaData name = new ColumnMetaData(table, "name", true, 12);
+
+        // When
+        final TableMetaData result = new TableMetaData(
+                "TEST_CATALOG",
+                "TEST_SCHEMA",
+                "TEST_TABLE",
+                List.of("id"),
+                List.of(id, name)
+        );
+
+        // Then
+        assertEquals("TEST_CATALOG", result.catalog());
+        assertEquals("TEST_SCHEMA", result.schema());
+        assertEquals("TEST_TABLE", result.name());
+        assertEquals(List.of(id), result.primaryKey());
+        assertEquals(List.of(id, name), result.columns());
+    }
+
+    @Test
+    void accessors() {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final ColumnMetaData column1 = new ColumnMetaData(table, "id", false, 1);
+        final TableMetaData tableMetaData = new TableMetaData(table, List.of("id"), List.of(column1));
+
+        // Then
+        assertEquals("TEST_CATALOG", tableMetaData.catalog());
+        assertEquals("TEST_SCHEMA", tableMetaData.schema());
+        assertEquals("TEST_TABLE", tableMetaData.name());
+    }
+
+    @Test
     void column() {
         // Given
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
@@ -233,6 +270,40 @@ class TableMetaDataTest {
     }
 
     @Test
+    void equals_null() {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final TableMetaData tableMetaData = new TableMetaData(
+                table,
+                List.of("id"),
+                List.of(new ColumnMetaData(table, "id", false, 1))
+        );
+
+        // When
+        final boolean result = tableMetaData.equals(null);
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
+    void equals_differentClass() {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final TableMetaData tableMetaData = new TableMetaData(
+                table,
+                List.of("id"),
+                List.of(new ColumnMetaData(table, "id", false, 1))
+        );
+
+        // When
+        final boolean result = tableMetaData.equals("TEST_TABLE");
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
     void equals_differentColumns() {
         // Given
         final Table table1 = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
@@ -305,6 +376,11 @@ class TableMetaDataTest {
 
         // Then
         assertNotNull(result);
+        assertTrue(result.contains("catalog='TEST_CATALOG'"));
+        assertTrue(result.contains("schema='TEST_SCHEMA'"));
+        assertTrue(result.contains("name='TEST_TABLE'"));
+        assertTrue(result.contains("primaryKey="));
+        assertTrue(result.contains("columns="));
     }
 
     @Test

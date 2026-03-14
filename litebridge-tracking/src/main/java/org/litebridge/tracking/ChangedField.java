@@ -53,6 +53,7 @@ public sealed class ChangedField permits ChangedCollectionField, ChangedMapField
 
     /**
      * Attempts to cast this {@code ChangedField} instance to a specific subtype.
+     * This provides a convenient type-safe way to cast the field to a specific subtype if it known beforehand.
      * <p>
      * If the cast is possible, the corresponding subtype instance is returned wrapped in an {@code Optional}.
      * If the cast fails, an empty {@code Optional} is returned.

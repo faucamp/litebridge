@@ -51,6 +51,18 @@ class ChangedFieldTest {
     }
 
     @Test
+    void cast_failure() {
+        // Given
+        final ChangedField changedField = new ChangedField("testName", 123);
+
+        // When
+        final Optional<ChangedMapField> result = changedField.cast(ChangedMapField.class);
+
+        // Then
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
     void testEquals_true() {
         // Given
         final ChangedField changedField1 = new ChangedField("testName", "testValue");

@@ -323,6 +323,22 @@ public class FieldAccessorChainTest {
     }
 
     @Test
+    void equals_differentType() {
+        // Given
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final FieldAccessor parent = mock(FieldAccessor.class);
+        final FieldAccessorChain chain = new FieldAccessorChain(parent, "parent.child", classFieldAccessorCache);
+
+        final Object other = new Object();
+
+        // When
+        final boolean result = chain.equals(other);
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
     void hashCode_delegatesToLastAccessorHashCode() {
         // Given
         final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());

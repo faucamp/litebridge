@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -179,11 +178,8 @@ public final class TrackedDto<DTO> {
                         // Update internal DTO tracking if the field is a nested DTO
                         if (fieldSnapshot.hash() != 0 && classFieldAccessorCache.isNestedDtoField(dto.getClass(), fieldSnapshot.field())) {
                             // This nested DTO field was null previously, so we need to track the new value
-                            final Object nestedDto = getFieldValue(dto, fieldSnapshot.field());
-
-                            if (nestedDto != null) {
-                                trackDtoCallback.accept(nestedDto);
-                            }
+                            final Object nestedDto = Objects.requireNonNull(getFieldValue(dto, fieldSnapshot.field()));
+                            trackDtoCallback.accept(nestedDto);
                         }
                     })
                     .map(fieldSnapshot -> {
@@ -282,10 +278,6 @@ public final class TrackedDto<DTO> {
         return getValueHash(getFieldValue(instance, field), dtosVisited);
     }
 
-    private int getFieldHash(final Object instance, final Field field, final Set<Object> dtosVisited) {
-        return getValueHash(getFieldValue(instance, classFieldAccessorCache.fieldAccessorOrThrow(instance.getClass(), field.getName())), dtosVisited);
-    }
-
     private int getValueHash(final @Nullable Object fieldValue, final Set<Object> dtosVisited) {
         if (fieldValue == null) {
             return 0;
@@ -325,9 +317,5 @@ public final class TrackedDto<DTO> {
 
     private static @Nullable Object getFieldValue(final Object instance, final FieldAccessor field) {
         return field.get(instance);
-    }
-
-    private FieldSnapshot toFieldSnapshot(final FieldAccessor fieldAccessor, final ChangedField changedField, final Set<Object> dtosVisited) {
-        return new FieldSnapshot(fieldAccessor, getValueHash(changedField.value(), dtosVisited));
     }
 }

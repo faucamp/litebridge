@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -106,6 +107,24 @@ class ClassFieldAccessorCacheTest {
 
         // Then 2
         assertEquals(result, result2);
+    }
+
+    @Test
+    void fieldAccessors_privateLookupCreationFails() {
+        // Given
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(MethodHandles.publicLookup());
+
+        // When
+        final IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> cache.fieldAccessors(ArrayList.class)
+        );
+
+        // Then
+        assertTrue(ex.getMessage().contains("Cannot create private lookup for declaring class: java.util.ArrayList"));
+        assertTrue(ex.getMessage().contains("while building accessors for DTO: java.util.ArrayList"));
+        assertNotNull(ex.getCause());
+        assertInstanceOf(IllegalAccessException.class, ex.getCause());
     }
 
     @Test

@@ -190,7 +190,24 @@ class PropertyAccessorTest {
         assertNotEquals(left.hashCode(), right.hashCode());
     }
 
-    // ... existing code ...
+    @Test
+    void constructor_illegalAccessException() {
+        // Given
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final Field field = ClassUtils.getField(TestDto.class, "myVar");
+
+        // When
+        final IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> new PropertyAccessor(field, MethodHandles.publicLookup(), classFieldAccessorCache)
+        );
+
+        // Then
+        assertTrue(ex.getMessage().contains("Failed to unreflect getter and setter for field: 'myVar'"));
+        assertTrue(ex.getMessage().contains(TestDto.class.getName()));
+        assertTrue(ex.getCause() instanceof IllegalAccessException);
+    }
+
     private class TestDto {
         private String myVar;
         private String otherVar;

@@ -120,4 +120,14 @@ class ChangedMapFieldTest {
     void testToString() {
         assertNotNull(new ChangedMapField("testName", Map.of("testKey", "testValue"), Map.of("testKey", 123)).toString());
     }
+
+    @Test
+    void constructor_nullMap() {
+        // When
+        final ChangedMapField result = new ChangedMapField("testName", null, null);
+
+        // Then
+        assertNotNull(result.mapSnapshot());
+        assertTrue(result.mapSnapshot().isEmpty());
+    }
 }
