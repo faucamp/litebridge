@@ -1,8 +1,14 @@
-package org.litebridge.db.spi;
+package org.litebridge.db.spi.impl;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
+import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.Join;
@@ -189,7 +195,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * The bind values are derived from the rows and included in the returned {@link  PreparedSql}.
      *
      * @param insert the {@link Insert} object containing the table metadata, columns, and rows for the SQL INSERT operation
-     * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values
+     * @return a {@link AbstractDatabaseProvider.PreparedSql} object containing the generated SQL query string and the list of bind values
      */
     protected PreparedSql prepareSql(final Insert insert) {
         final List<String> columnNames = insert.columns().stream().map(ColumnMetaData::name).toList();

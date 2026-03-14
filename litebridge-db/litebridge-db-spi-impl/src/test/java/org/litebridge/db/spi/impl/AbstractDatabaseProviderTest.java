@@ -1,7 +1,12 @@
-package org.litebridge.db.spi;
+package org.litebridge.db.spi.impl;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.Join;

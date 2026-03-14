@@ -17,6 +17,7 @@
 
     <modules>
         <module>litebridge-db-spi</module>
+        <module>litebridge-db-spi-impl</module>
         <module>litebridge-db-h2</module>
     </modules>
 

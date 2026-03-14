@@ -86,7 +86,7 @@ public class Aliased {
      *
      * @param alias the alias to assign to this entity; must not be null
      */
-    final void setAlias(final String alias) {
+    public final void setAlias(final String alias) {
         this.alias = alias;
     }
 

@@ -140,6 +140,11 @@
             </dependency>
             <dependency>
                 <groupId>org.litebridge.db</groupId>
+                <artifactId>litebridge-db-spi-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.litebridge.db</groupId>
                 <artifactId>litebridge-db-h2</artifactId>
                 <version>${project.version}</version>
             </dependency>

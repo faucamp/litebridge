@@ -2,7 +2,7 @@ package org.litebridge.db.h2;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.convert.DefaultTypeConverter;
-import org.litebridge.db.spi.AbstractDatabaseProvider;
+import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
 
 import java.sql.Connection;
 
