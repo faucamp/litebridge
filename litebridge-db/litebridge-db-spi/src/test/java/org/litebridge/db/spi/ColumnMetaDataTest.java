@@ -102,6 +102,7 @@ class ColumnMetaDataTest {
 
     @Test
     void equals_includesAliasAndJoinColumn() {
+        // Given
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
 
         final ColumnMetaData a = new ColumnMetaData(table, "id", false, 1, 20, 0, true, "SEQ_ID");
@@ -110,19 +111,51 @@ class ColumnMetaDataTest {
         a.setJoinColumn("x");
         b.setJoinColumn("y");
 
+        // When/Then
         assertNotEquals(a, b);
         assertNotEquals(a.hashCode(), b.hashCode());
     }
 
     @Test
     void toString_containsUsefulParts() {
+        // Given
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnMetaData column = new ColumnMetaData(table, "id", false, 1, 20, 0, true, "SEQ_ID");
 
+        // When
         final String s = column.toString();
 
+        // Then
         assertNotNull(s);
         assertTrue(s.contains("ColumnMetaData["));
         assertTrue(s.contains("name='id'"));
+    }
+
+    @Test
+    void table() {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "id", false, 1, 20, 0, true, "SEQ_ID");
+
+        // When
+        final Table result = columnMetaData.table();
+
+        // Then
+        assertEquals(table, result);
+    }
+
+    @Test
+    void toColumn() {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "id", false, 1, 20, 0, true, "SEQ_ID");
+
+        // When
+        final Column result = columnMetaData.toColumn();
+
+        // Then
+        assertEquals(columnMetaData.table(), result.table());
+        assertEquals(columnMetaData.name(), result.name());
+        assertNull(result.alias());
     }
 }

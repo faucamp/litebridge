@@ -2,9 +2,12 @@ package org.litebridge.db.spi;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RowTest {
@@ -169,5 +172,69 @@ class RowTest {
 
         // Then
         assertTrue(result != 0);
+    }
+
+    @Test
+    void columnForAlias_exists() {
+        // Given
+        final Column column = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "TEST_COLUMN");
+        column.setAlias("testAlias");
+        final Row row = new Row().withColumn(column, "value");
+
+        // When
+        final Row.RowColumn result = row.columnForAlias("testAlias").orElseThrow();
+
+        // Then
+        assertEquals(column, result.column());
+    }
+
+    @Test
+    void columnForAlias_doesNotExist() {
+        // Given
+        final Column column = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "TEST_COLUMN");
+        column.setAlias("testAlias");
+        final Row row = new Row().withColumn(column, "value");
+
+        // When
+        final Optional<Row.RowColumn> result = row.columnForAlias("nonExistentAlias");
+
+        // Then
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void columnForAlias_nullAlias() {
+        // Given
+        final Column column = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "TEST_COLUMN");
+        final Row row = new Row().withColumn(column, "value");
+
+        // When/Then
+        assertThrows(NullPointerException.class, () -> row.columnForAlias(null));
+    }
+
+    @Test
+    void testSize_emptyRow() {
+        // Given
+        final Row row = new Row();
+
+        // When
+        final int result = row.size();
+
+        // Then
+        assertEquals(0, result);
+    }
+
+    @Test
+    void testSize_nonEmptyRow() {
+        // Given
+        final Column column1 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "TEST_COLUMN1");
+        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "TEST_COLUMN2");
+        final Row row = new Row().withColumn(column1, "value1").withColumn(column2, "value2");
+
+        // When
+        final int result = row.size();
+
+        // Then
+        assertEquals(2, result);
     }
 }

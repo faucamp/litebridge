@@ -2,7 +2,6 @@ package org.litebridge.db.spi;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.Result;
-import org.slf4j.Logger;
 
 import java.util.LinkedHashMap;
 import java.util.Objects;
@@ -18,10 +17,7 @@ import java.util.stream.Stream;
  */
 public final class Row implements Result {
 
-    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Row.class);
     private final LinkedHashMap<Column, @Nullable Object> columns = new LinkedHashMap<>();
-    @Nullable
-    private Column last;
 
     /**
      * Add a new column-value pair to the row and return the updated instance.
@@ -33,16 +29,6 @@ public final class Row implements Result {
      * @return the updated {@code Row} instance with the new column-value pair added
      */
     public Row withColumn(final Column column, final @Nullable Object value) {
-        if (column.name().equals("ID")) {
-            LOGGER.info("Adding ID column with alias: {}, hash: {}", column.alias(), column.hashCode());
-
-            if (last != null) {
-                LOGGER.info("Equals previous: {}", last.equals(column));
-            }
-
-            last = column;
-        }
-
         columns.put(column, value);
         return this;
     }
@@ -79,8 +65,9 @@ public final class Row implements Result {
      * if it exists, or an empty {@code Optional} if no match is found
      */
     public Optional<RowColumn> columnForAlias(final String alias) {
+        final String aliasToCheck = Objects.requireNonNull(alias, "Alias cannot be null");
         return columnStream()
-                .filter(rc -> Objects.equals(rc.column().alias(), alias))
+                .filter(rc -> Objects.equals(rc.column().alias(), aliasToCheck))
                 .findFirst();
     }
 
