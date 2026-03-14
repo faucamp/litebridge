@@ -14,7 +14,6 @@
     <groupId>org.litebridge.example</groupId>
     <artifactId>litebridge-example</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.1</version>
 
     <modules>
         <module>litebridge-example-common</module>

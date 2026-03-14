@@ -12,7 +12,6 @@
     </parent>
 
     <artifactId>litebridge-db-spi</artifactId>
-    <version>0.0.1</version>
 
     <build>
         <plugins>

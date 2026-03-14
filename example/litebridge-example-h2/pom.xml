@@ -12,7 +12,6 @@
     </parent>
 
     <artifactId>litebridge-example-h2</artifactId>
-    <version>0.0.1</version>
 
     <dependencies>
         <!-- Project dependencies -->

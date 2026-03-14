@@ -12,7 +12,6 @@
     </parent>
 
     <artifactId>litebridge-orm</artifactId>
-    <version>0.0.1</version>
 
     <build>
         <plugins>
