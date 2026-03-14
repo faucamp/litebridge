@@ -17,7 +17,27 @@ It simplifies persistence by treating SQL as a first-class citizen, balancing re
 * **Transparent Mapping**: Map DTOs to databases without modifying your domain classes. Use programmatic, `Map`-based configuration or _optional_ annotations.
 * **Fluent API**: Compose queries using a natural, SQL-like fluent builder that stays out of your way.
 
+## Shortcuts
+
+<!-- TOC -->
+  * [Quick Introduction](#quick-introduction)
+  * [Documentation](#documentation)
+  * [Project Structure](#project-structure)
+<!-- TOC -->
+
 ## Quick Introduction
+
+
+<!-- TOC -->
+* [Setup: Register DTO-table mappings](#setup-register-dto-table-mappings)
+* [Persisting a DTO:](#persisting-a-dto)
+  * [Cascading persistence](#cascading-persistence)
+* [Querying](#querying)
+  * [Retrieving a single DTO](#retrieving-a-single-dto)
+  * [Retrieving multiple DTOs](#retrieving-multiple-dtos)
+  * [Retrieving related DTOs](#retrieving-related-dtos)
+  * [Arbitrary SQL queries](#arbitrary-sql-queries)
+<!-- TOC -->
 
 Given the following example `Person` and `Account` DTO classes:
 
@@ -283,6 +303,10 @@ litebridge.select("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSO
         .forEach(p -> logger.info("Person DTO: " + p));
 ```
 
+## Documentation
+
+1. [Change Tracker](docs/change-tracker.md)
+
 ## Project Structure
 
 Litebridge is modular, allowing you to include only the components you need.
@@ -316,7 +340,7 @@ A collection of database provider modules. You only need to include the specific
 ![Coverage](.github/badges/litebridge-tracking/jacoco.svg)
 ![Branches](.github/badges/litebridge-tracking/branches.svg)
 
-Exposes the `ChangeTracker` API. This provides lightweight change tracking for arbitrary DTOs. While the ORM uses this internally for SQL optimization, it can be used independently for other state-tracking needs.
+Exposes the `ChangeTracker` API. This provides lightweight change tracking for arbitrary DTOs. While the ORM uses this internally for SQL optimisation, it can be used independently for other state-tracking needs.
 
 ### Supporting modules
 
