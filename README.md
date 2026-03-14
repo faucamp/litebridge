@@ -335,6 +335,13 @@ A collection of database provider modules. You only need to include the specific
 
   The Service Provider Interface (SPI) for implementing custom database providers. Not required for client use.
 
+* **`litebridge-db-impl`**:
+
+  ![Coverage](.github/badges/litebridge-db/litebridge-db-spi-impl/jacoco.svg)
+  ![Branches](.github/badges/litebridge-db/litebridge-db-spi-impl/branches.svg)
+
+  Provides a default implementation of the `DatabaseProvider` SPI. Used to simplify the creation of new database providers.
+
 #### `litebridge-tracking`
 
 ![Coverage](.github/badges/litebridge-tracking/jacoco.svg)

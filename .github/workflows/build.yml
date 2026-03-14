@@ -52,6 +52,15 @@ jobs:
         badges-directory: .github/badges/litebridge-db/litebridge-db-spi
         generate-branches-badge: true
 
+    - name: "Generate JaCoCo Badge: litebridge-db-spi-impl"
+      # Run on main branch only
+      if: github.ref == 'refs/heads/main'
+      uses: cicirello/jacoco-badge-generator@v2
+      with:
+        jacoco-csv-file: litebridge-db/litebridge-db-spi-impl/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-db/litebridge-db-spi-impl
+        generate-branches-badge: true
+
     - name: "Generate JaCoCo Badge: litebridge-db-h2"
       # Run on main branch only
       if: github.ref == 'refs/heads/main'
