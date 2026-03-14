@@ -196,8 +196,9 @@ public class SelectSpecDtoMapper {
         for (final Row row : rows) {
             final List<Object> pkValues = pkColumns.stream()
                     .map(pkColumn -> row.column(pkColumn.name())
-                            .orElseThrow(() -> new IllegalStateException("No primary key column found for table '%s' in row: %s".formatted(table.getMetaData().name(), row)))
-                            .value())
+                            .map(Row.RowColumn::value)
+                            // No PK present in selected columns; use a hash of the row as the identifier
+                            .orElseGet(row::hashCode))
                     .toList();
 
             dtoPkGroupedRows.computeIfAbsent(pkValues, k -> new ArrayList<>())

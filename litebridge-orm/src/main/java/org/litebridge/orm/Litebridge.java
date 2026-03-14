@@ -1,9 +1,11 @@
 package org.litebridge.orm;
 
 import org.litebridge.db.spi.Aliased;
+import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
+import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.api.dto.DtoSelector;
 import org.litebridge.orm.api.spec.TableMapping;
 import org.litebridge.orm.api.spec.TableSpec;
@@ -14,9 +16,11 @@ import org.litebridge.orm.persistence.DtoEntityMapping;
 import org.litebridge.orm.persistence.EntityDtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.PersistenceFacade;
+import org.litebridge.orm.persistence.SelectSpecDtoMapper;
 import org.litebridge.orm.persistence.TableMapper;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ChangeTracker;
+import org.litebridge.tracking.FieldAccessor;
 
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
@@ -269,7 +273,24 @@ public class Litebridge {
      * @throws IllegalArgumentException if the row or dtoClass is null, or if mapping fails due to type mismatches or invalid configurations.
      */
     public <DTO> DTO toDto(final Row row, final Class<DTO> dtoClass) {
-        throw new UnsupportedOperationException("Regression");
+        final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
+        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, new AliasGenerator());
+        selectSpec.setFieldColumns(row.columnStream()
+                .map(rowColumn -> {
+                    final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(rowColumn.column().name());
+                    return new DtoSelectSpec.FieldColumn(fieldAccessor, rowColumn.column());
+                })
+                .toList());
+
+        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter());
+
+        final List<DTO> dtos = selectSpecDtoMapper.toDtos(dtoClass, List.of(row));
+
+        if (dtos.isEmpty()) {
+            throw new IllegalArgumentException("No DTO could be created from the given row and DTO class.");
+        }
+
+        return dtos.getFirst();
     }
 
     public <DTO> EntityDtoMapper<DTO> entityDtoMapper(final Class<DTO> dtoClass, final List<DtoEntityMapping> dtoEntityMappings) {

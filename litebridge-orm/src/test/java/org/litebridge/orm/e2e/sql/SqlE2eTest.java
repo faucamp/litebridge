@@ -4,8 +4,10 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Row;
+import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Person;
+import org.litebridge.orm.e2e.basic.mapping.DtoTableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +19,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.litebridge.db.spi.Column.c;
+import static org.litebridge.orm.api.spec.TableSpec.t;
 
 class SqlE2eTest extends AbstractE2eTest {
 
@@ -77,10 +80,10 @@ class SqlE2eTest extends AbstractE2eTest {
 
     @Test
     @DisplayName("Select records using SQL and map results to Person objects")
-    @Disabled("Not currently supported due to changes in DTO mapper architecture")
     void selectMapToDto() throws Exception {
         // Given
         insertTestPersonRecords();
+        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
 
         // When
         LOGGER.info("Selecting specific columns and filtering records using a query");
