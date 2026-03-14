@@ -41,6 +41,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -616,6 +617,42 @@ class AbstractDatabaseProviderTest {
 
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> databaseProvider.verifySchemaAndTableExists(table, databaseMetaData));
+    }
+
+    @Test
+    void quoteIdentifier_reservedKeyword() {
+        // Given
+        final String identifier = "TABLE";
+
+        // When
+        final String result = databaseProvider.quoteIdentifier(identifier);
+
+        // Then
+        assertEquals("\"TABLE\"", result);
+    }
+
+    @Test
+    void quoteIdentifier_notNeeded() {
+        // Given
+        final String identifier = "TEST";
+
+        // When
+        final String result = databaseProvider.quoteIdentifier(identifier);
+
+        // Then
+        assertEquals("TEST", result);
+    }
+
+    @Test
+    void quoteIdentifier_null() {
+        // Given
+        final String identifier = null;
+
+        // When
+        final String result = databaseProvider.quoteIdentifier(identifier);
+
+        // Then
+        assertNull(result);
     }
 
     @Test
