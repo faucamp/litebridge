@@ -162,7 +162,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
     }
 
     public Column toColumn() {
-        return new Column(table, name);
+        return new Column(new Table(table), name);
     }
 
     @Override
