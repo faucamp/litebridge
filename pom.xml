@@ -108,17 +108,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>${maven-javadoc-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>aggregate</id>
-                        <goals>
-                            <goal>aggregate</goal>
-                        </goals>
-                        <configuration>
-                            <skippedModules>litebridge-example</skippedModules>
-                        </configuration>
-                    </execution>
-                </executions>
+                <configuration>
+                    <skippedModules>litebridge-example-common,litebridge-example-h2</skippedModules>
+                </configuration>
             </plugin>
         </plugins>
     </build>
