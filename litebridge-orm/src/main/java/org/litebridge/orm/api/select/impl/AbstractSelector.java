@@ -3,8 +3,10 @@ package org.litebridge.orm.api.select.impl;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,11 +21,11 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSelector.class);
     protected final SSP selectSpec;
-    protected final DatabaseProvider databaseProvider;
+    protected final TransactionalDatabaseProvider databaseProvider;
     protected final Class<DTO> dtoClass;
 
     protected AbstractSelector(final SSP selectSpec,
-                               final DatabaseProvider databaseProvider,
+                               final TransactionalDatabaseProvider databaseProvider,
                                final Class<DTO> dtoClass) {
         this.selectSpec = selectSpec;
         this.databaseProvider = databaseProvider;
@@ -92,7 +94,7 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
         final List<Row> rows;
 
         try {
-            rows = databaseProvider.select(selectSpec.toSelect());
+            rows = databaseProvider.select(selectSpec.toSelect(), databaseProvider.transactionManager());
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute select query", ex);
         }

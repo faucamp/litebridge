@@ -3,13 +3,13 @@ package org.litebridge.orm.api.dto;
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.DirectFieldAccessor;
 import org.litebridge.tracking.FieldAccessor;
@@ -36,7 +36,7 @@ class DtoOrderByClauseChainTest {
         final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker);
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final AliasGenerator aliasGenerator = new AliasGenerator();
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator);
 

@@ -15,8 +15,9 @@ module litebridge.orm {
     exports org.litebridge.orm;
     exports org.litebridge.orm.api.spec;
     exports org.litebridge.orm.api.sql;
+    exports org.litebridge.orm.api.tx;
+    exports org.litebridge.orm.tx;
 
-    // Unit test support
     opens org.litebridge.orm to litebridge.tracking;
     opens org.litebridge.orm.api.dto to litebridge.commons, litebridge.tracking;
     opens org.litebridge.orm.api.select to litebridge.tracking;

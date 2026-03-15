@@ -6,10 +6,10 @@ import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
@@ -53,12 +53,14 @@ public class PersistenceFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PersistenceFacade.class);
     private final TableProvider tableProvider;
-    private final DatabaseProvider databaseProvider;
+    private final TransactionalDatabaseProvider databaseProvider;
+    private final TransactionManager transactionManager;
 
     public PersistenceFacade(final TableRegistry tableRegistry,
-                             final DatabaseProvider databaseProvider) {
+                             final TransactionalDatabaseProvider databaseProvider) {
         this.tableProvider = new TableProvider(tableRegistry);
         this.databaseProvider = databaseProvider;
+        this.transactionManager = databaseProvider.transactionManager();
     }
 
     /**
@@ -456,16 +458,6 @@ public class PersistenceFacade {
         });
     }
 
-//    private AbstractStatementBuilder<?> createStatementBuilder(final Object dto) {
-//        final OrmTable table = tableProvider.getTableOrThrow(dto.getClass());
-//
-//        if (table.isPersistedDto(dto)) {
-//            return createUpdateBuilder(dto, table);
-//        } else {
-//            return createInsertBuilder(dto, table);
-//        }
-//    }
-
     private AbstractStatementBuilder<?> createStatementBuilder(final Object dto, final Set<Object> inProgressDtos) {
         if (inProgressDtos.contains(dto)) {
             LOGGER.trace("Skipping DTO: {} - already in progress", dto);
@@ -494,7 +486,9 @@ public class PersistenceFacade {
      * including the number of rows affected
      * @throws SQLException if a database access error occurs during statement execution
      */
-    private CompositeUpdateResult executeUpdateStatement(final Object dto, final @Nullable DtoUpdateResult parentResult, final StatementBuilder<?> statementBuilder) throws SQLException {
+    private CompositeUpdateResult executeUpdateStatement(final Object dto,
+                                                         final @Nullable DtoUpdateResult parentResult,
+                                                         final StatementBuilder<?> statementBuilder) throws SQLException {
         final CompositeUpdateResult result = new CompositeUpdateResult();
         final DtoUpdateResult dtoUpdateResult = new DtoUpdateResult(dto, parentResult);
 
@@ -522,9 +516,9 @@ public class PersistenceFacade {
         }
 
         if (updateStatement instanceof Insert insert) {
-            dtoUpdateResult.setUpdateResult(databaseProvider.insert(insert));
+            dtoUpdateResult.setUpdateResult(databaseProvider.insert(insert, transactionManager));
         } else if (updateStatement instanceof Update update) {
-            dtoUpdateResult.setUpdateResult(databaseProvider.update(update));
+            dtoUpdateResult.setUpdateResult(databaseProvider.update(update, transactionManager));
         } else if (statementBuilder instanceof InsertBuilder) {
             dtoUpdateResult.setUpdateResult(new InsertResult(0));
         } else {

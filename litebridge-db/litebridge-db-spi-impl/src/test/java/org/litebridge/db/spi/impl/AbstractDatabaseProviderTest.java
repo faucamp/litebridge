@@ -14,6 +14,8 @@ import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.tx.ManagedConnection;
+import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
@@ -25,7 +27,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -59,7 +60,7 @@ import static org.mockito.Mockito.when;
 class AbstractDatabaseProviderTest {
 
     @Mock
-    private Connection connection;
+    private TransactionManager transactionManager;
 
     @Mock
     private TypeConverter typeConverter;
@@ -67,17 +68,20 @@ class AbstractDatabaseProviderTest {
     @InjectMocks
     private TestDatabaseProvider databaseProvider;
 
+    private ManagedConnection connection;
+
     @Test
-    void getTableMetaData() throws Exception {
-        getTableMetaDataImpl();
+    void tableMetaData() throws Exception {
+        tableMetaDataImpl();
     }
 
-    private TableMetaData getTableMetaDataImpl() throws SQLException {
-        return getTableMetaDataImpl("TEST_SCHEMA");
+    private TableMetaData tableMetaDataImpl() throws SQLException {
+        return tableMetaDataImpl("TEST_SCHEMA");
     }
 
-    private TableMetaData getTableMetaDataImpl(final String schema) throws SQLException {
+    private TableMetaData tableMetaDataImpl(final String schema) throws SQLException {
         // Given
+        mockTransactionManager();
         final Table table = new Table("TEST_CATALOG", schema, "TEST_TABLE");
 
         final DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
@@ -107,7 +111,7 @@ class AbstractDatabaseProviderTest {
         when(databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)).thenReturn(columnResultSet);
 
         // When
-        final TableMetaData result = databaseProvider.getTableMetaData(table);
+        final TableMetaData result = databaseProvider.tableMetaData(table, transactionManager);
 
         // Then
         assertNotNull(result);
@@ -132,7 +136,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void insert() throws Exception {
         // Given
-        final TableMetaData table = getTableMetaDataImpl();
+        final TableMetaData table = tableMetaDataImpl();
         final ColumnMetaData column = table.column("TEST_COLUMN");
         column.setSequence("TEST_SEQUENCE");
         final ColumnValue columnValue1 = new ColumnValue(column, "testValue1");
@@ -154,7 +158,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(preparedStatement);
 
         // When
-        final InsertResult result = databaseProvider.insert(insert);
+        final InsertResult result = databaseProvider.insert(insert, transactionManager);
 
         // Then
         assertNotNull(result);
@@ -167,7 +171,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void insert_noSchema() throws Exception {
         // Given
-        final TableMetaData table = getTableMetaDataImpl("");
+        final TableMetaData table = tableMetaDataImpl("");
         final ColumnMetaData column = table.column("TEST_COLUMN");
         final ColumnValue columnValue = new ColumnValue(column, "testValue");
         final RowValue rowValue = new RowValue(List.of(columnValue));
@@ -186,7 +190,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(preparedStatement);
 
         // When
-        final InsertResult result = databaseProvider.insert(insert);
+        final InsertResult result = databaseProvider.insert(insert, transactionManager);
 
         // Then
         assertNotNull(result);
@@ -199,7 +203,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void insert_noAffectedRows() throws Exception {
         // Given
-        final TableMetaData table = getTableMetaDataImpl();
+        final TableMetaData table = tableMetaDataImpl();
         final ColumnMetaData column = table.column("TEST_COLUMN");
         final ColumnValue columnValue = new ColumnValue(column, "testValue");
         final RowValue rowValue = new RowValue(List.of(columnValue));
@@ -213,7 +217,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(preparedStatement);
 
         // When
-        final InsertResult result = databaseProvider.insert(insert);
+        final InsertResult result = databaseProvider.insert(insert, transactionManager);
 
         // Then
         assertNotNull(result);
@@ -225,7 +229,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void insert_noGeneratedKeys() throws Exception {
         // Given
-        final TableMetaData table = getTableMetaDataImpl();
+        final TableMetaData table = tableMetaDataImpl();
         final ColumnMetaData column = table.column("TEST_COLUMN");
         final ColumnValue columnValue = new ColumnValue(column, "testValue");
         final RowValue rowValue = new RowValue(List.of(columnValue));
@@ -243,7 +247,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(preparedStatement);
 
         // When
-        final InsertResult result = databaseProvider.insert(insert);
+        final InsertResult result = databaseProvider.insert(insert, transactionManager);
 
         // Then
         assertNotNull(result);
@@ -255,7 +259,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void insert_nullValue_notNullColumn() throws Exception {
         // Given
-        final TableMetaData table = getTableMetaDataImpl();
+        final TableMetaData table = tableMetaDataImpl();
         final ColumnMetaData column = table.column("TEST_COLUMN");
         final ColumnValue columnValue = new ColumnValue(column, null);
         final RowValue rowValue = new RowValue(List.of(columnValue));
@@ -263,13 +267,13 @@ class AbstractDatabaseProviderTest {
         final Insert insert = new Insert(table, List.of(column), List.of(rowValue), true);
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> databaseProvider.insert(insert));
+        assertThrows(IllegalArgumentException.class, () -> databaseProvider.insert(insert, transactionManager));
     }
 
     @Test
     void update() throws Exception {
         // Given
-        final TableMetaData table = getTableMetaDataImpl();
+        final TableMetaData table = tableMetaDataImpl();
         final ColumnMetaData column = table.column("TEST_COLUMN");
         final ColumnValue columnValue1 = new ColumnValue(column, "testValue");
         final ColumnValue columnValue2 = new ColumnValue(column, "testValue");
@@ -286,7 +290,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
 
         // When
-        final UpdateResult result = databaseProvider.update(update);
+        final UpdateResult result = databaseProvider.update(update, transactionManager);
 
         // Then
         assertNotNull(result);
@@ -296,7 +300,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void update_noSchema_noConditions() throws Exception {
         // Given
-        final TableMetaData table = getTableMetaDataImpl("");
+        final TableMetaData table = tableMetaDataImpl("");
         final ColumnMetaData column = table.column("TEST_COLUMN");
         final ColumnValue columnValue = new ColumnValue(column, "testValue");
 
@@ -308,7 +312,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
 
         // When
-        final UpdateResult result = databaseProvider.update(update);
+        final UpdateResult result = databaseProvider.update(update, transactionManager);
 
         // Then
         assertNotNull(result);
@@ -318,7 +322,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void select() throws Exception {
         // Given
-        final TableMetaData tableMetaData = getTableMetaDataImpl();
+        final TableMetaData tableMetaData = tableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), "t1");
         final Column column = tableMetaData.column("TEST_COLUMN").toColumn();
 
@@ -350,7 +354,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
 
         // When
-        List<Row> result = databaseProvider.select(select);
+        List<Row> result = databaseProvider.select(select, transactionManager);
 
         // Then
         assertNotNull(result);
@@ -362,7 +366,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void select_emptyResult() throws Exception {
         // Given
-        final TableMetaData tableMetaData = getTableMetaDataImpl();
+        final TableMetaData tableMetaData = tableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name());
         final Column column = tableMetaData.column("TEST_COLUMN").toColumn();
 
@@ -381,54 +385,12 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
 
         // When
-        final List<Row> result = databaseProvider.select(select);
+        final List<Row> result = databaseProvider.select(select, transactionManager);
 
         // Then
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
-
-//    @Test
-//    void select_transformsAlias() throws Exception {
-//        // Given
-//        final TableMetaData tableMetaData = getTableMetaDataImpl();
-//        final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name());
-//        final Column column = tableMetaData.column("TEST_COLUMN").toColumn();
-//
-//        final Select select = new Select(
-//                table,
-//                List.of(column),
-//                Collections.emptyList(),
-//                Collections.emptyList(),
-//                List.of(new Condition(column, Operator.EQ, "TEST_VALUE")),
-//                Optional.empty());
-//
-//        when(typeConverter.convert("TEST_VALUE", Types.VARCHAR)).thenReturn("TEST_VALUE");
-//
-//        final PreparedStatement preparedStatement = mock(PreparedStatement.class);
-//        final ResultSet resultSet = mock(ResultSet.class);
-//        final ResultSetMetaData resultSetMetaData = mock(ResultSetMetaData.class);
-//
-//        when(resultSet.next()).thenReturn(true).thenReturn(false);
-//        when(resultSet.getMetaData()).thenReturn(resultSetMetaData);
-//        when(resultSetMetaData.getColumnCount()).thenReturn(1);
-//        when(resultSetMetaData.getSchemaName(1)).thenReturn(tableMetaData.schema());
-//        when(resultSetMetaData.getTableName(1)).thenReturn(tableMetaData.name());
-//        when(resultSetMetaData.getColumnName(1)).thenReturn(column.name());
-//        when(resultSetMetaData.getColumnLabel(1)).thenReturn("db_alias");
-//        when(resultSet.getObject(column.name())).thenReturn("dbValue");
-//
-//        when(typeConverter.convert("dbValue", Types.VARCHAR)).thenReturn("dbValue");
-//        when(preparedStatement.executeQuery()).thenReturn(resultSet);
-//        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
-//
-//        // When
-//        final List<Row> result = provider.select(select);
-//
-//        // Then
-//        assertEquals(1, result.size());
-//        assertTrue(result.get(0).columnForAlias("DB_ALIAS").isPresent());
-//    }
 
     @Test
     void getTypeConverter() {
@@ -438,7 +400,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void toSql() throws Exception {
         // Given
-        final TableMetaData tableMetaData = getTableMetaDataImpl();
+        final TableMetaData tableMetaData = tableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), "t1");
         final Column column1 = tableMetaData.column("TEST_PK").toColumn().as("col1");
         column1.table().setAlias("t1");
@@ -465,7 +427,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void toSql_selectAllColumns() throws Exception {
         // Given
-        final TableMetaData tableMetaData = getTableMetaDataImpl();
+        final TableMetaData tableMetaData = tableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name());
 
         final Select select = new Select(
@@ -606,7 +568,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void createCondition() throws Exception {
         // Given
-        final Column column = getTableMetaDataImpl().column("TEST_COLUMN").toColumn();
+        final Column column = tableMetaDataImpl().column("TEST_COLUMN").toColumn();
         final Condition condition = new Condition(column, Operator.EQ, "testValue");
 
         // When
@@ -620,7 +582,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void createCondition_isNull() throws Exception {
         // Given
-        final Column column = getTableMetaDataImpl().column("TEST_COLUMN").toColumn();
+        final Column column = tableMetaDataImpl().column("TEST_COLUMN").toColumn();
         final Condition condition = new Condition(column, Operator.IS_NULL);
 
         // When
@@ -634,7 +596,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void createCondition_isNotNull() throws Exception {
         // Given
-        final Column column = getTableMetaDataImpl().column("TEST_COLUMN").toColumn();
+        final Column column = tableMetaDataImpl().column("TEST_COLUMN").toColumn();
         final Condition condition = new Condition(column, Operator.IS_NOT_NULL);
 
         // When
@@ -648,7 +610,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void createCondition_using() throws Exception {
         // Given
-        final Column column = getTableMetaDataImpl().column("TEST_COLUMN").toColumn();
+        final Column column = tableMetaDataImpl().column("TEST_COLUMN").toColumn();
         final Condition condition = new Condition(column, Operator.USING, null);
 
         // When
@@ -661,7 +623,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void createCondition_withTableAlias() throws Exception {
         // Given
-        final Column column = getTableMetaDataImpl().column("TEST_COLUMN").toColumn();
+        final Column column = tableMetaDataImpl().column("TEST_COLUMN").toColumn();
         column.table().setAlias("t1");
         final Condition condition = new Condition(column, Operator.EQ, "testValue");
 
@@ -675,7 +637,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void createCondition_columnComparison() throws Exception {
         // Given
-        final TableMetaData tableMetaData = getTableMetaDataImpl();
+        final TableMetaData tableMetaData = tableMetaDataImpl();
         final Column left = tableMetaData.column("TEST_COLUMN").toColumn();
         left.table().setAlias("t1");
         final Column right = tableMetaData.column("TEST_PK").toColumn();
@@ -692,6 +654,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void prepareStatement() throws Exception {
         // Given
+        mockTransactionManager();
         final Object objectVal = new Object();
         final List<AbstractDatabaseProvider.BindValue> bindValues = List.of(
                 new AbstractDatabaseProvider.BindValue(123, Types.INTEGER),
@@ -712,7 +675,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(preparedSql.sql())).thenReturn(preparedStatement);
 
         // When
-        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, false);
+        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, false, transactionManager);
 
         // Then
         verify(result).setInt(1, 123);
@@ -731,6 +694,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void prepareStatement_nullBindValueEntry() throws Exception {
         // Given
+        mockTransactionManager();
         final List<AbstractDatabaseProvider.BindValue> bindValues = new ArrayList<>();
         bindValues.add(null);
         final AbstractDatabaseProvider.PreparedSql preparedSql = new AbstractDatabaseProvider.PreparedSql("SELECT * FROM TEST_TABLE WHERE TEST_COLUMN = ?", bindValues);
@@ -739,7 +703,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(preparedSql.sql())).thenReturn(preparedStatement);
 
         // When
-        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, false);
+        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, false, transactionManager);
 
         // Then
         verify(result).setString(1, null);
@@ -748,6 +712,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void prepareStatement_emptyBindValues() throws Exception {
         // Given
+        mockTransactionManager();
         final AbstractDatabaseProvider.PreparedSql preparedSql = new AbstractDatabaseProvider.PreparedSql(
                 "SELECT * FROM TEST_TABLE",
                 Collections.emptyList());
@@ -756,7 +721,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(preparedSql.sql())).thenReturn(preparedStatement);
 
         // When
-        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, false);
+        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, false, transactionManager);
 
         // Then
         assertSame(preparedStatement, result);
@@ -765,6 +730,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void prepareStatement_returnGeneratedKeys() throws Exception {
         // Given
+        mockTransactionManager();
         final AbstractDatabaseProvider.PreparedSql preparedSql = new AbstractDatabaseProvider.PreparedSql(
                 "INSERT INTO TEST_TABLE(TEST_COLUMN) VALUES (?)",
                 List.of(new AbstractDatabaseProvider.BindValue("value", Types.VARCHAR)));
@@ -773,7 +739,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(preparedSql.sql(), Statement.RETURN_GENERATED_KEYS)).thenReturn(preparedStatement);
 
         // When
-        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, true);
+        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, true, transactionManager);
 
         // Then
         assertSame(preparedStatement, result);
@@ -783,7 +749,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void prepareRow_nullableColumnWithNullValue() throws Exception {
         // Given
-        final TableMetaData tableMetaData = getTableMetaDataImpl();
+        final TableMetaData tableMetaData = tableMetaDataImpl();
         final ColumnMetaData nullableColumn = tableMetaData.column("TEST_PK");
         final RowValue rowValue = new RowValue(List.of(new ColumnValue(nullableColumn, null)));
 
@@ -799,7 +765,7 @@ class AbstractDatabaseProviderTest {
     @Test
     void prepareRow_autoIncrementColumnWithNullValue() throws Exception {
         // Given
-        final TableMetaData tableMetaData = getTableMetaDataImpl();
+        final TableMetaData tableMetaData = tableMetaDataImpl();
         final ColumnMetaData column = tableMetaData.column("TEST_COLUMN");
         column.setAutoIncrement(true);
         final RowValue rowValue = new RowValue(List.of(new ColumnValue(column, null)));
@@ -814,8 +780,9 @@ class AbstractDatabaseProviderTest {
     }
 
     @Test
-    void getTableMetaData_usesCache() throws Exception {
+    void tableMetaData_usesCache() throws Exception {
         // Given
+        mockTransactionManager();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
         when(connection.getMetaData()).thenReturn(databaseMetaData);
@@ -844,8 +811,8 @@ class AbstractDatabaseProviderTest {
         when(databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)).thenReturn(columnResultSet);
 
         // When
-        final TableMetaData first = databaseProvider.getTableMetaData(table);
-        final TableMetaData second = databaseProvider.getTableMetaData(table);
+        final TableMetaData first = databaseProvider.tableMetaData(table, transactionManager);
+        final TableMetaData second = databaseProvider.tableMetaData(table, transactionManager);
 
         // Then
         assertSame(first, second);
@@ -853,13 +820,14 @@ class AbstractDatabaseProviderTest {
     }
 
     @Test
-    void getTableMetaData_wrapsSqlException() throws Exception {
+    void tableMetaData_wrapsSqlException() throws Exception {
         // Given
+        mockTransactionManager();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         when(connection.getMetaData()).thenThrow(new SQLException("boom"));
 
         // When
-        final IllegalStateException exception = assertThrows(IllegalStateException.class, () -> databaseProvider.getTableMetaData(table));
+        final IllegalStateException exception = assertThrows(IllegalStateException.class, () -> databaseProvider.tableMetaData(table, transactionManager));
 
         // Then
         assertEquals("Failed to get table metadata for table: " + table, exception.getMessage());
@@ -960,10 +928,14 @@ class AbstractDatabaseProviderTest {
         assertNotNull(databaseProvider.getLogger());
     }
 
-    private static class TestDatabaseProvider extends AbstractDatabaseProvider {
+    private void mockTransactionManager() throws SQLException {
+        connection = mock(ManagedConnection.class);
+        when(transactionManager.connection()).thenReturn(connection);
+    }
 
-        public TestDatabaseProvider(final Connection connection, final TypeConverter typeConverter) {
-            super(connection, typeConverter);
+    private static class TestDatabaseProvider extends AbstractDatabaseProvider {
+        public TestDatabaseProvider(final TypeConverter typeConverter) {
+            super(typeConverter);
         }
     }
 }

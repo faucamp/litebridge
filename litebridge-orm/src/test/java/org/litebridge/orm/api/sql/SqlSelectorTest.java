@@ -9,6 +9,7 @@ import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class SqlSelectorTest {
 
     @Mock
-    private DatabaseProvider databaseProvider;
+    private TransactionalDatabaseProvider databaseProvider;
 
     private TableRegistry tableRegistry;
 

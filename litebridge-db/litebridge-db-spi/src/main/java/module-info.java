@@ -17,4 +17,5 @@ module litebridge.db.spi {
     exports org.litebridge.db.spi.query;
     exports org.litebridge.db.spi.update;
     exports org.litebridge.db.spi.util;
+    exports org.litebridge.db.spi.tx;
 }

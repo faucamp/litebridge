@@ -4,8 +4,6 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
 
-import java.sql.Connection;
-
 /**
  * H2 Database Provider for Litebridge.
  * <p>
@@ -21,8 +19,8 @@ import java.sql.Connection;
  */
 public class H2DatabaseProvider extends AbstractDatabaseProvider {
 
-    public H2DatabaseProvider(final Connection connection) {
-        super(connection, new DefaultTypeConverter());
+    public H2DatabaseProvider() {
+        super(new DefaultTypeConverter());
     }
 
     protected @Nullable String transformAlias(final @Nullable String dbAlias) {

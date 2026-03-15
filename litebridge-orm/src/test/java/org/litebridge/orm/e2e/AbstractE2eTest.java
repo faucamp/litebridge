@@ -5,15 +5,17 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.litebridge.db.h2.H2DatabaseProvider;
 import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.tx.DefaultTransactionManager;
+import org.litebridge.orm.tx.SingleConnectionDataSource;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 public abstract class AbstractE2eTest {
 
-    private static Connection connection;
+    private static SingleConnectionDataSource dataSource;
     protected Litebridge litebridge;
 
     @BeforeEach
@@ -23,19 +25,19 @@ public abstract class AbstractE2eTest {
 
     @AfterAll
     static void afterAll() throws SQLException {
-        if (connection != null) {
+        if (dataSource != null) {
             shutdownInMemoryH2();
         }
     }
 
-    protected Connection connection() {
-        return connection;
+    protected DataSource dataSource() {
+        return dataSource;
     }
 
     private Litebridge ensureLitebridge() throws SQLException {
-        if (connection == null) {
-            connection = createH2Connection();
-            litebridge = new Litebridge(new H2DatabaseProvider(connection));
+        if (dataSource() == null) {
+            dataSource = createH2DataSource();
+            litebridge = new Litebridge(new H2DatabaseProvider(), dataSource, new DefaultTransactionManager(dataSource));
         }
 
         return litebridge;
@@ -56,14 +58,13 @@ public abstract class AbstractE2eTest {
      * Creates an H2 in-memory database connection.
      *
      * @return H2 database connection
-     * @throws SQLException if connection creation fails
      */
-    private Connection createH2Connection() throws SQLException {
+    private SingleConnectionDataSource createH2DataSource() {
         final String url = "jdbc:h2:mem:lb;DB_CLOSE_DELAY=-1";
         final String user = "sa";
         final String password = "";
         runFlywayMigration(url, user, password);
-        return DriverManager.getConnection(url, user, password);
+        return new SingleConnectionDataSource(url, user, password);
     }
 
     /**
@@ -89,11 +90,12 @@ public abstract class AbstractE2eTest {
      * @throws SQLException if shutdown fails
      */
     private static void shutdownInMemoryH2() throws SQLException {
-        if (connection != null) {
+        if (dataSource != null) {
+            final Connection connection = dataSource.getConnection();
             Statement statement = connection.createStatement();
             statement.execute("SHUTDOWN");
             connection.close();
-            connection = null;
+            dataSource = null;
         }
     }
 }

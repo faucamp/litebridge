@@ -1,10 +1,8 @@
 package org.litebridge.orm.e2e.sql;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Row;
-import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Person;
 import org.litebridge.orm.e2e.basic.mapping.DtoTableMap;
@@ -144,7 +142,7 @@ class SqlE2eTest extends AbstractE2eTest {
     }
 
     private void insertTestPersonRecords() throws SQLException {
-        final Connection connection = connection();
+        final Connection connection = dataSource().getConnection();
         final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO LB.PERSON (PERSON_ID, FIRST_NAME, SURNAME, AGE, EYE_COLOUR) VALUES (?, ?, ?, ?, ?)");
         insertPerson(1L, "Alice", "Smith", 20, "brown", preparedStatement);
         insertPerson(2L, "Bob", "Johnson", 30, null, preparedStatement);
@@ -152,7 +150,7 @@ class SqlE2eTest extends AbstractE2eTest {
     }
 
     private void insertTestAccountRecords() throws SQLException {
-        final Connection connection = connection();
+        final Connection connection = dataSource().getConnection();
         final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO LB.ACCOUNT (ACCOUNT_ID, ACCOUNT_NAME, BALANCE, PERSON_ID) VALUES (?, ?, ?, ?)");
         insertAccount(1L, "Alice's Account", 1000L, 1L, preparedStatement);
         insertAccount(2L, "Bob's Account", 2000L, 2L, preparedStatement);

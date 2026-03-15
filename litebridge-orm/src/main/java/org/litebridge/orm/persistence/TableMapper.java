@@ -3,10 +3,10 @@ package org.litebridge.orm.persistence;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ModuleUtils;
+import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.spec.AbstractColumnSpecBuilder;
@@ -37,12 +37,12 @@ import java.util.stream.Collectors;
 
 public final class TableMapper {
 
-    private final DatabaseProvider databaseProvider;
+    private final TransactionalDatabaseProvider databaseProvider;
     private final TableRegistry tableRegistry;
     private final ChangeTracker changeTracker;
     private final ClassFieldAccessorCache classFieldAccessorCache;
 
-    public TableMapper(final DatabaseProvider databaseProvider,
+    public TableMapper(final TransactionalDatabaseProvider databaseProvider,
                        final TableRegistry tableRegistry,
                        final ChangeTracker changeTracker) {
         this.databaseProvider = databaseProvider;
@@ -68,7 +68,7 @@ public final class TableMapper {
         }
 
         // Read the table metadata
-        final TableMetaData tableMetaData = databaseProvider.getTableMetaData(tableSpec);
+        final TableMetaData tableMetaData = ObjectUtils.requireNonNull(databaseProvider.tableMetaData(tableSpec, databaseProvider.transactionManager()), () -> new IllegalStateException("Database provider returned null table metadata for table: " + tableSpec.name()));
 
         final Map<FieldAccessor, MappedFieldTarget> columnMap = mapFields(lookup, dtoClass, tableMetaData, tableSpec.fieldColumnMap());
         return new OrmTable(dtoClass, tableMetaData, columnMap, changeTracker);

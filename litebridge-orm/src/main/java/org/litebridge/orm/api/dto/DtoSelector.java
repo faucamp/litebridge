@@ -5,13 +5,13 @@ import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.SelectSpecDtoMapper;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 
 import java.util.Arrays;
@@ -29,7 +29,7 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
                        final OrmTable dtoTable,
                        final TableRegistry tableRegistry,
                        final ClassFieldAccessorCache classFieldAccessorCache,
-                       final DatabaseProvider databaseProvider,
+                       final TransactionalDatabaseProvider databaseProvider,
                        final AliasGenerator aliasGenerator) {
         super(new DtoSelectSpec(dtoClass, dtoTable, aliasGenerator), databaseProvider, dtoClass);
         this.tableRegistry = tableRegistry;

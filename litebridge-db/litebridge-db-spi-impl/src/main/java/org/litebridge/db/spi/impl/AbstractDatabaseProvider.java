@@ -15,6 +15,8 @@ import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.tx.ConnectionProvider;
+import org.litebridge.db.spi.tx.ManagedConnection;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
@@ -26,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -53,40 +54,37 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     static final String[] TYPES_TABLE = {"TABLE"};
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDatabaseProvider.class);
-    private final Connection connection;
     private final TypeConverter typeConverter;
     /**
      * Map of qualified table name -> table metadata.
      */
     private final Map<String, TableMetaData> tableMetaDataCache = new ConcurrentHashMap<>();
 
-    public AbstractDatabaseProvider(final Connection connection,
-                                    final TypeConverter typeConverter) {
-        this.connection = connection;
+    public AbstractDatabaseProvider(final TypeConverter typeConverter) {
         this.typeConverter = Objects.requireNonNull(typeConverter, "No TypeConverter provided");
     }
 
     @Override
-    public TableMetaData getTableMetaData(final Table table) throws SQLException {
-        return ensureTableMetaData(table);
+    public TableMetaData tableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {
+        return ensureTableMetaData(table, connectionProvider);
     }
 
     @Override
-    public InsertResult insert(final Insert insert) throws SQLException {
+    public InsertResult insert(final Insert insert, final ConnectionProvider connectionProvider) throws SQLException {
         final PreparedSql preparedSql = prepareSql(insert);
-        return executeSqlInsert(preparedSql, insert.table(), insert.returnGeneratedKeys());
+        return executeSqlInsert(preparedSql, insert.table(), insert.returnGeneratedKeys(), connectionProvider);
     }
 
     @Override
-    public UpdateResult update(final Update update) throws SQLException {
-        final PreparedSql preparedSql = prepareSql(update);
-        return executeSqlUpdate(preparedSql, update.table());
+    public UpdateResult update(final Update update, final ConnectionProvider connectionProvider) throws SQLException {
+        final PreparedSql preparedSql = prepareSql(update, connectionProvider);
+        return executeSqlUpdate(preparedSql, connectionProvider);
     }
 
     @Override
-    public List<Row> select(final Select select) throws SQLException {
+    public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
         final String sql = toSql(select);
-        return executeSqlQuery(sql, select.columns(), select.where(), select.table());
+        return executeSqlQuery(sql, select.where(), select.table(), connectionProvider);
     }
 
     @Override
@@ -236,7 +234,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      *               and conditions for the WHERE clause to specify target rows.
      * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values.
      */
-    protected PreparedSql prepareSql(final Update update) {
+    protected PreparedSql prepareSql(final Update update, final ConnectionProvider connectionProvider) throws SQLException {
         final StringBuilder sql = appendTable(new StringBuilder("UPDATE "), update.table())
                 .append(" SET ");
 
@@ -273,7 +271,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
                 if (condition.value() != null) {
                     bindValues.add(new BindValue(condition.value(),
-                            ensureTableMetaData(condition.column().table())
+                            ensureTableMetaData(condition.column().table(), connectionProvider)
                                     .column(condition.column().name())
                                     .getDataType()));
                 }
@@ -420,8 +418,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @return an {@link InsertResult} object encapsulating the number of affected rows and a list of generated keys (if any)
      * @throws SQLException if an error occurs while executing the SQL insert or retrieving the generated keys
      */
-    protected InsertResult executeSqlInsert(final PreparedSql preparedSql, final TableMetaData tableMetaData, final boolean returnGeneratedKeys) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, returnGeneratedKeys)) {
+    protected InsertResult executeSqlInsert(final PreparedSql preparedSql, final TableMetaData tableMetaData, final boolean returnGeneratedKeys, final ConnectionProvider connectionProvider) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, returnGeneratedKeys, connectionProvider)) {
             final int affectedRows = preparedStatement.executeUpdate();
 
             if (returnGeneratedKeys && affectedRows > 0) {
@@ -450,13 +448,13 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * This method performs the execution of a prepared update statement and wraps the number
      * of affected rows in an {@link UpdateResult} object.
      *
-     * @param preparedSql   the {@link PreparedSql} object containing the SQL query string and bind values to be executed
-     * @param tableMetaData the {@link TableMetaData} object containing the metadata of the target table
+     * @param preparedSql        the {@link PreparedSql} object containing the SQL query string and bind values to be executed
+     * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
      * @return an {@link UpdateResult} object encapsulating the number of rows affected by the update operation
      * @throws SQLException if an error occurs while executing the SQL update
      */
-    protected UpdateResult executeSqlUpdate(final PreparedSql preparedSql, final TableMetaData tableMetaData) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false)) {
+    protected UpdateResult executeSqlUpdate(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false, connectionProvider)) {
             final int affectedRows = preparedStatement.executeUpdate();
             return new UpdateResult(affectedRows);
         }
@@ -466,14 +464,14 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * Execute the given SQL query with specified columns, conditions, and table, and returns the result as a list of rows.
      *
      * @param sql        the SQL query to be executed
-     * @param columns    the list of columns to include in the query
      * @param conditions the list of conditions to apply in the WHERE clause of the query
      * @param table      the table from which data is queried
+     * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
      * @return a list of {@code Row} objects representing the query results
      * @throws SQLException if an SQL error occurs while executing the query
      */
-    private List<Row> executeSqlQuery(final String sql, final List<Column> columns, final List<Condition> conditions, final Table table) throws SQLException {
-        final TableMetaData fromTable = ensureTableMetaData(table);
+    private List<Row> executeSqlQuery(final String sql, final List<Condition> conditions, final Table table, final ConnectionProvider connectionProvider) throws SQLException {
+        final TableMetaData fromTable = ensureTableMetaData(table, connectionProvider);
         final List<BindValue> bindValues = conditions.stream()
                 .filter(condition -> condition.operator() != Operator.IS_NULL && condition.operator() != Operator.IS_NOT_NULL)
                 .map(condition -> {
@@ -483,7 +481,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 })
                 .toList();
 
-        try (final PreparedStatement preparedStatement = prepareStatement(new PreparedSql(sql, bindValues), false)) {
+        try (final PreparedStatement preparedStatement = prepareStatement(new PreparedSql(sql, bindValues), false, connectionProvider)) {
             // Execute SQL query
             final ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -497,7 +495,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 for (int i = 1; i <= columnCount; i++) {
                     final String schemaName = resultSet.getMetaData().getSchemaName(i);
                     final String tableName = resultSet.getMetaData().getTableName(i);
-                    final TableMetaData columnTable = ensureTableMetaData(fromTable.catalog(), schemaName, tableName);
+                    final TableMetaData columnTable = ensureTableMetaData(fromTable.catalog(), schemaName, tableName, connectionProvider);
                     final String columnName = resultSet.getMetaData().getColumnName(i);
                     final String alias = transformAlias(resultSet.getMetaData().getColumnLabel(i));
                     final ColumnMetaData columnMetaData = columnTable.column(columnName);
@@ -587,17 +585,19 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @param returnGeneratedKeys a boolean indicating whether the statement should return generated keys.
      *                            Pass {@code true} to configure the statement to return generated keys,
      *                            or {@code false} otherwise.
+     * @param connectionProvider  the {@link ConnectionProvider} used to obtain a database connection.
      * @return a {@link PreparedStatement} that is ready to be executed based on the provided SQL and bind values.
      * @throws SQLException if a database access error occurs or the preparation of the SQL statement fails.
      */
     @SuppressWarnings("SqlSourceToSinkFlow")
-    protected PreparedStatement prepareStatement(final PreparedSql preparedSql, final boolean returnGeneratedKeys) throws SQLException {
+    protected PreparedStatement prepareStatement(final PreparedSql preparedSql, final boolean returnGeneratedKeys, final ConnectionProvider connectionProvider) throws SQLException {
         if (LOGGER.isTraceEnabled() && !CollectionUtils.isEmpty(preparedSql.bindValues)) {
             LOGGER.trace("Generated SQL: {} with bind parameters: {}", preparedSql.sql(), preparedSql.bindValues.stream().map(BindValue::value).toList());
         } else {
             LOGGER.debug("Generated SQL: {}", preparedSql.sql());
         }
 
+        final ManagedConnection connection = connectionProvider.connection();
         final PreparedStatement preparedStatement;
 
         if (returnGeneratedKeys) {
@@ -679,16 +679,16 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return new PreparedRow(valueSpecifiers, bindValues);
     }
 
-    private TableMetaData ensureTableMetaData(final String catalog, final String schema, final String table) throws SQLException {
-        return ensureTableMetaData(new Table(catalog, schema, table));
+    private TableMetaData ensureTableMetaData(final String catalog, final String schema, final String table, final ConnectionProvider connectionProvider) throws SQLException {
+        return ensureTableMetaData(new Table(catalog, schema, table), connectionProvider);
     }
 
-    private TableMetaData ensureTableMetaData(final Table table) {
+    private TableMetaData ensureTableMetaData(final Table table, final ConnectionProvider connectionProvider) {
         TableMetaData tableMetaData = this.tableMetaDataCache.get(table.qualifiedName());
 
         if (tableMetaData == null) {
             try {
-                tableMetaData = fetchTableMetaData(table);
+                tableMetaData = fetchTableMetaData(table, connectionProvider);
             } catch (SQLException ex) {
                 throw new IllegalStateException("Failed to get table metadata for table: " + table, ex);
             }
@@ -708,8 +708,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @return a {@code TableMetaData} object containing details about the table's structure, primary keys, and column metadata
      * @throws SQLException if an error occurs while fetching database metadata
      */
-    protected TableMetaData fetchTableMetaData(final Table table) throws SQLException {
-        final DatabaseMetaData databaseMetaData = connection.getMetaData();
+    protected TableMetaData fetchTableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {
+        final DatabaseMetaData databaseMetaData = connectionProvider.connection().getMetaData();
 
         // Verify basic details
         verifySchemaAndTableExists(table, databaseMetaData);

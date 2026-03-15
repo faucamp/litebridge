@@ -10,11 +10,12 @@ import org.litebridge.example.common.dto.Account;
 import org.litebridge.example.common.dto.Person;
 import org.litebridge.example.common.mapping.DtoTableMap;
 import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.tx.DefaultTransactionManager;
+import org.litebridge.orm.tx.SingleConnectionDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
+import javax.sql.DataSource;
 import java.sql.SQLException;
 
 import static org.litebridge.orm.api.spec.TableSpec.t;
@@ -30,16 +31,16 @@ public class H2Example {
         final String password = "";
         configureDatabase(url, user, password);
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
-            runExamples(connection);
+        try {
+            runExamples(new SingleConnectionDataSource(url, user, password));
         } catch (Exception ex) {
             LOGGER.error("An error occurred during H2 example execution", ex);
         }
     }
 
-    private static void runExamples(final Connection connection) throws SQLException {
+    private static void runExamples(final DataSource dataSource) throws SQLException {
         // Initialise litebridge and register DTO-table mappings
-        final Litebridge litebridge = new Litebridge(new H2DatabaseProvider(connection));
+        final Litebridge litebridge = new Litebridge(new H2DatabaseProvider(), dataSource, new DefaultTransactionManager(dataSource));
         litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
         litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
 

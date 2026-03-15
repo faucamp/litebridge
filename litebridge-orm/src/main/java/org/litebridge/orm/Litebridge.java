@@ -1,9 +1,9 @@
 package org.litebridge.orm;
 
 import org.litebridge.db.spi.Aliased;
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.api.dto.DtoSelector;
@@ -11,6 +11,7 @@ import org.litebridge.orm.api.spec.TableMapping;
 import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.api.sql.SqlFromClause;
 import org.litebridge.orm.api.sql.SqlSelector;
+import org.litebridge.orm.api.tx.TransactionContext;
 import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.DtoEntityMapping;
 import org.litebridge.orm.persistence.EntityDtoMapper;
@@ -19,9 +20,12 @@ import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.orm.persistence.SelectSpecDtoMapper;
 import org.litebridge.orm.persistence.TableMapper;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridge.orm.tx.DefaultTransactionManager;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.FieldAccessor;
 
+import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -49,7 +53,8 @@ public class Litebridge {
     private static final Aliased[] ALL_COLUMNS = new Aliased[0];
 
     private final TableRegistry tableRegistry = new TableRegistry();
-    private final DatabaseProvider databaseProvider;
+    private final TransactionalDatabaseProvider databaseProvider;
+    private final TransactionContext transactionContext;
     private final PersistenceFacade persistenceFacade;
     private final TableMapper tableMapper;
     private final ChangeTracker changeTracker;
@@ -61,15 +66,26 @@ public class Litebridge {
      *                         This parameter is required to set up database operations
      *                         and facilitate persistence functionalities. Must not be null.
      */
-    public Litebridge(final DatabaseProvider databaseProvider) {
-        this(databaseProvider, MethodHandles.lookup());
+    public Litebridge(final DatabaseProvider databaseProvider,
+                      final DataSource dataSource) {
+        this(databaseProvider, dataSource, new DefaultTransactionManager(dataSource), MethodHandles.lookup());
     }
 
-    public Litebridge(final DatabaseProvider databaseProvider, final MethodHandles.Lookup lookup) {
-        this.databaseProvider = databaseProvider;
-        this.persistenceFacade = new PersistenceFacade(tableRegistry, databaseProvider);
+    public Litebridge(final DatabaseProvider databaseProvider,
+                      final DataSource dataSource,
+                      final TransactionManager transactionManager) {
+        this(databaseProvider, dataSource, transactionManager, MethodHandles.lookup());
+    }
+
+    public Litebridge(final DatabaseProvider databaseProvider,
+                      final DataSource dataSource,
+                      final TransactionManager transactionManager,
+                      final MethodHandles.Lookup lookup) {
+        this.databaseProvider = new TransactionalDatabaseProvider(transactionManager, databaseProvider);
+        this.transactionContext = new TransactionContext(transactionManager);
+        this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider);
         this.changeTracker = new ChangeTracker(lookup);
-        this.tableMapper = new TableMapper(databaseProvider, tableRegistry, changeTracker);
+        this.tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker);
     }
 
     /**
@@ -295,5 +311,9 @@ public class Litebridge {
 
     public <DTO> EntityDtoMapper<DTO> entityDtoMapper(final Class<DTO> dtoClass, final List<DtoEntityMapping> dtoEntityMappings) {
         return new EntityDtoMapper<>(dtoClass, dtoEntityMappings, changeTracker.classFieldAccessorCache());
+    }
+
+    public TransactionContext transaction() {
+        return transactionContext;
     }
 }
