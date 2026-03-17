@@ -1,5 +1,7 @@
 package org.litebridge.orm;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
@@ -28,8 +30,10 @@ import org.litebridge.tracking.FieldAccessor;
 import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -58,6 +62,7 @@ public class Litebridge {
     private final PersistenceFacade persistenceFacade;
     private final TableMapper tableMapper;
     private final ChangeTracker changeTracker;
+    private @Nullable List<FieldAccessor> pendingManyToOneDependencies;
 
     /**
      * Constructs a Litebridge instance with the specified database provider.
@@ -83,8 +88,8 @@ public class Litebridge {
                       final MethodHandles.Lookup lookup) {
         this.databaseProvider = new TransactionalDatabaseProvider(transactionManager, databaseProvider);
         this.transactionContext = new TransactionContext(transactionManager);
-        this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider);
         this.changeTracker = new ChangeTracker(lookup);
+        this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker);
         this.tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker);
     }
 
@@ -98,13 +103,43 @@ public class Litebridge {
      * @throws SQLException if an error occurs during the mapping or registration process.
      */
     public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final TableSpec tableSpec, final Class<?>... dtoInterfaces) throws SQLException {
-        final OrmTable table = tableMapper.mapToTable(lookup, dtoClass, tableSpec);
-        tableRegistry.addTable(dtoClass, table);
-        Arrays.stream(dtoInterfaces).forEach(dtoInterface -> tableRegistry.addTable(dtoInterface, table));
+        final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoClass, tableSpec);
+        final OrmTable ormTable = mappedTable.ormTable();
+        tableRegistry.addTable(dtoClass, mappedTable.ormTable());
+        Arrays.stream(dtoInterfaces).forEach(dtoInterface -> tableRegistry.addTable(dtoInterface, ormTable));
 
-        if (!table.getNestedDtoClasses().isEmpty()) {
-            table.getNestedDtoClasses().forEach(nestedDtoClass -> tableRegistry.addTable(nestedDtoClass, table));
+        if (!ormTable.getNestedDtoClasses().isEmpty()) {
+            ormTable.getNestedDtoClasses().forEach(nestedDtoClass -> tableRegistry.addTable(nestedDtoClass, ormTable));
         }
+
+        // Process pending many-to-one dependencies for this class
+        if (!CollectionUtils.isEmpty(pendingManyToOneDependencies)) {
+            final Iterator<FieldAccessor> iterator = pendingManyToOneDependencies.iterator();
+
+            while (iterator.hasNext()) {
+                final FieldAccessor fieldAccessor = iterator.next();
+
+                if (fieldAccessor.genericType() == dtoClass) {
+                    ormTable.addOneToManyReverseMapping(fieldAccessor);
+                    iterator.remove();
+                }
+            }
+        }
+
+        // Process/pend this table's dependants)
+        mappedTable.manyToOneDependencies().forEach(fieldAccessor -> {
+            final OrmTable targetOrmTable = tableRegistry.getTable(fieldAccessor.genericType());
+
+            if (targetOrmTable != null) {
+                targetOrmTable.addOneToManyReverseMapping(fieldAccessor);
+            } else {
+                if (pendingManyToOneDependencies == null) {
+                    pendingManyToOneDependencies = new ArrayList<>();
+                }
+
+                pendingManyToOneDependencies.add(fieldAccessor);
+            }
+        });
     }
 
     public void register(final Class<?> dtoClass, final TableSpec tableSpec, final Class<?>... dtoInterfaces) throws SQLException {

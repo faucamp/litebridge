@@ -113,6 +113,14 @@ public final class ChangeTracker {
     }
 
     @SuppressWarnings("unchecked")
+    public <DTO> Set<TrackedDto<DTO>> getTrackedDtos(final Class<DTO> dtoClass) {
+        return trackedDtos.values().stream()
+                .filter(trackedDto -> trackedDto.dto().getClass() == dtoClass)
+                .map(trackedDto -> (TrackedDto<DTO>) trackedDto)
+                .collect(Collectors.toSet());
+    }
+
+    @SuppressWarnings("unchecked")
     public <DTO> @Nullable TrackedDto<DTO> getTrackedDtoOrNull(final DTO dto) {
         return (TrackedDto<DTO>) trackedDtos.get(dto);
     }

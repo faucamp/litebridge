@@ -1,7 +1,6 @@
 package org.litebridge.orm.api.tx;
 
 import org.litebridge.db.spi.tx.Isolation;
-import org.litebridge.db.spi.tx.TransactionControl;
 import org.litebridge.db.spi.tx.TransactionException;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.tx.Transaction;
@@ -16,10 +15,25 @@ public sealed class TransactionContextTerminal permits TransactionContext {
         this.transactionManager = transactionManager;
     }
 
+    /**
+     * Indicates that the transaction should be read-only.
+     * <p>
+     * Read-only transactions are used when the transaction
+     * is intended to only read data and not modify it.
+     */
     void setReadOnly() {
         this.readOnly = true;
     }
 
+    /**
+     * Sets the transaction isolation level for the current thread.
+     * <p>
+     * The isolation level determines the degree of isolation provided
+     * for transactions, affecting how changes made by one transaction
+     * are visible to other transactions.
+     *
+     * @param isolation the desired isolation level for the transaction
+     */
     void setIsolation(final Isolation isolation) {
         this.isolation = isolation;
     }
@@ -34,6 +48,7 @@ public sealed class TransactionContextTerminal permits TransactionContext {
      * <p>
      * This method may be called multiple times (nested).
      *
+     * @return a {@link Transaction} auto-closeable, suitable for use in a try-with-resources statement.
      * @throws TransactionException if an error occurs during starting the transaction
      */
     public Transaction begin() {

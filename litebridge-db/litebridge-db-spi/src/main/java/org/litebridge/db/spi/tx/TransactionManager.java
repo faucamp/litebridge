@@ -41,4 +41,18 @@ public interface TransactionManager extends TransactionControl {
      * @return {@code true} if cleanup still needs to be performed, {@code false} otherwise
      */
     boolean requiresCleanup();
+
+    /**
+     * Adds a {@code Runnable} to be executed if the transaction is committed.
+     *
+     * @param callback The runnable to execute when the transaction is committed.
+     */
+    void addCommitCallback(Runnable callback);
+
+    /**
+     * Adds a {@code Runnable} to be executed if the transaction is rolled back.
+     *
+     * @param callback The runnable to execute on transaction rollback.
+     */
+    void addRollbackCallback(Runnable callback);
 }

@@ -6,13 +6,15 @@ import org.litebridge.db.spi.tx.Isolation;
 import org.litebridge.db.spi.tx.ManagedConnection;
 import org.litebridge.db.spi.tx.TransactionException;
 import org.litebridge.db.spi.tx.TransactionManager;
-import org.litebridge.db.spi.tx.TransactionSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Default Litebridge Transaction Manager
@@ -133,6 +135,8 @@ public final class DefaultTransactionManager implements TransactionManager {
             cleanup(true);
             throw new TransactionException("Commit failed", ex);
         }
+
+        executeCompletionCallbacks(state.getCommitCallbacks(), "Rollback callback failed");
     }
 
     @Override
@@ -151,8 +155,7 @@ public final class DefaultTransactionManager implements TransactionManager {
 
     @Override
     public boolean isTransactionActive() {
-        final TransactionState state = holder.get();
-        return state != null && !state.autoCommit;
+        return isTransactionActive(holder.get());
     }
 
     @Override
@@ -171,6 +174,27 @@ public final class DefaultTransactionManager implements TransactionManager {
         return holder.get() != null;
     }
 
+    @Override
+    public void addCommitCallback(Runnable callback) {
+        final TransactionState state = holder.get();
+
+        if (isTransactionActive(state)) {
+            state.addCommitCallback(callback);
+        } else {
+            // Auto-commit, no transaction
+            callback.run();
+        }
+    }
+
+    @Override
+    public void addRollbackCallback(final Runnable callback) {
+        final TransactionState state = holder.get();
+
+        if (isTransactionActive(state)) {
+            state.addRollbackCallback(callback);
+        }
+    }
+
     private TransactionState transactionStateOrThrow() {
         return ObjectUtils.requireNonNull(holder.get(), () -> new IllegalStateException("No transaction active"));
     }
@@ -181,7 +205,28 @@ public final class DefaultTransactionManager implements TransactionManager {
             cleanup(false);
         } catch (final SQLException ex) {
             cleanup(true);
+
             throw new TransactionException("Rollback failed", ex);
+        }
+
+        executeCompletionCallbacks(state.getRollbackCallbacks(), "Rollback callback failed");
+    }
+
+    private static boolean isTransactionActive(final @Nullable TransactionState state) {
+        return state != null && !state.autoCommit;
+    }
+
+    private static void executeCompletionCallbacks(final List<Runnable> callbacks, final String errorStr) {
+        if (!callbacks.isEmpty()) {
+            LOGGER.trace("Executing transaction completion callbacks");
+
+            try {
+                callbacks.forEach(Runnable::run);
+            } catch (Exception ex) {
+                throw new TransactionException(errorStr, ex);
+            }
+
+            LOGGER.trace("Transaction completion callbacks done");
         }
     }
 
@@ -235,11 +280,47 @@ public final class DefaultTransactionManager implements TransactionManager {
          * Indicates whether the transaction is marked for rollback only.
          */
         boolean rollbackOnly = false;
+        /**
+         * List of callbacks to execute when a transaction is committed.
+         * <p>
+         * This is used by the ORM to synchronise the state of DTOs change tracking after updates
+         */
+        private @Nullable List<Runnable> commitCallbacks;
+        /**
+         * List of callbacks to execute when a transaction is rolled back.
+         * <p>
+         * This is used by the ORM to undo in-flight changes to DTOs while the transaction is running (e.g. generated PK setting)
+         */
+        private @Nullable List<Runnable> rollbackCallbacks;
 
         TransactionState(final Connection connection, final boolean autoCommit) throws SQLException {
             this.connection = connection;
             this.managedConnection = new ManagedConnection(connection);
             this.autoCommit = autoCommit;
+        }
+
+        void addCommitCallback(final Runnable callback) {
+            if (commitCallbacks == null) {
+                commitCallbacks = new ArrayList<>();
+            }
+
+            commitCallbacks.add(callback);
+        }
+
+        List<Runnable> getCommitCallbacks() {
+            return commitCallbacks != null ? commitCallbacks : Collections.emptyList();
+        }
+
+        void addRollbackCallback(final Runnable callback) {
+            if (rollbackCallbacks == null) {
+                rollbackCallbacks = new ArrayList<>();
+            }
+
+            rollbackCallbacks.add(callback);
+        }
+
+        List<Runnable> getRollbackCallbacks() {
+            return rollbackCallbacks != null ? rollbackCallbacks : Collections.emptyList();
         }
     }
 }

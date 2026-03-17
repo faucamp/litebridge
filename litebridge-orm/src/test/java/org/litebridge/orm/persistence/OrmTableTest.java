@@ -7,7 +7,6 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.FieldAccessor;
-import org.litebridge.tracking.FieldAccessorChain;
 import org.litebridge.tracking.TrackedDto;
 
 import java.lang.invoke.MethodHandles;
@@ -16,7 +15,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OrmTableTest {
 
@@ -241,22 +246,6 @@ class OrmTableTest {
         assertSame(idColumn, result.get(0).getValue());
         assertSame(nameField, result.get(1).getKey());
         assertSame(nameColumn, result.get(1).getValue());
-    }
-
-    @Test
-    @SuppressWarnings("removal")
-    void deprecatedConstructor() {
-        // Given
-        final OrmTable ormTable = simpleOrmTable();
-        final ColumnMetaData aliasedIdColumn = column("aliased_test_table", "id", Types.BIGINT);
-        final TableMetaData aliasedMetaData = tableMetaData("aliased_test_table", aliasedIdColumn);
-
-        // When
-        final OrmTable result = new OrmTable(ormTable, aliasedMetaData);
-
-        // Then
-        assertEquals(TestDto.class, result.dtoClass());
-        assertSame(aliasedMetaData, result.getMetaData());
     }
 
     private static OrmTable simpleOrmTable() {

@@ -191,7 +191,7 @@ class BasicE2eTest extends AbstractE2eTest {
         assertNotNull(person.getId(), "Person ID should be set after save");
         assertNotNull(account.getId(), "Account ID should be set after save");
         assertNotNull(person.getAccounts(), "Person should have a list of accounts");
-        assertEquals(1, person.getAccounts().size(), "Person should have exactly one account");
+        assertEquals(2, person.getAccounts().size(), "Person should have exactly two accounts");
 
         final Person fetchedPerson = litebridge.select(Person.class)
                 .join(Account.class).on("accounts")

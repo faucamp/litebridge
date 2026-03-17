@@ -18,6 +18,7 @@ import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.db.spi.update.UpdateStatement;
 import org.litebridge.orm.persistence.manytomany.NoOpFieldAccessor;
+import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.ChangedCollectionField;
 import org.litebridge.tracking.ChangedField;
 import org.litebridge.tracking.ChangedFields;
@@ -55,12 +56,15 @@ public class PersistenceFacade {
     private final TableProvider tableProvider;
     private final TransactionalDatabaseProvider databaseProvider;
     private final TransactionManager transactionManager;
+    private final ChangeTracker changeTracker;
 
     public PersistenceFacade(final TableRegistry tableRegistry,
-                             final TransactionalDatabaseProvider databaseProvider) {
+                             final TransactionalDatabaseProvider databaseProvider,
+                             final ChangeTracker changeTracker) {
         this.tableProvider = new TableProvider(tableRegistry);
         this.databaseProvider = databaseProvider;
         this.transactionManager = databaseProvider.transactionManager();
+        this.changeTracker = changeTracker;
     }
 
     /**
@@ -399,11 +403,17 @@ public class PersistenceFacade {
         // TODO: composite PK support
         final ColumnMetaData pkColumn = embeddedDtoPk.get(0);
         final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(pkColumn.name());
+        final Object currentPkValue = field.get(dto);
 
-        if (field.get(dto) == null) {
+        if (currentPkValue == null) {
             final Object convertedValue = databaseProvider.getTypeConverter().convert(generatedKey, pkColumn.getDataType());
             field.set(dto, convertedValue);
             embeddedDtoTable.syncPersistedDto(dto);
+            transactionManager.addRollbackCallback(() -> {
+                LOGGER.trace("Rolling back generated key for DTO '{}'", dto);
+                field.set(dto, currentPkValue);
+                embeddedDtoTable.syncPersistedDto(dto);
+            });
         } else {
             LOGGER.trace("Generated key for DTO '{}' already set - ignoring", dto);
         }
@@ -422,40 +432,29 @@ public class PersistenceFacade {
     private void updateOneToManyReverseMappings(final DtoUpdateResult dtoUpdateResult, final CompositeUpdateResult compositeUpdateResult) {
         tableProvider.pushContext(dtoUpdateResult, new HashSet<>());
         final Object dto = dtoUpdateResult.getDto();
+        final OrmTable ormTable = tableProvider.getTableOrThrow(dto.getClass());
 
-        final OrmTable table = tableProvider.getTableOrThrow(dto.getClass());
-        final List<MappedOneToMany> mappedOneToManyList = table.getOneToManyMappings();
+        if (!CollectionUtils.isEmpty(ormTable.getOneToManyReverseMappings())) {
+            ormTable.getOneToManyReverseMappings().forEach(collectionField -> {
+                changeTracker.getTrackedDtos(collectionField.dtoClass())
+                        .forEach(trackedDto -> {
+                            final Collection<Object> collection = (Collection<Object>) collectionField.get(trackedDto.dto());
 
-        if (CollectionUtils.isEmpty(mappedOneToManyList)) {
-            // No reverse mappings to update
-            return;
-        }
-
-        mappedOneToManyList.forEach(mappedOneToMany -> {
-            LOGGER.trace("Updating reverse mapping for field '{}' of DTO: {}", mappedOneToMany.collection().name(), dto);
-            // Get the current value of the mapping
-            final FieldAccessor reverseMappingCollection = mappedOneToMany.collection();
-            final Collection<Object> currentCollection;
-            final Collection<Object> dtoCollection = (Collection<Object>) reverseMappingCollection.get(dto);
-
-            if (dtoCollection != null) {
-                currentCollection = dtoCollection;
-            } else {
-                currentCollection = (Collection<Object>) ClassUtils.newInstance(reverseMappingCollection.type());
-                reverseMappingCollection.set(dto, currentCollection);
-            }
-
-            compositeUpdateResult.results().forEach(updateResult -> {
-                if (updateResult.getDto().getClass() == reverseMappingCollection.genericType()) {
-                    // Matching collection class - add the updated value to the collection if necessary
-                    //TODO: support for multiple collections of the same type in the parent DTO
-                    if (!currentCollection.contains(updateResult.getDto())) {
-                        LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", mappedOneToMany.collection().name(), updateResult.getDto());
-                        currentCollection.add(updateResult.getDto());
-                    }
-                }
+                            // If the collection does not exist yet, initialise it
+                            if (collection == null) {
+                                final Collection<Object> newCollection = (Collection<Object>) ClassUtils.newInstance(collectionField.type());
+                                collectionField.set(trackedDto.dto(), newCollection);
+                                newCollection.add(dto);
+                                transactionManager.addRollbackCallback(() -> collectionField.set(trackedDto.dto(), null));
+                            } else if (!collection.contains(dto)) {
+                                // Add the updated value to the collection
+                                LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", collectionField.name(), dto);
+                                collection.add(dto);
+                                transactionManager.addRollbackCallback(() -> collection.remove(dto));
+                            }
+                        });
             });
-        });
+        }
     }
 
     private AbstractStatementBuilder<?> createStatementBuilder(final Object dto, final Set<Object> inProgressDtos) {

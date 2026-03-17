@@ -306,7 +306,7 @@ public final class TrackedDto<DTO> {
 
     private int getDtoHash(final Object dto, final Set<Object> dtosVisited) {
         if (dtosVisited.contains(dto)) {
-            LOGGER.warn("Circular reference detected in DTO: {}", dto);
+            LOGGER.trace("Circular reference detected in DTO: {}; returning defaulted hash", dto);
             return 1;
         }
 

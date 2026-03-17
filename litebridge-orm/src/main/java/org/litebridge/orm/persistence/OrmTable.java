@@ -46,6 +46,8 @@ public class OrmTable {
     private final WeakIdentitySet<Object> persistedDtos = new WeakIdentitySet<>();
     private final List<Class<?>> nestedDtoClasses;
     private final TableRegistry contextTableRegistry = new TableRegistry();
+    @Nullable
+    private List<FieldAccessor> oneToManyReverseMappings;
 
     /**
      * Constructs a new {@code OrmTable} instance, initializing table metadata, field-to-column mappings,
@@ -122,11 +124,6 @@ public class OrmTable {
         this.fieldTargetMap = Collections.unmodifiableMap(processedFieldTargetMap);
         this.nestedDtoClasses = nestedDtoClasses.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(nestedDtoClasses);
         this.fieldTargetEntries = Collections.unmodifiableList(orderedFieldTargetEntries);
-    }
-
-    @Deprecated(forRemoval = true)
-    public OrmTable(final OrmTable other, final TableMetaData aliasedTable) {
-        this(other.dtoClass, aliasedTable, other.fieldTargetMap, other.changeTracker);
     }
 
     /**
@@ -296,5 +293,17 @@ public class OrmTable {
 
     public TableRegistry getContextTableRegistry() {
         return contextTableRegistry;
+    }
+
+    public void addOneToManyReverseMapping(final FieldAccessor fieldAccessor) {
+        if (oneToManyReverseMappings == null) {
+            oneToManyReverseMappings = new ArrayList<>();
+        }
+
+        oneToManyReverseMappings.add(fieldAccessor);
+    }
+
+    public @Nullable List<FieldAccessor> getOneToManyReverseMappings() {
+        return oneToManyReverseMappings;
     }
 }
