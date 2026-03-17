@@ -42,4 +42,20 @@ public final class ReadOnlyClause {
     public Transaction begin() {
         return transactionContextTerminal.begin();
     }
+
+    /**
+     * Executes a given {@link Runnable} within the context of a transaction.
+     * <p>
+     * This method begins a new transaction, executes the provided {@link Runnable},
+     * and commits the transaction if no exception occurs. In case of an exception,
+     * the transaction is rolled back, and a {@link TransactionException} is thrown.
+     *
+     * @param runnable the {@link Runnable} containing the operations to be executed
+     *                 within the transactional context
+     * @throws TransactionException if an error occurs during execution or if the
+     *                              transaction is rolled back due to an exception
+     */
+    public void execute(final Runnable runnable) {
+        transactionContextTerminal.execute(runnable);
+    }
 }

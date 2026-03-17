@@ -2,6 +2,7 @@ package org.litebridge.orm.e2e.basic;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.tx.TransactionException;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.basic.dto.Person;
@@ -63,6 +64,27 @@ class TransactionsE2eTest extends AbstractE2eTest {
             litebridge.save(person);
             tx.commit();
         }
+
+        // Then
+        final int recordCount = litebridge.select("PERSON_ID").from("LB", "PERSON").list().size();
+        assertEquals(1, recordCount, "Should have exactly one record in the database");
+        assertNotNull(person.getId(), "Person ID should be set after transaction commit");
+    }
+
+    @Test
+    @DisplayName("Transaction commit: lambda")
+    void transaction_commit_lambda() throws Exception {
+        // Given
+        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+
+        final Person person = new Person();
+        person.setName("Alice");
+        person.setSurname("Smith");
+        person.setAge(20);
+        person.setEyeColour("blue");
+
+        // When
+        litebridge.transaction().readOnly().execute(() -> litebridge.save(person));
 
         // Then
         final int recordCount = litebridge.select("PERSON_ID").from("LB", "PERSON").list().size();
@@ -194,5 +216,30 @@ class TransactionsE2eTest extends AbstractE2eTest {
         assertNull(person.getId(), "Person ID should not be set after rollback");
         assertNull(account.getId(), "Account ID should not be set after rollback");
         assertNull(person.getAccounts(), "Person accounts not restored to null after rollback");
+    }
+
+    @Test
+    @DisplayName("Transaction rollback on exception: lambda")
+    void transaction_rollback_lambda() throws Exception {
+        // Given
+        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+
+        final Person person = new Person();
+        person.setSurname("NoFirstName");
+        boolean exceptionThrown = false;
+
+        // When
+        try {
+            litebridge.transaction().execute(() -> litebridge.save(person));
+        } catch (TransactionException ex) {
+            exceptionThrown = true;
+            LOGGER.info("Caught exception: {}", ex.getMessage(), ex);
+        }
+
+        // Then
+        assertTrue(exceptionThrown, "Exception should be thrown");
+        final int recordCount = litebridge.select("PERSON_ID").from("LB", "PERSON").list().size();
+        assertEquals(0, recordCount, "Should have no records in the database");
+        assertNull(person.getId(), "Person ID should not be set after transaction rollback");
     }
 }
