@@ -25,6 +25,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(TransactionsE2eTest.class);
 
     @Test
+    @SuppressWarnings("resource")
     @DisplayName("Transaction commit: manual control")
     void transaction_commit_manual() throws Exception {
         // Given
@@ -84,7 +85,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         person.setEyeColour("blue");
 
         // When
-        litebridge.transaction().readOnly().execute(() -> litebridge.save(person));
+        litebridge.transaction().execute(() -> litebridge.save(person));
 
         // Then
         final int recordCount = litebridge.select("PERSON_ID").from("LB", "PERSON").list().size();
