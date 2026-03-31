@@ -1,0 +1,27 @@
+package org.litebridge.orm.persistence;
+
+import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.query.Condition;
+import org.litebridge.db.spi.update.Delete;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public final class DeleteBuilder extends AbstractStatementBuilder<Delete> {
+
+    private final List<Condition> conditions = new ArrayList<>();
+
+    public DeleteBuilder(final OrmTable table) {
+        super(table);
+    }
+
+    public DeleteBuilder where(final Condition condition) {
+        conditions.add(condition);
+        return this;
+    }
+
+    @Override
+    public Delete build() {
+        return new Delete(new Table(table.getMetaData().catalog(), table.getMetaData().schema(), table.getMetaData().name()), conditions);
+    }
+}

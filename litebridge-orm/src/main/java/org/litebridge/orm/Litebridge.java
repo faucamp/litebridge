@@ -9,10 +9,12 @@ import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.api.dto.DtoSelector;
+import org.litebridge.orm.api.dto.delete.DtoDeletor;
 import org.litebridge.orm.api.spec.TableMapping;
 import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.api.sql.SqlFromClause;
 import org.litebridge.orm.api.sql.SqlSelector;
+import org.litebridge.orm.api.sql.delete.SqlDeleteFromClause;
 import org.litebridge.orm.api.tx.TransactionContext;
 import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.DtoEntityMapping;
@@ -24,7 +26,6 @@ import org.litebridge.orm.persistence.TableMapper;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.tx.DefaultTransactionManager;
-import org.litebridge.orm.tx.Transaction;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.FieldAccessor;
 
@@ -313,6 +314,23 @@ public class Litebridge {
      */
     public SqlFromClause select() {
         return new SqlSelector(databaseProvider, tableRegistry).select(ALL_COLUMNS);
+    }
+
+    public void delete(final Object dto) {
+        try {
+            persistenceFacade.delete(dto);
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to delete DTO: " + dto, ex);
+        }
+    }
+
+    public <DTO> DtoDeletor<DTO> delete(final Class<DTO> dtoClass) {
+        final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
+        return new DtoDeletor<>(dtoClass, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider);
+    }
+
+    public SqlDeleteFromClause delete() {
+        return new SqlDeleteFromClause(databaseProvider);
     }
 
     /**

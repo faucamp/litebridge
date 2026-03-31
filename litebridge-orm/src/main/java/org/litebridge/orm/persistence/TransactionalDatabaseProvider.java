@@ -8,6 +8,7 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.TransactionManager;
+import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.Update;
@@ -43,6 +44,11 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     @Override
     public UpdateResult update(final Update update, final ConnectionProvider connectionProvider) throws SQLException {
         return executeAndCleanupIfNeeded(() -> databaseProvider.update(update, transactionManager));
+    }
+
+    @Override
+    public UpdateResult delete(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeAndCleanupIfNeeded(() -> databaseProvider.delete(delete, transactionManager));
     }
 
     @Override

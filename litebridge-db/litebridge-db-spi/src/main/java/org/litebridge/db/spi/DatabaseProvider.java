@@ -3,6 +3,7 @@ package org.litebridge.db.spi;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.tx.ConnectionProvider;
+import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.Update;
@@ -60,6 +61,8 @@ public interface DatabaseProvider {
      * @throws SQLException if any SQL error occurs during the execution of the SELECT operation.
      */
     List<Row> select(Select select, ConnectionProvider connectionProvider) throws SQLException;
+
+    UpdateResult delete(Delete delete, ConnectionProvider connectionProvider) throws SQLException;
 
     String toSql(Select select);
 

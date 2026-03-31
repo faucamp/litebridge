@@ -141,6 +141,23 @@ class SqlE2eTest extends AbstractE2eTest {
         assertEquals("Bob's Account", row2.column("ACCOUNT_NAME").orElseThrow().value());
     }
 
+    @Test
+    @DisplayName("Delete records")
+    void delete() throws Exception {
+        // Given
+        insertTestPersonRecords();
+        assertEquals(2, litebridge.select().from("LB", "PERSON").list().size());
+
+        // When
+        litebridge.delete()
+                .from("LB.PERSON")
+                .where("AGE").gt(20)
+                .execute();
+
+        // Then
+        assertEquals(1, litebridge.select().from("LB", "PERSON").list().size());
+    }
+
     private void insertTestPersonRecords() throws SQLException {
         final Connection connection = dataSource().getConnection();
         final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO LB.PERSON (PERSON_ID, FIRST_NAME, SURNAME, AGE, EYE_COLOUR) VALUES (?, ?, ?, ?, ?)");

@@ -18,6 +18,7 @@ import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.ManagedConnection;
 import org.litebridge.db.spi.update.ColumnValue;
+import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.RowValue;
@@ -85,6 +86,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
         final String sql = toSql(select);
         return executeSqlQuery(sql, select.where(), select.table(), connectionProvider);
+    }
+
+    @Override
+    public UpdateResult delete(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
+        final PreparedSql preparedSql = prepareSql(delete, connectionProvider);
+        return executeSqlUpdate(preparedSql, connectionProvider);
     }
 
     @Override
@@ -261,6 +268,39 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             first = true;
 
             for (Condition condition : update.where()) {
+                if (first) {
+                    first = false;
+                } else {
+                    sql.append(" AND ");
+                }
+
+                sql.append(createCondition(condition));
+
+                if (condition.value() != null) {
+                    bindValues.add(new BindValue(condition.value(),
+                            ensureTableMetaData(condition.column().table(), connectionProvider)
+                                    .column(condition.column().name())
+                                    .getDataType()));
+                }
+            }
+        }
+
+        return new PreparedSql(sql.toString(), bindValues);
+    }
+
+    protected PreparedSql prepareSql(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
+        final StringBuilder sql = appendTable(new StringBuilder("DELETE FROM "), delete.table());
+
+        final List<BindValue> bindValues = new ArrayList<>();
+
+        boolean first = true;
+
+        if (!delete.where().isEmpty()) {
+            sql.append(" WHERE ");
+
+            first = true;
+
+            for (Condition condition : delete.where()) {
                 if (first) {
                     first = false;
                 } else {
@@ -463,9 +503,9 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     /**
      * Execute the given SQL query with specified columns, conditions, and table, and returns the result as a list of rows.
      *
-     * @param sql        the SQL query to be executed
-     * @param conditions the list of conditions to apply in the WHERE clause of the query
-     * @param table      the table from which data is queried
+     * @param sql                the SQL query to be executed
+     * @param conditions         the list of conditions to apply in the WHERE clause of the query
+     * @param table              the table from which data is queried
      * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
      * @return a list of {@code Row} objects representing the query results
      * @throws SQLException if an SQL error occurs while executing the query

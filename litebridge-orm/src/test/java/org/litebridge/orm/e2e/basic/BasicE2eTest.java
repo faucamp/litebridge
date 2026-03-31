@@ -2,7 +2,6 @@ package org.litebridge.orm.e2e.basic;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.tx.TransactionControl;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.basic.dto.Person;
@@ -259,5 +258,55 @@ class BasicE2eTest extends AbstractE2eTest {
 
         // Then
         assertEquals(personAccount, result);
+    }
+
+    @Test
+    @DisplayName("Delete DTOs, no transactions (autocommit)")
+    void delete_autoCommit() throws Exception {
+        // Register DTO-table mappings
+        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+
+        // Create DTOs and enable change tracking
+        final Person person1 = new Person();
+        person1.setName("Alice");
+        person1.setSurname("Smith");
+        person1.setAge(20);
+        person1.setEyeColour("blue");
+
+        final Person person2 = new Person();
+        person2.setName("Bob");
+        person2.setSurname("Jones");
+        person2.setAge(22);
+        person2.setEyeColour("brown");
+
+        final Person person3 = new Person();
+        person3.setName("Frank");
+        person3.setSurname("Davies");
+        person3.setAge(45);
+        person3.setEyeColour("brown");
+
+        final Person person4 = new Person();
+        person4.setName("John");
+        person4.setSurname("Doe");
+        person4.setAge(30);
+        person4.setEyeColour("brown");
+
+        litebridge.save(person1, person2, person3, person4);
+
+        // Delete DTO directly
+        assertNotNull(litebridge.select(Person.class).where("name").eq("Bob").oneOrNull());
+        litebridge.delete(person2);
+        assertNull(litebridge.select(Person.class).where("name").eq("Bob").oneOrNull());
+
+        // Delete DTO via query
+        assertNotNull(litebridge.select(Person.class).where("name").eq("Alice").oneOrNull());
+        litebridge.delete(Person.class).where("name").eq("Alice").execute();
+        assertNull(litebridge.select(Person.class).where("name").eq("Alice").oneOrNull());
+
+        // Delete all Person records
+        assertEquals(2, litebridge.select(Person.class).list().size());
+        litebridge.delete(Person.class).execute();
+        assertEquals(0, litebridge.select(Person.class).list().size());
     }
 }

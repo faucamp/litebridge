@@ -11,6 +11,7 @@ import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.ColumnValue;
+import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.RowValue;
@@ -154,6 +155,11 @@ public class PersistenceFacade {
         executeUpdateStatement(dto, null, statementBuilder);
     }
 
+    public void delete(final Object dto) throws SQLException {
+        final DeleteBuilder statementBuilder = createDeleteBuilder(dto, tableProvider.getTableOrThrow(dto.getClass()), new HashSet<>());
+        executeUpdateStatement(dto, null, statementBuilder);
+    }
+
     private InsertBuilder createInsertBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos) {
         final InsertBuilder insertBuilder = new InsertBuilder(table);
         prepareUpdateStatement(dto, table, insertBuilder, inProgressDtos);
@@ -164,6 +170,12 @@ public class PersistenceFacade {
         final UpdateBuilder updateBuilder = new UpdateBuilder(table);
         prepareUpdateStatement(dto, table, updateBuilder, inProgressDtos);
         return updateBuilder;
+    }
+
+    private DeleteBuilder createDeleteBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos) {
+        final DeleteBuilder deleteBuilder = new DeleteBuilder(table);
+        prepareDeleteStatement(dto, table, deleteBuilder, inProgressDtos);
+        return deleteBuilder;
     }
 
     private <DTO> @Nullable StatementChain prepareUpdateStatement(final DTO dto, final OrmTable table, final AbstractStatementBuilder<?> statementBuilder, final Set<Object> inProgressDtos) {
@@ -317,6 +329,28 @@ public class PersistenceFacade {
                 updateBuilder.where(condition);
             });
         }
+
+        return statementChain;
+    }
+
+    private <DTO> @Nullable StatementChain prepareDeleteStatement(final DTO dto, final OrmTable table, final DeleteBuilder deleteBuilder, final Set<Object> inProgressDtos) {
+        inProgressDtos.add(dto);
+        final StatementChain statementChain = deleteBuilder.statementChain();
+
+        table.getMetaData().primaryKey().forEach(columnMetaData -> {
+            final Column pkColumn = columnMetaData.toColumn();
+            final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
+            final Object pkValue = field.get(dto);
+            final Condition condition;
+
+            if (pkValue != null) {
+                condition = new Condition(pkColumn, Operator.EQ, pkValue);
+            } else {
+                condition = new Condition(pkColumn, Operator.IS_NULL);
+            }
+
+            deleteBuilder.where(condition);
+        });
 
         return statementChain;
     }
@@ -518,6 +552,8 @@ public class PersistenceFacade {
             dtoUpdateResult.setUpdateResult(databaseProvider.insert(insert, transactionManager));
         } else if (updateStatement instanceof Update update) {
             dtoUpdateResult.setUpdateResult(databaseProvider.update(update, transactionManager));
+        } else if (updateStatement instanceof Delete delete) {
+            dtoUpdateResult.setUpdateResult(databaseProvider.delete(delete, transactionManager));
         } else if (statementBuilder instanceof InsertBuilder) {
             dtoUpdateResult.setUpdateResult(new InsertResult(0));
         } else {
