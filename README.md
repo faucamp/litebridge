@@ -305,7 +305,7 @@ litebridge.select("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSO
 
 ## Documentation
 
-1. [Change Tracker](docs/change-tracker.md)
+[Litebridge documentation](docs/index.md)
 
 ## Project Structure
 

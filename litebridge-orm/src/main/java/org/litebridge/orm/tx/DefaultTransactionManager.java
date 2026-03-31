@@ -37,10 +37,7 @@ import java.util.List;
  * - {@link IllegalStateException} is thrown when a method requiring a transaction is invoked without an active transaction
  * - {@link TransactionException} is thrown for failures during transaction begin, commit, or rollback operations.
  * - {@link SQLException} is propagated when querying for a new connection or performing cleanup operations.
- *
- * @implNote This class relies on the auto-commit mode of the JDBC {@code Connection} to be disabled
- * during the transaction lifecycle and restored to its default state when a transaction concludes.
- */
+ **/
 public final class DefaultTransactionManager implements TransactionManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTransactionManager.class);

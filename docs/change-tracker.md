@@ -1,15 +1,16 @@
 # Change Tracker
 
+← [Home](index.md)
+
 ## Contents
 
 <!-- TOC -->
-* [Home](../README.md)
-* [Change Tracker](#change-tracker)
-    * [Usage](#usage)
-        * [Tracking all changes to a DTO](#tracking-all-changes-to-a-dto)
-        * [Tracking specific fields of a DTO](#tracking-specific-fields-of-a-dto)
-        * [Retrieving changed fields](#retrieving-changed-fields)
-        * [Snapshot behaviour](#snapshot-behaviour)
+* [Overview](#overview)
+* [Usage](#usage)
+    * [Tracking all changes to a DTO](#tracking-all-changes-to-a-dto)
+    * [Tracking specific fields of a DTO](#tracking-specific-fields-of-a-dto)
+    * [Retrieving changed fields](#retrieving-changed-fields)
+    * [Snapshot behaviour](#snapshot-behaviour)
 <!-- TOC -->
 
 
