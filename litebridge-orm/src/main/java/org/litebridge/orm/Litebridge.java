@@ -5,16 +5,21 @@ import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.tx.TransactionManager;
+import org.litebridge.orm.api.delete.DeleteQuery;
+import org.litebridge.orm.api.delete.DeleteTerminal;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.api.dto.DtoSelector;
+import org.litebridge.orm.api.dto.delete.DtoDeleteWhereClause;
 import org.litebridge.orm.api.dto.delete.DtoDeletor;
 import org.litebridge.orm.api.spec.TableMapping;
 import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.api.sql.SqlFromClause;
 import org.litebridge.orm.api.sql.SqlSelector;
 import org.litebridge.orm.api.sql.delete.SqlDeleteFromClause;
+import org.litebridge.orm.api.sql.delete.SqlDeletor;
 import org.litebridge.orm.api.tx.TransactionContext;
 import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.DtoEntityMapping;
@@ -38,6 +43,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * Primary entry point for Litebridge.
@@ -324,13 +330,21 @@ public class Litebridge {
         }
     }
 
-    public <DTO> DtoDeletor<DTO> delete(final Class<DTO> dtoClass) {
+    public <DTO> void delete(final Class<DTO> dtoClass, final Function<DtoDeleteWhereClause<DTO>, DeleteQuery> query) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        return new DtoDeletor<>(dtoClass, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider);
+        final DtoDeletor<DTO> dtoDtoDeletor = new DtoDeletor<>(dtoClass, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider);
+        final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(dtoDtoDeletor);
+        deleteTerminal.execute();
     }
 
-    public SqlDeleteFromClause delete() {
-        return new SqlDeleteFromClause(databaseProvider);
+    public <DTO> void delete(final Class<DTO> dtoClass) {
+        delete(dtoClass, dtoDeletor -> dtoDeletor);
+    }
+
+    public void delete(final String tableName, final Function<SqlDeletor, DeleteQuery> query) {
+        final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName, null), databaseProvider);
+        final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(sqlDeletor);
+        deleteTerminal.execute();
     }
 
     /**

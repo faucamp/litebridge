@@ -149,10 +149,7 @@ class SqlE2eTest extends AbstractE2eTest {
         assertEquals(2, litebridge.select().from("LB", "PERSON").list().size());
 
         // When
-        litebridge.delete()
-                .from("LB.PERSON")
-                .where("AGE").gt(20)
-                .execute();
+        litebridge.delete("LB.PERSON", p -> p.where("AGE").gt(20));
 
         // Then
         assertEquals(1, litebridge.select().from("LB", "PERSON").list().size());

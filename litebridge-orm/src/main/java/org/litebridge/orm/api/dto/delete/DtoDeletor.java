@@ -8,7 +8,7 @@ import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 
-public final class DtoDeletor<DTO> extends AbstractDeletor<DTO, DtoDeleteSpec> {
+public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implements DtoDeleteWhereClause<DTO> {
 
     public DtoDeletor(final Class<DTO> dtoClass,
                       final OrmTable dtoTable,
@@ -18,11 +18,13 @@ public final class DtoDeletor<DTO> extends AbstractDeletor<DTO, DtoDeleteSpec> {
         super(new DtoDeleteSpec(dtoClass, dtoTable), databaseProvider);
     }
 
+    @Override
     public DtoDeleteWhereConditionClause<DTO> where(final String field) {
         final Column column = deleteSpec.dtoTable().getColumnForFieldName(field).toColumn();
-        return new DtoDeleteWhereConditionClause<>(deleteSpec.newWhereCondition(column), new DtoDeleteWhereConditionClauseTerminal<>(this));
+        return new DtoDeleteWhereConditionClause<>(deleteSpec.newWhereCondition(column), new DtoDeleteWhereConditionClauseTerminalImpl<>(this));
     }
 
+    @Override
     public DtoDeleteWhereConditionClause<DTO> where(final FieldColumnSpec field) {
         return where(field.field().name());
     }

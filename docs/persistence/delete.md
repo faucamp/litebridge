@@ -39,25 +39,20 @@ litebridge.delete(person);
 
 Litebridge also provides a fluent API for deleting registered object types via a query.
 This is useful for deleting multiple objects that match certain criteria.
-To delete objects via a query, use the `delete()` method with a query object:
+To delete objects via a query, use the `delete()` method with a DTO class and optional query lambda:
 
 ```java
-litebridge.delete(Person .class)
-        .where("age").gt(20)
-        .execute();
+litebridge.delete(Person.class, p -> p.where("age").gt(20));
 ```
 
-The `execute()` call at the end signals the end of the chain, allowing Litebridge to delete the objects that match the
-built-up criteria.
+The use of a lambda for the query avoids the need for an explicit terminal "execute" call.
 
 ### SQL-level deletes
 
 Litebridge's fluent API allows for arbitrary SQL-level deletes:
 
 ```java
-litebridge.delete().from("LB.PERSON")
-        .where("AGE").gt(20)
-        .execute();
+litebridge.delete("LB.PERSON", p -> p.where("AGE").gt(20));
 ```
 
 For SQL-level deletes, no DTO registration is required.

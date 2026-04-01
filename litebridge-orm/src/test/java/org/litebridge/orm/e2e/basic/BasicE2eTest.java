@@ -301,12 +301,12 @@ class BasicE2eTest extends AbstractE2eTest {
 
         // Delete DTO via query
         assertNotNull(litebridge.select(Person.class).where("name").eq("Alice").oneOrNull());
-        litebridge.delete(Person.class).where("name").eq("Alice").execute();
+        litebridge.delete(Person.class, p -> p.where("name").eq("Alice").and("age").eq(20));
         assertNull(litebridge.select(Person.class).where("name").eq("Alice").oneOrNull());
 
         // Delete all Person records
         assertEquals(2, litebridge.select(Person.class).list().size());
-        litebridge.delete(Person.class).execute();
+        litebridge.delete(Person.class);
         assertEquals(0, litebridge.select(Person.class).list().size());
     }
 }

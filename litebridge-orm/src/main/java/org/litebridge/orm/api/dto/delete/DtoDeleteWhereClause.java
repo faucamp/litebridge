@@ -1,0 +1,11 @@
+package org.litebridge.orm.api.dto.delete;
+
+import org.litebridge.orm.api.delete.DeleteQuery;
+import org.litebridge.orm.api.spec.FieldColumnSpec;
+
+public sealed interface DtoDeleteWhereClause<DTO> extends DeleteQuery permits DtoDeletor {
+
+    DtoDeleteWhereConditionClause<DTO> where(final String field);
+
+    DtoDeleteWhereConditionClause<DTO> where(final FieldColumnSpec field);
+}

@@ -1,28 +1,14 @@
 package org.litebridge.orm.api.sql.delete;
 
 import org.litebridge.db.spi.Row;
-import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.api.delete.DeleteWhereConditionClauseTerminal;
 
-public class SqlDeleteWhereConditionClauseTerminal
+public sealed interface SqlDeleteWhereConditionClauseTerminal
 
-        implements DeleteWhereConditionClauseTerminal<Row,
+        extends DeleteWhereConditionClauseTerminal<Row,
         SqlDeleteWhereConditionClause,
-        SqlDeleteWhereConditionClauseTerminal> {
+        SqlDeleteWhereConditionClauseTerminal>
 
-    private final SqlDeletor delegate;
+        permits SqlDeleteWhereConditionClauseTerminalImpl {
 
-    public SqlDeleteWhereConditionClauseTerminal(final SqlDeletor delegate) {
-        this.delegate = delegate;
-    }
-
-    @Override
-    public UpdateResult execute() {
-        return delegate.execute();
-    }
-
-    @Override
-    public SqlDeleteWhereConditionClause and(final String column) {
-        return delegate.where(column);
-    }
 }
