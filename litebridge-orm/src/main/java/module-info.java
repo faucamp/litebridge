@@ -16,6 +16,7 @@ module litebridge.orm {
     exports org.litebridge.orm.api.delete;
     exports org.litebridge.orm.api.spec;
     exports org.litebridge.orm.api.sql;
+    exports org.litebridge.orm.api.sql.delete;
     exports org.litebridge.orm.api.tx;
     exports org.litebridge.orm.api.dto;
     exports org.litebridge.orm.api.dto.delete;

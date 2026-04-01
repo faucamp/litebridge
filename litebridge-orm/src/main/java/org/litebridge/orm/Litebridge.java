@@ -18,7 +18,7 @@ import org.litebridge.orm.api.spec.TableMapping;
 import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.api.sql.SqlFromClause;
 import org.litebridge.orm.api.sql.SqlSelector;
-import org.litebridge.orm.api.sql.delete.SqlDeleteFromClause;
+import org.litebridge.orm.api.sql.delete.SqlDeleteWhereClause;
 import org.litebridge.orm.api.sql.delete.SqlDeletor;
 import org.litebridge.orm.api.tx.TransactionContext;
 import org.litebridge.orm.persistence.AliasGenerator;
@@ -341,10 +341,14 @@ public class Litebridge {
         delete(dtoClass, dtoDeletor -> dtoDeletor);
     }
 
-    public void delete(final String tableName, final Function<SqlDeletor, DeleteQuery> query) {
+    public void delete(final String tableName, final Function<SqlDeleteWhereClause, DeleteQuery> query) {
         final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName, null), databaseProvider);
         final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(sqlDeletor);
         deleteTerminal.execute();
+    }
+
+    public void delete(final String tableName) {
+        delete(tableName, sqlDeletor -> sqlDeletor);
     }
 
     /**
