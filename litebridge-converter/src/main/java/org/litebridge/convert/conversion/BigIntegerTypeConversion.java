@@ -1,6 +1,7 @@
 package org.litebridge.convert.conversion;
 
 import com.toddfast.util.convert.TypeConverter;
+import org.jspecify.annotations.Nullable;
 
 import java.math.BigInteger;
 
@@ -18,7 +19,7 @@ public class BigIntegerTypeConversion implements TypeConverter.Conversion<BigInt
     }
 
     @Override
-    public BigInteger convert(final Object value) {
+    public @Nullable BigInteger convert(final @Nullable Object value) {
         if (value == null) {
             return null;
         }

@@ -311,8 +311,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         if (!delete.where().isEmpty()) {
             sql.append(" WHERE ");
 
-            first = true;
-
             for (Condition condition : delete.where()) {
                 if (first) {
                     first = false;
@@ -645,7 +643,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     @SuppressWarnings("SqlSourceToSinkFlow")
     protected PreparedStatement prepareStatement(final PreparedSql preparedSql, final boolean returnGeneratedKeys, final ConnectionProvider connectionProvider) throws SQLException {
         if (LOGGER.isTraceEnabled() && !CollectionUtils.isEmpty(preparedSql.bindValues)) {
-            LOGGER.trace("Generated SQL: {} with bind parameters: {}", preparedSql.sql(), preparedSql.bindValues.stream().map(BindValue::value).toList());
+            LOGGER.trace("Generated SQL: {} with bind parameters: {}", preparedSql.sql(), preparedSql.bindValues.stream()
+                    .filter(Objects::nonNull)
+                    .map(bindValue -> bindValue.value() != null ? bindValue.value() : "<null>")
+                    .toList());
         } else {
             LOGGER.debug("Generated SQL: {}", preparedSql.sql());
         }

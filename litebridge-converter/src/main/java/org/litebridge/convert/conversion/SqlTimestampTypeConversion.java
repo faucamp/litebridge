@@ -1,5 +1,6 @@
 package org.litebridge.convert.conversion;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.TimeUtils;
 
 import java.sql.Timestamp;
@@ -12,7 +13,7 @@ import java.util.Objects;
 public class SqlTimestampTypeConversion extends com.toddfast.util.convert.conversion.SqlTimestampTypeConversion {
 
     @Override
-    public Timestamp convert(final Object value) {
+    public @Nullable Timestamp convert(final @Nullable Object value) {
         if (value == null) {
             return null;
         }

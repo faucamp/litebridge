@@ -54,6 +54,7 @@ public final class DefaultTransactionManager implements TransactionManager {
     }
 
     @Override
+    @SuppressWarnings("MagicConstant")
     public void begin(final boolean readOnly, final Isolation isolation) {
         final TransactionState state = holder.get();
 
