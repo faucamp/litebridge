@@ -99,7 +99,7 @@ They throw an `IllegalStateException` if multiple rows are returned from the dat
 - `oneOrThrow()` throws a `NoSuchElementException` if no rows were found
 - `oneOrThrow(Supplier<Throwable>)` allows a custom exception to be thrown if no rows were found
 
-#### All results/iter
+#### All results
 
 The remaining terminals provide various ways to iterate/retrieve all results from a query:
 
