@@ -35,8 +35,8 @@ public final class SqlFromClause implements FromClause<Row,
     }
 
     @Override
-    public SqlFromClauseTerminal from(final String schema, final String table) {
-        final Table spiTable = tableRegistry.getOrCreateSpiTable(schema, table);
+    public SqlFromClauseTerminal from(final String table) {
+        final Table spiTable = tableRegistry.getOrCreateSpiTable(table);
         selectSpec.setTable(spiTable);
         selectSpec.setColumns(Arrays.stream(columns)
                 .map(aliased -> {

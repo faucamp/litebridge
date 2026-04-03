@@ -26,18 +26,6 @@ public interface FromClause<DTO,
         OBC extends OrderByClause<DTO, OBC, OBCC>,
         OBCC extends OrderByClauseChain<DTO, OBC, OBCC>> {
 
-    /**
-     * Specifies the source table and schema for the SQL query, setting the base
-     * table and columns used in the query construction.
-     * <p>
-     * If the table is not already registered, it is created and associated with the given schema and
-     * table name.
-     *
-     * @param schema the name of the database schema
-     * @param table  the name of the table within the specified schema
-     * @return an instance of {@code SqlFromClauseTerminal} to allow further query configuration
-     */
-    FCT from(final String schema, final String table);
 
     /**
      * Specifies the source table and schema for the SQL query, setting the base
@@ -49,7 +37,5 @@ public interface FromClause<DTO,
      * @param table the name of the table within the specified schema
      * @return an instance of {@code SqlFromClauseTerminal} to allow further query configuration
      */
-    default FCT from(final String table) {
-        return from("", table);
-    }
+    FCT from(final String table);
 }

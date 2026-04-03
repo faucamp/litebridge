@@ -3,7 +3,7 @@ package org.litebridge.orm.api.update.model;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.orm.api.select.model.ConditionSpec;
@@ -18,17 +18,17 @@ import java.util.List;
 public class UpdateSpec {
 
     @Nullable
-    protected TableMetaData tableMetaData;
+    protected Table table;
     protected final List<ColumnValue> columnValues = new ArrayList<>();
     @Nullable
     protected List<ConditionSpec> whereConditions;
 
-    public TableMetaData getTableMetaData() {
-        return ObjectUtils.requireNonNull(tableMetaData, () -> new IllegalStateException("DeleteSpec.table not set"));
+    public Table getTable() {
+        return ObjectUtils.requireNonNull(table, () -> new IllegalStateException("DeleteSpec.table not set"));
     }
 
-    public void setTableMetaData(final TableMetaData tableMetaData) {
-        this.tableMetaData = tableMetaData;
+    public void setTable(final Table table) {
+        this.table = table;
     }
 
     public @Nullable List<ConditionSpec> getWhereConditions() {
@@ -55,9 +55,9 @@ public class UpdateSpec {
     }
 
     public Update toUpdate() {
-        ObjectUtils.requireNonNull(tableMetaData, () -> new IllegalStateException("Table not specified"));
+        ObjectUtils.requireNonNull(table, () -> new IllegalStateException("Table not specified"));
 
-        return new Update(tableMetaData.toTable(),
+        return new Update(table,
                 columnValues,
                 whereConditions != null ? whereConditions.stream()
                         .map(ConditionSpec::toCondition)

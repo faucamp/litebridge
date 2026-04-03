@@ -33,7 +33,7 @@ class SqlE2eTest extends AbstractE2eTest {
         // When
         LOGGER.info("Selecting all records");
         final List<Row> result =
-                litebridge.select().from("LB", "PERSON")
+                litebridge.select().from("LB.PERSON")
                         .orderBy("PERSON_ID").asc()
                         .list();
 
@@ -64,7 +64,7 @@ class SqlE2eTest extends AbstractE2eTest {
         // When
         LOGGER.info("Selecting specific columns and filtering records using a query");
         final List<Row> result =
-                litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
+                litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
                         .where("AGE").gt(18)
                         .and("AGE").lt(25)
                         .list();
@@ -82,12 +82,12 @@ class SqlE2eTest extends AbstractE2eTest {
     void selectMapToDto() throws Exception {
         // Given
         insertTestPersonRecords();
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
 
         // When
         LOGGER.info("Selecting specific columns and filtering records using a query");
         final List<Person> result =
-                litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
+                litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
                         .where("AGE").gt(18)
                         .and("AGE").lt(25)
                         .orderBy("PERSON_ID").asc()
@@ -120,7 +120,7 @@ class SqlE2eTest extends AbstractE2eTest {
                                 c("PERSON", "AGE"),
                                 c("ACCOUNT", "ACCOUNT_ID"),
                                 c("ACCOUNT", "ACCOUNT_NAME"))
-                        .from("LB", "PERSON")
+                        .from("LB.PERSON")
                         .join("LB", "ACCOUNT").using("PERSON_ID")
                         .list();
 
@@ -147,13 +147,13 @@ class SqlE2eTest extends AbstractE2eTest {
     void delete() throws Exception {
         // Given
         insertTestPersonRecords();
-        assertEquals(2, litebridge.select().from("LB", "PERSON").list().size());
+        assertEquals(2, litebridge.select().from("LB.PERSON").list().size());
 
         // When
         litebridge.delete("LB.PERSON", p -> p.where("AGE").gt(20));
 
         // Then
-        assertEquals(1, litebridge.select().from("LB", "PERSON").list().size());
+        assertEquals(1, litebridge.select().from("LB.PERSON").list().size());
     }
 
     @Test
@@ -161,14 +161,14 @@ class SqlE2eTest extends AbstractE2eTest {
     void update() throws Exception {
         // Given
         insertTestPersonRecords();
-        assumeTrue(litebridge.select().from("LB", "PERSON").where("AGE").lt(50).list().size() == 2);
+        assumeTrue(litebridge.select().from("LB.PERSON").where("AGE").lt(50).list().size() == 2);
 
         // When
         litebridge.update("LB.PERSON", p -> p.set("AGE").to(50)
                 .where("FIRST_NAME").eq("Bob"));
 
         // Then
-        assertEquals(1, litebridge.select().from("LB", "PERSON").where("AGE").lt(50).list().size());
+        assertEquals(1, litebridge.select().from("LB.PERSON").where("AGE").lt(50).list().size());
     }
 
     private void insertTestPersonRecords() throws SQLException {

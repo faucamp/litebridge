@@ -267,8 +267,8 @@ public class Litebridge {
     }
 
     public void update(final String tableName, final Function<SqlUpdateStart, UpdateQuery> query) {
-        final TableMetaData tableMetaData = Objects.requireNonNull(tableRegistry.getTable(tableName)).getMetaData();
-        final SqlUpdater sqlUpdater = new SqlUpdater(tableMetaData, databaseProvider);
+        final Table table = tableRegistry.getOrCreateSpiTable(tableName);
+        final SqlUpdater sqlUpdater = new SqlUpdater(table, databaseProvider);
         final UpdateTerminal updateTerminal = (UpdateTerminal) query.apply(sqlUpdater);
         updateTerminal.execute();
     }

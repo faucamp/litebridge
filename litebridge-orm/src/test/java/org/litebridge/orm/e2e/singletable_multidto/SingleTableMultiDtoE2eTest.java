@@ -21,8 +21,8 @@ class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
     @Test
     @DisplayName("Nested DTOs mapped to a single table")
     void nestedDtos_singleTable() throws Exception {
-        assumeTrue(litebridge.select().from("LB", "PERSON").list().isEmpty());
-        assumeTrue(litebridge.select().from("LB", "ACCOUNT").list().isEmpty());
+        assumeTrue(litebridge.select().from("LB.PERSON").list().isEmpty());
+        assumeTrue(litebridge.select().from("LB.ACCOUNT").list().isEmpty());
 
         // Register DTO-table mapping
         litebridge.register(SingleTableNestedParent.class, t("LB", "NESTED_DTO", DtoTableMap.SingeTableNestedDto));

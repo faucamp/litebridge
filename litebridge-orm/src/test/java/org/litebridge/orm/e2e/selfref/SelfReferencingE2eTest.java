@@ -22,7 +22,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
     @DisplayName("Single self-referencing DTO mapped to a single table, cascading save")
     void selfReferencingDto_cascadeSave() throws Exception {
         // Register DTO-table mappings
-        litebridge.register(SelfReferencingDto.class, t("LB", "SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
+        litebridge.register(SelfReferencingDto.class, t("LB.SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
 
         // Create nested DTOs
         final SelfReferencingDto dto1 = new SelfReferencingDto();
@@ -43,7 +43,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
         litebridge.save(dto3);
 
         // Then
-        litebridge.select().from("LB", "SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
+        litebridge.select().from("LB.SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
         final List<SelfReferencingDto> result = litebridge.select(SelfReferencingDto.class)
                 .orderBy("id").asc()
                 .list();
@@ -65,10 +65,10 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
     @Test
     @DisplayName("Single self-referencing DTO mapped to a single table, save all individual DTOs in one call")
     void selfReferencingDto_saveAll() throws Exception {
-        assumeTrue(litebridge.select().from("LB", "PERSON").stream().findAny().isEmpty());
+        assumeTrue(litebridge.select().from("LB.PERSON").stream().findAny().isEmpty());
 
         // Register DTO-table mappings
-        litebridge.register(SelfReferencingDto.class, t("LB", "SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
+        litebridge.register(SelfReferencingDto.class, t("LB.SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
 
         // Create nested DTOs
         final SelfReferencingDto dto1 = new SelfReferencingDto();
@@ -89,7 +89,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
         litebridge.save(dto1, dto2, dto3);
 
         // Then
-        litebridge.select().from("LB", "SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
+        litebridge.select().from("LB.SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
         final List<SelfReferencingDto> result = litebridge.select(SelfReferencingDto.class)
                 .orderBy("id").asc()
                 .list();
@@ -112,7 +112,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
     @DisplayName("Single self-referencing DTO mapped to a single table, save each DTO individually")
     void selfReferencingDto_saveIndividually() throws Exception {
         // Register DTO-table mappings
-        litebridge.register(SelfReferencingDto.class, t("LB", "SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
+        litebridge.register(SelfReferencingDto.class, t("LB.SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
 
         // Create nested DTOs
         final SelfReferencingDto dto1 = new SelfReferencingDto();
@@ -135,7 +135,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
         litebridge.save(dto3);
 
         // Then
-        litebridge.select().from("LB", "SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
+        litebridge.select().from("LB.SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
         final List<SelfReferencingDto> result = litebridge.select(SelfReferencingDto.class)
                 .join(SelfReferencingDto.class).on("parent")
                 .orderBy("id").asc()

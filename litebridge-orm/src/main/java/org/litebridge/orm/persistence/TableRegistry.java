@@ -75,15 +75,20 @@ public final class TableRegistry {
                         tableMap.values().stream());
     }
 
-    public org.litebridge.db.spi.Table getOrCreateSpiTable(final String schema, final String table) {
+    public Table getOrCreateSpiTable(final String table) {
+        final String[] catalogSchemaTable = StringUtils.splitArray(table, '.', 3, true);
+        return getOrCreateSpiTable(catalogSchemaTable[0], catalogSchemaTable[1], catalogSchemaTable[2]);
+    }
+
+    private Table getOrCreateSpiTable(final String catalog, final String schema, final String table) {
         // If the table has been registered for DTO mapping, use the corresponding Table object, else use the table name directly
         final org.litebridge.db.spi.Table spiTable;
         final OrmTable ormTable = getTable(schema, table);
 
         if (ormTable != null) {
-            spiTable = new Table(ormTable.getMetaData().catalog(), ormTable.getMetaData().schema(), ormTable.getMetaData().name());
+            spiTable = ormTable.getMetaData().toTable();
         } else {
-            spiTable = new org.litebridge.db.spi.Table("", schema, table);
+            spiTable = new Table(catalog, schema, table);
         }
 
         return spiTable;

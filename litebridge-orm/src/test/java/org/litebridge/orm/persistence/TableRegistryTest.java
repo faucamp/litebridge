@@ -193,7 +193,7 @@ class TableRegistryTest {
         tableRegistry.addTable(TestDto.class, ormTable(TestDto.class, "public", "test_table"));
 
         // When
-        final Table result = tableRegistry.getOrCreateSpiTable("public", "test_table");
+        final Table result = tableRegistry.getOrCreateSpiTable("public.test_table");
 
         // Then
         assertEquals("", result.catalog());
@@ -207,7 +207,7 @@ class TableRegistryTest {
         final TableRegistry tableRegistry = new TableRegistry();
 
         // When
-        final Table result = tableRegistry.getOrCreateSpiTable("public", "test_table");
+        final Table result = tableRegistry.getOrCreateSpiTable("public.test_table");
 
         // Then
         assertEquals("", result.catalog());

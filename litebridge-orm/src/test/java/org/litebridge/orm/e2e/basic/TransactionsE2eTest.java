@@ -29,7 +29,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction commit: manual control")
     void transaction_commit_manual() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
 
         final Person person = new Person();
         person.setName("Alice");
@@ -43,7 +43,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         litebridge.transaction().commit();
 
         // Then
-        final int recordCount = litebridge.select("PERSON_ID").from("LB", "PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
         assertEquals(1, recordCount, "Should have exactly one record in the database");
         assertNotNull(person.getId(), "Person ID should be set after transaction commit");
     }
@@ -52,7 +52,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction commit: try-with-resources")
     void transaction_commit_tryWithResources() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
 
         final Person person = new Person();
         person.setName("Alice");
@@ -67,7 +67,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         }
 
         // Then
-        final int recordCount = litebridge.select("PERSON_ID").from("LB", "PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
         assertEquals(1, recordCount, "Should have exactly one record in the database");
         assertNotNull(person.getId(), "Person ID should be set after transaction commit");
     }
@@ -76,7 +76,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction commit: lambda")
     void transaction_commit_lambda() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
 
         final Person person = new Person();
         person.setName("Alice");
@@ -88,7 +88,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         litebridge.transaction().execute(() -> litebridge.save(person));
 
         // Then
-        final int recordCount = litebridge.select("PERSON_ID").from("LB", "PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
         assertEquals(1, recordCount, "Should have exactly one record in the database");
         assertNotNull(person.getId(), "Person ID should be set after transaction commit");
     }
@@ -97,7 +97,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction rollback on exception: manual control")
     void transaction_rollback_manual() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
 
         final Person person = new Person();
         person.setSurname("NoFirstName");
@@ -117,7 +117,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
 
         // Then
         assertTrue(exceptionThrown, "Exception should be thrown");
-        final int recordCount = litebridge.select("PERSON_ID").from("LB", "PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
         assertEquals(0, recordCount, "Should have no records in the database");
         assertNull(person.getId(), "Person ID should not be set after transaction rollback");
     }
@@ -126,7 +126,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction rollback on exception: try-with-resources")
     void transaction_rollback_tryWithResources() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
 
         final Person person = new Person();
         person.setSurname("NoFirstName");
@@ -142,7 +142,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
 
         // Then
         assertTrue(exceptionThrown, "Exception should be thrown");
-        final int recordCount = litebridge.select("PERSON_ID").from("LB", "PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
         assertEquals(0, recordCount, "Should have no records in the database");
         assertNull(person.getId(), "Person ID should not be set after transaction rollback");
     }
@@ -151,7 +151,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction explicit rollback: try-with-resources")
     void transaction_explicitRollback_tryWithResources() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
 
         final Person person = new Person();
         person.setName("Alice");
@@ -170,7 +170,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         }
 
         // Then
-        final int recordCount = litebridge.select("PERSON_ID").from("LB", "PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
         assertEquals(0, recordCount, "Should have no records in the database");
         assertTrue(personIdSetDuringTransaction, "Person ID should be set after save() while still in transaction");
         assertNull(person.getId(), "Person ID should not be set after transaction rollback");
@@ -180,8 +180,8 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction explicit rollback: rollback DTO collections")
     void transaction_explicitRollback_oneToMany() throws Exception {
         // Register DTO-table mappings
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
-        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB.ACCOUNT", DtoTableMap.Account));
 
         // Create DTOs and enable change tracking
         final Person person = litebridge.track(new Person());
@@ -210,9 +210,9 @@ class TransactionsE2eTest extends AbstractE2eTest {
         }
 
         // Then
-        final int personCount = litebridge.select("PERSON_ID").from("LB", "PERSON").list().size();
+        final int personCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
         assertEquals(0, personCount, "Should have no PERSON records in the database");
-        final int accountCount = litebridge.select("ACCOUNT_ID").from("LB", "ACCOUNT").list().size();
+        final int accountCount = litebridge.select("ACCOUNT_ID").from("LB.ACCOUNT").list().size();
         assertEquals(0, accountCount, "Should have no ACCOUNT records in the database");
         assertNull(person.getId(), "Person ID should not be set after rollback");
         assertNull(account.getId(), "Account ID should not be set after rollback");
@@ -223,7 +223,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction rollback on exception: lambda")
     void transaction_rollback_lambda() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
 
         final Person person = new Person();
         person.setSurname("NoFirstName");
@@ -239,7 +239,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
 
         // Then
         assertTrue(exceptionThrown, "Exception should be thrown");
-        final int recordCount = litebridge.select("PERSON_ID").from("LB", "PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
         assertEquals(0, recordCount, "Should have no records in the database");
         assertNull(person.getId(), "Person ID should not be set after transaction rollback");
     }

@@ -24,21 +24,21 @@ public class SqlExample extends AbstractExample {
 
         LOGGER.info("[EXAMPLE] Retrieve all persons");
         final List<Row> personRows =
-                litebridge.select().from("LB", "PERSON")
+                litebridge.select().from("LB.PERSON")
                         .orderBy("PERSON_ID").asc()
                         .list();
 
         personRows.forEach(row -> LOGGER.info("Row data for PERSON record: {}", row));
 
         LOGGER.info("[EXAMPLE] Retrieve persons using a WHERE clause");
-        litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
+        litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
                 .where("AGE").gt(18)
                 .and("AGE").lt(25)
                 .stream()
                 .forEach(record -> LOGGER.info("SQL result: Selected data for PERSON record: {}", record));
 
         LOGGER.info("[EXAMPLE] Retrieve persons using SQL and map results to a DTO");
-        litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
+        litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
                 .where("AGE").gt(18)
                 .and("AGE").lt(25)
                 .orderBy("PERSON_ID").asc()
@@ -53,7 +53,7 @@ public class SqlExample extends AbstractExample {
                         c("PERSON", "AGE"),
                         c("ACCOUNT", "ACCOUNT_ID"),
                         c("ACCOUNT", "ACCOUNT_NAME"))
-                .from("LB", "PERSON")
+                .from("LB.PERSON")
                 .join("LB", "ACCOUNT").using("PERSON_ID")
                 .stream()
                 .forEach(p -> LOGGER.info("Joined result: {}", p));
