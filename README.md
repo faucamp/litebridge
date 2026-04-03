@@ -367,5 +367,8 @@ Internal utilities. Litebridge implements internal versions of common patterns t
 
 ### Documentaion and examples
 
+#### `docs`
+Litebridge documentation.
+
 #### `example`
 Examples demonstrating how to use Litebridge.
