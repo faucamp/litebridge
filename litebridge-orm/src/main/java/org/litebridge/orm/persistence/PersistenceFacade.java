@@ -217,13 +217,13 @@ public class PersistenceFacade {
                 continue;
             }
 
-            final ColumnMetaData column = (ColumnMetaData) entry.getValue();
+            final ColumnMetaData columnMetaData = (ColumnMetaData) entry.getValue();
             final ChangedField changedField = changedFields.getOrNull(fieldAccessor.name());
             final Object value;
             final boolean basicType;
 
             if (changedField == null) {
-                if (isInsert && (column.isAutoIncrement() || column.getSequence() != null)) {
+                if (isInsert && (columnMetaData.isAutoIncrement() || columnMetaData.getSequence() != null)) {
                     basicType = true;
                     value = null;
                 } else {
@@ -236,7 +236,7 @@ public class PersistenceFacade {
             }
 
             if (basicType) {
-                columnValues.add(new ColumnValue(column, value));
+                columnValues.add(new ColumnValue(columnMetaData.toColumn(), value));
             } else {
                 // Dealing with an embedded DTO - add the context to the table provider
                 tableProvider.pushContext(table.getContextTableRegistry());
@@ -263,14 +263,14 @@ public class PersistenceFacade {
                                             && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
                                         // TODO: composite PK support
                                         final Object pkValue = insertResult.generatedKeys().getFirst();
-                                        columnValues.add(new ColumnValue(column, pkValue));
+                                        columnValues.add(new ColumnValue(columnMetaData.toColumn(), pkValue));
                                         updateDtoPrimaryKey(value, pkValue);
                                     }
                                 });
                                 statementChain.addDependency(value, dependencyPipe);
                             } else {
                                 // PK already set - set the PK value on the current DTO and ensure the embedded DTO is persisted
-                                columnValues.add(new ColumnValue(column, embeddedDtoPkValue));
+                                columnValues.add(new ColumnValue(columnMetaData.toColumn(), embeddedDtoPkValue));
                                 statementChain.addDependency(value, new PipedStatement(dependencyStatementBuilder, value));
                             }
                         } else {
@@ -282,14 +282,14 @@ public class PersistenceFacade {
                                             && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
                                         // TODO: composite PK support
                                         final Object pkValue = insertResult.generatedKeys().getFirst();
-                                        columnValues.add(new ColumnValue(column, pkValue));
+                                        columnValues.add(new ColumnValue(columnMetaData.toColumn(), pkValue));
                                         updateDtoPrimaryKey(value, pkValue);
                                     }
                                 });
                                 statementChain.addDependency(value, dependencyPipe);
                             } else {
                                 // PK already set - set the PK value on the current DTO and ensure the embedded DTO is persisted
-                                columnValues.add(new ColumnValue(column, embeddedDtoPkValue));
+                                columnValues.add(new ColumnValue(columnMetaData.toColumn(), embeddedDtoPkValue));
                                 statementChain.addDependency(value, new PipedStatement(new NoOpStatementBuilder(), value));
                             }
 
@@ -303,7 +303,7 @@ public class PersistenceFacade {
                     // TODO: composite PK support
                     final FieldAccessor field = nestedDtoTable.getFieldForColumnName(embeddedDtoPk.get(0).name());
                     final Object pkValue = field.get(value);
-                    columnValues.add(new ColumnValue(column, pkValue));
+                    columnValues.add(new ColumnValue(columnMetaData.toColumn(), pkValue));
                 }
             }
         }
@@ -377,7 +377,7 @@ public class PersistenceFacade {
                                 // TODO: composite PK support
                                 final Object pkValue = insertResult.generatedKeys().getFirst();
                                 updateDtoPrimaryKey(dto, pkValue);
-                                final ColumnMetaData column = collectionDtoTable.getColumnForFieldName(mappedOneToMany.mappedByField().name());
+                                final Column column = collectionDtoTable.getColumnForFieldName(mappedOneToMany.mappedByField().name()).toColumn();
                                 columnValues.add(new ColumnValue(column, pkValue));
                             }
                         }));
@@ -459,7 +459,7 @@ public class PersistenceFacade {
         // TODO: composite PK support
         final ColumnMetaData pkColumn = embeddedDtoPk.get(0);
         final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(pkColumn.name());
-        return List.of(new ColumnValue(pkColumn, field.get(dto)));
+        return List.of(new ColumnValue(pkColumn.toColumn(), field.get(dto)));
     }
 
     @SuppressWarnings("unchecked")

@@ -2,7 +2,6 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
-import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Update;
@@ -38,6 +37,6 @@ final class UpdateBuilder extends AbstractStatementBuilder<Update> {
     @Override
     public Update build() {
         CollectionUtils.requireNonEmpty(columnValues, () -> new IllegalArgumentException("No column values specified for UPDATE"));
-        return new Update(table.getMetaData(), columnValues, conditions);
+        return new Update(ormTable.getMetaData().toTable(), columnValues, conditions);
     }
 }

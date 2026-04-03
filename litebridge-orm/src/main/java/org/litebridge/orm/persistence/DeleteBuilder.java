@@ -22,6 +22,6 @@ public final class DeleteBuilder extends AbstractStatementBuilder<Delete> {
 
     @Override
     public Delete build() {
-        return new Delete(new Table(table.getMetaData().catalog(), table.getMetaData().schema(), table.getMetaData().name()), conditions);
+        return new Delete(new Table(ormTable.getMetaData().catalog(), ormTable.getMetaData().schema(), ormTable.getMetaData().name()), conditions);
     }
 }

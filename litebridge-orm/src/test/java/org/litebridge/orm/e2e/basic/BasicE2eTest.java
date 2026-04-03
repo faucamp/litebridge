@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.litebridge.orm.api.spec.FieldMapping.f;
 import static org.litebridge.orm.api.spec.TableSpec.t;
 
@@ -308,5 +309,63 @@ class BasicE2eTest extends AbstractE2eTest {
         assertEquals(2, litebridge.select(Person.class).list().size());
         litebridge.delete(Person.class);
         assertEquals(0, litebridge.select(Person.class).list().size());
+    }
+
+    @Test
+    @DisplayName("Update DTOs, no transactions (autocommit)")
+    void update() throws Exception {
+        // Given
+        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+
+        final Person person1 = new Person();
+        person1.setName("Alice");
+        person1.setSurname("Smith");
+        person1.setAge(20);
+        person1.setEyeColour("blue");
+
+        final Account account = new Account();
+        account.setName("Account 1");
+        account.setBalance(BigInteger.valueOf(1000));
+        account.setOwner(person1);
+        person1.setAccounts(List.of(account));
+
+        final Person person2 = new Person();
+        person2.setName("Bob");
+        person2.setSurname("Jones");
+        person2.setAge(22);
+        person2.setEyeColour("brown");
+
+        litebridge.save(person1, person2);
+        assumeTrue(litebridge.select(Person.class).list().size() == 2);
+        assumeTrue(litebridge.select(Person.class).where("name").eq("Jane").oneOrNull() == null);
+
+        // Update the person's first name directly
+        person1.setName("Jane");
+        litebridge.update(person1);
+        assertNotNull(litebridge.select(Person.class).where("name").eq("Jane").oneOrNull());
+
+        // Update multiple records for the Person DTO via a query
+        litebridge.update(Person.class, p -> p
+                .set("name").to("John")
+                .set("surname").to("Doe")
+                .set("age").to(18)
+                .where("age").gt(18));
+
+        assertTrue(litebridge.select(Person.class).stream().allMatch(p -> p.getName().equals("John") && p.getSurname().equals("Doe") && p.getAge() == 18));
+
+        // Adjust the age of all persons
+        litebridge.update(Person.class, p ->
+                p.set("age").increment()
+                        .where("surname").eq("Doe"));
+
+        assertTrue(litebridge.select(Person.class).stream().allMatch(p -> p.getAge() == 19));
+
+        // Update a specific record using the SQL API
+        litebridge.update("LB.PERSON", p ->
+                p.set("EYE_COLOUR").to("unknown")
+                        .where("EYE_COLOUR").eq("blue"));
+
+        assertEquals(1, litebridge.select(Person.class).stream().filter(p -> p.getEyeColour().equals("unknown")).count());
     }
 }

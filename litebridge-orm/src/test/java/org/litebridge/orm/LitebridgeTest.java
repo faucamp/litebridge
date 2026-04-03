@@ -128,7 +128,7 @@ class LitebridgeTest {
         verify(databaseProvider).insert(insertArgumentCaptor.capture(), any(ConnectionProvider.class));
 
         final Insert insert = insertArgumentCaptor.getValue();
-        assertEquals(tableMetaData, insert.table());
+        assertEquals(tableMetaData.toTable(), insert.table());
         assertEquals(2, insert.columns().size());
         assertEquals("MY_ID", insert.columns().getFirst().name());
         assertEquals("MY_VAR", insert.columns().getLast().name());
@@ -208,7 +208,7 @@ class LitebridgeTest {
         verify(databaseProvider).insert(insertArgumentCaptor.capture(), any(ConnectionProvider.class));
 
         final Insert insert = insertArgumentCaptor.getValue();
-        assertEquals(tableMetaData, insert.table());
+        assertEquals(tableMetaData.toTable(), insert.table());
         assertEquals(2, insert.columns().size());
         assertEquals("MY_ID", insert.columns().getFirst().name());
         assertEquals("MY_VAR", insert.columns().getLast().name());
@@ -257,7 +257,7 @@ class LitebridgeTest {
         verify(databaseProvider).update(updateArgumentCaptor.capture(), any(ConnectionProvider.class));
 
         final Update update = updateArgumentCaptor.getValue();
-        assertEquals(tableMetaData, update.table());
+        assertEquals(tableMetaData.toTable(), update.table());
         assertEquals(1, update.columnValues().size());
         assertEquals("MY_VAR", update.columnValues().getFirst().column().name());
         assertEquals("updatedValue", update.columnValues().getFirst().value());

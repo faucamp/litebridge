@@ -1,6 +1,7 @@
 package org.litebridge.db.spi.update;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -26,20 +27,20 @@ class InsertTest {
                         new ColumnMetaData(table, "NAME", true, Types.VARCHAR)
                 )
         );
-        final List<ColumnMetaData> columns = List.of(
-                tableMetaData.column("ID"),
-                tableMetaData.column("NAME")
+        final List<Column> columns = List.of(
+                tableMetaData.column("ID").toColumn(),
+                tableMetaData.column("NAME").toColumn()
         );
         final RowValue row = new RowValue(List.of(
-                new ColumnValue(tableMetaData.column("ID"), 1L),
-                new ColumnValue(tableMetaData.column("NAME"), "testName")
+                new ColumnValue(tableMetaData.column("ID").toColumn(), 1L),
+                new ColumnValue(tableMetaData.column("NAME").toColumn(), "testName")
         ));
 
         // When
-        final Insert result = new Insert(tableMetaData, columns, List.of(row), true);
+        final Insert result = new Insert(tableMetaData.toTable(), columns, List.of(row), true);
 
         // Then
-        assertEquals(tableMetaData, result.table());
+        assertEquals(table, result.table());
         assertEquals(columns, result.columns());
         assertEquals(List.of(row), result.rows());
         assertTrue(result.returnGeneratedKeys());
@@ -58,16 +59,16 @@ class InsertTest {
                 )
         );
         final RowValue row = new RowValue(List.of(
-                new ColumnValue(tableMetaData.column("ID"), 1L),
-                new ColumnValue(tableMetaData.column("NAME"), "testName")
+                new ColumnValue(tableMetaData.column("ID").toColumn(), 1L),
+                new ColumnValue(tableMetaData.column("NAME").toColumn(), "testName")
         ));
 
         // When
-        final Insert result = new Insert(tableMetaData, row, false);
+        final Insert result = new Insert(table, row, false);
 
         // Then
-        assertEquals(tableMetaData, result.table());
-        assertEquals(List.of(tableMetaData.column("ID"), tableMetaData.column("NAME")), result.columns());
+        assertEquals(table, result.table());
+        assertEquals(List.of(tableMetaData.column("ID").toColumn(), tableMetaData.column("NAME").toColumn()), result.columns());
         assertEquals(List.of(row), result.rows());
         assertEquals(false, result.returnGeneratedKeys());
     }
@@ -84,21 +85,23 @@ class InsertTest {
                         new ColumnMetaData(table, "NAME", true, Types.VARCHAR)
                 )
         );
+        final Column idColumn = tableMetaData.column("ID").toColumn();
+        final Column nameColumn = tableMetaData.column("NAME").toColumn();
         final RowValue row1 = new RowValue(List.of(
-                new ColumnValue(tableMetaData.column("ID"), 1L),
-                new ColumnValue(tableMetaData.column("NAME"), "testName1")
+                new ColumnValue(idColumn, 1L),
+                new ColumnValue(nameColumn, "testName1")
         ));
         final RowValue row2 = new RowValue(List.of(
-                new ColumnValue(tableMetaData.column("ID"), 2L),
-                new ColumnValue(tableMetaData.column("NAME"), "testName2")
+                new ColumnValue(idColumn, 2L),
+                new ColumnValue(nameColumn, "testName2")
         ));
 
         // When
-        final Insert result = new Insert(tableMetaData, List.of(row1, row2), true);
+        final Insert result = new Insert(tableMetaData.toTable(), List.of(row1, row2), true);
 
         // Then
-        assertEquals(tableMetaData, result.table());
-        assertEquals(List.of(tableMetaData.column("ID"), tableMetaData.column("NAME")), result.columns());
+        assertEquals(table, result.table());
+        assertEquals(List.of(tableMetaData.column("ID").toColumn(), tableMetaData.column("NAME").toColumn()), result.columns());
         assertEquals(List.of(row1, row2), result.rows());
         assertTrue(result.returnGeneratedKeys());
     }
@@ -118,7 +121,7 @@ class InsertTest {
 
         // When
         final IllegalArgumentException result = assertThrows(IllegalArgumentException.class,
-                () -> new Insert(tableMetaData, List.of(), false));
+                () -> new Insert(tableMetaData.toTable(), List.of(), false));
 
         // Then
         assertEquals("No rows to insert for table: TEST_TABLE", result.getMessage());

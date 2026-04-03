@@ -10,6 +10,7 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.math.MathOperation;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.Operator;
@@ -72,8 +73,9 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     @Override
     public InsertResult insert(final Insert insert, final ConnectionProvider connectionProvider) throws SQLException {
-        final PreparedSql preparedSql = prepareSql(insert);
-        return executeSqlInsert(preparedSql, insert.table(), insert.returnGeneratedKeys(), connectionProvider);
+        final PreparedSql preparedSql = prepareSql(insert, connectionProvider);
+        final TableMetaData tableMetaData = ensureTableMetaData(insert.table(), connectionProvider);
+        return executeSqlInsert(preparedSql, tableMetaData, insert.returnGeneratedKeys(), connectionProvider);
     }
 
     @Override
@@ -202,8 +204,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @param insert the {@link Insert} object containing the table metadata, columns, and rows for the SQL INSERT operation
      * @return a {@link AbstractDatabaseProvider.PreparedSql} object containing the generated SQL query string and the list of bind values
      */
-    protected PreparedSql prepareSql(final Insert insert) {
-        final List<String> columnNames = insert.columns().stream().map(ColumnMetaData::name).toList();
+    protected PreparedSql prepareSql(final Insert insert, final ConnectionProvider connectionProvider) throws SQLException {
+        final List<String> columnNames = insert.columns().stream().map(Column::name).toList();
 
         final StringBuilder sql = appendTable(new StringBuilder("INSERT INTO "), insert.table())
                 .append(" (")
@@ -215,7 +217,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         boolean first = true;
 
         for (RowValue row : insert.rows()) {
-            final PreparedRow preparedRow = prepareRow(row);
+            final PreparedRow preparedRow = prepareRow(row, connectionProvider);
             sql.append('(').append(String.join(", ", preparedRow.valueSpecifiers())).append(')');
             bindValues.addAll(preparedRow.bindValues());
 
@@ -256,10 +258,16 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 sql.append(", ");
             }
 
-            sql.append(quoteIdentifier(columnValue.column().name())).append(" = ?");
+            sql.append(quoteIdentifier(columnValue.column().name())).append(" = ");
+            final ColumnMetaData columnMetaData = ensuretColumnMetaData(columnValue.column(), connectionProvider);
 
-            final Object convertedValue = typeConverter.convert(columnValue.value(), columnValue.column().getDataType());
-            bindValues.add(new BindValue(convertedValue, columnValue.column().getDataType()));
+            if (columnValue.value() instanceof MathOperation mathOperation) {
+                sql.append(createMathOperation(columnMetaData, mathOperation));
+            } else {
+                sql.append('?');
+                final Object convertedValue = typeConverter.convert(columnValue.value(), columnMetaData.getDataType());
+                bindValues.add(new BindValue(convertedValue, columnMetaData.getDataType()));
+            }
         }
 
         if (!update.where().isEmpty()) {
@@ -286,6 +294,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
 
         return new PreparedSql(sql.toString(), bindValues);
+    }
+
+    protected String createMathOperation(final ColumnMetaData column, final MathOperation mathOperation) {
+        final Object convertedValue = typeConverter.convert(mathOperation.value(), column.getDataType());
+        return "%s %s %s".formatted(quoteIdentifier(column.name()), mathOperation.operator().symbol(), convertedValue);
     }
 
     protected PreparedSql prepareSql(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
@@ -695,12 +708,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @return a PreparedRow instance containing processed value specifiers and bind values
      * @throws IllegalArgumentException if a non-nullable column without an auto-increment or sequence value is attempted to be set to NULL
      */
-    protected PreparedRow prepareRow(final RowValue rowValue) {
+    protected PreparedRow prepareRow(final RowValue rowValue, final ConnectionProvider connectionProvider) throws SQLException {
         final List<String> valueSpecifiers = new ArrayList<>(rowValue.columns().size());
         final List<BindValue> bindValues = new ArrayList<>(rowValue.columns().size());
 
         for (final ColumnValue columnValue : rowValue.columns()) {
-            final ColumnMetaData column = columnValue.column();
+            final ColumnMetaData column = ensuretColumnMetaData(columnValue.column(), connectionProvider);
             final Object convertedValue = typeConverter.convert(columnValue.value(), column.getDataType());
 
             if (convertedValue == null) {
@@ -770,6 +783,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         } else {
             return identifier;
         }
+    }
+
+    protected ColumnMetaData ensuretColumnMetaData(final Column column, final ConnectionProvider connectionProvider) throws SQLException {
+        return ensureTableMetaData(column.table(), connectionProvider).column(column.name());
     }
 
     /**

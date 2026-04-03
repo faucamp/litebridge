@@ -1,5 +1,6 @@
 package org.litebridge.db.spi.update;
 
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.query.Condition;
 
@@ -20,6 +21,6 @@ import java.util.List;
  * @param columnValues The {@link ColumnValue} pairs a column with its new value, ensuring clear definition of updates.
  * @param where        The {@link Condition} objects define filter criteria that determine which rows of the table will be updated.
  */
-public record Update(TableMetaData table, List<ColumnValue> columnValues, List<Condition> where)
+public record Update(Table table, List<ColumnValue> columnValues, List<Condition> where)
         implements UpdateStatement {
 }

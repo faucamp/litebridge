@@ -14,6 +14,7 @@ import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.ManagedConnection;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.ColumnValue;
@@ -136,21 +137,21 @@ class AbstractDatabaseProviderTest {
     @Test
     void insert() throws Exception {
         // Given
-        final TableMetaData table = tableMetaDataImpl();
-        final ColumnMetaData column = table.column("TEST_COLUMN");
-        column.setSequence("TEST_SEQUENCE");
-        final ColumnValue columnValue1 = new ColumnValue(column, "testValue1");
-        final ColumnValue columnValue2 = new ColumnValue(column, null);
+        final TableMetaData tableMetaData = tableMetaDataImpl();
+        final ColumnMetaData columnMetaData = tableMetaData.column("TEST_COLUMN");
+        columnMetaData.setSequence("TEST_SEQUENCE");
+        final ColumnValue columnValue1 = new ColumnValue(columnMetaData.toColumn(), "testValue1");
+        final ColumnValue columnValue2 = new ColumnValue(columnMetaData.toColumn(), null);
         final RowValue rowValue1 = new RowValue(List.of(columnValue1));
         final RowValue rowValue2 = new RowValue(List.of(columnValue2));
 
-        final Insert insert = new Insert(table, List.of(column), List.of(rowValue1, rowValue2), true);
+        final Insert insert = new Insert(tableMetaData.toTable(), List.of(columnMetaData.toColumn()), List.of(rowValue1, rowValue2), true);
 
         when(typeConverter.convert("testValue1", Types.VARCHAR)).thenReturn("testValue1");
 
         final ResultSet resultSet = mock(ResultSet.class);
         when(resultSet.next()).thenReturn(true).thenReturn(false);
-        when(resultSet.getObject(table.primaryKey().get(0).name())).thenReturn("testValue");
+        when(resultSet.getObject(tableMetaData.primaryKey().get(0).name())).thenReturn("testValue");
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(preparedStatement.executeUpdate()).thenReturn(1);
@@ -173,10 +174,10 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData table = tableMetaDataImpl("");
         final ColumnMetaData column = table.column("TEST_COLUMN");
-        final ColumnValue columnValue = new ColumnValue(column, "testValue");
+        final ColumnValue columnValue = new ColumnValue(column.toColumn(), "testValue");
         final RowValue rowValue = new RowValue(List.of(columnValue));
 
-        final Insert insert = new Insert(table, rowValue, true);
+        final Insert insert = new Insert(table.toTable(), rowValue, true);
 
         when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
 
@@ -205,10 +206,10 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData table = tableMetaDataImpl();
         final ColumnMetaData column = table.column("TEST_COLUMN");
-        final ColumnValue columnValue = new ColumnValue(column, "testValue");
+        final ColumnValue columnValue = new ColumnValue(column.toColumn(), "testValue");
         final RowValue rowValue = new RowValue(List.of(columnValue));
 
-        final Insert insert = new Insert(table, List.of(rowValue), true);
+        final Insert insert = new Insert(table.toTable(), List.of(rowValue), true);
 
         when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
 
@@ -231,10 +232,10 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData table = tableMetaDataImpl();
         final ColumnMetaData column = table.column("TEST_COLUMN");
-        final ColumnValue columnValue = new ColumnValue(column, "testValue");
+        final ColumnValue columnValue = new ColumnValue(column.toColumn(), "testValue");
         final RowValue rowValue = new RowValue(List.of(columnValue));
 
-        final Insert insert = new Insert(table, List.of(column), List.of(rowValue), true);
+        final Insert insert = new Insert(table.toTable(), List.of(column.toColumn()), List.of(rowValue), true);
 
         when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
 
@@ -261,10 +262,10 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData table = tableMetaDataImpl();
         final ColumnMetaData column = table.column("TEST_COLUMN");
-        final ColumnValue columnValue = new ColumnValue(column, null);
+        final ColumnValue columnValue = new ColumnValue(column.toColumn(), null);
         final RowValue rowValue = new RowValue(List.of(columnValue));
 
-        final Insert insert = new Insert(table, List.of(column), List.of(rowValue), true);
+        final Insert insert = new Insert(table.toTable(), List.of(column.toColumn()), List.of(rowValue), true);
 
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> databaseProvider.insert(insert, transactionManager));
@@ -275,13 +276,13 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData table = tableMetaDataImpl();
         final ColumnMetaData column = table.column("TEST_COLUMN");
-        final ColumnValue columnValue1 = new ColumnValue(column, "testValue");
-        final ColumnValue columnValue2 = new ColumnValue(column, "testValue");
+        final ColumnValue columnValue1 = new ColumnValue(column.toColumn(), "testValue");
+        final ColumnValue columnValue2 = new ColumnValue(column.toColumn(), "testValue");
         final Condition condition1 = new Condition(column.toColumn(), Operator.EQ, "conditionValue");
         final Condition condition2 = new Condition(column.toColumn(), Operator.IS_NOT_NULL);
         final Condition condition3 = new Condition(column.toColumn(), Operator.IS_NULL);
 
-        final Update update = new Update(table, List.of(columnValue1, columnValue2), List.of(condition1, condition2, condition3));
+        final Update update = new Update(table.toTable(), List.of(columnValue1, columnValue2), List.of(condition1, condition2, condition3));
 
         when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
 
@@ -302,9 +303,9 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData table = tableMetaDataImpl("");
         final ColumnMetaData column = table.column("TEST_COLUMN");
-        final ColumnValue columnValue = new ColumnValue(column, "testValue");
+        final ColumnValue columnValue = new ColumnValue(column.toColumn(), "testValue");
 
-        final Update update = new Update(table, List.of(columnValue), Collections.emptyList());
+        final Update update = new Update(table.toTable(), List.of(columnValue), Collections.emptyList());
 
         when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
@@ -751,10 +752,10 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final ColumnMetaData nullableColumn = tableMetaData.column("TEST_PK");
-        final RowValue rowValue = new RowValue(List.of(new ColumnValue(nullableColumn, null)));
+        final RowValue rowValue = new RowValue(List.of(new ColumnValue(nullableColumn.toColumn(), null)));
 
         // When
-        final AbstractDatabaseProvider.PreparedRow preparedRow = databaseProvider.prepareRow(rowValue);
+        final AbstractDatabaseProvider.PreparedRow preparedRow = databaseProvider.prepareRow(rowValue, mock(ConnectionProvider.class));
 
         // Then
         assertNotNull(preparedRow);
@@ -768,10 +769,10 @@ class AbstractDatabaseProviderTest {
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final ColumnMetaData column = tableMetaData.column("TEST_COLUMN");
         column.setAutoIncrement(true);
-        final RowValue rowValue = new RowValue(List.of(new ColumnValue(column, null)));
+        final RowValue rowValue = new RowValue(List.of(new ColumnValue(column.toColumn(), null)));
 
         // When
-        final AbstractDatabaseProvider.PreparedRow preparedRow = databaseProvider.prepareRow(rowValue);
+        final AbstractDatabaseProvider.PreparedRow preparedRow = databaseProvider.prepareRow(rowValue, mock(ConnectionProvider.class));
 
         // Then
         assertNotNull(preparedRow);

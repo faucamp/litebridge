@@ -1,7 +1,6 @@
 package org.litebridge.orm.persistence;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -15,7 +14,9 @@ import java.sql.Types;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 class UpdateBuilderTest {
@@ -36,7 +37,7 @@ class UpdateBuilderTest {
     void setColumnValues() {
         // Given
         final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable());
-        final ColumnValue columnValue = new ColumnValue(column("test_table", "name", Types.VARCHAR), "test");
+        final ColumnValue columnValue = new ColumnValue(column("test_table", "name", Types.VARCHAR).toColumn(), "test");
 
         // When
         final UpdateBuilder result = updateBuilder.setColumnValues(List.of(columnValue));
@@ -50,7 +51,7 @@ class UpdateBuilderTest {
     void where() {
         // Given
         final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable());
-        final ColumnValue columnValue = new ColumnValue(column("test_table", "name", Types.VARCHAR), "test");
+        final ColumnValue columnValue = new ColumnValue(column("test_table", "name", Types.VARCHAR).toColumn(), "test");
         final Condition condition = mock(Condition.class);
         updateBuilder.setColumnValues(List.of(columnValue));
 
@@ -68,7 +69,7 @@ class UpdateBuilderTest {
         final OrmTable ormTable = ormTable();
         final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable);
 
-        final ColumnValue columnValue = new ColumnValue(column("test_table", "name", Types.VARCHAR), "test");
+        final ColumnValue columnValue = new ColumnValue(column("test_table", "name", Types.VARCHAR).toColumn(), "test");
         final Condition condition = mock(Condition.class);
 
         updateBuilder.setColumnValues(List.of(columnValue));
@@ -78,7 +79,7 @@ class UpdateBuilderTest {
         final Update result = updateBuilder.build();
 
         // Then
-        assertSame(ormTable.getMetaData(), result.table());
+        assertEquals(ormTable.getMetaData().toTable(), result.table());
         assertEquals(List.of(columnValue), result.columnValues());
         assertEquals(List.of(condition), result.where());
     }

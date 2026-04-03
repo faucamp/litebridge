@@ -6,6 +6,7 @@ import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.api.delete.DeleteQuery;
 import org.litebridge.orm.api.delete.DeleteTerminal;
@@ -14,13 +15,19 @@ import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.api.dto.DtoSelector;
 import org.litebridge.orm.api.dto.delete.DtoDeleteWhereClause;
 import org.litebridge.orm.api.dto.delete.DtoDeletor;
+import org.litebridge.orm.api.dto.update.DtoUpdateStart;
+import org.litebridge.orm.api.dto.update.DtoUpdater;
 import org.litebridge.orm.api.spec.TableMapping;
 import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.api.sql.SqlFromClause;
 import org.litebridge.orm.api.sql.SqlSelector;
 import org.litebridge.orm.api.sql.delete.SqlDeleteWhereClause;
 import org.litebridge.orm.api.sql.delete.SqlDeletor;
+import org.litebridge.orm.api.sql.update.SqlUpdateStart;
+import org.litebridge.orm.api.sql.update.SqlUpdater;
 import org.litebridge.orm.api.tx.TransactionContext;
+import org.litebridge.orm.api.update.UpdateQuery;
+import org.litebridge.orm.api.update.UpdateTerminal;
 import org.litebridge.orm.persistence.AliasGenerator;
 import org.litebridge.orm.persistence.DtoEntityMapping;
 import org.litebridge.orm.persistence.EntityDtoMapper;
@@ -250,6 +257,20 @@ public class Litebridge {
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to update DTO: " + dto, ex);
         }
+    }
+
+    public <DTO> void update(final Class<DTO> dtoClass, final Function<DtoUpdateStart<DTO>, UpdateQuery> update) {
+        final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
+        final DtoUpdater<DTO> dtoUpdater = new DtoUpdater<>(dtoClass, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider);
+        final UpdateTerminal updateTerminal = (UpdateTerminal) update.apply(dtoUpdater);
+        updateTerminal.execute();
+    }
+
+    public void update(final String tableName, final Function<SqlUpdateStart, UpdateQuery> query) {
+        final TableMetaData tableMetaData = Objects.requireNonNull(tableRegistry.getTable(tableName)).getMetaData();
+        final SqlUpdater sqlUpdater = new SqlUpdater(tableMetaData, databaseProvider);
+        final UpdateTerminal updateTerminal = (UpdateTerminal) query.apply(sqlUpdater);
+        updateTerminal.execute();
     }
 
     /**

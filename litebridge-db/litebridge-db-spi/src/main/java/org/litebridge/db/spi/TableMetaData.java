@@ -131,6 +131,10 @@ public final class TableMetaData {
         return columnMap.containsKey(columnName);
     }
 
+    public Table toTable() {
+        return new Table(catalog, schema, name);
+    }
+
     @Override
     public boolean equals(@Nullable Object obj) {
         if (obj == this) return true;

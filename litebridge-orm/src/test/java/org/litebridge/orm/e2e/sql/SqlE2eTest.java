@@ -16,6 +16,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.litebridge.db.spi.Column.c;
 import static org.litebridge.orm.api.spec.TableSpec.t;
 
@@ -153,6 +154,21 @@ class SqlE2eTest extends AbstractE2eTest {
 
         // Then
         assertEquals(1, litebridge.select().from("LB", "PERSON").list().size());
+    }
+
+    @Test
+    @DisplayName("Update records")
+    void update() throws Exception {
+        // Given
+        insertTestPersonRecords();
+        assumeTrue(litebridge.select().from("LB", "PERSON").where("AGE").lt(50).list().size() == 2);
+
+        // When
+        litebridge.update("LB.PERSON", p -> p.set("AGE").to(50)
+                .where("FIRST_NAME").eq("Bob"));
+
+        // Then
+        assertEquals(1, litebridge.select().from("LB", "PERSON").where("AGE").lt(50).list().size());
     }
 
     private void insertTestPersonRecords() throws SQLException {

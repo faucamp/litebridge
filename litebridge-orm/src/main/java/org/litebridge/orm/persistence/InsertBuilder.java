@@ -23,11 +23,11 @@ final class InsertBuilder extends AbstractStatementBuilder<Insert> {
 
     @Override
     public Insert build() {
-        return new Insert(table.getMetaData(), rows.stream().map(DtoRowValue::rowValue).toList(), returnGeneratedKeys());
+        return new Insert(ormTable.getMetaData().toTable(), rows.stream().map(DtoRowValue::rowValue).toList(), returnGeneratedKeys());
     }
 
     private boolean returnGeneratedKeys() {
-        final Set<ColumnMetaData> autoIncrementingPks = table.getMetaData().primaryKey().stream()
+        final Set<ColumnMetaData> autoIncrementingPks = ormTable.getMetaData().primaryKey().stream()
                 .filter(ColumnMetaData::isAutoIncrement)
                 .collect(Collectors.toSet());
 

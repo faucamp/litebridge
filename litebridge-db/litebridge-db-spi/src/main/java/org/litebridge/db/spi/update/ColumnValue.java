@@ -1,6 +1,7 @@
 package org.litebridge.db.spi.update;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 
 /**
@@ -17,5 +18,5 @@ import org.litebridge.db.spi.ColumnMetaData;
  * @param column The metadata defining the column.
  * @param value  The value associated with the column, which may be null.
  */
-public record ColumnValue(ColumnMetaData column, @Nullable Object value) {
+public record ColumnValue(Column column, @Nullable Object value) {
 }

@@ -16,7 +16,7 @@ class RowValueTest {
         // Given
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnMetaData column = new ColumnMetaData(table, "TEST_COLUMN", true, Types.VARCHAR);
-        final ColumnValue columnValue = new ColumnValue(column, "testValue");
+        final ColumnValue columnValue = new ColumnValue(column.toColumn(), "testValue");
 
         // When
         final RowValue rowValue = new RowValue(List.of(columnValue));
