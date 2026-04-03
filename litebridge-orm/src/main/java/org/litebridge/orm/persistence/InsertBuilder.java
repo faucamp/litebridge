@@ -27,8 +27,9 @@ final class InsertBuilder extends AbstractStatementBuilder<Insert> {
     }
 
     private boolean returnGeneratedKeys() {
-        final Set<ColumnMetaData> autoIncrementingPks = ormTable.getMetaData().primaryKey().stream()
+        final Set<String> autoIncrementingPks = ormTable.getMetaData().primaryKey().stream()
                 .filter(ColumnMetaData::isAutoIncrement)
+                .map(ColumnMetaData::name)
                 .collect(Collectors.toSet());
 
         if (autoIncrementingPks.isEmpty()) {
@@ -38,7 +39,7 @@ final class InsertBuilder extends AbstractStatementBuilder<Insert> {
         return rows.stream()
                 .flatMap(dtoRowValue -> dtoRowValue.rowValue().columns().stream())
                 // Check if a value for the auto-incrementing PK was specified
-                .noneMatch(columnValue -> autoIncrementingPks.contains(columnValue.column())
+                .noneMatch(columnValue -> autoIncrementingPks.contains(columnValue.column().name())
                         && columnValue.value() != null);
     }
 }
