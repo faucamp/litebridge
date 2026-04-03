@@ -7,6 +7,10 @@
 <!-- TOC -->
 * [Overview](#overview)
 * [Usage](#usage)
+    * [Terminal operations](#terminal-operations)
+      * [Get first result](#get-first-result)
+      * [Get exactly one result](#get-exactly-one-result)
+      * [Get all results](#get-all-results)
   * [Retrieving a single DTO](#retrieving-a-single-dto)
   * [Retrieving multiple DTOs](#retrieving-multiple-dtos)
   * [Retrieving related DTOs](#retrieving-related-dtos)
@@ -19,11 +23,14 @@ Litebridge provides a fluent API for constructing queries using a familiar SQL-l
 
 ## Usage
 
-### Retrieving a single DTO
+Select statements are constructed via the `litebridge.select()` method. The API adapts to what is being queried,
+covering use cases for both DTO-marshalling and raw SQL queries.
 
-Queries are constructed using `where()`, `join()`, `orderBy()` and similar clauses. Each clause
-When making DTO-level queries, the field names used in the query clauses must match the field names in the DTO being queried,
-not the database column names:
+Each query is built-up using a chained sequence of methods corresponding to the SQL clauses. The query is executed
+by invoking a terminal method, which defines how results must be returned, for example:
+
+Queries are constructed using a chained sequence of methods corresponding to the SQL clauses 
+(like `where()`, `join()`, `orderBy()` etc):
 
 ```java
 final Optional<Person> alice = litebridge.select(Person.class)
@@ -33,7 +40,87 @@ final Optional<Person> alice = litebridge.select(Person.class)
         .first();
 ```
 
-The terminating `first()` 
+This will result in a SQL query similar to:
+
+```sql
+SELECT * FROM LB.PERSON WHERE FIRST_NAME = 'Alice' AND SURNAME = 'Smith' ORDER BY ID ASC LIMIT 1;
+```
+
+Note that the example above made a DTO-level query by selecting the `Person` DTO class.
+When making DTO-level queries, the identifiers used in the query clauses must match the field names in the DTO being queried
+and not the database column names, unless a more formal mapping is specified at query-time.
+
+The `first()` call is a terminal operation that executes the query and returns the result.
+
+#### DTO-level queries
+
+DTOs must first be registered with Litebridge with via a database table mapping before they can be queried.
+
+Once a DTO class is registered, it can be queried using the `litebridge.select(Class<?>)` method, e.g.:
+
+```java
+litebridge.select(Person.class).list();
+```
+
+#### SQL-level queries
+
+When making a SQL-level query, no prior registration steps are required. Specific columns can be selected
+using the `litebridge.select(String...)` method, or all columns can be selected using `litebridge.select()`:
+
+```java
+// Selects all columns from the PERSON table
+litebridge.select().from("LB.PERSON").list();
+
+// Selects specific columns from the PERSON table
+litebridge.select("PERSON_ID", "FIRST_NAME").from("LB.PERSON").list();
+```
+
+
+#### Terminal operations
+
+Terminal operations are the last step in a query and define how results must be returned.
+
+#### Get first result
+
+The `first*` suite of terminals provides easy ways to get the first result from a query resulting in any number of records:
+
+- `first()` returns an `Optional` with the first result if any rows were found, or an empty `Optional` otherwise
+- `firstOrNull()` returns `null` if no rows were found, or the first result otherwise
+- `firstOrThrow()` throws a `NoSuchElementException` if no rows were found
+- `firstOrThrow(Supplier<Throwable>)` allows a custom exception to be thrown if no rows were found
+
+#### Get exactly one result
+
+The `one*` suite of terminals provides easy ways to get the result of a query resulting in exactly one record. 
+They throw an `IllegalStateException` if multiple rows are returned from the database.
+
+- `one()` returns an `Optional` with the single result if one matched, or an empty `Optional` otherwise
+- `oneOrNull()` returns `null` if no rows were found, or the single result otherwise
+- `oneOrThrow()` throws a `NoSuchElementException` if no rows were found
+- `oneOrThrow(Supplier<Throwable>)` allows a custom exception to be thrown if no rows were found
+
+#### All results/iter
+
+The remaining terminals provide various ways to iterate/retrieve all results from a query:
+
+- `stream()` returns a `Stream` of the results
+- `list()` returns a `List` containing all results
+- `forEach(Consumer<T>)` iterates over the results and applies the given consumer to each row
+
+## DTO-level examples
+
+### Retrieving a single DTO
+
+To retrieve the first result:
+
+```java
+final Optional<Person> alice = litebridge.select(Person.class)
+        .where("name").eq("Alice")
+        .and("surname").eq("Smith")
+        .orderBy("id").asc()
+        .first();
+```
+
 If `null` is preferred as an empty response:
 
 ```java
@@ -73,7 +160,7 @@ final List<Person> allPersons = litebridge.select(Person.class)
         .list();
 ```
 
-Or they can be looped through directly:
+Or they can be iterated through directly:
 
 ```java
 litebridge.select(Person.class)
@@ -88,7 +175,7 @@ the fetch behaviour is specified by using JOINs.
 
 If no JOINs are specified (or some are omitted), the fields for the corresponding related/nested DTOs will be null.
 This allows control over query behaviour, allowing only necessary data to be retrieved when dealing with complex
-object grahps.
+object graphs.
 
 To select an `Account` and also retrieve the related `Person` object in its `owner` field:
 
@@ -113,7 +200,7 @@ Person groupedPerson = litebridge.select(Person.class)
 // groupedPerson.accounts is null
 ```
 
-### Arbitrary SQL queries
+## SQL-level examples
 
 The same fluent API can be used to perform any SQL query, without requiring a DTO mapping:
 
@@ -129,3 +216,6 @@ litebridge.select("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSO
         .map(row -> litebridge.toDto(row, Person.class))
         .forEach(p -> logger.info("Person DTO: " + p));
 ```
+
+Note the difference between the identifiers used in the query clauses vs the previous DTO-level examples.
+When making a SQL-level query, the identifiers used in the query clauses must match the column names in the database table being queried.

@@ -261,7 +261,7 @@ the fetch behaviour is specified by using JOINs.
 
 If no JOINs are specified (or some are omitted), the fields for the corresponding related/nested DTOs will be null.
 This allows control over query behaviour, allowing only necessary data to be retrieved when dealing with complex
-object grahps.
+object graphs.
 
 To select an `Account` and also retrieve the related `Person` object in its `owner` field:
 
