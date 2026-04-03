@@ -88,8 +88,8 @@ Map<FieldSpec, ColumnMapping> accountMap = Map.of(
 );
 
 // Enable persistence for the Person and Account DTO classes 
-litebridge.register(Person.class, t("LB", "PERSON", personMap);
-litebridge.register(Account.class, t("LB", "ACCOUNT", accountMap);
+litebridge.register(Person.class, t("LB.PERSON", personMap);
+litebridge.register(Account.class, t("LB.ACCOUNT", accountMap);
 ```
 
 The above snippet makes use of staticly-imported shorthand mapping methods `f()`, `p()`, and `c()`,
@@ -291,7 +291,7 @@ Person groupedPerson = litebridge.select(Person.class)
 The same fluent API can be used to perform any SQL query, without requiring a DTO mapping:
 
 ```java
-litebridge.select("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE").from("LB", "PERSON")
+litebridge.select("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
         .where("AGE").gt(18)
         .and("AGE").lt(25)
         .orderBy("PERSON_ID").asc()
