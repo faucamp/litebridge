@@ -8,6 +8,7 @@ import java.lang.invoke.MethodHandleInfo;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /**
  * Property-based {@code FieldAccessor} implementation.
@@ -86,5 +87,14 @@ public final class PropertyAccessor implements FieldAccessor {
     @Override
     public int hashCode() {
         return hashCode;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", PropertyAccessor.class.getSimpleName() + "[", "]")
+                .add("property=" + name())
+                .add("type=" + type())
+                .add("dtoClass=" + dtoClass())
+                .toString();
     }
 }

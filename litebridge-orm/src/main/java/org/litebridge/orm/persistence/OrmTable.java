@@ -8,6 +8,7 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.tracking.ChangeTracker;
+import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 import org.litebridge.tracking.FieldAccessorChain;
 import org.litebridge.tracking.TrackedDto;
@@ -46,6 +47,7 @@ public class OrmTable {
     private final WeakIdentitySet<Object> persistedDtos = new WeakIdentitySet<>();
     private final List<Class<?>> nestedDtoClasses;
     private final TableRegistry contextTableRegistry = new TableRegistry();
+    private final ClassFieldAccessorCache classFieldAccessorCache;
     @Nullable
     private List<FieldAccessor> oneToManyReverseMappings;
 
@@ -61,9 +63,11 @@ public class OrmTable {
     public OrmTable(final Class<?> dtoClass,
                     final TableMetaData metaData,
                     final Map<FieldAccessor, MappedFieldTarget> fieldTargetMap,
-                    final ChangeTracker changeTracker) {
+                    final ChangeTracker changeTracker,
+                    final ClassFieldAccessorCache classFieldAccessorCache) {
         this.dtoClass = dtoClass;
         this.metaData = metaData;
+        this.classFieldAccessorCache = classFieldAccessorCache;
 
         this.changeTracker = changeTracker;
         final Map<String, ColumnMetaData> columnMap = new HashMap<>(fieldTargetMap.size());
@@ -151,7 +155,13 @@ public class OrmTable {
      * @return the column metadata for the specified field name, or null if not found
      */
     public ColumnMetaData getColumnForFieldName(final String fieldName) {
-        return Objects.requireNonNull(fieldNameColumnMap.get(fieldName), "No column for field '" + fieldName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, fieldName);
+
+        if (fieldAccessor instanceof FieldAccessorChain fieldAccessorChain) {
+            return Objects.requireNonNull(fieldNameColumnMap.get(fieldAccessorChain.fieldAccessors().getFirst().name()), "No parent column for field path '" + fieldAccessorChain.fieldPath() + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
+        } else {
+            return Objects.requireNonNull(fieldNameColumnMap.get(fieldName), "No column for field '" + fieldName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
+        }
     }
 
     public List<Class<?>> getNestedDtoClasses() {

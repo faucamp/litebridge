@@ -1,0 +1,26 @@
+package org.litebridge.orm.e2e.compositepk.mapping;
+
+import org.litebridge.orm.api.spec.ColumnMapping;
+import org.litebridge.orm.api.spec.FieldMapping;
+
+import java.util.Map;
+
+import static org.litebridge.orm.api.spec.ColumnMapping.c;
+import static org.litebridge.orm.api.spec.FieldMapping.f;
+
+public final class DtoTableMap {
+
+    private DtoTableMap() {
+    }
+
+    public static final Map<FieldMapping, ColumnMapping> CompositePkLookup = Map.of(
+            f("id"), c("LOOKUP_ID"),
+            f("name"), c("LOOKUP_NAME")
+    );
+
+    public static final Map<FieldMapping, ColumnMapping> CompositePkFkTest = Map.of(
+            f("lookup"), c("LOOKUP_ID").joinUsing(),
+            f("testId"), c("TEST_ID"),
+            f("description"), c("TEST_DESC")
+    );
+}

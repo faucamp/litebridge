@@ -33,8 +33,8 @@ class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Select DTO and join fetch related DTOs")
     void nestedDtos_fetchRelatedDtos() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
-        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB.ACCOUNT", DtoTableMap.Account));
 
         final Person person = new Person();
         person.setName("Alice");
@@ -68,8 +68,8 @@ class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Select DTO without related DTOs")
     void nestedDtos_dontfetchRelatedDtos() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
-        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB.ACCOUNT", DtoTableMap.Account));
 
         final Person person = new Person();
         person.setName("Alice");
@@ -98,8 +98,8 @@ class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Nested DTOs mapped to separate tables, cascading save, no transactions (autocommit)")
     void nestedDtos_oneTablePerDto_cascadeSave_autoCommit() throws Exception {
         // Register DTO-table mappings
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
-        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB.ACCOUNT", DtoTableMap.Account));
 
         // Create DTOs and enable change tracking
         final Person person = litebridge.track(new Person());
@@ -158,8 +158,8 @@ class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Nested DTOs mapped to separate tables, cascading save in transaction")
     void nestedDtos_oneTablePerDto_cascadeSave_transaction() throws Exception {
         // Register DTO-table mappings
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
-        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB.ACCOUNT", DtoTableMap.Account));
 
         // Create DTOs and enable change tracking
         final Person person = litebridge.track(new Person());
@@ -229,8 +229,8 @@ class BasicE2eTest extends AbstractE2eTest {
 
         // Register DTO-table mappings (a client using the above "PersonMapping" DTO would need
         // to create these "entities", as the query API would not make sense for multi-table DTOs)
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
-        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB.ACCOUNT", DtoTableMap.Account));
 
         // Create entity-DTO mapper
         final EntityDtoMapper<PersonAccount> entityDtoMapper = litebridge.entityDtoMapper(PersonAccount.class,
@@ -265,8 +265,8 @@ class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Delete DTOs, no transactions (autocommit)")
     void delete_autoCommit() throws Exception {
         // Register DTO-table mappings
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
-        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB.ACCOUNT", DtoTableMap.Account));
 
         // Create DTOs and enable change tracking
         final Person person1 = new Person();
@@ -315,8 +315,8 @@ class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Update DTOs, no transactions (autocommit)")
     void update() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
-        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        litebridge.register(Account.class, t("LB.ACCOUNT", DtoTableMap.Account));
 
         final Person person1 = new Person();
         person1.setName("Alice");

@@ -6,6 +6,7 @@ import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.tracking.ChangeTracker;
+import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 import org.litebridge.tracking.TrackedDto;
 
@@ -41,7 +42,8 @@ class OrmTableTest {
                         idField, idColumn,
                         nameField, nameColumn
                 ),
-                changeTracker);
+                changeTracker,
+                new ClassFieldAccessorCache(MethodHandles.lookup()));
 
         // Then
         assertEquals(TestDto.class, ormTable.dtoClass());
@@ -60,7 +62,7 @@ class OrmTableTest {
         final OrmTable ormTable = simpleOrmTable();
 
         // When/Then
-        assertThrows(NullPointerException.class, () -> ormTable.getColumnForFieldName("unknown"));
+        assertThrows(IllegalArgumentException.class, () -> ormTable.getColumnForFieldName("unknown"));
     }
 
     @Test
@@ -97,7 +99,8 @@ class OrmTableTest {
                         idField, idColumn,
                         nameField, nameColumn
                 ),
-                changeTracker);
+                changeTracker,
+                new ClassFieldAccessorCache(MethodHandles.lookup()));
 
         // When
         final List<FieldAccessor> result = ormTable.fieldAcessorStream().toList();
@@ -190,7 +193,8 @@ class OrmTableTest {
         final OrmTable ormTable = new OrmTable(ParentDto.class,
                 tableMetaData("parent_table", idColumn),
                 Map.of(childrenField, mappedOneToMany),
-                changeTracker);
+                changeTracker,
+                new ClassFieldAccessorCache(MethodHandles.lookup()));
 
         // Then
         assertEquals(1, ormTable.getOneToManyMappings().size());
@@ -209,7 +213,8 @@ class OrmTableTest {
         final OrmTable ormTable = new OrmTable(TestDto.class,
                 tableMetaData("test_table", idColumn),
                 Map.of(idField, idColumn),
-                changeTracker);
+                changeTracker,
+                new ClassFieldAccessorCache(MethodHandles.lookup()));
 
         // Then
         assertTrue(ormTable.getOneToManyMappingForField(idField).isEmpty());
@@ -235,7 +240,8 @@ class OrmTableTest {
         final OrmTable ormTable = new OrmTable(TestDto.class,
                 tableMetaData("test_table", idColumn, nameColumn),
                 fieldTargetMap,
-                changeTracker);
+                changeTracker,
+                new ClassFieldAccessorCache(MethodHandles.lookup()));
 
         // When
         final List<Map.Entry<FieldAccessor, MappedFieldTarget>> result = ormTable.mappedFieldTargets();
@@ -256,7 +262,8 @@ class OrmTableTest {
         return new OrmTable(TestDto.class,
                 tableMetaData("test_table", idColumn),
                 Map.of(idField, idColumn),
-                changeTracker);
+                changeTracker,
+                new ClassFieldAccessorCache(MethodHandles.lookup()));
     }
 
     private static FieldAccessor fieldAccessor(final ChangeTracker changeTracker, final Class<?> dtoClass, final String fieldName) {

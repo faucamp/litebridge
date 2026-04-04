@@ -50,10 +50,12 @@ public final class TableSpec extends Table {
         return fieldColumnMap;
     }
 
+    @Deprecated(forRemoval = true)
     public static TableSpec t(final String catalog, final String schema, final String table, final Map<FieldMapping, ColumnMapping> fieldColumnSpecMap) {
         return new TableSpec(catalog, schema, table, fieldColumnSpecMap);
     }
 
+    @Deprecated(forRemoval = true)
     public static TableSpec t(final String schema, final String table, final Map<FieldMapping, ColumnMapping> fieldColumnSpecMap) {
         return new TableSpec(null, schema, table, fieldColumnSpecMap);
     }

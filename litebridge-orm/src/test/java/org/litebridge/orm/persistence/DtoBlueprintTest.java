@@ -9,6 +9,7 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.dto.DtoJoinSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.tracking.ChangeTracker;
+import org.litebridge.tracking.ClassFieldAccessorCache;
 
 import java.lang.invoke.MethodHandles;
 import java.sql.Types;
@@ -66,7 +67,7 @@ class DtoBlueprintTest {
         final Table table = new Table("", "public", tableName);
         final ColumnMetaData idColumn = new ColumnMetaData(table, "id", false, Types.BIGINT);
         final TableMetaData tableMetaData = new TableMetaData(table, List.of("id"), List.of(idColumn));
-        return new OrmTable(dtoClass, tableMetaData, Map.of(), new ChangeTracker(MethodHandles.lookup()));
+        return new OrmTable(dtoClass, tableMetaData, Map.of(), new ChangeTracker(MethodHandles.lookup()), new ClassFieldAccessorCache(MethodHandles.lookup()));
     }
 
     private static class TestDto {

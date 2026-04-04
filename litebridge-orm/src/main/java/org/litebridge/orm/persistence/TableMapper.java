@@ -72,7 +72,7 @@ public final class TableMapper {
         final TableMetaData tableMetaData = ObjectUtils.requireNonNull(databaseProvider.tableMetaData(tableSpec, databaseProvider.transactionManager()), () -> new IllegalStateException("Database provider returned null table metadata for table: " + tableSpec.name()));
 
         final MappedDto mappedDto = mapFields(lookup, dtoClass, tableMetaData, tableSpec.fieldColumnMap());
-        final OrmTable ormTable = new OrmTable(dtoClass, tableMetaData, mappedDto.mappedFields(), changeTracker);
+        final OrmTable ormTable = new OrmTable(dtoClass, tableMetaData, mappedDto.mappedFields(), changeTracker, classFieldAccessorCache);
         return new MappedTable(ormTable, mappedDto.manyToOneDependencies());
     }
 

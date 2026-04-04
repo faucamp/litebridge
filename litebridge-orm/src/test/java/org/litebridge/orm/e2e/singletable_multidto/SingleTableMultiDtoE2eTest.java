@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.singletable_multidto.dto.SingleTableNestedParent;
 import org.litebridge.orm.e2e.singletable_multidto.mapping.DtoTableMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -16,8 +14,6 @@ import static org.litebridge.orm.api.spec.TableSpec.t;
 
 class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SingleTableMultiDtoE2eTest.class);
-
     @Test
     @DisplayName("Nested DTOs mapped to a single table")
     void nestedDtos_singleTable() throws Exception {
@@ -25,7 +21,7 @@ class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
         assumeTrue(litebridge.select().from("LB.ACCOUNT").list().isEmpty());
 
         // Register DTO-table mapping
-        litebridge.register(SingleTableNestedParent.class, t("LB", "NESTED_DTO", DtoTableMap.SingeTableNestedDto));
+        litebridge.register(SingleTableNestedParent.class, t("LB.NESTED_DTO", DtoTableMap.SingeTableNestedDto));
 
         // Create DTOs and enable change tracking
         final SingleTableNestedParent singleTableNestedParent = litebridge.track(new SingleTableNestedParent());

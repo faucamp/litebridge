@@ -8,6 +8,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /**
  * Direct field access {@code FieldAccessor} implementation using Java 9's {@link VarHandle}.
@@ -78,5 +79,14 @@ public final class DirectFieldAccessor implements FieldAccessor {
     @Override
     public int hashCode() {
         return Objects.hashCode(field);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", DirectFieldAccessor.class.getSimpleName() + "[", "]")
+                .add("field=" + name())
+                .add("type=" + type())
+                .add("dtoClass=" + dtoClass())
+                .toString();
     }
 }

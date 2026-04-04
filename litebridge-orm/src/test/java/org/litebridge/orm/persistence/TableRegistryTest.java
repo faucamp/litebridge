@@ -5,13 +5,19 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.tracking.ChangeTracker;
+import org.litebridge.tracking.ClassFieldAccessorCache;
 
 import java.lang.invoke.MethodHandles;
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TableRegistryTest {
 
@@ -219,7 +225,7 @@ class TableRegistryTest {
         final Table table = new Table("", schema, tableName);
         final ColumnMetaData idColumn = new ColumnMetaData(table, "id", false, Types.BIGINT);
         final TableMetaData tableMetaData = new TableMetaData(table, List.of("id"), List.of(idColumn));
-        return new OrmTable(dtoClass, tableMetaData, Map.of(), new ChangeTracker(MethodHandles.lookup()));
+        return new OrmTable(dtoClass, tableMetaData, Map.of(), new ChangeTracker(MethodHandles.lookup()), new ClassFieldAccessorCache(MethodHandles.lookup()));
     }
 
     private static class TestDto {

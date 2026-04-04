@@ -1,5 +1,6 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.tracking.FieldAccessor;
 
@@ -8,6 +9,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,12 +34,21 @@ public final class DtoConstructor {
                     final Constructor<DTO> dtoConstructor = canonicalConstructor(dtoClass, fieldAccessorValues)
                             .orElseThrow(() -> new IllegalArgumentException("No suitable constructor found for DTO class: " + dtoClass));
 
+                    final Map<FieldAccessor, @Nullable Object> valuesByField = new HashMap<>(fieldAccessorValues.size());
+
+                    for (FieldAccessorValue fieldAccessorValue : fieldAccessorValues) {
+                        final Object value = fieldAccessorValue.value();
+
+                        if (value instanceof DtoDependency) {
+                            //TODO: Placeholder for future partial-object construction logic
+                            valuesByField.put(fieldAccessorValue.field(), null);
+                        } else {
+                            valuesByField.put(fieldAccessorValue.field(), value);
+                        }
+                    }
+
                     final Object[] args = canonicalConstructorFieldAccessorCache.get(dtoClass).stream()
-                            .map(fieldAccessor -> fieldAccessorValues.stream()
-                                    .filter(value -> value.field() == fieldAccessor)
-                                    .map(FieldAccessorValue::value)
-                                    .findFirst()
-                                    .orElseThrow())
+                            .map(valuesByField::get)
                             .toArray();
 
                     return new ConstructionResult<>(ClassUtils.newInstance(dtoClass, dtoConstructor, args), false);
@@ -83,26 +94,25 @@ public final class DtoConstructor {
 
             if (constructorParameterCount == 0) {
                 defaultConstructor = constructor;
-            } else if (recordComponents != null) {
-                if (recordComponents.length == constructorParameterCount) {
-                    boolean match = true;
+            } else if (recordComponents != null && recordComponents.length == constructorParameterCount) {
+                boolean match = true;
 
-                    for (int i = 0; i < recordComponents.length; i++) {
-                        final RecordComponent recordComponent = recordComponents[i];
-                        final Class<?> parameterType = recordComponent.getType();
-                        final Class<?> constructorParameterType = constructor.getParameterTypes()[i];
+                for (int i = 0; i < recordComponents.length; i++) {
+                    final RecordComponent recordComponent = recordComponents[i];
+                    final Class<?> parameterType = recordComponent.getType();
+                    final Class<?> constructorParameterType = constructor.getParameterTypes()[i];
 
-                        if (!parameterType.isAssignableFrom(constructorParameterType)) {
-                            match = false;
-                            break;
-                        }
-                    }
-
-                    if (match) {
-                        canonicalConstructor = constructor;
-                        canonicalConstructorFieldAccessors = fieldAccessorValues.stream().map(FieldAccessorValue::field).toList();
+                    if (!parameterType.isAssignableFrom(constructorParameterType)) {
+                        match = false;
+                        break;
                     }
                 }
+
+                if (match) {
+                    canonicalConstructor = constructor;
+                    canonicalConstructorFieldAccessors = fieldAccessorValues.stream().map(FieldAccessorValue::field).toList();
+                }
+
             } else if (fieldAccessorValues.size() == constructorParameterCount) {
                 final List<FieldAccessor> unmappedFieldAccessors = fieldAccessorValues.stream()
                         .map(FieldAccessorValue::field)
@@ -141,6 +151,9 @@ public final class DtoConstructor {
     public record ConstructionResult<DTO>(DTO dto, boolean defaultConstructorUsed) {
     }
 
-    public record FieldAccessorValue(FieldAccessor field, Object value) {
+    public record FieldAccessorValue(FieldAccessor field, @Nullable Object value) {
+    }
+
+    public record DtoDependency(FieldAccessor field, Class<?> targetDtoClass, List<Object> targetPrimaryKey) {
     }
 }

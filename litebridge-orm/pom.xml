@@ -42,6 +42,8 @@
                         --add-opens litebridge.orm/org.litebridge.orm.persistence=litebridge.commons
                         --add-opens litebridge.orm/org.litebridge.orm.e2e.basic.dto=litebridge.commons
                         --add-opens litebridge.orm/org.litebridge.orm.e2e.basic.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridge.orm.e2e.compositepk.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridge.orm.e2e.compositepk.dto=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridge.orm.e2e.manytomany.dto=litebridge.commons
                         --add-opens litebridge.orm/org.litebridge.orm.e2e.manytomany.dto=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridge.orm.e2e.selfref.dto=litebridge.commons

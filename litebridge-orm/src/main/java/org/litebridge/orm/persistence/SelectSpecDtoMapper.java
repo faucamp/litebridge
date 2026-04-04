@@ -3,6 +3,7 @@ package org.litebridge.orm.persistence;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
+import org.litebridge.commons.MapUtils;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.convert.TypeConverter;
@@ -78,20 +79,27 @@ public class SelectSpecDtoMapper {
             return partialDto.dto();
         }
 
-        for (final DtoDependency dependency : partialDto.dependencies()) {
+        PartiallyConstructedDto currentDto = partialDto;
+
+        for (final DtoConstructor.DtoDependency dependency : partialDto.dependencies()) {
             final PartiallyConstructedDto relatedDto = dtoCache.get(dependency.targetDtoClass(), dependency.targetPrimaryKey());
 
             if (relatedDto != null) {
-                dependency.field().set(partialDto.dto(), resolveRelatedDtoDependencies(relatedDto, resolvedDtos));
+                if (relatedDto.dto() instanceof Record) {
+                    // Can't set a record's field - recreate the record
+                    currentDto = recreateDto(partialDto, Map.of(dependency.field(), resolveRelatedDtoDependencies(relatedDto, resolvedDtos)));
+                } else {
+                    dependency.field().set(currentDto.dto(), resolveRelatedDtoDependencies(relatedDto, resolvedDtos));
+                }
             } else {
                 LOGGER.debug("Unresolved dependency for field '{}' in DTO class '{}' with target key: {}: no matching DTO found", dependency.field().name(), partialDto.dto().getClass(), dependency.targetPrimaryKey());
             }
         }
 
-        updateOneToManyCollectionMappings(partialDto);
-        updateManyToManyCollectionMappings(partialDto);
-        resolvedDtos.add(partialDto);
-        return partialDto.dto();
+        updateOneToManyCollectionMappings(currentDto);
+        updateManyToManyCollectionMappings(currentDto);
+        resolvedDtos.add(currentDto);
+        return currentDto.dto();
     }
 
     private @Nullable PartiallyConstructedDto toDto(final DtoBlueprint.SelectDtoData dtoData) {
@@ -122,11 +130,19 @@ public class SelectSpecDtoMapper {
         return partialDto;
     }
 
-    @SuppressWarnings("unchecked")
     private PartiallyConstructedDto createDto(final Class<?> dtoClass, final OrmTable table, final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
+        return createDto(dtoClass, table, dtoData, fieldColumns, null);
+    }
+
+    private PartiallyConstructedDto recreateDto(final PartiallyConstructedDto partialDto, final Map<FieldAccessor, Object> valueOverrides) {
+        return createDto(partialDto.dto().getClass(), partialDto.ormTable(), partialDto.dtoData(), partialDto.fieldColumns(), valueOverrides);
+    }
+
+    @SuppressWarnings("unchecked")
+    private PartiallyConstructedDto createDto(final Class<?> dtoClass, final OrmTable table, final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns, @Nullable final Map<FieldAccessor, Object> valueOverrides) {
         final Row row = dtoData.row();
         final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues = new ArrayList<>(row.size());
-        final List<DtoDependency> dependencies = new ArrayList<>();
+        final List<DtoConstructor.DtoDependency> dependencies = new ArrayList<>();
 
         fieldColumns.forEach(fieldColumn -> {
             final FieldAccessor field;
@@ -154,7 +170,9 @@ public class SelectSpecDtoMapper {
                 return;
             }
 
-            if (sameTableNestedDto) {
+            if (MapUtils.containsKey(field, valueOverrides)) {
+                fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, valueOverrides.get(field)));
+            } else if (sameTableNestedDto) {
                 // Nested DTO built up from the same table
                 //TODO: may need to filter the field columns; perhaps during pre-processing (which would require explicit support for this scenario, kinda lke here)
                 final Object nestedDto = toDto(field.type(), table, dtoData, fieldColumns).dto();
@@ -171,7 +189,9 @@ public class SelectSpecDtoMapper {
                         .orElseThrow(() -> new IllegalStateException("No column found for alias '%s' in row: %s".formatted(fieldColumn.column().alias(), row)));
                 final Object targetPkValue = rowColumn.value();
                 final List<Object> targetPk = targetPkValue instanceof List<?> ? (List<Object>) targetPkValue : Collections.singletonList(targetPkValue);
-                dependencies.add(new DtoDependency(field, field.type(), targetPk));
+                final DtoConstructor.DtoDependency dependency = new DtoConstructor.DtoDependency(field, field.type(), targetPk);
+                dependencies.add(dependency);
+                fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, dependency));
             }
         });
 
@@ -180,10 +200,21 @@ public class SelectSpecDtoMapper {
 
         if (constructionResult.defaultConstructorUsed()) {
             // Set the fields via field accessors since the default constructor was used
-            fieldAccessorValues.forEach(fieldAccessorValue -> fieldAccessorValue.field().set(dto, fieldAccessorValue.value()));
+            fieldAccessorValues.forEach(fieldAccessorValue -> {
+                final Object value;
+
+                if (fieldAccessorValue.value() instanceof DtoConstructor.DtoDependency dependency) {
+                    //TODO: Placeholder for future partial-object construction logic
+                    value = null;
+                } else {
+                    value = fieldAccessorValue.value();
+                }
+
+                fieldAccessorValue.field().set(dto, value);
+            });
         }
 
-        return new PartiallyConstructedDto(dto, table, dependencies);
+        return new PartiallyConstructedDto(dto, table, dtoData, fieldColumns, dependencies);
     }
 
     private List<DtoBlueprint> createDtoBlueprints(final List<Row> rows) {
@@ -243,7 +274,7 @@ public class SelectSpecDtoMapper {
 
     private void updateOneToManyCollectionMappings(final PartiallyConstructedDto partialDto) {
         final Object dto = partialDto.dto();
-        final OrmTable table = partialDto.dtoTable();
+        final OrmTable table = partialDto.ormTable();
 
         final List<MappedOneToMany> mappedOneToManyList = table.getOneToManyMappings();
 
@@ -274,7 +305,7 @@ public class SelectSpecDtoMapper {
 
     private void updateManyToManyCollectionMappings(final PartiallyConstructedDto partialDto) {
         final Object dto = partialDto.dto();
-        final OrmTable table = partialDto.dtoTable();
+        final OrmTable table = partialDto.ormTable();
 
         final List<MappedManyToMany> mappedManyToManyList = table.getManyToManyMappings();
 
@@ -303,10 +334,11 @@ public class SelectSpecDtoMapper {
         });
     }
 
-    private record PartiallyConstructedDto(Object dto, OrmTable dtoTable, List<DtoDependency> dependencies) {
-    }
-
-    private record DtoDependency(FieldAccessor field, Class<?> targetDtoClass, List<Object> targetPrimaryKey) {
+    private record PartiallyConstructedDto(Object dto,
+                                           OrmTable ormTable,
+                                           DtoBlueprint.DtoData<?> dtoData,
+                                           List<DtoSelectSpec.FieldColumn> fieldColumns,
+                                           List<DtoConstructor.DtoDependency> dependencies) {
     }
 
     private static final class PartiallyConstructedDtoCache {

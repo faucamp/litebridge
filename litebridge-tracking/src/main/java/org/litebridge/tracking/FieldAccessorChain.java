@@ -6,6 +6,7 @@ import org.litebridge.commons.ClassUtils;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.StringJoiner;
 
 /**
  * Represents a chain of {@link FieldAccessor} instances, allowing the traversal and manipulation of nested fields
@@ -131,5 +132,12 @@ public final class FieldAccessorChain implements FieldAccessor {
     @Override
     public int hashCode() {
         return fieldAccessors.getLast().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", FieldAccessorChain.class.getSimpleName() + "[", "]")
+                .add("fieldPath='" + fieldPath + "'")
+                .toString();
     }
 }

@@ -8,6 +8,7 @@ import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.tracking.ChangeTracker;
+import org.litebridge.tracking.ClassFieldAccessorCache;
 
 import java.lang.invoke.MethodHandles;
 import java.sql.Types;
@@ -108,7 +109,7 @@ class UpdateBuilderTest {
         final Table table = new Table("", "public", "test_table");
         final ColumnMetaData idColumn = new ColumnMetaData(table, "id", false, Types.BIGINT);
         final TableMetaData tableMetaData = new TableMetaData(table, List.of("id"), List.of(idColumn));
-        return new OrmTable(TestDto.class, tableMetaData, Map.of(), changeTracker);
+        return new OrmTable(TestDto.class, tableMetaData, Map.of(), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
     }
 
     private static ColumnMetaData column(final String tableName, final String columnName, final int type) {
