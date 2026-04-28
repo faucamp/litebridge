@@ -37,6 +37,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -474,14 +475,14 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             final int affectedRows = preparedStatement.executeUpdate();
 
             if (returnGeneratedKeys && affectedRows > 0) {
-                final List<Object> generatedKeys = new ArrayList<>(tableMetaData.primaryKey().size());
+                final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(tableMetaData.primaryKey().size());
                 final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
 
-                for (ColumnMetaData pkColumn : tableMetaData.primaryKey()) {
-                    if (generatedKeysResultSet.next()) {
+                if (generatedKeysResultSet.next()) {
+                    for (ColumnMetaData pkColumn : tableMetaData.primaryKey()) {
                         final Object generatedId = generatedKeysResultSet.getObject(pkColumn.name());
                         LOGGER.debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
-                        generatedKeys.add(generatedId);
+                        generatedKeys.put(pkColumn, generatedId);
                     }
                 }
 

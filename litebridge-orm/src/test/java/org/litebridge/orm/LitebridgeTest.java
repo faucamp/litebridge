@@ -1,6 +1,5 @@
 package org.litebridge.orm;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.convert.DefaultTypeConverter;
@@ -112,7 +111,7 @@ class LitebridgeTest {
         final ColumnMetaData columnMetaDataMyVar = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
         final TableMetaData tableMetaData = new TableMetaData(tableSpec, List.of("MY_ID"), List.of(columnMetaDataMyId, columnMetaDataMyVar));
         when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(tableMetaData);
-        when(databaseProvider.insert(any(Insert.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Collections.emptyList()));
+        when(databaseProvider.insert(any(Insert.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Collections.emptyMap()));
 
         litebridge.register(TestDto.class, tableSpec);
         final TestDto testDto = new TestDto();
@@ -192,7 +191,7 @@ class LitebridgeTest {
         final ColumnMetaData columnMetaDataMyVar = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
         final TableMetaData tableMetaData = new TableMetaData(tableSpec, List.of("MY_ID"), List.of(columnMetaDataMyId, columnMetaDataMyVar));
         when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(tableMetaData);
-        when(databaseProvider.insert(any(Insert.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, List.of(123L)));
+        when(databaseProvider.insert(any(Insert.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Map.of(columnMetaDataMyId, 123L)));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
         litebridge.register(TestDto.class, tableSpec);

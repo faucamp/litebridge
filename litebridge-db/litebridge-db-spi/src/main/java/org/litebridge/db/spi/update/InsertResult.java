@@ -1,7 +1,9 @@
 package org.litebridge.db.spi.update;
 
+import org.litebridge.db.spi.ColumnMetaData;
+
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 
 /**
  * The result of an insert operation performed on the database.
@@ -15,19 +17,19 @@ import java.util.List;
  */
 public final class InsertResult extends UpdateResult {
 
-    private final List<Object> generatedKeys;
+    private final Map<ColumnMetaData, Object> generatedKeys;
 
     public InsertResult(final int rowsAffected) {
         super(rowsAffected);
-        this.generatedKeys = Collections.emptyList();
+        this.generatedKeys = Collections.emptyMap();
     }
 
-    public InsertResult(final int rowsAffected, final List<Object> generatedKeys) {
+    public InsertResult(final int rowsAffected, final Map<ColumnMetaData, Object> generatedKeys) {
         super(rowsAffected);
         this.generatedKeys = generatedKeys;
     }
 
-    public List<Object> generatedKeys() {
+    public Map<ColumnMetaData, Object> generatedKeys() {
         return generatedKeys;
     }
 }

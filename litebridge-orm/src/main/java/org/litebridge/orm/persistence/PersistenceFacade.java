@@ -23,6 +23,7 @@ import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.ChangedCollectionField;
 import org.litebridge.tracking.ChangedField;
 import org.litebridge.tracking.ChangedFields;
+import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 import org.litebridge.tracking.TrackedDto;
 import org.slf4j.Logger;
@@ -33,10 +34,12 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -58,6 +61,7 @@ public class PersistenceFacade {
     private final TransactionalDatabaseProvider databaseProvider;
     private final TransactionManager transactionManager;
     private final ChangeTracker changeTracker;
+    private final ClassFieldAccessorCache classFieldAccessorCache;
 
     public PersistenceFacade(final TableRegistry tableRegistry,
                              final TransactionalDatabaseProvider databaseProvider,
@@ -66,6 +70,7 @@ public class PersistenceFacade {
         this.databaseProvider = databaseProvider;
         this.transactionManager = databaseProvider.transactionManager();
         this.changeTracker = changeTracker;
+        this.classFieldAccessorCache = changeTracker.classFieldAccessorCache();
     }
 
     /**
@@ -103,8 +108,7 @@ public class PersistenceFacade {
 
             if (dtoUpdateResult.getUpdateResult() instanceof InsertResult insertResult
                     && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-                // TODO: composite PK support
-                updateDtoPrimaryKey(dtoUpdateResult.getDto(), insertResult.generatedKeys().getFirst());
+                dtoUpdateResult.setDto(updateDtoPrimaryKey(dtoUpdateResult.getDto(), insertResult.generatedKeys()));
             } else {
                 tableProvider.getTableOrThrow(dtoUpdateResult.getDto().getClass()).syncPersistedDto(dtoUpdateResult.getDto());
             }
@@ -130,8 +134,7 @@ public class PersistenceFacade {
 
             if (dtoUpdateResult.getUpdateResult() instanceof InsertResult insertResult) {
                 if (!CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-                    // TODO: composite PK support
-                    updateDtoPrimaryKey(dtoUpdateResult.getDto(), insertResult.generatedKeys().getFirst());
+                    updateDtoPrimaryKey(dtoUpdateResult.getDto(), insertResult.generatedKeys());
                 }
             } else {
                 tableProvider.getTableOrThrow(dtoUpdateResult.getDto().getClass()).syncPersistedDto(dtoUpdateResult.getDto());
@@ -240,7 +243,7 @@ public class PersistenceFacade {
             } else {
                 // Dealing with an embedded DTO - add the context to the table provider
                 tableProvider.pushContext(table.getContextTableRegistry());
-                final OrmTable nestedDtoTable = tableProvider.getTableOrThrow(value.getClass());
+                final OrmTable nestedDtoTable = tableProvider.getTableOrThrow(Objects.requireNonNull(value).getClass());
 
                 if (!nestedDtoTable.isPersistedDto(value)) {
                     // Cascade save to the embedded DTO
@@ -248,51 +251,68 @@ public class PersistenceFacade {
 
                     if (existingStatement == null) {
                         // Check if the nested DTO's PK is set
-                        // TODO: composite PK support
-                        final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(nestedDtoTable.getMetaData().primaryKey().getFirst().name());
-                        final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
+                        final boolean dtoPkSet = nestedDtoTable.getMetaData().primaryKey().stream().anyMatch(pkColumn -> {
+                            final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
+                            final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
+                            return embeddedDtoPkValue != null;
+                        });
 
                         if (!inProgressDtos.contains(value)) {
-                            // Create an insert/update statement for the nested DTO
+                            // First time we're encountering this nested DTO; create an insert/update statement for it
                             final AbstractStatementBuilder<?> dependencyStatementBuilder = createStatementBuilder(value, inProgressDtos);
 
-                            if (embeddedDtoPkValue == null) {
+                            if (!dtoPkSet) {
                                 // PK not yet set - pipe the generated key back to the parent DTO
                                 final PipedStatement dependencyPipe = new PipedStatement(dependencyStatementBuilder, value, updateResult -> {
                                     if (updateResult instanceof InsertResult insertResult
                                             && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-                                        // TODO: composite PK support
-                                        final Object pkValue = insertResult.generatedKeys().getFirst();
-                                        columnValues.add(new ColumnValue(columnMetaData.toColumn(), pkValue));
-                                        updateDtoPrimaryKey(value, pkValue);
+
+                                        insertResult.generatedKeys().forEach((pkColumn, pkValue) -> columnValues.add(new ColumnValue(pkColumn.toColumn(), pkValue)));
+                                        updateDtoPrimaryKey(value, insertResult.generatedKeys());
                                     }
                                 });
+
                                 statementChain.addDependency(value, dependencyPipe);
                             } else {
                                 // PK already set - set the PK value on the current DTO and ensure the embedded DTO is persisted
-                                columnValues.add(new ColumnValue(columnMetaData.toColumn(), embeddedDtoPkValue));
+                                nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
+                                    final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
+                                    final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
+
+                                    if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
+                                        columnValues.add(new ColumnValue(columnMetaData.toColumn(), embeddedDtoPkValue));
+                                    }
+                                });
+
                                 statementChain.addDependency(value, new PipedStatement(dependencyStatementBuilder, value));
                             }
                         } else {
                             // Statement for the nested DTO is under construction - pipe its PK to this field when available
-                            if (embeddedDtoPkValue == null) {
+                            if (!dtoPkSet) {
                                 // PK not yet set - pipe the generated key back to the parent DTO
                                 final PipedStatement dependencyPipe = new PipedStatement(new NoOpStatementBuilder(), value, updateResult -> {
                                     if (updateResult instanceof InsertResult insertResult
                                             && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-                                        // TODO: composite PK support
-                                        final Object pkValue = insertResult.generatedKeys().getFirst();
-                                        columnValues.add(new ColumnValue(columnMetaData.toColumn(), pkValue));
-                                        updateDtoPrimaryKey(value, pkValue);
+
+                                        insertResult.generatedKeys().forEach((pkColumn, pkValue) -> {
+                                            columnValues.add(new ColumnValue(pkColumn.toColumn(), pkValue));
+                                        });
+
+                                        updateDtoPrimaryKey(value, insertResult.generatedKeys());
                                     }
                                 });
+
                                 statementChain.addDependency(value, dependencyPipe);
                             } else {
                                 // PK already set - set the PK value on the current DTO and ensure the embedded DTO is persisted
-                                columnValues.add(new ColumnValue(columnMetaData.toColumn(), embeddedDtoPkValue));
+                                nestedDtoTable.getMetaData().primaryKey().stream().forEach(pkColumn -> {
+                                    final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
+                                    final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
+                                    columnValues.add(new ColumnValue(pkColumn.toColumn(), embeddedDtoPkValue));
+                                });
+
                                 statementChain.addDependency(value, new PipedStatement(new NoOpStatementBuilder(), value));
                             }
-
                         }
 
                         tableProvider.popContext();
@@ -374,11 +394,8 @@ public class PersistenceFacade {
                         statementChain.addDependant(value, new PipedStatement(dependantStatementBuilder, value, updateResult -> {
                             if (updateResult instanceof InsertResult insertResult
                                     && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-                                // TODO: composite PK support
-                                final Object pkValue = insertResult.generatedKeys().getFirst();
-                                updateDtoPrimaryKey(dto, pkValue);
-                                final Column column = collectionDtoTable.getColumnForFieldName(mappedOneToMany.mappedByField().name()).toColumn();
-                                columnValues.add(new ColumnValue(column, pkValue));
+                                insertResult.generatedKeys().forEach((pkColumn, pkValue) -> columnValues.add(new ColumnValue(pkColumn.toColumn(), pkValue)));
+                                updateDtoPrimaryKey(dto, insertResult.generatedKeys());
                             }
                         }));
                     }
@@ -413,9 +430,7 @@ public class PersistenceFacade {
                         statementChain.addDependency(value, new PipedStatement(dependantStatementBuilder, value, updateResult -> {
                             if (updateResult instanceof InsertResult insertResult
                                     && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-                                // TODO: composite PK support
-                                final Object pkValue = insertResult.generatedKeys().getFirst();
-                                updateDtoPrimaryKey(value, pkValue);
+                                updateDtoPrimaryKey(value, insertResult.generatedKeys());
                             }
 
                             // Add join table entry
@@ -431,26 +446,54 @@ public class PersistenceFacade {
         }
     }
 
-    private void updateDtoPrimaryKey(final Object dto, final Object generatedKey) {
+    private Object updateDtoPrimaryKey(final Object dto, final Map<ColumnMetaData, Object> generatedKeys) {
+        Object currentDto = dto;
         final OrmTable embeddedDtoTable = tableProvider.getTableOrThrow(dto.getClass());
-        final List<ColumnMetaData> embeddedDtoPk = embeddedDtoTable.getMetaData().primaryKey();
-        // TODO: composite PK support
-        final ColumnMetaData pkColumn = embeddedDtoPk.get(0);
-        final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(pkColumn.name());
-        final Object currentPkValue = field.get(dto);
+        final List<ColumnMetaData> dtoPkColumns = embeddedDtoTable.getMetaData().primaryKey();
+        final Map<FieldAccessor, @Nullable Object> currentPkValues = new HashMap<>();
+        final Map<FieldAccessor, Object> generatedPkValues = new HashMap<>();
 
-        if (currentPkValue == null) {
-            final Object convertedValue = databaseProvider.getTypeConverter().convert(generatedKey, pkColumn.getDataType());
-            field.set(dto, convertedValue);
-            embeddedDtoTable.syncPersistedDto(dto);
-            transactionManager.addRollbackCallback(() -> {
-                LOGGER.trace("Rolling back generated key for DTO '{}'", dto);
-                field.set(dto, currentPkValue);
-                embeddedDtoTable.syncPersistedDto(dto);
-            });
-        } else {
-            LOGGER.trace("Generated key for DTO '{}' already set - ignoring", dto);
+        for (ColumnMetaData pkColumn : generatedKeys.keySet()) {
+            final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(pkColumn.name());
+            final Object currentPkValue = field.get(dto);
+            currentPkValues.put(field, currentPkValue);
+
+            if (currentPkValue == null) {
+                final Object generatedKey = generatedKeys.get(pkColumn);
+                final Object convertedValue = Objects.requireNonNull(databaseProvider.getTypeConverter().convert(generatedKey, pkColumn.getDataType()));
+                generatedPkValues.put(field, convertedValue);
+            } else {
+                LOGGER.trace("Generated key for DTO '{}' already set - ignoring", dto);
+            }
         }
+
+        if (dto instanceof Record) {
+            // Can't set a record's field - recreate the record
+            final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues = classFieldAccessorCache.fieldAccessors(dto.getClass()).stream()
+                    .map(fieldAccessor -> {
+                        if (generatedPkValues.containsKey(fieldAccessor)) {
+                            return new DtoConstructor.FieldAccessorValue(fieldAccessor, generatedPkValues.get(fieldAccessor));
+                        } else {
+                            return new DtoConstructor.FieldAccessorValue(fieldAccessor, fieldAccessor.get(dto));
+                        }
+                    })
+                    .toList();
+
+            currentDto = SelectSpecDtoMapper.constructDto(dto.getClass(), fieldAccessorValues);
+        } else {
+            // Normal class
+            generatedPkValues.forEach((field, value) -> {
+                field.set(dto, value);
+                embeddedDtoTable.syncPersistedDto(dto);
+                transactionManager.addRollbackCallback(() -> {
+                    LOGGER.trace("Rolling back generated key for DTO '{}'", dto);
+                    field.set(dto, currentPkValues.get(field));
+                    embeddedDtoTable.syncPersistedDto(dto);
+                });
+            });
+        }
+
+        return currentDto;
     }
 
     private List<ColumnValue> dtoPrimaryKeyColumnValues(final Object dto) {

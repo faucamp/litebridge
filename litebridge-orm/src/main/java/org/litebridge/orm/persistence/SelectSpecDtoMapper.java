@@ -1,5 +1,6 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
@@ -195,8 +196,14 @@ public class SelectSpecDtoMapper {
             }
         });
 
+        final Object dto = constructDto(dtoClass, fieldAccessorValues);
+        return new PartiallyConstructedDto(dto, table, dtoData, fieldColumns, dependencies);
+    }
+
+    @SuppressWarnings("unchecked")
+    static <DTO> DTO constructDto(final Class<DTO> dtoClass, final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues) {
         final DtoConstructor.ConstructionResult<?> constructionResult = DtoConstructor.newInstance(dtoClass, fieldAccessorValues);
-        final Object dto = constructionResult.dto();
+        final DTO dto = (DTO) constructionResult.dto();
 
         if (constructionResult.defaultConstructorUsed()) {
             // Set the fields via field accessors since the default constructor was used
@@ -214,7 +221,7 @@ public class SelectSpecDtoMapper {
             });
         }
 
-        return new PartiallyConstructedDto(dto, table, dtoData, fieldColumns, dependencies);
+        return dto;
     }
 
     private List<DtoBlueprint> createDtoBlueprints(final List<Row> rows) {

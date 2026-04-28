@@ -6,7 +6,7 @@ import org.litebridge.db.spi.update.UpdateResult;
 
 public class DtoUpdateResult {
 
-    private final Object dto;
+    private Object dto;
     @Nullable
     private UpdateResult updateResult;
     @Nullable
@@ -19,6 +19,10 @@ public class DtoUpdateResult {
 
     public Object getDto() {
         return ObjectUtils.requireNonNull(dto, () -> new IllegalStateException("DTO not set"));
+    }
+
+    public void setDto(final Object dto) {
+        this.dto = dto;
     }
 
     public UpdateResult getUpdateResult() {

@@ -23,4 +23,10 @@ public final class DtoTableMap {
             f("testId"), c("TEST_ID"),
             f("description"), c("TEST_DESC")
     );
+
+    public static final Map<FieldMapping, ColumnMapping> CompositePkSimple = Map.of(
+            f("pk1"), c("PK1").autoIncrement().usingSequence("LB.COMPOSITE_PK1_SEQ"),
+            f("pk2"), c("PK2").autoIncrement().usingSequence("LB.COMPOSITE_PK2_SEQ"),
+            f("description"), c("TEST_DESC")
+    );
 }

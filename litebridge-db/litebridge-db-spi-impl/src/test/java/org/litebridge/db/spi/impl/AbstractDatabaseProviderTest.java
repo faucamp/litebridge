@@ -151,7 +151,7 @@ class AbstractDatabaseProviderTest {
 
         final ResultSet resultSet = mock(ResultSet.class);
         when(resultSet.next()).thenReturn(true).thenReturn(false);
-        when(resultSet.getObject(tableMetaData.primaryKey().get(0).name())).thenReturn("testValue");
+        when(resultSet.getObject(tableMetaData.primaryKey().getFirst().name())).thenReturn("testValue");
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(preparedStatement.executeUpdate()).thenReturn(1);
@@ -166,7 +166,7 @@ class AbstractDatabaseProviderTest {
         assertEquals(1, result.rowsAffected());
         assertNotNull(result.generatedKeys());
         assertEquals(1, result.generatedKeys().size());
-        assertEquals("testValue", result.generatedKeys().get(0));
+        assertEquals("testValue", result.generatedKeys().get(tableMetaData.primaryKey().getFirst()));
     }
 
     @Test
@@ -183,7 +183,7 @@ class AbstractDatabaseProviderTest {
 
         final ResultSet resultSet = mock(ResultSet.class);
         when(resultSet.next()).thenReturn(true).thenReturn(false);
-        when(resultSet.getObject(table.primaryKey().get(0).name())).thenReturn("testValue");
+        when(resultSet.getObject(table.primaryKey().getFirst().name())).thenReturn("testValue");
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(preparedStatement.executeUpdate()).thenReturn(1);
@@ -198,7 +198,7 @@ class AbstractDatabaseProviderTest {
         assertEquals(1, result.rowsAffected());
         assertNotNull(result.generatedKeys());
         assertEquals(1, result.generatedKeys().size());
-        assertEquals("testValue", result.generatedKeys().get(0));
+        assertEquals("testValue", result.generatedKeys().get(table.primaryKey().getFirst()));
     }
 
     @Test

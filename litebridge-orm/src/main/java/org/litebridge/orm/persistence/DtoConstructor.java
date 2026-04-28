@@ -10,10 +10,13 @@ import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class DtoConstructor {
@@ -82,6 +85,9 @@ public final class DtoConstructor {
             return;
         }
 
+        final Set<Class<?>> fieldAccessorTypes = new HashSet<>(fieldAccessorValues.size());
+        final boolean matchParameterNames = fieldAccessorValues.stream().anyMatch(fieldAccessorValue -> !fieldAccessorTypes.add(fieldAccessorValue.field().type()));
+
         final RecordComponent[] recordComponents = dtoClass.getRecordComponents();
         final Constructor<DTO>[] constructors = ClassUtils.getConstructors(dtoClass);
 
@@ -95,41 +101,90 @@ public final class DtoConstructor {
             if (constructorParameterCount == 0) {
                 defaultConstructor = constructor;
             } else if (recordComponents != null && recordComponents.length == constructorParameterCount) {
+                // Constructing a record
                 boolean match = true;
+                final List<FieldAccessor> mappedFieldAccessors = new ArrayList<>();
+                final Map<String, FieldAccessor> unmappedFieldAccessors = fieldAccessorValues.stream()
+                        .map(FieldAccessorValue::field)
+                        .collect(Collectors.toMap(
+                                FieldAccessor::name,
+                                Function.identity(),
+                                (fa1, fa2) -> fa1,
+                                HashMap::new
+                        ));
 
                 for (int i = 0; i < recordComponents.length; i++) {
                     final RecordComponent recordComponent = recordComponents[i];
                     final Class<?> parameterType = recordComponent.getType();
-                    final Class<?> constructorParameterType = constructor.getParameterTypes()[i];
+                    final Parameter parameter = constructor.getParameters()[i];
+                    final FieldAccessor fieldAccessor = unmappedFieldAccessors.get(parameter.getName());
 
-                    if (!parameterType.isAssignableFrom(constructorParameterType)) {
+                    if (fieldAccessor == null) {
                         match = false;
                         break;
                     }
-                }
 
-                if (match) {
-                    canonicalConstructor = constructor;
-                    canonicalConstructorFieldAccessors = fieldAccessorValues.stream().map(FieldAccessorValue::field).toList();
-                }
+                    if (!parameterType.isAssignableFrom(fieldAccessor.type())) {
+                        match = false;
+                        break;
+                    }
 
-            } else if (fieldAccessorValues.size() == constructorParameterCount) {
-                final List<FieldAccessor> unmappedFieldAccessors = fieldAccessorValues.stream()
-                        .map(FieldAccessorValue::field)
-                        .collect(Collectors.toCollection(ArrayList::new));
-                final List<FieldAccessor> mappedFieldAccessors = new ArrayList<>();
-
-                for (Parameter parameter : constructor.getParameters()) {
-                    final FieldAccessor fieldAccessor = unmappedFieldAccessors.stream()
-                            .filter(field -> field.type() == parameter.getType())
-                            .findFirst().orElse(null);
-
-                    if (fieldAccessor == null) {
+                    if (!parameter.getName().equals(fieldAccessor.name())) {
+                        match = false;
                         break;
                     }
 
                     mappedFieldAccessors.add(fieldAccessor);
-                    unmappedFieldAccessors.remove(fieldAccessor);
+                    unmappedFieldAccessors.remove(fieldAccessor.name());
+                }
+
+                if (match) {
+                    canonicalConstructor = constructor;
+                    canonicalConstructorFieldAccessors = mappedFieldAccessors;
+                }
+
+            } else if (fieldAccessorValues.size() == constructorParameterCount) {
+                // POJO constructor
+                final List<FieldAccessor> mappedFieldAccessors = new ArrayList<>();
+
+                if (matchParameterNames) {
+                    final Map<String, FieldAccessor> unmappedFieldAccessors = fieldAccessorValues.stream()
+                            .map(FieldAccessorValue::field)
+                            .collect(Collectors.toMap(
+                                    FieldAccessor::name,
+                                    Function.identity(),
+                                    (fa1, fa2) -> fa1,
+                                    HashMap::new
+                            ));
+
+                    for (Parameter parameter : constructor.getParameters()) {
+                        if (!parameter.isNamePresent()) {
+                            throw new IllegalStateException("Unable to determine parameter names for canonical constructor (code not compiled with '-parameters' flag); since there are multiple parameters of the same type, additional mapping config is required");
+                        }
+
+                        final FieldAccessor fieldAccessor = unmappedFieldAccessors.get(parameter.getName());
+
+                        if (fieldAccessor == null) {
+                            break;
+                        }
+
+                        mappedFieldAccessors.add(fieldAccessor);
+                        unmappedFieldAccessors.remove(fieldAccessor.name());
+                    }
+                } else {
+                    // Match parameter types only
+                    for (Parameter parameter : constructor.getParameters()) {
+                        final FieldAccessor fieldAccessor = fieldAccessorValues.stream()
+                                .map(FieldAccessorValue::field)
+                                .filter(fa -> fa.type().equals(parameter.getType()))
+                                .findFirst().orElse(null);
+
+                        if (fieldAccessor == null) {
+                            break;
+                        }
+
+                        mappedFieldAccessors.add(fieldAccessor);
+                    }
                 }
 
                 if (mappedFieldAccessors.size() == constructorParameterCount) {

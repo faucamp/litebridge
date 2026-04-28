@@ -1,10 +1,13 @@
 package org.litebridge.db.spi.update;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.Table;
 
-import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InsertResultTest {
 
@@ -12,7 +15,9 @@ class InsertResultTest {
     void constructor_withGeneratedKeys() {
         // Given
         final int rowsAffected = 1;
-        final List<Object> generatedKeys = List.of(123L);
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "ID", false, 1);
+        final Map<ColumnMetaData, Object> generatedKeys = Map.of(columnMetaData, 123L);
 
         // When
         final InsertResult result = new InsertResult(rowsAffected, generatedKeys);
