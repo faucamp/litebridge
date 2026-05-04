@@ -6,7 +6,6 @@ import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.api.delete.DeleteQuery;
 import org.litebridge.orm.api.delete.DeleteTerminal;
@@ -17,7 +16,9 @@ import org.litebridge.orm.api.dto.delete.DtoDeleteWhereClause;
 import org.litebridge.orm.api.dto.delete.DtoDeletor;
 import org.litebridge.orm.api.dto.update.DtoUpdateStart;
 import org.litebridge.orm.api.dto.update.DtoUpdater;
-import org.litebridge.orm.api.spec.TableMapping;
+import org.litebridge.orm.api.register.RegistrationContext;
+import org.litebridge.orm.api.register.RegistrationSpec;
+import org.litebridge.orm.api.register.RegistrationTableContext;
 import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.api.sql.SqlFromClause;
 import org.litebridge.orm.api.sql.SqlSelector;
@@ -117,11 +118,14 @@ public class Litebridge {
      * @param tableSpec the table specification defining the mapping of the DTO class to the database table; must not be null.
      * @throws SQLException if an error occurs during the mapping or registration process.
      */
-    public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final TableSpec tableSpec, final Class<?>... dtoInterfaces) throws SQLException {
+    public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final TableSpec tableSpec, final @Nullable List<Class<?>> dtoInterfaces) throws SQLException {
         final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoClass, tableSpec);
         final OrmTable ormTable = mappedTable.ormTable();
         tableRegistry.addTable(dtoClass, mappedTable.ormTable());
-        Arrays.stream(dtoInterfaces).forEach(dtoInterface -> tableRegistry.addTable(dtoInterface, ormTable));
+
+        if (dtoInterfaces != null) {
+            dtoInterfaces.forEach(dtoInterface -> tableRegistry.addTable(dtoInterface, ormTable));
+        }
 
         if (!ormTable.getNestedDtoClasses().isEmpty()) {
             ormTable.getNestedDtoClasses().forEach(nestedDtoClass -> tableRegistry.addTable(nestedDtoClass, ormTable));
@@ -158,11 +162,16 @@ public class Litebridge {
     }
 
     public void register(final Class<?> dtoClass, final TableSpec tableSpec, final Class<?>... dtoInterfaces) throws SQLException {
-        register(MethodHandles.lookup(), dtoClass, tableSpec, dtoInterfaces);
+        register(MethodHandles.lookup(), dtoClass, tableSpec, Arrays.asList(dtoInterfaces));
     }
 
-    public void register(final TableMapping tableMapping) throws SQLException {
-        register(tableMapping.lookup(), tableMapping.dtoClass(), tableMapping.tableSpec());
+    public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) throws SQLException {
+        final RegistrationSpec registrationSpec = (RegistrationSpec) rc.apply(new RegistrationContext());
+        register(lookup, dtoClass, registrationSpec.buildTableSpec(), registrationSpec.dtoInterfaces());
+    }
+
+    public void register(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) throws SQLException {
+        register(MethodHandles.lookup(), dtoClass, rc);
     }
 
     /**

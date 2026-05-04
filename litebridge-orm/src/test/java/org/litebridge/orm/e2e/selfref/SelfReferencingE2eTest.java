@@ -8,6 +8,7 @@ import org.litebridge.orm.e2e.selfref.mapping.DtoTableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,7 +23,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
     @DisplayName("Single self-referencing DTO mapped to a single table, cascading save")
     void selfReferencingDto_cascadeSave() throws Exception {
         // Register DTO-table mappings
-        litebridge.register(SelfReferencingDto.class, t("LB.SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
+        registerDtoTableMappings();
 
         // Create nested DTOs
         final SelfReferencingDto dto1 = new SelfReferencingDto();
@@ -68,7 +69,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
         assumeTrue(litebridge.select().from("LB.PERSON").stream().findAny().isEmpty());
 
         // Register DTO-table mappings
-        litebridge.register(SelfReferencingDto.class, t("LB.SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
+        registerDtoTableMappings();
 
         // Create nested DTOs
         final SelfReferencingDto dto1 = new SelfReferencingDto();
@@ -112,7 +113,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
     @DisplayName("Single self-referencing DTO mapped to a single table, save each DTO individually")
     void selfReferencingDto_saveIndividually() throws Exception {
         // Register DTO-table mappings
-        litebridge.register(SelfReferencingDto.class, t("LB.SELF_REFERENCING", DtoTableMap.SelfReferencingDto));
+        registerDtoTableMappings();
 
         // Create nested DTOs
         final SelfReferencingDto dto1 = new SelfReferencingDto();
@@ -145,5 +146,12 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
         //assertEquals("parent", result.get(0).getMyVar());
         assertEquals("middle", result.get(0).getMyVar());
         assertEquals("child", result.get(1).getMyVar());
+    }
+
+    private void registerDtoTableMappings() throws SQLException {
+        litebridge.register(SelfReferencingDto.class, rc -> rc.mapToTable("LB.SELF_REFERENCING")
+                .mapField("id").toColumn("ID")
+                .mapField("myVar").toColumn("MY_VAR")
+                .mapField("parent").toColumn("PARENT_ID").joinOn("ID"));
     }
 }

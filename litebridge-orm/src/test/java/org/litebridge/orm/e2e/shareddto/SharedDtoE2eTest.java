@@ -6,13 +6,11 @@ import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.shareddto.dto.Application;
 import org.litebridge.orm.e2e.shareddto.dto.Server;
 import org.litebridge.orm.e2e.shareddto.dto.Status;
-import org.litebridge.orm.e2e.shareddto.mapping.DtoTableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.litebridge.orm.api.spec.TableSpec.t;
 
 class SharedDtoE2eTest extends AbstractE2eTest {
 
@@ -22,8 +20,19 @@ class SharedDtoE2eTest extends AbstractE2eTest {
     @DisplayName("Persist objects that share a nested DTO mapped to different tables")
     void sharedDto_differentTables() throws Exception {
         // Register DTOs and construct data
-        litebridge.register(Application.class, t("LB.APPLICATION", DtoTableMap.Application));
-        litebridge.register(Server.class, t("LB.SERVER", DtoTableMap.Server));
+        litebridge.register(Application.class, rc -> rc.mapToTable("LB.APPLICATION")
+                .mapField("name").toColumn("NAME")
+                .mapField("status").toColumn("STATUS_CODE").joinOn("CODE")
+                .withMappedTable(Status.class, src -> src.mapToTable("LB.APPLICATION_STATUS")
+                        .mapField("code").toColumn("CODE")
+                        .mapField("message").toColumn("MESSAGE")));
+
+        litebridge.register(Server.class, rc -> rc.mapToTable("LB.SERVER")
+                .mapField("host").toColumn("HOST")
+                .mapField("status").toColumn("SERVER_STATUS_CODE").joinOn("STATUS_CODE")
+                .withMappedTable(Status.class, src -> src.mapToTable("LB.SERVER_STATUS")
+                        .mapField("code").toColumn("STATUS_CODE")
+                        .mapField("message").toColumn("MESSAGE")));
 
         final Application application = new Application();
         application.setName("MyApp");

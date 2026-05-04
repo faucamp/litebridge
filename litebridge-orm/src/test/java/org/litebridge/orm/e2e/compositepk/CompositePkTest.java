@@ -6,12 +6,10 @@ import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkFkTest;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkLookup;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkSimple;
-import org.litebridge.orm.e2e.compositepk.mapping.DtoTableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.litebridge.orm.api.spec.TableSpec.t;
 
 class CompositePkTest extends AbstractE2eTest {
 
@@ -21,8 +19,14 @@ class CompositePkTest extends AbstractE2eTest {
     @DisplayName("Composite PK with foreign key constraint")
     void compositePk_foreignKey() throws Exception {
         // Given
-        litebridge.register(CompositePkLookup.class, t("LB.COMP_PK_LOOKUP", DtoTableMap.CompositePkLookup));
-        litebridge.register(CompositePkFkTest.class, t("LB.COMP_PK_FK_TEST", DtoTableMap.CompositePkFkTest));
+        litebridge.register(CompositePkLookup.class, rc -> rc.mapToTable("LB.COMP_PK_LOOKUP")
+                .mapField("id").toColumn("LOOKUP_ID")
+                .mapField("name").toColumn("LOOKUP_NAME"));
+
+        litebridge.register(CompositePkFkTest.class, rc -> rc.mapToTable("LB.COMP_PK_FK_TEST")
+                .mapField("lookup").toColumn("LOOKUP_ID").joinUsing()
+                .mapField("testId").toColumn("TEST_ID")
+                .mapField("description").toColumn("TEST_DESC"));
 
         final CompositePkLookup lookup = new CompositePkLookup(123L, "Category 1");
         final CompositePkFkTest test1 = new CompositePkFkTest(lookup, 1L, "Test 1");
@@ -46,7 +50,11 @@ class CompositePkTest extends AbstractE2eTest {
     @DisplayName("Composite auto-incrementing PK")
     void compositePk_autoIncrement() throws Exception {
         // Given
-        litebridge.register(CompositePkSimple.class, t("LB.COMP_PK_SIMPLE", DtoTableMap.CompositePkSimple));
+        litebridge.register(CompositePkSimple.class, rc -> rc.mapToTable("LB.COMP_PK_SIMPLE")
+                .mapField("pk1").toColumn("PK1").autoIncrement().usingSequence("LB.COMPOSITE_PK1_SEQ")
+                .mapField("pk2").toColumn("PK2").autoIncrement().usingSequence("LB.COMPOSITE_PK2_SEQ")
+                .mapField("description").toColumn("TEST_DESC"));
+
         final CompositePkSimple dto = new CompositePkSimple(null, null, "test");
 
         // When

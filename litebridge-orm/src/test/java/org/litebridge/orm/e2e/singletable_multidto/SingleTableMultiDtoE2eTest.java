@@ -4,13 +4,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.singletable_multidto.dto.SingleTableNestedParent;
-import org.litebridge.orm.e2e.singletable_multidto.mapping.DtoTableMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.litebridge.orm.api.spec.TableSpec.t;
 
 class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
 
@@ -21,7 +19,10 @@ class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
         assumeTrue(litebridge.select().from("LB.ACCOUNT").list().isEmpty());
 
         // Register DTO-table mapping
-        litebridge.register(SingleTableNestedParent.class, t("LB.NESTED_DTO", DtoTableMap.SingeTableNestedDto));
+        litebridge.register(SingleTableNestedParent.class, rc -> rc.mapToTable("LB.NESTED_DTO")
+                .mapField("parentValue1").toColumn("PARENT_VALUE1")
+                .mapField("nestedChild.childValue1").toColumn("CHILD_VALUE1")
+                .mapField("nestedChild.grandChild.grandChildValue1").toColumn("GRANDCHILD_VALUE1"));
 
         // Create DTOs and enable change tracking
         final SingleTableNestedParent singleTableNestedParent = litebridge.track(new SingleTableNestedParent());

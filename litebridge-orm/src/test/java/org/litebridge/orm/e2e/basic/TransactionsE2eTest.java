@@ -6,7 +6,6 @@ import org.litebridge.db.spi.tx.TransactionException;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.basic.dto.Person;
-import org.litebridge.orm.e2e.basic.mapping.DtoTableMap;
 import org.litebridge.orm.tx.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.litebridge.orm.api.spec.TableSpec.t;
 
 class TransactionsE2eTest extends AbstractE2eTest {
 
@@ -29,7 +27,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction commit: manual control")
     void transaction_commit_manual() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        BasicE2eTest.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
         person.setName("Alice");
@@ -52,7 +50,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction commit: try-with-resources")
     void transaction_commit_tryWithResources() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        BasicE2eTest.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
         person.setName("Alice");
@@ -76,7 +74,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction commit: lambda")
     void transaction_commit_lambda() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        BasicE2eTest.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
         person.setName("Alice");
@@ -97,7 +95,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction rollback on exception: manual control")
     void transaction_rollback_manual() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        BasicE2eTest.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
         person.setSurname("NoFirstName");
@@ -126,7 +124,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction rollback on exception: try-with-resources")
     void transaction_rollback_tryWithResources() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        BasicE2eTest.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
         person.setSurname("NoFirstName");
@@ -151,7 +149,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction explicit rollback: try-with-resources")
     void transaction_explicitRollback_tryWithResources() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        BasicE2eTest.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
         person.setName("Alice");
@@ -180,8 +178,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction explicit rollback: rollback DTO collections")
     void transaction_explicitRollback_oneToMany() throws Exception {
         // Register DTO-table mappings
-        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
-        litebridge.register(Account.class, t("LB.ACCOUNT", DtoTableMap.Account));
+        BasicE2eTest.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Create DTOs and enable change tracking
         final Person person = litebridge.track(new Person());
@@ -223,7 +220,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction rollback on exception: lambda")
     void transaction_rollback_lambda() throws Exception {
         // Given
-        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        BasicE2eTest.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
         person.setSurname("NoFirstName");

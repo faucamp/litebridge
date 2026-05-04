@@ -4,8 +4,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Row;
 import org.litebridge.orm.e2e.AbstractE2eTest;
+import org.litebridge.orm.e2e.basic.BasicE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Person;
-import org.litebridge.orm.e2e.basic.mapping.DtoTableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.litebridge.db.spi.Column.c;
-import static org.litebridge.orm.api.spec.TableSpec.t;
 
 class SqlE2eTest extends AbstractE2eTest {
 
@@ -82,7 +81,7 @@ class SqlE2eTest extends AbstractE2eTest {
     void selectMapToDto() throws Exception {
         // Given
         insertTestPersonRecords();
-        litebridge.register(Person.class, t("LB.PERSON", DtoTableMap.Person));
+        BasicE2eTest.registerPersonDtoTableMapping(litebridge);
 
         // When
         LOGGER.info("Selecting specific columns and filtering records using a query");
