@@ -1,6 +1,7 @@
 package org.litebridge.tracking;
 
 import org.litebridge.commons.ClassUtils;
+import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.StringUtils;
 
 import java.lang.invoke.MethodHandles;
@@ -74,7 +75,7 @@ public class ClassFieldAccessorCache {
             final FieldAccessor subFieldAccessor = fieldAccessor(dtoClass, subFieldAndRestOfPath[0]);
             return chain(new FieldAccessorChain(subFieldAccessor, fieldName, this), subFieldAndRestOfPath[1]);
         } else {
-            return ensureFieldAccessors(dtoClass).get(fieldName);
+            return ObjectUtils.requireNonNull(ensureFieldAccessors(dtoClass).get(fieldName), () -> new IllegalArgumentException("Field '%s' not found in class '%s'".formatted(fieldName, dtoClass.getName())));
         }
     }
 

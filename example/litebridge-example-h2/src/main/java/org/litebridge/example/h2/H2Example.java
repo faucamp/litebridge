@@ -44,13 +44,11 @@ public class H2Example {
                 .mapField("name").toColumn("FIRST_NAME")
                 .mapField("surname").toColumn("SURNAME")
                 .mapField("age").toColumn("AGE")
-                .mapProperty("eyeColour").toColumn("EYE_COLOUR")
-                .mapField("accounts").oneToMany(c -> c.mappedByField("owner")));
+                .mapProperty("eyeColour").toColumn("EYE_COLOUR"));
 
         litebridge.register(Account.class, rc -> rc.mapToTable("LB.ACCOUNT")
                 .mapField("id").toColumn("ACCOUNT_ID").autoIncrement().usingSequence("LB.ACCOUNT_SEQ")
                 .mapField("name").toColumn("ACCOUNT_NAME")
-                .mapField("balance").toColumn("BALANCE")
                 .mapField("owner").toColumn("PERSON_ID").joinUsing());
 
         new PersistenceExample(litebridge).run();
