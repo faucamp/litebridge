@@ -1,10 +1,9 @@
 package org.litebridge.orm.api.register;
 
-import org.litebridge.commons.BooleanUtils;
 import org.litebridge.orm.api.spec.ColumnSpec;
+import org.litebridge.orm.api.spec.DtoTableSpec;
 import org.litebridge.orm.api.spec.FieldSpec;
 import org.litebridge.orm.api.spec.TableMapping;
-import org.litebridge.orm.api.spec.TableSpec;
 
 import java.util.function.Function;
 
@@ -27,8 +26,9 @@ public final class RegistrationJoinStep extends RegistrationTableContextImpl {
     }
 
     public RegistrationTableContext withMappedTable(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) {
-        final RegistrationSpec registrationSpec = (RegistrationSpec) rc.apply(new RegistrationContext());
-        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, false, null, joinColumn, new TableMapping(dtoClass, registrationSpec.buildTableSpec())));
+        final DtoTableSpecBuilder dtoTableSpecBuilder = (DtoTableSpecBuilder) rc.apply(new RegistrationContext());
+        final DtoTableSpec dtoTableSpec = dtoTableSpecBuilder.buildDtoTableSpec(dtoClass);
+        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, false, null, joinColumn, new TableMapping(dtoClass, dtoTableSpec.tableSpec())));
         return registrationTableContext;
     }
 
@@ -36,7 +36,6 @@ public final class RegistrationJoinStep extends RegistrationTableContextImpl {
     public RegistrationFieldContext mapField(final String fieldName) {
         registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, false, null, joinColumn));
         return registrationTableContext.mapField(fieldName);
-
     }
 
     @Override
@@ -46,8 +45,8 @@ public final class RegistrationJoinStep extends RegistrationTableContextImpl {
     }
 
     @Override
-    public TableSpec buildTableSpec() {
+    public DtoTableSpec buildDtoTableSpec(final Class<?> dtoClass) {
         addFieldColumnMapping(fieldSpec, new ColumnSpec(column, false, null, joinColumn));
-        return super.buildTableSpec();
+        return super.buildDtoTableSpec(dtoClass);
     }
 }

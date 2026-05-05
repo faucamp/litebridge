@@ -2,15 +2,17 @@ package org.litebridge.orm.api.register;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.spec.ColumnMapping;
+import org.litebridge.orm.api.spec.DtoTableSpec;
 import org.litebridge.orm.api.spec.FieldMapping;
 import org.litebridge.orm.api.spec.FieldSpec;
 import org.litebridge.orm.api.spec.TableSpec;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public sealed class RegistrationTableContextImpl implements RegistrationTableContext, RegistrationSpec
+public sealed class RegistrationTableContextImpl implements RegistrationTableContext, DtoTableSpecBuilder
         permits RegistrationColumnContext, RegistrationJoinStep {
 
     private final String tableName;
@@ -40,13 +42,8 @@ public sealed class RegistrationTableContextImpl implements RegistrationTableCon
     }
 
     @Override
-    public TableSpec buildTableSpec() {
-        return new TableSpec(tableName, fieldColumnMap);
-    }
-
-    @Override
-    public @Nullable List<Class<?>> dtoInterfaces() {
-        return dtoInterfaces;
+    public DtoTableSpec buildDtoTableSpec(final Class<?> dtoClass) {
+        return new DtoTableSpec(dtoClass, new TableSpec(tableName, fieldColumnMap), dtoInterfaces != null ? dtoInterfaces : Collections.emptyList());
     }
 
     void addFieldColumnMapping(final FieldMapping fieldMapping, final ColumnMapping columnMapping) {

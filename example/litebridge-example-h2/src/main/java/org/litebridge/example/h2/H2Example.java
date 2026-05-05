@@ -8,7 +8,6 @@ import org.litebridge.example.common.SqlExample;
 import org.litebridge.example.common.TypeSafeExample;
 import org.litebridge.example.common.dto.Account;
 import org.litebridge.example.common.dto.Person;
-import org.litebridge.example.common.mapping.DtoTableMap;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.tx.DefaultTransactionManager;
 import org.litebridge.orm.tx.SingleConnectionDataSource;
@@ -17,8 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
-
-import static org.litebridge.orm.api.spec.TableSpec.t;
 
 public class H2Example {
 
@@ -41,8 +38,20 @@ public class H2Example {
     private static void runExamples(final DataSource dataSource) throws SQLException {
         // Initialise litebridge and register DTO-table mappings
         final Litebridge litebridge = new Litebridge(new H2DatabaseProvider(), dataSource, new DefaultTransactionManager(dataSource));
-        litebridge.register(Person.class, t("LB", "PERSON", DtoTableMap.Person));
-        litebridge.register(Account.class, t("LB", "ACCOUNT", DtoTableMap.Account));
+
+        litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
+                .mapField("id").toColumn("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ")
+                .mapField("name").toColumn("FIRST_NAME")
+                .mapField("surname").toColumn("SURNAME")
+                .mapField("age").toColumn("AGE")
+                .mapProperty("eyeColour").toColumn("EYE_COLOUR")
+                .mapField("accounts").oneToMany(c -> c.mappedByField("owner")));
+
+        litebridge.register(Account.class, rc -> rc.mapToTable("LB.ACCOUNT")
+                .mapField("id").toColumn("ACCOUNT_ID").autoIncrement().usingSequence("LB.ACCOUNT_SEQ")
+                .mapField("name").toColumn("ACCOUNT_NAME")
+                .mapField("balance").toColumn("BALANCE")
+                .mapField("owner").toColumn("PERSON_ID").joinUsing());
 
         new PersistenceExample(litebridge).run();
         new QueryExample(litebridge).run();

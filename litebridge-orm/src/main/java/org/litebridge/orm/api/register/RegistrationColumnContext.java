@@ -1,8 +1,8 @@
 package org.litebridge.orm.api.register;
 
 import org.litebridge.orm.api.spec.ColumnSpec;
+import org.litebridge.orm.api.spec.DtoTableSpec;
 import org.litebridge.orm.api.spec.FieldSpec;
-import org.litebridge.orm.api.spec.TableSpec;
 
 public final class RegistrationColumnContext extends RegistrationTableContextImpl {
 
@@ -42,8 +42,8 @@ public final class RegistrationColumnContext extends RegistrationTableContextImp
     }
 
     @Override
-    public TableSpec buildTableSpec() {
+    public DtoTableSpec buildDtoTableSpec(final Class<?> dtoClass) {
         addFieldColumnMapping(fieldSpec, new ColumnSpec(column, false, null, null));
-        return super.buildTableSpec();
+        return super.buildDtoTableSpec(dtoClass);
     }
 }

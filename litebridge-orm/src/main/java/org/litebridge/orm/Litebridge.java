@@ -16,10 +16,10 @@ import org.litebridge.orm.api.dto.delete.DtoDeleteWhereClause;
 import org.litebridge.orm.api.dto.delete.DtoDeletor;
 import org.litebridge.orm.api.dto.update.DtoUpdateStart;
 import org.litebridge.orm.api.dto.update.DtoUpdater;
+import org.litebridge.orm.api.register.DtoTableSpecBuilder;
 import org.litebridge.orm.api.register.RegistrationContext;
-import org.litebridge.orm.api.register.RegistrationSpec;
 import org.litebridge.orm.api.register.RegistrationTableContext;
-import org.litebridge.orm.api.spec.TableSpec;
+import org.litebridge.orm.api.spec.DtoTableSpec;
 import org.litebridge.orm.api.sql.SqlFromClause;
 import org.litebridge.orm.api.sql.SqlSelector;
 import org.litebridge.orm.api.sql.delete.SqlDeleteWhereClause;
@@ -46,7 +46,6 @@ import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -110,21 +109,64 @@ public class Litebridge {
     }
 
     /**
+     * Registers a DTO class along with its associated table specification using the provided lookup and registration context.
+     *
+     * @param lookup   An instance of MethodHandles.Lookup used to access caller-sensitive methods.
+     * @param dtoClass The class object of the DTO (Data Transfer Object) to be registered.
+     * @param rc       A function that takes a RegistrationContext instance to configure the table mapping.
+     * @throws SQLException If an SQL-related error occurs during the registration process.
+     */
+    public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) throws SQLException {
+        final DtoTableSpecBuilder dtoTableSpecBuilder = (DtoTableSpecBuilder) rc.apply(new RegistrationContext());
+        register(lookup, dtoTableSpecBuilder.buildDtoTableSpec(dtoClass));
+    }
+
+    /**
+     * Registers a DTO class along with its associated table specification using the provided lookup and registration context.
+     * <p>
+     * This uses a local `MethodHandles.lookup()` to reflect the DTO and optional interfaces.
+     *
+     * @param dtoClass The class object of the DTO (Data Transfer Object) to be registered.
+     * @param rc       A function that takes a RegistrationContext instance to configure the table mapping.
+     * @throws SQLException If an SQL-related error occurs during the registration process.
+     */
+    public void register(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) throws SQLException {
+        register(MethodHandles.lookup(), dtoClass, rc);
+    }
+
+    /**
      * Register a Data Transfer Object (DTO) class with its corresponding table specification.
+     * <p>
+     * This method maps the DTO class to a database table and stores the association
+     * in the table registry to enable database operations such as insert, update, or query.
+     * <p>
+     * It uses a local `MethodHandles.lookup()` to reflect the DTO and optional interfaces.
+     *
+     * @param dtoTableSpec DTO-to-table mapping details
+     * @throws SQLException if an error occurs during the mapping or registration process.
+     */
+    public void register(final DtoTableSpec dtoTableSpec) throws SQLException {
+        register(MethodHandles.lookup(), dtoTableSpec);
+    }
+
+    /**
+     * Register a Data Transfer Object (DTO) class with its corresponding table specification,
+     * using the provided lookup object to reflect the DTO and optional interfaces.
+     * <p>
      * This method maps the DTO class to a database table and stores the association
      * in the table registry to enable database operations such as insert, update, or query.
      *
-     * @param dtoClass  the class of the Data Transfer Object to be registered; must not be null.
-     * @param tableSpec the table specification defining the mapping of the DTO class to the database table; must not be null.
+     * @param lookup       Lookup object used for reflecting the DTO and optional interfaces.
+     * @param dtoTableSpec DTO-to-table mapping details
      * @throws SQLException if an error occurs during the mapping or registration process.
      */
-    public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final TableSpec tableSpec, final @Nullable List<Class<?>> dtoInterfaces) throws SQLException {
-        final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoClass, tableSpec);
+    public void register(final MethodHandles.Lookup lookup, final DtoTableSpec dtoTableSpec) throws SQLException {
+        final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoTableSpec.dtoClass(), dtoTableSpec.tableSpec());
         final OrmTable ormTable = mappedTable.ormTable();
-        tableRegistry.addTable(dtoClass, mappedTable.ormTable());
+        tableRegistry.addTable(dtoTableSpec.dtoClass(), mappedTable.ormTable());
 
-        if (dtoInterfaces != null) {
-            dtoInterfaces.forEach(dtoInterface -> tableRegistry.addTable(dtoInterface, ormTable));
+        if (!CollectionUtils.isEmpty(dtoTableSpec.dtoInterfaces())) {
+            dtoTableSpec.dtoInterfaces().forEach(dtoInterface -> tableRegistry.addTable(dtoInterface, ormTable));
         }
 
         if (!ormTable.getNestedDtoClasses().isEmpty()) {
@@ -138,7 +180,7 @@ public class Litebridge {
             while (iterator.hasNext()) {
                 final FieldAccessor fieldAccessor = iterator.next();
 
-                if (fieldAccessor.genericType() == dtoClass) {
+                if (fieldAccessor.genericType() == dtoTableSpec.dtoClass()) {
                     ormTable.addOneToManyReverseMapping(fieldAccessor);
                     iterator.remove();
                 }
@@ -159,19 +201,6 @@ public class Litebridge {
                 pendingManyToOneDependencies.add(fieldAccessor);
             }
         });
-    }
-
-    public void register(final Class<?> dtoClass, final TableSpec tableSpec, final Class<?>... dtoInterfaces) throws SQLException {
-        register(MethodHandles.lookup(), dtoClass, tableSpec, Arrays.asList(dtoInterfaces));
-    }
-
-    public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) throws SQLException {
-        final RegistrationSpec registrationSpec = (RegistrationSpec) rc.apply(new RegistrationContext());
-        register(lookup, dtoClass, registrationSpec.buildTableSpec(), registrationSpec.dtoInterfaces());
-    }
-
-    public void register(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) throws SQLException {
-        register(MethodHandles.lookup(), dtoClass, rc);
     }
 
     /**
