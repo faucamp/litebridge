@@ -33,7 +33,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -138,6 +137,7 @@ class AbstractDatabaseProviderTest {
     void insert() throws Exception {
         // Given
         final TableMetaData tableMetaData = tableMetaDataImpl();
+        tableMetaData.column("TEST_PK").setAutoIncrement(true);
         final ColumnMetaData columnMetaData = tableMetaData.column("TEST_COLUMN");
         columnMetaData.setSequence("TEST_SEQUENCE");
         final ColumnValue columnValue1 = new ColumnValue(columnMetaData.toColumn(), "testValue1");
@@ -156,7 +156,7 @@ class AbstractDatabaseProviderTest {
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(preparedStatement.executeUpdate()).thenReturn(1);
         when(preparedStatement.getGeneratedKeys()).thenReturn(resultSet);
-        when(connection.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(preparedStatement);
+        when(connection.prepareStatement(anyString(), any(String[].class))).thenReturn(preparedStatement);
 
         // When
         final InsertResult result = databaseProvider.insert(insert, transactionManager);
@@ -173,6 +173,7 @@ class AbstractDatabaseProviderTest {
     void insert_noSchema() throws Exception {
         // Given
         final TableMetaData table = tableMetaDataImpl("");
+        table.column("TEST_PK").setAutoIncrement(true);
         final ColumnMetaData column = table.column("TEST_COLUMN");
         final ColumnValue columnValue = new ColumnValue(column.toColumn(), "testValue");
         final RowValue rowValue = new RowValue(List.of(columnValue));
@@ -188,7 +189,7 @@ class AbstractDatabaseProviderTest {
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(preparedStatement.executeUpdate()).thenReturn(1);
         when(preparedStatement.getGeneratedKeys()).thenReturn(resultSet);
-        when(connection.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(preparedStatement);
+        when(connection.prepareStatement(anyString(), any(String[].class))).thenReturn(preparedStatement);
 
         // When
         final InsertResult result = databaseProvider.insert(insert, transactionManager);
@@ -215,7 +216,7 @@ class AbstractDatabaseProviderTest {
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(preparedStatement.executeUpdate()).thenReturn(0);
-        when(connection.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(preparedStatement);
+        when(connection.prepareStatement(anyString(), any(String[].class))).thenReturn(preparedStatement);
 
         // When
         final InsertResult result = databaseProvider.insert(insert, transactionManager);
@@ -245,7 +246,7 @@ class AbstractDatabaseProviderTest {
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(preparedStatement.executeUpdate()).thenReturn(1);
         when(preparedStatement.getGeneratedKeys()).thenReturn(resultSet);
-        when(connection.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(preparedStatement);
+        when(connection.prepareStatement(anyString(), any(String[].class))).thenReturn(preparedStatement);
 
         // When
         final InsertResult result = databaseProvider.insert(insert, transactionManager);
@@ -343,12 +344,9 @@ class AbstractDatabaseProviderTest {
         when(resultSet.next()).thenReturn(true).thenReturn(false);
         final ResultSetMetaData resultSetMetaData = mock(ResultSetMetaData.class);
         when(resultSetMetaData.getColumnCount()).thenReturn(1);
-        when(resultSetMetaData.getSchemaName(1)).thenReturn(tableMetaData.schema());
-        when(resultSetMetaData.getTableName(1)).thenReturn(tableMetaData.name());
-        when(resultSetMetaData.getColumnName(1)).thenReturn(column.name());
         when(resultSetMetaData.getColumnLabel(1)).thenReturn(column.name());
         when(resultSet.getMetaData()).thenReturn(resultSetMetaData);
-        when(resultSet.getObject(column.name())).thenReturn("dbValue");
+        when(resultSet.getObject(1)).thenReturn("dbValue");
 
         when(typeConverter.convert("dbValue", Types.VARCHAR)).thenReturn("dbValue");
         when(preparedStatement.executeQuery()).thenReturn(resultSet);
@@ -676,7 +674,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(preparedSql.sql())).thenReturn(preparedStatement);
 
         // When
-        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, false, transactionManager);
+        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, false, tableMetaDataImpl(), transactionManager);
 
         // Then
         verify(result).setInt(1, 123);
@@ -704,7 +702,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(preparedSql.sql())).thenReturn(preparedStatement);
 
         // When
-        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, false, transactionManager);
+        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, false, tableMetaDataImpl(), transactionManager);
 
         // Then
         verify(result).setString(1, null);
@@ -722,7 +720,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(preparedSql.sql())).thenReturn(preparedStatement);
 
         // When
-        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, false, transactionManager);
+        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, false, tableMetaDataImpl(), transactionManager);
 
         // Then
         assertSame(preparedStatement, result);
@@ -737,10 +735,12 @@ class AbstractDatabaseProviderTest {
                 List.of(new AbstractDatabaseProvider.BindValue("value", Types.VARCHAR)));
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
-        when(connection.prepareStatement(preparedSql.sql(), Statement.RETURN_GENERATED_KEYS)).thenReturn(preparedStatement);
+        when(connection.prepareStatement(eq(preparedSql.sql()), eq(new String[]{"TEST_PK"}))).thenReturn(preparedStatement);
+        final TableMetaData tableMetaData = tableMetaDataImpl();
+        tableMetaData.column("TEST_PK").setAutoIncrement(true);
 
         // When
-        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, true, transactionManager);
+        final PreparedStatement result = databaseProvider.prepareStatement(preparedSql, true, tableMetaData, transactionManager);
 
         // Then
         assertSame(preparedStatement, result);
@@ -930,8 +930,10 @@ class AbstractDatabaseProviderTest {
     }
 
     private void mockTransactionManager() throws SQLException {
-        connection = mock(ManagedConnection.class);
-        when(transactionManager.connection()).thenReturn(connection);
+        if (connection == null) {
+            connection = mock(ManagedConnection.class);
+            when(transactionManager.connection()).thenReturn(connection);
+        }
     }
 
     private static class TestDatabaseProvider extends AbstractDatabaseProvider {

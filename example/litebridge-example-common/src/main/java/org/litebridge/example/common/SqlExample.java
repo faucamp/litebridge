@@ -48,11 +48,11 @@ public class SqlExample extends AbstractExample {
 
         LOGGER.info("[EXAMPLE] Using joins");
         litebridge.select(
-                        c("PERSON", "FIRST_NAME"),
-                        c("PERSON", "SURNAME"),
-                        c("PERSON", "AGE"),
-                        c("ACCOUNT", "ACCOUNT_ID"),
-                        c("ACCOUNT", "ACCOUNT_NAME"))
+                        c("LB.PERSON", "FIRST_NAME"),
+                        c("LB.PERSON", "SURNAME"),
+                        c("LB.PERSON", "AGE"),
+                        c("LB.ACCOUNT", "ACCOUNT_ID"),
+                        c("LB.ACCOUNT", "ACCOUNT_NAME"))
                 .from("LB.PERSON")
                 .join("LB", "ACCOUNT").using("PERSON_ID")
                 .stream()

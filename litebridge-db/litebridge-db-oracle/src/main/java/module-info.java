@@ -1,16 +1,16 @@
 import org.jspecify.annotations.NullMarked;
 
 /**
- * H2 Database Provider
+ * Oracle Database Provider
  */
 @NullMarked
-module litebridge.db.h2 {
+module litebridge.db.oracle {
     requires org.jspecify;
     requires litebridge.converter;
     requires litebridge.db.spi;
     requires litebridge.db.spi.impl;
-    requires org.slf4j;
     requires java.sql;
+    requires org.slf4j;
 
-    exports org.litebridge.db.h2;
+    exports org.litebridge.db.oracle;
 }

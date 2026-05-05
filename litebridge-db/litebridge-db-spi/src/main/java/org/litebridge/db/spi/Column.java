@@ -81,7 +81,7 @@ public class Column extends Aliased {
      * @return a new {@code Column} instance associated with the specified catalog, schema, table, and column name
      */
     public static Column c(final String table, final String column) {
-        return c("", "", table, column);
+        return c(new Table(table, null), column);
     }
 
     /**

@@ -13,6 +13,7 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.math.MathOperation;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.Join;
+import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
@@ -34,7 +35,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,19 +82,20 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     @Override
     public UpdateResult update(final Update update, final ConnectionProvider connectionProvider) throws SQLException {
         final PreparedSql preparedSql = prepareSql(update, connectionProvider);
-        return executeSqlUpdate(preparedSql, connectionProvider);
+        final TableMetaData tableMetaData = ensureTableMetaData(update.table(), connectionProvider);
+        return executeSqlUpdate(preparedSql, tableMetaData, connectionProvider);
     }
 
     @Override
     public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
-        final String sql = toSql(select);
-        return executeSqlQuery(sql, select.where(), select.table(), connectionProvider);
+        return executeSqlQuery(select, connectionProvider);
     }
 
     @Override
     public UpdateResult delete(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
         final PreparedSql preparedSql = prepareSql(delete, connectionProvider);
-        return executeSqlUpdate(preparedSql, connectionProvider);
+        final TableMetaData tableMetaData = ensureTableMetaData(delete.table(), connectionProvider);
+        return executeSqlUpdate(preparedSql, tableMetaData, connectionProvider);
     }
 
     @Override
@@ -129,7 +130,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         appendTable(sql, select.table());
 
         if (select.table().alias() != null) {
-            sql.append(" AS ").append(quoteIdentifier(select.table().alias()));
+            sql.append(' ').append(createAlias(quoteIdentifier(select.table().alias())));
         }
 
         // Joins
@@ -176,8 +177,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
 
         select.limit().ifPresent(limit -> {
-            limit.limit().ifPresent(limitVal -> sql.append(" LIMIT ").append(limitVal));
-            limit.offset().ifPresent(offset -> sql.append(" OFFSET ").append(offset));
+            appendLimitClause(limit, sql);
         });
 
         return sql.toString();
@@ -348,7 +348,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final StringBuilder sb = appendTable(new StringBuilder(" JOIN "), join.table());
 
         if (join.table().alias() != null) {
-            sb.append(" AS ").append(quoteIdentifier(join.table().alias()));
+            sb.append(' ').append(createAlias(quoteIdentifier(join.table().alias())));
         }
 
         if (join.conditions().getFirst().operator() != Operator.USING) {
@@ -431,7 +431,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         sql.append('.').append(quoteIdentifier(column.name()));
 
         if (!StringUtils.isBlank(column.alias())) {
-            sql.append(" AS ").append(quoteIdentifier(column.alias()));
+            sql.append(' ').append(createAlias(quoteIdentifier(column.alias())));
         }
     }
 
@@ -471,27 +471,39 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @throws SQLException if an error occurs while executing the SQL insert or retrieving the generated keys
      */
     protected InsertResult executeSqlInsert(final PreparedSql preparedSql, final TableMetaData tableMetaData, final boolean returnGeneratedKeys, final ConnectionProvider connectionProvider) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, returnGeneratedKeys, connectionProvider)) {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, returnGeneratedKeys, tableMetaData, connectionProvider)) {
             final int affectedRows = preparedStatement.executeUpdate();
 
             if (returnGeneratedKeys && affectedRows > 0) {
-                final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(tableMetaData.primaryKey().size());
-                final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
-
-                if (generatedKeysResultSet.next()) {
-                    for (ColumnMetaData pkColumn : tableMetaData.primaryKey()) {
-                        final Object generatedId = generatedKeysResultSet.getObject(pkColumn.name());
-                        LOGGER.debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
-                        generatedKeys.put(pkColumn, generatedId);
-                    }
-                }
-
-                generatedKeysResultSet.close();
+                final Map<ColumnMetaData, Object> generatedKeys = extractGeneratedKeys(tableMetaData, preparedStatement);
                 return new InsertResult(affectedRows, generatedKeys);
             } else {
                 return new InsertResult(affectedRows);
             }
         }
+    }
+
+    protected List<ColumnMetaData> getGeneratedPrimaryKeyColumns(final TableMetaData tableMetaData) {
+        return tableMetaData.primaryKey().stream()
+                .filter(ColumnMetaData::isAutoIncrement)
+                .toList();
+    }
+
+    protected Map<ColumnMetaData, Object> extractGeneratedKeys(final TableMetaData tableMetaData, final PreparedStatement preparedStatement) throws SQLException {
+        final List<ColumnMetaData> generatedPrimaryKeys = getGeneratedPrimaryKeyColumns(tableMetaData);
+        final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(tableMetaData.primaryKey().size());
+        final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
+
+        if (generatedKeysResultSet.next()) {
+            for (ColumnMetaData pkColumn : generatedPrimaryKeys) {
+                final Object generatedId = generatedKeysResultSet.getObject(pkColumn.name());
+                getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
+                generatedKeys.put(pkColumn, generatedId);
+            }
+        }
+
+        generatedKeysResultSet.close();
+        return generatedKeys;
     }
 
     /**
@@ -505,8 +517,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @return an {@link UpdateResult} object encapsulating the number of rows affected by the update operation
      * @throws SQLException if an error occurs while executing the SQL update
      */
-    protected UpdateResult executeSqlUpdate(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false, connectionProvider)) {
+    protected UpdateResult executeSqlUpdate(final PreparedSql preparedSql, final TableMetaData tableMetaData, final ConnectionProvider connectionProvider) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false, tableMetaData, connectionProvider)) {
             final int affectedRows = preparedStatement.executeUpdate();
             return new UpdateResult(affectedRows);
         }
@@ -515,16 +527,15 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     /**
      * Execute the given SQL query with specified columns, conditions, and table, and returns the result as a list of rows.
      *
-     * @param sql                the SQL query to be executed
-     * @param conditions         the list of conditions to apply in the WHERE clause of the query
-     * @param table              the table from which data is queried
+     * @param select             the SQL select query to be executed
      * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
      * @return a list of {@code Row} objects representing the query results
      * @throws SQLException if an SQL error occurs while executing the query
      */
-    private List<Row> executeSqlQuery(final String sql, final List<Condition> conditions, final Table table, final ConnectionProvider connectionProvider) throws SQLException {
-        final TableMetaData fromTable = ensureTableMetaData(table, connectionProvider);
-        final List<BindValue> bindValues = conditions.stream()
+    private List<Row> executeSqlQuery(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
+        final String sql = toSql(select);
+        final TableMetaData fromTable = ensureTableMetaData(select.table(), connectionProvider);
+        final List<BindValue> bindValues = select.where().stream()
                 .filter(condition -> condition.operator() != Operator.IS_NULL && condition.operator() != Operator.IS_NOT_NULL)
                 .map(condition -> {
                     final ColumnMetaData column = fromTable.column(condition.column().name());
@@ -533,7 +544,16 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 })
                 .toList();
 
-        try (final PreparedStatement preparedStatement = prepareStatement(new PreparedSql(sql, bindValues), false, connectionProvider)) {
+        final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.columns().size());
+
+        for (Column column : select.columns()) {
+            final String key = column.alias() != null ? column.alias() : column.name();
+            final TableMetaData table = ensureTableMetaData(column.table(), connectionProvider);
+            final ColumnMetaData columnMetaData = table.column(column.name());
+            columnLabelsToColumnMetaData.put(key, columnMetaData);
+        }
+
+        try (final PreparedStatement preparedStatement = prepareStatement(new PreparedSql(sql, bindValues), false, fromTable, connectionProvider)) {
             // Execute SQL query
             final ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -545,16 +565,28 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 final int columnCount = resultSet.getMetaData().getColumnCount();
 
                 for (int i = 1; i <= columnCount; i++) {
-                    final String schemaName = resultSet.getMetaData().getSchemaName(i);
-                    final String tableName = resultSet.getMetaData().getTableName(i);
-                    final TableMetaData columnTable = ensureTableMetaData(fromTable.catalog(), schemaName, tableName, connectionProvider);
-                    final String columnName = resultSet.getMetaData().getColumnName(i);
                     final String alias = transformAlias(resultSet.getMetaData().getColumnLabel(i));
-                    final ColumnMetaData columnMetaData = columnTable.column(columnName);
-                    final Column column = columnMetaData.toColumn().as(alias);
+                    final ColumnMetaData columnMetaData = columnLabelsToColumnMetaData.get(alias);
 
-                    final Object value = typeConverter.convert(resultSet.getObject(columnName), columnMetaData.getDataType());
-                    row.withColumn(column, value);
+                    if (columnMetaData != null) {
+                        // Use ORM-side metadata
+                        final Column column = columnMetaData.toColumn().as(alias);
+                        final Object value = typeConverter.convert(resultSet.getObject(i), columnMetaData.getDataType());
+                        row.withColumn(column, value);
+                    } else {
+                        // Read the metadata from the result
+                        final String schemaName = resultSet.getMetaData().getSchemaName(i);
+                        final String tableName = resultSet.getMetaData().getTableName(i);
+                        final String columnName = resultSet.getMetaData().getColumnName(i);
+                        final String columnAlias = resultSet.getMetaData().getColumnLabel(i);
+                        final int dataType = resultSet.getMetaData().getColumnType(i);
+
+                        final Table table = new Table(schemaName, tableName);
+                        final Column column = new Column(table, columnName, columnAlias);
+
+                        final Object value = typeConverter.convert(resultSet.getObject(i), dataType);
+                        row.withColumn(column, value);
+                    }
                 }
 
                 rows.add(row);
@@ -637,29 +669,27 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @param returnGeneratedKeys a boolean indicating whether the statement should return generated keys.
      *                            Pass {@code true} to configure the statement to return generated keys,
      *                            or {@code false} otherwise.
+     * @param tableMetaData
      * @param connectionProvider  the {@link ConnectionProvider} used to obtain a database connection.
      * @return a {@link PreparedStatement} that is ready to be executed based on the provided SQL and bind values.
      * @throws SQLException if a database access error occurs or the preparation of the SQL statement fails.
      */
     @SuppressWarnings("SqlSourceToSinkFlow")
-    protected PreparedStatement prepareStatement(final PreparedSql preparedSql, final boolean returnGeneratedKeys, final ConnectionProvider connectionProvider) throws SQLException {
-        if (LOGGER.isTraceEnabled() && !CollectionUtils.isEmpty(preparedSql.bindValues)) {
-            LOGGER.trace("Generated SQL: {} with bind parameters: {}", preparedSql.sql(), preparedSql.bindValues.stream()
+    protected PreparedStatement prepareStatement(final PreparedSql preparedSql,
+                                                 final boolean returnGeneratedKeys,
+                                                 final TableMetaData tableMetaData,
+                                                 final ConnectionProvider connectionProvider) throws SQLException {
+        if (getLogger().isTraceEnabled() && !CollectionUtils.isEmpty(preparedSql.bindValues)) {
+            getLogger().trace("Generated SQL: {} with bind parameters: {}", preparedSql.sql(), preparedSql.bindValues.stream()
                     .filter(Objects::nonNull)
                     .map(bindValue -> bindValue.value() != null ? bindValue.value() : "<null>")
                     .toList());
         } else {
-            LOGGER.debug("Generated SQL: {}", preparedSql.sql());
+            getLogger().debug("Generated SQL: {}", preparedSql.sql());
         }
 
         final ManagedConnection connection = connectionProvider.connection();
-        final PreparedStatement preparedStatement;
-
-        if (returnGeneratedKeys) {
-            preparedStatement = connection.prepareStatement(preparedSql.sql(), Statement.RETURN_GENERATED_KEYS);
-        } else {
-            preparedStatement = connection.prepareStatement(preparedSql.sql());
-        }
+        final PreparedStatement preparedStatement = createPreparedStatementUsingConnection(preparedSql, returnGeneratedKeys, tableMetaData, connection);
 
         final int[] ordinal = {1};
 
@@ -689,6 +719,21 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
 
         return preparedStatement;
+    }
+
+    protected PreparedStatement createPreparedStatementUsingConnection(final PreparedSql preparedSql,
+                                                                       final boolean returnGeneratedKeys,
+                                                                       final TableMetaData tableMetaData,
+                                                                       final ManagedConnection connection) throws SQLException {
+        if (returnGeneratedKeys) {
+            final String[] generatedKeyNames = getGeneratedPrimaryKeyColumns(tableMetaData).stream()
+                    .map(ColumnMetaData::name)
+                    .toArray(String[]::new);
+
+            return connection.prepareStatement(preparedSql.sql(), generatedKeyNames);
+        } else {
+            return connection.prepareStatement(preparedSql.sql());
+        }
     }
 
     /**
@@ -785,6 +830,15 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         } else {
             return identifier;
         }
+    }
+
+    protected String createAlias(final String alias) {
+        return "AS %s".formatted(alias);
+    }
+
+    protected void appendLimitClause(final Limit limit, final StringBuilder sql) {
+        limit.limit().ifPresent(limitVal -> sql.append(" LIMIT ").append(limitVal));
+        limit.offset().ifPresent(offset -> sql.append(" OFFSET ").append(offset));
     }
 
     protected ColumnMetaData ensureColumnMetaData(final Column column, final ConnectionProvider connectionProvider) throws SQLException {

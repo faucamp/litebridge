@@ -18,6 +18,7 @@
     <modules>
         <module>litebridge-example-common</module>
         <module>litebridge-example-h2</module>
+        <module>litebridge-example-oracle</module>
     </modules>
 
     <dependencyManagement>

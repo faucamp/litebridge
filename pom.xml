@@ -27,6 +27,7 @@
         <jspecify.version>1.0.0</jspecify.version>
         <junit-jupiter.version>6.0.3</junit-jupiter.version>
         <mockito.version>5.23.0</mockito.version>
+        <ojdbc17.version>23.26.1.0.0</ojdbc17.version>
         <slf4j.version>2.0.17</slf4j.version>
         <typeconverter.version>1.0</typeconverter.version>
     </properties>
@@ -149,8 +150,8 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.litebridge</groupId>
-                <artifactId>litebridge-db-h2</artifactId>
+                <groupId>org.litebridge.db</groupId>
+                <artifactId>litebridge-db-oracle</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -171,6 +172,11 @@
                 <version>${flyway.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-database-oracle</artifactId>
+                <version>${flyway.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
                 <version>${h2.version}</version>
@@ -184,6 +190,11 @@
                 <groupId>org.jspecify</groupId>
                 <artifactId>jspecify</artifactId>
                 <version>${jspecify.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.database.jdbc</groupId>
+                <artifactId>ojdbc17</artifactId>
+                <version>${ojdbc17.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
