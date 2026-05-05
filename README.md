@@ -69,35 +69,29 @@ public class Account {
 // Create a litebridge instance
 Litebridge litebridge = new Litebridge(new H2DatabaseProvider(connection));
 
-// Specify the table mapping for the Person DTO class
-Map<FieldSpec, ColumnSpec> personMap = Map.of(
-        // Field name -> column/relation details
-        f("id"),        c("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ"),
-        f("name"),      c("FIRST_NAME"),
-        f("surname"),   c("SURNAME"),
-        f("age"),       c("AGE"),
-        p("eyeColour"), c("EYE_COLOUR"),
-        f("accounts"),  oneToMany("owner")
-);
+// Register the table mapping for the Person DTO class
+litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
+    .mapField("id").toColumn("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ")
+    .mapField("name").toColumn("FIRST_NAME")
+    .mapField("surname").toColumn("SURNAME")
+    .mapField("age").toColumn("AGE")
+    .mapProperty("eyeColour").toColumn("EYE_COLOUR")
+    .mapField("accounts").oneToMany(c -> c.mappedByField("owner")));
 
-Map<FieldSpec, ColumnMapping> accountMap = Map.of(
-        f("id"),      c("ACCOUNT_ID").autoIncrement().usingSequence("LB.ACCOUNT_SEQ"),
-        f("name"),    c("ACCOUNT_NAME"),
-        f("balance"), c("BALANCE"),
-        f("owner"),   c("PERSON_ID").joinUsing()
-);
-
-// Enable persistence for the Person and Account DTO classes 
-litebridge.register(Person.class, t("LB.PERSON", personMap);
-litebridge.register(Account.class, t("LB.ACCOUNT", accountMap);
+// Register the table mapping for the Account DTO class
+litebridge.register(Account.class, rc -> rc.mapToTable("LB.ACCOUNT")
+    .mapField("id").toColumn("ACCOUNT_ID").autoIncrement().usingSequence("LB.ACCOUNT_SEQ")
+    .mapField("name").toColumn("ACCOUNT_NAME")
+    .mapField("balance").toColumn("BALANCE")
+    .mapField("owner").toColumn("PERSON_ID").joinUsing());
 ```
 
-The above snippet makes use of staticly-imported shorthand mapping methods `f()`, `p()`, and `c()`,
-which are synonyms for `field()`, `property()`, and `column()`, respectively. 
+The `register()` method is used to register a DTO-table mapping. It takes a DTO class and a callback that 
+provides a fluent API for configuring the mapping.
 
-`field()` and `property()` are
-used to specify a DTO field (and how to access it), while `column()` allows fluent specification of a target
-mapped database table column. 
+`mapField()` and `mapProperty()` are used to specify a DTO field (and how to access it), while `toColumn()` 
+allows specification of a target mapped database table column, which can itself
+be modified with further chained calls (such as the `autoIncrement()` and `usingSequence()` methods).
 
 The table mappings above specify the following:
 * For the `Person` class:
