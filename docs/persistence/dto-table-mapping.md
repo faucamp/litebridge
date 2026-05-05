@@ -24,7 +24,7 @@ database-specific mapping information - though a Litebridge-based application ca
 
 ## Usage
 
-### Registering a DTO-table mapping
+### Fluent API
 
 Litebridge provides a fluent API to specify how a DTO is mapped to a database table, accessible via
 the `Litebridge.register()` suite of methods.
@@ -123,3 +123,5 @@ The table mappings above specify the following:
   * The `name` field is mapped to the `ACCOUNT_NAME` column.
   * The `balance` field is mapped to the `BALANCE` column.
   * The `owner` field is a many-to-one mapping, with the foreign key mapped to column `PERSON_ID`. The related DTO is specified by a `JOIN USING` clause (i.e. joining on `PERSON_ID` in both tables) to fetch the target `Person` instance. 
+
+### Fluent API

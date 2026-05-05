@@ -191,7 +191,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @param sequence the name of the database sequence to generate the next value from
      * @return a formatted SQL string representing the next sequence value for direct insertion
      */
-    protected static String createSequenceNextValueForDirectInsert(final String sequence) {
+    protected String createSequenceNextValueForDirectInsert(final String sequence) {
         return "NEXT VALUE FOR %s".formatted(sequence);
     }
 
@@ -260,7 +260,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             }
 
             sql.append(quoteIdentifier(columnValue.column().name())).append(" = ");
-            final ColumnMetaData columnMetaData = ensuretColumnMetaData(columnValue.column(), connectionProvider);
+            final ColumnMetaData columnMetaData = ensureColumnMetaData(columnValue.column(), connectionProvider);
 
             if (columnValue.value() instanceof MathOperation mathOperation) {
                 sql.append(createMathOperation(columnMetaData, mathOperation));
@@ -715,7 +715,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final List<BindValue> bindValues = new ArrayList<>(rowValue.columns().size());
 
         for (final ColumnValue columnValue : rowValue.columns()) {
-            final ColumnMetaData column = ensuretColumnMetaData(columnValue.column(), connectionProvider);
+            final ColumnMetaData column = ensureColumnMetaData(columnValue.column(), connectionProvider);
             final Object convertedValue = typeConverter.convert(columnValue.value(), column.getDataType());
 
             if (convertedValue == null) {
@@ -787,7 +787,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
-    protected ColumnMetaData ensuretColumnMetaData(final Column column, final ConnectionProvider connectionProvider) throws SQLException {
+    protected ColumnMetaData ensureColumnMetaData(final Column column, final ConnectionProvider connectionProvider) throws SQLException {
         return ensureTableMetaData(column.table(), connectionProvider).column(column.name());
     }
 

@@ -14,7 +14,7 @@ It simplifies persistence by treating SQL as a first-class citizen, balancing re
 * **Lightweight**: A pure Java library with minimal external dependencies.
 * **Modern**: Built for Java 21+, leveraging modern idioms and features extensively.
 * **Efficient**: Focuses on performance and minimising database round-trips via built-in DTO change tracking.
-* **Transparent Mapping**: Map DTOs to databases without modifying your domain classes. Use programmatic, `Map`-based configuration or _optional_ annotations.
+* **Transparent Mapping**: Map DTOs to databases without modifying your domain classes. Use a fluent API, programmatic `Map`-based configuration or _optional_ annotations.
 * **Fluent API**: Compose queries using a natural, SQL-like fluent builder that stays out of your way.
 
 ## Shortcuts

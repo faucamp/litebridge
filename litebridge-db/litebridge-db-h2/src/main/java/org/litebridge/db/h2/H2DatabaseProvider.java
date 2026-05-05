@@ -7,15 +7,11 @@ import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
 /**
  * H2 Database Provider for Litebridge.
  * <p>
- * {@code }H2DatabaseProvider} is a concrete implementation of {@link AbstractDatabaseProvider}
- * designed to facilitate interactions with an H2 database. This class provides
- * database operations leveraging the connection specified during instantiation.
+ * {@code H2DatabaseProvider} is a concrete implementation of {@link AbstractDatabaseProvider}
+ * designed to facilitate interactions with an H2 database.
  * <p>
  * It uses a {@link DefaultTypeConverter} for handling type conversions between
  * database values and Java data types.
- * <p>
- * The {@code H2DatabaseProvider} requires an active database connection to be
- * provided at the time of instantiation.
  */
 public class H2DatabaseProvider extends AbstractDatabaseProvider {
 
@@ -23,6 +19,7 @@ public class H2DatabaseProvider extends AbstractDatabaseProvider {
         super(new DefaultTypeConverter());
     }
 
+    @Override
     protected @Nullable String transformAlias(final @Nullable String dbAlias) {
         if (dbAlias == null) {
             return null;
