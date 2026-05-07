@@ -114,13 +114,13 @@ class SqlE2eTest extends AbstractE2eTest {
         LOGGER.info("Selecting with a JOIN USING clause");
         final List<Row> result =
                 litebridge.select(
-                                c("PERSON", "FIRST_NAME"),
-                                c("PERSON", "SURNAME"),
-                                c("PERSON", "AGE"),
-                                c("ACCOUNT", "ACCOUNT_ID"),
-                                c("ACCOUNT", "ACCOUNT_NAME"))
+                                c("LB.PERSON", "FIRST_NAME"),
+                                c("LB.PERSON", "SURNAME"),
+                                c("LB.PERSON", "AGE"),
+                                c("LB.ACCOUNT", "ACCOUNT_ID"),
+                                c("LB.ACCOUNT", "ACCOUNT_NAME"))
                         .from("LB.PERSON")
-                        .join("LB", "ACCOUNT").using("PERSON_ID")
+                        .join("LB.ACCOUNT").using("PERSON_ID")
                         .list();
 
         // Then

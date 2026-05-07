@@ -7,6 +7,7 @@ import org.litebridge.orm.api.dto.DtoSelectSpec;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class DtoBlueprint {
 
@@ -29,18 +30,24 @@ public class DtoBlueprint {
         joinedDtoData.add(new JoinDtoData(dtoJoinSpec, primaryKey, dtoRow));
     }
 
-    public static abstract class DtoData<S extends DtoDataSpec> {
+    public static sealed abstract class DtoData<S extends DtoDataSpec> permits SelectDtoData, JoinDtoData {
         protected final S spec;
+        private final List<DtoSelectSpec.FieldColumn> fieldColumns;
         private final List<Object> primaryKey;
         private final Row row;
 
-        public DtoData(final S spec, final List<Object> primaryKey, final Row row) {
+        private DtoData(final S spec, final List<DtoSelectSpec.FieldColumn> fieldColumns, final List<Object> primaryKey, final Row row) {
             this.spec = spec;
+            this.fieldColumns = fieldColumns;
             this.primaryKey = primaryKey;
             this.row = row;
         }
 
         public abstract Class<?> dtoClass();
+
+        public List<DtoSelectSpec.FieldColumn> fieldColumns() {
+            return fieldColumns;
+        }
 
         public List<Object> primaryKey() {
             return primaryKey;
@@ -55,9 +62,14 @@ public class DtoBlueprint {
         }
     }
 
-    public static class SelectDtoData extends DtoData<DtoSelectSpec> {
+    public static final class SelectDtoData extends DtoData<DtoSelectSpec> {
         public SelectDtoData(final DtoSelectSpec dtoSelectSpec, final List<Object> primaryKey, final Row dtoRows) {
-            super(dtoSelectSpec, primaryKey, dtoRows);
+            super(dtoSelectSpec,
+                    dtoSelectSpec.getFieldColumns().stream()
+                            .filter(fieldColumn -> fieldColumn.column().table().equals(dtoSelectSpec.getTable()))
+                            .toList(),
+                    primaryKey,
+                    dtoRows);
         }
 
         @Override
@@ -66,10 +78,13 @@ public class DtoBlueprint {
         }
     }
 
-    public static class JoinDtoData extends DtoData<DtoJoinSpec> {
+    public static final class JoinDtoData extends DtoData<DtoJoinSpec> {
 
         public JoinDtoData(final DtoJoinSpec dtoJoinSpec, final List<Object> primaryKey, final Row dtoRows) {
-            super(dtoJoinSpec, primaryKey, dtoRows);
+            super(dtoJoinSpec,
+                    Objects.requireNonNull(dtoJoinSpec.getFieldColumns()),
+                    primaryKey,
+                    dtoRows);
         }
 
         @Override

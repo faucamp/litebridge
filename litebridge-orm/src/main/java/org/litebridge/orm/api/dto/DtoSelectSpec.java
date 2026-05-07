@@ -5,7 +5,7 @@ import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.model.SelectSpec;
-import org.litebridge.orm.persistence.AliasGenerator;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.tracking.FieldAccessor;
 

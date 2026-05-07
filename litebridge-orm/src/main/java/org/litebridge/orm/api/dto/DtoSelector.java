@@ -7,7 +7,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
-import org.litebridge.orm.persistence.AliasGenerator;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.SelectSpecDtoMapper;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -98,6 +98,7 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
         return fetchOneDto(true);
     }
 
+    //TODO: check if this override is still required
     @Override
     public Stream<DTO> stream() {
         return list().stream();

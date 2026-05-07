@@ -40,20 +40,16 @@ public class SqlSelectSpec extends SelectSpec {
         this.columns.addAll(sanitise((columns)));
     }
 
-    public JoinSpec newJoinSpec(final Table table) {
-        return newJoinSpec(table.schema(), table.name());
+    public SqlJoinSpec newJoinSpec(final String table) {
+        return newJoinSpec(new Table(table, null));
     }
 
-    public JoinSpec newJoinSpec(final String table) {
-        return newJoinSpec("", table);
-    }
-
-    public SqlJoinSpec newJoinSpec(final String schema, final String table) {
+    public SqlJoinSpec newJoinSpec(final Table table) {
         if (this.joins == null) {
             joins = new ArrayList<>();
         }
 
-        final SqlJoinSpec joinSpec = new SqlJoinSpec(schema, table);
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(table);
         joins.add(joinSpec);
         return joinSpec;
     }

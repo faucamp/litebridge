@@ -1,0 +1,19 @@
+package org.litebridge.orm.persistence.alias;
+
+import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.Table;
+import org.litebridge.orm.persistence.OrmTable;
+
+public final class NoOpAliasGenerator implements AliasGenerator {
+
+    @Override
+    public Table aliasTable(final OrmTable ormTable) {
+        return ormTable.getMetaData().toTable();
+    }
+
+    @Override
+    public Column aliasColumn(final Table ormTable, final ColumnMetaData columnMetaData) {
+        return columnMetaData.toColumn();
+    }
+}

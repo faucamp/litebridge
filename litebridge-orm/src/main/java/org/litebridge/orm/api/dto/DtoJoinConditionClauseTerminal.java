@@ -4,9 +4,8 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.orm.api.select.JoinClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
-import org.litebridge.orm.api.sql.SqlJoinSpec;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
-import org.litebridge.orm.persistence.AliasGenerator;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.Arrays;

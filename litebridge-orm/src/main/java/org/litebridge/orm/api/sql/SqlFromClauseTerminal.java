@@ -26,8 +26,8 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     }
 
     @Override
-    public SqlJoinClause join(final String schema, final String table) {
-        return new SqlJoinClause(selectSpec.newJoinSpec(schema, table), delegate);
+    public SqlJoinClause join(final String table) {
+        return new SqlJoinClause(selectSpec.newJoinSpec(table), delegate);
     }
 
     @Override

@@ -54,7 +54,7 @@ public class SqlExample extends AbstractExample {
                         c("LB.ACCOUNT", "ACCOUNT_ID"),
                         c("LB.ACCOUNT", "ACCOUNT_NAME"))
                 .from("LB.PERSON")
-                .join("LB", "ACCOUNT").using("PERSON_ID")
+                .join("LB.ACCOUNT").using("PERSON_ID")
                 .stream()
                 .forEach(p -> LOGGER.info("Joined result: {}", p));
     }

@@ -7,7 +7,7 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
 import org.litebridge.orm.api.select.model.ConditionSpec;
-import org.litebridge.orm.persistence.AliasGenerator;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.orm.persistence.MappedManyToMany;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.tracking.ClassFieldAccessorCache;

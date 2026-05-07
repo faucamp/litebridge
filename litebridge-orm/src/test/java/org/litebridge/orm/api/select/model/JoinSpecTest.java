@@ -18,15 +18,14 @@ class JoinSpecTest {
     @Test
     void table() {
         // Given
-        final JoinSpec joinSpec = new SqlJoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        final Table table = new Table("TEST_SCHEMA.TEST_TABLE", null);
+        final JoinSpec joinSpec = new SqlJoinSpec(table);
 
         // When
-        final Table table = joinSpec.table();
+        final Table result = joinSpec.table();
 
         // Then
-        assertNotNull(table);
-        assertEquals("TEST_SCHEMA", table.schema());
-        assertEquals("TEST_TABLE", table.name());
+        assertEquals(table, result);
     }
 
     @Test

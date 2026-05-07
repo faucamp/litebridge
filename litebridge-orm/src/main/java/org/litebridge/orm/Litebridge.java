@@ -29,7 +29,7 @@ import org.litebridge.orm.api.sql.update.SqlUpdater;
 import org.litebridge.orm.api.tx.TransactionContext;
 import org.litebridge.orm.api.update.UpdateQuery;
 import org.litebridge.orm.api.update.UpdateTerminal;
-import org.litebridge.orm.persistence.AliasGenerator;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.orm.persistence.DtoEntityMapping;
 import org.litebridge.orm.persistence.EntityDtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
@@ -38,6 +38,8 @@ import org.litebridge.orm.persistence.SelectSpecDtoMapper;
 import org.litebridge.orm.persistence.TableMapper;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
+import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridge.orm.tx.DefaultTransactionManager;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.FieldAccessor;
@@ -320,14 +322,14 @@ public class Litebridge {
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass) {
-        final AliasGenerator aliasGenerator = new AliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
         return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator).select();
     }
 
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
         final OrmTable table = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
-        final AliasGenerator aliasGenerator = new AliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
         return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator).select();
     }
 
@@ -421,7 +423,7 @@ public class Litebridge {
      */
     public <DTO> DTO toDto(final Row row, final Class<DTO> dtoClass) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, new AliasGenerator());
+        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, new NoOpAliasGenerator());
         selectSpec.setFieldColumns(row.columnStream()
                 .map(rowColumn -> {
                     final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(rowColumn.column().name());

@@ -88,7 +88,7 @@ class SqlSelectSpecTest {
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setColumns(List.of(column));
-        final JoinSpec joinSpec = sqlSelectSpec.newJoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        final JoinSpec joinSpec = sqlSelectSpec.newJoinSpec("TEST_SCHEMA.TEST_TABLE");
 
         // When
         sqlSelectSpec.setJoins(List.of(joinSpec));
@@ -110,7 +110,7 @@ class SqlSelectSpecTest {
         sqlSelectSpec.setColumns(List.of(column));
 
         // When
-        final JoinSpec result = sqlSelectSpec.newJoinSpec("TEST_SCHEMA", "TEST_TABLE2");
+        final JoinSpec result = sqlSelectSpec.newJoinSpec("TEST_SCHEMA.TEST_TABLE2");
 
         // Then
         assertNotNull(result);

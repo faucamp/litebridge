@@ -11,6 +11,7 @@ import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public final class DtoJoinSpec implements JoinSpec, DtoDataSpec {
@@ -37,8 +38,8 @@ public final class DtoJoinSpec implements JoinSpec, DtoDataSpec {
         return ormTable;
     }
 
-    public @Nullable List<DtoSelectSpec.FieldColumn> getFieldColumns() {
-        return fieldColumns;
+    public List<DtoSelectSpec.FieldColumn> getFieldColumns() {
+        return fieldColumns != null ? fieldColumns : Collections.emptyList();
     }
 
     public void setFieldColumns(@Nullable final List<DtoSelectSpec.FieldColumn> fieldColumns) {

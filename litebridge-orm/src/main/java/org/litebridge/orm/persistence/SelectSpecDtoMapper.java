@@ -1,12 +1,12 @@
 package org.litebridge.orm.persistence;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.MapUtils;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.dto.DtoJoinSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
@@ -104,11 +104,11 @@ public class SelectSpecDtoMapper {
     }
 
     private @Nullable PartiallyConstructedDto toDto(final DtoBlueprint.SelectDtoData dtoData) {
-        return toDto(dtoData, dtoData.spec().getFieldColumns());
+        return toDto(dtoData, dtoData.fieldColumns());
     }
 
     private @Nullable PartiallyConstructedDto toDto(final DtoBlueprint.JoinDtoData dtoData) {
-        return toDto(dtoData, dtoData.spec().getFieldColumns());
+        return toDto(dtoData, dtoData.fieldColumns());
     }
 
     private @Nullable PartiallyConstructedDto toDto(final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
@@ -225,15 +225,19 @@ public class SelectSpecDtoMapper {
     }
 
     private List<DtoBlueprint> createDtoBlueprints(final List<Row> rows) {
-        final OrmTable table = selectSpec.dtoTable();
+        final OrmTable ormTable = selectSpec.dtoTable();
+
+        // Find the primary key(s) for this table
+        final List<ColumnMetaData> pkColumns = ormTable.getMetaData().primaryKey();
+        // Match that to aliased columns (if any) in the select spec
+        final List<DtoSelectSpec.FieldColumn> pkFieldColumns = extractPrimaryKeyFieldColumns(pkColumns, selectSpec.getTable(), selectSpec.getFieldColumns());
 
         // Group rows by the DTO table's primary key value for DTO assembly
-        final List<ColumnMetaData> pkColumns = table.getMetaData().primaryKey();
         final Map<List<Object>, List<Row>> dtoPkGroupedRows = new LinkedHashMap<>();
 
         for (final Row row : rows) {
-            final List<Object> pkValues = pkColumns.stream()
-                    .map(pkColumn -> row.column(pkColumn.name())
+            final List<Object> pkValues = pkFieldColumns.stream()
+                    .map(pkFieldColumn -> row.column(pkFieldColumn.column())
                             .map(Row.RowColumn::value)
                             // No PK present in selected columns; use a hash of the row as the identifier
                             .orElseGet(row::hashCode))
@@ -244,8 +248,8 @@ public class SelectSpecDtoMapper {
         }
 
         // Construct the DTO blueprint by grouping other DTO data contained within each primary key-grouped list of rows
-        final boolean hasJoins = !CollectionUtils.isEmpty(selectSpec.getJoins());
         final List<DtoBlueprint> blueprints = new ArrayList<>(dtoPkGroupedRows.size());
+        final boolean hasJoins = !CollectionUtils.isEmpty(selectSpec.getJoins());
 
         for (final Map.Entry<List<Object>, List<Row>> entry : dtoPkGroupedRows.entrySet()) {
             final List<Row> rowGroup = entry.getValue();
@@ -256,12 +260,14 @@ public class SelectSpecDtoMapper {
                         .map(DtoJoinSpec.class::cast)
                         .forEach(dtoJoinSpec -> {
                             final List<ColumnMetaData> joinPkColumns = dtoJoinSpec.dtoTable().getMetaData().primaryKey();
-                            final Map<List<Object>, Row> relatedDtoRows = new LinkedHashMap<>();
+                            final List<DtoSelectSpec.FieldColumn> joinPkFieldColumns = extractPrimaryKeyFieldColumns(joinPkColumns, dtoJoinSpec.table(), dtoJoinSpec.getFieldColumns());
+                            final Map<List<@Nullable Object>, Row> relatedDtoRows = new LinkedHashMap<>();
 
                             for (final Row row : rowGroup) {
-                                final List<Object> joinPkValues = joinPkColumns.stream()
-                                        .map(pkColumn -> row.column(pkColumn.name())
-                                                .orElseThrow(() -> new IllegalStateException("No primary key column found for join table '%s' in row: %s".formatted(table.getMetaData().name(), row)))
+                                final List<@Nullable Object> joinPkValues = joinPkFieldColumns.stream()
+                                        .filter(joinPkFieldColumn -> joinPkFieldColumn.column().alias() != null)
+                                        .map(joinPkFieldColumn -> row.column(joinPkFieldColumn.column())
+                                                .orElseThrow(() -> new IllegalStateException("No primary key column found for join table '%s' in row: %s".formatted(ormTable.getMetaData().name(), row)))
                                                 .value())
                                         .toList();
 
@@ -277,6 +283,20 @@ public class SelectSpecDtoMapper {
         }
 
         return blueprints;
+    }
+
+    private List<DtoSelectSpec.FieldColumn> extractPrimaryKeyFieldColumns(final List<ColumnMetaData> pkColumns, final Table table, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
+        final List<DtoSelectSpec.FieldColumn> pkFieldColumns = new ArrayList<>(pkColumns.size());
+
+        for (ColumnMetaData pkColumnn : pkColumns) {
+            fieldColumns.stream()
+                    .filter(fieldColumn -> fieldColumn.column().table().equals(table))
+                    .filter(fieldColumn -> fieldColumn.column().name().equals(pkColumnn.name()))
+                    .findFirst()
+                    .ifPresent(pkFieldColumns::add);
+        }
+
+        return pkFieldColumns;
     }
 
     private void updateOneToManyCollectionMappings(final PartiallyConstructedDto partialDto) {

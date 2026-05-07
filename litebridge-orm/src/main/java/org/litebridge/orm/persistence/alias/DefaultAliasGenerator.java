@@ -1,15 +1,16 @@
-package org.litebridge.orm.persistence;
+package org.litebridge.orm.persistence.alias;
 
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public final class AliasGenerator {
+public final class DefaultAliasGenerator implements AliasGenerator {
 
     /**
      * Map of name -> alias base string
@@ -20,16 +21,18 @@ public final class AliasGenerator {
      */
     private final Map<String, Integer> aliasCount = new HashMap<>();
 
-    public Table aliasTable(final OrmTable table) {
-        final TableMetaData tableMetaData = table.getMetaData();
+    @Override
+    public Table aliasTable(final OrmTable ormTable) {
+        final TableMetaData tableMetaData = ormTable.getMetaData();
         final String tableAlias = newAlias(tableMetaData.name());
         return new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), tableAlias);
     }
 
-    public Column aliasColumn(final Table table, final ColumnMetaData column) {
+    @Override
+    public Column aliasColumn(final Table ormTable, final ColumnMetaData columnMetaData) {
         // Create a new alias
-        final String columnAlias = table.alias() + newAlias(column.name());
-        return new Column(table, column.name(), columnAlias);
+        final String columnAlias = ormTable.alias() + newAlias(columnMetaData.name());
+        return new Column(ormTable, columnMetaData.name(), columnAlias);
     }
 
     private String newAlias(final String name) {

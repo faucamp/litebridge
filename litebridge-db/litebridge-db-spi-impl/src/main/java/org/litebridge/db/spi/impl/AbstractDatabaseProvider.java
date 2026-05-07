@@ -581,7 +581,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                         final String columnAlias = resultSet.getMetaData().getColumnLabel(i);
                         final int dataType = resultSet.getMetaData().getColumnType(i);
 
-                        final Table table = new Table(schemaName, tableName);
+                        final Table table = new Table("", schemaName, tableName);
                         final Column column = new Column(table, columnName, columnAlias);
 
                         final Object value = typeConverter.convert(resultSet.getObject(i), dataType);

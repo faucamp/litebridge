@@ -12,9 +12,5 @@ public interface SqlJoinClauseTerminal extends JoinClauseTerminal<Row,
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
-    SqlJoinClause join(final String schema, String table);
-
-    default SqlJoinClause join(final String table) {
-        return join("", table);
-    }
+    SqlJoinClause join(final String table);
 }

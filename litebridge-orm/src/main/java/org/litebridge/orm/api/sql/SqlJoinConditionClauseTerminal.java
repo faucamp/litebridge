@@ -29,8 +29,8 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     }
 
     @Override
-    public SqlJoinClause join(final String schema, final String table) {
-        return new SqlJoinClause(selectSpec.newJoinSpec(schema, table), delegate);
+    public SqlJoinClause join(final String table) {
+        return new SqlJoinClause(selectSpec.newJoinSpec(table), delegate);
     }
 
     @Override
