@@ -3,40 +3,49 @@ package org.litebridge.orm.e2e.setup;
 import org.litebridge.db.oracle.OracleDatabaseProvider;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.orm.tx.SingleConnectionDataSource;
-import org.testcontainers.containers.OracleContainer;
-
-import javax.sql.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OracleDbEnvironment implements DbEnvironment {
 
-    private final OracleContainer container = new OracleContainer("gvenzl/oracle-xe:21-slim-faststart")
-            .withDatabaseName("testdb")
-            .withUsername("LB")
-            .withPassword("password");
+    private static final Logger LOGGER = LoggerFactory.getLogger(OracleDbEnvironment.class);
+    private final OracleContainerManager containerManager = OracleContainerManager.getInstance();
+    private SingleConnectionDataSource dataSource;
 
     @Override
     public void start() {
-        container.start();
+        // Start the shared container (only happens once)
+        containerManager.start();
+        LOGGER.debug("OracleDbEnvironment ready (using shared container)");
     }
 
     @Override
     public void stop() {
-        container.stop();
+        // Clean up the data source, but keep the container running
+        if (dataSource != null) {
+            try {
+                dataSource.getConnection().close();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to close data source connection", e);
+            }
+            dataSource = null;
+        }
+        LOGGER.debug("OracleDbEnvironment data source closed (container remains running)");
     }
 
     @Override
     public String getJdbcUrl() {
-        return container.getJdbcUrl();
+        return containerManager.getContainer().getJdbcUrl();
     }
 
     @Override
     public String getUsername() {
-        return container.getUsername();
+        return containerManager.getContainer().getUsername();
     }
 
     @Override
     public String getPassword() {
-        return container.getPassword();
+        return containerManager.getContainer().getPassword();
     }
 
     @Override
@@ -51,6 +60,13 @@ public class OracleDbEnvironment implements DbEnvironment {
 
     @Override
     public SingleConnectionDataSource getDataSource() {
-        return new SingleConnectionDataSource(container.getJdbcUrl(), container.getUsername(), container.getPassword());
+        if (dataSource == null) {
+            dataSource = new SingleConnectionDataSource(
+                    containerManager.getContainer().getJdbcUrl(),
+                    containerManager.getContainer().getUsername(),
+                    containerManager.getContainer().getPassword()
+            );
+        }
+        return dataSource;
     }
 }

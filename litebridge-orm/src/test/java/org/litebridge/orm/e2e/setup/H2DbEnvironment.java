@@ -19,6 +19,17 @@ public class H2DbEnvironment implements DbEnvironment {
     public void start() {
     }
 
+    @Override
+    public void stop() throws Exception {
+        if (dataSource != null) {
+            final Connection connection = dataSource.getConnection();
+            Statement statement = connection.createStatement();
+            statement.execute("SHUTDOWN");
+            connection.close();
+            dataSource = null;
+        }
+    }
+
     /**
      * Creates an H2 in-memory database connection.
      *
@@ -36,17 +47,6 @@ public class H2DbEnvironment implements DbEnvironment {
     @Override
     public String[] getMigrationLocations() {
         return new String[]{"classpath:db/migration/common", "classpath:db/migration/h2"};
-    }
-
-    @Override
-    public void stop() throws Exception {
-        if (dataSource != null) {
-            final Connection connection = dataSource.getConnection();
-            Statement statement = connection.createStatement();
-            statement.execute("SHUTDOWN");
-            connection.close();
-            dataSource = null;
-        }
     }
 
     @Override

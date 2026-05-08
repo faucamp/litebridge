@@ -12,8 +12,6 @@ import org.litebridge.orm.tx.SingleConnectionDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
-
 @ExtendWith(MultiDbTestExtension.class)
 public abstract class AbstractE2eTest {
 
@@ -22,7 +20,7 @@ public abstract class AbstractE2eTest {
     protected DbEnvironment dbEnv;
 
     @BeforeEach
-    void setup(DbEnvironment env) throws SQLException {
+    void beforeEach(DbEnvironment env) throws Exception {
         this.dbEnv = env;
         this.dbEnv.start(); // If not already started
 
@@ -39,30 +37,38 @@ public abstract class AbstractE2eTest {
     }
 
     @AfterEach
-    void tearDown() {
-        try {
-            dbEnv.stop();
-        } catch (Exception ex) {
-            LOGGER.error("Failed to stop database environment", ex);
-        } finally {
-            dbEnv = null;
-        }
+    void afterEach() throws Exception {
+        cleanupDatabase(dbEnv);
+        dbEnv.stop();
+        dbEnv = null;
     }
 
     /**
      * Runs Flyway migration on the supplied database connection.
      *
-     * @param url      Database connection URL
-     * @param user     Database user name
-     * @param password Database user password
+     * @param env Test database environment
      */
     private static void runFlywayMigration(final DbEnvironment env) {
         // Configure and run Flyway migration
         final Flyway flyway = Flyway.configure()
                 .dataSource(env.getJdbcUrl(), env.getUsername(), env.getPassword())
                 .locations(env.getMigrationLocations())
+                .cleanDisabled(false)
                 .load();
 
         flyway.migrate();
+    }
+
+    /**
+     * Cleanup database state between tests.
+     * This drops all tables in the LB schema to ensure test isolation.
+     */
+    private void cleanupDatabase(final DbEnvironment dbEnv) {
+        final Flyway flyway = Flyway.configure()
+                .dataSource(dbEnv.getJdbcUrl(), dbEnv.getUsername(), dbEnv.getPassword())
+                .locations(dbEnv.getMigrationLocations())
+                .cleanDisabled(false)
+                .load();
+        flyway.clean();
     }
 }
