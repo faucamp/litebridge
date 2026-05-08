@@ -40,6 +40,7 @@
                         --add-opens litebridge.orm/org.litebridge.orm.api.select.impl=litebridge.commons
                         --add-opens litebridge.orm/org.litebridge.orm.api.select.impl=ALL-UNNAMED
                         --add-opens litebridge.orm/org.litebridge.orm.persistence=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridge.orm.e2e.setup=ALL-UNNAMED
                         --add-opens litebridge.orm/org.litebridge.orm.e2e.basic.dto=litebridge.commons
                         --add-opens litebridge.orm/org.litebridge.orm.e2e.basic.dto=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridge.orm.e2e.compositepk.dto=litebridge.commons
