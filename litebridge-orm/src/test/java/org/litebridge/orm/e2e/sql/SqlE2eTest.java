@@ -9,6 +9,7 @@ import org.litebridge.orm.e2e.basic.dto.Person;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
@@ -170,19 +171,21 @@ class SqlE2eTest extends AbstractE2eTest {
     }
 
     private void insertTestPersonRecords() throws SQLException {
-//        final Connection connection = dataSource().getConnection();
-//        final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO LB.PERSON (PERSON_ID, FIRST_NAME, SURNAME, AGE, EYE_COLOUR) VALUES (?, ?, ?, ?, ?)");
-//        insertPerson(1L, "Alice", "Smith", 20, "brown", preparedStatement);
-//        insertPerson(2L, "Bob", "Johnson", 30, null, preparedStatement);
-//        preparedStatement.close();
+        try (final Connection connection = dbEnv.getDataSource().getConnection()) {
+            try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO LB.PERSON (PERSON_ID, FIRST_NAME, SURNAME, AGE, EYE_COLOUR) VALUES (?, ?, ?, ?, ?)")) {
+                insertPerson(1L, "Alice", "Smith", 20, "brown", preparedStatement);
+                insertPerson(2L, "Bob", "Johnson", 30, null, preparedStatement);
+            }
+        }
     }
 
     private void insertTestAccountRecords() throws SQLException {
-//        final Connection connection = dataSource().getConnection();
-//        final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO LB.ACCOUNT (ACCOUNT_ID, ACCOUNT_NAME, BALANCE, PERSON_ID) VALUES (?, ?, ?, ?)");
-//        insertAccount(1L, "Alice's Account", 1000L, 1L, preparedStatement);
-//        insertAccount(2L, "Bob's Account", 2000L, 2L, preparedStatement);
-//        preparedStatement.close();
+        try (final Connection connection = dbEnv.getDataSource().getConnection()) {
+            try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO LB.ACCOUNT (ACCOUNT_ID, ACCOUNT_NAME, BALANCE, PERSON_ID) VALUES (?, ?, ?, ?)")) {
+                insertAccount(1L, "Alice's Account", 1000L, 1L, preparedStatement);
+                insertAccount(2L, "Bob's Account", 2000L, 2L, preparedStatement);
+            }
+        }
     }
 
     private void insertPerson(final Long personId, final String firstName, final String surname, final int age, final String eyeColour, final PreparedStatement preparedStatement) throws SQLException {

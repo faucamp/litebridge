@@ -30,7 +30,16 @@ public final class DtoWhereConditionClauseTerminal<DTO>
 
     @Override
     public DtoWhereConditionClause<DTO> and(final String field) {
-        final Column column = table.getColumnForFieldName(field).toColumn();
+        Column column = table.getColumnForFieldName(field).toColumn();
+
+        // Use the aliased column if it is part of the SELECT clause, else use the unaliased column
+        for (Column selectedColumn : selectSpec.columns()) {
+            if (selectedColumn.equalsIgnoreAlias(column)) {
+                column = selectedColumn;
+                break;
+            }
+        }
+
         return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), this);
     }
 

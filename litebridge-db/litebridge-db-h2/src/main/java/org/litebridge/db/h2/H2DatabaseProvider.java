@@ -40,14 +40,14 @@ public class H2DatabaseProvider extends AbstractDatabaseProvider {
         }
     }
 
-    @Override
-    protected @Nullable String transformAlias(final @Nullable String dbAlias) {
-        if (dbAlias == null) {
-            return null;
-        } else {
-            return dbAlias.toLowerCase();
-        }
-    }
+//    @Override
+//    protected @Nullable String transformAlias(final @Nullable String dbAlias) {
+//        if (dbAlias == null) {
+//            return null;
+//        } else {
+//            return dbAlias.toLowerCase();
+//        }
+//    }
 
     @Override
     protected Logger getLogger() {

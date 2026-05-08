@@ -12,4 +12,5 @@ public interface DbEnvironment {
     SingleConnectionDataSource getDataSource();
     DatabaseProvider getDatabaseProvider();
     String[] getMigrationLocations();
+    String getName();
 }

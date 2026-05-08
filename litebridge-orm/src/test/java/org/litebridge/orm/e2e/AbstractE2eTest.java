@@ -18,13 +18,14 @@ public abstract class AbstractE2eTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractE2eTest.class);
     protected Litebridge litebridge;
     protected DbEnvironment dbEnv;
+    private Flyway flyway;
 
     @BeforeEach
     void beforeEach(DbEnvironment env) throws Exception {
         this.dbEnv = env;
         this.dbEnv.start(); // If not already started
 
-        // Run Flyway on the specific DB
+        // Init Flyway on the specific DB
         runFlywayMigration(env);
 
         SingleConnectionDataSource ds = dbEnv.getDataSource();
@@ -38,7 +39,8 @@ public abstract class AbstractE2eTest {
 
     @AfterEach
     void afterEach() throws Exception {
-        cleanupDatabase(dbEnv);
+        // Cleanup database state between tests
+        flyway.clean();
         dbEnv.stop();
         dbEnv = null;
     }
@@ -48,27 +50,17 @@ public abstract class AbstractE2eTest {
      *
      * @param env Test database environment
      */
-    private static void runFlywayMigration(final DbEnvironment env) {
+    private void runFlywayMigration(final DbEnvironment env) {
         // Configure and run Flyway migration
-        final Flyway flyway = Flyway.configure()
-                .dataSource(env.getJdbcUrl(), env.getUsername(), env.getPassword())
-                .locations(env.getMigrationLocations())
-                .cleanDisabled(false)
-                .load();
+        if (flyway == null) {
+            flyway = Flyway.configure()
+                    .dataSource(env.getJdbcUrl(), env.getUsername(), env.getPassword())
+                    .locations(env.getMigrationLocations())
+                    .cleanDisabled(false)
+                    .load();
+
+        }
 
         flyway.migrate();
-    }
-
-    /**
-     * Cleanup database state between tests.
-     * This drops all tables in the LB schema to ensure test isolation.
-     */
-    private void cleanupDatabase(final DbEnvironment dbEnv) {
-        final Flyway flyway = Flyway.configure()
-                .dataSource(dbEnv.getJdbcUrl(), dbEnv.getUsername(), dbEnv.getPassword())
-                .locations(dbEnv.getMigrationLocations())
-                .cleanDisabled(false)
-                .load();
-        flyway.clean();
     }
 }

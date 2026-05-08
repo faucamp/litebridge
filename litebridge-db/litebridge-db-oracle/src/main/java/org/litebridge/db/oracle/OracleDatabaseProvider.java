@@ -67,7 +67,7 @@ public class OracleDatabaseProvider extends AbstractDatabaseProvider {
         }
 
         final StringBuilder columnSql = new StringBuilder(quoteIdentifier(column.name()));
-        
+
         if (includeColumnAlias && !StringUtils.isBlank(column.alias())) {
             columnSql.append(' ').append(createAlias(quoteIdentifier(column.alias())));
         }
@@ -110,14 +110,14 @@ public class OracleDatabaseProvider extends AbstractDatabaseProvider {
         return generatedKeys;
     }
 
-    @Override
-    protected @Nullable String transformAlias(final @Nullable String dbAlias) {
-        if (dbAlias == null) {
-            return null;
-        } else {
-            return dbAlias.toLowerCase();
-        }
-    }
+//    @Override
+//    protected @Nullable String transformAlias(final @Nullable String dbAlias) {
+//        if (dbAlias == null) {
+//            return null;
+//        } else {
+//            return dbAlias.toLowerCase();
+//        }
+//    }
 
     @Override
     protected Logger getLogger() {

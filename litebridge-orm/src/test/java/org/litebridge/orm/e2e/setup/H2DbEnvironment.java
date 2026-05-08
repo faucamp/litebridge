@@ -50,6 +50,11 @@ public class H2DbEnvironment implements DbEnvironment {
     }
 
     @Override
+    public String getName() {
+        return "H2";
+    }
+
+    @Override
     public String getJdbcUrl() {
         return url;
     }

@@ -59,6 +59,11 @@ public class OracleDbEnvironment implements DbEnvironment {
     }
 
     @Override
+    public String getName() {
+        return "Oracle";
+    }
+
+    @Override
     public SingleConnectionDataSource getDataSource() {
         if (dataSource == null) {
             dataSource = new SingleConnectionDataSource(

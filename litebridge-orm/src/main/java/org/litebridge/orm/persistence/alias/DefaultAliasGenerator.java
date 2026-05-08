@@ -36,7 +36,7 @@ public final class DefaultAliasGenerator implements AliasGenerator {
     }
 
     private String newAlias(final String name) {
-        final String alias = aliasMap.computeIfAbsent(name, StringUtils::abbreviate);
+        final String alias = aliasMap.computeIfAbsent(name, StringUtils::abbreviate).toUpperCase();
         final int count = aliasCount.compute(alias, (k, v) -> v == null ? 0 : v + 1);
 
         if (count >= 1) {

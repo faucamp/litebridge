@@ -39,7 +39,9 @@ public final class SqlReservedWords {
             "END",
             "NULL",
             "TRUE",
-            "FALSE"
+            "FALSE",
+            "ASC",
+            "DESC"
     );
 
     public static boolean contains(final String word) {
