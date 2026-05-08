@@ -22,17 +22,26 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         implements DtoJoinClassTerminal<DTO> {
 
     private final TableRegistry tableRegistry;
-    private final OrmTable table;
+    private final OrmTable ormTable;
 
     public DtoFromClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);
         tableRegistry = delegate.tableRegistry();
-        table = delegate.table();
+        ormTable = delegate.table();
     }
 
     @Override
     public DtoWhereConditionClause<DTO> where(final String field) {
-        final Column column = table.getColumnForFieldName(field).toColumn();
+        Column column = ormTable.getColumnForFieldName(field).toColumn();
+
+        // Use the aliased column if it is part of the SELECT clause, else use the unaliased column
+        for (Column selectedColumn : selectSpec.columns()) {
+            if (selectedColumn.equalsIgnoreAlias(column)) {
+                column = selectedColumn;
+                break;
+            }
+        }
+
         return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate));
     }
 
@@ -45,7 +54,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         final OrmTable joinTable;
 
         // First check for inline/contextually-registered tables
-        final OrmTable contextScopedTable = table.getContextTableRegistry().getTable(dtoClass);
+        final OrmTable contextScopedTable = ormTable.getContextTableRegistry().getTable(dtoClass);
 
         if (contextScopedTable != null) {
             joinTable = contextScopedTable;
@@ -59,7 +68,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
         final String[] columns = Arrays.stream(fields)
-                .map(table::getColumnForFieldName)
+                .map(ormTable::getColumnForFieldName)
                 .map(ColumnMetaData::name)
                 .toArray(String[]::new);
         return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);

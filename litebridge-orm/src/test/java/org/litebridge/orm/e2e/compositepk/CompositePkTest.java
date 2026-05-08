@@ -1,7 +1,7 @@
 package org.litebridge.orm.e2e.compositepk;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkFkTest;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkLookup;
@@ -15,7 +15,7 @@ class CompositePkTest extends AbstractE2eTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CompositePkTest.class);
 
-    @Test
+    @TestTemplate
     @DisplayName("Composite PK with foreign key constraint")
     void compositePk_foreignKey() throws Exception {
         // Given
@@ -46,7 +46,7 @@ class CompositePkTest extends AbstractE2eTest {
         assertEquals(test1, test1Result);
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Composite auto-incrementing PK")
     void compositePk_autoIncrement() throws Exception {
         // Given

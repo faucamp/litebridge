@@ -1,7 +1,7 @@
 package org.litebridge.orm.e2e.shareddto;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.shareddto.dto.Application;
 import org.litebridge.orm.e2e.shareddto.dto.Server;
@@ -16,7 +16,7 @@ class SharedDtoE2eTest extends AbstractE2eTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SharedDtoE2eTest.class);
 
-    @Test
+    @TestTemplate
     @DisplayName("Persist objects that share a nested DTO mapped to different tables")
     void sharedDto_differentTables() throws Exception {
         // Register DTOs and construct data

@@ -1,7 +1,7 @@
 package org.litebridge.orm.e2e.manytomany;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Person;
 import org.litebridge.orm.e2e.manytomany.dto.Group;
@@ -21,7 +21,7 @@ class ManyToManyE2eTest extends AbstractE2eTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ManyToManyE2eTest.class);
 
-    @Test
+    @TestTemplate
     @DisplayName("Select DTO and join fetch related DTOs")
     void nestedDtos_fetchRelatedDtos() throws Exception {
         registerDtoTableMappings();
@@ -137,7 +137,7 @@ class ManyToManyE2eTest extends AbstractE2eTest {
         assertTrue(resultGroup1Updated.getMembers().stream().anyMatch(p -> person3.getId().equals(p.getId())));
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Select DTO without related DTOs")
     void nestedDtos_dontfetchRelatedDtos() throws Exception {
         registerDtoTableMappings();

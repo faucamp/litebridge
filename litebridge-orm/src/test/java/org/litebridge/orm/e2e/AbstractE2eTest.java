@@ -1,101 +1,66 @@
 package org.litebridge.orm.e2e;
 
 import org.flywaydb.core.Flyway;
-import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.litebridge.db.h2.H2DatabaseProvider;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.e2e.setup.DbEnvironment;
+import org.litebridge.orm.e2e.setup.MultiDbTestExtension;
 import org.litebridge.orm.tx.DefaultTransactionManager;
 import org.litebridge.orm.tx.SingleConnectionDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+@ExtendWith(MultiDbTestExtension.class)
 public abstract class AbstractE2eTest {
 
-    private static SingleConnectionDataSource dataSource;
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractE2eTest.class);
     protected Litebridge litebridge;
+    protected DbEnvironment dbEnv;
+    private Flyway flyway;
 
     @BeforeEach
-    void beforeEach() throws SQLException {
-        litebridge = resetLiteBridge();
+    void beforeEach(DbEnvironment env) throws Exception {
+        this.dbEnv = env;
+        this.dbEnv.start(); // If not already started
+
+        // Init Flyway on the specific DB
+        runFlywayMigration(env);
+
+        SingleConnectionDataSource ds = dbEnv.getDataSource();
+
+        this.litebridge = new Litebridge(
+                dbEnv.getDatabaseProvider(),
+                ds,
+                new DefaultTransactionManager(ds)
+        );
     }
 
-    @AfterAll
-    static void afterAll() throws SQLException {
-        if (dataSource != null) {
-            shutdownInMemoryH2();
-        }
-    }
-
-    protected DataSource dataSource() {
-        return dataSource;
-    }
-
-    private Litebridge ensureLitebridge() throws SQLException {
-        if (dataSource() == null) {
-            dataSource = createH2DataSource();
-            litebridge = new Litebridge(new H2DatabaseProvider(), dataSource, new DefaultTransactionManager(dataSource));
-        }
-
-        return litebridge;
-    }
-
-    /**
-     * Resets the Litebridge instance by shutting down the in-memory H2 database and ensuring a new connection.
-     *
-     * @return Litebridge instance
-     * @throws SQLException if shutdown or connection creation fails
-     */
-    private Litebridge resetLiteBridge() throws SQLException {
-        shutdownInMemoryH2();
-        return ensureLitebridge();
-    }
-
-    /**
-     * Creates an H2 in-memory database connection.
-     *
-     * @return H2 database connection
-     */
-    private SingleConnectionDataSource createH2DataSource() {
-        final String url = "jdbc:h2:mem:lb;DB_CLOSE_DELAY=-1";
-        final String user = "sa";
-        final String password = "";
-        runFlywayMigration(url, user, password);
-        return new SingleConnectionDataSource(url, user, password);
+    @AfterEach
+    void afterEach() throws Exception {
+        // Cleanup database state between tests
+        flyway.clean();
+        dbEnv.stop();
+        dbEnv = null;
     }
 
     /**
      * Runs Flyway migration on the supplied database connection.
      *
-     * @param url      Database connection URL
-     * @param user     Database user name
-     * @param password Database user password
+     * @param env Test database environment
      */
-    private static void runFlywayMigration(final String url, final String user, final String password) {
+    private void runFlywayMigration(final DbEnvironment env) {
         // Configure and run Flyway migration
-        final Flyway flyway = Flyway.configure()
-                .dataSource(url, user, password)
-                .locations("classpath:db/migration")
-                .load();
+        if (flyway == null) {
+            flyway = Flyway.configure()
+                    .dataSource(env.getJdbcUrl(), env.getUsername(), env.getPassword())
+                    .locations(env.getMigrationLocations())
+                    .cleanDisabled(false)
+                    .load();
+
+        }
 
         flyway.migrate();
-    }
-
-    /**
-     * Shuts down the in-memory H2 database connection.
-     *
-     * @throws SQLException if shutdown fails
-     */
-    private static void shutdownInMemoryH2() throws SQLException {
-        if (dataSource != null) {
-            final Connection connection = dataSource.getConnection();
-            Statement statement = connection.createStatement();
-            statement.execute("SHUTDOWN");
-            connection.close();
-            dataSource = null;
-        }
     }
 }

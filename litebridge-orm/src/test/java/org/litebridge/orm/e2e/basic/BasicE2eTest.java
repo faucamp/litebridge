@@ -2,6 +2,7 @@ package org.litebridge.orm.e2e.basic;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Account;
@@ -29,7 +30,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicE2eTest.class);
 
-    @Test
+    @TestTemplate
     @DisplayName("Select DTO and join fetch related DTOs")
     void nestedDtos_fetchRelatedDtos() throws Exception {
         // Register DTO-table mappings
@@ -64,7 +65,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertEquals(person, result.getOwner());
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Select DTO without related DTOs")
     void nestedDtos_dontfetchRelatedDtos() throws Exception {
         // Register DTO-table mappings
@@ -93,7 +94,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertNull(result.getOwner());
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Nested DTOs mapped to separate tables, cascading save, no transactions (autocommit)")
     void nestedDtos_oneTablePerDto_cascadeSave_autoCommit() throws Exception {
         // Register DTO-table mappings
@@ -152,7 +153,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertEquals(1, fetchedAccount.getOwner().getAccounts().size(), "Only 1 account should be present since we selected a single Account from the Account side");
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Nested DTOs mapped to separate tables, cascading save in transaction")
     void nestedDtos_oneTablePerDto_cascadeSave_transaction() throws Exception {
         // Register DTO-table mappings
@@ -211,7 +212,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertEquals(1, fetchedAccount.getOwner().getAccounts().size(), "Only 1 account should be present since we selected a single Account from the Account side");
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Single DTO mapped to multiple tables")
     void singleDto_multipleTables() throws Exception {
         // Create our "original"/unmapped DTO (unmapped since Litebridge expects one table per DTO)
@@ -257,7 +258,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertEquals(personAccount, result);
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Delete DTOs, no transactions (autocommit)")
     void delete_autoCommit() throws Exception {
         // Register DTO-table mappings
@@ -306,7 +307,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertEquals(0, litebridge.select(Person.class).list().size());
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Update DTOs, no transactions (autocommit)")
     void update() throws Exception {
         // Given

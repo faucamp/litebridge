@@ -1,7 +1,7 @@
 package org.litebridge.orm.e2e.basic;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.db.spi.tx.TransactionException;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Account;
@@ -22,7 +22,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TransactionsE2eTest.class);
 
-    @Test
+    @TestTemplate
     @SuppressWarnings("resource")
     @DisplayName("Transaction commit: manual control")
     void transaction_commit_manual() throws Exception {
@@ -46,7 +46,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         assertNotNull(person.getId(), "Person ID should be set after transaction commit");
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Transaction commit: try-with-resources")
     void transaction_commit_tryWithResources() throws Exception {
         // Given
@@ -70,7 +70,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         assertNotNull(person.getId(), "Person ID should be set after transaction commit");
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Transaction commit: lambda")
     void transaction_commit_lambda() throws Exception {
         // Given
@@ -91,7 +91,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         assertNotNull(person.getId(), "Person ID should be set after transaction commit");
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Transaction rollback on exception: manual control")
     void transaction_rollback_manual() throws Exception {
         // Given
@@ -120,7 +120,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         assertNull(person.getId(), "Person ID should not be set after transaction rollback");
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Transaction rollback on exception: try-with-resources")
     void transaction_rollback_tryWithResources() throws Exception {
         // Given
@@ -145,7 +145,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         assertNull(person.getId(), "Person ID should not be set after transaction rollback");
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Transaction explicit rollback: try-with-resources")
     void transaction_explicitRollback_tryWithResources() throws Exception {
         // Given
@@ -174,7 +174,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         assertNull(person.getId(), "Person ID should not be set after transaction rollback");
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Transaction explicit rollback: rollback DTO collections")
     void transaction_explicitRollback_oneToMany() throws Exception {
         // Register DTO-table mappings
@@ -216,7 +216,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         assertNull(person.getAccounts(), "Person accounts not restored to null after rollback");
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Transaction rollback on exception: lambda")
     void transaction_rollback_lambda() throws Exception {
         // Given
