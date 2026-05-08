@@ -575,7 +575,7 @@ class AbstractDatabaseProviderTest {
 
         // Then
         assertNotNull(result);
-        assertEquals("TEST_COLUMN = ?", result);
+        assertEquals("TEST_TABLE.TEST_COLUMN = ?", result);
     }
 
     @Test
@@ -589,7 +589,7 @@ class AbstractDatabaseProviderTest {
 
         // Then
         assertNotNull(result);
-        assertEquals("TEST_COLUMN IS NULL", result);
+        assertEquals("TEST_TABLE.TEST_COLUMN IS NULL", result);
     }
 
     @Test
@@ -603,7 +603,7 @@ class AbstractDatabaseProviderTest {
 
         // Then
         assertNotNull(result);
-        assertEquals("TEST_COLUMN IS NOT NULL", result);
+        assertEquals("TEST_TABLE.TEST_COLUMN IS NOT NULL", result);
     }
 
     @Test

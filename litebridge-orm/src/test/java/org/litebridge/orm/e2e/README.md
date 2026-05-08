@@ -14,12 +14,18 @@ To specify a specific database environment, set the `db.env` system property to 
 
 By default, the tests will run against all supported databases (`all`).
 
+Example:
+
+```sql
+-Ddb.env=h2
+```
+
 ## IntelliJ note
 
 To run a specific end-to-end test in IntelliJ, you may need to add the following VM option to the run configuration:
 
 ```
---add-opens litebridge.orm/org.litebridge.orm.e2e=ALL-UNNAMED --add-opens litebridge.orm/org.litebridge.orm.e2e.setup=ALL-UNNAMED --add-opens litebridge.orm/org.litebridge.orm.e2e=ALL-UNNAMED --add-opens litebridge.orm/org.litebridge.orm.e2e.compositepk=ALL-UNNAMED
+--add-opens litebridge.orm/org.litebridge.orm.e2e=ALL-UNNAMED --add-opens litebridge.orm/org.litebridge.orm.e2e.setup=ALL-UNNAMED
 ```
 
 JUnit runs in the unnamed module; the above allows the test-specific `e2e` package to access the `litebridge.orm` module.

@@ -110,15 +110,6 @@ public class OracleDatabaseProvider extends AbstractDatabaseProvider {
         return generatedKeys;
     }
 
-//    @Override
-//    protected @Nullable String transformAlias(final @Nullable String dbAlias) {
-//        if (dbAlias == null) {
-//            return null;
-//        } else {
-//            return dbAlias.toLowerCase();
-//        }
-//    }
-
     @Override
     protected Logger getLogger() {
         return LOGGER;

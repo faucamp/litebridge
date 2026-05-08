@@ -853,7 +853,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @param sqlDataType The integer value indicating the SQL data type of the bound value,
      *                    corresponding to values in {@link java.sql.Types}.
      */
-    protected record BindValue(@Nullable Object value, int sqlDataType) {
+    public record BindValue(@Nullable Object value, int sqlDataType) {
     }
 
     /**
@@ -871,7 +871,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      *                   in the SQL query. Each value can be nullable, represented
      *                   by the {@link BindValue} type.
      */
-    protected record PreparedSql(String sql, List<@Nullable BindValue> bindValues) {
+    public record PreparedSql(String sql, List<@Nullable BindValue> bindValues) {
     }
 
     /**
