@@ -40,10 +40,10 @@ public class OracleDatabaseProvider extends AbstractDatabaseProvider {
     }
 
     @Override
-    protected String createColumnIdentifier(final Column column, final Select select) {
+    protected String createColumnIdentifier(final Column column, final boolean includeColumnAlias, final @Nullable Select select) {
         // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the column
-        if (CollectionUtils.isEmpty(select.joins())) {
-            return super.createColumnIdentifier(column, select);
+        if (select == null || CollectionUtils.isEmpty(select.joins())) {
+            return super.createColumnIdentifier(column, includeColumnAlias, select);
         }
 
         boolean applyTableQualifier = true;
@@ -63,13 +63,12 @@ public class OracleDatabaseProvider extends AbstractDatabaseProvider {
         }
 
         if (applyTableQualifier) {
-            return super.createColumnIdentifier(column, select);
+            return super.createColumnIdentifier(column, includeColumnAlias, select);
         }
 
         final StringBuilder columnSql = new StringBuilder(quoteIdentifier(column.name()));
-        columnSql.append(quoteIdentifier(column.name()));
-
-        if (!StringUtils.isBlank(column.alias())) {
+        
+        if (includeColumnAlias && !StringUtils.isBlank(column.alias())) {
             columnSql.append(' ').append(createAlias(quoteIdentifier(column.alias())));
         }
 

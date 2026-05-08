@@ -118,7 +118,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                     sql.append(", ");
                 }
 
-                sql.append(createColumnIdentifier(column, select));
+                sql.append(createColumnIdentifier(column, true, select));
             }
         } else {
             // Empty select clause; return all columns
@@ -382,7 +382,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @return a {@code String} representing the constructed SQL condition fragment
      */
     protected String createCondition(final Condition condition, @Nullable final Select select) {
-        final String column = createColumnIdentifier(condition.column(), select);
+        final String column = createColumnIdentifier(condition.column(), false, select);
 
         if (condition.operator() == Operator.IS_NULL || condition.operator() == Operator.IS_NOT_NULL) {
             return "%s %s".formatted(column, mapOperator(condition.operator()));
@@ -415,7 +415,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return sql;
     }
 
-    protected String createColumnIdentifier(final Column column, final @Nullable Select select) {
+    protected String createColumnIdentifier(final Column column, boolean includeColumnAlias, final @Nullable Select select) {
         final StringBuilder columnSql = new StringBuilder();
 
         if (!StringUtils.isEmpty(column.table().alias())) {
@@ -426,7 +426,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
         columnSql.append('.').append(quoteIdentifier(column.name()));
 
-        if (!StringUtils.isBlank(column.alias())) {
+        if (includeColumnAlias && !StringUtils.isBlank(column.alias())) {
             columnSql.append(' ').append(createAlias(quoteIdentifier(column.alias())));
         }
 
