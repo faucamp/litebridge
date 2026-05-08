@@ -29,6 +29,7 @@
         <mockito.version>5.23.0</mockito.version>
         <ojdbc17.version>23.26.1.0.0</ojdbc17.version>
         <slf4j.version>2.0.17</slf4j.version>
+        <testcontainers.version>2.0.5</testcontainers.version>
         <typeconverter.version>1.0</typeconverter.version>
     </properties>
 
@@ -223,6 +224,18 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-junit-jupiter</artifactId>
                 <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-oracle-xe</artifactId>
+                <version>${testcontainers.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

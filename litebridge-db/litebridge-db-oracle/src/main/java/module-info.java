@@ -11,6 +11,7 @@ module litebridge.db.oracle {
     requires litebridge.db.spi.impl;
     requires java.sql;
     requires org.slf4j;
+    requires litebridge.commons;
 
     exports org.litebridge.db.oracle;
 }

@@ -571,7 +571,7 @@ class AbstractDatabaseProviderTest {
         final Condition condition = new Condition(column, Operator.EQ, "testValue");
 
         // When
-        final String result = databaseProvider.createCondition(condition);
+        final String result = databaseProvider.createCondition(condition, mock(Select.class));
 
         // Then
         assertNotNull(result);
@@ -585,7 +585,7 @@ class AbstractDatabaseProviderTest {
         final Condition condition = new Condition(column, Operator.IS_NULL);
 
         // When
-        final String result = databaseProvider.createCondition(condition);
+        final String result = databaseProvider.createCondition(condition, mock(Select.class));
 
         // Then
         assertNotNull(result);
@@ -599,7 +599,7 @@ class AbstractDatabaseProviderTest {
         final Condition condition = new Condition(column, Operator.IS_NOT_NULL);
 
         // When
-        final String result = databaseProvider.createCondition(condition);
+        final String result = databaseProvider.createCondition(condition, mock(Select.class));
 
         // Then
         assertNotNull(result);
@@ -613,7 +613,7 @@ class AbstractDatabaseProviderTest {
         final Condition condition = new Condition(column, Operator.USING, null);
 
         // When
-        final String result = databaseProvider.createCondition(condition);
+        final String result = databaseProvider.createCondition(condition, mock(Select.class));
 
         // Then
         assertEquals("USING (TEST_COLUMN)", result);
@@ -627,7 +627,7 @@ class AbstractDatabaseProviderTest {
         final Condition condition = new Condition(column, Operator.EQ, "testValue");
 
         // When
-        final String result = databaseProvider.createCondition(condition);
+        final String result = databaseProvider.createCondition(condition, mock(Select.class));
 
         // Then
         assertEquals("t1.TEST_COLUMN = ?", result);
@@ -644,7 +644,7 @@ class AbstractDatabaseProviderTest {
         final Condition condition = new Condition(left, Operator.EQ, right);
 
         // When
-        final String result = databaseProvider.createCondition(condition);
+        final String result = databaseProvider.createCondition(condition, mock(Select.class));
 
         // Then
         assertEquals("t1.TEST_COLUMN = t2.TEST_PK", result);

@@ -2,6 +2,7 @@ package org.litebridge.orm.e2e.singletable_multidto;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.singletable_multidto.dto.SingleTableNestedParent;
 
@@ -12,7 +13,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
 
-    @Test
+    @TestTemplate
     @DisplayName("Nested DTOs mapped to a single table")
     void nestedDtos_singleTable() throws Exception {
         assumeTrue(litebridge.select().from("LB.PERSON").list().isEmpty());

@@ -3,6 +3,7 @@ package org.litebridge.db.spi;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /**
  * A database column that belongs to a specific table and optionally has an alias.
@@ -130,5 +131,14 @@ public class Column extends Aliased {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), table);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Column.class.getSimpleName() + "[", "]")
+                .add("table=" + table)
+                .add("name=" + name())
+                .add("alias=" + alias())
+                .toString();
     }
 }

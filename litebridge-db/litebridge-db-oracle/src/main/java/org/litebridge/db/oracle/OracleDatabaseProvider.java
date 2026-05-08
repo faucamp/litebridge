@@ -1,11 +1,18 @@
 package org.litebridge.db.oracle;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.CollectionUtils;
+import org.litebridge.commons.StringUtils;
 import org.litebridge.convert.DefaultTypeConverter;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
+import org.litebridge.db.spi.query.Condition;
+import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.Limit;
+import org.litebridge.db.spi.query.Operator;
+import org.litebridge.db.spi.query.Select;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +37,43 @@ public class OracleDatabaseProvider extends AbstractDatabaseProvider {
 
     public OracleDatabaseProvider() {
         super(new DefaultTypeConverter());
+    }
+
+    @Override
+    protected String createColumnIdentifier(final Column column, final Select select) {
+        // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the column
+        if (CollectionUtils.isEmpty(select.joins())) {
+            return super.createColumnIdentifier(column, select);
+        }
+
+        boolean applyTableQualifier = true;
+
+        for (Join join : select.joins()) {
+            for (Condition condition : join.conditions()) {
+                if (condition.operator() == Operator.USING && condition.column().equalsIgnoreAlias(column)) {
+                    // Don't include table qualifiers
+                    applyTableQualifier = false;
+                    break;
+                }
+            }
+
+            if (!applyTableQualifier) {
+                break;
+            }
+        }
+
+        if (applyTableQualifier) {
+            return super.createColumnIdentifier(column, select);
+        }
+
+        final StringBuilder columnSql = new StringBuilder(quoteIdentifier(column.name()));
+        columnSql.append(quoteIdentifier(column.name()));
+
+        if (!StringUtils.isBlank(column.alias())) {
+            columnSql.append(' ').append(createAlias(quoteIdentifier(column.alias())));
+        }
+
+        return columnSql.toString();
     }
 
     @Override

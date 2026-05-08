@@ -1,10 +1,9 @@
 package org.litebridge.orm.e2e.selfref;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.selfref.dto.SelfReferencingDto;
-import org.litebridge.orm.e2e.selfref.mapping.DtoTableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,13 +12,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.litebridge.orm.api.spec.TableSpec.t;
 
 class SelfReferencingE2eTest extends AbstractE2eTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SelfReferencingE2eTest.class);
 
-    @Test
+    @TestTemplate
     @DisplayName("Single self-referencing DTO mapped to a single table, cascading save")
     void selfReferencingDto_cascadeSave() throws Exception {
         // Register DTO-table mappings
@@ -63,7 +61,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
         assertEquals(result.get(1), result.get(2).getParent());
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Single self-referencing DTO mapped to a single table, save all individual DTOs in one call")
     void selfReferencingDto_saveAll() throws Exception {
         assumeTrue(litebridge.select().from("LB.PERSON").stream().findAny().isEmpty());
@@ -109,7 +107,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
         assertEquals(result.get(1), result.get(2).getParent());
     }
 
-    @Test
+    @TestTemplate
     @DisplayName("Single self-referencing DTO mapped to a single table, save each DTO individually")
     void selfReferencingDto_saveIndividually() throws Exception {
         // Register DTO-table mappings
