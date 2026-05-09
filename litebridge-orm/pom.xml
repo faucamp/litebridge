@@ -36,6 +36,8 @@
                         --add-opens litebridge.orm/org.litebridge.orm=litebridge.commons
                         --add-opens litebridge.orm/org.litebridge.orm=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridge.orm.api.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridge.orm.api.dto.delete=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridge.orm.api.dto.update=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridge.orm.api.select=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridge.orm.api.select.impl=litebridge.commons
                         --add-opens litebridge.orm/org.litebridge.orm.api.select.impl=ALL-UNNAMED

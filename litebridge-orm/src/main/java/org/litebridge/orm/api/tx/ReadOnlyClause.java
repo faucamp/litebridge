@@ -10,6 +10,7 @@ public final class ReadOnlyClause {
 
     public ReadOnlyClause(final TransactionContextTerminal transactionContextTerminal) {
         this.transactionContextTerminal = transactionContextTerminal;
+        this.transactionContextTerminal.setReadOnly();
     }
 
     /**

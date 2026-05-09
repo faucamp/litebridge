@@ -388,6 +388,67 @@ class LitebridgeTest {
         assertEquals("testValue", result.myVar);
     }
 
+    @Test
+    void delete() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final FieldSpec fieldSpec = new FieldSpec("myId", false);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_ID", false, null, null);
+        final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
+        final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
+        final ColumnMetaData idColumn = new ColumnMetaData(tableSpec, "MY_ID", false, Types.BIGINT);
+        final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
+        when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(new TableMetaData(tableSpec, List.of("MY_ID"), List.of(idColumn)));
+        litebridge.register(dtoTableSpec);
+
+        final TestDto testDto = new TestDto();
+        testDto.myId = 1L;
+
+        // When
+        litebridge.delete(testDto);
+
+        // Then
+        verify(databaseProvider).delete(any(), any());
+    }
+
+    @Test
+    void delete_class() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final FieldSpec fieldSpec = new FieldSpec("myVar", false);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR", false, null, null);
+        final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
+        final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
+        final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
+        final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
+        when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(new TableMetaData(tableSpec, List.of("MY_VAR"), List.of(columnMetaData)));
+        litebridge.register(dtoTableSpec);
+
+        // When
+        litebridge.delete(TestDto.class);
+
+        // Then
+        verify(databaseProvider).delete(any(), any());
+    }
+
+    @Test
+    void transaction() {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+
+        // When
+        final org.litebridge.orm.api.tx.TransactionContext result = litebridge.transaction();
+
+        // Then
+        assertNotNull(result);
+    }
+
     private static class TestDto {
         private Long myId;
         private String myVar;
