@@ -25,10 +25,6 @@ public class SqlJoinSpec implements JoinSpec {
         this.table = table;
     }
 
-    @Deprecated(forRemoval = true)
-    public SqlJoinSpec(final String schema, final String table) {
-        this(new Table("", schema, table));
-    }
 
     @Override
     public Table table() {

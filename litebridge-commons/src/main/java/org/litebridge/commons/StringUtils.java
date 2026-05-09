@@ -116,17 +116,6 @@ public final class StringUtils {
         return result;
     }
 
-    /**
-     * Splits a string by a single character. This is significantly faster than
-     * String.split() for single-character delimiters because it avoids regex.
-     *
-     * @param target    The string to split.
-     * @param delimiter The character to split by.
-     * @return An array of strings.
-     */
-    public static String[] splitArray(@Nullable String target, char delimiter) {
-        return split(target, delimiter).toArray(new String[0]);
-    }
 
     /**
      * Splits a given string into an array of substrings based on a specified delimiter,
@@ -175,54 +164,6 @@ public final class StringUtils {
         return str == null ? "" : str;
     }
 
-    /**
-     * Converts the first character of the given string to lowercase.
-     *
-     * @param str the input string; must not be null or empty
-     * @return a new string with the first character converted to lowercase
-     * @throws IllegalArgumentException if the input string is null or empty
-     */
-    public static String lowerFirst(final String str) {
-        if (isEmpty(str)) {
-            throw new IllegalArgumentException("Empty or null input string");
-        }
-
-        final char firstChar = Character.toLowerCase(str.charAt(0));
-        return firstChar + str.substring(1);
-    }
-
-    /**
-     * Converts the given string into camelCase format by removing non-word characters,
-     * lowercasing the first word, and capitalizing the first letter of subsequent words.
-     *
-     * @param str the input string to be converted; must not be null
-     * @return the camelCase formatted string, or an empty string if the input is empty or contains only non-word characters
-     * @throws NullPointerException if the input string is null
-     */
-    public static String camelCase(final String str) {
-        if (isEmpty(Objects.requireNonNull(str, "Input cannot be null"))) {
-            return "";
-        }
-
-        // Split the string by any non-word characters (including spaces and underscores)
-        final String[] words = str.split("[\\W_]+");
-        final StringBuilder builder = new StringBuilder();
-
-        for (int i = 0; i < words.length; i++) {
-            final String word = words[i];
-
-            if (i == 0) {
-                // For the first word, convert to lowercase
-                builder.append(word.toLowerCase());
-            } else {
-                // For subsequent words, capitalize the first letter and lowercase the rest
-                builder.append(Character.toUpperCase(word.charAt(0)));
-                builder.append(word.substring(1).toLowerCase());
-            }
-        }
-
-        return builder.toString();
-    }
 
     /**
      * Checks if the given string contains only ASCII characters.

@@ -88,27 +88,6 @@ public final class CollectionUtils {
         return map;
     }
 
-    /**
-     * Converts the given array to a {@link List}.
-     * <p>
-     * If the array is null or empty, an immutable empty list is returned.
-     * Otherwise, a list containing the elements of the array is returned.
-     *
-     * @param array the array to convert to a list; may be null
-     * @return a non-null list containing the elements of the array, or an immutable empty list if the array is null or empty
-     */
-    @SafeVarargs
-    public static <T> List<T> toList(final T... array) {
-        final List<T> list;
-
-        if (array.length == 0) {
-            list = Collections.emptyList();
-        } else {
-            list = List.of(array);
-        }
-
-        return list;
-    }
 
     /**
      * Ensures that the provided collection is not null or empty.

@@ -175,7 +175,6 @@ public class SelectSpecDtoMapper {
                 fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, valueOverrides.get(field)));
             } else if (sameTableNestedDto) {
                 // Nested DTO built up from the same table
-                //TODO: may need to filter the field columns; perhaps during pre-processing (which would require explicit support for this scenario, kinda lke here)
                 final Object nestedDto = toDto(field.type(), table, dtoData, fieldColumns).dto();
                 fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, nestedDto));
             } else if (ClassUtils.isBasicType(field.type())) {
@@ -211,7 +210,6 @@ public class SelectSpecDtoMapper {
                 final Object value;
 
                 if (fieldAccessorValue.value() instanceof DtoConstructor.DtoDependency dependency) {
-                    //TODO: Placeholder for future partial-object construction logic
                     value = null;
                 } else {
                     value = fieldAccessorValue.value();
@@ -318,7 +316,6 @@ public class SelectSpecDtoMapper {
             final Collection<Object> dtoCollection = (Collection<Object>) collection.get(dto);
 
             if (dtoCollection != null) {
-                //TODO: handle immutable collections
                 currentCollection = dtoCollection;
             } else {
                 currentCollection = (Collection<Object>) ClassUtils.newInstance(collection.type());
@@ -349,7 +346,6 @@ public class SelectSpecDtoMapper {
             final Collection<Object> dtoCollection = (Collection<Object>) collection.get(dto);
 
             if (dtoCollection != null) {
-                //TODO: handle immutable collections
                 currentCollection = dtoCollection;
             } else {
                 currentCollection = (Collection<Object>) ClassUtils.newInstance(collection.type());

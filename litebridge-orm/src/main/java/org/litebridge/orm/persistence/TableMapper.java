@@ -270,7 +270,7 @@ public final class TableMapper {
         final ColumnSpec joinColumnSpec = new ColumnSpec(manyToMany.joinColumn(), false, null, manyToMany.joinColumn());
         final ColumnSpec inverseJoinColumnSpec = new ColumnSpec(manyToMany.inverseJoinColumn(), false, null, manyToMany.inverseJoinColumn());
 
-        final TableSpec tableSpec = TableSpec.t(manyToMany.joinTable(), Map.of(
+        final TableSpec tableSpec = new TableSpec(manyToMany.joinTable(), Map.of(
                 new NoFieldMapping(), joinColumnSpec,
                 new NoFieldMapping(), inverseJoinColumnSpec));
 

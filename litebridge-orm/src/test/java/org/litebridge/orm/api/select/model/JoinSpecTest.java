@@ -31,7 +31,7 @@ class JoinSpecTest {
     @Test
     void newCondition() {
         // Given
-        final SqlJoinSpec joinSpec = new SqlJoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("TEST_SCHEMA", "TEST_TABLE"));
         final Table table = joinSpec.table();
 
         // When
@@ -49,7 +49,7 @@ class JoinSpecTest {
     @Test
     void using() {
         // Given
-        final SqlJoinSpec joinSpec = new SqlJoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("TEST_SCHEMA", "TEST_TABLE"));
         final Table table = joinSpec.table();
 
         // When
@@ -65,7 +65,7 @@ class JoinSpecTest {
     @Test
     void toJoin() {
         // Given
-        final SqlJoinSpec joinSpec = new SqlJoinSpec("TEST_SCHEMA", "TEST_TABLE");
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("TEST_SCHEMA", "TEST_TABLE"));
         final Table table = joinSpec.table();
         final ConditionSpec conditionSpec = joinSpec.newCondition(new Column(table, "TEST_COLUMN"));
         conditionSpec.setOperator(Operator.LT);

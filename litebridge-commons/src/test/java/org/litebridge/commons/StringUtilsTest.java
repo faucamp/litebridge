@@ -376,67 +376,6 @@ class StringUtilsTest {
         assertEquals("Hello World!", result);
     }
 
-    @Test
-    void lowerFirst() {
-        // Given
-        final String input = "ABC DEF!";
-
-        // When
-        final String result = StringUtils.lowerFirst(input);
-
-        // Then
-        assertEquals("aBC DEF!", result);
-    }
-
-    @Test
-    @SuppressWarnings("ConstantConditions")
-    void lowerFirst_null() {
-        // Given
-        final String input = null;
-
-        // When
-        assertThrows(IllegalArgumentException.class, () -> StringUtils.lowerFirst(input));
-    }
-
-    @Test
-    void lowerFirst_empty() {
-        // Given
-        final String input = "";
-
-        // When
-        assertThrows(IllegalArgumentException.class, () -> StringUtils.lowerFirst(input));
-    }
-
-    @Test
-    void camelCase() {
-        // Given
-        final String input = "Hello World 123!";
-
-        // When
-        final String result = StringUtils.camelCase(input);
-
-        // Then
-        assertEquals("helloWorld123", result);
-    }
-
-    @Test
-    @SuppressWarnings("ConstantConditions")
-    void camelCase_null() {
-        // When/Then
-        assertThrows(NullPointerException.class, () -> StringUtils.camelCase(null));
-    }
-
-    @Test
-    void camelCase_empty() {
-        // Given
-        final String input = "";
-
-        // When
-        final String result = StringUtils.camelCase(input);
-
-        // Then
-        assertEquals("", result);
-    }
 
     @Test
     void split() {
@@ -493,21 +432,6 @@ class StringUtilsTest {
         assertTrue(result.isEmpty());
     }
 
-    @Test
-    void splitArray() {
-        // Given
-        final String input = "aaa.bbb.ccc.ddd";
-
-        // When
-        final String[] result = StringUtils.splitArray(input, '.');
-
-        // Then
-        assertEquals(4, result.length);
-        assertEquals("aaa", result[0]);
-        assertEquals("bbb", result[1]);
-        assertEquals("ccc", result[2]);
-        assertEquals("ddd", result[3]);
-    }
 
     @Test
     void split_setSize_truncate() {

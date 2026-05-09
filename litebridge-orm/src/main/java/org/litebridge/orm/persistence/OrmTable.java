@@ -81,7 +81,6 @@ public class OrmTable {
             final MappedFieldTarget preprocessedTarget;
 
             if (mappedFieldTarget instanceof ColumnAndInlineTable(ColumnMetaData column, OrmTable tableSpec)) {
-                //TODO: aliases
                 contextTableRegistry.addTable(fieldAccessor.type(), tableSpec);
                 preprocessedTarget = column;
             } else {

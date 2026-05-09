@@ -17,7 +17,6 @@ import org.litebridge.tracking.ClassFieldAccessorCache;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec> {
 
@@ -96,12 +95,6 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
     @Override
     public @Nullable DTO firstOrNull() {
         return fetchOneDto(true);
-    }
-
-    //TODO: check if this override is still required
-    @Override
-    public Stream<DTO> stream() {
-        return list().stream();
     }
 
     @Override

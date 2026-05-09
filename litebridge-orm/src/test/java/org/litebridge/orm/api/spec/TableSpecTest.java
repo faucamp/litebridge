@@ -57,12 +57,12 @@ class TableSpecTest {
     }
 
     @Test
-    void t() {
+    void constructor_full() {
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = new HashMap<>();
         fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn", false, null, null));
 
         // When
-        final TableSpec result = TableSpec.t("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
+        final TableSpec result = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
 
         // Then
         assertNotNull(result);
@@ -74,12 +74,12 @@ class TableSpecTest {
     }
 
     @Test
-    void t_noCatalog() {
+    void constructor_noCatalog() {
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = new HashMap<>();
         fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn", false, null, null));
 
         // When
-        final TableSpec result = TableSpec.t("TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
+        final TableSpec result = new TableSpec("TEST_SCHEMA.TEST_TABLE", fieldColumnMap);
 
         // Then
         assertNotNull(result);
@@ -91,12 +91,12 @@ class TableSpecTest {
     }
 
     @Test
-    void t_noCatalogOrSchema() {
+    void constructor_noCatalogOrSchema() {
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = new HashMap<>();
         fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn", false, null, null));
 
         // When
-        final TableSpec result = TableSpec.t("TEST_TABLE", fieldColumnMap);
+        final TableSpec result = new TableSpec("TEST_TABLE", fieldColumnMap);
 
         // Then
         assertNotNull(result);

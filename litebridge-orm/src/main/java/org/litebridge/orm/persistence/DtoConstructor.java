@@ -43,7 +43,6 @@ public final class DtoConstructor {
                         final Object value = fieldAccessorValue.value();
 
                         if (value instanceof DtoDependency) {
-                            //TODO: Placeholder for future partial-object construction logic
                             valuesByField.put(fieldAccessorValue.field(), null);
                         } else {
                             valuesByField.put(fieldAccessorValue.field(), value);

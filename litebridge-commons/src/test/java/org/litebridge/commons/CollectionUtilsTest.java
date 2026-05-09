@@ -213,21 +213,4 @@ class CollectionUtilsTest {
         assertEquals(message, result.getMessage());
     }
 
-    @Test
-    void toList() {
-        // When
-        final List<String> result = CollectionUtils.toList("value1", "value2", "value3");
-
-        // Then
-        assertEquals(List.of("value1", "value2", "value3"), result);
-    }
-
-    @Test
-    void toList_empty() {
-        // When
-        final List<String> result = CollectionUtils.toList();
-
-        // Then
-        assertEquals(Collections.emptyList(), result);
-    }
 }
