@@ -160,3 +160,9 @@ DtoTableSpec accountSpec = new DtoTableSpec(Account.class, new TableSpec("LB.ACC
 litebridge.register(MethodHandles.lookup(), personSpec);
 litebridge.register(MethodHandles.lookup(), accountSpec); 
 ```
+
+The above snippet makes use of staticly-imported shorthand mapping methods `f()`, `p()`, and `c()`,
+which are synonyms for `field()`, `property()`, and `column()`, respectively.
+
+`field()` and `property()` are used to specify a DTO field (and how to access it), 
+while `column()` allows fluent specification of a target mapped database table column. 
