@@ -124,4 +124,39 @@ The table mappings above specify the following:
   * The `balance` field is mapped to the `BALANCE` column.
   * The `owner` field is a many-to-one mapping, with the foreign key mapped to column `PERSON_ID`. The related DTO is specified by a `JOIN USING` clause (i.e. joining on `PERSON_ID` in both tables) to fetch the target `Person` instance. 
 
-### Fluent API
+### Low-level API
+
+Whilst the fluent API is the recommended approach, the low-level API provides more freedom over the structure
+in which the mapping is specified, by allowing direct specification of mapping definitions.
+This allows these specifications to be created/packaged separately from the `register(DtoTableSpec)` call.
+
+#### Example
+
+```java
+// Specify the table mapping for the Person DTO class 
+// (e.g. in a separate class as a constant)
+Map<FieldMapping, ColumnMapping> personMap = Map.of(
+                // Field name -> column/relation details
+                f("id"),           c("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ"),
+                f("name"),         c("FIRST_NAME"),
+                f("surname"),      c("SURNAME"),
+                f("age"),          c("AGE"),
+                p("eyeColour"), c("EYE_COLOUR"),
+                f("accounts"),     oneToMany(f("owner"))
+        );
+
+Map<FieldMapping, ColumnMapping> accountMap = Map.of(
+        f("id"),      c("ACCOUNT_ID").autoIncrement().usingSequence("LB.ACCOUNT_SEQ"),
+        f("name"),    c("ACCOUNT_NAME"),
+        f("balance"), c("BALANCE"),
+        f("owner"),   c("PERSON_ID").joinUsing()
+);
+
+// Create specifications for the Person and Account DTO classes
+DtoTableSpec personSpec = new DtoTableSpec(Person.class, new TableSpec("LB.PERSON", personMap));
+DtoTableSpec accountSpec = new DtoTableSpec(Account.class, new TableSpec("LB.ACCOUNT", personMap));
+
+// Register the table mappings
+litebridge.register(MethodHandles.lookup(), personSpec);
+litebridge.register(MethodHandles.lookup(), accountSpec); 
+```
