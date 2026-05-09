@@ -8,6 +8,25 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 
+/**
+ * Represents a transactional context that allows controlled execution of
+ * operations within a transaction. This class is immutable and thread-safe.
+ * <p>
+ * A transaction is used to perform operations such as commit and rollback
+ * on a transactional resource. It also provides methods for obtaining
+ * connections and checking the state of the transaction.
+ * <p>
+ * Instances of this class are created with a {@link TransactionManager},
+ * which provides the underlying transaction management capabilities.
+ * The lifecycle of a transaction includes starting, committing, rolling
+ * back, or closing. A transaction can be completed either by calling
+ * {@link #commit()}, {@link #rollback()}, or automatically when the
+ * {@link #close()} method is invoked.
+ * <p>
+ * This class also implements {@link AutoCloseable}, ensuring that resources are
+ * properly released if the transaction block terminates without explicit commit.
+ * If a transaction is not committed when closed, it will be rolled back.
+ */
 public final class Transaction implements TransactionControl, AutoCloseable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Transaction.class);

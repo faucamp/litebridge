@@ -1,5 +1,13 @@
 package org.litebridge.db.spi.tx;
 
+/**
+ * Provides control over the transaction lifecycle, including committing and rolling back transactions.
+ * This interface extends {@link ConnectionProvider} to offer transaction-specific operations.
+ * <p>
+ * Implementations of this interface are expected to manage the transaction lifecycle, ensuring
+ * that changes are either committed or rolled back appropriately. They also provide a mechanism
+ * to check the status of the transaction for the current thread.
+ */
 public interface TransactionControl extends ConnectionProvider {
 
     /**

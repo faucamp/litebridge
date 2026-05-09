@@ -8,7 +8,7 @@ import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.e2e.setup.DbEnvironment;
 import org.litebridge.orm.e2e.setup.MultiDbTestExtension;
 import org.litebridge.orm.tx.DefaultTransactionManager;
-import org.litebridge.orm.tx.SingleConnectionDataSource;
+import org.litebridge.orm.tx.LitebridgeDriverManagerDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,7 @@ public abstract class AbstractE2eTest {
         // Init Flyway on the specific DB
         runFlywayMigration(env);
 
-        SingleConnectionDataSource ds = dbEnv.getDataSource();
+        LitebridgeDriverManagerDataSource ds = dbEnv.getDataSource();
 
         this.litebridge = new Litebridge(
                 dbEnv.getDatabaseProvider(),

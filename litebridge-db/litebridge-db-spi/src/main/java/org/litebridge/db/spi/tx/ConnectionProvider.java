@@ -2,6 +2,16 @@ package org.litebridge.db.spi.tx;
 
 import java.sql.SQLException;
 
+/**
+ * Provides a mechanism to obtain a managed database connection, typically bound to the scope of a transaction.
+ * This interface abstracts the underlying connection management, ensuring proper lifecycle handling of the
+ * connection resource.
+ * <p>
+ * Implementations of this interface are expected to manage the allocation, reuse, and cleanup of
+ * database connections in a manner that aligns with the application's transaction and resource management
+ * strategy. Connections obtained through this interface may either participate in transactions or operate
+ * in auto-commit mode, depending on the context in which they are used.
+ */
 public interface ConnectionProvider {
 
     /**

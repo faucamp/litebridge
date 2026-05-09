@@ -2,7 +2,7 @@ package org.litebridge.orm.e2e.setup;
 
 import org.litebridge.db.oracle.OracleDatabaseProvider;
 import org.litebridge.db.spi.DatabaseProvider;
-import org.litebridge.orm.tx.SingleConnectionDataSource;
+import org.litebridge.orm.tx.LitebridgeDriverManagerDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +10,7 @@ public class OracleDbEnvironment implements DbEnvironment {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OracleDbEnvironment.class);
     private final OracleContainerManager containerManager = OracleContainerManager.getInstance();
-    private SingleConnectionDataSource dataSource;
+    private LitebridgeDriverManagerDataSource dataSource;
 
     @Override
     public void start() {
@@ -64,9 +64,9 @@ public class OracleDbEnvironment implements DbEnvironment {
     }
 
     @Override
-    public SingleConnectionDataSource getDataSource() {
+    public LitebridgeDriverManagerDataSource getDataSource() {
         if (dataSource == null) {
-            dataSource = new SingleConnectionDataSource(
+            dataSource = new LitebridgeDriverManagerDataSource(
                     containerManager.getContainer().getJdbcUrl(),
                     containerManager.getContainer().getUsername(),
                     containerManager.getContainer().getPassword()

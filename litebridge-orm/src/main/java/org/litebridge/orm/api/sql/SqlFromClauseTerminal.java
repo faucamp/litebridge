@@ -7,8 +7,6 @@ import org.litebridge.orm.api.spec.FieldColumnSpec;
 
 import java.util.Arrays;
 
-;
-
 public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
         SqlJoinClause,
         SqlJoinConditionClause,

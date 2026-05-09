@@ -7,14 +7,24 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
-public class SingleConnectionDataSource implements DataSource {
+/**
+ * A simple {@link DataSource} implementation that utilises {@link DriverManager} to create connections.
+ * It provides basic functionality for connection management by encapsulating a URL,
+ * username, and password to connect to a database.
+ * <p>
+ * This class implements the {@link javax.sql.DataSource} interface and delegates connection
+ * retrieval to the {@link java.sql.DriverManager} class, making it suitable for lightweight
+ * database connection management.
+ * <p>
+ * Thread safety is not guaranteed. Ensure proper synchronisation for concurrent access.
+ */
+public class LitebridgeDriverManagerDataSource implements DataSource {
 
     private final String url;
     private final String username;
     private final String password;
 
-
-    public SingleConnectionDataSource(final String url, final String username, final String password) {
+    public LitebridgeDriverManagerDataSource(final String url, final String username, final String password) {
         this.url = url;
         this.username = username;
         this.password = password;
@@ -32,12 +42,12 @@ public class SingleConnectionDataSource implements DataSource {
 
     @Override
     public PrintWriter getLogWriter() {
-        throw unsupported("getLogWriter");
+        return DriverManager.getLogWriter();
     }
 
     @Override
     public void setLogWriter(final PrintWriter out) {
-        throw unsupported("setLogWriter(PrintWriter)");
+        DriverManager.setLogWriter(out);
     }
 
     @Override
@@ -47,7 +57,7 @@ public class SingleConnectionDataSource implements DataSource {
 
     @Override
     public int getLoginTimeout() {
-        throw new UnsupportedOperationException();
+        return DriverManager.getLoginTimeout();
     }
 
     @Override
@@ -68,9 +78,5 @@ public class SingleConnectionDataSource implements DataSource {
     @Override
     public boolean isWrapperFor(final Class<?> iface) {
         return iface.isInstance(this);
-    }
-
-    private static UnsupportedOperationException unsupported(final String methodName) {
-        return new UnsupportedOperationException("Unsupported method: " + methodName);
     }
 }

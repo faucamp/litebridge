@@ -26,7 +26,7 @@ public final class ClassUtils {
      * Equivalent to {@code getAllFields(type, false)}.
      *
      * @param type the class from which to retrieve all declared fields
-     * @return a set of all fields declared in the given class and its superclasses
+     * @return a list of all fields declared in the given class and its superclasses
      */
     public static List<Field> getAllFields(final Class<?> type, final MethodHandles.Lookup lookup) {
         return getAllFields(type, false, lookup);

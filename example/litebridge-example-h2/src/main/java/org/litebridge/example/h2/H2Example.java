@@ -6,12 +6,10 @@ import org.litebridge.example.common.PersistenceExample;
 import org.litebridge.example.common.QueryExample;
 import org.litebridge.example.common.SqlExample;
 import org.litebridge.example.common.TypeSafeExample;
-import org.litebridge.example.common.dto.Account;
-import org.litebridge.example.common.dto.Person;
 import org.litebridge.example.common.mapping.CommonDtoRegistration;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.tx.DefaultTransactionManager;
-import org.litebridge.orm.tx.SingleConnectionDataSource;
+import org.litebridge.orm.tx.LitebridgeDriverManagerDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +28,7 @@ public class H2Example {
         configureDatabase(url, user, password);
 
         try {
-            runExamples(new SingleConnectionDataSource(url, user, password));
+            runExamples(new LitebridgeDriverManagerDataSource(url, user, password));
         } catch (Exception ex) {
             LOGGER.error("An error occurred during H2 example execution", ex);
         }

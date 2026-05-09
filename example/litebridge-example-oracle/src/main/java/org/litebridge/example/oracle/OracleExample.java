@@ -9,7 +9,7 @@ import org.litebridge.example.common.TypeSafeExample;
 import org.litebridge.example.common.mapping.CommonDtoRegistration;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.tx.DefaultTransactionManager;
-import org.litebridge.orm.tx.SingleConnectionDataSource;
+import org.litebridge.orm.tx.LitebridgeDriverManagerDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ public class OracleExample {
         configureDatabase(url, adminUser, adminPassword, litebridgeUser, litebridgePassword);
 
         try {
-            runExamples(new SingleConnectionDataSource(url, litebridgeUser, litebridgePassword));
+            runExamples(new LitebridgeDriverManagerDataSource(url, litebridgeUser, litebridgePassword));
         } catch (Exception ex) {
             LOGGER.error("An error occurred during Oracle example execution", ex);
         }
@@ -87,7 +87,7 @@ public class OracleExample {
             final String appPassword
     ) {
         try (
-                final Connection connection = new SingleConnectionDataSource(url, adminUser, adminPassword).getConnection();
+                final Connection connection = new LitebridgeDriverManagerDataSource(url, adminUser, adminPassword).getConnection();
                 final Statement statement = connection.createStatement()
         ) {
             statement.execute("""

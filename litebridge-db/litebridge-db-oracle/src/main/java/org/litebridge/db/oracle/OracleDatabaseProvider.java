@@ -33,7 +33,7 @@ import java.util.Map;
  */
 public class OracleDatabaseProvider extends AbstractDatabaseProvider {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(OracleDatabaseProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OracleDatabaseProvider.class);
 
     public OracleDatabaseProvider() {
         super(new DefaultTypeConverter());

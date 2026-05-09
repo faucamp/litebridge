@@ -1,6 +1,5 @@
 package org.litebridge.db.h2;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
@@ -15,8 +14,9 @@ import java.sql.Statement;
  * H2DatabaseProvider is a concrete implementation of AbstractDatabaseProvider
  * specifically designed to interact with H2 database instances. It handles the
  * creation of prepared statements and logging tailored for H2 database operations.
- *
- * This class provides H2-specific implementations for database*/
+ * <p>
+ * This class provides H2-specific implementations for database
+ */
 public class H2DatabaseProvider extends AbstractDatabaseProvider {
 
     private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(H2DatabaseProvider.class);

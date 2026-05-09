@@ -20,6 +20,18 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
+/**
+ * A wrapper for a {@link Connection} object that ensures certain methods associated with
+ * transaction and connection management are not directly invoked.
+ * <p>
+ * The purpose of this class is to provide a managed connection where specific operations
+ * like commit, rollback, close, and others related to transaction state or connection properties
+ * are restricted, while other operations are delegated to the underlying connection.
+ * <p>
+ * This class implements the {@link Connection} interface, proxying the majority of its methods
+ * to an internal {@link Connection} instance. For methods that are deemed unsafe or restricted
+ * for managed contexts, an {@link UnsupportedOperationException} is thrown.
+ */
 public final class ManagedConnection implements Connection {
 
     private final Connection connection;

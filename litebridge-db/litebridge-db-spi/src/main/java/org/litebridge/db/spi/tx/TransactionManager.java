@@ -1,5 +1,10 @@
 package org.litebridge.db.spi.tx;
 
+/**
+ * Defines a contract for managing transactions within an application.
+ * Provides methods to begin, commit, and rollback transactions, as well
+ * as handling transaction-specific behaviors such as callbacks and cleanup.
+ */
 public interface TransactionManager extends TransactionControl {
 
     /**
