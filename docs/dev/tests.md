@@ -2,8 +2,9 @@
 
 The build contains end-to-end/integration tests for Litebridge which validate the functionality of the ORM 
 by interacting with specific or all supported databases.
+They also serve as a reference for developers to understand how the ORM works.
 
-The tests are found in: [`litebridge-orm/src/test/java/org/litebridge/orm/e2e/`](../../litebridge-orm/src/test/java/org/litebridge/orm/e2e/`)
+The tests are found in: [`litebridge-orm/src/test/java/org/litebridge/orm/e2e/`](../../litebridge-orm/src/test/java/org/litebridge/orm/e2e/)
 
 ## Database environment
 
