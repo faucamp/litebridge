@@ -114,7 +114,6 @@ public class Litebridge {
      * @param lookup   An instance of MethodHandles.Lookup used to access caller-sensitive methods.
      * @param dtoClass The class object of the DTO (Data Transfer Object) to be registered.
      * @param rc       A function that takes a RegistrationContext instance to configure the table mapping.
-     * @throws SQLException If an SQL-related error occurs during the registration process.
      */
     public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) {
         final DtoTableSpecBuilder dtoTableSpecBuilder = (DtoTableSpecBuilder) rc.apply(new RegistrationContext());
@@ -128,7 +127,6 @@ public class Litebridge {
      *
      * @param dtoClass The class object of the DTO (Data Transfer Object) to be registered.
      * @param rc       A function that takes a RegistrationContext instance to configure the table mapping.
-     * @throws SQLException If an SQL-related error occurs during the registration process.
      */
     public void register(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) {
         register(MethodHandles.lookup(), dtoClass, rc);
@@ -143,7 +141,6 @@ public class Litebridge {
      * It uses a local `MethodHandles.lookup()` to reflect the DTO and optional interfaces.
      *
      * @param dtoTableSpec DTO-to-table mapping details
-     * @throws SQLException if an error occurs during the mapping or registration process.
      */
     public void register(final DtoTableSpec dtoTableSpec) {
         register(MethodHandles.lookup(), dtoTableSpec);
@@ -158,7 +155,6 @@ public class Litebridge {
      *
      * @param lookup       Lookup object used for reflecting the DTO and optional interfaces.
      * @param dtoTableSpec DTO-to-table mapping details
-     * @throws SQLException if an error occurs during the mapping or registration process.
      */
     public void register(final MethodHandles.Lookup lookup, final DtoTableSpec dtoTableSpec) {
         final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoTableSpec.dtoClass(), dtoTableSpec.tableSpec());
