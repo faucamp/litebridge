@@ -29,7 +29,6 @@ import org.litebridge.orm.api.sql.update.SqlUpdater;
 import org.litebridge.orm.api.tx.TransactionContext;
 import org.litebridge.orm.api.update.UpdateQuery;
 import org.litebridge.orm.api.update.UpdateTerminal;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.orm.persistence.DtoEntityMapping;
 import org.litebridge.orm.persistence.EntityDtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
@@ -38,6 +37,7 @@ import org.litebridge.orm.persistence.SelectSpecDtoMapper;
 import org.litebridge.orm.persistence.TableMapper;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridge.orm.tx.DefaultTransactionManager;
@@ -90,17 +90,15 @@ public class Litebridge {
      */
     public Litebridge(final DatabaseProvider databaseProvider,
                       final DataSource dataSource) {
-        this(databaseProvider, dataSource, new DefaultTransactionManager(dataSource), MethodHandles.lookup());
+        this(databaseProvider, new DefaultTransactionManager(dataSource), MethodHandles.lookup());
     }
 
     public Litebridge(final DatabaseProvider databaseProvider,
-                      final DataSource dataSource,
                       final TransactionManager transactionManager) {
-        this(databaseProvider, dataSource, transactionManager, MethodHandles.lookup());
+        this(databaseProvider, transactionManager, MethodHandles.lookup());
     }
 
     public Litebridge(final DatabaseProvider databaseProvider,
-                      final DataSource dataSource,
                       final TransactionManager transactionManager,
                       final MethodHandles.Lookup lookup) {
         this.databaseProvider = new TransactionalDatabaseProvider(transactionManager, databaseProvider);
@@ -118,7 +116,7 @@ public class Litebridge {
      * @param rc       A function that takes a RegistrationContext instance to configure the table mapping.
      * @throws SQLException If an SQL-related error occurs during the registration process.
      */
-    public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) throws SQLException {
+    public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) {
         final DtoTableSpecBuilder dtoTableSpecBuilder = (DtoTableSpecBuilder) rc.apply(new RegistrationContext());
         register(lookup, dtoTableSpecBuilder.buildDtoTableSpec(dtoClass));
     }
@@ -132,7 +130,7 @@ public class Litebridge {
      * @param rc       A function that takes a RegistrationContext instance to configure the table mapping.
      * @throws SQLException If an SQL-related error occurs during the registration process.
      */
-    public void register(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) throws SQLException {
+    public void register(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) {
         register(MethodHandles.lookup(), dtoClass, rc);
     }
 
@@ -147,7 +145,7 @@ public class Litebridge {
      * @param dtoTableSpec DTO-to-table mapping details
      * @throws SQLException if an error occurs during the mapping or registration process.
      */
-    public void register(final DtoTableSpec dtoTableSpec) throws SQLException {
+    public void register(final DtoTableSpec dtoTableSpec) {
         register(MethodHandles.lookup(), dtoTableSpec);
     }
 
@@ -162,7 +160,7 @@ public class Litebridge {
      * @param dtoTableSpec DTO-to-table mapping details
      * @throws SQLException if an error occurs during the mapping or registration process.
      */
-    public void register(final MethodHandles.Lookup lookup, final DtoTableSpec dtoTableSpec) throws SQLException {
+    public void register(final MethodHandles.Lookup lookup, final DtoTableSpec dtoTableSpec) {
         final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoTableSpec.dtoClass(), dtoTableSpec.tableSpec());
         final OrmTable ormTable = mappedTable.ormTable();
         tableRegistry.addTable(dtoTableSpec.dtoClass(), mappedTable.ormTable());

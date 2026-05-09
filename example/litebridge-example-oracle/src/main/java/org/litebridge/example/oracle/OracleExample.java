@@ -48,9 +48,9 @@ public class OracleExample {
         }
     }
 
-    private static void runExamples(final DataSource dataSource) throws SQLException {
+    private static void runExamples(final DataSource dataSource) {
         // Initialise litebridge and register DTO-table mappings
-        final Litebridge litebridge = new Litebridge(new OracleDatabaseProvider(), dataSource, new DefaultTransactionManager(dataSource));
+        final Litebridge litebridge = new Litebridge(new OracleDatabaseProvider(), new DefaultTransactionManager(dataSource));
         CommonDtoRegistration.registerPersonAndAccount(litebridge);
 
         new PersistenceExample(litebridge).run();

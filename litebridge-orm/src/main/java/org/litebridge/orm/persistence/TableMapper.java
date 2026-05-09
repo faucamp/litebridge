@@ -52,7 +52,7 @@ public final class TableMapper {
         this.classFieldAccessorCache = changeTracker.classFieldAccessorCache();
     }
 
-    public MappedTable mapToTable(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final TableSpec tableSpec) throws SQLException {
+    public MappedTable mapToTable(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final TableSpec tableSpec) {
         // Up-front validation
         Objects.requireNonNull(lookup, "MethodHandles lookup is required for reflection");
         Objects.requireNonNull(dtoClass, "DTO class cannot be null");
@@ -69,7 +69,12 @@ public final class TableMapper {
         }
 
         // Read the table metadata
-        final TableMetaData tableMetaData = ObjectUtils.requireNonNull(databaseProvider.tableMetaData(tableSpec, databaseProvider.transactionManager()), () -> new IllegalStateException("Database provider returned null table metadata for table: " + tableSpec.name()));
+        final TableMetaData tableMetaData;
+        try {
+            tableMetaData = ObjectUtils.requireNonNull(databaseProvider.tableMetaData(tableSpec, databaseProvider.transactionManager()), () -> new IllegalStateException("Database provider returned null table metadata for table: " + tableSpec.name()));
+        } catch (final SQLException ex) {
+            throw new IllegalStateException("Failed to read table metadata for table:" + tableSpec, ex);
+        }
 
         final MappedDto mappedDto = mapFields(lookup, dtoClass, tableMetaData, tableSpec.fieldColumnMap());
         final OrmTable ormTable = new OrmTable(dtoClass, tableMetaData, mappedDto.mappedFields(), changeTracker, classFieldAccessorCache);
@@ -170,7 +175,7 @@ public final class TableMapper {
                     try {
                         nestedTable = mapToTable(lookup, columnSpec.mappedTable().dtoClass(), columnSpec.mappedTable().tableSpec());
                         manyToOneDependencies.addAll(nestedTable.manyToOneDependencies());
-                    } catch (SQLException ex) {
+                    } catch (Exception ex) {
                         throw new IllegalStateException("Failed to map nested DTO class '" + columnSpec.mappedTable().dtoClass() + "' to table: " + columnSpec.mappedTable().tableSpec(), ex);
                     }
                 } else if (!tableRegistry.containsTable(fieldAccessor.type())) {

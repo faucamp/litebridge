@@ -38,6 +38,7 @@
         <module>litebridge-converter</module>
         <module>litebridge-db</module>
         <module>litebridge-orm</module>
+        <module>litebridge-spring-parent</module>
         <module>litebridge-tracking</module>
         <module>example</module>
         <module>jacoco-aggregate-report</module>
@@ -111,7 +112,8 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>${maven-javadoc-plugin.version}</version>
                 <configuration>
-                    <skippedModules>litebridge-example-common,litebridge-example-h2,litebridge-example-oracle</skippedModules>
+                    <skippedModules>litebridge-example-common,litebridge-example-h2,litebridge-example-oracle
+                    </skippedModules>
                 </configuration>
             </plugin>
         </plugins>
@@ -158,6 +160,21 @@
             <dependency>
                 <groupId>org.litebridge</groupId>
                 <artifactId>litebridge-dto</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.litebridge.spring</groupId>
+                <artifactId>litebridge-spring</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.litebridge.spring</groupId>
+                <artifactId>litebridge-spring-boot-autoconfigure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.litebridge.spring</groupId>
+                <artifactId>litebridge-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

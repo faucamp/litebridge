@@ -8,7 +8,7 @@ import java.sql.SQLException;
 
 public class CommonDtoRegistration {
 
-    public static void registerPersonAndAccount(final Litebridge litebridge) throws SQLException {
+    public static void registerPersonAndAccount(final Litebridge litebridge) {
         litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
                 .mapField("id").toColumn("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ")
                 .mapField("name").toColumn("FIRST_NAME")

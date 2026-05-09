@@ -32,7 +32,6 @@ public abstract class AbstractE2eTest {
 
         this.litebridge = new Litebridge(
                 dbEnv.getDatabaseProvider(),
-                ds,
                 new DefaultTransactionManager(ds)
         );
     }

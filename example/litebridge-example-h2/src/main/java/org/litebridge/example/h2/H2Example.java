@@ -34,9 +34,9 @@ public class H2Example {
         }
     }
 
-    private static void runExamples(final DataSource dataSource) throws SQLException {
+    private static void runExamples(final DataSource dataSource) {
         // Initialise litebridge and register DTO-table mappings
-        final Litebridge litebridge = new Litebridge(new H2DatabaseProvider(), dataSource, new DefaultTransactionManager(dataSource));
+        final Litebridge litebridge = new Litebridge(new H2DatabaseProvider(), new DefaultTransactionManager(dataSource));
         CommonDtoRegistration.registerPersonAndAccount(litebridge);
 
         new PersistenceExample(litebridge).run();
