@@ -17,6 +17,7 @@ module litebridge.spring.boot.autoconfigure {
     requires spring.boot.autoconfigure;
     requires spring.boot.sql;
     requires org.jspecify;
+    requires org.slf4j;
 
     opens org.litebridge.spring.boot.autoconfigure to spring.core, spring.beans, spring.context;
     exports org.litebridge.spring.boot.autoconfigure;
