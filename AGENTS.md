@@ -45,15 +45,18 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 - Database-specific logic (SQL dialect, metadata handling) must reside in `DatabaseProvider` implementations.
 - New database support should be added as a new module in the `litebridge-db` directory.
 - The `AbstractDatabaseProvider` class in module `litebridge-db-spi-impl provides a starting point for implementing the SPI, but is not strictly required. It can also be modified to accommodate specific database requirements if needed.
-- **TCK**:
 
 ### 4. Testing
 - **E2E Tests**: Found in `litebridge-orm/src/test/java/.../e2e/`. Use these for verifying full feature integration.
-- **Database Environments**: Use the `MultiDbTestExtension` to run tests against multiple database providers (H2, Oracle, etc.).
+- **Database Environments**: Use the `MultiDbTestExtension` to run tests against multiple database providers (H2, Oracle, etc.). These can be set via command line/Maven by using the `e2e.env` property. Valid values are:
+  - `all` - Run against all supported databases (this is the default no `e2e.env` property is provided)
+  - `h2` - Run against an in-memory H2 database
+  - `oracle` - Run against Oracle XE via testcontainers
+  - `none` - Disable E2E integration tests. This is useful when making targeted changes that need quick testing.
 - **Mocking**: Use Mockito for unit tests that don't require a live database.
 - **Style**: Use JUnit 6 conventions for test classes and methods, and use the existing "Given-When-Then" pattern for test setup where possible (E2E tests are mostly exempt from this).
 - **Coverage**: Aim for 100% test coverage in unit tests, and that E2E tests cover the majority of use cases.
-- 
+
 ## Key Classes and APIs
 
 - `org.litebridge.orm.Litebridge`: The main entry point for `save`, `select`, `update`, `delete`.
