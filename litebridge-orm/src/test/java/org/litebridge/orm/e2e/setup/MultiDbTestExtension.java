@@ -19,20 +19,23 @@ public class MultiDbTestExtension implements TestTemplateInvocationContextProvid
 
     @Override
     public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
-        String env = System.getProperty("db.env", "all");
+        String env = System.getProperty("e2e.env", "all");
 
-        if (env.equals("all")) {
-            return Stream.of(
+        return switch (env) {
+            case "all" -> Stream.of(
                     invocationContext(new H2DbEnvironment()),
                     invocationContext(new OracleDbEnvironment())
             );
-        } else if (env.equals("h2")) {
-            return Stream.of(invocationContext(new H2DbEnvironment()));
-        } else if (env.equals("oracle")) {
-            return Stream.of(invocationContext(new OracleDbEnvironment()));
-        } else {
-            throw new IllegalArgumentException("Invalid db.env value: " + env);
-        }
+            case "h2" -> Stream.of(invocationContext(new H2DbEnvironment()));
+            case "oracle" -> Stream.of(invocationContext(new OracleDbEnvironment()));
+            case "none" -> Stream.empty();
+            default -> throw new IllegalArgumentException("Invalid e2e.env value: " + env);
+        };
+    }
+
+    @Override
+    public boolean mayReturnZeroTestTemplateInvocationContexts(final ExtensionContext context) {
+        return true;
     }
 
     private TestTemplateInvocationContext invocationContext(DbEnvironment env) {

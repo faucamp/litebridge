@@ -238,6 +238,21 @@ class WeakIdentityMapTest {
     }
 
     @Test
+    void clear_withStaleEntry() {
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
+        Object key1 = new Object();
+        map.put(key1, "value1");
+
+        final WeakReference<Object> ref = new WeakReference<>(key1);
+        key1 = null;
+        awaitCollected(ref);
+
+        // At this point the ref should be in the queue
+        map.clear();
+        assertTrue(map.isEmpty());
+    }
+
+    @Test
     void putAll() {
         // Given
         final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
@@ -337,6 +352,89 @@ class WeakIdentityMapTest {
     }
 
     @Test
+    void keySet_containsAll_false() {
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
+        map.put(new Object(), "value");
+        assertFalse(map.keySet().containsAll(List.of(new Object())));
+        assertTrue(map.keySet().containsAll(List.of())); // Empty collection
+    }
+
+    @Test
+    void keySet_addAll_empty() {
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
+        assertFalse(map.keySet().addAll(List.of()));
+    }
+
+    @Test
+    void keySet_removeAll_empty() {
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
+        map.put(new Object(), "value");
+        assertFalse(map.keySet().removeAll(List.of()));
+    }
+
+    @Test
+    void keySet_retainAll_empty() {
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
+        map.put(new Object(), "value");
+        assertTrue(map.keySet().retainAll(List.of()));
+        assertTrue(map.isEmpty());
+    }
+
+    @Test
+    void keySet_toArray_staleEntry() {
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
+        Object key1 = new Object();
+        map.put(key1, "value1");
+
+        final WeakReference<Object> ref = new WeakReference<>(key1);
+        key1 = null;
+        awaitCollected(ref);
+
+        // At this point the ref is still in innerMap but get() returns null
+        // toArray should skip it
+        Object[] array = map.keySet().toArray();
+        assertEquals(0, array.length);
+    }
+
+    @Test
+    void keySet_toArray_mixedStaleEntries() {
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
+        Object key1 = new Object();
+        Object key2 = new Object();
+        map.put(key1, "value1");
+        map.put(key2, "value2");
+
+        final WeakReference<Object> ref = new WeakReference<>(key1);
+        key1 = null;
+        awaitCollected(ref);
+
+        Object[] array = map.keySet().toArray();
+        assertEquals(1, array.length);
+        assertEquals(key2, array[0]);
+    }
+
+    @Test
+    void keySet_retainAll_onEmptyMap() {
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
+        assertFalse(map.keySet().retainAll(List.of("anything")));
+    }
+
+    @Test
+    void keySet_removeAll_notModified() {
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
+        map.put(new Object(), "value");
+        assertFalse(map.keySet().removeAll(List.of(new Object())));
+    }
+    
+    @Test
+    void keySet_addAll_notModified() {
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
+        Object key = new Object();
+        map.put(key, "value");
+        assertFalse(map.keySet().addAll(List.of(key)));
+    }
+
+    @Test
     void keySet_iterator() {
         // Given
         final WeakIdentityMap<ConstantHashObject, String> map = new WeakIdentityMap<>();
@@ -416,6 +514,64 @@ class WeakIdentityMapTest {
         assertEquals(2, result.size());
         assertTrue(result.stream().anyMatch(entry -> entry.getKey().equals(key1) && entry.getValue().equals(value1)));
         assertTrue(result.stream().anyMatch(entry -> entry.getKey().equals(key2) && entry.getValue().equals(value2)));
+    }
+
+    @Test
+    void iterator_remove_withoutNext() {
+        // Given
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
+        map.put(new Object(), "value");
+        final Iterator<Object> it = map.keySet().iterator();
+
+        // When/Then
+        assertThrows(IllegalStateException.class, it::remove);
+    }
+
+    @Test
+    void identityWeakReference_equals() {
+        // Given
+        final Object key = new Object();
+        final WeakIdentityMap.IdentityWeakReference<Object> ref1 = new WeakIdentityMap.IdentityWeakReference<>(key, null);
+        final WeakIdentityMap.IdentityWeakReference<Object> ref2 = new WeakIdentityMap.IdentityWeakReference<>(key, null);
+        final WeakIdentityMap.IdentityWeakReference<Object> ref3 = new WeakIdentityMap.IdentityWeakReference<>(new Object(), null);
+
+        // When/Then
+        assertEquals(ref1, ref1);
+        assertEquals(ref1, ref2);
+        assertNotEquals(ref1, ref3);
+        assertNotEquals(ref1, new Object());
+        assertNotEquals(ref1, null);
+    }
+
+    @Test
+    void identityLookupWrapper_equals() {
+        // Given
+        final Object key = new Object();
+        final WeakIdentityMap.IdentityLookupWrapper wrapper = new WeakIdentityMap.IdentityLookupWrapper(key);
+        final WeakIdentityMap.IdentityWeakReference<Object> ref = new WeakIdentityMap.IdentityWeakReference<>(key, null);
+
+        // When/Then
+        assertTrue(wrapper.equals(ref));
+        assertFalse(wrapper.equals(new Object()));
+        assertFalse(wrapper.equals(null));
+    }
+
+    @Test
+    void iterator_staleEntry() {
+        final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
+        Object key1 = new Object();
+        map.put(key1, "value1");
+
+        Iterator<Object> it = map.keySet().iterator();
+
+        // key1 is now eligible for GC
+        final WeakReference<Object> ref = new WeakReference<>(key1);
+        key1 = null;
+        awaitCollected(ref);
+
+        // it.hasNext() should trigger stale entry removal and return false
+        assertFalse(it.hasNext());
+        assertTrue(map.isEmpty());
     }
 
     private static class ConstantHashObject {

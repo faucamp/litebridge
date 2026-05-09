@@ -5,7 +5,7 @@ by interacting with specifc or all supported databases.
 
 ## Database environment
 
-To specify a specific database environment, set the `db.env` system property to the desired environment:
+To specify a specific database environment, set the `e2e.env` system property to the desired environment:
 
 - `all` - Run against all supported databases (default)
 - `h2` - Run against H2
@@ -17,7 +17,7 @@ By default, the tests will run against all supported databases (`all`).
 Example:
 
 ```sql
--Ddb.env=h2
+-De2e.env=h2
 ```
 
 ## IntelliJ note

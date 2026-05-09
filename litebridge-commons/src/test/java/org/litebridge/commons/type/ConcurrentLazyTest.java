@@ -8,6 +8,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -36,6 +37,48 @@ class ConcurrentLazyTest {
 
         // Then
         assertEquals("hello", result);
+    }
+
+    @Test
+    void orThrow() {
+        // Given
+        final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> "hello");
+
+        // When
+        final String result = concurrentLazy.orThrow();
+
+        // Then
+        assertEquals("hello", result);
+    }
+
+    @Test
+    void orThrow_null() {
+        // Given
+        final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> null);
+
+        // When / Then
+        assertThrows(java.util.NoSuchElementException.class, concurrentLazy::orThrow);
+    }
+
+    @Test
+    void orThrow_exceptionSupplier() throws Exception {
+        // Given
+        final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> "hello");
+
+        // When
+        final String result = concurrentLazy.orThrow(() -> new Exception("test"));
+
+        // Then
+        assertEquals("hello", result);
+    }
+
+    @Test
+    void orThrow_exceptionSupplier_null() {
+        // Given
+        final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> null);
+
+        // When / Then
+        assertThrows(Exception.class, () -> concurrentLazy.orThrow(() -> new Exception("test")));
     }
 
     @Test

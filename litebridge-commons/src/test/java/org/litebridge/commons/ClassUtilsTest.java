@@ -17,6 +17,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ClassUtilsTest {
 
     @Test
+    void getAllFields_illegalAccess() {
+        // Given
+        final MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getAllFields(TestDto.class, lookup));
+    }
+
+    @Test
     void getAllFields() {
         // When
         final List<Field> result = ClassUtils.getAllFields(TestDto.class, MethodHandles.lookup());
@@ -351,6 +360,52 @@ class ClassUtilsTest {
     @Test
     void newInstance_failure() {
         assertThrows(IllegalStateException.class, () -> ClassUtils.newInstance(UnsupportedConstructorClass.class));
+    }
+
+    @Test
+    void newInstance_withCollection() {
+        // When
+        final List<?> result = ClassUtils.newInstance(List.class);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result instanceof java.util.ArrayList);
+    }
+
+    @Test
+    void newInstance_withConstructor() throws NoSuchMethodException {
+        // Given
+        final java.lang.reflect.Constructor<TestDto> constructor = TestDto.class.getDeclaredConstructor();
+
+        // When
+        final TestDto result = ClassUtils.newInstance(TestDto.class, constructor);
+
+        // Then
+        assertNotNull(result);
+    }
+
+    @Test
+    void newInstance_withConstructor_failure() throws NoSuchMethodException {
+        // Given
+        final java.lang.reflect.Constructor<UnsupportedConstructorClass> constructor = UnsupportedConstructorClass.class.getDeclaredConstructor(String.class);
+
+        // When/Then
+        // Passing wrong number of arguments to force failure
+        assertThrows(IllegalStateException.class, () -> ClassUtils.newInstance(UnsupportedConstructorClass.class, constructor, "too", "many", "args"));
+    }
+
+    @Test
+    void getConstructors() {
+        // When
+        final java.lang.reflect.Constructor<TestDto>[] result = ClassUtils.getConstructors(TestDto.class);
+
+        // Then
+        assertEquals(1, result.length);
+    }
+
+    @Test
+    void getGenericTypes_notParameterized() {
+        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getGenericTypes(String.class));
     }
 
     private static class TestDto {

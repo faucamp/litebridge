@@ -15,6 +15,31 @@ import static org.mockito.Mockito.when;
 class ObjectUtilsTest {
 
     @Test
+    void requireNonNull() {
+        // Given
+        final Object input = new Object();
+
+        // When
+        final Object result = ObjectUtils.requireNonNull(input, () -> new IllegalArgumentException("Object must not be null"));
+
+        // Then
+        assertEquals(input, result);
+    }
+
+    @Test
+    void requireNonNull_null() {
+        // Given
+        final Object input = null;
+
+        // When
+        IllegalArgumentException result = assertThrows(IllegalArgumentException.class,
+                () -> ObjectUtils.requireNonNull(input, () -> new IllegalArgumentException("Test message")));
+
+        // Then
+        assertEquals("Test message", result.getMessage());
+    }
+
+    @Test
     void requireNull() {
         // Given
         final Object input = null;
