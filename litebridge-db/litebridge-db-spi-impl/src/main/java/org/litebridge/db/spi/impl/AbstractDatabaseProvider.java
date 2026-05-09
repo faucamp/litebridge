@@ -667,12 +667,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @param returnGeneratedKeys a boolean indicating whether the statement should return generated keys.
      *                            Pass {@code true} to configure the statement to return generated keys,
      *                            or {@code false} otherwise.
-     * @param tableMetaData
+     * @param tableMetaData       Meta-data for the current table
      * @param connectionProvider  the {@link ConnectionProvider} used to obtain a database connection.
      * @return a {@link PreparedStatement} that is ready to be executed based on the provided SQL and bind values.
      * @throws SQLException if a database access error occurs or the preparation of the SQL statement fails.
      */
-    @SuppressWarnings("SqlSourceToSinkFlow")
     protected PreparedStatement prepareStatement(final PreparedSql preparedSql,
                                                  final boolean returnGeneratedKeys,
                                                  final TableMetaData tableMetaData,

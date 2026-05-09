@@ -8,5 +8,6 @@ It simplifies persistence by treating SQL as a first-class citizen, balancing re
 
 ## Contents
 
-1. [Change Tracker](change-tracker.md)
 2. [Persistence](persistence/index.md)
+1. [Change Tracker](change-tracker.md) 
+3. [Development](dev/index.md)

@@ -1,9 +1,7 @@
 package org.litebridge.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
-import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;

@@ -19,7 +19,7 @@ public class MultiDbTestExtension implements TestTemplateInvocationContextProvid
 
     @Override
     public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
-        String env = System.getProperty("e2e.env", "all");
+        String env = System.getProperty("lb.e2e.env", "all");
 
         return switch (env) {
             case "all" -> Stream.of(
@@ -29,7 +29,7 @@ public class MultiDbTestExtension implements TestTemplateInvocationContextProvid
             case "h2" -> Stream.of(invocationContext(new H2DbEnvironment()));
             case "oracle" -> Stream.of(invocationContext(new OracleDbEnvironment()));
             case "none" -> Stream.empty();
-            default -> throw new IllegalArgumentException("Invalid e2e.env value: " + env);
+            default -> throw new IllegalArgumentException("Invalid lb.e2e.env value: " + env);
         };
     }
 

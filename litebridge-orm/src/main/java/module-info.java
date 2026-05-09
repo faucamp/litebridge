@@ -21,8 +21,11 @@ module litebridge.orm {
     exports org.litebridge.orm.api.spec;
     exports org.litebridge.orm.api.sql;
     exports org.litebridge.orm.api.sql.delete;
+    exports org.litebridge.orm.api.sql.update;
     exports org.litebridge.orm.api.tx;
     exports org.litebridge.orm.api.update;
+    exports org.litebridge.orm.api.update.model;
+    exports org.litebridge.orm.persistence;
     exports org.litebridge.orm.tx;
 
     opens org.litebridge.orm to litebridge.tracking;

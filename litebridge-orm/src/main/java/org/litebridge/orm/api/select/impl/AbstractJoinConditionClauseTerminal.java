@@ -6,7 +6,6 @@ import org.litebridge.orm.api.select.OrderByClause;
 import org.litebridge.orm.api.select.OrderByClauseChain;
 import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
-import org.litebridge.orm.api.sql.SqlJoinSpec;
 
 public abstract class AbstractJoinConditionClauseTerminal<DTO,
         JCC extends JoinConditionClause<DTO, JCC, SELF>,

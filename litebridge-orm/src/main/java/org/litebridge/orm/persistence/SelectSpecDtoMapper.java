@@ -297,6 +297,7 @@ public class SelectSpecDtoMapper {
         return pkFieldColumns;
     }
 
+    @SuppressWarnings("unchecked")
     private void updateOneToManyCollectionMappings(final PartiallyConstructedDto partialDto) {
         final Object dto = partialDto.dto();
         final OrmTable table = partialDto.ormTable();
@@ -327,6 +328,7 @@ public class SelectSpecDtoMapper {
         });
     }
 
+    @SuppressWarnings("unchecked")
     private void updateManyToManyCollectionMappings(final PartiallyConstructedDto partialDto) {
         final Object dto = partialDto.dto();
         final OrmTable table = partialDto.ormTable();

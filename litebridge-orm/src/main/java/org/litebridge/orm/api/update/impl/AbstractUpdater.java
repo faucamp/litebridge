@@ -8,7 +8,6 @@ import org.litebridge.orm.api.update.model.UpdateSpec;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 
 import java.sql.SQLException;
-import java.util.Objects;
 
 public abstract sealed class AbstractUpdater<US extends UpdateSpec> implements UpdateTerminal
         permits DtoUpdater, SqlUpdater {

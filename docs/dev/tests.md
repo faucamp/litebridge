@@ -1,7 +1,9 @@
 # End-to-End Tests
 
-This directory contains end-to-end tests for Litebridge, which validate the functionality of the ORM 
+The build contains end-to-end/integration tests for Litebridge which validate the functionality of the ORM 
 by interacting with specific or all supported databases.
+
+The tests are found in: [`litebridge-orm/src/test/java/org/litebridge/orm/e2e/`](../../litebridge-orm/src/test/java/org/litebridge/orm/e2e/`)
 
 ## Database environment
 
@@ -14,10 +16,18 @@ To specify a specific database environment, set the `lb.e2e.env` system property
 
 By default, the tests will run against all supported databases (`all`).
 
-Example:
+### Examples:
 
-```sql
--Dlb.e2e.env=h2
+To run H2 integration tests only:
+
+```bash
+mvn clean test -Dlb.e2e.env=h2
+```
+
+To disable integration tests (but still run unit tests):
+
+```bash
+mvn clean test -Dlb.e2e.env=none
 ```
 
 ## IntelliJ note

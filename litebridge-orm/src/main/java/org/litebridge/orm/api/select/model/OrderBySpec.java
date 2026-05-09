@@ -2,9 +2,6 @@ package org.litebridge.orm.api.select.model;
 
 import org.litebridge.db.spi.query.OrderBy;
 
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * Specification for an "ORDER BY" clause in a database query.
  * <p>

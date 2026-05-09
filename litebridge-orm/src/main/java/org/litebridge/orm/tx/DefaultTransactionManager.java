@@ -76,7 +76,7 @@ public final class DefaultTransactionManager implements TransactionManager {
             connection.setAutoCommit(false);
 
             if (readOnly) {
-                connection.setReadOnly(readOnly);
+                connection.setReadOnly(true);
             }
 
             if (isolation != Isolation.DEFAULT) {

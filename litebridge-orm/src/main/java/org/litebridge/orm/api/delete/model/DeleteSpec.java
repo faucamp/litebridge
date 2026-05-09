@@ -4,7 +4,6 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.update.Delete;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 

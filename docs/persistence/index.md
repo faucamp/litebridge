@@ -5,6 +5,6 @@
 ## Contents
 
 1. [Registering DTO-table mappings](dto-table-mapping.md)
-1. [Querying data](select.md)
-2. [Updating data](update.md)
-2. [Deleting data](delete.md)
+2. [Querying data](select.md)
+3. [Updating data](update.md)
+4. [Deleting data](delete.md)

@@ -3,7 +3,6 @@ package org.litebridge.orm.api.sql;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
-import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
 
 import java.util.ArrayList;

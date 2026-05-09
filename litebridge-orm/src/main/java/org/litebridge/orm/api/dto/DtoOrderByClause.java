@@ -3,7 +3,6 @@ package org.litebridge.orm.api.dto;
 import org.litebridge.orm.api.select.OrderByClause;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.model.OrderBySpec;
-import org.litebridge.orm.api.select.model.SelectSpec;
 
 public final class DtoOrderByClause<DTO>
         implements OrderByClause<DTO, DtoOrderByClause<DTO>, DtoOrderByClauseChain<DTO>> {

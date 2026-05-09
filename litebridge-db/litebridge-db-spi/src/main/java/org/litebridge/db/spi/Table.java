@@ -41,6 +41,7 @@ public class Table extends Aliased {
         this(catalogSchemaTable[0], catalogSchemaTable[1], catalogSchemaTable[2], alias);
     }
 
+    @SuppressWarnings("IncompleteCopyConstructor")
     public Table(final Table other) {
         this(other.catalog(), other.schema(), other.name(), other.alias());
     }

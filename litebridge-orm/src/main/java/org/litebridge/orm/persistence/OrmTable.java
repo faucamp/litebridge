@@ -1,6 +1,5 @@
 package org.litebridge.orm.persistence;
 
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.type.WeakIdentitySet;
@@ -31,7 +30,6 @@ import java.util.stream.Stream;
  * This class maintains metadata and mappings between object field accessors and database columns.
  * It tracks changes made to objects and their associated database states for ORM operations.
  */
-@NullMarked
 public class OrmTable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrmTable.class);

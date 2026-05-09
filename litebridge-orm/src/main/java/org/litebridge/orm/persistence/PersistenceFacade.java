@@ -333,21 +333,7 @@ public class PersistenceFacade {
         } else {
             final UpdateBuilder updateBuilder = (UpdateBuilder) statementBuilder;
             updateBuilder.setColumnValues(columnValues);
-
-            table.getMetaData().primaryKey().forEach(columnMetaData -> {
-                final Column pkColumn = columnMetaData.toColumn();
-                final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
-                final Object pkValue = field.get(dto);
-                final Condition condition;
-
-                if (pkValue != null) {
-                    condition = new Condition(pkColumn, Operator.EQ, pkValue);
-                } else {
-                    condition = new Condition(pkColumn, Operator.IS_NULL);
-                }
-
-                updateBuilder.where(condition);
-            });
+            addPrimaryKeyConditions(dto, table, updateBuilder);
         }
 
         return statementChain;
@@ -355,24 +341,9 @@ public class PersistenceFacade {
 
     private <DTO> @Nullable StatementChain prepareDeleteStatement(final DTO dto, final OrmTable table, final DeleteBuilder deleteBuilder, final Set<Object> inProgressDtos) {
         inProgressDtos.add(dto);
-        final StatementChain statementChain = deleteBuilder.statementChain();
+        addPrimaryKeyConditions(dto, table, deleteBuilder);
 
-        table.getMetaData().primaryKey().forEach(columnMetaData -> {
-            final Column pkColumn = columnMetaData.toColumn();
-            final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
-            final Object pkValue = field.get(dto);
-            final Condition condition;
-
-            if (pkValue != null) {
-                condition = new Condition(pkColumn, Operator.EQ, pkValue);
-            } else {
-                condition = new Condition(pkColumn, Operator.IS_NULL);
-            }
-
-            deleteBuilder.where(condition);
-        });
-
-        return statementChain;
+        return deleteBuilder.statementChain();
     }
 
     private <DTO> void processOneToManyUpdate(final DTO dto, final OrmTable table, final Set<Object> inProgressDtos, final MappedOneToMany mappedOneToMany, final StatementChain statementChain, final List<ColumnValue> columnValues) {
@@ -667,5 +638,36 @@ public class PersistenceFacade {
 
             throw new IllegalArgumentException("No table found for DTO class: " + dtoClass);
         }
+    }
+
+    /**
+     * Adds primary key conditions for the given DTO and table to an {@link UpdateBuilder} or {@link DeleteBuilder}.
+     *
+     * @param dto              the DTO to add primary key conditions for
+     * @param table            the table corresponding to the DTO
+     * @param statementBuilder the statement builder to add conditions to. Must be an {@link UpdateBuilder} or {@link DeleteBuilder}.
+     * @param <DTO>            class of the DTO
+     */
+    private static <DTO> void addPrimaryKeyConditions(final DTO dto, final OrmTable table, final AbstractStatementBuilder<?> statementBuilder) {
+        table.getMetaData().primaryKey().forEach(columnMetaData -> {
+            final Column pkColumn = columnMetaData.toColumn();
+            final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
+            final Object pkValue = field.get(dto);
+            final Condition condition;
+
+            if (pkValue != null) {
+                condition = new Condition(pkColumn, Operator.EQ, pkValue);
+            } else {
+                condition = new Condition(pkColumn, Operator.IS_NULL);
+            }
+
+            if (statementBuilder instanceof UpdateBuilder updateBuilder) {
+                updateBuilder.where(condition);
+            } else if (statementBuilder instanceof DeleteBuilder deleteBuilder) {
+                deleteBuilder.where(condition);
+            } else {
+                throw new IllegalStateException("Unsupported statement builder type: " + statementBuilder.getClass().getName());
+            }
+        });
     }
 }

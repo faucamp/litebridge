@@ -5,7 +5,6 @@ import org.litebridge.orm.api.select.JoinConditionClause;
 import org.litebridge.orm.api.select.JoinConditionClauseTerminal;
 import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
-import org.litebridge.orm.api.sql.SqlJoinSpec;
 
 public abstract class AbstractJoinClause<DTO,
         JCC extends JoinConditionClause<DTO, JCC, JCCT>,

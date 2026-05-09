@@ -3,7 +3,6 @@ package org.litebridge.orm.api.dto;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.orm.api.select.OrderByClauseChain;
 import org.litebridge.orm.api.select.impl.OrderByClauseTerminalImpl;
-import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.Arrays;
