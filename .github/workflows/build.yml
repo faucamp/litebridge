@@ -97,6 +97,24 @@ jobs:
         badges-directory: .github/badges/litebridge-tracking
         generate-branches-badge: true
 
+    - name: "Generate JaCoCo Badge: litebridge-spring"
+      # Run on main branch only
+      if: github.ref == 'refs/heads/main'
+      uses: cicirello/jacoco-badge-generator@v2
+      with:
+        jacoco-csv-file: spring/litebridge-spring/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/spring/litebridge-spring
+        generate-branches-badge: true
+
+    - name: "Generate JaCoCo Badge: litebridge-spring-boot-autoconfigure"
+      # Run on main branch only
+      if: github.ref == 'refs/heads/main'
+      uses: cicirello/jacoco-badge-generator@v2
+      with:
+        jacoco-csv-file: spring/litebridge-spring-boot-autoconfigure/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/spring/litebridge-spring-boot-autoconfigure
+        generate-branches-badge: true
+
     - name: "Generate JaCoCo Badge: aggregate"
       # Run on main branch only
       if: github.ref == 'refs/heads/main'

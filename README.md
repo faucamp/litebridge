@@ -16,7 +16,7 @@ It simplifies persistence by treating SQL as a first-class citizen, balancing re
 * **Efficient**: Focuses on performance and minimising database round-trips via built-in DTO change tracking.
 * **Transparent Mapping**: Map DTOs to databases without modifying your domain classes. Use a fluent API, programmatic `Map`-based configuration or _optional_ annotations.
 * **Fluent API**: Compose queries using a natural, SQL-like fluent builder that stays out of your way.
-
+* **Spring Integration**: Use the Litebridge Spring Boot starter to easily integrate Litebridge with your Spring Boot application.
 ## Shortcuts
 
 <!-- TOC -->
@@ -321,7 +321,9 @@ Litebridge is modular, allowing you to include only the components you need.
 The core engine. This is the primary dependency required for all applications using the ORM.
 
 #### `litebridge-db`
+
 A collection of database provider modules. You only need to include the specific implementation for your database (or multiple if needed).
+
 * **`litebridge-db-h2`**:
 
   ![Coverage](.github/badges/litebridge-db/litebridge-db-h2/jacoco.svg)
@@ -372,6 +374,33 @@ Simple type conversion support for translating between Java types and SQL-specif
 ![Branches](.github/badges/litebridge-commons/branches.svg)
 
 Internal utilities. Litebridge implements internal versions of common patterns to avoid bloating your project with large 3rd-party utility suites.
+
+#### `spring`
+
+Spring Framework integration for Litebridge.
+
+* **`litebridge-spring`**:
+
+  ![Coverage](.github/badges/spring/litebridge-spring/jacoco.svg)
+  ![Branches](.github/badges/spring/litebridge-spring/branches.svg)
+
+  Core Litebridge-Spring integration.
+
+  Used for manual configuration of Litebridge Spring beans.
+
+* **`litebridge-spring-boot-starter`**:
+
+  Spring Boot autoconfiguration for Litebridge. 
+  Used to integrate Litebridge with typical Spring Boot applications.
+
+  This is the only dependency needed for autoconfigured Spring Boot applications.
+
+* **`litebridge-spring-boot-autoconfigure`**:
+
+  ![Coverage](.github/badges/spring/litebridge-spring-boot-autoconfigure/jacoco.svg)
+  ![Branches](.github/badges/spring/litebridge-spring-boot-autoconfigure/branches.svg)
+
+  Spring Boot Autoconfiguration implementation.
 
 ### Documentation and examples
 
