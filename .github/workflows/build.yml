@@ -76,7 +76,7 @@ jobs:
       uses: cicirello/jacoco-badge-generator@v2
       with:
         jacoco-csv-file: litebridge-db/litebridge-db-oracle/target/site/jacoco/jacoco.csv
-        badges-directory: .github/badges/litebridge-oracle/litebridge-db-oracle
+        badges-directory: .github/badges/litebridge-db/litebridge-db-oracle
         generate-branches-badge: true
 
     - name: "Generate JaCoCo Badge: litebridge-orm"
