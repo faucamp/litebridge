@@ -70,6 +70,15 @@ jobs:
         badges-directory: .github/badges/litebridge-db/litebridge-db-h2
         generate-branches-badge: true
 
+    - name: "Generate JaCoCo Badge: litebridge-db-oracle"
+      # Run on main branch only
+      if: github.ref == 'refs/heads/main'
+      uses: cicirello/jacoco-badge-generator@v2
+      with:
+        jacoco-csv-file: litebridge-db/litebridge-db-oracle/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-oracle/litebridge-db-oracle
+        generate-branches-badge: true
+
     - name: "Generate JaCoCo Badge: litebridge-orm"
       # Run on main branch only
       if: github.ref == 'refs/heads/main'
