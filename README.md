@@ -297,6 +297,12 @@ litebridge.select("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
         .forEach(p -> logger.info("Person DTO: " + p));
 ```
 
+## Supported databases
+
+Litebridge currently supports the following databases:
+* **H2**: `litebridge-db-h2`
+* **Oracle**: `litebridge-db-oracle`
+
 ## Documentation
 
 [Litebridge documentation](docs/index.md)
@@ -322,6 +328,14 @@ A collection of database provider modules. You only need to include the specific
   ![Branches](.github/badges/litebridge-db/litebridge-db-h2/branches.svg)
 
   H2 database provider.
+
+* **`litebridge-db-oracle`**:
+
+  ![Coverage](.github/badges/litebridge-db/litebridge-db-oracle/jacoco.svg)
+  ![Branches](.github/badges/litebridge-db/litebridge-db-oracle/branches.svg)
+
+  Oracle database provider.
+
 * **`litebridge-db-spi`**:
 
   ![Coverage](.github/badges/litebridge-db/litebridge-db-spi/jacoco.svg)
@@ -359,10 +373,10 @@ Simple type conversion support for translating between Java types and SQL-specif
 
 Internal utilities. Litebridge implements internal versions of common patterns to avoid bloating your project with large 3rd-party utility suites.
 
-### Documentaion and examples
+### Documentation and examples
 
 #### `docs`
-Litebridge documentation.
+[Litebridge documentation](docs/index.md)
 
 #### `example`
 Examples demonstrating how to use Litebridge.
