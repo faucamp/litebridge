@@ -38,7 +38,7 @@
         <module>litebridge-converter</module>
         <module>litebridge-db</module>
         <module>litebridge-orm</module>
-        <module>litebridge-spring-parent</module>
+        <module>spring</module>
         <module>litebridge-tracking</module>
         <module>example</module>
         <module>jacoco-aggregate-report</module>
