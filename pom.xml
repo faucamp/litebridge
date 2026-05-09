@@ -111,7 +111,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>${maven-javadoc-plugin.version}</version>
                 <configuration>
-                    <skippedModules>litebridge-example-common,litebridge-example-h2</skippedModules>
+                    <skippedModules>litebridge-example-common,litebridge-example-h2,litebridge-example-oracle</skippedModules>
                 </configuration>
             </plugin>
         </plugins>
