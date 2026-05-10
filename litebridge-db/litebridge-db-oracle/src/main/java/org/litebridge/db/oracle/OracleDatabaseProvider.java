@@ -41,16 +41,21 @@ public class OracleDatabaseProvider extends AbstractDatabaseProvider {
 
     @Override
     protected String createColumnIdentifier(final Column column, final boolean includeColumnAlias, final @Nullable Select select) {
-        // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the column
         if (select == null || CollectionUtils.isEmpty(select.joins())) {
             return super.createColumnIdentifier(column, includeColumnAlias, select);
         }
 
         boolean applyTableQualifier = true;
 
+        // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the column
         for (Join join : select.joins()) {
             for (Condition condition : join.conditions()) {
-                if (condition.operator() == Operator.USING && condition.column().equalsIgnoreAlias(column)) {
+                if (condition.operator() == Operator.USING
+                        // Same column
+                        && (condition.column().equalsIgnoreAlias(column)
+                        // Same column but from other side of join
+                        || (condition.column().equalsColumnOnlyIgnoreAlias(column)
+                        && (select.table().equalsIgnoreAlias(column.table()) || join.table().equalsIgnoreAlias(column.table()))))) {
                     // Don't include table qualifiers
                     applyTableQualifier = false;
                     break;

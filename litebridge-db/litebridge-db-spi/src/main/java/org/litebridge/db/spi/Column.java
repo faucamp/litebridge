@@ -128,6 +128,10 @@ public class Column extends Aliased {
         return table.equalsIgnoreAlias(column.table);
     }
 
+    public boolean equalsColumnOnlyIgnoreAlias(final Column column) {
+        return super.equalsIgnoreAlias(column);
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), table);

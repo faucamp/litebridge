@@ -111,6 +111,79 @@ class OracleDatabaseProviderTest {
     }
 
     @Test
+    void createColumnIdentifier_withUsingForSameColumnFromJoinSideAndSelectedColumnFromSelectTable_omitsTableQualifier() {
+        // Given
+        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
+        final Table table = new Table("TEST_TABLE", null);
+        final Table joinedTable = new Table("JOINED_TABLE", null);
+        final Column column = new Column(table, "TEST_COLUMN");
+        final Column joinColumn = new Column(joinedTable, "TEST_COLUMN");
+        final Join join = new Join(joinedTable, List.of(new Condition(joinColumn, Operator.USING, null)));
+        final Select select = new Select(
+                table,
+                List.of(column),
+                List.of(join),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Optional.empty());
+
+        // When
+        final String result = provider.createColumnIdentifier(column, true, select);
+
+        // Then
+        assertEquals("TEST_COLUMN", result);
+    }
+
+    @Test
+    void createColumnIdentifier_withUsingForSameColumnFromSelectSideAndSelectedColumnFromJoinTable_omitsTableQualifier() {
+        // Given
+        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
+        final Table table = new Table("TEST_TABLE", null);
+        final Table joinedTable = new Table("JOINED_TABLE", null);
+        final Column column = new Column(joinedTable, "TEST_COLUMN");
+        final Column selectColumn = new Column(table, "TEST_COLUMN");
+        final Join join = new Join(joinedTable, List.of(new Condition(selectColumn, Operator.USING, null)));
+        final Select select = new Select(
+                table,
+                List.of(column),
+                List.of(join),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Optional.empty());
+
+        // When
+        final String result = provider.createColumnIdentifier(column, true, select);
+
+        // Then
+        assertEquals("TEST_COLUMN", result);
+    }
+
+    @Test
+    void createColumnIdentifier_withUsingForSameColumnButUnrelatedTable_usesDefaultTableQualifier() {
+        // Given
+        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
+        final Table table = new Table("TEST_TABLE", null);
+        final Table joinedTable = new Table("JOINED_TABLE", null);
+        final Table unrelatedTable = new Table("UNRELATED_TABLE", null);
+        final Column column = new Column(unrelatedTable, "TEST_COLUMN");
+        final Column selectColumn = new Column(table, "TEST_COLUMN");
+        final Join join = new Join(joinedTable, List.of(new Condition(selectColumn, Operator.USING, null)));
+        final Select select = new Select(
+                table,
+                List.of(column),
+                List.of(join),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Optional.empty());
+
+        // When
+        final String result = provider.createColumnIdentifier(column, true, select);
+
+        // Then
+        assertEquals("UNRELATED_TABLE.TEST_COLUMN", result);
+    }
+
+    @Test
     void createColumnIdentifier_withMatchingUsing_omitsTableQualifier() {
         // Given
         final OracleDatabaseProvider provider = new OracleDatabaseProvider();
