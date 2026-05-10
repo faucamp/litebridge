@@ -107,7 +107,7 @@ The `register()` callback provides additional options for configuring the mappin
 
 - `allowInterface(Class)`: Allows Litebridge to treat the DTO class as an implementation of the specified interface. This is useful when querying or mapping relationships using interfaces.
 
-### Many-tomany relationships
+### Many-to-many relationships
 
 Many-to-many relationships can be specified using the `manyToMany()` method, similar
 to the `oneToMany()` method. The relationship is defined on either/both sides of the related DTOs, as needed.
