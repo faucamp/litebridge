@@ -319,11 +319,12 @@ public class PersistenceFacade {
                     }
                 } else {
                     // Get the primary key
-                    final List<ColumnMetaData> embeddedDtoPk = nestedDtoTable.getMetaData().primaryKey();
-                    // TODO: composite PK support
-                    final FieldAccessor field = nestedDtoTable.getFieldForColumnName(embeddedDtoPk.get(0).name());
-                    final Object pkValue = field.get(value);
-                    columnValues.add(new ColumnValue(columnMetaData.toColumn(), pkValue));
+                    nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
+                        final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
+                        final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
+                        final Column joinColumn = table.getColumnForFieldName(fieldAccessor.name()).toColumn();
+                        columnValues.add(new ColumnValue(joinColumn, embeddedDtoPkValue));
+                    });
                 }
             }
         }
@@ -469,11 +470,14 @@ public class PersistenceFacade {
 
     private List<ColumnValue> dtoPrimaryKeyColumnValues(final Object dto) {
         final OrmTable embeddedDtoTable = tableProvider.getTableOrThrow(dto.getClass());
-        final List<ColumnMetaData> embeddedDtoPk = embeddedDtoTable.getMetaData().primaryKey();
-        // TODO: composite PK support
-        final ColumnMetaData pkColumn = embeddedDtoPk.get(0);
-        final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(pkColumn.name());
-        return List.of(new ColumnValue(pkColumn.toColumn(), field.get(dto)));
+        final List<ColumnValue> pkColumnValues = new ArrayList<>(embeddedDtoTable.getMetaData().primaryKey().size());
+
+        embeddedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
+            final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(pkColumn.name());
+            pkColumnValues.add(new ColumnValue(pkColumn.toColumn(), field.get(dto)));
+        });
+
+        return pkColumnValues;
     }
 
     @SuppressWarnings("unchecked")
