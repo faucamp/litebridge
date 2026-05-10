@@ -9,7 +9,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
@@ -49,8 +48,10 @@ public class LitebridgeAutoConfiguration {
     }
 
     /**
-     * Instantiates a Litebridge instance with a DatabaseProvider
-     * specified by the {@code litebridge.database-provider-class} property.
+     * Instantiates a Litebridge instance.
+     * <p>
+     * The DatabaseProvider is specified by the {@code litebridge.database-provider.class} property,
+     * or by detecting an implementation on the classpath if not specified.
      *
      * @param properties         Litebridge Spring Boot autoconfiguration properties
      * @param transactionManager Litebridge Spring transaction manager
@@ -58,51 +59,47 @@ public class LitebridgeAutoConfiguration {
      */
     @Bean(name = "litebridge")
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(name = "litebridge.database-provider-class")
     public Litebridge litebridge(final LitebridgeProperties properties, final LitebridgeTransactionManager transactionManager) {
-        return new Litebridge(configBasedDatabaseProvider(properties), transactionManager);
-    }
+        final DatabaseProvider databaseProvider;
 
-    /**
-     * Instantiates a Litebridge instance
-     * with a DatabaseProvider detected from the classpath,
-     * when no {@code litebridge.database-provider-class} property was specified)
-     *
-     * @param transactionManager Litebridge Spring transaction manager
-     * @return Litebridge instance
-     */
-    @Bean(name = "litebridge")
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(name = "litebridge.database-provider-class", matchIfMissing = true)
-    public Litebridge litebridgeAutoDatabaseProvider(final LitebridgeTransactionManager transactionManager) {
-        return new Litebridge(autoDetectDatabaseProvider(), transactionManager);
+        if (properties.getDatabaseProvider().getProviderClass() != null) {
+            // Specific database provider class configured
+            databaseProvider = configBasedDatabaseProvider(properties);
+        } else {
+            // Database provider class not explicitly set; detect it from the classpath
+            databaseProvider = autoDetectDatabaseProvider(properties);
+        }
+
+        return new Litebridge(databaseProvider, transactionManager);
     }
 
     /**
      * Instantiates configured DatabaseProvider from property-specified class with validation.
      * <p>
-     * The {@link DatabaseProvider} implementation class is specified by the {@code litebridge.database-provider-class} property.
+     * The {@link DatabaseProvider} implementation class is specified by the {@code litebridge.database-provider.class} property.
      */
+    @SuppressWarnings("unchecked")
     private static DatabaseProvider configBasedDatabaseProvider(final LitebridgeProperties properties) {
-        LOGGER.debug("Litebridge: Initialising configured DatabaseProvider class: {}", properties.getDatabaseProviderClass());
+        final String databaseProviderClassName = Objects.requireNonNull(properties.getDatabaseProvider().getProviderClass());
+        LOGGER.debug("Litebridge: Initialising configured DatabaseProvider class: {}", databaseProviderClassName);
         final Class<? extends DatabaseProvider> databaseProviderClass;
 
         try {
-            final Class<?> candidateClass = ClassUtils.forName(properties.getDatabaseProviderClass(), ClassUtils.getDefaultClassLoader());
+            final Class<?> candidateClass = ClassUtils.forName(databaseProviderClassName, ClassUtils.getDefaultClassLoader());
 
             if (DatabaseProvider.class.isAssignableFrom(candidateClass)) {
                 databaseProviderClass = (Class<? extends DatabaseProvider>) candidateClass;
             } else {
-                throw new IllegalArgumentException("Failed to instantiate Litebridge; Specified class does not implement DatabaseProvider: %s".formatted(properties.getDatabaseProviderClass()));
+                throw new IllegalArgumentException("Failed to instantiate Litebridge; Specified class does not implement DatabaseProvider: %s".formatted(databaseProviderClassName));
             }
         } catch (ClassNotFoundException ex) {
-            throw new IllegalArgumentException("Failed to instantiate Litebridge; DatabaseProvider class not found: %s".formatted(properties.getDatabaseProviderClass()), ex);
+            throw new IllegalArgumentException("Failed to instantiate Litebridge; DatabaseProvider class not found: %s".formatted(databaseProviderClassName), ex);
         }
 
         final Constructor<? extends DatabaseProvider> constructor = ClassUtils.getConstructorIfAvailable(databaseProviderClass);
 
         if (constructor == null) {
-            throw new IllegalArgumentException("Failed to instantiate Litebridge; No suitable constructor found for DatabaseProvider class: %s".formatted(properties.getDatabaseProviderClass()));
+            throw new IllegalArgumentException("Failed to instantiate Litebridge; No suitable constructor found for DatabaseProvider class: %s".formatted(databaseProviderClassName));
         }
 
         return BeanUtils.instantiateClass(constructor);
@@ -111,20 +108,20 @@ public class LitebridgeAutoConfiguration {
 
     /**
      * Instantiates single DatabaseProvider via classpath scan for available {@link DatabaseProvider} implementations
-     * if no {@code litebridge.database-provider-class} property is specified.
+     * if no {@code litebridge.database-provider.class} property is specified.
      * <p>
      * It enforces uniqueness - ensures that only one {@link DatabaseProvider} implementation is used per application.
      */
-    private static DatabaseProvider autoDetectDatabaseProvider() {
+    private static DatabaseProvider autoDetectDatabaseProvider(final LitebridgeProperties properties) {
         LOGGER.debug("Litebridge: Auto-detecting DatabaseProvider from classpath");
         final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AssignableTypeFilter(DatabaseProvider.class));
-        final Set<BeanDefinition> candidates = scanner.findCandidateComponents("org.litebridge.db");
+        final Set<BeanDefinition> candidates = scanner.findCandidateComponents(properties.getDatabaseProvider().getScanBasePackage());
 
         if (CollectionUtils.isEmpty(candidates)) {
-            throw new IllegalStateException("Failed to instantiate Litebridge; no DatabaseProvider implementations found");
+            throw new IllegalStateException("Failed to instantiate Litebridge; no DatabaseProvider implementations found by scanning base package: " + properties.getDatabaseProvider().getScanBasePackage());
         } else if (candidates.size() > 1) {
-            throw new IllegalStateException("Failed to instantiate Litebridge; multiple DatabaseProvider implementations found: %s. Please ensure there is only one on the classpath, or specify the fully qualified class name in the 'litebridge.database-provider-class' property.".formatted(candidates));
+            throw new IllegalStateException("Failed to instantiate Litebridge; multiple DatabaseProvider implementations found: %s. Please ensure there is only one on the classpath, or specify the fully qualified class name in the 'litebridge.database-provider.class' property.".formatted(candidates));
         }
 
         final BeanDefinition candidate = candidates.iterator().next();

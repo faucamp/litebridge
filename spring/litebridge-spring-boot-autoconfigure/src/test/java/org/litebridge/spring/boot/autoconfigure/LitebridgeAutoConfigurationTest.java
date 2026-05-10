@@ -1,6 +1,18 @@
 package org.litebridge.spring.boot.autoconfigure;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.tx.ConnectionProvider;
+import org.litebridge.db.spi.update.Delete;
+import org.litebridge.db.spi.update.Insert;
+import org.litebridge.db.spi.update.InsertResult;
+import org.litebridge.db.spi.update.Update;
+import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.spring.LitebridgeTransactionManager;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -9,6 +21,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
+import java.sql.SQLException;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -19,12 +34,66 @@ class LitebridgeAutoConfigurationTest {
             .withUserConfiguration(TestConfig.class);
 
     @Test
-    void shouldAutoConfigureLitebridge() {
+    void autoConfigure_configDatabaseProvider() {
         this.contextRunner
-                .withPropertyValues("litebridge.database-provider-class=org.litebridge.spring.boot.autoconfigure.LitebridgeAutoConfigurationTest$MockDatabaseProvider")
+                .withPropertyValues("litebridge.database-provider.class=org.litebridge.db.h2.H2DatabaseProvider")
                 .run(context -> {
                     assertThat(context).hasSingleBean(Litebridge.class);
                     assertThat(context).hasSingleBean(LitebridgeTransactionManager.class);
+                });
+    }
+
+    @Test
+    void autoConfigure_configDatabaseProvider_noConstructor() {
+        this.contextRunner
+                .withPropertyValues("litebridge.database-provider.class=org.litebridge.spring.boot.autoconfigure.LitebridgeAutoConfigurationTest$NoConstructorDatabaseProvider")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                });
+    }
+
+    @Test
+    void autoConfigure_configDatabaseProvider_providerClassNotFound() {
+        this.contextRunner
+                .withPropertyValues("litebridge.database-provider.class=com.example.NonExistentProvider")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                });
+    }
+
+    @Test
+    void autoConfigure_configDatabaseProvider_invalidProviderClass() {
+        this.contextRunner
+                .withPropertyValues("litebridge.database-provider.class=java.lang.String")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                });
+    }
+
+    @Test
+    void autoConfigure_classpathDatabaseProvider() {
+        this.contextRunner
+                .run(context -> {
+                    assertThat(context).hasSingleBean(Litebridge.class);
+                    assertThat(context).hasSingleBean(LitebridgeTransactionManager.class);
+                });
+    }
+
+    @Test
+    void autoConfigure_classpathDatabaseProvider_noProviderFound() {
+        this.contextRunner
+                .withPropertyValues("litebridge.database-provider.scan-base-package=com.example.nonexistent")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                });
+    }
+
+    @Test
+    void autoConfigure_classpathDatabaseProvider_multipleProvidersFound() {
+        this.contextRunner
+                .withPropertyValues("litebridge.database-provider.scan-base-package=org.litebridge")
+                .run(context -> {
+                    assertThat(context).hasFailed();
                 });
     }
 
@@ -36,13 +105,47 @@ class LitebridgeAutoConfigurationTest {
         }
     }
 
-    public static class MockDatabaseProvider implements org.litebridge.db.spi.DatabaseProvider {
-        @Override public org.litebridge.db.spi.TableMetaData tableMetaData(org.litebridge.db.spi.Table table, org.litebridge.db.spi.tx.ConnectionProvider connectionProvider) { return null; }
-        @Override public org.litebridge.db.spi.update.InsertResult insert(org.litebridge.db.spi.update.Insert insert, org.litebridge.db.spi.tx.ConnectionProvider connectionProvider) { return null; }
-        @Override public org.litebridge.db.spi.update.UpdateResult update(org.litebridge.db.spi.update.Update update, org.litebridge.db.spi.tx.ConnectionProvider connectionProvider) { return null; }
-        @Override public java.util.List<org.litebridge.db.spi.Row> select(org.litebridge.db.spi.query.Select select, org.litebridge.db.spi.tx.ConnectionProvider connectionProvider) { return null; }
-        @Override public org.litebridge.db.spi.update.UpdateResult delete(org.litebridge.db.spi.update.Delete delete, org.litebridge.db.spi.tx.ConnectionProvider connectionProvider) { return null; }
-        @Override public String toSql(org.litebridge.db.spi.query.Select select) { return null; }
-        @Override public org.litebridge.db.spi.convert.TypeConverter getTypeConverter() { return null; }
+    /**
+     * Class designed to test inaccessibility of constructor
+     */
+    public static class NoConstructorDatabaseProvider implements DatabaseProvider {
+
+        private NoConstructorDatabaseProvider() {
+        }
+
+        @Override
+        public TableMetaData tableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {
+            return null;
+        }
+
+        @Override
+        public InsertResult insert(final Insert insert, final ConnectionProvider connectionProvider) throws SQLException {
+            return null;
+        }
+
+        @Override
+        public UpdateResult update(final Update update, final ConnectionProvider connectionProvider) throws SQLException {
+            return null;
+        }
+
+        @Override
+        public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
+            return List.of();
+        }
+
+        @Override
+        public UpdateResult delete(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
+            return null;
+        }
+
+        @Override
+        public String toSql(final Select select) {
+            return "";
+        }
+
+        @Override
+        public TypeConverter getTypeConverter() {
+            return null;
+        }
     }
 }
