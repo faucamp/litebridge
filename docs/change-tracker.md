@@ -2,20 +2,6 @@
 
 ← [Home](index.md)
 
-## Contents
-
-<!-- TOC -->
-* [Overview](#overview)
-* [Usage](#usage)
-    * [Tracking all changes to a DTO](#tracking-all-changes-to-a-dto)
-    * [Tracking specific fields of a DTO](#tracking-specific-fields-of-a-dto)
-    * [Retrieving changed fields](#retrieving-changed-fields)
-    * [Snapshot behaviour](#snapshot-behaviour)
-<!-- TOC -->
-
-
-## Overview
-
 The `ChangeTracker` API prvoides lightweight change tracking for arbitrary DTOs. 
 While the Litebridge ORM uses this internally for SQL optimisation, it can be used independently for other state-tracking needs.
 

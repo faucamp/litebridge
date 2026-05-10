@@ -2,8 +2,6 @@
 
 ← [Persistence](index.md)
 
-## Overview
-
 Litebridge provides a fluent API for deleting data, which allows for:
 
 * DTO-level deletes

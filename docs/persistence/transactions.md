@@ -66,7 +66,7 @@ Before calling `begin()` or `execute()`, you can configure the transaction with 
 
 ### Read-only transactions
 
-Indicating a transaction is read-only can allow the database to optimize performance and prevent accidental modifications.
+Indicating a transaction is read-only can allow the database to optimise performance and prevent accidental modifications.
 
 ```java
 litebridge.transaction()

@@ -2,9 +2,12 @@
 
 ← [Persistence](index.md)
 
-Litebridge includes a built-in change tracking mechanism that helps optimize database updates by only persisting fields that have actually changed.
+Litebridge includes a built-in change tracking mechanism that helps optimise database updates by only persisting fields that have actually changed.
 
-## Overview
+Purpose:
+- **Performance**: Reduced database load by only updating changed columns.
+- **Efficiency**: No need to manually keep track of what changed in your application logic.
+- **Safety**: Minimises the risk of overwriting concurrent changes to unrelated columns (depending on the database's locking strategy).
 
 Change tracking works by wrapping a DTO in a proxy that intercepts calls to its setters (or by comparing the current state with a snapshot of the original state). When you save a tracked DTO, Litebridge only generates SQL for the modified fields.
 
@@ -56,9 +59,3 @@ person.setEyeColour("Green");
 // Only EYE_COLOUR will be updated in the database
 litebridge.save(person);
 ```
-
-## Benefits
-
-- **Performance**: Reduced database load by only updating changed columns.
-- **Efficiency**: No need to manually keep track of what changed in your application logic.
-- **Safety**: Minimizes the risk of overwriting concurrent changes to unrelated columns (depending on the database's locking strategy).

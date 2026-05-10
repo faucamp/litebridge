@@ -26,7 +26,7 @@ When the starter is on the classpath, Litebridge will automatically:
 
 ## Configuration Properties
 
-You can customize the autoconfiguration using the following properties in `application.properties` or `application.yml`:
+You can customise the autoconfiguration using the following properties in `application.properties` or `application.yml`:
 
 | Property | Description | Default |
 | :--- | :--- | :--- |
