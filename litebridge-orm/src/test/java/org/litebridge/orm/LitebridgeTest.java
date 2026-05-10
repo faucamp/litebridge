@@ -27,6 +27,7 @@ import org.litebridge.orm.tx.DefaultTransactionManager;
 import org.mockito.ArgumentCaptor;
 
 import javax.sql.DataSource;
+import java.lang.invoke.MethodHandles;
 import java.sql.Types;
 import java.util.Collections;
 import java.util.List;
@@ -447,6 +448,38 @@ class LitebridgeTest {
 
         // Then
         assertNotNull(result);
+    }
+
+    @Test
+    void constructors() {
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final TransactionManager transactionManager = mock(TransactionManager.class);
+        
+        assertNotNull(new Litebridge(databaseProvider, transactionManager));
+        assertNotNull(new Litebridge(databaseProvider, transactionManager, MethodHandles.lookup()));
+    }
+
+    @Test
+    void delete_overloads() throws Exception {
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+
+        litebridge.delete("MY_TABLE");
+        litebridge.delete("MY_TABLE", q -> q.where("COL").eq("VAL"));
+        
+        verify(databaseProvider, org.mockito.Mockito.atLeastOnce()).delete(any(), any());
+    }
+
+    @Test
+    void update_overloads() throws Exception {
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+
+        litebridge.update("MY_TABLE", q -> q.set("COL").to("VAL").where("ID").eq(1));
+        
+        verify(databaseProvider).update(any(), any());
     }
 
     private static class TestDto {

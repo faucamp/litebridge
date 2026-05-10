@@ -58,6 +58,52 @@ class TransactionContextTest {
     }
 
     @Test
+    void readOnly_isolation() {
+        // Given
+        TransactionManager transactionManager = mock(TransactionManager.class);
+        TransactionContext context = new TransactionContext(transactionManager);
+
+        // When
+        Transaction tx = context.readOnly().isolation(Isolation.READ_UNCOMMITTED).begin();
+
+        // Then
+        verify(transactionManager).begin(true, Isolation.READ_UNCOMMITTED);
+        assertNotNull(tx);
+    }
+
+    @Test
+    void readOnly_execute() {
+        // Given
+        TransactionManager transactionManager = mock(TransactionManager.class);
+        TransactionContext context = new TransactionContext(transactionManager);
+        Runnable runnable = mock(Runnable.class);
+
+        // When
+        context.readOnly().execute(runnable);
+
+        // Then
+        verify(transactionManager).begin(true, Isolation.DEFAULT);
+        verify(runnable).run();
+        verify(transactionManager).commit();
+    }
+
+    @Test
+    void isolation_execute() {
+        // Given
+        TransactionManager transactionManager = mock(TransactionManager.class);
+        TransactionContext context = new TransactionContext(transactionManager);
+        Runnable runnable = mock(Runnable.class);
+
+        // When
+        context.isolation(Isolation.SERIALIZABLE).execute(runnable);
+
+        // Then
+        verify(transactionManager).begin(false, Isolation.SERIALIZABLE);
+        verify(runnable).run();
+        verify(transactionManager).commit();
+    }
+
+    @Test
     void commit() {
         // Given
         TransactionManager transactionManager = mock(TransactionManager.class);
