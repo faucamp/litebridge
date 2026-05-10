@@ -168,11 +168,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                     sql.append(", ");
                 }
 
-                if (orderBy.column().table().alias() != null) {
-                    sql.append(quoteIdentifier(orderBy.column().table().alias())).append('.');
-                }
-
-                sql.append(quoteIdentifier(orderBy.column().name())).append(orderBy.asc() ? " ASC" : " DESC");
+                sql.append(quoteIdentifier(createColumnIdentifier(orderBy.column(), false, select)))
+                        .append(orderBy.asc() ? " ASC" : " DESC");
             }
         }
 
@@ -492,7 +489,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(tableMetaData.primaryKey().size());
         final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
 
-        if (generatedKeysResultSet.next()) {
+        while (generatedKeysResultSet.next()) {
             for (ColumnMetaData pkColumn : generatedPrimaryKeys) {
                 final Object generatedId = generatedKeysResultSet.getObject(pkColumn.name());
                 getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
