@@ -2,20 +2,6 @@
 
 ← [Home](../index.md)
 
-## Contents
-
-<!-- TOC -->
-* [Overview](#overview)
-* [Usage](#usage)
-    * [Tracking all changes to a DTO](#tracking-all-changes-to-a-dto)
-    * [Tracking specific fields of a DTO](#tracking-specific-fields-of-a-dto)
-    * [Retrieving changed fields](#retrieving-changed-fields)
-    * [Snapshot behaviour](#snapshot-behaviour)
-<!-- TOC -->
-
-
-## Overview
-
 Litebridge allows direct mapping of entities/Data Transfer Objects (DTOs) to tables, similar to other ORMs, but with a strong focus
 on using DTOs directly without modification or annotations, etc.
 

@@ -70,18 +70,6 @@ public class Aliased {
     }
 
     /**
-     * Create a new instance of {@code Aliased} with the specified name.
-     * <p>
-     * This is shorthand for {@code new Aliased(name)}.
-     *
-     * @param name the target name for the aliased entity, must not be null
-     * @return a new {@code Aliased} instance initialized with the given name
-     */
-    public static Aliased a(final String name) {
-        return new Aliased(name);
-    }
-
-    /**
      * Set the alias for this entity.
      *
      * @param alias the alias to assign to this entity; must not be null

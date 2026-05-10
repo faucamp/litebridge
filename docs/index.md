@@ -10,4 +10,5 @@ It simplifies persistence by treating SQL as a first-class citizen, balancing re
 
 1. [Persistence](persistence/index.md)
 2. [Change Tracker](change-tracker.md) 
-3. [Development](dev/index.md)
+3. [Spring Integration](spring/index.md)
+4. [Litebridge Development](dev/index.md)

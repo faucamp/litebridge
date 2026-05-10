@@ -2,24 +2,6 @@
 
 ← [Persistence](index.md)
 
-## Contents
-
-<!-- TOC -->
-* [Overview](#overview)
-* [Starting a transaction](#starting-a-transaction)
-* [Transaction management patterns](#transaction-management-patterns)
-    * [Manual control](#manual-control)
-    * [Try-with-resources](#try-with-resources)
-    * [Lambda execution](#lambda-execution)
-* [Transaction configuration](#transaction-configuration)
-    * [Read-only transactions](#read-only-transactions)
-    * [Isolation levels](#isolation-levels)
-* [DTO state rollback](#dto-state-rollback)
-* [Nested transactions](#nested-transactions)
-<!-- TOC -->
-
-## Overview
-
 Litebridge provides a programmatic API for transaction management, giving you full control over when transactions start, 
 commit, or rollback. It supports manual control, try-with-resources for automatic resource management, and lambda-based 
 execution for a more functional approach.

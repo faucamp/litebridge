@@ -2,10 +2,23 @@
 
 ← [Home](../index.md)
 
-## Contents
+Litebridge provides a lightweight persistence layer for working with DTOs and relational databases. It focuses on mapping DTO classes to database tables, querying data, applying inserts and updates, deleting records, and managing transactional boundaries.
 
-1. [Registering DTO-table mappings](dto-table-mapping.md)
-2. [Querying data](select.md)
-3. [Updating data](update.md)
-4. [Deleting data](delete.md)
-5. [Transactions](transactions.md)
+## Persistence Topics
+
+This section covers the core persistence features provided by Litebridge:
+
+1. **[Registering DTO-table mappings](dto-table-mapping.md)**: Define how DTO classes map to database tables, columns, keys, and relationships.
+2. **[Querying data](select.md)**: Retrieve records from the database and map results back into DTOs.
+3. **[Updating data](update.md)**: Persist new DTOs or update existing records using Litebridge’s persistence operations.
+4. **[Deleting data](delete.md)**: Remove records from the database using mapped DTOs.
+5. **[Transactions](transactions.md)**: Coordinate persistence operations safely using Litebridge transaction support.
+
+## Core Concepts
+
+The persistence module is built around a few key ideas:
+
+- **DTO-table mappings** describe how Java DTOs correspond to database tables.
+- **Persistence operations** provide a simple way to select, insert, update, save, and delete DTOs.
+- **Change tracking** helps Litebridge determine which DTO fields need to be persisted.
+- **Transactions** ensure related database operations are committed or rolled back together.

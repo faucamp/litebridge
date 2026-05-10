@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AliasedTest {
@@ -68,16 +67,6 @@ class AliasedTest {
         // Then
         assertEquals("testName", result.name());
         assertEquals("testAlias", result.alias());
-    }
-
-    @Test
-    void a() {
-        // When
-        final Aliased result = Aliased.a("testName");
-
-        // Then
-        assertEquals("testName", result.name());
-        assertNull(result.alias());
     }
 
     @Test

@@ -1,5 +1,7 @@
 package org.litebridge.db.spi.update;
 
+import org.litebridge.db.spi.Table;
+
 /**
  * Common marker interface for database update operations.
  * <p>
@@ -13,4 +15,11 @@ package org.litebridge.db.spi.update;
  * This interface is part of the update-related models for database operations.
  */
 public interface UpdateStatement {
+
+    /**
+     * Get the target table for the update statement.
+     *
+     * @return the target table of the update statement
+     */
+    Table table();
 }

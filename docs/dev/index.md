@@ -1,6 +1,8 @@
-# Development
+# Litebridge Development
 
 ← [Home](../index.md)
+
+How to build, test and contribute to the Litebridge project.
 
 ## Contents
 

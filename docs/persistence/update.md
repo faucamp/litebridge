@@ -2,21 +2,6 @@
 
 ← [Persistence](index.md)
 
-## Contents
-
-<!-- TOC -->
-* [Overview](#overview)
-* [Usage](#usage)
-    * [Persistence](#persistence)
-      * [Persisting a DTO](#persisting-a-dto)
-      * [Explicit DTO updates](#explicit-dto-updates)
-    * [Query-based updates](#query-based-updates)
-        * [DTO-level query updates](#dto-level-query-updates)
-        * [SQL-level query updates](#sql-level-query-updates)
-<!-- TOC -->
-
-## Overview
-
 Updates to data can be performed in a variety of ways:
 
 - Implicitly by persisting a DTO via `litebridge.save(Object)`

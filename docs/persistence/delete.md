@@ -2,16 +2,6 @@
 
 ← [Persistence](index.md)
 
-## Contents
-
-<!-- TOC -->
-* [Overview](#overview)
-* [Usage](#usage)
-  * [Deleting DTOs directly](#deleting-dtos-directly)
-  * [Deleting DTOs via a query](#deleting-dtos-via-a-query)
-  * [SQL-level deletes](#sql-level-deletes)
-<!-- TOC -->
-
 ## Overview
 
 Litebridge provides a fluent API for deleting data, which allows for:

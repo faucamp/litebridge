@@ -2,26 +2,6 @@
 
 ← [Persistence](index.md)
 
-## Contents
-
-<!-- TOC -->
-* [Overview](#overview)
-* [Usage](#usage)
-    * [DTO-level queries](#dto-level-queries)
-    * [SQL-level queries](#sql-level-queries)
-    * [Terminal operations](#terminal-operations)
-    * [Get first result](#get-first-result)
-    * [Get exactly one result](#get-exactly-one-result)
-    * [All results](#all-results)
-* [DTO-level examples](#dto-level-examples)
-  * [Retrieving a single DTO](#retrieving-a-single-dto)
-  * [Retrieving multiple DTOs](#retrieving-multiple-dtos)
-  * [Retrieving related DTOs](#retrieving-related-dtos)
-* [SQL-level examples](#sql-level-examples)
-<!-- TOC -->
-
-## Overview
-
 Litebridge provides a fluent API for constructing queries using a familiar SQL-like syntax.
 
 ## Usage
