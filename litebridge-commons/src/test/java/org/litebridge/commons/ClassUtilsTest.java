@@ -61,6 +61,19 @@ class ClassUtilsTest {
     }
 
     @Test
+    void getAllFields_inheritance_includeStatic() {
+        // When
+        final List<Field> result = ClassUtils.getAllFields(ChildTestDto.class, true, MethodHandles.lookup());
+
+        // Then
+        assertEquals(4, result.size());
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("active")));
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("staticField")));
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("name")));
+        assertTrue(result.stream().anyMatch(field -> field.getName().equals("age")));
+    }
+
+    @Test
     void getField() {
         // Given
         final String fieldName = "age";
@@ -108,6 +121,18 @@ class ClassUtilsTest {
     void isBasicType_String() {
         // Given
         final String object = "Hello World!";
+
+        // When
+        final boolean result = ClassUtils.isBasicType(object.getClass());
+
+        // Then
+        assertTrue(result);
+    }
+
+    @Test
+    void isBasicType_StringBuilder() {
+        // Given
+        final StringBuilder object = new StringBuilder("Hello World!");
 
         // When
         final boolean result = ClassUtils.isBasicType(object.getClass());
@@ -219,6 +244,18 @@ class ClassUtilsTest {
 
         // Then
         assertTrue(result);
+    }
+
+    @Test
+    void isBasicType_stringArray_false() {
+        // Given
+        final String[] stringArray = new String[1];
+
+        // When
+        final boolean result = ClassUtils.isBasicType(stringArray.getClass());
+
+        // Then
+        assertFalse(result);
     }
 
     @Test
@@ -349,6 +386,15 @@ class ClassUtilsTest {
     }
 
     @Test
+    void getGenericTypes_typeVariable() {
+        // Given
+        final Field genericField = ClassUtils.getField(GenericTestDto.class, "value");
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getGenericTypes(genericField));
+    }
+
+    @Test
     void newInstance() {
         // When
         final TestDto result = ClassUtils.newInstance(TestDto.class);
@@ -385,6 +431,19 @@ class ClassUtilsTest {
     }
 
     @Test
+    void newInstance_withConstructorAndArguments() throws NoSuchMethodException {
+        // Given
+        final java.lang.reflect.Constructor<ConstructorArgumentClass> constructor = ConstructorArgumentClass.class.getDeclaredConstructor(String.class);
+
+        // When
+        final ConstructorArgumentClass result = ClassUtils.newInstance(ConstructorArgumentClass.class, constructor, "test-value");
+
+        // Then
+        assertNotNull(result);
+        assertEquals("test-value", result.value);
+    }
+
+    @Test
     void newInstance_withConstructor_failure() throws NoSuchMethodException {
         // Given
         final java.lang.reflect.Constructor<UnsupportedConstructorClass> constructor = UnsupportedConstructorClass.class.getDeclaredConstructor(String.class);
@@ -401,6 +460,15 @@ class ClassUtilsTest {
 
         // Then
         assertEquals(1, result.length);
+    }
+
+    @Test
+    void getConstructors_withCollection() {
+        // When
+        final java.lang.reflect.Constructor<List>[] result = ClassUtils.getConstructors(List.class);
+
+        // Then
+        assertTrue(result.length > 0);
     }
 
     @Test
@@ -433,6 +501,10 @@ class ClassUtilsTest {
         private Map<String, ?> mapOfWildcards;
     }
 
+    private static class GenericTestDto<T> {
+        private List<T> value;
+    }
+
     private static class ChildTestDto extends TestDto {
         private boolean active;
     }
@@ -444,6 +516,14 @@ class ClassUtilsTest {
 
     private static class UnsupportedConstructorClass {
         private UnsupportedConstructorClass(final String param) {
+        }
+    }
+
+    private static class ConstructorArgumentClass {
+        private final String value;
+
+        private ConstructorArgumentClass(final String value) {
+            this.value = value;
         }
     }
 }

@@ -2,6 +2,7 @@ package org.litebridge.spring;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.litebridge.db.spi.tx.Isolation;
 import org.litebridge.db.spi.tx.ManagedConnection;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -98,5 +99,131 @@ class LitebridgeTransactionManagerTest {
         assertFalse(commitCalled.get());
         assertTrue(rollbackCalled.get());
         verify(connection).rollback();
+    }
+
+    @Test
+    void testDirectTransactionOperationsAreUnsupported() {
+        // Given
+        LitebridgeTransactionManager tm = new LitebridgeTransactionManager(dataSource);
+
+        // When / Then
+        UnsupportedOperationException beginException = assertThrows(
+                UnsupportedOperationException.class,
+                tm::begin
+        );
+        assertEquals(
+                "LitebridgeTransactionManager does not support direct begin(). Use Spring's transaction management (e.g., @Transactional).",
+                beginException.getMessage()
+        );
+
+        UnsupportedOperationException beginWithOptionsException = assertThrows(
+                UnsupportedOperationException.class,
+                () -> tm.begin(true, Isolation.READ_COMMITTED)
+        );
+        assertEquals(
+                "LitebridgeTransactionManager does not support direct begin(). Use Spring's transaction management (e.g., @Transactional).",
+                beginWithOptionsException.getMessage()
+        );
+
+        UnsupportedOperationException commitException = assertThrows(
+                UnsupportedOperationException.class,
+                tm::commit
+        );
+        assertEquals(
+                "LitebridgeTransactionManager does not support direct commit(). Use Spring's transaction management (e.g., @Transactional).",
+                commitException.getMessage()
+        );
+
+        UnsupportedOperationException rollbackException = assertThrows(
+                UnsupportedOperationException.class,
+                tm::rollback
+        );
+        assertEquals(
+                "LitebridgeTransactionManager does not support direct rollback(). Use Spring's transaction management (e.g., @Transactional).",
+                rollbackException.getMessage()
+        );
+    }
+
+    @Test
+    void testCleanupIsNoOpAndDoesNotRequireCleanup() {
+        // Given
+        LitebridgeTransactionManager tm = new LitebridgeTransactionManager(dataSource);
+
+        // When / Then
+        assertDoesNotThrow(tm::cleanup);
+        assertFalse(tm.requiresCleanup());
+    }
+
+    @Test
+    void testStateOutsideTransaction() {
+        // Given
+        LitebridgeTransactionManager tm = new LitebridgeTransactionManager(dataSource);
+
+        // When / Then
+        assertFalse(tm.isTransactionActive());
+        assertFalse(tm.isRollbackOnly());
+    }
+
+    @Test
+    void testReadOnlyTransactionReportsRollbackOnly() throws SQLException {
+        // Given
+        LitebridgeTransactionManager tm = new LitebridgeTransactionManager(dataSource);
+        TransactionTemplate tt = new TransactionTemplate(tm);
+        tt.setReadOnly(true);
+
+        when(dataSource.getConnection()).thenReturn(connection);
+
+        // When / Then
+        tt.executeWithoutResult(status -> {
+            assertTrue(tm.isTransactionActive());
+            assertTrue(tm.isRollbackOnly());
+        });
+
+        verify(connection).commit();
+        verify(connection).close();
+    }
+
+    @Test
+    void testCommitCallbackRunsImmediatelyWhenSynchronizationIsInactive() {
+        // Given
+        LitebridgeTransactionManager tm = new LitebridgeTransactionManager(dataSource);
+        AtomicBoolean commitCalled = new AtomicBoolean(false);
+
+        // When
+        tm.addCommitCallback(() -> commitCalled.set(true));
+
+        // Then
+        assertTrue(commitCalled.get());
+    }
+
+    @Test
+    void testRollbackCallbackDoesNothingWhenSynchronizationIsInactive() {
+        // Given
+        LitebridgeTransactionManager tm = new LitebridgeTransactionManager(dataSource);
+        AtomicBoolean rollbackCalled = new AtomicBoolean(false);
+
+        // When
+        tm.addRollbackCallback(() -> rollbackCalled.set(true));
+
+        // Then
+        assertFalse(rollbackCalled.get());
+    }
+
+    @Test
+    void testRollbackCallbackIsNotCalledAfterCommitCompletion() throws SQLException {
+        // Given
+        LitebridgeTransactionManager tm = new LitebridgeTransactionManager(dataSource);
+        TransactionTemplate tt = new TransactionTemplate(tm);
+        AtomicBoolean rollbackCalled = new AtomicBoolean(false);
+
+        when(dataSource.getConnection()).thenReturn(connection);
+
+        // When
+        tt.executeWithoutResult(status -> tm.addRollbackCallback(() -> rollbackCalled.set(true)));
+
+        // Then
+        assertFalse(rollbackCalled.get());
+        verify(connection).commit();
+        verify(connection).close();
     }
 }
