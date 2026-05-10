@@ -44,6 +44,18 @@
         <module>jacoco-aggregate-report</module>
     </modules>
 
+    <scm>
+        <developerConnection>scm:git:https://github.com/faucamp/litebridge.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://github.com/faucamp/litebridge</url>
+        </repository>
+    </distributionManagement>
+
     <build>
         <pluginManagement>
             <plugins>
