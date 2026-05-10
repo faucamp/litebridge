@@ -125,7 +125,7 @@ public class Column extends Aliased {
     public boolean equalsIgnoreAlias(final Aliased aliased) {
         if (!(aliased instanceof final Column column)) return false;
         if (!super.equalsIgnoreAlias(column)) return false;
-        return table.equalsIgnoreAlias(table);
+        return table.equalsIgnoreAlias(column.table);
     }
 
     @Override

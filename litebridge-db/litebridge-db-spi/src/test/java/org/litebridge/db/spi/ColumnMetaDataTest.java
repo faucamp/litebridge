@@ -101,19 +101,30 @@ class ColumnMetaDataTest {
     }
 
     @Test
-    void equals_includesAliasAndJoinColumn() {
-        // Given
+    void equals_differentFields() {
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final ColumnMetaData base = new ColumnMetaData(table, "id", false, 1, 20, 0, true, "SEQ_ID");
 
-        final ColumnMetaData a = new ColumnMetaData(table, "id", false, 1, 20, 0, true, "SEQ_ID");
-        final ColumnMetaData b = new ColumnMetaData(table, "id", false, 1, 20, 0, true, "SEQ_ID");
+        assertNotEquals(base, new ColumnMetaData(table, "id", true, 1, 20, 0, true, "SEQ_ID")); // nullable
+        assertNotEquals(base, new ColumnMetaData(table, "id", false, 2, 20, 0, true, "SEQ_ID")); // dataType
+        assertNotEquals(base, new ColumnMetaData(table, "id", false, 1, 21, 0, true, "SEQ_ID")); // size
+        assertNotEquals(base, new ColumnMetaData(table, "id", false, 1, 20, 1, true, "SEQ_ID")); // decimalDigits
+        assertNotEquals(base, new ColumnMetaData(table, "id", false, 1, 20, 0, false, "SEQ_ID")); // autoIncrement
+        assertNotEquals(base, new ColumnMetaData(table, "id", false, 1, 20, 0, true, "OTHER_SEQ")); // sequence
+        
+        final Table table2 = new Table("OTHER", "OTHER", "OTHER");
+        assertNotEquals(base, new ColumnMetaData(table2, "id", false, 1, 20, 0, true, "SEQ_ID")); // table
 
-        a.setJoinColumn("x");
-        b.setJoinColumn("y");
+        ColumnMetaData withJoin = new ColumnMetaData(table, "id", false, 1, 20, 0, true, "SEQ_ID");
+        withJoin.setJoinColumn("JOIN");
+        assertNotEquals(base, withJoin); // joinColumn
+    }
 
-        // When/Then
-        assertNotEquals(a, b);
-        assertNotEquals(a.hashCode(), b.hashCode());
+    @Test
+    void equals_sameInstance() {
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final ColumnMetaData column = new ColumnMetaData(table, "id", false, 1);
+        assertEquals(column, column);
     }
 
     @Test

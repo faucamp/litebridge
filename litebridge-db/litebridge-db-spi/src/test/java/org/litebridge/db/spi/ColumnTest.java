@@ -61,6 +61,28 @@ class ColumnTest {
     }
 
     @Test
+    void as_bridge() {
+        // Given
+        final Aliased aliased = new Column(table, "testName");
+
+        // When
+        final Aliased result = aliased.as("testAlias");
+
+        // Then
+        assertEquals("testAlias", result.alias());
+        assertTrue(result instanceof Column);
+    }
+
+    @Test
+    void equals_sameInstance() {
+        // Given
+        final Column column = new Column(table, "testName");
+
+        // When/Then
+        assertTrue(column.equals(column));
+    }
+
+    @Test
     void c() {
         // When
         final Column result = Column.c(table, "testName");
@@ -175,13 +197,26 @@ class ColumnTest {
     void equalsIgnoreAlias_true() {
         // Given
         final Column column1 = new Column(table, "testName", "testAlias");
-        final Column column2 = new Column(new Table("OTHER_CATALOG", "OTHER_SCHEMA", "OTHER_TABLE"), "testName", "otherAlias");
+        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", "otherAlias"), "testName", "otherAlias");
 
         // When
         final boolean result = column1.equalsIgnoreAlias(column2);
 
         // Then
         assertTrue(result);
+    }
+
+    @Test
+    void equalsIgnoreAlias_false_table() {
+        // Given
+        final Column column1 = new Column(table, "testName", "testAlias");
+        final Column column2 = new Column(new Table("OTHER_CATALOG", "OTHER_SCHEMA", "OTHER_TABLE"), "testName", "otherAlias");
+
+        // When
+        final boolean result = column1.equalsIgnoreAlias(column2);
+
+        // Then
+        assertFalse(result);
     }
 
     @Test
@@ -208,6 +243,20 @@ class ColumnTest {
 
         // Then
         assertFalse(result);
+    }
+
+    @Test
+    void testToString() {
+        // Given
+        final Column column = new Column(table, "testName", "testAlias");
+
+        // When
+        final String result = column.toString();
+
+        // Then
+        assertTrue(result.contains("Column"));
+        assertTrue(result.contains("testName"));
+        assertTrue(result.contains("testAlias"));
     }
 
     @Test

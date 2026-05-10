@@ -384,6 +384,117 @@ class TableMetaDataTest {
     }
 
     @Test
+    void equals_differentSchema() {
+        // Given
+        final Table table1 = new Table("TEST_CATALOG", "TEST_SCHEMA1", "TEST_TABLE");
+        final Table table2 = new Table("TEST_CATALOG", "TEST_SCHEMA2", "TEST_TABLE");
+        final ColumnMetaData col1 = new ColumnMetaData(table1, "id", false, 1);
+        final ColumnMetaData col2 = new ColumnMetaData(table2, "id", false, 1);
+        final TableMetaData meta1 = new TableMetaData(table1, List.of("id"), List.of(col1));
+        final TableMetaData meta2 = new TableMetaData(table2, List.of("id"), List.of(col2));
+
+        // When
+        boolean result = meta1.equals(meta2);
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
+    void equals_differentName() {
+        // Given
+        final Table table1 = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE1");
+        final Table table2 = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE2");
+        final ColumnMetaData col1 = new ColumnMetaData(table1, "id", false, 1);
+        final ColumnMetaData col2 = new ColumnMetaData(table2, "id", false, 1);
+        final TableMetaData meta1 = new TableMetaData(table1, List.of("id"), List.of(col1));
+        final TableMetaData meta2 = new TableMetaData(table2, List.of("id"), List.of(col2));
+
+        // When
+        boolean result = meta1.equals(meta2);
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
+    void toTable() {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final ColumnMetaData column1 = new ColumnMetaData(table, "id", false, 1);
+        final TableMetaData tableMetaData = new TableMetaData(table, List.of("id"), List.of(column1));
+
+        // When
+        final Table result = tableMetaData.toTable();
+
+        // Then
+        assertEquals(table.catalog(), result.catalog());
+        assertEquals(table.schema(), result.schema());
+        assertEquals(table.name(), result.name());
+    }
+
+    @Test
+    void equals_differentPrimaryKeySize() {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final ColumnMetaData column1 = new ColumnMetaData(table, "id", false, 1);
+        final TableMetaData tableMetaData1 = new TableMetaData(table, List.of("id"), List.of(column1));
+        final TableMetaData tableMetaData2 = new TableMetaData(table, List.of(), List.of(column1));
+
+        // When
+        boolean result = tableMetaData1.equals(tableMetaData2);
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
+    void equals_differentColumnsSize() {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final ColumnMetaData column1 = new ColumnMetaData(table, "id", false, 1);
+        final ColumnMetaData column2 = new ColumnMetaData(table, "name", true, 12);
+        final TableMetaData tableMetaData1 = new TableMetaData(table, List.of("id"), List.of(column1, column2));
+        final TableMetaData tableMetaData2 = new TableMetaData(table, List.of("id"), List.of(column1));
+
+        // When
+        boolean result = tableMetaData1.equals(tableMetaData2);
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
+    void equals_differentCatalog() {
+        // Given
+        final Table table1 = new Table("CAT1", "S", "T");
+        final Table table2 = new Table("CAT2", "S", "T");
+        final TableMetaData tableMetaData1 = new TableMetaData(table1, List.of(), List.of());
+        final TableMetaData tableMetaData2 = new TableMetaData(table2, List.of(), List.of());
+
+        // When
+        boolean result = tableMetaData1.equals(tableMetaData2);
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
+    void equals_nullCatalogs() {
+        // Given
+        final Table table1 = new Table(null, "S", "T");
+        final Table table2 = new Table(null, "S", "T");
+        final TableMetaData tableMetaData1 = new TableMetaData(table1, List.of(), List.of());
+        final TableMetaData tableMetaData2 = new TableMetaData(table2, List.of(), List.of());
+
+        // When
+        boolean result = tableMetaData1.equals(tableMetaData2);
+
+        // Then
+        assertTrue(result);
+    }
+
+    @Test
     void testHashCode() {
         // Given
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");

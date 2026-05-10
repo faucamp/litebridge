@@ -109,6 +109,7 @@ class RowTest {
 
         // Then
         assertNotNull(result);
+        assertEquals("{TEST_COLUMN=testValue}", result);
     }
 
     @Test
@@ -122,7 +123,7 @@ class RowTest {
         final String result = rowColumn.toString();
 
         // Then
-        assertNotNull(result);
+        assertEquals("TEST_COLUMN=testValue", result);
     }
 
     @Test
