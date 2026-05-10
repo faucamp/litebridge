@@ -8,9 +8,7 @@ on using DTOs directly without modification or annotations, etc.
 This negates the need for intermediate layer of formal entity classes containing
 database-specific mapping information - though a Litebridge-based application can still use this model if desired (including annotations).
 
-## Usage
-
-### Fluent API
+## Fluent API
 
 Litebridge provides a fluent API to specify how a DTO is mapped to a database table, accessible via
 the `Litebridge.register()` suite of methods.
@@ -78,13 +76,6 @@ litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
     .mapField("age").toColumn("AGE")
     .mapProperty("eyeColour").toColumn("EYE_COLOUR")
     .mapField("accounts").oneToMany(c -> c.mappedByField("owner")));
-
-// Register the table mapping for the Account DTO class
-litebridge.register(Account.class, rc -> rc.mapToTable("LB.ACCOUNT")
-    .mapField("id").toColumn("ACCOUNT_ID").autoIncrement().usingSequence("LB.ACCOUNT_SEQ")
-    .mapField("name").toColumn("ACCOUNT_NAME")
-    .mapField("balance").toColumn("BALANCE")
-    .mapField("owner").toColumn("PERSON_ID").joinUsing());
 ```
 
 The `register()` method is used to register a DTO-table mapping. It takes a DTO class and a callback that
@@ -108,9 +99,126 @@ The table mappings above specify the following:
   * The `id` field is mapped to the `ACCOUNT_ID` column. Values for this field are generated using the `LB.PERSON_SEQ` sequence.
   * The `name` field is mapped to the `ACCOUNT_NAME` column.
   * The `balance` field is mapped to the `BALANCE` column.
-  * The `owner` field is a many-to-one mapping, with the foreign key mapped to column `PERSON_ID`. The related DTO is specified by a `JOIN USING` clause (i.e. joining on `PERSON_ID` in both tables) to fetch the target `Person` instance. 
+  * The `owner` field is a many-to-one mapping, with the foreign key mapped to column `PERSON_ID`. The related DTO is specified by a `JOIN USING` clause (i.e. joining on `PERSON_ID` in both tables) to fetch the target `Person` instance.
 
-### Low-level API
+### Mapping options
+
+The `register()` callback provides additional options for configuring the mapping:
+
+- `allowInterface(Class)`: Allows Litebridge to treat the DTO class as an implementation of the specified interface. This is useful when querying or mapping relationships using interfaces.
+
+### Many-tomany relationships
+
+Many-to-many relationships can be specified using the `manyToMany()` method, similar
+to the `oneToMany()` method. The relationship is defined on either/both sides of the related DTOs, as needed.
+
+Given the following example `Group` and `GroupedPerson` DTO classes:
+
+```java
+
+public class Group {
+
+    private String name;
+    private String description;
+    private List<org.litebridge.orm.e2e.basic.dto.Person> members;
+
+    // Getters and setters, etc
+}
+
+public class GroupedPerson extends Person {
+
+    private List<Group> groups;
+
+    // Getters and setters, etc
+}
+```
+
+With the following database setup (along with the `LB.PERSON` table from earlier) defining the `LB.PERSON_GROUP` join table:
+
+```sql
+CREATE TABLE LB."GROUP"
+(
+  GROUP_NAME VARCHAR2(50)  NOT NULL PRIMARY KEY,
+  GROUP_DESC VARCHAR2(255) NOT NULL
+);
+
+CREATE TABLE LB.PERSON_GROUP
+(
+  PERSON_ID  NUMBER(10)   NOT NULL REFERENCES LB.PERSON (PERSON_ID),
+  GROUP_NAME VARCHAR2(50) NOT NULL REFERENCES LB."GROUP" (GROUP_NAME),
+
+  PRIMARY KEY (PERSON_ID, GROUP_NAME)
+);
+```
+
+The corresponding mapping can be specified as follows:
+
+```java
+litebridge.register(GroupedPerson.class, rc -> rc
+        .allowInterface(Person.class)
+        .mapToTable("LB.PERSON")
+        .mapField("id").toColumn("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ")
+        .mapField("name").toColumn("FIRST_NAME")
+        .mapField("groups").manyToMany(c -> c.joinTable("LB.PERSON_GROUP")
+            .joinColumn("PERSON_ID")
+            .inverseJoinColumn("GROUP_NAME")));
+
+litebridge.register(Group.class, rc -> rc.mapToTable("LB.GROUP")
+        .mapField("name").toColumn("GROUP_NAME")
+        .mapField("description").toColumn("GROUP_DESC")
+        .mapField("members").manyToMany(c -> c.joinTable("LB.PERSON_GROUP")
+            .joinColumn("GROUP_NAME")
+            .inverseJoinColumn("PERSON_ID")));
+```
+
+The `Group` class:
+  * Mapped to table `LB.GROUP`.
+  * The `members` field is a many-to-many relationship, using the join table `LB.PERSON_GROUP`. The `joinColumn` specifies the column in the join table for the `Group` table, and `inverseJoinColumn` specifies the column in the join table for the `Person` table.
+
+Similarly, the `GroupedPerson` class is mapped to table `LB.PERSON` and also specifies the many-to-many join so that the relationship is available from both DTOs.
+
+### Embedded/Nested DTOs
+
+Litebridge supports mapping nested DTOs to the same table as the parent DTO by using dot-notation in `mapField()`:
+
+```java
+litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
+    .mapField("name").toColumn("FIRST_NAME")
+    .mapField("address.street").toColumn("STREET")
+    .mapField("address.city").toColumn("CITY"));
+```
+
+This is useful for flattening a complex DTO structure into a single database table.
+
+### Shared DTOs with multiple tables
+
+Sometimes the same DTO class needs to be mapped to different tables depending on the context (e.g., a generic `Status` DTO). This can be achieved using `withMappedTable()`:
+
+```java
+litebridge.register(Application.class, rc -> rc.mapToTable("LB.APPLICATION")
+    .mapField("name").toColumn("NAME")
+    .mapField("status").toColumn("STATUS_CODE").joinOn("CODE")
+    .withMappedTable(Status.class, src -> src.mapToTable("LB.APPLICATION_STATUS")
+        .mapField("code").toColumn("CODE")
+        .mapField("message").toColumn("MESSAGE")));
+
+litebridge.register(Server.class, rc -> rc.mapToTable("LB.SERVER")
+    .mapField("host").toColumn("HOST")
+    .mapField("status").toColumn("SERVER_STATUS_CODE").joinOn("STATUS_CODE")
+    .withMappedTable(Status.class, src -> src.mapToTable("LB.SERVER_STATUS")
+        .mapField("code").toColumn("STATUS_CODE")
+        .mapField("message").toColumn("MESSAGE")));
+```
+
+When querying a shared DTO, you must specify the context (the parent DTO) to disambiguate which table to use:
+
+```java
+Status status = litebridge.select(Status.class, Server.class)
+    .where("code").eq(418)
+    .oneOrThrow();
+```
+
+## Low-level API
 
 Whilst the fluent API is the recommended approach, the low-level API provides more freedom over the structure
 in which the mapping is specified, by allowing direct specification of mapping definitions.

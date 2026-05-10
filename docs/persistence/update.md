@@ -16,10 +16,14 @@ similar to the [`select()`](select.md) API.
 
 #### Persistence
 
-##### Persisting a DTO
+##### Persisting DTOs
 
 For basic usage, it is sufficient to rely on `litebridge.save(Object)` to manage a DTO's
-persistence state.
+persistence state. Multiple DTOs can be saved at once:
+
+```java
+litebridge.save(person1, person2, person3);
+```
 
 To persist a DTO, simply invoke the `save()` method on the `Litebridge` instance:
 
@@ -33,6 +37,8 @@ litebridge.save(person);
 
 This will result in SQL INSERT and/or UPDATE statements, depending on whether the DTO is initially new or already persisted.
 
+Litebridge uses **cascading saves** by default. If a DTO has relationships to other DTOs, those DTOs will also be saved when the parent DTO is saved.
+
 DTOs must first be registered with Litebridge with via a database table mapping before they can be persisted.
 
 ##### Explicit DTO updates
@@ -43,7 +49,7 @@ If an explicit UPDATE statement is desired, it can be performed via `litebridge.
 litebridge.update(person);
 ```
 
-This will attempt a SQL UPDATE statement regardless of the persistence state of the DTO.
+This will attempt a SQL UPDATE statement regardless of the persistence state of the DTO. Note that `save()` is generally preferred as it is more efficient when used with [change tracking](change-tracking.md).
 
 #### Query-based updates
 
@@ -71,4 +77,12 @@ and not the database column names, unless a more formal mapping is specified at 
 litebridge.update("LB.PERSON", p -> p
         .set("AGE").to(50)
         .where("FIRST_NAME").eq("Bob"));
+```
+
+The SQL-level update API also supports atomic increments:
+
+```java
+litebridge.update("LB.PERSON", p -> p
+        .set("AGE").increment()
+        .where("PERSON_ID").eq(123L));
 ```

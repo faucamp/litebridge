@@ -56,6 +56,12 @@ litebridge.select().from("LB.PERSON").list();
 
 // Selects specific columns from the PERSON table
 litebridge.select("PERSON_ID", "FIRST_NAME").from("LB.PERSON").list();
+
+// Select with a JOIN USING clause
+litebridge.select("FIRST_NAME", "ACCOUNT_NAME")
+        .from("LB.PERSON")
+        .join("LB.ACCOUNT").using("PERSON_ID")
+        .list();
 ```
 
 
@@ -175,12 +181,25 @@ Account account = litebridge.select(Account.class)
 Retrieving the reverse (a `Person` and their collection of associated `Accounts`) works the same way:
 
 ```java
-Person groupedPerson = litebridge.select(Person.class)
+Person person = litebridge.select(Person.class)
         .join(Account.class).on("accounts")
         .where("id").eq(123L)
         .oneOrThrow();
 
-// groupedPerson.accounts is null
+// person.accounts contains the related Account objects
+```
+
+### Many-to-Many JOINs
+
+Many-to-many relationships can also be fetched using the same `join()` API:
+
+```java
+Group group = litebridge.select(Group.class)
+        .join(Person.class).on("members")
+        .where("name").eq("Administrators")
+        .oneOrThrow();
+
+// group.members contains the Person objects in this group
 ```
 
 ## SQL-level examples
@@ -199,6 +218,8 @@ litebridge.select("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
         .map(row -> litebridge.toDto(row, Person.class))
         .forEach(p -> logger.info("Person DTO: " + p));
 ```
+
+The `litebridge.toDto(Row, Class)` method is a convenient way to manually map a raw SQL result row to a registered DTO class.
 
 Note the difference between the identifiers used in the query clauses vs the previous DTO-level examples.
 When making a SQL-level query, the identifiers used in the query clauses must match the column names in the database table being queried.

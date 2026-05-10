@@ -12,7 +12,8 @@ This section covers the core persistence features provided by Litebridge:
 2. **[Querying data](select.md)**: Retrieve records from the database and map results back into DTOs.
 3. **[Updating data](update.md)**: Persist new DTOs or update existing records using Litebridge’s persistence operations.
 4. **[Deleting data](delete.md)**: Remove records from the database using mapped DTOs.
-5. **[Transactions](transactions.md)**: Coordinate persistence operations safely using Litebridge transaction support.
+5. **[Change tracking](change-tracking.md)**: Optimise updates by only persisting modified fields.
+6. **[Transactions](transactions.md)**: Coordinate persistence operations safely using Litebridge transaction support.
 
 ## Core Concepts
 
