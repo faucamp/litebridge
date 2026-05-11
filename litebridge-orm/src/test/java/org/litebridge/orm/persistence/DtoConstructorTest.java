@@ -14,9 +14,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -25,6 +28,7 @@ class DtoConstructorTest {
 
     private static Map<Class<?>, Object> defaultConstructorCache;
     private static Map<Class<?>, Object> canonicalConstructorCache;
+    private static Map<Class<?>, List<FieldAccessor>> canonicalConstructorFieldAccessorCache;
 
     @BeforeAll
     @SuppressWarnings("unchecked")
@@ -37,6 +41,10 @@ class DtoConstructorTest {
             final Field canonicalConstructorCacheField = ClassUtils.getField(DtoConstructor.class, "canonicalConstructorCache");
             canonicalConstructorCacheField.setAccessible(true);
             canonicalConstructorCache = (Map<Class<?>, Object>) canonicalConstructorCacheField.get(null);
+
+            final Field canonicalConstructorFieldAccessorCacheField = ClassUtils.getField(DtoConstructor.class, "canonicalConstructorFieldAccessorCache");
+            canonicalConstructorFieldAccessorCacheField.setAccessible(true);
+            canonicalConstructorFieldAccessorCache = (Map<Class<?>, List<FieldAccessor>>) canonicalConstructorFieldAccessorCacheField.get(null);
         } catch (Exception ex) {
             fail("Failed to reflect constructor cache fields", ex);
         }
@@ -46,6 +54,7 @@ class DtoConstructorTest {
     void beforeEach() {
         defaultConstructorCache.clear();
         canonicalConstructorCache.clear();
+        canonicalConstructorFieldAccessorCache.clear();
     }
 
     /**
@@ -70,6 +79,16 @@ class DtoConstructorTest {
         assertTrue(result.defaultConstructorUsed());
     }
 
+    @Test
+    void constructor_privateUtilityConstructorCanBeInvokedReflectively() throws Exception {
+        // Given
+        final Constructor<DtoConstructor> constructor = DtoConstructor.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+
+        // When/Then
+        assertDoesNotThrow(() -> constructor.newInstance());
+    }
+
     /**
      * Test case for creating an instance using a canonical constructor (with arguments).
      */
@@ -88,6 +107,52 @@ class DtoConstructorTest {
         assertNotNull(result.dto());
         assertFalse(result.defaultConstructorUsed());
         assertEquals(42, result.dto().id);
+    }
+
+    @Test
+    void newInstance_canonicalConstructorUsesCachedConstructorWhenDefaultConstructorIsAbsent() throws Exception {
+        // Given
+        final Constructor<CanonicalConstructorDto> canonicalConstructor = CanonicalConstructorDto.class.getDeclaredConstructor(int.class);
+        final FieldAccessor fieldAccessor = new DirectFieldAccessor(CanonicalConstructorDto.class.getDeclaredField("id"), MethodHandles.lookup());
+
+        defaultConstructorCache.put(CanonicalConstructorDto.class, DtoConstructor.NO_CONSTRUCTOR);
+        canonicalConstructorCache.put(CanonicalConstructorDto.class, canonicalConstructor);
+        canonicalConstructorFieldAccessorCache.put(CanonicalConstructorDto.class, List.of(fieldAccessor));
+
+        // When
+        final DtoConstructor.ConstructionResult<CanonicalConstructorDto> result = DtoConstructor.newInstance(
+                CanonicalConstructorDto.class,
+                List.of(new DtoConstructor.FieldAccessorValue(fieldAccessor, 42))
+        );
+
+        // Then
+        assertNotNull(result);
+        assertNotNull(result.dto());
+        assertFalse(result.defaultConstructorUsed());
+        assertEquals(42, result.dto().id);
+    }
+
+    @Test
+    void newInstance_canonicalConstructorReceivesNullForDtoDependency() throws Exception {
+        // Given
+        final FieldAccessor dependencyFieldAccessor = new DirectFieldAccessor(DependencyConstructorDto.class.getDeclaredField("dependency"), MethodHandles.lookup());
+        final DtoConstructor.DtoDependency dependency = new DtoConstructor.DtoDependency(
+                dependencyFieldAccessor,
+                DefaultConstructorDto.class,
+                List.of(1)
+        );
+
+        // When
+        final DtoConstructor.ConstructionResult<DependencyConstructorDto> result = DtoConstructor.newInstance(
+                DependencyConstructorDto.class,
+                List.of(new DtoConstructor.FieldAccessorValue(dependencyFieldAccessor, dependency))
+        );
+
+        // Then
+        assertNotNull(result);
+        assertNotNull(result.dto());
+        assertFalse(result.defaultConstructorUsed());
+        assertNull(result.dto().dependency);
     }
 
     /**
@@ -110,6 +175,36 @@ class DtoConstructorTest {
         assertEquals("Hello world!", result.dto().value());
     }
 
+    @Test
+    void newInstance_recordCanonicalConstructorDoesNotMatchWhenAccessorIsMissing() throws Exception {
+        // Given
+        final FieldAccessor fieldAccessor = new DirectFieldAccessor(RecordDto.class.getDeclaredField("value"), MethodHandles.lookup());
+
+        // When/Then
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> DtoConstructor.newInstance(
+                        TwoValueRecordDto.class,
+                        List.of(new DtoConstructor.FieldAccessorValue(fieldAccessor, "Hello world!"))
+                )
+        );
+    }
+
+    @Test
+    void newInstance_recordCanonicalConstructorDoesNotMatchWhenAccessorTypeIsNotAssignable() throws Exception {
+        // Given
+        final FieldAccessor fieldAccessor = new DirectFieldAccessor(WrongRecordFieldTypeDto.class.getDeclaredField("value"), MethodHandles.lookup());
+
+        // When/Then
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> DtoConstructor.newInstance(
+                        RecordDto.class,
+                        List.of(new DtoConstructor.FieldAccessorValue(fieldAccessor, 42))
+                )
+        );
+    }
+
     /**
      * Test case for falling back to default constructor when arguments don't match any canonical constructor.
      */
@@ -130,6 +225,47 @@ class DtoConstructorTest {
         assertNotNull(result);
         assertNotNull(result.dto());
         assertTrue(result.defaultConstructorUsed());
+    }
+
+    @Test
+    void newInstance_pojoCanonicalConstructorUsesParameterNamesWhenParameterTypesAreDuplicated() throws Exception {
+        // Given
+        final FieldAccessor firstFieldAccessor = new DirectFieldAccessor(DuplicateTypeConstructorDto.class.getDeclaredField("first"), MethodHandles.lookup());
+        final FieldAccessor secondFieldAccessor = new DirectFieldAccessor(DuplicateTypeConstructorDto.class.getDeclaredField("second"), MethodHandles.lookup());
+
+        // When/Then
+        assertThrows(IllegalStateException.class, () -> DtoConstructor.newInstance(
+                DuplicateTypeConstructorDto.class,
+                List.of(
+                        new DtoConstructor.FieldAccessorValue(secondFieldAccessor, "second-value"),
+                        new DtoConstructor.FieldAccessorValue(firstFieldAccessor, "first-value")
+                )
+        ));
+    }
+    
+    @Test
+    void newInstance_pojoCanonicalConstructorFailsWhenParameterNamesAreNotAvailableForDuplicatedTypes() throws Exception {
+        // Given
+        final FieldAccessor firstFieldAccessor = new DirectFieldAccessor(DuplicateTypePackagePrivateConstructorDto.class.getDeclaredField("first"), MethodHandles.lookup());
+        final FieldAccessor secondFieldAccessor = new DirectFieldAccessor(DuplicateTypePackagePrivateConstructorDto.class.getDeclaredField("second"), MethodHandles.lookup());
+
+        // When
+        final Exception result = assertThrows(
+                IllegalStateException.class,
+                () -> DtoConstructor.newInstance(
+                        DuplicateTypePackagePrivateConstructorDto.class,
+                        List.of(
+                                new DtoConstructor.FieldAccessorValue(firstFieldAccessor, "first-value"),
+                                new DtoConstructor.FieldAccessorValue(secondFieldAccessor, "second-value")
+                        )
+                )
+        );
+
+        // Then
+        assertEquals(
+                "Unable to determine parameter names for canonical constructor (code not compiled with '-parameters' flag); since there are multiple parameters of the same type, additional mapping config is required",
+                result.getMessage()
+        );
     }
 
     /**
@@ -164,6 +300,22 @@ class DtoConstructorTest {
         assertTrue(result.defaultConstructorUsed());
     }
 
+    @Test
+    void newInstance_cachedNoCanonicalConstructorThrowsWhenDefaultConstructorIsAlsoAbsent() {
+        // Given
+        defaultConstructorCache.put(CanonicalConstructorDto.class, DtoConstructor.NO_CONSTRUCTOR);
+        canonicalConstructorCache.put(CanonicalConstructorDto.class, DtoConstructor.NO_CONSTRUCTOR);
+
+        // When
+        final Exception result = assertThrows(
+                IllegalArgumentException.class,
+                () -> DtoConstructor.newInstance(CanonicalConstructorDto.class, Collections.emptyList())
+        );
+
+        // Then
+        assertInstanceOf(IllegalArgumentException.class, result);
+    }
+
     /**
      * Test case for caching constructors when no suitable ones are present.
      */
@@ -187,6 +339,7 @@ class DtoConstructorTest {
         // Assert
         assertEquals(defaultConstructor, defaultConstructorCache.get(NoArgConstructorDto.class));
         assertEquals(DtoConstructor.NO_CONSTRUCTOR, canonicalConstructorCache.get(NoArgConstructorDto.class));
+        assertEquals(Collections.emptyList(), canonicalConstructorFieldAccessorCache.get(NoArgConstructorDto.class));
     }
 
     private static final class DefaultConstructorDto {
@@ -202,6 +355,48 @@ class DtoConstructorTest {
 
         public CanonicalConstructorDto(int id) {
             this.id = id;
+        }
+    }
+
+    private static final class DependencyConstructorDto {
+        private final DefaultConstructorDto dependency;
+
+        public DependencyConstructorDto(DefaultConstructorDto dependency) {
+            this.dependency = dependency;
+        }
+    }
+
+    private static final class DuplicateTypeConstructorDto {
+        private final String first;
+        private final String second;
+
+        public DuplicateTypeConstructorDto(String first, String second) {
+            this.first = first;
+            this.second = second;
+        }
+    }
+
+    private static final class DuplicateTypeFallbackDto {
+        private String first;
+        private String second;
+        private String fallback;
+
+        public DuplicateTypeFallbackDto() {
+        }
+
+        public DuplicateTypeFallbackDto(String first, String second) {
+            this.first = first;
+            this.second = second;
+        }
+    }
+
+    static final class DuplicateTypePackagePrivateConstructorDto {
+        private final String first;
+        private final String second;
+
+        DuplicateTypePackagePrivateConstructorDto(String first, String second) {
+            this.first = first;
+            this.second = second;
         }
     }
 
@@ -225,6 +420,13 @@ class DtoConstructorTest {
         }
     }
 
+    private static final class WrongRecordFieldTypeDto {
+        private Integer value;
+    }
+
     private record RecordDto(String value) {
+    }
+
+    private record TwoValueRecordDto(String value, String otherValue) {
     }
 }
