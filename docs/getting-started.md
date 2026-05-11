@@ -1,5 +1,7 @@
 # Getting Started
 
+← [Home](index.md)
+
 This guide will help you set up Litebridge in your Java project.
 
 ## Requirements
