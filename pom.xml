@@ -7,7 +7,7 @@
     <groupId>org.litebridge</groupId>
     <artifactId>litebridge</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
