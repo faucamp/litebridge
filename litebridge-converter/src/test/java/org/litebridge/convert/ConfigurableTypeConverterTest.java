@@ -1,37 +1,17 @@
 package org.litebridge.convert;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridge.convert.converter.Converter;
-import org.jspecify.annotations.Nullable;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ConfigurableTypeConverterTest {
 
     @Test
-    void testRegisterAndConvertBySqlType() {
-        // Given
-        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
-        typeConverter.register(new TestSqlConverter<>(String.class, new int[]{1}));
-
-        // When
-        Object result = typeConverter.convert("test", 1);
-
-        // Then
-        assertEquals("test", result);
-    }
-
-    @Test
-    void testConvertBySqlType_NotFound() {
-        // Given
-        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
-
-        // When/Then
-        assertThrows(IllegalArgumentException.class, () -> typeConverter.convert("test", 1));
-    }
-
-    @Test
-    void testRegisterAndConvertByJavaType() {
+    void register_convertByJavaType() {
         // Given
         ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(new TestConverter<>(String.class));
@@ -44,7 +24,74 @@ class ConfigurableTypeConverterTest {
     }
 
     @Test
-    void testConvertByJavaType_NotFound() {
+    void register_convertBySqlType() {
+        // Given
+        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        typeConverter.register(new TestSqlConverter<>(String.class, new int[]{1}));
+
+        // When
+        Object result = typeConverter.convert("test", 1);
+
+        // Then
+        assertEquals("test", result);
+    }
+
+    @Test
+    void register_multipleConverters() {
+        // Given
+        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        typeConverter.register(new TestConverter<>(String.class));
+        typeConverter.register(new TestConverter<>(Integer.class));
+
+        // When
+        String stringResult = typeConverter.convert("testString", String.class);
+        Integer intResult = typeConverter.convert(123, Integer.class);
+
+        // Then
+        assertEquals("testString", stringResult);
+        assertEquals(123, intResult);
+    }
+
+    @Test
+    void register_multipleSqlConverters() {
+        // Given
+        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        typeConverter.register(new TestSqlConverter<>(String.class, new int[]{1}));
+        typeConverter.register(new TestSqlConverter<>(Byte.class, new int[]{2}));
+
+        // When
+        Object stringResult = typeConverter.convert("testSqlString", 1);
+        Object byteResult = typeConverter.convert((byte) 42, 2);
+
+        // Then
+        assertEquals("testSqlString", stringResult);
+        assertEquals((byte) 42, byteResult);
+    }
+
+    @Test
+    void register_customFunction() {
+        // Given
+        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        typeConverter.register(Long.class, value -> value == null ? 0L : Long.parseLong(value.toString()));
+
+        // When
+        Long result = typeConverter.convert("1000", Long.class);
+
+        // Then
+        assertEquals(1000L, result);
+    }
+
+    @Test
+    void convert_bySqlType_notFound() {
+        // Given
+        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> typeConverter.convert("test", 1));
+    }
+
+    @Test
+    void convert_byJavaType_notFound() {
         // Given
         ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
 
@@ -53,7 +100,7 @@ class ConfigurableTypeConverterTest {
     }
 
     @Test
-    void testRegisterWithFunction() {
+    void register_withFunction() {
         // Given
         ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(String.class, new int[]{1}, value -> value == null ? null : value.toString());
@@ -68,7 +115,7 @@ class ConfigurableTypeConverterTest {
     }
 
     @Test
-    void testUnregisterByJavaType() {
+    void unregister_byJavaType() {
         // Given
         ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(new TestConverter<>(String.class));
@@ -82,7 +129,7 @@ class ConfigurableTypeConverterTest {
     }
 
     @Test
-    void testUnregisterBySqlType() {
+    void unregister_bySqlType() {
         // Given
         ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(new TestSqlConverter<>(String.class, new int[]{1}));
@@ -97,14 +144,33 @@ class ConfigurableTypeConverterTest {
 
     private static class TestConverter<T> implements Converter<T> {
         private final Class<T> type;
-        TestConverter(Class<T> type) { this.type = type; }
-        @Override public Class<?> type() { return type; }
-        @Override public @Nullable T convert(@Nullable Object value) { return (T) value; }
+
+        TestConverter(Class<T> type) {
+            this.type = type;
+        }
+
+        @Override
+        public Class<?> type() {
+            return type;
+        }
+
+        @Override
+        public @Nullable T convert(@Nullable Object value) {
+            return (T) value;
+        }
     }
 
     private static class TestSqlConverter<T> extends TestConverter<T> implements org.litebridge.convert.converter.SqlConverter<T> {
         private final int[] sqlTypes;
-        TestSqlConverter(Class<T> type, int[] sqlTypes) { super(type); this.sqlTypes = sqlTypes; }
-        @Override public int[] sqlTypes() { return sqlTypes; }
+
+        TestSqlConverter(Class<T> type, int[] sqlTypes) {
+            super(type);
+            this.sqlTypes = sqlTypes;
+        }
+
+        @Override
+        public int[] sqlTypes() {
+            return sqlTypes;
+        }
     }
 }

@@ -17,7 +17,7 @@ public class ConfigurableTypeConverter implements TypeConverter {
     /**
      * Converts a value to a database-specific representation (or vice-versa) based on the {@link java.sql.Types} code.
      *
-     * @param value the value to convert, may be {@code null}
+     * @param value      the value to convert, may be {@code null}
      * @param dbDataType the {@link java.sql.Types} code for the database data type
      * @return the converted value, or {@code null} if the input was {@code null}
      * @throws IllegalArgumentException if no converter is found for the specified SQL type
@@ -37,8 +37,8 @@ public class ConfigurableTypeConverter implements TypeConverter {
      * Converts a value to a specific Java type.
      *
      * @param value the value to convert, may be {@code null}
-     * @param type the target Java type
-     * @param <T> the target Java type
+     * @param type  the target Java type
+     * @param <T>   the target Java type
      * @return the converted value, or {@code null} if the input was {@code null}
      * @throws IllegalArgumentException if no converter is found for the specified Java type
      */
@@ -63,12 +63,23 @@ public class ConfigurableTypeConverter implements TypeConverter {
     }
 
     /**
+     * Registers a converter for a specific Java type using a functional interface.
+     *
+     * @param type              the target Java type
+     * @param converterFunction the conversion logic
+     * @param <T>               the target Java type
+     */
+    public <T> void register(final Class<T> type, final ConverterFunction<T> converterFunction) {
+        converterRegistry.register(type, converterFunction);
+    }
+
+    /**
      * Registers a converter for a specific Java type and its associated SQL types using a functional interface.
      *
-     * @param type the target Java type
-     * @param sqlTypes an array of {@link java.sql.Types} codes associated with this converter
+     * @param type              the target Java type
+     * @param sqlTypes          an array of {@link java.sql.Types} codes associated with this converter
      * @param converterFunction the conversion logic
-     * @param <T> the target Java type
+     * @param <T>               the target Java type
      */
     public <T> void register(final Class<T> type, final int[] sqlTypes, final ConverterFunction<T> converterFunction) {
         converterRegistry.register(type, sqlTypes, converterFunction);

@@ -29,7 +29,7 @@ class DefaultTypeConverterTest {
     }
 
     @Test
-    void testConvert_sqlType_boolean() {
+    void convert_sqlType_boolean() {
         // Given
         final String value = "true";
 
@@ -42,7 +42,7 @@ class DefaultTypeConverterTest {
     }
 
     @Test
-    void testConvert_sqlType_timestamp() {
+    void convert_sqlType_timestamp() {
         // Given
         final String value = "2025-12-31T10:55:00+02:00";
 
@@ -55,7 +55,7 @@ class DefaultTypeConverterTest {
     }
 
     @Test
-    void testConvert_sqlType_varchar() {
+    void convert_sqlType_varchar() {
         // Given
         final String value = "123";
 
@@ -68,7 +68,7 @@ class DefaultTypeConverterTest {
     }
 
     @Test
-    void testConvert_sqlType_integer() {
+    void convert_sqlType_integer() {
         // Given
         final String value = "123";
 
@@ -81,7 +81,7 @@ class DefaultTypeConverterTest {
     }
 
     @Test
-    void testConvert_sqlType_numeric() {
+    void convert_sqlType_numeric() {
         // Given
         final String value = "123";
 
@@ -94,7 +94,7 @@ class DefaultTypeConverterTest {
     }
 
     @Test
-    void testConvert_sqlType_bigint() {
+    void convert_sqlType_bigint() {
         // Given
         final String value = "123";
 
@@ -107,7 +107,7 @@ class DefaultTypeConverterTest {
     }
 
     @Test
-    void testConvert_sqlType_smallint() {
+    void convert_sqlType_smallint() {
         // Given
         final String value = "123";
 
@@ -120,7 +120,7 @@ class DefaultTypeConverterTest {
     }
 
     @Test
-    void testConvert_null() {
+    void convert_null() {
         // When
         final Integer result = defaultTypeConverter.convert(null, Integer.class);
 
@@ -129,7 +129,7 @@ class DefaultTypeConverterTest {
     }
 
     @Test
-    void testConvert_sqlType_null() {
+    void convert_sqlType_null() {
         // When
         final Integer result = (Integer) defaultTypeConverter.convert(null, Types.INTEGER);
 
@@ -138,7 +138,7 @@ class DefaultTypeConverterTest {
     }
 
     @Test
-    void testConvert_primitive() {
+    void convert_primitive() {
         // Given
         final String value = "123";
 
@@ -150,7 +150,7 @@ class DefaultTypeConverterTest {
     }
 
     @Test
-    void testConvert_class_unsupported() {
+    void convert_class_unsupported() {
         // Given
         final String value = "123";
 
@@ -159,7 +159,7 @@ class DefaultTypeConverterTest {
     }
 
     @Test
-    void testConvert_sqlType_unsupported() {
+    void convert_sqlType_unsupported() {
         // Given
         final String value = "123";
         final int unknownType = -999;

@@ -1,17 +1,21 @@
 package org.litebridge.convert;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridge.convert.converter.Converter;
 import org.litebridge.convert.converter.ConverterFunction;
 import org.litebridge.convert.converter.SqlConverter;
-import org.jspecify.annotations.Nullable;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ConverterRegistryTest {
 
     @Test
-    void testRegisterAndGetConverter_JavaType() {
+    void register_andGetConverter_javaType() {
         // Given
         ConverterRegistry registry = new ConverterRegistry();
         Converter<String> converter = new TestConverter<>(String.class);
@@ -24,7 +28,7 @@ class ConverterRegistryTest {
     }
 
     @Test
-    void testRegisterAndGetConverter_SqlType() {
+    void register_andGetConverter_sqlType() {
         // Given
         ConverterRegistry registry = new ConverterRegistry();
         SqlConverter<String> converter = new TestSqlConverter<>(String.class, new int[]{1, 2});
@@ -39,7 +43,7 @@ class ConverterRegistryTest {
     }
 
     @Test
-    void testRegister_OverrideWarning() {
+    void testRegister_overrideWarning() {
         // Given
         ConverterRegistry registry = new ConverterRegistry();
         Converter<String> converter1 = new TestConverter<>(String.class);
@@ -54,7 +58,7 @@ class ConverterRegistryTest {
     }
 
     @Test
-    void testRegisterSql_OverrideWarning() {
+    void testRegisterSql_overrideWarning() {
         // Given
         ConverterRegistry registry = new ConverterRegistry();
         SqlConverter<String> converter1 = new TestSqlConverter<>(String.class, new int[]{1});
@@ -71,7 +75,7 @@ class ConverterRegistryTest {
     }
 
     @Test
-    void testRegister_ConverterFunction() {
+    void testRegister_converterFunction() {
         // Given
         ConverterRegistry registry = new ConverterRegistry();
         ConverterFunction<String> function = value -> value == null ? null : value.toString();
@@ -87,7 +91,7 @@ class ConverterRegistryTest {
     }
 
     @Test
-    void testRegister_ConverterFunctionAsConverter() {
+    void testRegister_converterFunctionAsConverter() {
         // Given
         ConverterRegistry registry = new ConverterRegistry();
         Converter<String> existingConverter = new TestConverter<>(String.class);
@@ -104,7 +108,7 @@ class ConverterRegistryTest {
     }
 
     @Test
-    void testRegisterSql_ConverterFunction() {
+    void testRegisterSql_converterFunction() {
         // Given
         ConverterRegistry registry = new ConverterRegistry();
         ConverterFunction<String> function = value -> value == null ? null : value.toString();
@@ -122,7 +126,7 @@ class ConverterRegistryTest {
     }
 
     @Test
-    void testRegisterSql_ConverterFunctionAsConverter() {
+    void testRegisterSql_converterFunctionAsConverter() {
         // Given
         ConverterRegistry registry = new ConverterRegistry();
         Converter<String> existingConverter = new TestConverter<>(String.class);
@@ -139,7 +143,7 @@ class ConverterRegistryTest {
     }
 
     @Test
-    void testUnregister_JavaType() {
+    void unregister_javaType() {
         // Given
         ConverterRegistry registry = new ConverterRegistry();
         Converter<String> converter = new TestConverter<>(String.class);
@@ -153,7 +157,7 @@ class ConverterRegistryTest {
     }
 
     @Test
-    void testUnregister_JavaTypeWithSqlCascade() {
+    void unregister_javaTypeWithSqlCascade() {
         // Given
         ConverterRegistry registry = new ConverterRegistry();
         SqlConverter<String> converter = new TestSqlConverter<>(String.class, new int[]{1});
@@ -168,7 +172,7 @@ class ConverterRegistryTest {
     }
 
     @Test
-    void testUnregister_SqlType() {
+    void unregister_sqlType() {
         // Given
         ConverterRegistry registry = new ConverterRegistry();
         SqlConverter<String> converter = new TestSqlConverter<>(String.class, new int[]{1});
@@ -183,7 +187,7 @@ class ConverterRegistryTest {
     }
 
     @Test
-    void testUnregister_NonExistentSqlType() {
+    void unregister_nonExistentSqlType() {
         // Given
         ConverterRegistry registry = new ConverterRegistry();
 
@@ -192,7 +196,7 @@ class ConverterRegistryTest {
     }
 
     @Test
-    void testDelegatingConverter_ToString() {
+    void testDelegatingConverter_toString() {
         Converter<String> delegate = new TestConverter<>(String.class);
         registryRegisterDelegating(delegate);
     }
@@ -220,7 +224,7 @@ class ConverterRegistryTest {
         assertTrue(toString.contains("DelegatingSqlConverter"));
         assertTrue(toString.contains("sqlTypes=[1]"));
         assertTrue(toString.contains("delegate=" + delegate));
-        
+
         SqlConverter<String> sqlConverter = (SqlConverter<String>) converter;
         assertArrayEquals(sqlTypes, sqlConverter.sqlTypes());
     }
@@ -273,16 +277,43 @@ class ConverterRegistryTest {
     private static class TestConverter<T> implements Converter<T> {
         private final Class<T> type;
         private final Class<?> primitiveType;
-        TestConverter(Class<T> type) { this(type, null); }
-        TestConverter(Class<T> type, Class<?> primitiveType) { this.type = type; this.primitiveType = primitiveType; }
-        @Override public Class<?> type() { return type; }
-        @Override public @Nullable Class<?> primitiveType() { return primitiveType; }
-        @Override public @Nullable T convert(@Nullable Object value) { return (T) value; }
+
+        TestConverter(Class<T> type) {
+            this(type, null);
+        }
+
+        TestConverter(Class<T> type, Class<?> primitiveType) {
+            this.type = type;
+            this.primitiveType = primitiveType;
+        }
+
+        @Override
+        public Class<?> type() {
+            return type;
+        }
+
+        @Override
+        public @Nullable Class<?> primitiveType() {
+            return primitiveType;
+        }
+
+        @Override
+        public @Nullable T convert(@Nullable Object value) {
+            return (T) value;
+        }
     }
 
     private static class TestSqlConverter<T> extends TestConverter<T> implements SqlConverter<T> {
         private final int[] sqlTypes;
-        TestSqlConverter(Class<T> type, int[] sqlTypes) { super(type); this.sqlTypes = sqlTypes; }
-        @Override public int[] sqlTypes() { return sqlTypes; }
+
+        TestSqlConverter(Class<T> type, int[] sqlTypes) {
+            super(type);
+            this.sqlTypes = sqlTypes;
+        }
+
+        @Override
+        public int[] sqlTypes() {
+            return sqlTypes;
+        }
     }
 }
