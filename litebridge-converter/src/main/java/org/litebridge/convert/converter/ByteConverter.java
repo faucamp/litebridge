@@ -1,5 +1,7 @@
 package org.litebridge.convert.converter;
 
+import org.jspecify.annotations.Nullable;
+
 import java.sql.Types;
 
 public class ByteConverter extends AbstractNumberConverter<Byte> implements SqlConverter<Byte> {
@@ -24,5 +26,10 @@ public class ByteConverter extends AbstractNumberConverter<Byte> implements SqlC
     @Override
     public Class<?> type() {
         return Byte.class;
+    }
+
+    @Override
+    public @Nullable Class<?> primitiveType() {
+        return byte.class;
     }
 }

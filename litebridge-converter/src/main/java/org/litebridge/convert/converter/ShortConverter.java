@@ -1,5 +1,7 @@
 package org.litebridge.convert.converter;
 
+import org.jspecify.annotations.Nullable;
+
 import java.sql.Types;
 
 public class ShortConverter extends AbstractNumberConverter<Short> implements SqlConverter<Short> {
@@ -17,12 +19,17 @@ public class ShortConverter extends AbstractNumberConverter<Short> implements Sq
     }
 
     @Override
-    public int[] sqlTypes() {
-        return SQL_TYPES;
+    public Class<?> type() {
+        return Short.class;
     }
 
     @Override
-    public Class<?> type() {
-        return Short.class;
+    public @Nullable Class<?> primitiveType() {
+        return short.class;
+    }
+
+    @Override
+    public int[] sqlTypes() {
+        return SQL_TYPES;
     }
 }

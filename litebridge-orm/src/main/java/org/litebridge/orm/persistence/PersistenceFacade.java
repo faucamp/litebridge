@@ -432,7 +432,7 @@ public class PersistenceFacade {
 
             if (currentPkValue == null) {
                 final Object generatedKey = generatedKeys.get(pkColumn);
-                final Object convertedValue = Objects.requireNonNull(databaseProvider.getTypeConverter().convert(generatedKey, pkColumn.getDataType()));
+                final Object convertedValue = Objects.requireNonNull(databaseProvider.getTypeConverter().convert(generatedKey, field.type()));
                 generatedPkValues.put(field, convertedValue);
             } else {
                 LOGGER.trace("Generated key for DTO '{}' already set - ignoring", dto);

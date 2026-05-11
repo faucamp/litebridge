@@ -9,6 +9,7 @@ import org.litebridge.orm.e2e.basic.dto.Person;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -40,18 +41,18 @@ class SqlE2eTest extends AbstractE2eTest {
         assertEquals(2, result.size());
         final Row row1 = result.getFirst();
         assertEquals(5, row1.columnStream().count());
-        assertEquals(1L, row1.column("PERSON_ID").orElseThrow().value());
+        assertEquals(BigDecimal.valueOf(1), row1.column("PERSON_ID").orElseThrow().value());
         assertEquals("Alice", row1.column("FIRST_NAME").orElseThrow().value());
         assertEquals("Smith", row1.column("SURNAME").orElseThrow().value());
-        assertEquals(20L, row1.column("AGE").orElseThrow().value());
+        assertEquals(BigDecimal.valueOf(20), row1.column("AGE").orElseThrow().value());
         assertEquals("brown", row1.column("EYE_COLOUR").orElseThrow().value());
         final Row row2 = result.get(1);
         assertEquals(5, row2.columnStream().count());
-        assertEquals(2L, row2.column("PERSON_ID").orElseThrow().value());
+        assertEquals(BigDecimal.valueOf(2), row2.column("PERSON_ID").orElseThrow().value());
         assertEquals("Bob", row2.column("FIRST_NAME").orElseThrow().value());
         assertEquals("Johnson", row2.column("SURNAME").orElseThrow().value());
         assertNull(row2.column("EYE_COLOUR").orElseThrow().value());
-        assertEquals(30L, row2.column("AGE").orElseThrow().value());
+        assertEquals(BigDecimal.valueOf(30), row2.column("AGE").orElseThrow().value());
     }
 
     @TestTemplate
@@ -73,7 +74,7 @@ class SqlE2eTest extends AbstractE2eTest {
         assertEquals(3, result.getFirst().columnStream().count());
         assertEquals("Alice", result.getFirst().column("FIRST_NAME").orElseThrow().value());
         assertEquals("Smith", result.getFirst().column("SURNAME").orElseThrow().value());
-        assertEquals(20L, result.getFirst().column("AGE").orElseThrow().value());
+        assertEquals(BigDecimal.valueOf(20), result.getFirst().column("AGE").orElseThrow().value());
     }
 
     @TestTemplate
@@ -129,15 +130,15 @@ class SqlE2eTest extends AbstractE2eTest {
         assertEquals(5, row1.columnStream().count());
         assertEquals("Alice", row1.column("FIRST_NAME").orElseThrow().value());
         assertEquals("Smith", row1.column("SURNAME").orElseThrow().value());
-        assertEquals(20L, row1.column("AGE").orElseThrow().value());
-        assertEquals(1L, row1.column("ACCOUNT_ID").orElseThrow().value());
+        assertEquals(BigDecimal.valueOf(20), row1.column("AGE").orElseThrow().value());
+        assertEquals(BigDecimal.valueOf(1), row1.column("ACCOUNT_ID").orElseThrow().value());
         assertEquals("Alice's Account", row1.column("ACCOUNT_NAME").orElseThrow().value());
         final Row row2 = result.get(1);
         assertEquals(5, row2.columnStream().count());
         assertEquals("Bob", row2.column("FIRST_NAME").orElseThrow().value());
         assertEquals("Johnson", row2.column("SURNAME").orElseThrow().value());
-        assertEquals(30L, row2.column("AGE").orElseThrow().value());
-        assertEquals(2L, row2.column("ACCOUNT_ID").orElseThrow().value());
+        assertEquals(BigDecimal.valueOf(30), row2.column("AGE").orElseThrow().value());
+        assertEquals(BigDecimal.valueOf(2), row2.column("ACCOUNT_ID").orElseThrow().value());
         assertEquals("Bob's Account", row2.column("ACCOUNT_NAME").orElseThrow().value());
     }
 

@@ -1,5 +1,7 @@
 package org.litebridge.convert.converter;
 
+import org.jspecify.annotations.Nullable;
+
 public class CharacterConverter extends AbstractStringParsingConverter<Character> implements Converter<Character> {
 
     @Override
@@ -10,5 +12,10 @@ public class CharacterConverter extends AbstractStringParsingConverter<Character
     @Override
     public Class<?> type() {
         return Character.class;
+    }
+
+    @Override
+    public @Nullable Class<?> primitiveType() {
+        return char.class;
     }
 }

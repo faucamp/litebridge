@@ -17,12 +17,17 @@ public class FloatConverter extends AbstractNumberConverter<Float> implements Sq
     }
 
     @Override
-    public int[] sqlTypes() {
-        return SQL_TYPES;
+    public Class<?> type() {
+        return Float.class;
     }
 
     @Override
-    public Class<?> type() {
-        return Float.class;
+    public Class<?> primitiveType() {
+        return float.class;
+    }
+
+    @Override
+    public int[] sqlTypes() {
+        return SQL_TYPES;
     }
 }

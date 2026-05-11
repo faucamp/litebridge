@@ -64,6 +64,10 @@
     <dependencies>
         <!-- Project dependencies -->
         <dependency>
+            <groupId>org.litebridge</groupId>
+            <artifactId>litebridge-converter</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.litebridge.db</groupId>
             <artifactId>litebridge-db-spi</artifactId>
         </dependency>

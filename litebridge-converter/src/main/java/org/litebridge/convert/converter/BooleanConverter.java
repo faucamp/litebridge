@@ -22,6 +22,11 @@ public class BooleanConverter extends AbstractStringParsingConverter<Boolean> im
     }
 
     @Override
+    public Class<?> primitiveType() {
+        return boolean.class;
+    }
+
+    @Override
     public int[] sqlTypes() {
         return SQL_TYPES;
     }

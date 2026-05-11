@@ -9,6 +9,7 @@ module litebridge.orm {
     requires org.jspecify;
     requires org.slf4j;
     requires litebridge.commons;
+    requires litebridge.converter;
     requires litebridge.db.spi;
     requires litebridge.tracking;
 

@@ -21,20 +21,28 @@ final class ConverterRegistry {
     private final Map<Integer, SqlConverter<?>> sqlDataTypeConverterMap = new ConcurrentHashMap<>();
 
     public void register(final Converter<?> converter) {
-        LOGGER.debug("Registering converter: {}", converter);
-
         if (classConverterMap.containsKey(converter.type())) {
-            LOGGER.warn("Overriding existing converter for type: {}", converter.type());
+            LOGGER.warn("Overriding existing converter for type '{}': {}", converter.type(), classConverterMap.get(converter.type()));
         }
 
+        LOGGER.debug("Registering converter for type '{}': {}", converter.type(), converter);
         classConverterMap.put(converter.type(), converter);
+
+        if (converter.primitiveType() != null) {
+            if (classConverterMap.containsKey(converter.primitiveType())) {
+                LOGGER.warn("Overriding existing converter for primitive type '{}': {}", converter.type(), classConverterMap.get(converter.primitiveType()));
+            }
+
+            LOGGER.debug("Registering converter for primitive type '{}': {}", converter.primitiveType(), converter);
+            classConverterMap.put(converter.primitiveType(), converter);
+        }
 
         if (converter instanceof SqlConverter<?> sqlConverter) {
             for (final int sqlType : sqlConverter.sqlTypes()) {
-                LOGGER.debug("Registering converter for SQL type: {}", sqlType);
+                LOGGER.debug("Registering converter for SQL type '{}': {}", sqlType, converter);
 
                 if (sqlDataTypeConverterMap.containsKey(sqlType)) {
-                    LOGGER.warn("Overriding existing converter for SQL type: {}", converter.type());
+                    LOGGER.warn("Overriding existing converter for SQL type '{}': {}", converter.type(), sqlDataTypeConverterMap.get(sqlType));
                 }
 
                 sqlDataTypeConverterMap.put(sqlType, sqlConverter);
