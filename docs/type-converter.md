@@ -59,14 +59,31 @@ String stringValue = converter.convert(456, String.class);
 Boolean boolValue = (Boolean) converter.convert(1, java.sql.Types.BOOLEAN);
 ```
 
-You can also use `ConfigurableTypeConverter` to create a custom-tailored converter:
+The `ConfigurableTypeConverter` (and `DefaultTypeConverter`) can be used to define custom converters in-line:
 
 ```java
 ConfigurableTypeConverter customConverter = new ConfigurableTypeConverter();
+
+// Register a custom converter using a converter function 
+customConverter.register(MyCustomType.class, value -> {
+    // Custom logic here
+    return new MyCustomType(value.toString());
+});
+
+// SQL types can also be specified this way
 customConverter.register(MyCustomType.class, new int[]{java.sql.Types.OTHER}, value -> {
     // Custom logic here
     return new MyCustomType(value.toString());
 });
+```
+
+Additionally, existing converters (e.g. for SQL types) can be replaced:
+
+```java
+DefaultTypeConverter defaultConverter = new DefaultTypeConverter();
+
+// Override to convert NUMERIC SQL types to Long (instead of the default BigDecimal)
+defaultConverter.register(Long.class, new int[]{java.sql.Types.NUMERIC}, new LongConverter());
 ```
 
 ## Built-in Converters

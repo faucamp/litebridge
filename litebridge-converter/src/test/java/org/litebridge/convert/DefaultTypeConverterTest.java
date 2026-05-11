@@ -2,6 +2,7 @@ package org.litebridge.convert;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.TimeUtils;
+import org.litebridge.convert.converter.LongConverter;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -166,5 +167,22 @@ class DefaultTypeConverterTest {
 
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> defaultTypeConverter.convert(value, unknownType));
+    }
+
+    @Test
+    void convert_sqlType_NUMERIC_overrideToLongConverter() {
+        // Given
+        final String value = "123";
+        // Ensure the default BigDecimalConverter is loaded
+        assertEquals(BigDecimal.valueOf(123), defaultTypeConverter.convert(value, Types.NUMERIC));
+
+        // When
+        defaultTypeConverter.register(Long.class, new int[]{Types.NUMERIC}, new LongConverter());
+        // Ensure the LongConverter now handles NUMERIC types
+        final Long result = (Long) defaultTypeConverter.convert(value, Types.NUMERIC);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(123, result);
     }
 }
