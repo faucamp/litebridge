@@ -66,6 +66,11 @@ class DoubleConverterTest {
     }
 
     @Test
+    void primitiveType() {
+        assertEquals(double.class, converter.primitiveType());
+    }
+
+    @Test
     void sqlTypes() {
         assertArrayEquals(new int[]{Types.FLOAT, Types.DOUBLE}, converter.sqlTypes());
     }

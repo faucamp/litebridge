@@ -225,10 +225,58 @@ class ConverterRegistryTest {
         assertArrayEquals(sqlTypes, sqlConverter.sqlTypes());
     }
 
+    @Test
+    void testRegister_PrimitiveType() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+        Converter<Integer> converter = new TestConverter<>(Integer.class, int.class);
+
+        // When
+        registry.register(converter);
+
+        // Then
+        assertEquals(converter, registry.getConverter(Integer.class));
+        assertEquals(converter, registry.getConverter(int.class));
+    }
+
+    @Test
+    void testRegister_PrimitiveOverrideWarning() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+        Converter<Integer> converter1 = new TestConverter<>(Integer.class, int.class);
+        Converter<Integer> converter2 = new TestConverter<>(Integer.class, int.class);
+
+        // When
+        registry.register(converter1);
+        registry.register(converter2); // Should trigger warnings for both Integer.class and int.class
+
+        // Then
+        assertEquals(converter2, registry.getConverter(Integer.class));
+        assertEquals(converter2, registry.getConverter(int.class));
+    }
+
+    @Test
+    void testDelegatingConverter_PrimitiveType() {
+        // Given
+        Converter<Integer> delegate = new TestConverter<>(Integer.class, int.class);
+        ConverterRegistry registry = new ConverterRegistry();
+        registry.register(Integer.class, (ConverterFunction<Integer>) delegate);
+
+        // When
+        Converter<Integer> converter = registry.getConverter(Integer.class);
+
+        // Then
+        assertNotNull(converter);
+        assertEquals(int.class, converter.primitiveType());
+    }
+
     private static class TestConverter<T> implements Converter<T> {
         private final Class<T> type;
-        TestConverter(Class<T> type) { this.type = type; }
+        private final Class<?> primitiveType;
+        TestConverter(Class<T> type) { this(type, null); }
+        TestConverter(Class<T> type, Class<?> primitiveType) { this.type = type; this.primitiveType = primitiveType; }
         @Override public Class<?> type() { return type; }
+        @Override public @Nullable Class<?> primitiveType() { return primitiveType; }
         @Override public @Nullable T convert(@Nullable Object value) { return (T) value; }
     }
 

@@ -66,6 +66,11 @@ class FloatConverterTest {
     }
 
     @Test
+    void primitiveType() {
+        assertEquals(float.class, converter.primitiveType());
+    }
+
+    @Test
     void sqlTypes() {
         assertArrayEquals(new int[]{Types.REAL}, converter.sqlTypes());
     }

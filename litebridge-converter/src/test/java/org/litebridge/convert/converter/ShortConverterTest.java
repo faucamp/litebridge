@@ -66,6 +66,11 @@ class ShortConverterTest {
     }
 
     @Test
+    void primitiveType() {
+        assertEquals(short.class, converter.primitiveType());
+    }
+
+    @Test
     void sqlTypes() {
         assertArrayEquals(new int[]{Types.SMALLINT}, converter.sqlTypes());
     }

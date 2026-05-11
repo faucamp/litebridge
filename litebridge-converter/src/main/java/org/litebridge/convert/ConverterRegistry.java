@@ -120,6 +120,11 @@ final class ConverterRegistry {
         }
 
         @Override
+        public @Nullable Class<?> primitiveType() {
+            return delegate.primitiveType();
+        }
+
+        @Override
         public @Nullable T convert(final @Nullable Object value) {
             return delegate.convert(value);
         }

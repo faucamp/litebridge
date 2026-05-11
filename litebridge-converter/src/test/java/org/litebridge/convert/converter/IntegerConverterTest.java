@@ -66,6 +66,11 @@ class IntegerConverterTest {
     }
 
     @Test
+    void primitiveType() {
+        assertEquals(int.class, converter.primitiveType());
+    }
+
+    @Test
     void sqlTypes() {
         assertArrayEquals(new int[]{Types.INTEGER}, converter.sqlTypes());
     }

@@ -66,6 +66,11 @@ class ByteConverterTest {
     }
 
     @Test
+    void primitiveType() {
+        assertEquals(byte.class, converter.primitiveType());
+    }
+
+    @Test
     void sqlTypes() {
         assertArrayEquals(new int[]{Types.TINYINT}, converter.sqlTypes());
     }

@@ -66,6 +66,11 @@ class LongConverterTest {
     }
 
     @Test
+    void primitiveType() {
+        assertEquals(long.class, converter.primitiveType());
+    }
+
+    @Test
     void sqlTypes() {
         assertArrayEquals(new int[]{Types.BIGINT}, converter.sqlTypes());
     }

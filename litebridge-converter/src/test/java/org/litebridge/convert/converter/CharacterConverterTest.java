@@ -43,4 +43,9 @@ class CharacterConverterTest {
     void type() {
         assertEquals(Character.class, converter.type());
     }
+
+    @Test
+    void primitiveType() {
+        assertEquals(char.class, converter.primitiveType());
+    }
 }

@@ -45,6 +45,11 @@ class BooleanConverterTest {
     }
 
     @Test
+    void primitiveType() {
+        assertEquals(boolean.class, converter.primitiveType());
+    }
+
+    @Test
     void sqlTypes() {
         assertArrayEquals(new int[]{Types.BIT, Types.BOOLEAN}, converter.sqlTypes());
     }

@@ -138,6 +138,18 @@ class DefaultTypeConverterTest {
     }
 
     @Test
+    void testConvert_primitive() {
+        // Given
+        final String value = "123";
+
+        // When
+        final int result = defaultTypeConverter.convert(value, int.class);
+
+        // Then
+        assertEquals(123, result);
+    }
+
+    @Test
     void testConvert_class_unsupported() {
         // Given
         final String value = "123";
