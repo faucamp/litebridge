@@ -1,16 +1,19 @@
-package org.litebridge.convert.conversion;
+package org.litebridge.convert.converter;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.TimeUtils;
 
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Objects;
 
-public class SqlTimestampTypeConversion extends com.toddfast.util.convert.conversion.SqlTimestampTypeConversion {
+public class SqlTimestampConverter implements SqlConverter<Timestamp> {
+
+    private static final int[] SQL_TYPES = new int[]{Types.TIMESTAMP};
 
     @Override
     public @Nullable Timestamp convert(final @Nullable Object value) {
@@ -29,4 +32,13 @@ public class SqlTimestampTypeConversion extends com.toddfast.util.convert.conver
         };
     }
 
+    @Override
+    public Class<?> type() {
+        return Timestamp.class;
+    }
+
+    @Override
+    public int[] sqlTypes() {
+        return SQL_TYPES;
+    }
 }

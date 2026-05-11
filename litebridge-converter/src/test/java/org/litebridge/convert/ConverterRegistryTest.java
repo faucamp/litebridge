@@ -1,0 +1,240 @@
+package org.litebridge.convert;
+
+import org.junit.jupiter.api.Test;
+import org.litebridge.convert.converter.Converter;
+import org.litebridge.convert.converter.ConverterFunction;
+import org.litebridge.convert.converter.SqlConverter;
+import org.jspecify.annotations.Nullable;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class ConverterRegistryTest {
+
+    @Test
+    void testRegisterAndGetConverter_JavaType() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+        Converter<String> converter = new TestConverter<>(String.class);
+
+        // When
+        registry.register(converter);
+
+        // Then
+        assertEquals(converter, registry.getConverter(String.class));
+    }
+
+    @Test
+    void testRegisterAndGetConverter_SqlType() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+        SqlConverter<String> converter = new TestSqlConverter<>(String.class, new int[]{1, 2});
+
+        // When
+        registry.register(converter);
+
+        // Then
+        assertEquals(converter, registry.getConverter(String.class));
+        assertEquals(converter, registry.getConverter(1));
+        assertEquals(converter, registry.getConverter(2));
+    }
+
+    @Test
+    void testRegister_OverrideWarning() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+        Converter<String> converter1 = new TestConverter<>(String.class);
+        Converter<String> converter2 = new TestConverter<>(String.class);
+
+        // When
+        registry.register(converter1);
+        registry.register(converter2); // Should log warning
+
+        // Then
+        assertEquals(converter2, registry.getConverter(String.class));
+    }
+
+    @Test
+    void testRegisterSql_OverrideWarning() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+        SqlConverter<String> converter1 = new TestSqlConverter<>(String.class, new int[]{1});
+        SqlConverter<Integer> converter2 = new TestSqlConverter<>(Integer.class, new int[]{1});
+
+        // When
+        registry.register(converter1);
+        registry.register(converter2); // Should log warning for SQL type 1
+
+        // Then
+        assertEquals(converter1, registry.getConverter(String.class));
+        assertEquals(converter2, registry.getConverter(Integer.class));
+        assertEquals(converter2, registry.getConverter(1));
+    }
+
+    @Test
+    void testRegister_ConverterFunction() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+        ConverterFunction<String> function = value -> value == null ? null : value.toString();
+
+        // When
+        registry.register(String.class, function);
+
+        // Then
+        Converter<String> converter = registry.getConverter(String.class);
+        assertNotNull(converter);
+        assertEquals(String.class, converter.type());
+        assertEquals("test", converter.convert("test"));
+    }
+
+    @Test
+    void testRegister_ConverterFunctionAsConverter() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+        Converter<String> existingConverter = new TestConverter<>(String.class);
+
+        // When
+        registry.register(String.class, (ConverterFunction<String>) existingConverter);
+
+        // Then
+        Converter<String> converter = registry.getConverter(String.class);
+        assertNotNull(converter);
+        // Should be a DelegatingConverter
+        assertTrue(converter.toString().contains("DelegatingConverter"));
+        assertEquals("test", converter.convert("test"));
+    }
+
+    @Test
+    void testRegisterSql_ConverterFunction() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+        ConverterFunction<String> function = value -> value == null ? null : value.toString();
+        int[] sqlTypes = {1, 2};
+
+        // When
+        registry.register(String.class, sqlTypes, function);
+
+        // Then
+        Converter<String> converter = registry.getConverter(String.class);
+        assertNotNull(converter);
+        assertEquals(String.class, converter.type());
+        assertEquals(converter, registry.getConverter(1));
+        assertEquals(converter, registry.getConverter(2));
+    }
+
+    @Test
+    void testRegisterSql_ConverterFunctionAsConverter() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+        Converter<String> existingConverter = new TestConverter<>(String.class);
+        int[] sqlTypes = {1};
+
+        // When
+        registry.register(String.class, sqlTypes, (ConverterFunction<String>) existingConverter);
+
+        // Then
+        Converter<String> converter = registry.getConverter(String.class);
+        assertNotNull(converter);
+        assertTrue(converter.toString().contains("DelegatingSqlConverter"));
+        assertEquals(converter, registry.getConverter(1));
+    }
+
+    @Test
+    void testUnregister_JavaType() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+        Converter<String> converter = new TestConverter<>(String.class);
+        registry.register(converter);
+
+        // When
+        registry.unregister(String.class);
+
+        // Then
+        assertNull(registry.getConverter(String.class));
+    }
+
+    @Test
+    void testUnregister_JavaTypeWithSqlCascade() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+        SqlConverter<String> converter = new TestSqlConverter<>(String.class, new int[]{1});
+        registry.register(converter);
+
+        // When
+        registry.unregister(String.class);
+
+        // Then
+        assertNull(registry.getConverter(String.class));
+        assertNull(registry.getConverter(1));
+    }
+
+    @Test
+    void testUnregister_SqlType() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+        SqlConverter<String> converter = new TestSqlConverter<>(String.class, new int[]{1});
+        registry.register(converter);
+
+        // When
+        registry.unregister(1);
+
+        // Then
+        assertNull(registry.getConverter(1));
+        assertNull(registry.getConverter(String.class)); // Should cascade
+    }
+
+    @Test
+    void testUnregister_NonExistentSqlType() {
+        // Given
+        ConverterRegistry registry = new ConverterRegistry();
+
+        // When/Then (should not throw)
+        registry.unregister(1);
+    }
+
+    @Test
+    void testDelegatingConverter_ToString() {
+        Converter<String> delegate = new TestConverter<>(String.class);
+        registryRegisterDelegating(delegate);
+    }
+
+    // Helper to access package private inner classes if needed or just trigger their code
+    private void registryRegisterDelegating(Converter<String> delegate) {
+        ConverterRegistry registry = new ConverterRegistry();
+        registry.register(String.class, (ConverterFunction<String>) delegate);
+        Converter<String> converter = registry.getConverter(String.class);
+        assertNotNull(converter);
+        String toString = converter.toString();
+        assertTrue(toString.contains("DelegatingConverter"));
+        assertTrue(toString.contains("delegate=" + delegate));
+    }
+
+    @Test
+    void testDelegatingSqlConverter_ToString() {
+        Converter<String> delegate = new TestConverter<>(String.class);
+        int[] sqlTypes = {1};
+        ConverterRegistry registry = new ConverterRegistry();
+        registry.register(String.class, sqlTypes, (ConverterFunction<String>) delegate);
+        Converter<String> converter = registry.getConverter(String.class);
+        assertNotNull(converter);
+        String toString = converter.toString();
+        assertTrue(toString.contains("DelegatingSqlConverter"));
+        assertTrue(toString.contains("sqlTypes=[1]"));
+        assertTrue(toString.contains("delegate=" + delegate));
+        
+        SqlConverter<String> sqlConverter = (SqlConverter<String>) converter;
+        assertArrayEquals(sqlTypes, sqlConverter.sqlTypes());
+    }
+
+    private static class TestConverter<T> implements Converter<T> {
+        private final Class<T> type;
+        TestConverter(Class<T> type) { this.type = type; }
+        @Override public Class<?> type() { return type; }
+        @Override public @Nullable T convert(@Nullable Object value) { return (T) value; }
+    }
+
+    private static class TestSqlConverter<T> extends TestConverter<T> implements SqlConverter<T> {
+        private final int[] sqlTypes;
+        TestSqlConverter(Class<T> type, int[] sqlTypes) { super(type); this.sqlTypes = sqlTypes; }
+        @Override public int[] sqlTypes() { return sqlTypes; }
+    }
+}

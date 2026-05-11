@@ -1,4 +1,4 @@
-package org.litebridge.convert.conversion;
+package org.litebridge.convert.converter;
 
 import org.junit.jupiter.api.Test;
 
@@ -8,25 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-class BigIntegerTypeConversionTest {
+class BigIntegerConverterTest {
 
-    private final BigIntegerTypeConversion conversion = new BigIntegerTypeConversion();
-
-    @Test
-    void getTypeKeys() {
-        // When
-        final Object[] result = conversion.getTypeKeys();
-
-        // Then
-        assertEquals(3, result.length);
-        assertEquals(BigInteger.class, result[0]);
-        assertEquals(BigInteger.class.getName(), result[1]);
-        assertEquals(BigIntegerTypeConversion.TYPE_BIGINTEGER, result[2]);
-    }
+    private final BigIntegerConverter converter = new BigIntegerConverter();
 
     @Test
     void convert_null() {
-        assertNull(conversion.convert(null));
+        assertNull(converter.convert(null));
     }
 
     @Test
@@ -35,7 +23,7 @@ class BigIntegerTypeConversionTest {
         final BigInteger input = new BigInteger("123456789012345678901234567890");
 
         // When
-        final BigInteger result = conversion.convert(input);
+        final BigInteger result = converter.convert(input);
 
         // Then
         assertSame(input, result);
@@ -48,7 +36,7 @@ class BigIntegerTypeConversionTest {
         final Long input = 9223372036854775807L;
 
         // When
-        final BigInteger result = conversion.convert(input);
+        final BigInteger result = converter.convert(input);
 
         // Then
         assertEquals(BigInteger.valueOf(9223372036854775807L), result);
@@ -60,7 +48,7 @@ class BigIntegerTypeConversionTest {
         final Integer input = 2147483647;
 
         // When
-        final BigInteger result = conversion.convert(input);
+        final BigInteger result = converter.convert(input);
 
         // Then
         assertEquals(BigInteger.valueOf(2147483647), result);
@@ -72,7 +60,7 @@ class BigIntegerTypeConversionTest {
         final Short input = 32767;
 
         // When
-        final BigInteger result = conversion.convert(input);
+        final BigInteger result = converter.convert(input);
 
         // Then
         assertEquals(BigInteger.valueOf(32767), result);
@@ -84,7 +72,7 @@ class BigIntegerTypeConversionTest {
         final Byte input = 127;
 
         // When
-        final BigInteger result = conversion.convert(input);
+        final BigInteger result = converter.convert(input);
 
         // Then
         assertEquals(BigInteger.valueOf(127), result);
@@ -96,7 +84,7 @@ class BigIntegerTypeConversionTest {
         final String input = "999999999999999999999999999999";
 
         // When
-        final BigInteger result = conversion.convert(input);
+        final BigInteger result = converter.convert(input);
 
         // Then
         assertEquals(new BigInteger("999999999999999999999999999999"), result);
@@ -108,7 +96,7 @@ class BigIntegerTypeConversionTest {
         final Double input = 123.0;
 
         // When
-        final BigInteger result = conversion.convert(input);
+        final BigInteger result = converter.convert(input);
 
         // Then
         assertEquals(new BigInteger("123"), result);
@@ -120,7 +108,7 @@ class BigIntegerTypeConversionTest {
         final Float input = 123.0F;
 
         // When
-        final BigInteger result = conversion.convert(input);
+        final BigInteger result = converter.convert(input);
 
         // Then
         assertEquals(new BigInteger("123"), result);

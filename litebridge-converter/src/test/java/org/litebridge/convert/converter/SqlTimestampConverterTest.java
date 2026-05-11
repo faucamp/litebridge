@@ -1,4 +1,4 @@
-package org.litebridge.convert.conversion;
+package org.litebridge.convert.converter;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.TimeUtils;
@@ -15,9 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class SqlTimestampTypeConversionTest {
+class SqlTimestampConverterTest {
 
-    private final SqlTimestampTypeConversion sqlTimestampTypeConversion = new SqlTimestampTypeConversion();
+    private final SqlTimestampConverter converter = new SqlTimestampConverter();
 
     @Test
     void convert_zonedDateTime() {
@@ -25,7 +25,7 @@ class SqlTimestampTypeConversionTest {
         final ZonedDateTime value = ZonedDateTime.now();
 
         // When
-        final Timestamp result = sqlTimestampTypeConversion.convert(value);
+        final Timestamp result = converter.convert(value);
 
         // Then
         assertNotNull(result);
@@ -38,7 +38,7 @@ class SqlTimestampTypeConversionTest {
         final LocalDateTime value = LocalDateTime.now();
 
         // When
-        final Timestamp result = sqlTimestampTypeConversion.convert(value);
+        final Timestamp result = converter.convert(value);
 
         // Then
         assertNotNull(result);
@@ -51,7 +51,7 @@ class SqlTimestampTypeConversionTest {
         final LocalDate value = LocalDate.now();
 
         // When
-        final Timestamp result = sqlTimestampTypeConversion.convert(value);
+        final Timestamp result = converter.convert(value);
 
         // Then
         assertNotNull(result);
@@ -64,7 +64,7 @@ class SqlTimestampTypeConversionTest {
         final Date value = new Date();
 
         // When
-        final Timestamp result = sqlTimestampTypeConversion.convert(value);
+        final Timestamp result = converter.convert(value);
 
         // Then
         assertNotNull(result);
@@ -77,7 +77,7 @@ class SqlTimestampTypeConversionTest {
         final long value = System.currentTimeMillis();
 
         // When
-        final Timestamp result = sqlTimestampTypeConversion.convert(value);
+        final Timestamp result = converter.convert(value);
 
         // Then
         assertNotNull(result);
@@ -90,7 +90,7 @@ class SqlTimestampTypeConversionTest {
         final String value = "2025-12-31T10:44:00+02:00";
 
         // When
-        final Timestamp result = sqlTimestampTypeConversion.convert(value);
+        final Timestamp result = converter.convert(value);
 
         // Then
         assertNotNull(result);
@@ -100,7 +100,7 @@ class SqlTimestampTypeConversionTest {
     @Test
     void convert_null() {
         // When
-        final Timestamp result = sqlTimestampTypeConversion.convert(null);
+        final Timestamp result = converter.convert(null);
 
         // Then
         assertNull(result);
@@ -112,6 +112,6 @@ class SqlTimestampTypeConversionTest {
         final Object value = new Object();
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> sqlTimestampTypeConversion.convert(value));
+        assertThrows(IllegalArgumentException.class, () -> converter.convert(value));
     }
 }

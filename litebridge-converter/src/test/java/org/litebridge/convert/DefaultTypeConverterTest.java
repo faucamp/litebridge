@@ -3,6 +3,7 @@ package org.litebridge.convert;
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.TimeUtils;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.sql.Types;
 
@@ -85,7 +86,7 @@ class DefaultTypeConverterTest {
         final String value = "123";
 
         // When
-        final Long result = (Long) defaultTypeConverter.convert(value, Types.NUMERIC);
+        final BigDecimal result = (BigDecimal) defaultTypeConverter.convert(value, Types.NUMERIC);
 
         // Then
         assertNotNull(result);
@@ -119,10 +120,37 @@ class DefaultTypeConverterTest {
     }
 
     @Test
+    void testConvert_null() {
+        // When
+        final Integer result = defaultTypeConverter.convert(null, Integer.class);
+
+        // Then
+        assertEquals(null, result);
+    }
+
+    @Test
+    void testConvert_sqlType_null() {
+        // When
+        final Integer result = (Integer) defaultTypeConverter.convert(null, Types.INTEGER);
+
+        // Then
+        assertEquals(null, result);
+    }
+
+    @Test
+    void testConvert_class_unsupported() {
+        // Given
+        final String value = "123";
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> defaultTypeConverter.convert(value, Void.class));
+    }
+
+    @Test
     void testConvert_sqlType_unsupported() {
         // Given
         final String value = "123";
-        final int unknownType = -1;
+        final int unknownType = -999;
 
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> defaultTypeConverter.convert(value, unknownType));

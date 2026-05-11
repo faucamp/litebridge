@@ -1,22 +1,13 @@
-package org.litebridge.convert.conversion;
+package org.litebridge.convert.converter;
 
-import com.toddfast.util.convert.TypeConverter;
 import org.jspecify.annotations.Nullable;
 
 import java.math.BigInteger;
+import java.sql.Types;
 
-public class BigIntegerTypeConversion implements TypeConverter.Conversion<BigInteger> {
+public class BigIntegerConverter implements Converter<BigInteger> {
 
-    public static final String TYPE_BIGINTEGER = "biginteger";
-
-    @Override
-    public Object[] getTypeKeys() {
-        return new Object[]{
-                BigInteger.class,
-                BigInteger.class.getName(),
-                TYPE_BIGINTEGER
-        };
-    }
+    private static final int[] SQL_TYPES = new int[]{Types.NUMERIC, Types.DECIMAL};
 
     @Override
     public @Nullable BigInteger convert(final @Nullable Object value) {
@@ -34,5 +25,10 @@ public class BigIntegerTypeConversion implements TypeConverter.Conversion<BigInt
             case Float floatValue -> BigInteger.valueOf(floatValue.longValue());
             default -> new BigInteger(value.toString());
         };
+    }
+
+    @Override
+    public Class<?> type() {
+        return BigInteger.class;
     }
 }

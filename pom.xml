@@ -30,7 +30,6 @@
         <ojdbc17.version>23.26.1.0.0</ojdbc17.version>
         <slf4j.version>2.0.17</slf4j.version>
         <testcontainers.version>2.0.5</testcontainers.version>
-        <typeconverter.version>1.0</typeconverter.version>
     </properties>
 
     <modules>
@@ -124,7 +123,8 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>${maven-javadoc-plugin.version}</version>
                 <configuration>
-                    <skippedModules>litebridge-example-common,litebridge-example-h2,litebridge-example-oracle,litebridge-example-spring-boot,litebridge-example-spring-boot-manual-config
+                    <skippedModules>
+                        litebridge-example-common,litebridge-example-h2,litebridge-example-oracle,litebridge-example-spring-boot,litebridge-example-spring-boot-manual-config
                     </skippedModules>
                 </configuration>
             </plugin>
@@ -235,11 +235,6 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
                 <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.toddfast.typeconverter</groupId>
-                <artifactId>typeconverter</artifactId>
-                <version>${typeconverter.version}</version>
             </dependency>
 
             <!-- Test dependencies -->
