@@ -4,7 +4,7 @@ import org.litebridge.convert.converter.SqlConverter;
 import org.litebridge.db.spi.convert.TypeConverter;
 
 /**
- * Default Litebridge type converter
+ * Litebridge type converter
  * <p>
  * Provides general-purpose SQL data type conversion support for Litebridge.
  */

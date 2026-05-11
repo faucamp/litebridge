@@ -4,10 +4,24 @@ import org.jspecify.annotations.Nullable;
 
 import java.sql.Types;
 
+/**
+ * A converter for {@link String} values.
+ * <p>
+ * Handles {@link java.sql.Types#CHAR}, {@link java.sql.Types#VARCHAR}, and {@link java.sql.Types#LONGVARCHAR}.
+ */
 public class StringConverter implements SqlConverter<String> {
 
     private static final int[] SQL_TYPES = new int[]{Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR};
 
+    /**
+     * Converts the given value to a {@link String}.
+     * <p>
+     * If the value is a {@code byte[]} or {@code char[]}, it is converted to a string using the appropriate constructor.
+     * Otherwise, {@link Object#toString()} is used.
+     *
+     * @param value the value to convert, may be {@code null}
+     * @return the converted string, or {@code null}
+     */
     @Override
     public @Nullable String convert(final @Nullable Object value) {
         if (value == null) {
@@ -35,11 +49,21 @@ public class StringConverter implements SqlConverter<String> {
         return valueStr;
     }
 
+    /**
+     * Returns the target Java class this converter handles.
+     *
+     * @return {@link String}.class
+     */
     @Override
     public Class<String> type() {
         return String.class;
     }
 
+    /**
+     * Returns the SQL types associated with this converter.
+     *
+     * @return an array containing {@link java.sql.Types#CHAR}, {@link java.sql.Types#VARCHAR}, and {@link java.sql.Types#LONGVARCHAR}
+     */
     @Override
     public int[] sqlTypes() {
         return SQL_TYPES;

@@ -5,10 +5,23 @@ import org.litebridge.convert.converter.Converter;
 import org.litebridge.convert.converter.ConverterFunction;
 import org.litebridge.db.spi.convert.TypeConverter;
 
+/**
+ * A concrete implementation of {@link TypeConverter} that allows manual registration and unregistration of converters.
+ * <p>
+ * This class provides a flexible way to manage {@link Converter} instances for both Java types and SQL types.
+ */
 public class ConfigurableTypeConverter implements TypeConverter {
 
     private final ConverterRegistry converterRegistry = new ConverterRegistry();
 
+    /**
+     * Converts a value to a database-specific representation (or vice-versa) based on the {@link java.sql.Types} code.
+     *
+     * @param value the value to convert, may be {@code null}
+     * @param dbDataType the {@link java.sql.Types} code for the database data type
+     * @return the converted value, or {@code null} if the input was {@code null}
+     * @throws IllegalArgumentException if no converter is found for the specified SQL type
+     */
     @Override
     public @Nullable Object convert(@Nullable final Object value, final int dbDataType) {
         final Converter<?> converter = converterRegistry.getConverter(dbDataType);
@@ -20,6 +33,15 @@ public class ConfigurableTypeConverter implements TypeConverter {
         return converter.convert(value);
     }
 
+    /**
+     * Converts a value to a specific Java type.
+     *
+     * @param value the value to convert, may be {@code null}
+     * @param type the target Java type
+     * @param <T> the target Java type
+     * @return the converted value, or {@code null} if the input was {@code null}
+     * @throws IllegalArgumentException if no converter is found for the specified Java type
+     */
     @Override
     public @Nullable <T> T convert(@Nullable final Object value, final Class<T> type) {
         final Converter<T> converter = converterRegistry.getConverter(type);
@@ -31,18 +53,41 @@ public class ConfigurableTypeConverter implements TypeConverter {
         return converter.convert(value);
     }
 
+    /**
+     * Registers a new converter.
+     *
+     * @param converter the converter to register
+     */
     public void register(final Converter<?> converter) {
         converterRegistry.register(converter);
     }
 
+    /**
+     * Registers a converter for a specific Java type and its associated SQL types using a functional interface.
+     *
+     * @param type the target Java type
+     * @param sqlTypes an array of {@link java.sql.Types} codes associated with this converter
+     * @param converterFunction the conversion logic
+     * @param <T> the target Java type
+     */
     public <T> void register(final Class<T> type, final int[] sqlTypes, final ConverterFunction<T> converterFunction) {
         converterRegistry.register(type, sqlTypes, converterFunction);
     }
 
+    /**
+     * Removes a converter for a specific Java type.
+     *
+     * @param type the Java type to unregister
+     */
     public void unregister(final Class<?> type) {
         converterRegistry.unregister(type);
     }
 
+    /**
+     * Removes a converter for a specific SQL type.
+     *
+     * @param sqlType the {@link java.sql.Types} code to unregister
+     */
     public void unregister(final int sqlType) {
         converterRegistry.unregister(sqlType);
     }

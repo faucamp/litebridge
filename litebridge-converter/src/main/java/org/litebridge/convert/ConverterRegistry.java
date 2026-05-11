@@ -14,12 +14,24 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * An internal registry for managing {@link Converter} instances.
+ * <p>
+ * This class provides thread-safe storage and retrieval of converters based on Java types and SQL types.
+ */
 final class ConverterRegistry {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConverterRegistry.class);
     private final Map<Class<?>, Converter<?>> classConverterMap = new ConcurrentHashMap<>();
     private final Map<Integer, SqlConverter<?>> sqlDataTypeConverterMap = new ConcurrentHashMap<>();
 
+    /**
+     * Registers a converter for the type it handles.
+     * <p>
+     * If the converter is a {@link SqlConverter}, it is also registered for its associated SQL types.
+     *
+     * @param converter the converter to register
+     */
     public void register(final Converter<?> converter) {
         if (classConverterMap.containsKey(converter.type())) {
             LOGGER.warn("Overriding existing converter for type '{}': {}", converter.type(), classConverterMap.get(converter.type()));
@@ -50,6 +62,13 @@ final class ConverterRegistry {
         }
     }
 
+    /**
+     * Registers a converter for a specific Java type using a functional interface.
+     *
+     * @param type the target Java type
+     * @param converterFunction the conversion logic
+     * @param <T> the target Java type
+     */
     public <T> void register(final Class<T> type, final ConverterFunction<T> converterFunction) {
         final Converter<T> converter;
 
@@ -62,6 +81,14 @@ final class ConverterRegistry {
         register(converter);
     }
 
+    /**
+     * Registers a converter for a specific Java type and its associated SQL types using a functional interface.
+     *
+     * @param type the target Java type
+     * @param sqlTypes an array of {@link java.sql.Types} codes associated with this converter
+     * @param converterFunction the conversion logic
+     * @param <T> the target Java type
+     */
     public <T> void register(final Class<T> type, final int[] sqlTypes, final ConverterFunction<T> converterFunction) {
         final Converter<T> converter;
 
@@ -74,6 +101,11 @@ final class ConverterRegistry {
         register(converter);
     }
 
+    /**
+     * Removes a converter for a specific Java type.
+     *
+     * @param type the Java type to unregister
+     */
     public void unregister(final Class<?> type) {
         LOGGER.debug("Unregistering converter for type: {}", type);
         final Converter<?> converter = classConverterMap.remove(type);
@@ -86,6 +118,11 @@ final class ConverterRegistry {
         }
     }
 
+    /**
+     * Removes a converter for a specific SQL type.
+     *
+     * @param sqlType the {@link java.sql.Types} code to unregister
+     */
     public void unregister(final int sqlType) {
         LOGGER.debug("Unregistering converter for SQL type: {}", sqlType);
         final Converter<?> converter = sqlDataTypeConverterMap.remove(sqlType);
@@ -96,11 +133,25 @@ final class ConverterRegistry {
         }
     }
 
+    /**
+     * Returns a converter for the specified Java type.
+     *
+     * @param type the target Java type
+     * @param <T> the target Java type
+     * @return the converter, or {@code null} if none is found
+     */
     @SuppressWarnings("unchecked")
     public <T> @Nullable Converter<T> getConverter(final Class<T> type) {
         return (Converter<T>) classConverterMap.get(type);
     }
 
+    /**
+     * Returns a converter for the specified SQL type.
+     *
+     * @param sqlType the {@link java.sql.Types} code
+     * @param <T> the target Java type
+     * @return the converter, or {@code null} if none is found
+     */
     @SuppressWarnings("unchecked")
     public <T> @Nullable Converter<T> getConverter(final int sqlType) {
         return (Converter<T>) sqlDataTypeConverterMap.get(sqlType);

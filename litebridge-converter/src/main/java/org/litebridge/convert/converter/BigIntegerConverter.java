@@ -5,10 +5,19 @@ import org.jspecify.annotations.Nullable;
 import java.math.BigInteger;
 import java.sql.Types;
 
+/**
+ * A converter for {@link BigInteger} values.
+ */
 public class BigIntegerConverter implements Converter<BigInteger> {
 
-    private static final int[] SQL_TYPES = new int[]{Types.NUMERIC, Types.DECIMAL};
-
+    /**
+     * Converts the given value to a {@link BigInteger}.
+     * <p>
+     * Supports various numeric types and string representation as fall-back.
+     *
+     * @param value the value to convert, may be {@code null}
+     * @return the converted {@link BigInteger}, or {@code null}
+     */
     @Override
     public @Nullable BigInteger convert(final @Nullable Object value) {
         if (value == null) {
@@ -27,6 +36,11 @@ public class BigIntegerConverter implements Converter<BigInteger> {
         };
     }
 
+    /**
+     * Returns the target Java class this converter handles.
+     *
+     * @return {@link BigInteger}.class
+     */
     @Override
     public Class<?> type() {
         return BigInteger.class;
