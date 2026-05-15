@@ -18,6 +18,11 @@ profile:
 #  - name: <SomeDisabledInspectionId>
 #    paths:
 #      - <path/where/not/run/inspection>
+exclude:
+  - name: All
+    paths:
+      - "example/**"
+      - "spring/litebridge-spring-boot3-test/**"
 projectJDK: "21" #(Applied in CI/CD pipeline)
 #Execute shell command before Qodana execution (Applied in CI/CD pipeline)
 #bootstrap: sh ./prepare-qodana.sh
