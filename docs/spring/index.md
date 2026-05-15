@@ -2,6 +2,16 @@
 
 Litebridge provides first-class support for Spring and Spring Boot, allowing you to easily integrate it into your applications.
 
+## Supported Versions
+
+Litebridge is tested against Spring Boot 3/Framework 6 and Spring Boot 4/Framework 7.
+Since the ORM itself is compiled against Java 21, the earliest supported Spring Boot version is Spring Boot 3.2.0:
+
+| Spring Boot | Spring Framework |
+|:------------|:-----------------|
+| 3.2.0       | 6.1.1            |
+| 4.0.6       | 7.0.7            |
+
 ## Integration Options
 
 There are two primary ways to integrate Litebridge with Spring:
