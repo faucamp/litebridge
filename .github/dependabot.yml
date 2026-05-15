@@ -4,3 +4,6 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "org.litebridgedb.example:*" # Ignore example projects
+      - dependency-name: "org.litebridgedb.spring:litebridge-spring-boot3-test" # Ignore SB3 compatibility test
