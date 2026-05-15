@@ -71,8 +71,6 @@ public class LitebridgeProperties {
          * Alias for {@link #setProviderClass(String)}, for compatibility with Spring Boot 3 due to lack of support for {@code @Name}.
          * <p>
          * Set the fully qualified class name of the database provider implementation to use.
-         *
-         * @return database provider class name
          */
         public void setClass(final @Nullable String providerClass) {
             this.providerClass = providerClass;
