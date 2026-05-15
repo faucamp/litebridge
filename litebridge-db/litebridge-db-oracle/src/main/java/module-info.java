@@ -13,7 +13,7 @@ module litebridge.db.oracle {
     requires org.slf4j;
     requires litebridge.commons;
 
-    provides org.litebridge.db.spi.DatabaseProvider with org.litebridge.db.oracle.OracleDatabaseProvider;
+    provides org.litebridgedb.db.spi.DatabaseProvider with org.litebridgedb.db.oracle.OracleDatabaseProvider;
 
-    exports org.litebridge.db.oracle;
+    exports org.litebridgedb.db.oracle;
 }

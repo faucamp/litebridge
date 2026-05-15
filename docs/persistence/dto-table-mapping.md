@@ -65,7 +65,7 @@ The following example shows how to map the `Person` and `Account` classes to tab
 The one-to-many between `Person` and `Account` is also specified, from both sides:
 
 ```java
-// Create a litebridge instance
+// Create a litebridgedb instance
 Litebridge litebridge = new Litebridge(new H2DatabaseProvider(), dataSource, new DefaultTransactionManager(dataSource));
 
 // Register the table mapping for the Person DTO class
@@ -120,7 +120,7 @@ public class Group {
 
     private String name;
     private String description;
-    private List<org.litebridge.orm.e2e.basic.dto.Person> members;
+    private List<org.litebridgedb.orm.e2e.basic.dto.Person> members;
 
     // Getters and setters, etc
 }

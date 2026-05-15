@@ -18,7 +18,7 @@ The `pom.xml` should use `litebridge-db` as its parent:
 
 ```xml
 <parent>
-    <groupId>org.litebridge.db</groupId>
+    <groupId>org.litebridgedb.db</groupId>
     <artifactId>litebridge-db</artifactId>
     <version>${project.version}</version>
     <relativePath>../pom.xml</relativePath>
@@ -31,12 +31,12 @@ Add dependencies on `litebridge-converter` (if you want to use the default type 
 <dependencies>
     <dependency>
         <!-- Litebridge default type converter -->
-        <groupId>org.litebridge</groupId>
+        <groupId>org.litebridgedb</groupId>
         <artifactId>litebridge-converter</artifactId>
     </dependency>
     <dependency>
         <!-- Provides the AbstractDatabaseProvider class -->
-        <groupId>org.litebridge.db</groupId>
+        <groupId>org.litebridgedb.db</groupId>
         <artifactId>litebridge-db-spi-impl</artifactId>
     </dependency>
     <!-- Your database JDBC driver -->
@@ -58,7 +58,7 @@ module litebridge.db.yourdb {
     requires org.slf4j;
     requires java.sql;
 
-    exports org.litebridge.db.yourdb;
+    exports org.litebridgedb.db.yourdb;
 }
 ```
 
@@ -126,8 +126,8 @@ Create unit tests in your module to verify that the generated SQL matches the ex
 To fully validate the provider, add it to the E2E test suite in `litebridge-orm`:
 1. Add your new module as a test dependency in `litebridge-orm/pom.xml`.
 2. Update the E2E test configuration to include your database (usually involving Testcontainers):
-   1. Add a new `org.litebridge.orm.e2e.setup.DbEnvironment` implementation for your database.
-   1. Update `org.litebridge.orm.e2e.setup.MultiDbTestExtension` and add your new environment as an invocation context.
+   1. Add a new `org.litebridgedb.orm.e2e.setup.DbEnvironment` implementation for your database.
+   1. Update `org.litebridgedb.orm.e2e.setup.MultiDbTestExtension` and add your new environment as an invocation context.
 4. Verify that all standard E2E tests pass against your new provider.
 
 Refer to the [End-to-End Tests](tests.md) documentation for more details on running integration tests.

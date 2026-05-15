@@ -11,7 +11,7 @@ module litebridge.tracking {
     requires org.slf4j;
     requires litebridge.commons;
 
-    exports org.litebridge.tracking;
+    exports org.litebridgedb.tracking;
 
-    opens org.litebridge.tracking to litebridge.commons;
+    opens org.litebridgedb.tracking to litebridge.commons;
 }

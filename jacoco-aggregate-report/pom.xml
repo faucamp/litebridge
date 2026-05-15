@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.litebridge</groupId>
+        <groupId>org.litebridgedb</groupId>
         <artifactId>litebridge</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.litebridge.jacoco</groupId>
+    <groupId>org.litebridgedb.jacoco</groupId>
     <artifactId>jacoco-aggregate-report</artifactId>
     <packaging>pom</packaging>
 
@@ -57,31 +57,31 @@
     <dependencies>
         <!-- Project dependencies -->
         <dependency>
-            <groupId>org.litebridge</groupId>
+            <groupId>org.litebridgedb</groupId>
             <artifactId>litebridge-commons</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.litebridge</groupId>
+            <groupId>org.litebridgedb</groupId>
             <artifactId>litebridge-converter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.litebridge.db</groupId>
+            <groupId>org.litebridgedb.db</groupId>
             <artifactId>litebridge-db-spi</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.litebridge.db</groupId>
+            <groupId>org.litebridgedb.db</groupId>
             <artifactId>litebridge-db-spi-impl</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.litebridge.db</groupId>
+            <groupId>org.litebridgedb.db</groupId>
             <artifactId>litebridge-db-h2</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.litebridge</groupId>
+            <groupId>org.litebridgedb</groupId>
             <artifactId>litebridge-orm</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.litebridge</groupId>
+            <groupId>org.litebridgedb</groupId>
             <artifactId>litebridge-tracking</artifactId>
         </dependency>
     </dependencies>

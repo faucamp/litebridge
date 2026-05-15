@@ -12,11 +12,11 @@ module litebridge.db.spi {
     requires org.jspecify;
     requires org.slf4j;
 
-    exports org.litebridge.db.spi;
-    exports org.litebridge.db.spi.convert;
-    exports org.litebridge.db.spi.math;
-    exports org.litebridge.db.spi.query;
-    exports org.litebridge.db.spi.tx;
-    exports org.litebridge.db.spi.update;
-    exports org.litebridge.db.spi.util;
+    exports org.litebridgedb.db.spi;
+    exports org.litebridgedb.db.spi.convert;
+    exports org.litebridgedb.db.spi.math;
+    exports org.litebridgedb.db.spi.query;
+    exports org.litebridgedb.db.spi.tx;
+    exports org.litebridgedb.db.spi.update;
+    exports org.litebridgedb.db.spi.util;
 }

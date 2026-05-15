@@ -82,7 +82,7 @@ litebridge.transaction()
 You can specify the isolation level for the transaction using the `isolation()` method.
 
 ```java
-import org.litebridge.db.spi.tx.Isolation;
+import org.litebridgedb.db.spi.tx.Isolation;
 
 litebridge.transaction()
     .isolation(Isolation.SERIALIZABLE)
