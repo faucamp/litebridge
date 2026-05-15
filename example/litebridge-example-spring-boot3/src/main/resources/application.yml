@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: example
+  datasource:
+    url: jdbc:h2:mem:dataSource;MODE=Oracle
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 20000
+      max-lifetime: 1800000
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+litebridge:
+  database-provider-class: org.litebridge.db.h2.H2DatabaseProvider
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+logging:
+  level:
+    root: INFO
+    org.litebridge: TRACE
+

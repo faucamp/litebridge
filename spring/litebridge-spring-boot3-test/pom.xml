@@ -5,16 +5,20 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.litebridge.example</groupId>
-        <artifactId>litebridge-example</artifactId>
+        <groupId>org.litebridge.spring</groupId>
+        <artifactId>litebridge-spring-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>litebridge-example-h2</artifactId>
+    <artifactId>litebridge-spring-boot3-test</artifactId>
+
+    <properties>
+        <spring-boot.version>3.2.0</spring-boot.version>
+    </properties>
 
     <build>
-        <!-- Exclude from mvn install/deploy -->
+        <!-- Exclude from mvn install/deploy; this module only runs Spring Boot 3 compatibility tests -->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -36,31 +40,35 @@
     <dependencies>
         <!-- Project dependencies -->
         <dependency>
-            <groupId>org.litebridge</groupId>
-            <artifactId>litebridge-orm</artifactId>
+            <groupId>org.litebridge.spring</groupId>
+            <artifactId>litebridge-spring-boot-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.litebridge.spring</groupId>
+            <artifactId>litebridge-spring</artifactId>
         </dependency>
         <dependency>
             <groupId>org.litebridge.db</groupId>
             <artifactId>litebridge-db-h2</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.litebridge.example</groupId>
-            <artifactId>litebridge-example-common</artifactId>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <!-- External dependencies -->
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <scope>provided</scope>
         </dependency>
+
+        <!-- Test dependencies -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
-
 </project>

@@ -21,6 +21,7 @@
         <module>litebridge-example-oracle</module>
         <module>litebridge-example-spring-boot</module>
         <module>litebridge-example-spring-boot-manual-config</module>
+        <module>litebridge-example-spring-boot3</module>
     </modules>
 
     <build>

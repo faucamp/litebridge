@@ -23,6 +23,7 @@
         <module>litebridge-spring</module>
         <module>litebridge-spring-boot-autoconfigure</module>
         <module>litebridge-spring-boot-starter</module>
+        <module>litebridge-spring-boot3-test</module>
     </modules>
 
     <dependencyManagement>
