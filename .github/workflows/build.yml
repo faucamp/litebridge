@@ -27,92 +27,92 @@ jobs:
     - name: Build with Maven and generate JaCoCo report
       run: mvn -B clean verify
 
-    - name: "Generate JaCoCo Badge: litebridgedb-commons"
+    - name: "Generate JaCoCo Badge: litebridge-commons"
       uses: cicirello/jacoco-badge-generator@v2
       with:
-        jacoco-csv-file: litebridgedb-commons/target/site/jacoco/jacoco.csv
-        badges-directory: .github/badges/litebridgedb-commons
+        jacoco-csv-file: litebridge-commons/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-commons
         generate-branches-badge: true
 
-    - name: "Generate JaCoCo Badge: litebridgedb-converter"
+    - name: "Generate JaCoCo Badge: litebridge-converter"
       # Run on main branch only
       if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
-        jacoco-csv-file: litebridgedb-converter/target/site/jacoco/jacoco.csv
-        badges-directory: .github/badges/litebridgedb-converter
+        jacoco-csv-file: litebridge-converter/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-converter
         generate-branches-badge: true
 
-    - name: "Generate JaCoCo Badge: litebridgedb-db-spi"
+    - name: "Generate JaCoCo Badge: litebridge-db-spi"
       # Run on main branch only
       if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
-        jacoco-csv-file: litebridgedb-db/litebridgedb-db-spi/target/site/jacoco/jacoco.csv
-        badges-directory: .github/badges/litebridgedb-db/litebridgedb-db-spi
+        jacoco-csv-file: litebridge-db/litebridge-db-spi/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-db/litebridge-db-spi
         generate-branches-badge: true
 
-    - name: "Generate JaCoCo Badge: litebridgedb-db-spi-impl"
+    - name: "Generate JaCoCo Badge: litebridge-db-spi-impl"
       # Run on main branch only
       if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
-        jacoco-csv-file: litebridgedb-db/litebridgedb-db-spi-impl/target/site/jacoco/jacoco.csv
-        badges-directory: .github/badges/litebridgedb-db/litebridgedb-db-spi-impl
+        jacoco-csv-file: litebridge-db/litebridge-db-spi-impl/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-db/litebridge-db-spi-impl
         generate-branches-badge: true
 
-    - name: "Generate JaCoCo Badge: litebridgedb-db-h2"
+    - name: "Generate JaCoCo Badge: litebridge-db-h2"
       # Run on main branch only
       if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
-        jacoco-csv-file: litebridgedb-db/litebridgedb-db-h2/target/site/jacoco/jacoco.csv
-        badges-directory: .github/badges/litebridgedb-db/litebridgedb-db-h2
+        jacoco-csv-file: litebridge-db/litebridge-db-h2/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-db/litebridge-db-h2
         generate-branches-badge: true
 
-    - name: "Generate JaCoCo Badge: litebridgedb-db-oracle"
+    - name: "Generate JaCoCo Badge: litebridge-db-oracle"
       # Run on main branch only
       if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
-        jacoco-csv-file: litebridgedb-db/litebridgedb-db-oracle/target/site/jacoco/jacoco.csv
-        badges-directory: .github/badges/litebridgedb-db/litebridgedb-db-oracle
+        jacoco-csv-file: litebridge-db/litebridge-db-oracle/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-db/litebridge-db-oracle
         generate-branches-badge: true
 
-    - name: "Generate JaCoCo Badge: litebridgedb-orm"
+    - name: "Generate JaCoCo Badge: litebridge-orm"
       # Run on main branch only
       if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
-        jacoco-csv-file: litebridgedb-orm/target/site/jacoco/jacoco.csv
-        badges-directory: .github/badges/litebridgedb-orm
+        jacoco-csv-file: litebridge-orm/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-orm
         generate-branches-badge: true
 
-    - name: "Generate JaCoCo Badge: litebridgedb-tracking"
+    - name: "Generate JaCoCo Badge: litebridge-tracking"
       # Run on main branch only
       if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
-        jacoco-csv-file: litebridgedb-tracking/target/site/jacoco/jacoco.csv
-        badges-directory: .github/badges/litebridgedb-tracking
+        jacoco-csv-file: litebridge-tracking/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-tracking
         generate-branches-badge: true
 
-    - name: "Generate JaCoCo Badge: litebridgedb-spring"
+    - name: "Generate JaCoCo Badge: litebridge-spring"
       # Run on main branch only
       if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
-        jacoco-csv-file: spring/litebridgedb-spring/target/site/jacoco/jacoco.csv
-        badges-directory: .github/badges/spring/litebridgedb-spring
+        jacoco-csv-file: spring/litebridge-spring/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/spring/litebridge-spring
         generate-branches-badge: true
 
-    - name: "Generate JaCoCo Badge: litebridgedb-spring-boot-autoconfigure"
+    - name: "Generate JaCoCo Badge: litebridge-spring-boot-autoconfigure"
       # Run on main branch only
       if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
-        jacoco-csv-file: spring/litebridgedb-spring-boot-autoconfigure/target/site/jacoco/jacoco.csv
-        badges-directory: .github/badges/spring/litebridgedb-spring-boot-autoconfigure
+        jacoco-csv-file: spring/litebridge-spring-boot-autoconfigure/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/spring/litebridge-spring-boot-autoconfigure
         generate-branches-badge: true
 
     - name: "Generate JaCoCo Badge: aggregate"
