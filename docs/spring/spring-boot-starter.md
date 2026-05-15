@@ -10,7 +10,7 @@ Add the following dependency to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>org.litebridge</groupId>
+    <groupId>org.litebridgedb</groupId>
     <artifactId>litebridge-spring-boot-starter</artifactId>
     <version>${litebridge.version}</version>
 </dependency>
@@ -31,12 +31,12 @@ You can customise the autoconfiguration using the following properties in `appli
 | Property | Description | Default |
 | :--- | :--- | :--- |
 | `litebridge.database-provider.class` | Fully qualified class name of the `DatabaseProvider` to use. | (Auto-detected) |
-| `litebridge.database-provider.scan-base-package` | Base package to scan for `DatabaseProvider` implementations if `class` is not set. | `org.litebridge.db` |
+| `litebridge.database-provider.scan-base-package` | Base package to scan for `DatabaseProvider` implementations if `class` is not set. | `org.litebridgedb.db` |
 
 ### Example
 
 ```properties
-litebridge.database-provider.class=org.litebridge.db.h2.H2DatabaseProvider
+litebridge.database-provider.class=org.litebridgedb.db.h2.H2DatabaseProvider
 ```
 
 ## DTO Registration

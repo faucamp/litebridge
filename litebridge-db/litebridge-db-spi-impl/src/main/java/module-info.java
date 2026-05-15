@@ -14,5 +14,5 @@ module litebridge.db.spi.impl {
     requires litebridge.commons;
     requires litebridge.db.spi;
 
-    exports org.litebridge.db.spi.impl;
+    exports org.litebridgedb.db.spi.impl;
 }

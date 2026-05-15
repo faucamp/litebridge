@@ -77,10 +77,10 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 
 ## Key Classes and APIs
 
-- `org.litebridge.orm.Litebridge`: The main entry point for `save`, `select`, `update`, `delete`.
-- `org.litebridge.orm.api.spec.TableSpec`: Core class for defining DTO-to-table mapping.
-- `org.litebridge.db.spi.DatabaseProvider`: The SPI that must be implemented for each supported database.
-- `org.litebridge.tracking.ChangeTracker`: Handles state tracking for DTOs to optimize updates.
+- `org.litebridgedb.orm.Litebridge`: The main entry point for `save`, `select`, `update`, `delete`.
+- `org.litebridgedb.orm.api.spec.TableSpec`: Core class for defining DTO-to-table mapping.
+- `org.litebridgedb.db.spi.DatabaseProvider`: The SPI that must be implemented for each supported database.
+- `org.litebridgedb.tracking.ChangeTracker`: Handles state tracking for DTOs to optimize updates.
 
 ## Common Agent Tasks
 

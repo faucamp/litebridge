@@ -6,7 +6,7 @@ The build contains end-to-end/integration tests for Litebridge which validate th
 by interacting with specific or all supported databases.
 They also serve as a reference for developers to understand how the ORM works.
 
-The tests are found in: [`litebridge-orm/src/test/java/org/litebridge/orm/e2e/`](../../litebridge-orm/src/test/java/org/litebridge/orm/e2e/)
+The tests are found in: [`litebridge-orm/src/test/java/org/litebridge/orm/e2e/`](../../litebridge-orm/src/test/java/org/litebridgedb/orm/e2e/)
 
 ## Database environment
 
@@ -38,7 +38,7 @@ mvn clean test -Dlb.e2e.env=none
 To run a specific end-to-end test in IntelliJ, you may need to add the following VM option to the run configuration:
 
 ```
---add-opens litebridge.orm/org.litebridge.orm.e2e=ALL-UNNAMED --add-opens litebridge.orm/org.litebridge.orm.e2e.setup=ALL-UNNAMED
+--add-opens litebridge.orm/org.litebridgedb.orm.e2e=ALL-UNNAMED --add-opens litebridge.orm/org.litebridgedb.orm.e2e.setup=ALL-UNNAMED
 ```
 
 JUnit runs in the unnamed module; the above allows the test-specific `e2e` package to access the `litebridge.orm` module.

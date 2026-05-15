@@ -12,7 +12,7 @@ module litebridge.db.h2 {
     requires org.slf4j;
     requires java.sql;
 
-    provides org.litebridge.db.spi.DatabaseProvider with org.litebridge.db.h2.H2DatabaseProvider;
+    provides org.litebridgedb.db.spi.DatabaseProvider with org.litebridgedb.db.h2.H2DatabaseProvider;
 
-    exports org.litebridge.db.h2;
+    exports org.litebridgedb.db.h2;
 }

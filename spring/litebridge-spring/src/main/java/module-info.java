@@ -11,5 +11,5 @@ module litebridge.spring {
     requires spring.tx;
     requires org.jspecify;
 
-    exports org.litebridge.spring;
+    exports org.litebridgedb.spring;
 }

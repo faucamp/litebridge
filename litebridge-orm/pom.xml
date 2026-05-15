@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.litebridge</groupId>
+        <groupId>org.litebridgedb</groupId>
         <artifactId>litebridge</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -33,28 +33,28 @@
                     <argLine>
                         @{argLine}
                         -javaagent:${org.mockito:mockito-core:jar}
-                        --add-opens litebridge.orm/org.litebridge.orm=litebridge.commons
-                        --add-opens litebridge.orm/org.litebridge.orm=litebridge.tracking
-                        --add-opens litebridge.orm/org.litebridge.orm.api.dto=litebridge.commons
-                        --add-opens litebridge.orm/org.litebridge.orm.api.dto.delete=litebridge.tracking
-                        --add-opens litebridge.orm/org.litebridge.orm.api.dto.update=litebridge.tracking
-                        --add-opens litebridge.orm/org.litebridge.orm.api.select=litebridge.tracking
-                        --add-opens litebridge.orm/org.litebridge.orm.api.select.impl=litebridge.commons
-                        --add-opens litebridge.orm/org.litebridge.orm.api.select.impl=ALL-UNNAMED
-                        --add-opens litebridge.orm/org.litebridge.orm.persistence=litebridge.commons
-                        --add-opens litebridge.orm/org.litebridge.orm.e2e.setup=ALL-UNNAMED
-                        --add-opens litebridge.orm/org.litebridge.orm.e2e.basic.dto=litebridge.commons
-                        --add-opens litebridge.orm/org.litebridge.orm.e2e.basic.dto=litebridge.tracking
-                        --add-opens litebridge.orm/org.litebridge.orm.e2e.compositepk.dto=litebridge.commons
-                        --add-opens litebridge.orm/org.litebridge.orm.e2e.compositepk.dto=litebridge.tracking
-                        --add-opens litebridge.orm/org.litebridge.orm.e2e.manytomany.dto=litebridge.commons
-                        --add-opens litebridge.orm/org.litebridge.orm.e2e.manytomany.dto=litebridge.tracking
-                        --add-opens litebridge.orm/org.litebridge.orm.e2e.selfref.dto=litebridge.commons
-                        --add-opens litebridge.orm/org.litebridge.orm.e2e.selfref.dto=litebridge.tracking
-                        --add-opens litebridge.orm/org.litebridge.orm.e2e.shareddto.dto=litebridge.commons
-                        --add-opens litebridge.orm/org.litebridge.orm.e2e.shareddto.dto=litebridge.tracking
-                        --add-opens litebridge.orm/org.litebridge.orm.e2e.singletable_multidto.dto=litebridge.commons
-                        --add-opens litebridge.orm/org.litebridge.orm.e2e.singletable_multidto.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.api.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.api.dto.delete=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.api.dto.update=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.api.select=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.api.select.impl=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.api.select.impl=ALL-UNNAMED
+                        --add-opens litebridge.orm/org.litebridgedb.orm.persistence=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.setup=ALL-UNNAMED
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.basic.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.basic.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.compositepk.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.compositepk.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.manytomany.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.manytomany.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.selfref.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.selfref.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.shareddto.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.shareddto.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.singletable_multidto.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.singletable_multidto.dto=litebridge.tracking
                     </argLine>
                 </configuration>
             </plugin>
@@ -64,15 +64,15 @@
     <dependencies>
         <!-- Project dependencies -->
         <dependency>
-            <groupId>org.litebridge</groupId>
+            <groupId>org.litebridgedb</groupId>
             <artifactId>litebridge-converter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.litebridge.db</groupId>
+            <groupId>org.litebridgedb.db</groupId>
             <artifactId>litebridge-db-spi</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.litebridge</groupId>
+            <groupId>org.litebridgedb</groupId>
             <artifactId>litebridge-tracking</artifactId>
         </dependency>
 
@@ -84,12 +84,12 @@
 
         <!-- Test dependencies -->
         <dependency>
-            <groupId>org.litebridge.db</groupId>
+            <groupId>org.litebridgedb.db</groupId>
             <artifactId>litebridge-db-h2</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.litebridge.db</groupId>
+            <groupId>org.litebridgedb.db</groupId>
             <artifactId>litebridge-db-oracle</artifactId>
             <scope>test</scope>
         </dependency>

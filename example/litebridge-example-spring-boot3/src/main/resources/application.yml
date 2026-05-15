@@ -22,7 +22,7 @@ server:
     context-path: /
 
 litebridge:
-  database-provider-class: org.litebridge.db.h2.H2DatabaseProvider
+  database-provider-class: org.litebridgedb.db.h2.H2DatabaseProvider
 
 springdoc:
   api-docs:

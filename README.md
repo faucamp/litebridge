@@ -66,7 +66,7 @@ public class Account {
 ### Setup: Register DTO-table mappings
 
 ```java
-// Create a litebridge instance
+// Create a litebridgedb instance
 Litebridge litebridge = new Litebridge(new H2DatabaseProvider(connection));
 
 // Register the table mapping for the Person DTO class
