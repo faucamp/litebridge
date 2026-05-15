@@ -43,10 +43,9 @@ public class LitebridgeConfig {
         Litebridge litebridge = new Litebridge(databaseProvider, transactionManager);
 
         // Register your DTOs
-        litebridge.register(User.class, TableSpec.builder("users")
-            .id("id", User::id)
-            .column("username", User::username)
-            .build());
+        litebridge.register(User.class, rc -> rc.mapToTable("LB.USERS")
+                .mapField("id").toColumn("ID")
+                .mapField("username").toColumn("USERNAME"));
 
         return litebridge;
     }
