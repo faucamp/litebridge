@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class CompositePkTest extends AbstractE2eTest {
 
@@ -49,6 +50,7 @@ class CompositePkTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("Composite auto-incrementing PK")
     void compositePk_autoIncrement() throws Exception {
+        assumeTrue(!dbEnv.getName().equals("SQLite"), "SQLite does not support multiple auto-incrementing columns");
         // Given
         litebridge.register(CompositePkSimple.class, rc -> rc.mapToTable("LB.COMP_PK_SIMPLE")
                 .mapField("pk1").toColumn("PK1").autoIncrement().usingSequence("LB.COMPOSITE_PK1_SEQ")

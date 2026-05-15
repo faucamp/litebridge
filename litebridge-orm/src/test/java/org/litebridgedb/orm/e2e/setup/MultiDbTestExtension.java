@@ -24,10 +24,12 @@ public class MultiDbTestExtension implements TestTemplateInvocationContextProvid
         return switch (env) {
             case "all" -> Stream.of(
                     invocationContext(new H2DbEnvironment()),
-                    invocationContext(new OracleDbEnvironment())
+                    invocationContext(new OracleDbEnvironment()),
+                    invocationContext(new SQLiteDbEnvironment())
             );
             case "h2" -> Stream.of(invocationContext(new H2DbEnvironment()));
             case "oracle" -> Stream.of(invocationContext(new OracleDbEnvironment()));
+            case "sqlite" -> Stream.of(invocationContext(new SQLiteDbEnvironment()));
             case "none" -> Stream.empty();
             default -> throw new IllegalArgumentException("Invalid lb.e2e.env value: " + env);
         };

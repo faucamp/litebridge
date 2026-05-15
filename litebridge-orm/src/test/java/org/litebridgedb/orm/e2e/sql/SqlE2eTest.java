@@ -41,18 +41,18 @@ class SqlE2eTest extends AbstractE2eTest {
         assertEquals(2, result.size());
         final Row row1 = result.getFirst();
         assertEquals(5, row1.columnStream().count());
-        assertEquals(BigDecimal.valueOf(1), row1.column("PERSON_ID").orElseThrow().value());
+        assertNumberEquals(1, row1.column("PERSON_ID").orElseThrow().value());
         assertEquals("Alice", row1.column("FIRST_NAME").orElseThrow().value());
         assertEquals("Smith", row1.column("SURNAME").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(20), row1.column("AGE").orElseThrow().value());
+        assertNumberEquals(20, row1.column("AGE").orElseThrow().value());
         assertEquals("brown", row1.column("EYE_COLOUR").orElseThrow().value());
         final Row row2 = result.get(1);
         assertEquals(5, row2.columnStream().count());
-        assertEquals(BigDecimal.valueOf(2), row2.column("PERSON_ID").orElseThrow().value());
+        assertNumberEquals(2, row2.column("PERSON_ID").orElseThrow().value());
         assertEquals("Bob", row2.column("FIRST_NAME").orElseThrow().value());
         assertEquals("Johnson", row2.column("SURNAME").orElseThrow().value());
         assertNull(row2.column("EYE_COLOUR").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(30), row2.column("AGE").orElseThrow().value());
+        assertNumberEquals(30, row2.column("AGE").orElseThrow().value());
     }
 
     @TestTemplate
@@ -74,7 +74,7 @@ class SqlE2eTest extends AbstractE2eTest {
         assertEquals(3, result.getFirst().columnStream().count());
         assertEquals("Alice", result.getFirst().column("FIRST_NAME").orElseThrow().value());
         assertEquals("Smith", result.getFirst().column("SURNAME").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(20), result.getFirst().column("AGE").orElseThrow().value());
+        assertNumberEquals(20, result.getFirst().column("AGE").orElseThrow().value());
     }
 
     @TestTemplate
@@ -130,15 +130,15 @@ class SqlE2eTest extends AbstractE2eTest {
         assertEquals(5, row1.columnStream().count());
         assertEquals("Alice", row1.column("FIRST_NAME").orElseThrow().value());
         assertEquals("Smith", row1.column("SURNAME").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(20), row1.column("AGE").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(1), row1.column("ACCOUNT_ID").orElseThrow().value());
+        assertNumberEquals(20, row1.column("AGE").orElseThrow().value());
+        assertNumberEquals(1, row1.column("ACCOUNT_ID").orElseThrow().value());
         assertEquals("Alice's Account", row1.column("ACCOUNT_NAME").orElseThrow().value());
         final Row row2 = result.get(1);
         assertEquals(5, row2.columnStream().count());
         assertEquals("Bob", row2.column("FIRST_NAME").orElseThrow().value());
         assertEquals("Johnson", row2.column("SURNAME").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(30), row2.column("AGE").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(2), row2.column("ACCOUNT_ID").orElseThrow().value());
+        assertNumberEquals(30, row2.column("AGE").orElseThrow().value());
+        assertNumberEquals(2, row2.column("ACCOUNT_ID").orElseThrow().value());
         assertEquals("Bob's Account", row2.column("ACCOUNT_NAME").orElseThrow().value());
     }
 
@@ -173,7 +173,7 @@ class SqlE2eTest extends AbstractE2eTest {
 
     private void insertTestPersonRecords() throws SQLException {
         try (final Connection connection = dbEnv.getDataSource().getConnection()) {
-            try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO LB.PERSON (PERSON_ID, FIRST_NAME, SURNAME, AGE, EYE_COLOUR) VALUES (?, ?, ?, ?, ?)")) {
+            try (final PreparedStatement preparedStatement = connection.prepareStatement(sql("INSERT INTO LB.PERSON (PERSON_ID, FIRST_NAME, SURNAME, AGE, EYE_COLOUR) VALUES (?, ?, ?, ?, ?)"))) {
                 insertPerson(1L, "Alice", "Smith", 20, "brown", preparedStatement);
                 insertPerson(2L, "Bob", "Johnson", 30, null, preparedStatement);
             }
@@ -182,10 +182,26 @@ class SqlE2eTest extends AbstractE2eTest {
 
     private void insertTestAccountRecords() throws SQLException {
         try (final Connection connection = dbEnv.getDataSource().getConnection()) {
-            try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO LB.ACCOUNT (ACCOUNT_ID, ACCOUNT_NAME, BALANCE, PERSON_ID) VALUES (?, ?, ?, ?)")) {
+            try (final PreparedStatement preparedStatement = connection.prepareStatement(sql("INSERT INTO LB.ACCOUNT (ACCOUNT_ID, ACCOUNT_NAME, BALANCE, PERSON_ID) VALUES (?, ?, ?, ?)"))) {
                 insertAccount(1L, "Alice's Account", 1000L, 1L, preparedStatement);
                 insertAccount(2L, "Bob's Account", 2000L, 2L, preparedStatement);
             }
+        }
+    }
+
+    private String tableName(final String tableName) {
+        return dbEnv.getName().equals("SQLite") ? tableName.replace("LB.", "") : tableName;
+    }
+
+    private String sql(final String sql) {
+        return dbEnv.getName().equals("SQLite") ? sql.replace("LB.", "") : sql;
+    }
+
+    private void assertNumberEquals(final long expected, final Object actual) {
+        if (actual instanceof Number number) {
+            assertEquals(expected, number.longValue());
+        } else {
+            assertEquals(BigDecimal.valueOf(expected), actual);
         }
     }
 
