@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-example-oracle</artifactId>
 
+    <name>Oracle Example</name>
+    <description>Example application using the Oracle database provider for Litebridge</description>
+
     <build>
         <!-- Exclude from mvn install/deploy -->
         <plugins>

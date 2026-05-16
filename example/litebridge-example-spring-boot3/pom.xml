@@ -13,6 +13,9 @@
     <artifactId>litebridge-example-spring-boot3</artifactId>
     <version>0.1.1-SNAPSHOT</version>
 
+    <name>Spring Boot 3 Example</name>
+    <description>Demonstrates Litebridge usage in Spring Boot 3</description>
+
     <properties>
         <springdoc-openapi-starter-webmvc-ui.version>2.3.0</springdoc-openapi-starter-webmvc-ui.version>
     </properties>

@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-example-h2</artifactId>
 
+    <name>H2 Example</name>
+    <description>Example application using the H2 database provider for Litebridge</description>
+
     <build>
         <!-- Exclude from mvn install/deploy -->
         <plugins>

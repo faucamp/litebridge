@@ -13,6 +13,9 @@
     <artifactId>litebridge-example-spring-boot-manual-config</artifactId>
     <version>0.1.1-SNAPSHOT</version>
 
+    <name>Spring Boot Manual Config Example</name>
+    <description>Demonstrates manual Litebridge bean configuration in a Spring Boot application</description>
+
     <properties>
         <springdoc-openapi-starter-webmvc-ui.version>3.0.3</springdoc-openapi-starter-webmvc-ui.version>
     </properties>

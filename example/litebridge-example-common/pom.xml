@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-example-common</artifactId>
 
+    <name>Examples Common Classes</name>
+    <description>Shared classes for Litebridge examples</description>
+
     <build>
         <!-- Exclude from mvn install/deploy -->
         <plugins>

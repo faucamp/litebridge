@@ -15,6 +15,9 @@
     <artifactId>litebridge-example</artifactId>
     <packaging>pom</packaging>
 
+    <name>Litebridge Examples</name>
+    <description>Parent POM for example Litebridge applications</description>
+
     <modules>
         <module>litebridge-example-common</module>
         <module>litebridge-example-h2</module>
