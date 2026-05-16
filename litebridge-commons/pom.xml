@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-commons</artifactId>
 
+    <name>Litebridge Commons</name>
+    <description>Common utilities for Litebridge components</description>
+
     <build>
         <plugins>
             <plugin>

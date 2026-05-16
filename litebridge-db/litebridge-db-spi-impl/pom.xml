@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-db-spi-impl</artifactId>
 
+    <name>Litebridge DB SPI Impl</name>
+    <description>Abstract implementation of Litebridge database Service Provider Interface (SPI)</description>
+
     <build>
         <plugins>
             <plugin>

@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-db-oracle</artifactId>
 
+    <name>Litebridge DB Oracle</name>
+    <description>Oracle database provider for Litebridge</description>
+
     <build>
         <plugins>
             <plugin>

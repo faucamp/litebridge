@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-tracking</artifactId>
 
+    <name>Litebridge Change Tracker</name>
+    <description>Provides field change tracking for plain Java objects</description>
+
     <build>
         <plugins>
             <plugin>

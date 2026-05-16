@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-db-h2</artifactId>
 
+    <name>Litebridge DB H2</name>
+    <description>H2 database provider for Litebridge</description>
+
     <build>
         <plugins>
             <plugin>

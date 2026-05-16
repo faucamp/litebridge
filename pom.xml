@@ -9,6 +9,37 @@
     <packaging>pom</packaging>
     <version>0.1.1-SNAPSHOT</version>
 
+    <name>Litebridge</name>
+    <description>Parent POM for Litebridge: a fast, lightweight Object-Relational Mapper (ORM) for Java 21+</description>
+    <url>https://litebridgedb.org</url>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Francois Aucamp Moser</name>
+            <email>francois.aucamp@gmail.com</email>
+            <url>https://github.com/faucamp</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <developerConnection>scm:git:https://github.com/faucamp/litebridge.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/faucamp/litebridge</url>
+        </repository>
+    </distributionManagement>
+
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
@@ -43,18 +74,6 @@
         <module>example</module>
         <module>jacoco-aggregate-report</module>
     </modules>
-
-    <scm>
-        <developerConnection>scm:git:https://github.com/faucamp/litebridge.git</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/faucamp/litebridge</url>
-        </repository>
-    </distributionManagement>
 
     <build>
         <pluginManagement>

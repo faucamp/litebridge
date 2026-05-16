@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-spring-boot-starter</artifactId>
 
+    <name>Litebridge Spring Boot Starter</name>
+    <description>Spring Boot starter for Litebridge</description>
+
     <dependencies>
         <!-- Project dependencies -->
         <dependency>

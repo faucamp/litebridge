@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-converter</artifactId>
 
+    <name>Litebridge Type Converter</name>
+    <description>Java and database type conversion for Litebridge</description>
+
     <dependencies>
         <!-- Project dependencies -->
         <dependency>

@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-spring</artifactId>
 
+    <name>Litebridge Spring</name>
+    <description>Core Spring Framework integration for Litebridge</description>
+
     <build>
         <plugins>
             <plugin>

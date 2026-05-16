@@ -11,6 +11,9 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
+    <name>Litebridge DB</name>
+    <description>Database integration SPI, providers and abstraction for Litebridge</description>
+
     <groupId>org.litebridgedb.db</groupId>
     <artifactId>litebridge-db</artifactId>
     <packaging>pom</packaging>

@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-orm</artifactId>
 
+    <name>Litebridge ORM</name>
+    <description>Fast, lightweight Object-Relational Mapper (ORM) for Java 21+</description>
+
     <build>
         <plugins>
             <plugin>

@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-spring-boot-autoconfigure</artifactId>
 
+    <name>Litebridge Spring Boot Autoconfigure</name>
+    <description>Spring Boot autoconfiguration library for Litebridge</description>
+
     <build>
         <plugins>
             <plugin>
