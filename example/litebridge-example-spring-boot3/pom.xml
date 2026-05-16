@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>litebridge-example-spring-boot3</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
 
     <properties>
         <springdoc-openapi-starter-webmvc-ui.version>2.3.0</springdoc-openapi-starter-webmvc-ui.version>
@@ -43,7 +43,7 @@
             <dependency>
                 <groupId>org.litebridgedb.example</groupId>
                 <artifactId>litebridge-example</artifactId>
-                <version>0.1.0</version>
+                <version>0.1.1-SNAPSHOT</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
