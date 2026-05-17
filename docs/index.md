@@ -14,3 +14,7 @@ It simplifies persistence by treating SQL as a first-class citizen, balancing re
 4. [Change Tracker](change-tracker.md) 
 5. [Spring Integration](spring/index.md)
 6. [Litebridge Development](dev/index.md)
+
+## API documentation
+
+Javadocs are available [here](https://faucamp.github.io/litebridge/javadoc).
