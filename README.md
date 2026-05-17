@@ -1,4 +1,4 @@
-# litebridge
+# Litebridge
 
 ![Coverage](.github/badges/jacoco.svg)
 ![Branches](.github/badges/branches.svg)
@@ -17,16 +17,15 @@ It simplifies persistence by treating SQL as a first-class citizen, balancing re
 * **Transparent Mapping**: Map DTOs to databases without modifying your domain classes. Use a fluent API, programmatic `Map`-based configuration or _optional_ annotations.
 * **Fluent API**: Compose queries using a natural, SQL-like fluent builder that stays out of your way.
 * **Spring Integration**: Use the Litebridge Spring Boot starter to easily integrate Litebridge with your Spring Boot application.
+
 ## Shortcuts
 
-<!-- TOC -->
-  * [Quick Introduction](#quick-introduction)
-  * [Documentation](#documentation)
-  * [Project Structure](#project-structure)
-<!-- TOC -->
+* [Quick Introduction](#quick-introduction)
+* [Documentation](#documentation)
+* [Project Structure](#project-structure)
+* [Javadocs](https://faucamp.github.io/litebridge/javadoc)
 
 ## Quick Introduction
-
 
 <!-- TOC -->
 * [Setup: Register DTO-table mappings](#setup-register-dto-table-mappings)
