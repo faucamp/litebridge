@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class MultiDbTestExtension implements TestTemplateInvocationContextProvider {
+
     @Override
     public boolean supportsTestTemplate(ExtensionContext context) {
         return true;
