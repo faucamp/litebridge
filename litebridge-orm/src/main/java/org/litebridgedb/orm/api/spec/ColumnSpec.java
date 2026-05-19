@@ -2,6 +2,7 @@ package org.litebridgedb.orm.api.spec;
 
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.litebridgedb.db.spi.generator.ColumnValueGenerator;
 
 /**
  * Specification of a database column, used to map DTO fields to target columns.
@@ -11,7 +12,7 @@ import org.jspecify.annotations.Nullable;
  *
  * @param name            Database column name
  * @param isAutoIncrement Whether column is set to auto-increment
- * @param sequence        Name of the sequence used to generate values for this column
+ * @param generator       Generator used to create a value for this column if not specified during inserts
  * @param joinColumn      Field name of the nested DTO to join on
  * @param mappedTable     In-line mapped table specification
  *
@@ -21,7 +22,7 @@ public record ColumnSpec(
         String name,
         boolean isAutoIncrement,
         @Nullable
-        String sequence,
+        ColumnValueGenerator generator,
         @Nullable
         String joinColumn,
         @Nullable
@@ -29,8 +30,12 @@ public record ColumnSpec(
 
     public ColumnSpec(final String name,
                       final boolean isAutoIncrement,
-                      final @Nullable String sequence,
+                      final @Nullable ColumnValueGenerator generator,
                       final @Nullable String joinColumn) {
-        this(name, isAutoIncrement, sequence, joinColumn, null);
+        this(name, isAutoIncrement, generator, joinColumn, null);
+    }
+
+    public ColumnSpec(final String name) {
+        this(name, false, null, null, null);
     }
 }

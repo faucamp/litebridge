@@ -1,5 +1,6 @@
 package org.litebridgedb.orm.api.register;
 
+import org.litebridgedb.db.spi.generator.ColumnValueGenerator;
 import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
 import org.litebridgedb.orm.api.spec.FieldSpec;
@@ -17,8 +18,18 @@ public final class RegistrationColumnContext extends RegistrationTableContextImp
         this.registrationTableContext = registrationTableContext;
     }
 
-    public RegistrationColumnAutoIncrementStep autoIncrement() {
-        return new RegistrationColumnAutoIncrementStep(fieldSpec, column, registrationTableContext);
+    public RegistrationTableContext autoIncrement() {
+        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, true, null, null));
+        return registrationTableContext;
+    }
+
+    public RegistrationTableContext generateUsingSequence(final String sequence) {
+        return generate(databaseProvider().getSequenceColumnValueGenerator(sequence));
+    }
+
+    public RegistrationTableContext generate(ColumnValueGenerator generator) {
+        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, true, generator, null));
+        return registrationTableContext;
     }
 
     public RegistrationJoinStep joinOn(final String column) {

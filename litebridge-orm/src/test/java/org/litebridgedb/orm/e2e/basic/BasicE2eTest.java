@@ -373,7 +373,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     public static void registerPersonDtoTableMapping(final Litebridge litebridge) throws SQLException {
         litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
-                .mapField("id").toColumn("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ")
+                .mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ")
                 .mapField("name").toColumn("FIRST_NAME")
                 .mapField("surname").toColumn("SURNAME")
                 .mapField("age").toColumn("AGE")
@@ -383,7 +383,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     private static void registerAccountDtoTableMapping(final Litebridge litebridge) throws SQLException {
         litebridge.register(Account.class, rc -> rc.mapToTable("LB.ACCOUNT")
-                .mapField("id").toColumn("ACCOUNT_ID").autoIncrement().usingSequence("LB.ACCOUNT_SEQ")
+                .mapField("id").toColumn("ACCOUNT_ID").generateUsingSequence("LB.ACCOUNT_SEQ")
                 .mapField("name").toColumn("ACCOUNT_NAME")
                 .mapField("balance").toColumn("BALANCE")
                 .mapField("owner").toColumn("PERSON_ID").joinUsing());

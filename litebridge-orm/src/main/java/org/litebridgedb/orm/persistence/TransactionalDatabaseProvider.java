@@ -5,6 +5,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
@@ -59,6 +60,11 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     @Override
     public String toSql(final Select select) {
         return databaseProvider.toSql(select);
+    }
+
+    @Override
+    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequenceName) {
+        return databaseProvider.getSequenceColumnValueGenerator(sequenceName);
     }
 
     @Override

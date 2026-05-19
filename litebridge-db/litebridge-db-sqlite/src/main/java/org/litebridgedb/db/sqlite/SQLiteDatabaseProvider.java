@@ -4,6 +4,7 @@ import org.litebridgedb.convert.DefaultTypeConverter;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.AbstractDatabaseProvider;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.ManagedConnection;
@@ -119,10 +120,16 @@ public class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
         return sql;
     }
 
+    /**
+     * SQLite does not support sequences. Throws an {@code UnsupportedOperationException} if called.
+     *
+     * @param sequence the sequence name
+     * @return N/A; throws an {@code UnsupportedOperationException}
+     * @throws UnsupportedOperationException if called
+     */
     @Override
-    protected String createSequenceNextValueForDirectInsert(final String sequence) {
-        // SQLite doesn't support sequences; return NULL to trigger AUTOINCREMENT for INTEGER PRIMARY KEY columns
-        return "NULL";
+    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
+        throw new UnsupportedOperationException("SQLite does not support sequences");
     }
 
     @Override

@@ -4,12 +4,10 @@ import org.litebridgedb.commons.ClassUtils;
 import org.litebridgedb.commons.CollectionUtils;
 import org.litebridgedb.commons.ModuleUtils;
 import org.litebridgedb.commons.ObjectUtils;
-import org.litebridgedb.commons.StringUtils;
 import org.litebridgedb.commons.type.ConcurrentLazy;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.TableMetaData;
-import org.litebridgedb.orm.api.spec.AbstractColumnSpecBuilder;
 import org.litebridgedb.orm.api.spec.ColumnMapping;
 import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldMapping;
@@ -91,10 +89,6 @@ public final class TableMapper {
         // Validate and formalise field mapping
         fieldColumnSpecMap.forEach((fieldMapping, columnMapping) -> {
             switch (columnMapping) {
-                case AbstractColumnSpecBuilder<?> columnSpecBuilder -> {
-                    final ColumnSpec columnSpec = columnSpecBuilder.build();
-                    mapColumnSpec(columnSpec, fieldMapping, lookup, dtoClass, tableMetaData, unmappedColumns, mappedFields, manyToOneDependencies);
-                }
                 case ColumnSpec columnSpec ->
                         mapColumnSpec(columnSpec, fieldMapping, lookup, dtoClass, tableMetaData, unmappedColumns, mappedFields, manyToOneDependencies);
                 case OneToMany oneToMany ->
@@ -160,8 +154,8 @@ public final class TableMapper {
         if (columnSpec.isAutoIncrement()) {
             column.setAutoIncrement(true);
 
-            if (!StringUtils.isBlank(columnSpec.sequence())) {
-                column.setSequence(columnSpec.sequence());
+            if (columnSpec.generator() != null) {
+                column.setGenerator(columnSpec.generator());
             }
         }
 

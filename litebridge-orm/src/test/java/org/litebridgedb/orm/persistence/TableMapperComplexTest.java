@@ -2,6 +2,7 @@ package org.litebridgedb.orm.persistence;
 
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.ColumnMetaData;
+import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.orm.api.register.DtoTableSpecBuilder;
 import org.litebridgedb.orm.api.register.RegistrationContext;
@@ -37,7 +38,7 @@ class TableMapperComplexTest {
         when(databaseProvider.tableMetaData(any(), any())).thenReturn(orderMeta);
         
         // When
-        RegistrationContext context = new RegistrationContext();
+        RegistrationContext context = new RegistrationContext(mock(DatabaseProvider.class));
         DtoTableSpec orderSpec = ((DtoTableSpecBuilder) context.mapToTable("orders")
                 .mapField("id").toColumn("ID"))
                 .buildDtoTableSpec(OrderDto.class);
@@ -51,7 +52,7 @@ class TableMapperComplexTest {
         TableMetaData custMeta = new TableMetaData(customerTable, List.of("ID"), List.of(custIdColumn));
         when(databaseProvider.tableMetaData(any(), any())).thenReturn(custMeta);
 
-        DtoTableSpec custSpec = ((DtoTableSpecBuilder) new RegistrationContext().mapToTable("customers")
+        DtoTableSpec custSpec = ((DtoTableSpecBuilder) new RegistrationContext(mock(DatabaseProvider.class)).mapToTable("customers")
                 .mapField("id").toColumn("ID")
                 .mapField("orders").oneToMany(b -> b.mappedByField("customer")))
                 .buildDtoTableSpec(CustomerDto.class);
@@ -117,14 +118,14 @@ class TableMapperComplexTest {
         });
 
         // Register Tag
-        DtoTableSpec tagSpec = ((DtoTableSpecBuilder) new RegistrationContext().mapToTable("tags")
+        DtoTableSpec tagSpec = ((DtoTableSpecBuilder) new RegistrationContext(mock(DatabaseProvider.class)).mapToTable("tags")
                 .mapField("id").toColumn("ID"))
                 .buildDtoTableSpec(TagDto.class);
         TableMapper.MappedTable mappedTag = mapper.mapToTable(MethodHandles.lookup(), TagDto.class, tagSpec.tableSpec());
         when(tableRegistry.getTable(TagDto.class)).thenReturn(mappedTag.ormTable());
 
         // Register Customer with ManyToMany to Tag
-        DtoTableSpec custSpec = ((DtoTableSpecBuilder) new RegistrationContext().mapToTable("customers")
+        DtoTableSpec custSpec = ((DtoTableSpecBuilder) new RegistrationContext(mock(DatabaseProvider.class)).mapToTable("customers")
                 .mapField("id").toColumn("ID")
                 .mapField("tags").manyToMany(b -> b.joinTable("customer_tags").joinColumn("CUST_ID").inverseJoinColumn("TAG_ID")))
                 .buildDtoTableSpec(CustomerManyToManyDto.class);

@@ -10,6 +10,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.math.MathOperation;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
@@ -104,6 +105,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
+    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
+        return new DefaultSequenceColumnValueGenerator(sequence);
+    }
+
+    @Override
     public String toSql(final Select select) {
         final StringBuilder sql = new StringBuilder("SELECT ");
 
@@ -178,18 +184,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         });
 
         return sql.toString();
-    }
-
-    /**
-     * Generate a SQL fragment to retrieve the next value from a sequence for direct use in an INSERT or UPDATE statement,
-     * e.g. to generate "INSERT INTO LB.ACCOUNT(ACCOUNT_ID, ACCOUNT_NAME) VALUES (NEXT VALUE FOR sequence_name, ?)",
-     * this method returns "NEXT VALUE FOR sequence_name".
-     *
-     * @param sequence the name of the database sequence to generate the next value from
-     * @return a formatted SQL string representing the next sequence value for direct insertion
-     */
-    protected String createSequenceNextValueForDirectInsert(final String sequence) {
-        return "NEXT VALUE FOR %s".formatted(sequence);
     }
 
     /**
@@ -758,11 +752,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             final Object convertedValue = typeConverter.convert(columnValue.value(), column.getDataType());
 
             if (convertedValue == null) {
-                if (!column.isNullable() && !column.isAutoIncrement() && column.getSequence() == null) {
+                if (!column.isNullable() && !column.isAutoIncrement() && column.getGenerator() == null) {
                     throw new IllegalArgumentException("Attempting to insert NULL into non-nullable column: '%s'. Possible cause: column spec missing generator such as autoincrement/sequence".formatted(column.name()));
-                } else if (column.getSequence() != null) {
-                    // Add the next value in the sequence directly to the statement
-                    valueSpecifiers.add(createSequenceNextValueForDirectInsert(column.getSequence()));
+                } else if (column.getGenerator() != null) {
+                    // Use the column value generator to add a value
+                    valueSpecifiers.add(column.getGenerator().generate(column).toString());
                 }
             } else {
                 valueSpecifiers.add("?");

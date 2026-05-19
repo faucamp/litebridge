@@ -5,7 +5,6 @@ import org.litebridgedb.db.h2.H2DatabaseProvider;
 import org.litebridgedb.example.common.PersistenceExample;
 import org.litebridgedb.example.common.QueryExample;
 import org.litebridgedb.example.common.SqlExample;
-import org.litebridgedb.example.common.TypeSafeExample;
 import org.litebridgedb.example.common.mapping.CommonDtoRegistration;
 import org.litebridgedb.orm.Litebridge;
 import org.litebridgedb.orm.tx.DefaultTransactionManager;
@@ -41,7 +40,6 @@ public class H2Example {
         new PersistenceExample(litebridge).run();
         new QueryExample(litebridge).run();
         new SqlExample(litebridge).run();
-        new TypeSafeExample(litebridge).run();
     }
 
     public static void configureDatabase(final String url, final String user, final String password) {

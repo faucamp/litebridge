@@ -53,8 +53,8 @@ class CompositePkTest extends AbstractE2eTest {
         assumeTrue(!dbEnv.getName().equals("SQLite"), "SQLite does not support multiple auto-incrementing columns");
         // Given
         litebridge.register(CompositePkSimple.class, rc -> rc.mapToTable("LB.COMP_PK_SIMPLE")
-                .mapField("pk1").toColumn("PK1").autoIncrement().usingSequence("LB.COMPOSITE_PK1_SEQ")
-                .mapField("pk2").toColumn("PK2").autoIncrement().usingSequence("LB.COMPOSITE_PK2_SEQ")
+                .mapField("pk1").toColumn("PK1").generateUsingSequence("LB.COMPOSITE_PK1_SEQ")
+                .mapField("pk2").toColumn("PK2").generateUsingSequence("LB.COMPOSITE_PK2_SEQ")
                 .mapField("description").toColumn("TEST_DESC"));
 
         final CompositePkSimple dto = new CompositePkSimple(null, null, "test");

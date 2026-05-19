@@ -26,7 +26,7 @@ public final class RegistrationJoinStep extends RegistrationTableContextImpl {
     }
 
     public RegistrationTableContext withMappedTable(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) {
-        final DtoTableSpecBuilder dtoTableSpecBuilder = (DtoTableSpecBuilder) rc.apply(new RegistrationContext());
+        final DtoTableSpecBuilder dtoTableSpecBuilder = (DtoTableSpecBuilder) rc.apply(new RegistrationContext(registrationTableContext.databaseProvider()));
         final DtoTableSpec dtoTableSpec = dtoTableSpecBuilder.buildDtoTableSpec(dtoClass);
         registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, false, null, joinColumn, new TableMapping(dtoClass, dtoTableSpec.tableSpec())));
         return registrationTableContext;

@@ -14,6 +14,7 @@ module litebridge.db.spi {
 
     exports org.litebridgedb.db.spi;
     exports org.litebridgedb.db.spi.convert;
+    exports org.litebridgedb.db.spi.generator;
     exports org.litebridgedb.db.spi.math;
     exports org.litebridgedb.db.spi.query;
     exports org.litebridgedb.db.spi.tx;
