@@ -1,10 +1,10 @@
-package org.litebridge.db.sqlite;
+package org.litebridgedb.db.sqlite;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
-import org.litebridge.db.spi.tx.ManagedConnection;
+import org.litebridgedb.db.spi.ColumnMetaData;
+import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.impl.AbstractDatabaseProvider;
+import org.litebridgedb.db.spi.tx.ManagedConnection;
 import org.mockito.Mockito;
 
 import java.sql.PreparedStatement;

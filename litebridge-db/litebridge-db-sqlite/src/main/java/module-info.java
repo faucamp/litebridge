@@ -12,7 +12,7 @@ module litebridge.db.sqlite {
     requires org.slf4j;
     requires java.sql;
 
-    provides org.litebridge.db.spi.DatabaseProvider with org.litebridge.db.sqlite.SQLiteDatabaseProvider;
+    provides org.litebridgedb.db.spi.DatabaseProvider with org.litebridgedb.db.sqlite.SQLiteDatabaseProvider;
 
-    exports org.litebridge.db.sqlite;
+    exports org.litebridgedb.db.sqlite;
 }

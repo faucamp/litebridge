@@ -1,12 +1,12 @@
-package org.litebridge.db.sqlite;
+package org.litebridgedb.db.sqlite;
 
-import org.litebridge.convert.DefaultTypeConverter;
-import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
-import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.tx.ManagedConnection;
+import org.litebridgedb.convert.DefaultTypeConverter;
+import org.litebridgedb.db.spi.ColumnMetaData;
+import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.impl.AbstractDatabaseProvider;
+import org.litebridgedb.db.spi.tx.ConnectionProvider;
+import org.litebridgedb.db.spi.tx.ManagedConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

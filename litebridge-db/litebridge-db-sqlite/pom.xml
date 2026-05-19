@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.litebridge.db</groupId>
+        <groupId>org.litebridgedb.db</groupId>
         <artifactId>litebridge-db</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.1.3-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -39,11 +39,11 @@
     <dependencies>
         <!-- Project dependencies -->
         <dependency>
-            <groupId>org.litebridge</groupId>
+            <groupId>org.litebridgedb</groupId>
             <artifactId>litebridge-converter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.litebridge.db</groupId>
+            <groupId>org.litebridgedb.db</groupId>
             <artifactId>litebridge-db-spi-impl</artifactId>
         </dependency>
 

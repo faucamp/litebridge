@@ -1,8 +1,8 @@
-package org.litebridge.orm.e2e.setup;
+package org.litebridgedb.orm.e2e.setup;
 
-import org.litebridge.db.sqlite.SQLiteDatabaseProvider;
-import org.litebridge.db.spi.DatabaseProvider;
-import org.litebridge.orm.tx.LitebridgeDriverManagerDataSource;
+import org.litebridgedb.db.sqlite.SQLiteDatabaseProvider;
+import org.litebridgedb.db.spi.DatabaseProvider;
+import org.litebridgedb.orm.tx.LitebridgeDriverManagerDataSource;
 
 import java.sql.Connection;
 
