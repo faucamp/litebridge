@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.jupiter.api.extension.TestTemplateInvocationContext;
 import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
+import org.litebridgedb.commons.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,20 +21,36 @@ public class MultiDbTestExtension implements TestTemplateInvocationContextProvid
 
     @Override
     public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
-        String env = System.getProperty("lb.e2e.env", "all");
+        final String[] envs = StringUtils.splitArray(System.getProperty("lb.e2e.env", "all"), ',', 0, false);
 
-        return switch (env) {
-            case "all" -> Stream.of(
+        if (envs.length == 1 && envs[0].equals("all")) {
+            return Stream.of(
                     invocationContext(new H2DbEnvironment()),
                     invocationContext(new OracleDbEnvironment()),
-                    invocationContext(new SQLiteDbEnvironment())
-            );
-            case "h2" -> Stream.of(invocationContext(new H2DbEnvironment()));
-            case "oracle" -> Stream.of(invocationContext(new OracleDbEnvironment()));
-            case "sqlite" -> Stream.of(invocationContext(new SQLiteDbEnvironment()));
-            case "none" -> Stream.empty();
-            default -> throw new IllegalArgumentException("Invalid lb.e2e.env value: " + env);
-        };
+                    invocationContext(new SQLiteDbEnvironment()));
+        }
+
+        final TestTemplateInvocationContext[] tests = new TestTemplateInvocationContext[envs.length];
+
+        for (int i = 0; i < envs.length; i++) {
+            final String env = envs[i];
+
+            switch (env) {
+                case "h2":
+                    tests[i] = invocationContext(new H2DbEnvironment());
+                    break;
+                case "oracle":
+                    tests[i] = invocationContext(new OracleDbEnvironment());
+                    break;
+                case "sqlite":
+                    tests[i] = invocationContext(new SQLiteDbEnvironment());
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid lb.e2e.env value: " + env);
+            }
+        }
+
+        return Stream.of(tests);
     }
 
     @Override
@@ -53,12 +70,19 @@ public class MultiDbTestExtension implements TestTemplateInvocationContextProvid
                 return Collections.singletonList(new ParameterResolver() {
                     @Override
                     public boolean supportsParameter(ParameterContext pc, ExtensionContext ec) {
-                        return pc.getParameter().getType().equals(DbEnvironment.class);
+                        return pc.getParameter().getType().equals(DbEnvironment.class)
+                                || pc.getParameter().getType().equals(DbEnvDtoTableMapper.class);
                     }
 
                     @Override
                     public Object resolveParameter(ParameterContext pc, ExtensionContext ec) {
-                        return env;
+                        if (pc.getParameter().getType().equals(DbEnvironment.class)) {
+                            return env;
+                        } else if (pc.getParameter().getType().equals(DbEnvDtoTableMapper.class)) {
+                            return env.getDtoTableMapper();
+                        } else {
+                            throw new IllegalArgumentException("Invalid parameter type: " + pc.getParameter().getType());
+                        }
                     }
                 });
             }

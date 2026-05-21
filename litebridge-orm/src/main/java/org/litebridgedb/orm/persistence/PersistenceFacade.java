@@ -226,7 +226,7 @@ public class PersistenceFacade {
             final boolean basicType;
 
             if (changedField == null) {
-                if (isInsert && (columnMetaData.isAutoIncrement() || columnMetaData.getGenerator() != null)) {
+                if (isInsert && columnMetaData.getGenerator() != null) {
                     basicType = true;
                     value = null;
                 } else {

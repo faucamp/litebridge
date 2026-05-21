@@ -1,7 +1,7 @@
 package org.litebridgedb.orm.e2e.setup;
 
-import org.litebridgedb.db.sqlite.SQLiteDatabaseProvider;
 import org.litebridgedb.db.spi.DatabaseProvider;
+import org.litebridgedb.db.sqlite.SQLiteDatabaseProvider;
 import org.litebridgedb.orm.tx.LitebridgeDriverManagerDataSource;
 
 import java.sql.Connection;
@@ -69,5 +69,10 @@ public class SQLiteDbEnvironment implements DbEnvironment {
     @Override
     public DatabaseProvider getDatabaseProvider() {
         return new SQLiteDatabaseProvider();
+    }
+
+    @Override
+    public DbEnvDtoTableMapper getDtoTableMapper() {
+        return new SQLiteDbEnvDtoTableMapper();
     }
 }

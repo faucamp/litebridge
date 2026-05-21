@@ -3,13 +3,12 @@ package org.litebridgedb.orm.e2e.manytomany;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
-import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.manytomany.dto.Group;
 import org.litebridgedb.orm.e2e.manytomany.dto.GroupedPerson;
+import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,8 +22,9 @@ class ManyToManyE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select DTO and join fetch related DTOs")
-    void nestedDtos_fetchRelatedDtos() throws Exception {
-        registerDtoTableMappings();
+    void nestedDtos_fetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        tableMapper.registerGroupedPersonDtoTableMapping(litebridge);
+        tableMapper.registerGroupDtoTableMapping(litebridge);
 
         final GroupedPerson person1 = new GroupedPerson();
         person1.setName("Alice");
@@ -139,8 +139,9 @@ class ManyToManyE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select DTO without related DTOs")
-    void nestedDtos_dontfetchRelatedDtos() throws Exception {
-        registerDtoTableMappings();
+    void nestedDtos_dontfetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        tableMapper.registerGroupedPersonDtoTableMapping(litebridge);
+        tableMapper.registerGroupDtoTableMapping(litebridge);
 
         final GroupedPerson person1 = new GroupedPerson();
         person1.setName("Alice");
@@ -236,23 +237,5 @@ class ManyToManyE2eTest extends AbstractE2eTest {
         assertTrue(resultGroup1Updated.getMembers().stream().anyMatch(p -> person1.getId().equals(p.getId())));
         assertTrue(resultGroup1Updated.getMembers().stream().anyMatch(p -> person2.getId().equals(p.getId())));
         assertTrue(resultGroup1Updated.getMembers().stream().anyMatch(p -> person3.getId().equals(p.getId())));
-    }
-
-    private void registerDtoTableMappings() throws SQLException {
-        litebridge.register(GroupedPerson.class, rc -> rc
-                .allowInterface(Person.class)
-                .mapToTable("LB.PERSON")
-                .mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ")
-                .mapField("name").toColumn("FIRST_NAME")
-                .mapField("groups").manyToMany(c -> c.joinTable("LB.PERSON_GROUP")
-                        .joinColumn("PERSON_ID")
-                        .inverseJoinColumn("GROUP_NAME")));
-
-        litebridge.register(Group.class, rc -> rc.mapToTable("LB.GROUP")
-                .mapField("name").toColumn("GROUP_NAME")
-                .mapField("description").toColumn("GROUP_DESC")
-                .mapField("members").manyToMany(c -> c.joinTable("LB.PERSON_GROUP")
-                        .joinColumn("GROUP_NAME")
-                        .inverseJoinColumn("PERSON_ID")));
     }
 }

@@ -4,8 +4,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
-import org.litebridgedb.orm.e2e.basic.BasicE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
+import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,10 +79,10 @@ class SqlE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select records using SQL and map results to Person objects")
-    void selectMapToDto() throws Exception {
+    void selectMapToDto(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         insertTestPersonRecords();
-        BasicE2eTest.registerPersonDtoTableMapping(litebridge);
+        tableMapper.registerPersonDtoTableMapping(litebridge);
 
         // When
         LOGGER.info("Selecting specific columns and filtering records using a query");

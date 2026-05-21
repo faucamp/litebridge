@@ -7,6 +7,8 @@ import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Account;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.basic.dto.PersonAccount;
+import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
+import org.litebridgedb.orm.e2e.setup.DbEnvironment;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
 import org.litebridgedb.orm.persistence.EntityDtoMapper;
 import org.litebridgedb.orm.tx.Transaction;
@@ -31,9 +33,9 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select DTO and join fetch related DTOs")
-    void nestedDtos_fetchRelatedDtos() throws Exception {
+    void nestedDtos_fetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        registerPersonAndAccountDtoTableMappings(litebridge);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Setup DTOs
         final Person person = new Person();
@@ -66,9 +68,9 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select DTO without related DTOs")
-    void nestedDtos_dontfetchRelatedDtos() throws Exception {
+    void nestedDtos_dontfetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        registerPersonAndAccountDtoTableMappings(litebridge);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         final Person person = new Person();
         person.setName("Alice");
@@ -95,9 +97,9 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Nested DTOs mapped to separate tables, cascading save, no transactions (autocommit)")
-    void nestedDtos_oneTablePerDto_cascadeSave_autoCommit() throws Exception {
+    void nestedDtos_oneTablePerDto_cascadeSave_autoCommit(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        registerPersonAndAccountDtoTableMappings(litebridge);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Create DTOs and enable change tracking
         final Person person = litebridge.track(new Person());
@@ -154,9 +156,9 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Nested DTOs mapped to separate tables, cascading save in transaction")
-    void nestedDtos_oneTablePerDto_cascadeSave_transaction() throws Exception {
+    void nestedDtos_oneTablePerDto_cascadeSave_transaction(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        registerPersonAndAccountDtoTableMappings(litebridge);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Create DTOs and enable change tracking
         final Person person = litebridge.track(new Person());
@@ -213,7 +215,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Single DTO mapped to multiple tables")
-    void singleDto_multipleTables() throws Exception {
+    void singleDto_multipleTables(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Create our "original"/unmapped DTO (unmapped since Litebridge expects one table per DTO)
         final PersonAccount personAccount = new PersonAccount();
         personAccount.setId(123L);
@@ -226,7 +228,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Register DTO-table mappings (a client using the above "PersonMapping" DTO would need
         // to create these "entities", as the query API would not make sense for multi-table DTOs)
-        registerPersonAndAccountDtoTableMappings(litebridge);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Create entity-DTO mapper
         final EntityDtoMapper<PersonAccount> entityDtoMapper = litebridge.entityDtoMapper(PersonAccount.class,
@@ -259,9 +261,9 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Delete DTOs, no transactions (autocommit)")
-    void delete_autoCommit() throws Exception {
+    void delete_autoCommit(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        registerPersonAndAccountDtoTableMappings(litebridge);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Create DTOs and enable change tracking
         final Person person1 = new Person();
@@ -308,9 +310,9 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Update DTOs, no transactions (autocommit)")
-    void update() throws Exception {
+    void update(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
-        registerPersonAndAccountDtoTableMappings(litebridge);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         final Person person1 = new Person();
         person1.setName("Alice");
@@ -361,31 +363,5 @@ public class BasicE2eTest extends AbstractE2eTest {
                         .where("EYE_COLOUR").eq("blue"));
 
         assertEquals(1, litebridge.select(Person.class).stream().filter(p -> p.getEyeColour().equals("unknown")).count());
-    }
-
-    /**
-     * Registers DTO-table mappings for Person and Account
-     */
-    public static void registerPersonAndAccountDtoTableMappings(final Litebridge litebridge) throws SQLException {
-        registerPersonDtoTableMapping(litebridge);
-        registerAccountDtoTableMapping(litebridge);
-    }
-
-    public static void registerPersonDtoTableMapping(final Litebridge litebridge) throws SQLException {
-        litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
-                .mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ")
-                .mapField("name").toColumn("FIRST_NAME")
-                .mapField("surname").toColumn("SURNAME")
-                .mapField("age").toColumn("AGE")
-                .mapProperty("eyeColour").toColumn("EYE_COLOUR")
-                .mapField("accounts").oneToMany(c -> c.mappedByField("owner")));
-    }
-
-    private static void registerAccountDtoTableMapping(final Litebridge litebridge) throws SQLException {
-        litebridge.register(Account.class, rc -> rc.mapToTable("LB.ACCOUNT")
-                .mapField("id").toColumn("ACCOUNT_ID").generateUsingSequence("LB.ACCOUNT_SEQ")
-                .mapField("name").toColumn("ACCOUNT_NAME")
-                .mapField("balance").toColumn("BALANCE")
-                .mapField("owner").toColumn("PERSON_ID").joinUsing());
     }
 }
