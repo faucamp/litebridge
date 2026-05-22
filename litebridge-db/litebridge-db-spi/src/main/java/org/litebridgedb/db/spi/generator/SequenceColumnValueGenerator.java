@@ -2,10 +2,24 @@ package org.litebridgedb.db.spi.generator;
 
 import org.litebridgedb.db.spi.ColumnMetaData;
 
+/**
+ * Abstract base class for generating SQL fragments to retrieve the next value from a database sequence
+ * to be used in SQL statements such as INSERT or UPDATE.
+ * <p>
+ * Subclasses must implement the {@link #generate(ColumnMetaData)} method to provide database-specific
+ * SQL syntax for fetching the next sequence value.
+ */
 public abstract class SequenceColumnValueGenerator implements ColumnValueGenerator {
 
     protected final String sequence;
 
+    /**
+     * Constructs a new instance of {@code SequenceColumnValueGenerator}.
+     *
+     * @param sequence the name of the database sequence from which values will be generated.
+     *                 This sequence name is used to create the SQL fragment for retrieving
+     *                 the next value in the sequence.
+     */
     public SequenceColumnValueGenerator(final String sequence) {
         this.sequence = sequence;
     }
