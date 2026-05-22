@@ -341,6 +341,14 @@ A collection of database provider modules. You only need to include the specific
 
   Oracle database provider.
 
+* **`litebridge-db-sqlite`**:
+
+  ![Coverage](.github/badges/litebridge-db/litebridge-db-sqlite/jacoco.svg)
+  ![Branches](.github/badges/litebridge-db/litebridge-db-sqlite/branches.svg)
+
+  SQLite database provider.
+
+
 * **`litebridge-db-spi`**:
 
   ![Coverage](.github/badges/litebridge-db/litebridge-db-spi/jacoco.svg)
