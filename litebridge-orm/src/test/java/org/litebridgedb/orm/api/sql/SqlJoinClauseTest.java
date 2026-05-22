@@ -1,0 +1,121 @@
+package org.litebridgedb.orm.api.sql;
+
+import org.junit.jupiter.api.Test;
+import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.query.Operator;
+import org.litebridgedb.orm.api.select.impl.AbstractSelector;
+import org.litebridgedb.orm.api.select.model.ConditionSpec;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+
+class SqlJoinClauseTest {
+
+    @Test
+    void constructorCreatesClause() {
+        // Given
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("joined_table", null));
+        final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
+
+        // When
+        final SqlJoinClause result = new SqlJoinClause(joinSpec, castDelegate(delegate));
+
+        // Then
+        assertNotNull(result);
+        assertTrue(joinSpec.conditions().isEmpty());
+    }
+
+    @Test
+    void onAddsConditionForJoinTableColumnAndReturnsConditionClause() {
+        // Given
+        final Table joinTable = new Table("joined_table", null);
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable);
+        final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
+        final SqlJoinClause clause = new SqlJoinClause(joinSpec, castDelegate(delegate));
+
+        // When
+        final SqlJoinConditionClause result = clause.on("joined_id");
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, joinSpec.conditions().size());
+
+        final ConditionSpec condition = joinSpec.conditions().getFirst();
+        assertEquals(joinTable, condition.getColumn().table());
+        assertEquals("joined_id", condition.getColumn().name());
+        assertNull(condition.getOperator());
+        assertNull(condition.getValue());
+    }
+
+    @Test
+    void onConditionWithNonNullValueSetsOperatorAndValue() {
+        // Given
+        final Table joinTable = new Table("joined_table", null);
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable);
+        final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
+        final SqlJoinClause clause = new SqlJoinClause(joinSpec, castDelegate(delegate));
+
+        // When
+        final SqlJoinConditionClauseTerminal terminal = clause.on("joined_id").eq("root_id");
+
+        // Then
+        assertNotNull(terminal);
+        assertEquals(1, joinSpec.conditions().size());
+
+        final ConditionSpec condition = joinSpec.conditions().getFirst();
+        assertEquals(joinTable, condition.getColumn().table());
+        assertEquals("joined_id", condition.getColumn().name());
+        assertEquals(Operator.EQ, condition.getOperator());
+        assertEquals("root_id", condition.getValue());
+    }
+
+    @Test
+    void onConditionWithNullEqValueTranslatesOperatorToIsNull() {
+        // Given
+        final Table joinTable = new Table("joined_table", null);
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable);
+        final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
+        final SqlJoinClause clause = new SqlJoinClause(joinSpec, castDelegate(delegate));
+
+        // When
+        final SqlJoinConditionClauseTerminal terminal = clause.on("optional_id").eq(null);
+
+        // Then
+        assertNotNull(terminal);
+        assertEquals(1, joinSpec.conditions().size());
+
+        final ConditionSpec condition = joinSpec.conditions().getFirst();
+        assertEquals(joinTable, condition.getColumn().table());
+        assertEquals("optional_id", condition.getColumn().name());
+        assertEquals(Operator.IS_NULL, condition.getOperator());
+        assertNull(condition.getValue());
+    }
+
+    @Test
+    void usingAddsUsingConditionAndReturnsTerminalClause() {
+        // Given
+        final Table joinTable = new Table("joined_table", null);
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable);
+        final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
+        final SqlJoinClause clause = new SqlJoinClause(joinSpec, castDelegate(delegate));
+
+        // When
+        final SqlJoinConditionClauseTerminal result = clause.using("shared_id");
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, joinSpec.conditions().size());
+
+        final ConditionSpec condition = joinSpec.conditions().getFirst();
+        assertEquals(joinTable, condition.getColumn().table());
+        assertEquals("shared_id", condition.getColumn().name());
+        assertEquals(Operator.USING, condition.getOperator());
+        assertNull(condition.getValue());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static AbstractSelector<org.litebridgedb.db.spi.Row, SqlSelectSpec> castDelegate(
+            final AbstractSelector<?, ?> delegate) {
+        return (AbstractSelector<org.litebridgedb.db.spi.Row, SqlSelectSpec>) delegate;
+    }
+}

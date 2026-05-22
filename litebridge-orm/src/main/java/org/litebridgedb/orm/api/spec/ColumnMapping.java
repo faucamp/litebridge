@@ -1,12 +1,22 @@
 package org.litebridgedb.orm.api.spec;
 
+/**
+ * Represents a base type for various kinds of database column mappings.
+ * <p>
+ * The {@code ColumnMapping} interface serves as a common contract for modelling different
+ * types of mappings between fields in a data transfer object (DTO) and database columns.
+ * It is a sealed interface, allowing only specific permitted implementations to be used.
+ * <p>
+ * Permitted implementations:
+ * - {@link ColumnSpec}: Represents a direct mapping between a DTO field and a single
+ * database column, with optional configuration for auto-increment and value generation.
+ * - {@link OneToMany}: Represents a one-to-many relationship, where a DTO field maps to
+ * a collection of related database rows.
+ * - {@link ManyToMany}: Represents a many-to-many relationship, where a DTO field maps to
+ * related entities through an intermediate join table.
+ * <p>
+ * This interface is part of the ORM framework, enabling flexible and type-safe mappings
+ * between DTO structures and underlying database schemas.
+ */
 public sealed interface ColumnMapping permits ColumnSpec, OneToMany, ManyToMany {
-
-    static OneToMany oneToMany(final FieldSpec mappedByField) {
-        return new OneToMany(mappedByField);
-    }
-
-    static ManyToMany manyToMany(final String joinTable, final String joinColumn, final String inverseJoinColumn) {
-        return new ManyToMany(joinTable, joinColumn, inverseJoinColumn);
-    }
 }

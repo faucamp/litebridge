@@ -17,8 +17,7 @@ public class ConditionSpec {
 
     private Column column;
     private Operator operator;
-    @Nullable
-    private Object value;
+    private @Nullable Object value;
 
     public Column getColumn() {
         return column;
