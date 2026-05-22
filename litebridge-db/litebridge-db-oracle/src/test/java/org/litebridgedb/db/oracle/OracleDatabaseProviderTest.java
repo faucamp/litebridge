@@ -5,6 +5,7 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -269,6 +271,18 @@ class OracleDatabaseProviderTest {
 
         // Then
         assertEquals("TEST_COLUMN", result);
+    }
+
+    @Test
+    void getSequenceColumnValueGenerator() {
+        // Given
+        final OracleDatabaseProvider oracleDatabaseProvider = new OracleDatabaseProvider();
+
+        // When
+        final SequenceColumnValueGenerator result = oracleDatabaseProvider.getSequenceColumnValueGenerator("test_sequence");
+
+        // Then
+        assertInstanceOf(OracleSequenceColumnValueGenerator.class, result);
     }
 
     @Test

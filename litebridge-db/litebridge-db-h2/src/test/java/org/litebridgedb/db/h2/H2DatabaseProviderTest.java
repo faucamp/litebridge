@@ -2,13 +2,16 @@ package org.litebridgedb.db.h2;
 
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.AbstractDatabaseProvider;
+import org.litebridgedb.db.spi.impl.DefaultSequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.tx.ManagedConnection;
 import org.mockito.Mockito;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -58,6 +61,18 @@ class H2DatabaseProviderTest {
         assertNotNull(result);
         verify(mockConnection, times(1))
                 .prepareStatement(mockPreparedSql.sql());
+    }
+
+    @Test
+    void getSequenceColumnValueGenerator() {
+        // Given
+        final H2DatabaseProvider databaseProvider = new H2DatabaseProvider();
+
+        // When
+        final SequenceColumnValueGenerator result = databaseProvider.getSequenceColumnValueGenerator("test_sequence");
+
+        // Then
+        assertInstanceOf(DefaultSequenceColumnValueGenerator.class, result);
     }
 
     @Test
