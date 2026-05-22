@@ -1,5 +1,16 @@
 package org.litebridgedb.orm.api.spec;
 
+/**
+ * Defines a mapping of a field or a property in a class to its corresponding representation.
+ * <p>
+ * This sealed interface serves as a contract for different types of field or property mappings
+ * in the API. It can represent either a specific field or property mapping, or signify the absence
+ * of any mapping.
+ * <p>
+ * The implementations of this interface are:
+ * - {@link FieldSpec}: Represents a specification for mapping a particular field or property.
+ * - {@link NoFieldMapping}: Represents a state where no field mapping is defined.
+ */
 public sealed interface FieldMapping permits FieldSpec, NoFieldMapping {
 
     /**

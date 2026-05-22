@@ -4,6 +4,17 @@ import org.litebridgedb.db.spi.tx.Isolation;
 import org.litebridgedb.db.spi.tx.TransactionException;
 import org.litebridgedb.db.spi.tx.TransactionManager;
 
+/**
+ * Represents a transactional context that provides methods for configuring
+ * and managing transactions. This class extends the functionality
+ * of {@link TransactionContextTerminal}, enabling specific transaction options
+ * such as setting the transaction as read-only, defining isolation levels,
+ * and managing the lifecycle of transactions through commit and rollback.
+ * <p>
+ * Instances of this class allow for transaction customisation and chaining of
+ * configuration clauses, facilitating flexible transactional behaviour
+ * for various use cases.
+ */
 public final class TransactionContext extends TransactionContextTerminal {
 
     public TransactionContext(TransactionManager transactionManager) {

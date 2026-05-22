@@ -5,6 +5,13 @@ import org.litebridgedb.db.spi.tx.TransactionException;
 import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.orm.tx.Transaction;
 
+/**
+ * Represents the terminal stage of a transactional context, providing core methods for configuring
+ * and managing transactions. This class defines basic transactional operations such as setting the
+ * transaction as read-only, specifying isolation levels, and handling the lifecycle of transactions.
+ * <p>
+ * This is a sealed class, permitting only specific subclasses to extend it.
+ */
 public sealed class TransactionContextTerminal permits TransactionContext {
 
     protected final TransactionManager transactionManager;

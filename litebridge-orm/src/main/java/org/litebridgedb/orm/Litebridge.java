@@ -82,22 +82,42 @@ public class Litebridge {
     private @Nullable List<FieldAccessor> pendingManyToOneDependencies;
 
     /**
-     * Constructs a Litebridge instance with the specified database provider.
+     * Constructs a Litebridge instance with the specified database provider and data source.
+     * <p>
+     * It uses the default method handle lookup, and Litebridge's {@link DefaultTransactionManager} to manage transactions.
      *
      * @param databaseProvider the database provider to be used by Litebridge.
      *                         This parameter is required to set up database operations
      *                         and facilitate persistence functionalities. Must not be null.
+     * @param dataSource       the data source to be used by Litebridge.
+     *                         This parameter is required to provide database connectivity
+     *                         and facilitate persistence operations. Must not be null.
      */
     public Litebridge(final DatabaseProvider databaseProvider,
                       final DataSource dataSource) {
         this(databaseProvider, new DefaultTransactionManager(dataSource), MethodHandles.lookup());
     }
 
+    /**
+     * Constructs a Litebridge instance with the specified database provider,
+     * transaction manager, and default method handle lookup.
+     *
+     * @param databaseProvider   the provider responsible for managing database connections
+     * @param transactionManager the manager responsible for handling database transactions
+     */
     public Litebridge(final DatabaseProvider databaseProvider,
                       final TransactionManager transactionManager) {
         this(databaseProvider, transactionManager, MethodHandles.lookup());
     }
 
+    /**
+     * Constructs an instance of Litebridge, responsible for managing database operations,
+     * transaction contexts, change tracking, and persistence functionality.
+     *
+     * @param databaseProvider   the provider responsible for supplying database connections and operations
+     * @param transactionManager the manager that handles transaction lifecycles and operations
+     * @param lookup             the MethodHandles.Lookup instance used for method and field lookups during change tracking
+     */
     public Litebridge(final DatabaseProvider databaseProvider,
                       final TransactionManager transactionManager,
                       final MethodHandles.Lookup lookup) {
@@ -293,6 +313,13 @@ public class Litebridge {
         }
     }
 
+    /**
+     * Updates the data in the database for the given DTO class by applying the specified update query.
+     *
+     * @param <DTO>    The type of the Data Transfer Object (DTO) to be updated.
+     * @param dtoClass The class of the DTO that determines the table to be updated.
+     * @param update   A function that builds the update query using the provided {@link DtoUpdateStart}.
+     */
     public <DTO> void update(final Class<DTO> dtoClass, final Function<DtoUpdateStart<DTO>, UpdateQuery> update) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
         final DtoUpdater<DTO> dtoUpdater = new DtoUpdater<>(dtoClass, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider);
@@ -300,6 +327,13 @@ public class Litebridge {
         updateTerminal.execute();
     }
 
+    /**
+     * Executes an update operation on the specified table using the provided query function.
+     *
+     * @param tableName the name of the table to update
+     * @param query     a function that defines the update query, transforming a {@code SqlUpdateStart}
+     *                  instance into an {@code UpdateQuery}
+     */
     public void update(final String tableName, final Function<SqlUpdateStart, UpdateQuery> query) {
         final Table table = tableRegistry.getOrCreateSpiTable(tableName);
         final SqlUpdater sqlUpdater = new SqlUpdater(table, databaseProvider);
@@ -377,6 +411,12 @@ public class Litebridge {
         return new SqlSelector(databaseProvider, tableRegistry).select(ALL_COLUMNS);
     }
 
+    /**
+     * Deletes the specified data transfer object (DTO) using the underlying persistence layer.
+     *
+     * @param dto the data transfer object to be deleted; must not be null
+     * @throws IllegalStateException if the deletion process fails due to a database error
+     */
     public void delete(final Object dto) {
         try {
             persistenceFacade.delete(dto);
@@ -385,6 +425,13 @@ public class Litebridge {
         }
     }
 
+    /**
+     * Deletes records from the database for the given DTO class based on the specified query.
+     *
+     * @param <DTO>    The type of the Data Transfer Object (DTO) representing the table.
+     * @param dtoClass The class of the DTO to identify the table for deletion.
+     * @param query    A function that builds the delete query using a {@link DtoDeleteWhereClause}.
+     */
     public <DTO> void delete(final Class<DTO> dtoClass, final Function<DtoDeleteWhereClause<DTO>, DeleteQuery> query) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
         final DtoDeletor<DTO> dtoDtoDeletor = new DtoDeletor<>(dtoClass, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider);
@@ -392,16 +439,34 @@ public class Litebridge {
         deleteTerminal.execute();
     }
 
+    /**
+     * Deletes the specified DTO type (all records) by providing its class as a parameter.
+     *
+     * @param <DTO>    The type of the Data Transfer Object to be deleted.
+     * @param dtoClass The class type of the DTO that is to be deleted.
+     */
     public <DTO> void delete(final Class<DTO> dtoClass) {
         delete(dtoClass, dtoDeletor -> dtoDeletor);
     }
 
+    /**
+     * Deletes records from the specified table in the database based on the provided delete query.
+     *
+     * @param tableName the name of the table from which records will be deleted
+     * @param query     a function that takes an instance of {@code SqlDeleteWhereClause} and returns a {@code DeleteQuery},
+     *                  specifying the conditions for deleting the records
+     */
     public void delete(final String tableName, final Function<SqlDeleteWhereClause, DeleteQuery> query) {
         final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName, null), databaseProvider);
         final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(sqlDeletor);
         deleteTerminal.execute();
     }
 
+    /**
+     * Deletes all entries from the specified table.
+     *
+     * @param tableName the name of the table from which to delete entries
+     */
     public void delete(final String tableName) {
         delete(tableName, sqlDeletor -> sqlDeletor);
     }
@@ -436,10 +501,26 @@ public class Litebridge {
         return dtos.getFirst();
     }
 
+    /**
+     * Creates an instance of EntityDtoMapper for the specified DTO class and entity-to-DTO mappings.
+     * <p>
+     * This allows raw row results to be mapped to DTO instances.
+     *
+     * @param dtoClass          the class of the DTO that the mapper will handle
+     * @param dtoEntityMappings the list of mappings between DTO fields and corresponding entity fields
+     * @return an instance of EntityDtoMapper configured for the specified DTO class and mappings
+     */
     public <DTO> EntityDtoMapper<DTO> entityDtoMapper(final Class<DTO> dtoClass, final List<DtoEntityMapping> dtoEntityMappings) {
         return new EntityDtoMapper<>(dtoClass, dtoEntityMappings, changeTracker.classFieldAccessorCache());
     }
 
+    /**
+     * Provides access to the current transaction context.
+     * <p>
+     * Use this method to start a transaction.
+     *
+     * @return the current TransactionContext instance associated with this object
+     */
     public TransactionContext transaction() {
         return transactionContext;
     }

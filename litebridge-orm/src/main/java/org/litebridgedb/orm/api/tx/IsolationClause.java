@@ -4,6 +4,14 @@ import org.litebridgedb.db.spi.tx.Isolation;
 import org.litebridgedb.db.spi.tx.TransactionException;
 import org.litebridgedb.orm.tx.Transaction;
 
+/**
+ * Represents an isolation clause in the context of transactional operations.
+ * Provides methods to configure transaction properties such as isolation level
+ * and read-only status, as well as to initialize and execute transactional logic.
+ * <p>
+ * This class is immutable and serves as a builder-like abstraction for chaining
+ * transactional configurations and operations.
+ */
 public final class IsolationClause {
 
     private final TransactionContextTerminal transactionContextTerminal;

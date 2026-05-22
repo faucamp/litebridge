@@ -4,6 +4,17 @@ import org.litebridgedb.db.spi.tx.Isolation;
 import org.litebridgedb.db.spi.tx.TransactionException;
 import org.litebridgedb.orm.tx.Transaction;
 
+/**
+ * A class representing a read-only clause in a transaction context.
+ * <p>
+ * Instances of this class are used to enforce read-only transactional behavior
+ * and configure transactional settings like isolation levels. The read-only
+ * nature ensures that no changes can be made to the database within the
+ * transactional scope.
+ * <p>
+ * This class delegates transactional operations to an underlying
+ * {@link TransactionContextTerminal} instance.
+ */
 public final class ReadOnlyClause {
 
     private final TransactionContextTerminal transactionContextTerminal;
