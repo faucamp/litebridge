@@ -1,5 +1,6 @@
 package org.litebridgedb.tracking;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.commons.ClassUtils;
 
@@ -10,7 +11,9 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -208,19 +211,35 @@ class DirectFieldAccessorTest {
         // Then
         assertTrue(ex.getMessage().contains("Failed to unreflect VarHandle for field: 'myVar'"));
         assertTrue(ex.getMessage().contains(TestDto.class.getName()));
-        assertTrue(ex.getCause() instanceof IllegalAccessException);
+        assertInstanceOf(IllegalAccessException.class, ex.getCause());
     }
 
-    private class TestDto {
-        private String myVar;
-        private String otherVar;
+    @Test
+    void test_toString() {
+        // Given
+        final DirectFieldAccessor directFieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup());
+
+        // When
+        final String result = directFieldAccessor.toString();
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result.contains("DirectFieldAccessor"));
+        assertTrue(result.contains("field"));
+        assertTrue(result.contains("type"));
+        assertTrue(result.contains("dtoClass"));
     }
 
-    private class TestDto2 {
-        private List<Long> list;
+    private static class TestDto {
+        private @Nullable String myVar;
+        private @Nullable String otherVar;
     }
 
-    private class TestDto3 {
-        private Map<String, Long> map;
+    private static class TestDto2 {
+        private @Nullable List<Long> list;
+    }
+
+    private static class TestDto3 {
+        private @Nullable Map<String, Long> map;
     }
 }

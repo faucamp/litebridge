@@ -10,6 +10,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -206,6 +207,22 @@ class PropertyAccessorTest {
         assertTrue(ex.getMessage().contains("Failed to unreflect getter and setter for field: 'myVar'"));
         assertTrue(ex.getMessage().contains(TestDto.class.getName()));
         assertTrue(ex.getCause() instanceof IllegalAccessException);
+    }
+
+    @Test
+    void test_toString() {
+        // Given
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
+
+        // When
+        final String result = propertyAccessor.toString();
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result.contains("PropertyAccessor"));
+        assertTrue(result.contains(TestDto.class.getName()));
+        assertTrue(result.contains("myVar"));
     }
 
     private class TestDto {

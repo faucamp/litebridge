@@ -20,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class ChangeTrackerTest {
 
@@ -58,6 +60,35 @@ public class ChangeTrackerTest {
                 .ifPresentOrElse(
                         changedField -> assertEquals(42, changedField.value()),
                         Assertions::fail);
+    }
+
+    @Test
+    public void trackDto_allFields() {
+        // Given
+        final TestDto dto = new TestDto();
+
+        // When
+        final TestDto result = changeTracker.trackDto(dto);
+        dto.setField1("TestValue");
+        dto.setField2(42);
+
+        // Then
+        assertSame(dto, result);
+
+        final ChangedFields changedFields = changeTracker.getTrackedDto(dto).changedFields();
+        assertEquals(2, changedFields.size());
+        assertEquals("TestValue", changedFields.get("field1").orElseThrow().value());
+        assertEquals(42, changedFields.get("field2").orElseThrow().value());
+    }
+
+    @Test
+    @SuppressWarnings("ConstantConditions")
+    public void trackDto_allFields_null() {
+        // Given
+        final Object dto = null;
+
+        // When/Then
+        assertThrows(NullPointerException.class, () -> changeTracker.trackDto(dto));
     }
 
     @Test
@@ -182,6 +213,31 @@ public class ChangeTrackerTest {
 
         // When/Then
         assertThrows(NullPointerException.class, () -> changeTracker.trackDtoFields(dto, trackedFields));
+    }
+
+    @Test
+    public void trackDtoFields_snapshotEmpty() {
+        // Given
+        final TestDto dto = new TestDto();
+        final Field field1 = TestDto.getDeclaredField("field1");
+        final Field field2 = TestDto.getDeclaredField("field2");
+        final Set<FieldAccessor> trackedFields = Set.of(
+                new DirectFieldAccessor(field1, MethodHandles.lookup()),
+                new DirectFieldAccessor(field2, MethodHandles.lookup()));
+
+        dto.setField1("InitialValue");
+        dto.setField2(42);
+
+        // When
+        final TestDto result = changeTracker.trackDtoFields(dto, trackedFields, true);
+
+        // Then
+        assertSame(dto, result);
+
+        final ChangedFields changedFields = changeTracker.getTrackedDto(dto).changedFields();
+        assertEquals(2, changedFields.size());
+        assertEquals("InitialValue", changedFields.get("field1").orElseThrow().value());
+        assertEquals(42, changedFields.get("field2").orElseThrow().value());
     }
 
     /**
@@ -339,6 +395,98 @@ public class ChangeTrackerTest {
         assertTrue(changedMapField.mapSnapshot().containsKey("Key1"));
     }
 
+    @Test
+    public void getTrackedDto_notTracked() {
+        // Given
+        final TestDto dto = new TestDto();
+
+        // When
+        final NullPointerException result = assertThrows(NullPointerException.class, () -> changeTracker.getTrackedDto(dto));
+
+        // Then
+        assertEquals("DTO is not tracked: " + dto, result.getMessage());
+    }
+
+    @Test
+    public void getTrackedDtoOrNull_notTracked() {
+        // Given
+        final TestDto dto = new TestDto();
+
+        // When
+        final TrackedDto<TestDto> result = changeTracker.getTrackedDtoOrNull(dto);
+
+        // Then
+        assertNull(result);
+    }
+
+    @Test
+    public void getTrackedDtos_filtersByExactDtoClass() {
+        // Given
+        final TestDto testDto1 = changeTracker.trackDto(new TestDto());
+        final TestDto testDto2 = changeTracker.trackDto(new TestDto());
+        changeTracker.trackDto(new ContainerDto());
+
+        // When
+        final Set<TrackedDto<TestDto>> result = changeTracker.getTrackedDtos(TestDto.class);
+
+        // Then
+        assertEquals(2, result.size());
+        assertTrue(result.stream().map(TrackedDto::dto).anyMatch(testDto1::equals));
+        assertTrue(result.stream().map(TrackedDto::dto).anyMatch(testDto2::equals));
+    }
+
+    @Test
+    public void getTrackedDtos_emptyWhenNoDtoOfClassTracked() {
+        // Given
+        changeTracker.trackDto(new TestDto());
+
+        // When
+        final Set<TrackedDto<ContainerDto>> result = changeTracker.getTrackedDtos(ContainerDto.class);
+
+        // Then
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void classFieldAccessorCache_returnsConfiguredCache() {
+        // When
+        final ClassFieldAccessorCache result = changeTracker.classFieldAccessorCache();
+
+        // Then
+        assertNotNull(result);
+        assertSame(result, changeTracker.classFieldAccessorCache());
+    }
+
+    @Test
+    public void getTrackedDtoOrNull_usesIdentityNotEquals() {
+        // Given
+        final EqualDto trackedDto = new EqualDto(1);
+        final EqualDto equalButDifferentDto = new EqualDto(1);
+        changeTracker.trackDto(trackedDto);
+
+        // When/Then
+        assertNotNull(changeTracker.getTrackedDtoOrNull(trackedDto));
+        assertNull(changeTracker.getTrackedDtoOrNull(equalButDifferentDto));
+    }
+
+    @Test
+    public void trackDto_alreadyTrackedDoesNotReplaceOriginalTrackedFields() {
+        // Given
+        final TestDto dto = new TestDto();
+        changeTracker.trackDto(dto, Set.of("field1"));
+
+        // When
+        changeTracker.trackDto(dto, Set.of("field2"));
+        dto.setField1("ChangedField1");
+        dto.setField2(42);
+
+        // Then
+        final ChangedFields changedFields = changeTracker.getTrackedDto(dto).changedFields();
+        assertEquals(1, changedFields.size());
+        assertTrue(changedFields.contains("field1"));
+        assertEquals("ChangedField1", changedFields.get("field1").orElseThrow().value());
+    }
+
     // Helper DTO class for testing
     static class TestDto {
         @Nullable
@@ -422,6 +570,38 @@ public class ChangeTrackerTest {
 
         public void setStringMap(final Map<String, String> stringMap) {
             this.stringMap = stringMap;
+        }
+    }
+
+    static class EqualDto {
+
+        private final int id;
+        private @Nullable String value;
+
+        EqualDto(final int id) {
+            this.id = id;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(final String value) {
+            this.value = value;
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            return obj instanceof EqualDto equalDto && id == equalDto.id;
+        }
+
+        @Override
+        public int hashCode() {
+            return id;
         }
     }
 }

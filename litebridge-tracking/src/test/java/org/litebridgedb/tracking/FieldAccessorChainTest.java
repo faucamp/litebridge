@@ -400,4 +400,22 @@ public class FieldAccessorChainTest {
     private static class TestParentDto {
         private TestDto testDto;
     }
+
+    @Test
+    void test_toString() {
+        // Given
+        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        final FieldAccessor parentAccessor = mock(FieldAccessor.class);
+        final String fieldPath = "parent.child";
+
+        final FieldAccessorChain fieldAccessorChain = new FieldAccessorChain(parentAccessor, fieldPath, classFieldAccessorCache);
+
+        // When
+        final String result = fieldAccessorChain.toString();
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result.contains("FieldAccessorChain"));
+        assertTrue(result.contains("fieldPath"));
+    }
 }
