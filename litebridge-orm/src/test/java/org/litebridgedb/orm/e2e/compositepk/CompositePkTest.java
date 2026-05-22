@@ -6,6 +6,7 @@ import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.compositepk.dto.CompositePkFkTest;
 import org.litebridgedb.orm.e2e.compositepk.dto.CompositePkLookup;
 import org.litebridgedb.orm.e2e.compositepk.dto.CompositePkSimple;
+import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,13 +19,13 @@ class CompositePkTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Composite PK with foreign key constraint")
-    void compositePk_foreignKey() throws Exception {
+    void compositePk_foreignKey(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
-        litebridge.register(CompositePkLookup.class, rc -> rc.mapToTable("LB.COMP_PK_LOOKUP")
+        litebridge.register(CompositePkLookup.class, rc -> rc.mapToTable(tableMapper.qualifyName("COMP_PK_LOOKUP"))
                 .mapField("id").toColumn("LOOKUP_ID")
                 .mapField("name").toColumn("LOOKUP_NAME"));
 
-        litebridge.register(CompositePkFkTest.class, rc -> rc.mapToTable("LB.COMP_PK_FK_TEST")
+        litebridge.register(CompositePkFkTest.class, rc -> rc.mapToTable(tableMapper.qualifyName("COMP_PK_FK_TEST"))
                 .mapField("lookup").toColumn("LOOKUP_ID").joinUsing()
                 .mapField("testId").toColumn("TEST_ID")
                 .mapField("description").toColumn("TEST_DESC"));
@@ -49,10 +50,12 @@ class CompositePkTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Composite auto-incrementing PK")
-    void compositePk_autoIncrement() throws Exception {
+    void compositePk_autoIncrement(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Not applicable for SQLite
         assumeTrue(!dbEnv.getName().equals("SQLite"), "SQLite does not support multiple auto-incrementing columns");
+
         // Given
-        litebridge.register(CompositePkSimple.class, rc -> rc.mapToTable("LB.COMP_PK_SIMPLE")
+        litebridge.register(CompositePkSimple.class, rc -> rc.mapToTable(tableMapper.qualifyName("COMP_PK_SIMPLE"))
                 .mapField("pk1").toColumn("PK1").generateUsingSequence("LB.COMPOSITE_PK1_SEQ")
                 .mapField("pk2").toColumn("PK2").generateUsingSequence("LB.COMPOSITE_PK2_SEQ")
                 .mapField("description").toColumn("TEST_DESC"));

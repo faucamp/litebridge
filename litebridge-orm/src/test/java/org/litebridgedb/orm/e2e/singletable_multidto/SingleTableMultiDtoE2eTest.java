@@ -3,6 +3,7 @@ package org.litebridgedb.orm.e2e.singletable_multidto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
+import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridgedb.orm.e2e.singletable_multidto.dto.SingleTableNestedParent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,12 +15,12 @@ class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Nested DTOs mapped to a single table")
-    void nestedDtos_singleTable() throws Exception {
-        assumeTrue(litebridge.select().from("LB.PERSON").list().isEmpty());
-        assumeTrue(litebridge.select().from("LB.ACCOUNT").list().isEmpty());
+    void nestedDtos_singleTable(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        assumeTrue(litebridge.select().from(tableMapper.qualifyName("PERSON")).list().isEmpty());
+        assumeTrue(litebridge.select().from(tableMapper.qualifyName("ACCOUNT")).list().isEmpty());
 
         // Register DTO-table mapping
-        litebridge.register(SingleTableNestedParent.class, rc -> rc.mapToTable("LB.NESTED_DTO")
+        litebridge.register(SingleTableNestedParent.class, rc -> rc.mapToTable(tableMapper.qualifyName("NESTED_DTO"))
                 .mapField("parentValue1").toColumn("PARENT_VALUE1")
                 .mapField("nestedChild.childValue1").toColumn("CHILD_VALUE1")
                 .mapField("nestedChild.grandChild.grandChildValue1").toColumn("GRANDCHILD_VALUE1"));

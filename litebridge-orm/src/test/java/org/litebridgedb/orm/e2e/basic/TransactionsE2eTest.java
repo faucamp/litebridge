@@ -28,6 +28,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction commit: manual control")
     void transaction_commit_manual(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
         tableMapper.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
@@ -42,7 +43,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         litebridge.transaction().commit();
 
         // Then
-        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from(personTableName).list().size();
         assertEquals(1, recordCount, "Should have exactly one record in the database");
         assertNotNull(person.getId(), "Person ID should be set after transaction commit");
     }
@@ -51,6 +52,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction commit: try-with-resources")
     void transaction_commit_tryWithResources(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
         tableMapper.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
@@ -66,7 +68,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         }
 
         // Then
-        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from(personTableName).list().size();
         assertEquals(1, recordCount, "Should have exactly one record in the database");
         assertNotNull(person.getId(), "Person ID should be set after transaction commit");
     }
@@ -75,6 +77,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction commit: lambda")
     void transaction_commit_lambda(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
         tableMapper.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
@@ -87,7 +90,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         litebridge.transaction().execute(() -> litebridge.save(person));
 
         // Then
-        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from(personTableName).list().size();
         assertEquals(1, recordCount, "Should have exactly one record in the database");
         assertNotNull(person.getId(), "Person ID should be set after transaction commit");
     }
@@ -96,6 +99,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction rollback on exception: manual control")
     void transaction_rollback_manual(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
         tableMapper.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
@@ -116,7 +120,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
 
         // Then
         assertTrue(exceptionThrown, "Exception should be thrown");
-        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from(personTableName).list().size();
         assertEquals(0, recordCount, "Should have no records in the database");
         assertNull(person.getId(), "Person ID should not be set after transaction rollback");
     }
@@ -125,6 +129,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction rollback on exception: try-with-resources")
     void transaction_rollback_tryWithResources(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
         tableMapper.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
@@ -141,7 +146,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
 
         // Then
         assertTrue(exceptionThrown, "Exception should be thrown");
-        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from(personTableName).list().size();
         assertEquals(0, recordCount, "Should have no records in the database");
         assertNull(person.getId(), "Person ID should not be set after transaction rollback");
     }
@@ -150,6 +155,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction explicit rollback: try-with-resources")
     void transaction_explicitRollback_tryWithResources(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
         tableMapper.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
@@ -169,7 +175,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         }
 
         // Then
-        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from(personTableName).list().size();
         assertEquals(0, recordCount, "Should have no records in the database");
         assertTrue(personIdSetDuringTransaction, "Person ID should be set after save() while still in transaction");
         assertNull(person.getId(), "Person ID should not be set after transaction rollback");
@@ -179,6 +185,8 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction explicit rollback: rollback DTO collections")
     void transaction_explicitRollback_oneToMany(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String accountTableName = tableMapper.qualifyName("ACCOUNT");
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Create DTOs and enable change tracking
@@ -208,9 +216,9 @@ class TransactionsE2eTest extends AbstractE2eTest {
         }
 
         // Then
-        final int personCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
+        final int personCount = litebridge.select("PERSON_ID").from(personTableName).list().size();
         assertEquals(0, personCount, "Should have no PERSON records in the database");
-        final int accountCount = litebridge.select("ACCOUNT_ID").from("LB.ACCOUNT").list().size();
+        final int accountCount = litebridge.select("ACCOUNT_ID").from(accountTableName).list().size();
         assertEquals(0, accountCount, "Should have no ACCOUNT records in the database");
         assertNull(person.getId(), "Person ID should not be set after rollback");
         assertNull(account.getId(), "Account ID should not be set after rollback");
@@ -221,6 +229,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     @DisplayName("Transaction rollback on exception: lambda")
     void transaction_rollback_lambda(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
         tableMapper.registerPersonDtoTableMapping(litebridge);
 
         final Person person = new Person();
@@ -237,7 +246,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
 
         // Then
         assertTrue(exceptionThrown, "Exception should be thrown");
-        final int recordCount = litebridge.select("PERSON_ID").from("LB.PERSON").list().size();
+        final int recordCount = litebridge.select("PERSON_ID").from(personTableName).list().size();
         assertEquals(0, recordCount, "Should have no records in the database");
         assertNull(person.getId(), "Person ID should not be set after transaction rollback");
     }

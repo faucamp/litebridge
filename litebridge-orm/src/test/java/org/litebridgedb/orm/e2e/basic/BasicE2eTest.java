@@ -358,7 +358,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertTrue(litebridge.select(Person.class).stream().allMatch(p -> p.getAge() == 19));
 
         // Update a specific record using the SQL API
-        litebridge.update("LB.PERSON", p ->
+        litebridge.update(tableMapper.qualifyName("PERSON"), p ->
                 p.set("EYE_COLOUR").to("unknown")
                         .where("EYE_COLOUR").eq("blue"));
 

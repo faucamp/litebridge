@@ -14,11 +14,9 @@ public interface DbEnvDtoTableMapper {
         registerAccountDtoTableMapping(litebridge);
     }
 
+    String qualifyName(final String tableName);
+
     void registerPersonDtoTableMapping(final Litebridge litebridge);
 
     void registerAccountDtoTableMapping(final Litebridge litebridge);
-
-    void registerGroupedPersonDtoTableMapping(final Litebridge litebridge);
-
-    void registerGroupDtoTableMapping(final Litebridge litebridge);
 }

@@ -113,13 +113,6 @@ public class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
         }
     }
 
-    @Override
-    protected StringBuilder appendTable(final StringBuilder sql, final String schema, final String table) {
-        // Ignore schema for SQLite
-        sql.append(quoteIdentifier(table));
-        return sql;
-    }
-
     /**
      * SQLite does not support sequences. Throws an {@code UnsupportedOperationException} if called.
      *
