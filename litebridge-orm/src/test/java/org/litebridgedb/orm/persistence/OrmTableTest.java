@@ -1,6 +1,7 @@
 package org.litebridgedb.orm.persistence;
 
 import org.junit.jupiter.api.Test;
+import org.litebridgedb.commons.type.ConcurrentLazy;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
@@ -54,6 +55,8 @@ class OrmTableTest {
         assertSame(nameField, ormTable.getFieldForColumnName("name"));
         assertSame(idField, ormTable.fieldForColumnNameOrNull("id"));
         assertNull(ormTable.fieldForColumnNameOrNull("unknown"));
+        assertTrue(ormTable.getNestedDtoClasses().isEmpty());
+        assertNull(ormTable.getOneToManyReverseMappings());
     }
 
     @Test
@@ -180,6 +183,168 @@ class OrmTableTest {
     }
 
     @Test
+    void getManyToManyMappings_andGetManyToManyMappingForField() {
+        // Given
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final FieldAccessor childrenField = fieldAccessor(changeTracker, ParentDto.class, "children");
+
+        final ColumnMetaData idColumn = column("parent_table", "id", Types.BIGINT);
+        final OrmTable joinTable = simpleOrmTable();
+        final OrmTable targetTable = simpleOrmTable();
+
+        final MappedManyToMany mappedManyToMany = new MappedManyToMany(
+                joinTable,
+                "parent_id",
+                childrenField,
+                new ConcurrentLazy<>(() -> targetTable),
+                "child_id");
+
+        final OrmTable ormTable = new OrmTable(ParentDto.class,
+                tableMetaData("parent_table", idColumn),
+                Map.of(childrenField, mappedManyToMany),
+                changeTracker,
+                new ClassFieldAccessorCache(MethodHandles.lookup()));
+
+        // Then
+        assertEquals(1, ormTable.getManyToManyMappings().size());
+        assertSame(mappedManyToMany, ormTable.getManyToManyMappings().getFirst());
+        assertTrue(ormTable.getManyToManyMappingForField(childrenField).isPresent());
+        assertSame(mappedManyToMany, ormTable.getManyToManyMappingForField(childrenField).orElseThrow());
+    }
+
+    @Test
+    void addOneToManyReverseMapping_initializesAndAppendsMappings() {
+        // Given
+        final OrmTable ormTable = simpleOrmTable();
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final FieldAccessor idField = fieldAccessor(changeTracker, TestDto.class, "id");
+        final FieldAccessor nameField = fieldAccessor(changeTracker, TestDto.class, "name");
+
+        // When
+        ormTable.addOneToManyReverseMapping(idField);
+        ormTable.addOneToManyReverseMapping(nameField);
+
+        // Then
+        assertNotNull(ormTable.getOneToManyReverseMappings());
+        assertEquals(2, ormTable.getOneToManyReverseMappings().size());
+        assertSame(idField, ormTable.getOneToManyReverseMappings().get(0));
+        assertSame(nameField, ormTable.getOneToManyReverseMappings().get(1));
+    }
+
+    @Test
+    void constructor_withColumnAndInlineTable_registersContextTableAndUsesColumn() {
+        // Given
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final FieldAccessor nestedField = fieldAccessor(changeTracker, InlineParentDto.class, "nested");
+
+        final ColumnMetaData nestedColumn = column("parent_table", "nested_id", Types.BIGINT);
+        final OrmTable inlineTable = inlineOrmTable();
+
+        final OrmTable ormTable = new OrmTable(InlineParentDto.class,
+                tableMetaData("parent_table", nestedColumn),
+                Map.of(nestedField, new ColumnAndInlineTable(nestedColumn, inlineTable)),
+                changeTracker,
+                new ClassFieldAccessorCache(MethodHandles.lookup()));
+
+        // Then
+        assertSame(nestedColumn, ormTable.getColumnForFieldName("nested"));
+        assertSame(nestedField, ormTable.getFieldForColumnName("nested_id"));
+        assertSame(inlineTable, ormTable.getContextTableRegistry().getTable(InlineNestedDto.class));
+        assertSame(nestedField, ormTable.mappedFieldTargets().getFirst().getKey());
+        assertSame(nestedColumn, ormTable.mappedFieldTargets().getFirst().getValue());
+    }
+
+    @Test
+    void constructor_withNestedFieldAccessorChain_tracksNestedDtoClassAndParentColumn() {
+        // Given
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final ClassFieldAccessorCache classFieldAccessorCache = changeTracker.classFieldAccessorCache();
+
+        final FieldAccessor addressField = classFieldAccessorCache.fieldAccessor(WithAddressDto.class, "address");
+        final FieldAccessor cityField = classFieldAccessorCache.fieldAccessor(WithAddressDto.class, "address.city");
+
+        final ColumnMetaData addressColumn = column("with_address_table", "address_id", Types.BIGINT);
+        final ColumnMetaData cityColumn = column("with_address_table", "city", Types.VARCHAR);
+
+        final OrmTable ormTable = new OrmTable(WithAddressDto.class,
+                tableMetaData("with_address_table", addressColumn, cityColumn),
+                Map.of(
+                        addressField, addressColumn,
+                        cityField, cityColumn
+                ),
+                changeTracker,
+                classFieldAccessorCache);
+
+        // Then
+        assertEquals(List.of(AddressDto.class), ormTable.getNestedDtoClasses());
+        assertSame(addressColumn, ormTable.getColumnForFieldName("address.city"));
+        assertSame(cityField, ormTable.getFieldForColumnName("city"));
+    }
+
+    @Test
+    void getColumnForFieldName_nestedFieldWithoutParentColumnThrowsNullPointerException() {
+        // Given
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final ClassFieldAccessorCache classFieldAccessorCache = changeTracker.classFieldAccessorCache();
+
+        final FieldAccessor cityField = classFieldAccessorCache.fieldAccessor(WithAddressDto.class, "address.city");
+        final ColumnMetaData cityColumn = column("with_address_table", "city", Types.VARCHAR);
+
+        final OrmTable ormTable = new OrmTable(WithAddressDto.class,
+                tableMetaData("with_address_table", cityColumn),
+                Map.of(cityField, cityColumn),
+                changeTracker,
+                classFieldAccessorCache);
+
+        // When/Then
+        assertThrows(NullPointerException.class, () -> ormTable.getColumnForFieldName("address.city"));
+    }
+
+    @Test
+    void mappedFieldTargets_appendsTargetsThatAreNotDatabaseColumns() {
+        // Given
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final FieldAccessor idField = fieldAccessor(changeTracker, ParentDto.class, "id");
+        final FieldAccessor childrenField = fieldAccessor(changeTracker, ParentDto.class, "children");
+        final FieldAccessor parentField = fieldAccessor(changeTracker, ChildDto.class, "parent");
+
+        final ColumnMetaData idColumn = column("parent_table", "id", Types.BIGINT);
+        final MappedOneToMany mappedOneToMany = new MappedOneToMany(parentField, childrenField);
+
+        final Map<FieldAccessor, MappedFieldTarget> fieldTargetMap = new LinkedHashMap<>();
+        fieldTargetMap.put(childrenField, mappedOneToMany);
+        fieldTargetMap.put(idField, idColumn);
+
+        final OrmTable ormTable = new OrmTable(ParentDto.class,
+                tableMetaData("parent_table", idColumn),
+                fieldTargetMap,
+                changeTracker,
+                new ClassFieldAccessorCache(MethodHandles.lookup()));
+
+        // When
+        final List<Map.Entry<FieldAccessor, MappedFieldTarget>> result = ormTable.mappedFieldTargets();
+
+        // Then
+        assertEquals(2, result.size());
+        assertSame(idField, result.get(0).getKey());
+        assertSame(idColumn, result.get(0).getValue());
+        assertSame(childrenField, result.get(1).getKey());
+        assertSame(mappedOneToMany, result.get(1).getValue());
+    }
+
+    private static OrmTable inlineOrmTable() {
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final FieldAccessor idField = fieldAccessor(changeTracker, InlineNestedDto.class, "id");
+        final ColumnMetaData idColumn = column("inline_nested_table", "id", Types.BIGINT);
+
+        return new OrmTable(InlineNestedDto.class,
+                tableMetaData("inline_nested_table", idColumn),
+                Map.of(idField, idColumn),
+                changeTracker,
+                new ClassFieldAccessorCache(MethodHandles.lookup()));
+    }
+
+    @Test
     void getOneToManyMappings_andGetOneToManyMappingForField() {
         // Given
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
@@ -296,5 +461,21 @@ class OrmTableTest {
     private static class ChildDto {
         private Long id;
         private ParentDto parent;
+    }
+
+    private static class InlineParentDto {
+        private InlineNestedDto nested;
+    }
+
+    private static class InlineNestedDto {
+        private Long id;
+    }
+
+    private static class WithAddressDto {
+        private AddressDto address;
+    }
+
+    private static class AddressDto {
+        private String city;
     }
 }
