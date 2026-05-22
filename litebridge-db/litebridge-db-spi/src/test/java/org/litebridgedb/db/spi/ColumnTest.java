@@ -246,6 +246,32 @@ class ColumnTest {
     }
 
     @Test
+    void equalsColumnOnlyIgnoreAlias_true() {
+        // Given
+        final Column column1 = new Column(table, "testName", "testAlias");
+        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "DIFFERENT_TABLE", "otherAlias"), "testName", "otherAlias");
+
+        // When
+        final boolean result = column1.equalsColumnOnlyIgnoreAlias(column2);
+
+        // Then
+        assertTrue(result);
+    }
+
+    @Test
+    void equalsColumnOnlyIgnoreAlias_false() {
+        // Given
+        final Column column1 = new Column(table, "testName", "testAlias");
+        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "DIFFERENT_TABLE", "otherAlias"), "differentColumn", "otherAlias");
+
+        // When
+        final boolean result = column1.equalsColumnOnlyIgnoreAlias(column2);
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
     void testToString() {
         // Given
         final Column column = new Column(table, "testName", "testAlias");
