@@ -298,9 +298,13 @@ litebridge.select("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
 
 ## Supported databases
 
-Litebridge currently supports the following databases:
-* **H2**: `litebridge-db-h2`
-* **Oracle**: `litebridge-db-oracle`
+Litebridge currently supports the following databases via the following modules:
+
+| Database | Artifact ID |
+| --- | --- |
+| **H2** | `litebridge-db-h2` |
+| **Oracle** | `litebridge-db-oracle` |
+| **SQLite** | `litebridge-db-sqlite` |
 
 ## Documentation
 
