@@ -70,7 +70,7 @@ Litebridge litebridge = new Litebridge(new H2DatabaseProvider(), dataSource, new
 
 // Register the table mapping for the Person DTO class
 litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
-    .mapField("id").toColumn("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ")
+    .mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ")
     .mapField("name").toColumn("FIRST_NAME")
     .mapField("surname").toColumn("SURNAME")
     .mapField("age").toColumn("AGE")
@@ -83,7 +83,7 @@ provides a fluent API for configuring the mapping.
 
 `mapField()` and `mapProperty()` are used to specify a DTO field (and how to access it), while `toColumn()`
 allows specification of a target mapped database table column, which can itself
-be modified with further chained calls (such as the `autoIncrement()` and `usingSequence()` methods).
+be modified with further chained calls (such as the `autoIncrement()` and `generateUsingSequence()` methods).
 
 The table mappings above specify the following:
 * For the `Person` class:
@@ -157,7 +157,7 @@ The corresponding mapping can be specified as follows:
 litebridge.register(GroupedPerson.class, rc -> rc
         .allowInterface(Person.class)
         .mapToTable("LB.PERSON")
-        .mapField("id").toColumn("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ")
+        .mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ")
         .mapField("name").toColumn("FIRST_NAME")
         .mapField("groups").manyToMany(c -> c.joinTable("LB.PERSON_GROUP")
             .joinColumn("PERSON_ID")
@@ -231,7 +231,7 @@ This allows these specifications to be created/packaged separately from the `reg
 // (e.g. in a separate class as a constant)
 Map<FieldMapping, ColumnMapping> personMap = Map.of(
                 // Field name -> column/relation details
-                f("id"),           c("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ"),
+                f("id"),           c("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ"),
                 f("name"),         c("FIRST_NAME"),
                 f("surname"),      c("SURNAME"),
                 f("age"),          c("AGE"),
@@ -240,7 +240,7 @@ Map<FieldMapping, ColumnMapping> personMap = Map.of(
         );
 
 Map<FieldMapping, ColumnMapping> accountMap = Map.of(
-        f("id"),      c("ACCOUNT_ID").autoIncrement().usingSequence("LB.ACCOUNT_SEQ"),
+        f("id"),      c("ACCOUNT_ID").generateUsingSequence("LB.ACCOUNT_SEQ"),
         f("name"),    c("ACCOUNT_NAME"),
         f("balance"), c("BALANCE"),
         f("owner"),   c("PERSON_ID").joinUsing()

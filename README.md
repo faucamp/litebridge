@@ -70,7 +70,7 @@ Litebridge litebridge = new Litebridge(new H2DatabaseProvider(connection));
 
 // Register the table mapping for the Person DTO class
 litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
-    .mapField("id").toColumn("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ")
+    .mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ")
     .mapField("name").toColumn("FIRST_NAME")
     .mapField("surname").toColumn("SURNAME")
     .mapField("age").toColumn("AGE")
@@ -79,7 +79,7 @@ litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
 
 // Register the table mapping for the Account DTO class
 litebridge.register(Account.class, rc -> rc.mapToTable("LB.ACCOUNT")
-    .mapField("id").toColumn("ACCOUNT_ID").autoIncrement().usingSequence("LB.ACCOUNT_SEQ")
+    .mapField("id").toColumn("ACCOUNT_ID").generateUsingSequence("LB.ACCOUNT_SEQ")
     .mapField("name").toColumn("ACCOUNT_NAME")
     .mapField("balance").toColumn("BALANCE")
     .mapField("owner").toColumn("PERSON_ID").joinUsing());
@@ -90,7 +90,7 @@ provides a fluent API for configuring the mapping.
 
 `mapField()` and `mapProperty()` are used to specify a DTO field (and how to access it), while `toColumn()` 
 allows specification of a target mapped database table column, which can itself
-be modified with further chained calls (such as the `autoIncrement()` and `usingSequence()` methods).
+be modified with further chained calls (such as the `autoIncrement()` and `generateUsingSequence()` methods).
 
 The table mappings above specify the following:
 * For the `Person` class:
