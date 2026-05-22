@@ -8,6 +8,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
@@ -1714,6 +1715,15 @@ class AbstractDatabaseProviderTest {
 
         // Then
         assertSame(preparedStatement, result);
+    }
+
+    @Test
+    void getSequenceColumnValueGenerator() {
+        // When
+        final SequenceColumnValueGenerator result = databaseProvider.getSequenceColumnValueGenerator("test_sequence");
+
+        // Then
+        assertInstanceOf(DefaultSequenceColumnValueGenerator.class, result);
     }
 
     private void mockTransactionManager() throws SQLException {

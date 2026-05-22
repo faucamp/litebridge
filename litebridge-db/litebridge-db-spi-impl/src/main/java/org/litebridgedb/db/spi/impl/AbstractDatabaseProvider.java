@@ -769,10 +769,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return new PreparedRow(valueSpecifiers, bindValues);
     }
 
-    private TableMetaData ensureTableMetaData(final String catalog, final String schema, final String table, final ConnectionProvider connectionProvider) throws SQLException {
-        return ensureTableMetaData(new Table(catalog, schema, table), connectionProvider);
-    }
-
     private TableMetaData ensureTableMetaData(final Table table, final ConnectionProvider connectionProvider) {
         TableMetaData tableMetaData = this.tableMetaDataCache.get(table.qualifiedName());
 
