@@ -6,10 +6,10 @@ import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.manytomany.dto.Group;
 import org.litebridgedb.orm.e2e.manytomany.dto.GroupedPerson;
+import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,8 +23,8 @@ class ManyToManyE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select DTO and join fetch related DTOs")
-    void nestedDtos_fetchRelatedDtos() throws Exception {
-        registerDtoTableMappings();
+    void nestedDtos_fetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) {
+        registerDtoTableMappings(tableMapper);
 
         final GroupedPerson person1 = new GroupedPerson();
         person1.setName("Alice");
@@ -139,8 +139,8 @@ class ManyToManyE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select DTO without related DTOs")
-    void nestedDtos_dontfetchRelatedDtos() throws Exception {
-        registerDtoTableMappings();
+    void nestedDtos_dontfetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        registerDtoTableMappings(tableMapper);
 
         final GroupedPerson person1 = new GroupedPerson();
         person1.setName("Alice");
@@ -238,20 +238,31 @@ class ManyToManyE2eTest extends AbstractE2eTest {
         assertTrue(resultGroup1Updated.getMembers().stream().anyMatch(p -> person3.getId().equals(p.getId())));
     }
 
-    private void registerDtoTableMappings() throws SQLException {
-        litebridge.register(GroupedPerson.class, rc -> rc
-                .allowInterface(Person.class)
-                .mapToTable("LB.PERSON")
-                .mapField("id").toColumn("PERSON_ID").autoIncrement().usingSequence("LB.PERSON_SEQ")
-                .mapField("name").toColumn("FIRST_NAME")
-                .mapField("groups").manyToMany(c -> c.joinTable("LB.PERSON_GROUP")
-                        .joinColumn("PERSON_ID")
-                        .inverseJoinColumn("GROUP_NAME")));
+    private void registerDtoTableMappings(final DbEnvDtoTableMapper tableMapper) {
+        if (dbEnv.getName().equals("SQLite")) {
+            litebridge.register(GroupedPerson.class, rc -> rc
+                    .allowInterface(Person.class)
+                    .mapToTable(tableMapper.qualifyName("PERSON"))
+                    .mapField("id").toColumn("PERSON_ID").autoIncrement()
+                    .mapField("name").toColumn("FIRST_NAME")
+                    .mapField("groups").manyToMany(c -> c.joinTable(tableMapper.qualifyName("PERSON_GROUP"))
+                            .joinColumn("PERSON_ID")
+                            .inverseJoinColumn("GROUP_NAME")));
+        } else {
+            litebridge.register(GroupedPerson.class, rc -> rc
+                    .allowInterface(Person.class)
+                    .mapToTable(tableMapper.qualifyName("PERSON"))
+                    .mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ")
+                    .mapField("name").toColumn("FIRST_NAME")
+                    .mapField("groups").manyToMany(c -> c.joinTable(tableMapper.qualifyName("PERSON_GROUP"))
+                            .joinColumn("PERSON_ID")
+                            .inverseJoinColumn("GROUP_NAME")));
+        }
 
-        litebridge.register(Group.class, rc -> rc.mapToTable("LB.GROUP")
+        litebridge.register(Group.class, rc -> rc.mapToTable(tableMapper.qualifyName("GROUP"))
                 .mapField("name").toColumn("GROUP_NAME")
                 .mapField("description").toColumn("GROUP_DESC")
-                .mapField("members").manyToMany(c -> c.joinTable("LB.PERSON_GROUP")
+                .mapField("members").manyToMany(c -> c.joinTable(tableMapper.qualifyName("PERSON_GROUP"))
                         .joinColumn("GROUP_NAME")
                         .inverseJoinColumn("PERSON_ID")));
     }

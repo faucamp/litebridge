@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.selfref.dto.SelfReferencingDto;
+import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,9 +20,10 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Single self-referencing DTO mapped to a single table, cascading save")
-    void selfReferencingDto_cascadeSave() throws Exception {
+    void selfReferencingDto_cascadeSave(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        registerDtoTableMappings();
+        final String selfReferencingTableName = tableMapper.qualifyName("SELF_REFERENCING");
+        registerDtoTableMappings(tableMapper);
 
         // Create nested DTOs
         final SelfReferencingDto dto1 = new SelfReferencingDto();
@@ -42,7 +44,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
         litebridge.save(dto3);
 
         // Then
-        litebridge.select().from("LB.SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
+        litebridge.select().from(selfReferencingTableName).stream().forEach(row -> LOGGER.info("{}", row));
         final List<SelfReferencingDto> result = litebridge.select(SelfReferencingDto.class)
                 .orderBy("id").asc()
                 .list();
@@ -63,11 +65,12 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Single self-referencing DTO mapped to a single table, save all individual DTOs in one call")
-    void selfReferencingDto_saveAll() throws Exception {
-        assumeTrue(litebridge.select().from("LB.PERSON").stream().findAny().isEmpty());
+    void selfReferencingDto_saveAll(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        final String selfReferencingTableName = tableMapper.qualifyName("SELF_REFERENCING");
+        assumeTrue(litebridge.select().from(selfReferencingTableName).stream().findAny().isEmpty());
 
         // Register DTO-table mappings
-        registerDtoTableMappings();
+        registerDtoTableMappings(tableMapper);
 
         // Create nested DTOs
         final SelfReferencingDto dto1 = new SelfReferencingDto();
@@ -88,7 +91,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
         litebridge.save(dto1, dto2, dto3);
 
         // Then
-        litebridge.select().from("LB.SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
+        litebridge.select().from(selfReferencingTableName).stream().forEach(row -> LOGGER.info("{}", row));
         final List<SelfReferencingDto> result = litebridge.select(SelfReferencingDto.class)
                 .orderBy("id").asc()
                 .list();
@@ -109,9 +112,9 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Single self-referencing DTO mapped to a single table, save each DTO individually")
-    void selfReferencingDto_saveIndividually() throws Exception {
+    void selfReferencingDto_saveIndividually(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        registerDtoTableMappings();
+        registerDtoTableMappings(tableMapper);
 
         // Create nested DTOs
         final SelfReferencingDto dto1 = new SelfReferencingDto();
@@ -146,8 +149,8 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
         assertEquals("child", result.get(1).getMyVar());
     }
 
-    private void registerDtoTableMappings() throws SQLException {
-        litebridge.register(SelfReferencingDto.class, rc -> rc.mapToTable("LB.SELF_REFERENCING")
+    private void registerDtoTableMappings(final DbEnvDtoTableMapper tableMapper) throws SQLException {
+        litebridge.register(SelfReferencingDto.class, rc -> rc.mapToTable(tableMapper.qualifyName("SELF_REFERENCING"))
                 .mapField("id").toColumn("ID")
                 .mapField("myVar").toColumn("MY_VAR")
                 .mapField("parent").toColumn("PARENT_ID").joinOn("ID"));

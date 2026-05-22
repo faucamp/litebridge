@@ -1,10 +1,8 @@
 package org.litebridgedb.orm.api.spec;
 
-public interface FieldColumnSpec {
-    FieldSpec field();
-    ColumnMapping column();
+public record FieldColumnSpec(FieldSpec field, ColumnMapping column) {
 
-    default ColumnSpec columnSpec() {
+    public ColumnSpec columnSpec() {
         return (ColumnSpec) column();
     }
 }

@@ -53,7 +53,7 @@ public abstract class AbstractE2eTest {
         // Configure and run Flyway migration
         if (flyway == null) {
             flyway = Flyway.configure()
-                    .dataSource(env.getJdbcUrl(), env.getUsername(), env.getPassword())
+                    .dataSource(env.getDataSource())
                     .locations(env.getMigrationLocations())
                     .cleanDisabled(false)
                     .load();

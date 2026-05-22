@@ -116,7 +116,7 @@ public class Litebridge {
      * @param rc       A function that takes a RegistrationContext instance to configure the table mapping.
      */
     public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) {
-        final DtoTableSpecBuilder dtoTableSpecBuilder = (DtoTableSpecBuilder) rc.apply(new RegistrationContext());
+        final DtoTableSpecBuilder dtoTableSpecBuilder = (DtoTableSpecBuilder) rc.apply(new RegistrationContext(databaseProvider));
         register(lookup, dtoTableSpecBuilder.buildDtoTableSpec(dtoClass));
     }
 

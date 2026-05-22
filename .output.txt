@@ -1,0 +1,413 @@
+Command finished with exit code 1.
+Command output:
+[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for org.springframework.boot:litebridge-example-spring-boot:jar:0.1.0-SNAPSHOT
+[WARNING] 'parent.relativePath' of POM org.springframework.boot:litebridge-example-spring-boot:0.1.0-SNAPSHOT (/Users/francois/git/litebridge/example/litebridge-example-spring-boot/pom.xml) points at org.litebridge.example:litebridge-example instead of org.springframework.boot:spring-boot-starter-parent, please verify your project structure @ line 7, column 13
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] litebridge                                                         [pom]
+[INFO] litebridge-commons                                                 [jar]
+[INFO] litebridge-db                                                      [pom]
+[INFO] litebridge-db-spi                                                  [jar]
+[INFO] litebridge-converter                                               [jar]
+[INFO] litebridge-db-spi-impl                                             [jar]
+[INFO] litebridge-db-h2                                                   [jar]
+[INFO] litebridge-db-oracle                                               [jar]
+[INFO] litebridge-db-sqlite                                               [jar]
+[INFO] litebridge-tracking                                                [jar]
+[INFO] litebridge-orm                                                     [jar]
+[INFO] litebridge-spring-parent                                           [pom]
+[INFO] litebridge-spring                                                  [jar]
+[INFO] litebridge-spring-boot-autoconfigure                               [jar]
+[INFO] litebridge-spring-boot-starter                                     [jar]
+[INFO] litebridge-example                                                 [pom]
+[INFO] litebridge-example-common                                          [jar]
+[INFO] litebridge-example-h2                                              [jar]
+[INFO] litebridge-example-oracle                                          [jar]
+[INFO] litebridge-example-spring-boot                                     [jar]
+[INFO] litebridge-example-spring-boot-manual-config                       [jar]
+[INFO] jacoco-aggregate-report                                            [pom]
+[INFO] 
+[INFO] ---------------------< org.litebridge:litebridge >----------------------
+[INFO] Building litebridge 0.1.0-SNAPSHOT                                [1/22]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ litebridge ---
+[INFO] 
+[INFO] --- enforcer:3.6.2:enforce (enforce-rules) @ litebridge ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireMavenVersion passed
+[INFO] Rule 1: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] 
+[INFO] --- jacoco:0.8.14:prepare-agent (default) @ litebridge ---
+[INFO] argLine set to -javaagent:/Users/francois/.m2/repository/org/jacoco/org.jacoco.agent/0.8.14/org.jacoco.agent-0.8.14-runtime.jar=destfile=/Users/francois/git/litebridge/target/jacoco.exec
+[INFO] 
+[INFO] --- jacoco:0.8.14:report (report) @ litebridge ---
+[INFO] Skipping JaCoCo execution due to missing execution data file.
+[INFO] 
+[INFO] --- install:3.1.4:install (default-install) @ litebridge ---
+[INFO] Installing /Users/francois/git/litebridge/pom.xml to /Users/francois/.m2/repository/org/litebridge/litebridge/0.1.0-SNAPSHOT/litebridge-0.1.0-SNAPSHOT.pom
+[INFO] 
+[INFO] -----------------< org.litebridge:litebridge-commons >------------------
+[INFO] Building litebridge-commons 0.1.0-SNAPSHOT                        [2/22]
+[INFO]   from litebridge-commons/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ litebridge-commons ---
+[INFO] Deleting /Users/francois/git/litebridge/litebridge-commons/target
+[INFO] 
+[INFO] --- enforcer:3.6.2:enforce (enforce-rules) @ litebridge-commons ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] 
+[INFO] --- jacoco:0.8.14:prepare-agent (default) @ litebridge-commons ---
+[INFO] argLine set to -javaagent:/Users/francois/.m2/repository/org/jacoco/org.jacoco.agent/0.8.14/org.jacoco.agent-0.8.14-runtime.jar=destfile=/Users/francois/git/litebridge/litebridge-commons/target/jacoco.exec
+[INFO] 
+[INFO] --- dependency:3.7.0:properties (default) @ litebridge-commons ---
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ litebridge-commons ---
+[INFO] skip non existing resourceDirectory /Users/francois/git/litebridge/litebridge-commons/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ litebridge-commons ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 16 source files with javac [debug target 21 module-path] to target/classes
+[INFO] /Users/francois/git/litebridge/litebridge-commons/src/main/java/org/litebridge/commons/ClassUtils.java: /Users/francois/git/litebridge/litebridge-commons/src/main/java/org/litebridge/commons/ClassUtils.java uses unchecked or unsafe operations.
+[INFO] /Users/francois/git/litebridge/litebridge-commons/src/main/java/org/litebridge/commons/ClassUtils.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ litebridge-commons ---
+[INFO] skip non existing resourceDirectory /Users/francois/git/litebridge/litebridge-commons/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ litebridge-commons ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 16 source files with javac [debug target 21 module-path] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.5:test (default-test) @ litebridge-commons ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jacoco:0.8.14:report (report) @ litebridge-commons ---
+[INFO] Skipping JaCoCo execution due to missing execution data file.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ litebridge-commons ---
+[INFO] Building jar: /Users/francois/git/litebridge/litebridge-commons/target/litebridge-commons-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- install:3.1.4:install (default-install) @ litebridge-commons ---
+[INFO] Installing /Users/francois/git/litebridge/litebridge-commons/pom.xml to /Users/francois/.m2/repository/org/litebridge/litebridge-commons/0.1.0-SNAPSHOT/litebridge-commons-0.1.0-SNAPSHOT.pom
+[INFO] Installing /Users/francois/git/litebridge/litebridge-commons/target/litebridge-commons-0.1.0-SNAPSHOT.jar to /Users/francois/.m2/repository/org/litebridge/litebridge-commons/0.1.0-SNAPSHOT/litebridge-commons-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] ------------------< org.litebridge.db:litebridge-db >-------------------
+[INFO] Building litebridge-db 0.1.0-SNAPSHOT                             [3/22]
+[INFO]   from litebridge-db/pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ litebridge-db ---
+[INFO] 
+[INFO] --- enforcer:3.6.2:enforce (enforce-rules) @ litebridge-db ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] 
+[INFO] --- jacoco:0.8.14:prepare-agent (default) @ litebridge-db ---
+[INFO] argLine set to -javaagent:/Users/francois/.m2/repository/org/jacoco/org.jacoco.agent/0.8.14/org.jacoco.agent-0.8.14-runtime.jar=destfile=/Users/francois/git/litebridge/litebridge-db/target/jacoco.exec
+[INFO] 
+[INFO] --- jacoco:0.8.14:report (report) @ litebridge-db ---
+[INFO] Skipping JaCoCo execution due to missing execution data file.
+[INFO] 
+[INFO] --- install:3.1.4:install (default-install) @ litebridge-db ---
+[INFO] Installing /Users/francois/git/litebridge/litebridge-db/pom.xml to /Users/francois/.m2/repository/org/litebridge/db/litebridge-db/0.1.0-SNAPSHOT/litebridge-db-0.1.0-SNAPSHOT.pom
+[INFO] 
+[INFO] ----------------< org.litebridge.db:litebridge-db-spi >-----------------
+[INFO] Building litebridge-db-spi 0.1.0-SNAPSHOT                         [4/22]
+[INFO]   from litebridge-db/litebridge-db-spi/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ litebridge-db-spi ---
+[INFO] Deleting /Users/francois/git/litebridge/litebridge-db/litebridge-db-spi/target
+[INFO] 
+[INFO] --- enforcer:3.6.2:enforce (enforce-rules) @ litebridge-db-spi ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] 
+[INFO] --- jacoco:0.8.14:prepare-agent (default) @ litebridge-db-spi ---
+[INFO] argLine set to -javaagent:/Users/francois/.m2/repository/org/jacoco/org.jacoco.agent/0.8.14/org.jacoco.agent-0.8.14-runtime.jar=destfile=/Users/francois/git/litebridge/litebridge-db/litebridge-db-spi/target/jacoco.exec
+[INFO] 
+[INFO] --- dependency:3.7.0:properties (default) @ litebridge-db-spi ---
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ litebridge-db-spi ---
+[INFO] skip non existing resourceDirectory /Users/francois/git/litebridge/litebridge-db/litebridge-db-spi/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ litebridge-db-spi ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 38 source files with javac [debug target 21 module-path] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ litebridge-db-spi ---
+[INFO] skip non existing resourceDirectory /Users/francois/git/litebridge/litebridge-db/litebridge-db-spi/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ litebridge-db-spi ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 23 source files with javac [debug target 21 module-path] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.5:test (default-test) @ litebridge-db-spi ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jacoco:0.8.14:report (report) @ litebridge-db-spi ---
+[INFO] Skipping JaCoCo execution due to missing execution data file.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ litebridge-db-spi ---
+[INFO] Building jar: /Users/francois/git/litebridge/litebridge-db/litebridge-db-spi/target/litebridge-db-spi-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- install:3.1.4:install (default-install) @ litebridge-db-spi ---
+[INFO] Installing /Users/francois/git/litebridge/litebridge-db/litebridge-db-spi/pom.xml to /Users/francois/.m2/repository/org/litebridge/db/litebridge-db-spi/0.1.0-SNAPSHOT/litebridge-db-spi-0.1.0-SNAPSHOT.pom
+[INFO] Installing /Users/francois/git/litebridge/litebridge-db/litebridge-db-spi/target/litebridge-db-spi-0.1.0-SNAPSHOT.jar to /Users/francois/.m2/repository/org/litebridge/db/litebridge-db-spi/0.1.0-SNAPSHOT/litebridge-db-spi-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] ----------------< org.litebridge:litebridge-converter >-----------------
+[INFO] Building litebridge-converter 0.1.0-SNAPSHOT                      [5/22]
+[INFO]   from litebridge-converter/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ litebridge-converter ---
+[INFO] Deleting /Users/francois/git/litebridge/litebridge-converter/target
+[INFO] 
+[INFO] --- enforcer:3.6.2:enforce (enforce-rules) @ litebridge-converter ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] 
+[INFO] --- jacoco:0.8.14:prepare-agent (default) @ litebridge-converter ---
+[INFO] argLine set to -javaagent:/Users/francois/.m2/repository/org/jacoco/org.jacoco.agent/0.8.14/org.jacoco.agent-0.8.14-runtime.jar=destfile=/Users/francois/git/litebridge/litebridge-converter/target/jacoco.exec
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ litebridge-converter ---
+[INFO] Copying 0 resource from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ litebridge-converter ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 28 source files with javac [debug target 21 module-path] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ litebridge-converter ---
+[INFO] Copying 1 resource from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ litebridge-converter ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 20 source files with javac [debug target 21 module-path] to target/test-classes
+[INFO] /Users/francois/git/litebridge/litebridge-converter/src/test/java/org/litebridge/convert/ConfigurableTypeConverterTest.java: Some input files use unchecked or unsafe operations.
+[INFO] /Users/francois/git/litebridge/litebridge-converter/src/test/java/org/litebridge/convert/ConfigurableTypeConverterTest.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- surefire:3.5.5:test (default-test) @ litebridge-converter ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jacoco:0.8.14:report (report) @ litebridge-converter ---
+[INFO] Skipping JaCoCo execution due to missing execution data file.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ litebridge-converter ---
+[INFO] Building jar: /Users/francois/git/litebridge/litebridge-converter/target/litebridge-converter-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- install:3.1.4:install (default-install) @ litebridge-converter ---
+[INFO] Installing /Users/francois/git/litebridge/litebridge-converter/pom.xml to /Users/francois/.m2/repository/org/litebridge/litebridge-converter/0.1.0-SNAPSHOT/litebridge-converter-0.1.0-SNAPSHOT.pom
+[INFO] Installing /Users/francois/git/litebridge/litebridge-converter/target/litebridge-converter-0.1.0-SNAPSHOT.jar to /Users/francois/.m2/repository/org/litebridge/litebridge-converter/0.1.0-SNAPSHOT/litebridge-converter-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --------------< org.litebridge.db:litebridge-db-spi-impl >--------------
+[INFO] Building litebridge-db-spi-impl 0.1.0-SNAPSHOT                    [6/22]
+[INFO]   from litebridge-db/litebridge-db-spi-impl/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ litebridge-db-spi-impl ---
+[INFO] Deleting /Users/francois/git/litebridge/litebridge-db/litebridge-db-spi-impl/target
+[INFO] 
+[INFO] --- enforcer:3.6.2:enforce (enforce-rules) @ litebridge-db-spi-impl ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] 
+[INFO] --- jacoco:0.8.14:prepare-agent (default) @ litebridge-db-spi-impl ---
+[INFO] argLine set to -javaagent:/Users/francois/.m2/repository/org/jacoco/org.jacoco.agent/0.8.14/org.jacoco.agent-0.8.14-runtime.jar=destfile=/Users/francois/git/litebridge/litebridge-db/litebridge-db-spi-impl/target/jacoco.exec
+[INFO] 
+[INFO] --- dependency:3.7.0:properties (default) @ litebridge-db-spi-impl ---
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ litebridge-db-spi-impl ---
+[INFO] skip non existing resourceDirectory /Users/francois/git/litebridge/litebridge-db/litebridge-db-spi-impl/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ litebridge-db-spi-impl ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 3 source files with javac [debug target 21 module-path] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ litebridge-db-spi-impl ---
+[INFO] skip non existing resourceDirectory /Users/francois/git/litebridge/litebridge-db/litebridge-db-spi-impl/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ litebridge-db-spi-impl ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug target 21 module-path] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.5:test (default-test) @ litebridge-db-spi-impl ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jacoco:0.8.14:report (report) @ litebridge-db-spi-impl ---
+[INFO] Skipping JaCoCo execution due to missing execution data file.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ litebridge-db-spi-impl ---
+[INFO] Building jar: /Users/francois/git/litebridge/litebridge-db/litebridge-db-spi-impl/target/litebridge-db-spi-impl-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- install:3.1.4:install (default-install) @ litebridge-db-spi-impl ---
+[INFO] Installing /Users/francois/git/litebridge/litebridge-db/litebridge-db-spi-impl/pom.xml to /Users/francois/.m2/repository/org/litebridge/db/litebridge-db-spi-impl/0.1.0-SNAPSHOT/litebridge-db-spi-impl-0.1.0-SNAPSHOT.pom
+[INFO] Installing /Users/francois/git/litebridge/litebridge-db/litebridge-db-spi-impl/target/litebridge-db-spi-impl-0.1.0-SNAPSHOT.jar to /Users/francois/.m2/repository/org/litebridge/db/litebridge-db-spi-impl/0.1.0-SNAPSHOT/litebridge-db-spi-impl-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] -----------------< org.litebridge.db:litebridge-db-h2 >-----------------
+[INFO] Building litebridge-db-h2 0.1.0-SNAPSHOT                          [7/22]
+[INFO]   from litebridge-db/litebridge-db-h2/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ litebridge-db-h2 ---
+[INFO] Deleting /Users/francois/git/litebridge/litebridge-db/litebridge-db-h2/target
+[INFO] 
+[INFO] --- enforcer:3.6.2:enforce (enforce-rules) @ litebridge-db-h2 ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] 
+[INFO] --- jacoco:0.8.14:prepare-agent (default) @ litebridge-db-h2 ---
+[INFO] argLine set to -javaagent:/Users/francois/.m2/repository/org/jacoco/org.jacoco.agent/0.8.14/org.jacoco.agent-0.8.14-runtime.jar=destfile=/Users/francois/git/litebridge/litebridge-db/litebridge-db-h2/target/jacoco.exec
+[INFO] 
+[INFO] --- dependency:3.7.0:properties (default) @ litebridge-db-h2 ---
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ litebridge-db-h2 ---
+[INFO] skip non existing resourceDirectory /Users/francois/git/litebridge/litebridge-db/litebridge-db-h2/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ litebridge-db-h2 ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 3 source files with javac [debug target 21 module-path] to target/classes
+[WARNING] /Users/francois/git/litebridge/litebridge-db/litebridge-db-h2/src/main/java/module-info.java:[7,21] module name component h2 should avoid terminal digits
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ litebridge-db-h2 ---
+[INFO] skip non existing resourceDirectory /Users/francois/git/litebridge/litebridge-db/litebridge-db-h2/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ litebridge-db-h2 ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug target 21 module-path] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.5:test (default-test) @ litebridge-db-h2 ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jacoco:0.8.14:report (report) @ litebridge-db-h2 ---
+[INFO] Skipping JaCoCo execution due to missing execution data file.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ litebridge-db-h2 ---
+[INFO] Building jar: /Users/francois/git/litebridge/litebridge-db/litebridge-db-h2/target/litebridge-db-h2-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- install:3.1.4:install (default-install) @ litebridge-db-h2 ---
+[INFO] Installing /Users/francois/git/litebridge/litebridge-db/litebridge-db-h2/pom.xml to /Users/francois/.m2/repository/org/litebridge/db/litebridge-db-h2/0.1.0-SNAPSHOT/litebridge-db-h2-0.1.0-SNAPSHOT.pom
+[INFO] Installing /Users/francois/git/litebridge/litebridge-db/litebridge-db-h2/target/litebridge-db-h2-0.1.0-SNAPSHOT.jar to /Users/francois/.m2/repository/org/litebridge/db/litebridge-db-h2/0.1.0-SNAPSHOT/litebridge-db-h2-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] ---------------< org.litebridge.db:litebridge-db-oracle >---------------
+[INFO] Building litebridge-db-oracle 0.1.0-SNAPSHOT                      [8/22]
+[INFO]   from litebridge-db/litebridge-db-oracle/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ litebridge-db-oracle ---
+[INFO] Deleting /Users/francois/git/litebridge/litebridge-db/litebridge-db-oracle/target
+[INFO] 
+[INFO] --- enforcer:3.6.2:enforce (enforce-rules) @ litebridge-db-oracle ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] 
+[INFO] --- jacoco:0.8.14:prepare-agent (default) @ litebridge-db-oracle ---
+[INFO] argLine set to -javaagent:/Users/francois/.m2/repository/org/jacoco/org.jacoco.agent/0.8.14/org.jacoco.agent-0.8.14-runtime.jar=destfile=/Users/francois/git/litebridge/litebridge-db/litebridge-db-oracle/target/jacoco.exec
+[INFO] 
+[INFO] --- dependency:3.7.0:properties (default) @ litebridge-db-oracle ---
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ litebridge-db-oracle ---
+[INFO] skip non existing resourceDirectory /Users/francois/git/litebridge/litebridge-db/litebridge-db-oracle/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ litebridge-db-oracle ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 3 source files with javac [debug target 21 module-path] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ litebridge-db-oracle ---
+[INFO] skip non existing resourceDirectory /Users/francois/git/litebridge/litebridge-db/litebridge-db-oracle/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ litebridge-db-oracle ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug target 21 module-path] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.5:test (default-test) @ litebridge-db-oracle ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jacoco:0.8.14:report (report) @ litebridge-db-oracle ---
+[INFO] Skipping JaCoCo execution due to missing execution data file.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ litebridge-db-oracle ---
+[INFO] Building jar: /Users/francois/git/litebridge/litebridge-db/litebridge-db-oracle/target/litebridge-db-oracle-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- install:3.1.4:install (default-install) @ litebridge-db-oracle ---
+[INFO] Installing /Users/francois/git/litebridge/litebridge-db/litebridge-db-oracle/pom.xml to /Users/francois/.m2/repository/org/litebridge/db/litebridge-db-oracle/0.1.0-SNAPSHOT/litebridge-db-oracle-0.1.0-SNAPSHOT.pom
+[INFO] Installing /Users/francois/git/litebridge/litebridge-db/litebridge-db-oracle/target/litebridge-db-oracle-0.1.0-SNAPSHOT.jar to /Users/francois/.m2/repository/org/litebridge/db/litebridge-db-oracle/0.1.0-SNAPSHOT/litebridge-db-oracle-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] ---------------< org.litebridge.db:litebridge-db-sqlite >---------------
+[INFO] Building litebridge-db-sqlite 0.1.0-SNAPSHOT                      [9/22]
+[INFO]   from litebridge-db/litebridge-db-sqlite/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ litebridge-db-sqlite ---
+[INFO] Deleting /Users/francois/git/litebridge/litebridge-db/litebridge-db-sqlite/target
+[INFO] 
+[INFO] --- enforcer:3.6.2:enforce (enforce-rules) @ litebridge-db-sqlite ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] 
+[INFO] --- jacoco:0.8.14:prepare-agent (default) @ litebridge-db-sqlite ---
+[INFO] argLine set to -javaagent:/Users/francois/.m2/repository/org/jacoco/org.jacoco.agent/0.8.14/org.jacoco.agent-0.8.14-runtime.jar=destfile=/Users/francois/git/litebridge/litebridge-db/litebridge-db-sqlite/target/jacoco.exec
+[INFO] 
+[INFO] --- dependency:3.7.0:properties (default) @ litebridge-db-sqlite ---
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ litebridge-db-sqlite ---
+[INFO] skip non existing resourceDirectory /Users/francois/git/litebridge/litebridge-db/litebridge-db-sqlite/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ litebridge-db-sqlite ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 3 source files with javac [debug target 21 module-path] to target/classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /Users/francois/git/litebridge/litebridge-db/litebridge-db-sqlite/src/main/java/org/litebridge/db/sqlite/SQLiteDatabaseProvider.java:[105,20] verifySchemaAndTableExists(org.litebridge.db.spi.Table,java.sql.DatabaseMetaData) in org.litebridge.db.sqlite.SQLiteDatabaseProvider cannot override verifySchemaAndTableExists(org.litebridge.db.spi.Table,java.sql.DatabaseMetaData) in org.litebridge.db.spi.impl.AbstractDatabaseProvider
+  overridden method is static
+[ERROR] /Users/francois/git/litebridge/litebridge-db/litebridge-db-sqlite/src/main/java/org/litebridge/db/sqlite/SQLiteDatabaseProvider.java:[104,5] method does not override or implement a method from a supertype
+[INFO] 2 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for litebridge 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] litebridge ......................................... SUCCESS [  0.215 s]
+[INFO] litebridge-commons ................................. SUCCESS [  1.079 s]
+[INFO] litebridge-db ...................................... SUCCESS [  0.005 s]
+[INFO] litebridge-db-spi .................................. SUCCESS [  0.235 s]
+[INFO] litebridge-converter ............................... SUCCESS [  0.198 s]
+[INFO] litebridge-db-spi-impl ............................. SUCCESS [  0.143 s]
+[INFO] litebridge-db-h2 ................................... SUCCESS [  0.062 s]
+[INFO] litebridge-db-oracle ............................... SUCCESS [  0.078 s]
+[INFO] litebridge-db-sqlite ............................... FAILURE [  0.033 s]
+[INFO] litebridge-tracking ................................ SKIPPED
+[INFO] litebridge-orm ..................................... SKIPPED
+[INFO] litebridge-spring-parent ........................... SKIPPED
+[INFO] litebridge-spring .................................. SKIPPED
+[INFO] litebridge-spring-boot-autoconfigure ............... SKIPPED
+[INFO] litebridge-spring-boot-starter ..................... SKIPPED
+[INFO] litebridge-example ................................. SKIPPED
+[INFO] litebridge-example-common .......................... SKIPPED
+[INFO] litebridge-example-h2 .............................. SKIPPED
+[INFO] litebridge-example-oracle .......................... SKIPPED
+[INFO] litebridge-example-spring-boot ..................... SKIPPED
+[INFO] litebridge-example-spring-boot-manual-config ....... SKIPPED
+[INFO] jacoco-aggregate-report ............................ SKIPPED
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.175 s
+[INFO] Finished at: 2026-05-13T12:26:56+02:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.15.0:compile (default-compile) on project litebridge-db-sqlite: Compilation failure: Compilation failure: 
+[ERROR] /Users/francois/git/litebridge/litebridge-db/litebridge-db-sqlite/src/main/java/org/litebridge/db/sqlite/SQLiteDatabaseProvider.java:[105,20] verifySchemaAndTableExists(org.litebridge.db.spi.Table,java.sql.DatabaseMetaData) in org.litebridge.db.sqlite.SQLiteDatabaseProvider cannot override verifySchemaAndTableExists(org.litebridge.db.spi.Table,java.sql.DatabaseMetaData) in org.litebridge.db.spi.impl.AbstractDatabaseProvider
+[ERROR]   overridden method is static
+[ERROR] /Users/francois/git/litebridge/litebridge-db/litebridge-db-sqlite/src/main/java/org/litebridge/db/sqlite/SQLiteDatabaseProvider.java:[104,5] method does not override or implement a method from a supertype
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+[ERROR] 
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :litebridge-db-sqlite

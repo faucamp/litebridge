@@ -8,8 +8,9 @@ import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
-import org.litebridgedb.orm.api.spec.FieldColumnMapping;
+import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
@@ -76,7 +77,7 @@ class DtoWhereConditionClauseTerminalTest {
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
 
         final DtoWhereConditionClauseTerminal<TestDto> dtoWhereConditionClauseTerminal = new DtoWhereConditionClauseTerminal<>(dtoSelector);
-        final FieldColumnSpec fieldColumnSpec = FieldColumnMapping.f("myVar").c("MY_VAR");
+        final FieldColumnSpec fieldColumnSpec = new FieldColumnSpec(new FieldSpec("myVar", false), new ColumnSpec("MY_VAR"));
 
         // When
         final DtoWhereConditionClause<TestDto> result = dtoWhereConditionClauseTerminal.and(fieldColumnSpec);
@@ -129,7 +130,7 @@ class DtoWhereConditionClauseTerminalTest {
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
 
         final DtoWhereConditionClauseTerminal<TestDto> dtoWhereConditionClauseTerminal = new DtoWhereConditionClauseTerminal<>(dtoSelector);
-        final FieldColumnSpec fieldColumnSpec = FieldColumnMapping.f("myVar").c("MY_VAR");
+        final FieldColumnSpec fieldColumnSpec = new FieldColumnSpec(new FieldSpec("myVar", false), new ColumnSpec("MY_VAR"));
 
         // When
         final DtoOrderByClause<TestDto> result = dtoWhereConditionClauseTerminal.orderBy(fieldColumnSpec);

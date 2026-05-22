@@ -272,19 +272,6 @@ class OracleDatabaseProviderTest {
     }
 
     @Test
-    void createSequenceNextValueForDirectInsert_validSequenceName() {
-        // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final String sequenceName = "MY_SEQUENCE";
-
-        // When
-        String result = provider.createSequenceNextValueForDirectInsert(sequenceName);
-
-        // Then
-        assertEquals("MY_SEQUENCE.NEXTVAL", result);
-    }
-
-    @Test
     void createAlias_validAlias() {
         // Given
         final OracleDatabaseProvider provider = new OracleDatabaseProvider();

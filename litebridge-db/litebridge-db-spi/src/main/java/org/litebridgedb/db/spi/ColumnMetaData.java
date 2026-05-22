@@ -1,6 +1,7 @@
 package org.litebridgedb.db.spi;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridgedb.db.spi.generator.ColumnValueGenerator;
 
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -24,7 +25,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
     private final int decimalDigits;
     private boolean autoIncrement;
     @Nullable
-    private String sequence;
+    private ColumnValueGenerator generator;
     @Nullable
     private String joinColumn;
 
@@ -38,7 +39,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
      * @param size          the size of the column, typically representing the maximum number of characters for string or digits for numeric types
      * @param decimalDigits the number of decimal digits for the column, applicable for numeric types
      * @param autoIncrement a flag indicating whether the column is defined as auto-increment
-     * @param sequence      the name of the sequence associated with the column, or null if no sequence is associated
+     * @param generator      the name of the sequence associated with the column, or null if no sequence is associated
      */
     public ColumnMetaData(final Table table,
                           final String name,
@@ -47,7 +48,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
                           final int size,
                           final int decimalDigits,
                           final boolean autoIncrement,
-                          final @Nullable String sequence) {
+                          final @Nullable ColumnValueGenerator generator) {
         this.table = table;
         this.name = name;
         this.nullable = nullable;
@@ -55,7 +56,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
         this.size = size;
         this.decimalDigits = decimalDigits;
         this.autoIncrement = autoIncrement;
-        this.sequence = sequence;
+        this.generator = generator;
     }
 
     /**
@@ -145,12 +146,12 @@ public final class ColumnMetaData implements MappedFieldTarget {
         this.autoIncrement = autoIncrement;
     }
 
-    public @Nullable String getSequence() {
-        return sequence;
+    public @Nullable ColumnValueGenerator getGenerator() {
+        return generator;
     }
 
-    public void setSequence(final @Nullable String sequence) {
-        this.sequence = sequence;
+    public void setGenerator(final @Nullable ColumnValueGenerator generator) {
+        this.generator = generator;
     }
 
     public @Nullable String getJoinColumn() {
@@ -168,12 +169,12 @@ public final class ColumnMetaData implements MappedFieldTarget {
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof final ColumnMetaData that)) return false;
-        return nullable == that.nullable && dataType == that.dataType && size == that.size && decimalDigits == that.decimalDigits && autoIncrement == that.autoIncrement && Objects.equals(table, that.table) && Objects.equals(name, that.name) && Objects.equals(sequence, that.sequence) && Objects.equals(joinColumn, that.joinColumn);
+        return nullable == that.nullable && dataType == that.dataType && size == that.size && decimalDigits == that.decimalDigits && autoIncrement == that.autoIncrement && Objects.equals(table, that.table) && Objects.equals(name, that.name) && Objects.equals(generator, that.generator) && Objects.equals(joinColumn, that.joinColumn);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(table, name, nullable, dataType, size, decimalDigits, autoIncrement, sequence, joinColumn);
+        return Objects.hash(table, name, nullable, dataType, size, decimalDigits, autoIncrement, generator, joinColumn);
     }
 
     @Override

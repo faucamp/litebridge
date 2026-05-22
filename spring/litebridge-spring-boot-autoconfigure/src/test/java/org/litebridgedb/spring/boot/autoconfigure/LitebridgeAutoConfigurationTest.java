@@ -6,6 +6,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.update.Delete;
@@ -146,6 +147,11 @@ class LitebridgeAutoConfigurationTest {
         @Override
         public TypeConverter getTypeConverter() {
             return null;
+        }
+
+        @Override
+        public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
+            throw new UnsupportedOperationException();
         }
     }
 }

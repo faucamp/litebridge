@@ -10,6 +10,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.math.MathOperation;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
@@ -104,6 +105,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
+    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
+        return new DefaultSequenceColumnValueGenerator(sequence);
+    }
+
+    @Override
     public String toSql(final Select select) {
         final StringBuilder sql = new StringBuilder("SELECT ");
 
@@ -178,18 +184,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         });
 
         return sql.toString();
-    }
-
-    /**
-     * Generate a SQL fragment to retrieve the next value from a sequence for direct use in an INSERT or UPDATE statement,
-     * e.g. to generate "INSERT INTO LB.ACCOUNT(ACCOUNT_ID, ACCOUNT_NAME) VALUES (NEXT VALUE FOR sequence_name, ?)",
-     * this method returns "NEXT VALUE FOR sequence_name".
-     *
-     * @param sequence the name of the database sequence to generate the next value from
-     * @return a formatted SQL string representing the next sequence value for direct insertion
-     */
-    protected String createSequenceNextValueForDirectInsert(final String sequence) {
-        return "NEXT VALUE FOR %s".formatted(sequence);
     }
 
     /**
@@ -487,18 +481,18 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     protected Map<ColumnMetaData, Object> extractGeneratedKeys(final TableMetaData tableMetaData, final PreparedStatement preparedStatement) throws SQLException {
         final List<ColumnMetaData> generatedPrimaryKeys = getGeneratedPrimaryKeyColumns(tableMetaData);
         final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(tableMetaData.primaryKey().size());
-        final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
 
-        while (generatedKeysResultSet.next()) {
-            for (ColumnMetaData pkColumn : generatedPrimaryKeys) {
-                final Object generatedId = generatedKeysResultSet.getObject(pkColumn.name());
-                getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
-                generatedKeys.put(pkColumn, generatedId);
+        try (final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys()) {
+            while (generatedKeysResultSet.next()) {
+                for (ColumnMetaData pkColumn : generatedPrimaryKeys) {
+                    final Object generatedId = generatedKeysResultSet.getObject(pkColumn.name());
+                    getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
+                    generatedKeys.put(pkColumn, generatedId);
+                }
             }
-        }
 
-        generatedKeysResultSet.close();
-        return generatedKeys;
+            return generatedKeys;
+        }
     }
 
     /**
@@ -596,33 +590,35 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     protected List<ColumnMetaData> getColumnNames(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
-        final ResultSet dbColumns = databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null);
-        final List<ColumnMetaData> columns = new ArrayList<>();
+        try (final ResultSet dbColumns = databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)) {
+            final List<ColumnMetaData> columns = new ArrayList<>();
 
-        while (dbColumns.next()) {
-            final String name = dbColumns.getString("COLUMN_NAME");
-            final boolean nullable = dbColumns.getBoolean("IS_NULLABLE");
-            final int dataType = dbColumns.getInt("DATA_TYPE");
-            final int size = dbColumns.getInt("COLUMN_SIZE");
+            while (dbColumns.next()) {
+                final String name = dbColumns.getString("COLUMN_NAME");
+                final boolean nullable = dbColumns.getBoolean("IS_NULLABLE");
+                final int dataType = dbColumns.getInt("DATA_TYPE");
+                final int size = dbColumns.getInt("COLUMN_SIZE");
+                final boolean isAutoincrement = dbColumns.getBoolean("IS_AUTOINCREMENT");
+                final int decimalDigits = dbColumns.getInt("DECIMAL_DIGITS");
 
-            columns.add(new ColumnMetaData(table, name, nullable, dataType, size));
+                columns.add(new ColumnMetaData(table, name, nullable, dataType, size, decimalDigits, isAutoincrement, null));
+            }
+
+            return columns;
         }
-
-        dbColumns.close();
-        return columns;
     }
 
     protected List<String> getPrimaryKeyColumnNames(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
-        final ResultSet primaryKeys = databaseMetaData.getPrimaryKeys(table.catalog(), table.schema(), table.name());
-        final List<String> primaryKeyColumnNames = new ArrayList<>();
+        try (final ResultSet primaryKeys = databaseMetaData.getPrimaryKeys(table.catalog(), table.schema(), table.name())) {
+            final List<String> primaryKeyColumnNames = new ArrayList<>();
 
-        while (primaryKeys.next()) {
-            final String columnName = primaryKeys.getString("COLUMN_NAME");
-            primaryKeyColumnNames.add(columnName);
+            while (primaryKeys.next()) {
+                final String columnName = primaryKeys.getString("COLUMN_NAME");
+                primaryKeyColumnNames.add(columnName);
+            }
+
+            return primaryKeyColumnNames;
         }
-
-        primaryKeys.close();
-        return primaryKeyColumnNames;
     }
 
     protected static void verifySchemaAndTableExists(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
@@ -758,11 +754,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             final Object convertedValue = typeConverter.convert(columnValue.value(), column.getDataType());
 
             if (convertedValue == null) {
-                if (!column.isNullable() && !column.isAutoIncrement() && column.getSequence() == null) {
+                if (!column.isNullable() && !column.isAutoIncrement() && column.getGenerator() == null) {
                     throw new IllegalArgumentException("Attempting to insert NULL into non-nullable column: '%s'. Possible cause: column spec missing generator such as autoincrement/sequence".formatted(column.name()));
-                } else if (column.getSequence() != null) {
-                    // Add the next value in the sequence directly to the statement
-                    valueSpecifiers.add(createSequenceNextValueForDirectInsert(column.getSequence()));
+                } else if (column.getGenerator() != null) {
+                    // Use the column value generator to add a value
+                    valueSpecifiers.add(column.getGenerator().generate(column).toString());
                 }
             } else {
                 valueSpecifiers.add("?");

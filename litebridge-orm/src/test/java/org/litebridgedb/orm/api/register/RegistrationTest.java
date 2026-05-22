@@ -1,6 +1,7 @@
 package org.litebridgedb.orm.api.register;
 
 import org.junit.jupiter.api.Test;
+import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
 import org.litebridgedb.orm.api.spec.FieldSpec;
 
@@ -9,19 +10,20 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 class RegistrationTest {
 
     @Test
     void fullRegistrationFlow() {
         // Given
-        RegistrationContext context = new RegistrationContext();
+        RegistrationContext context = new RegistrationContext(mock(DatabaseProvider.class));
 
         // When
         DtoTableSpec spec = ((DtoTableSpecBuilder) context
                 .allowInterface(TestInterface.class)
                 .mapToTable("test_table")
-                .mapField("id").toColumn("ID").autoIncrement().natively()
+                .mapField("id").toColumn("ID").autoIncrement()
                 .mapField("name").toColumn("NAME")
                 .mapField("address").toColumn("ADDR")
                 .mapField("category").toColumn("CAT_ID").joinOn("CAT_ID")
@@ -40,7 +42,7 @@ class RegistrationTest {
     @Test
     void mapProperty() {
         // Given
-        RegistrationContext context = new RegistrationContext();
+        RegistrationContext context = new RegistrationContext(mock(DatabaseProvider.class));
 
         // When
         DtoTableSpec spec = ((DtoTableSpecBuilder) context
@@ -56,7 +58,9 @@ class RegistrationTest {
                 .anyMatch(f -> f.name().equals("name") && f.property()));
     }
 
-    private interface TestInterface {}
+    private interface TestInterface {
+    }
+
     private static class TestDto {
         private Long id;
         private String name;

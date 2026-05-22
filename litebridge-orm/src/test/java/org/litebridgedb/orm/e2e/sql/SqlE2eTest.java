@@ -4,8 +4,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
-import org.litebridgedb.orm.e2e.basic.BasicE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
+import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,14 +26,15 @@ class SqlE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select all records")
-    void selectAll() throws Exception {
+    void selectAll(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
-        insertTestPersonRecords();
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        insertTestPersonRecords(personTableName);
 
         // When
         LOGGER.info("Selecting all records");
         final List<Row> result =
-                litebridge.select().from("LB.PERSON")
+                litebridge.select().from(personTableName)
                         .orderBy("PERSON_ID").asc()
                         .list();
 
@@ -41,30 +42,31 @@ class SqlE2eTest extends AbstractE2eTest {
         assertEquals(2, result.size());
         final Row row1 = result.getFirst();
         assertEquals(5, row1.columnStream().count());
-        assertEquals(BigDecimal.valueOf(1), row1.column("PERSON_ID").orElseThrow().value());
+        assertNumberEquals(1, row1.column("PERSON_ID").orElseThrow().value());
         assertEquals("Alice", row1.column("FIRST_NAME").orElseThrow().value());
         assertEquals("Smith", row1.column("SURNAME").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(20), row1.column("AGE").orElseThrow().value());
+        assertNumberEquals(20, row1.column("AGE").orElseThrow().value());
         assertEquals("brown", row1.column("EYE_COLOUR").orElseThrow().value());
         final Row row2 = result.get(1);
         assertEquals(5, row2.columnStream().count());
-        assertEquals(BigDecimal.valueOf(2), row2.column("PERSON_ID").orElseThrow().value());
+        assertNumberEquals(2, row2.column("PERSON_ID").orElseThrow().value());
         assertEquals("Bob", row2.column("FIRST_NAME").orElseThrow().value());
         assertEquals("Johnson", row2.column("SURNAME").orElseThrow().value());
         assertNull(row2.column("EYE_COLOUR").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(30), row2.column("AGE").orElseThrow().value());
+        assertNumberEquals(30, row2.column("AGE").orElseThrow().value());
     }
 
     @TestTemplate
     @DisplayName("Select specific columns and filter records using a query")
-    void selectQuery() throws Exception {
+    void selectQuery(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
-        insertTestPersonRecords();
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        insertTestPersonRecords(personTableName);
 
         // When
         LOGGER.info("Selecting specific columns and filtering records using a query");
         final List<Row> result =
-                litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
+                litebridge.select("FIRST_NAME", "SURNAME", "AGE").from(personTableName)
                         .where("AGE").gt(18)
                         .and("AGE").lt(25)
                         .list();
@@ -74,20 +76,21 @@ class SqlE2eTest extends AbstractE2eTest {
         assertEquals(3, result.getFirst().columnStream().count());
         assertEquals("Alice", result.getFirst().column("FIRST_NAME").orElseThrow().value());
         assertEquals("Smith", result.getFirst().column("SURNAME").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(20), result.getFirst().column("AGE").orElseThrow().value());
+        assertNumberEquals(20, result.getFirst().column("AGE").orElseThrow().value());
     }
 
     @TestTemplate
     @DisplayName("Select records using SQL and map results to Person objects")
-    void selectMapToDto() throws Exception {
+    void selectMapToDto(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
-        insertTestPersonRecords();
-        BasicE2eTest.registerPersonDtoTableMapping(litebridge);
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        insertTestPersonRecords(personTableName);
+        tableMapper.registerPersonDtoTableMapping(litebridge);
 
         // When
         LOGGER.info("Selecting specific columns and filtering records using a query");
         final List<Person> result =
-                litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
+                litebridge.select("FIRST_NAME", "SURNAME", "AGE").from(personTableName)
                         .where("AGE").gt(18)
                         .and("AGE").lt(25)
                         .orderBy("PERSON_ID").asc()
@@ -106,22 +109,24 @@ class SqlE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select with a JOIN USING clause")
-    void selectJoinUsing() throws Exception {
+    void selectJoinUsing(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
-        insertTestPersonRecords();
-        insertTestAccountRecords();
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String accountTableName = tableMapper.qualifyName("ACCOUNT");
+        insertTestPersonRecords(personTableName);
+        insertTestAccountRecords(accountTableName);
 
         // When
         LOGGER.info("Selecting with a JOIN USING clause");
         final List<Row> result =
                 litebridge.select(
-                                c("LB.PERSON", "FIRST_NAME"),
-                                c("LB.PERSON", "SURNAME"),
-                                c("LB.PERSON", "AGE"),
-                                c("LB.ACCOUNT", "ACCOUNT_ID"),
-                                c("LB.ACCOUNT", "ACCOUNT_NAME"))
-                        .from("LB.PERSON")
-                        .join("LB.ACCOUNT").using("PERSON_ID")
+                                c(personTableName, "FIRST_NAME"),
+                                c(personTableName, "SURNAME"),
+                                c(personTableName, "AGE"),
+                                c(accountTableName, "ACCOUNT_ID"),
+                                c(accountTableName, "ACCOUNT_NAME"))
+                        .from(personTableName)
+                        .join(accountTableName).using("PERSON_ID")
                         .list();
 
         // Then
@@ -130,62 +135,80 @@ class SqlE2eTest extends AbstractE2eTest {
         assertEquals(5, row1.columnStream().count());
         assertEquals("Alice", row1.column("FIRST_NAME").orElseThrow().value());
         assertEquals("Smith", row1.column("SURNAME").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(20), row1.column("AGE").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(1), row1.column("ACCOUNT_ID").orElseThrow().value());
+        assertNumberEquals(20, row1.column("AGE").orElseThrow().value());
+        assertNumberEquals(1, row1.column("ACCOUNT_ID").orElseThrow().value());
         assertEquals("Alice's Account", row1.column("ACCOUNT_NAME").orElseThrow().value());
         final Row row2 = result.get(1);
         assertEquals(5, row2.columnStream().count());
         assertEquals("Bob", row2.column("FIRST_NAME").orElseThrow().value());
         assertEquals("Johnson", row2.column("SURNAME").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(30), row2.column("AGE").orElseThrow().value());
-        assertEquals(BigDecimal.valueOf(2), row2.column("ACCOUNT_ID").orElseThrow().value());
+        assertNumberEquals(30, row2.column("AGE").orElseThrow().value());
+        assertNumberEquals(2, row2.column("ACCOUNT_ID").orElseThrow().value());
         assertEquals("Bob's Account", row2.column("ACCOUNT_NAME").orElseThrow().value());
     }
 
     @TestTemplate
     @DisplayName("Delete records")
-    void delete() throws Exception {
+    void delete(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
-        insertTestPersonRecords();
-        assertEquals(2, litebridge.select().from("LB.PERSON").list().size());
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        insertTestPersonRecords(personTableName);
+        assertEquals(2, litebridge.select().from(personTableName).list().size());
 
         // When
-        litebridge.delete("LB.PERSON", p -> p.where("AGE").gt(20));
+        litebridge.delete(personTableName, p -> p.where("AGE").gt(20));
 
         // Then
-        assertEquals(1, litebridge.select().from("LB.PERSON").list().size());
+        assertEquals(1, litebridge.select().from(personTableName).list().size());
     }
 
     @TestTemplate
     @DisplayName("Update records")
-    void update() throws Exception {
+    void update(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
-        insertTestPersonRecords();
-        assumeTrue(litebridge.select().from("LB.PERSON").where("AGE").lt(50).list().size() == 2);
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        insertTestPersonRecords(personTableName);
+        assumeTrue(litebridge.select().from(personTableName).where("AGE").lt(50).list().size() == 2);
 
         // When
-        litebridge.update("LB.PERSON", p -> p.set("AGE").to(50)
+        litebridge.update(personTableName, p -> p.set("AGE").to(50)
                 .where("FIRST_NAME").eq("Bob"));
 
         // Then
-        assertEquals(1, litebridge.select().from("LB.PERSON").where("AGE").lt(50).list().size());
+        assertEquals(1, litebridge.select().from(personTableName).where("AGE").lt(50).list().size());
     }
 
-    private void insertTestPersonRecords() throws SQLException {
+    private void insertTestPersonRecords(final String personTableName) throws SQLException {
         try (final Connection connection = dbEnv.getDataSource().getConnection()) {
-            try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO LB.PERSON (PERSON_ID, FIRST_NAME, SURNAME, AGE, EYE_COLOUR) VALUES (?, ?, ?, ?, ?)")) {
+            try (final PreparedStatement preparedStatement = connection.prepareStatement(sql("INSERT INTO " + personTableName + " (PERSON_ID, FIRST_NAME, SURNAME, AGE, EYE_COLOUR) VALUES (?, ?, ?, ?, ?)"))) {
                 insertPerson(1L, "Alice", "Smith", 20, "brown", preparedStatement);
                 insertPerson(2L, "Bob", "Johnson", 30, null, preparedStatement);
             }
         }
     }
 
-    private void insertTestAccountRecords() throws SQLException {
+    private void insertTestAccountRecords(final String accountTableName) throws SQLException {
         try (final Connection connection = dbEnv.getDataSource().getConnection()) {
-            try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO LB.ACCOUNT (ACCOUNT_ID, ACCOUNT_NAME, BALANCE, PERSON_ID) VALUES (?, ?, ?, ?)")) {
+            try (final PreparedStatement preparedStatement = connection.prepareStatement(sql("INSERT INTO " + accountTableName + " (ACCOUNT_ID, ACCOUNT_NAME, BALANCE, PERSON_ID) VALUES (?, ?, ?, ?)"))) {
                 insertAccount(1L, "Alice's Account", 1000L, 1L, preparedStatement);
                 insertAccount(2L, "Bob's Account", 2000L, 2L, preparedStatement);
             }
+        }
+    }
+
+    private String tableName(final String tableName) {
+        return dbEnv.getName().equals("SQLite") ? tableName.replace("LB.", "") : tableName;
+    }
+
+    private String sql(final String sql) {
+        return dbEnv.getName().equals("SQLite") ? sql.replace("LB.", "") : sql;
+    }
+
+    private void assertNumberEquals(final long expected, final Object actual) {
+        if (actual instanceof Number number) {
+            assertEquals(expected, number.longValue());
+        } else {
+            assertEquals(BigDecimal.valueOf(expected), actual);
         }
     }
 

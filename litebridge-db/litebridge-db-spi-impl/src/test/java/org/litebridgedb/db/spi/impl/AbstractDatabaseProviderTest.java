@@ -201,7 +201,7 @@ class AbstractDatabaseProviderTest {
         final TableMetaData tableMetaData = tableMetaDataImpl();
         tableMetaData.column("TEST_PK").setAutoIncrement(true);
         final ColumnMetaData columnMetaData = tableMetaData.column("TEST_COLUMN");
-        columnMetaData.setSequence("TEST_SEQUENCE");
+        columnMetaData.setGenerator(new DefaultSequenceColumnValueGenerator("TEST_SEQUENCE"));
         final ColumnValue columnValue1 = new ColumnValue(columnMetaData.toColumn(), "testValue1");
         final ColumnValue columnValue2 = new ColumnValue(columnMetaData.toColumn(), null);
         final RowValue rowValue1 = new RowValue(List.of(columnValue1));
@@ -1033,18 +1033,6 @@ class AbstractDatabaseProviderTest {
     }
 
     @Test
-    void createSequenceNextValueForDirectInsert() {
-        // Given
-        final String sequence = "TEST_SEQUENCE";
-
-        // When
-        final String result = databaseProvider.createSequenceNextValueForDirectInsert(sequence);
-
-        // Then
-        assertEquals("NEXT VALUE FOR TEST_SEQUENCE", result);
-    }
-
-    @Test
     void createMathOperation() throws Exception {
         // Given
         final TableMetaData tableMetaData = tableMetaDataImpl();
@@ -1674,7 +1662,7 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final ColumnMetaData column = tableMetaData.column("TEST_COLUMN");
-        column.setSequence("TEST_SEQUENCE");
+        column.setGenerator(new DefaultSequenceColumnValueGenerator("TEST_SEQUENCE"));
         final RowValue rowValue = new RowValue(List.of(new ColumnValue(column.toColumn(), "testValue")));
 
         when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");

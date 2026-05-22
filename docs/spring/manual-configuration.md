@@ -12,12 +12,12 @@ Add the `litebridge-spring` and your chosen database provider to your `pom.xml`:
 <dependency>
     <groupId>org.litebridgedb</groupId>
     <artifactId>litebridge-spring</artifactId>
-    <version>${litebridge.version}</version>
+    <version>0.1.3</version> <!-- Replace with latest version -->
 </dependency>
 <dependency>
     <groupId>org.litebridgedb</groupId>
     <artifactId>litebridge-db-h2</artifactId>
-    <version>${litebridge.version}</version>
+    <version>0.1.3</version> <!-- Replace with latest version -->
 </dependency>
 ```
 

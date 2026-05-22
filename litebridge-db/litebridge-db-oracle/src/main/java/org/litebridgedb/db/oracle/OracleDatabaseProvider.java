@@ -7,6 +7,7 @@ import org.litebridgedb.convert.DefaultTypeConverter;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.AbstractDatabaseProvider;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
@@ -81,8 +82,8 @@ public class OracleDatabaseProvider extends AbstractDatabaseProvider {
     }
 
     @Override
-    protected String createSequenceNextValueForDirectInsert(final String sequence) {
-        return "%s.NEXTVAL".formatted(sequence);
+    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
+        return new OracleSequenceColumnValueGenerator(sequence);
     }
 
     @Override

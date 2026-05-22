@@ -8,6 +8,7 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.impl.DefaultSequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.db.spi.update.Insert;
@@ -104,7 +105,7 @@ class LitebridgeTest {
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpecMyId = new FieldSpec("myId", false);
-        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", true, "LB.TEST_SEQ", null);
+        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", true, new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
         final FieldSpec fieldSpecMyVar = new FieldSpec("myVar", false);
         final ColumnSpec columnSpecMyVar = new ColumnSpec("MY_VAR", false, null, null);
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(
@@ -152,7 +153,7 @@ class LitebridgeTest {
         final TransactionManager transactionManager = new DefaultTransactionManager(dataSource);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpecMyId = new FieldSpec("myId", false);
-        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", true, "LB.TEST_SEQ", null);
+        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", true, new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
         final FieldSpec fieldSpecMyVar = new FieldSpec("myVar", false);
         final ColumnSpec columnSpecMyVar = new ColumnSpec("MY_VAR", false, null, null);
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(
@@ -186,7 +187,7 @@ class LitebridgeTest {
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpecMyId = new FieldSpec("myId", false);
-        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", true, "LB.TEST_SEQ", null);
+        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", true, new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
         final FieldSpec fieldSpecMyVar = new FieldSpec("myVar", false);
         final ColumnSpec columnSpecMyVar = new ColumnSpec("MY_VAR", false, null, null);
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(
@@ -235,7 +236,7 @@ class LitebridgeTest {
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpecMyId = new FieldSpec("myId", false);
-        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", true, "LB.TEST_SEQ", null);
+        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", true, new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
         final FieldSpec fieldSpecMyVar = new FieldSpec("myVar", false);
         final ColumnSpec columnSpecMyVar = new ColumnSpec("MY_VAR", false, null, null);
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(
@@ -454,7 +455,7 @@ class LitebridgeTest {
     void constructors() {
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionManager transactionManager = mock(TransactionManager.class);
-        
+
         assertNotNull(new Litebridge(databaseProvider, transactionManager));
         assertNotNull(new Litebridge(databaseProvider, transactionManager, MethodHandles.lookup()));
     }
@@ -467,7 +468,7 @@ class LitebridgeTest {
 
         litebridge.delete("MY_TABLE");
         litebridge.delete("MY_TABLE", q -> q.where("COL").eq("VAL"));
-        
+
         verify(databaseProvider, org.mockito.Mockito.atLeastOnce()).delete(any(), any());
     }
 
@@ -478,7 +479,7 @@ class LitebridgeTest {
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
         litebridge.update("MY_TABLE", q -> q.set("COL").to("VAL").where("ID").eq(1));
-        
+
         verify(databaseProvider).update(any(), any());
     }
 

@@ -3,6 +3,7 @@ package org.litebridgedb.orm.e2e.shareddto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
+import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridgedb.orm.e2e.shareddto.dto.Application;
 import org.litebridgedb.orm.e2e.shareddto.dto.Server;
 import org.litebridgedb.orm.e2e.shareddto.dto.Status;
@@ -18,19 +19,19 @@ class SharedDtoE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Persist objects that share a nested DTO mapped to different tables")
-    void sharedDto_differentTables() throws Exception {
+    void sharedDto_differentTables(final DbEnvDtoTableMapper tableMapper) {
         // Register DTOs and construct data
-        litebridge.register(Application.class, rc -> rc.mapToTable("LB.APPLICATION")
+        litebridge.register(Application.class, rc -> rc.mapToTable(tableMapper.qualifyName("APPLICATION"))
                 .mapField("name").toColumn("NAME")
                 .mapField("status").toColumn("STATUS_CODE").joinOn("CODE")
-                .withMappedTable(Status.class, src -> src.mapToTable("LB.APPLICATION_STATUS")
+                .withMappedTable(Status.class, src -> src.mapToTable(tableMapper.qualifyName("APPLICATION_STATUS"))
                         .mapField("code").toColumn("CODE")
                         .mapField("message").toColumn("MESSAGE")));
 
-        litebridge.register(Server.class, rc -> rc.mapToTable("LB.SERVER")
+        litebridge.register(Server.class, rc -> rc.mapToTable(tableMapper.qualifyName("SERVER"))
                 .mapField("host").toColumn("HOST")
                 .mapField("status").toColumn("SERVER_STATUS_CODE").joinOn("STATUS_CODE")
-                .withMappedTable(Status.class, src -> src.mapToTable("LB.SERVER_STATUS")
+                .withMappedTable(Status.class, src -> src.mapToTable(tableMapper.qualifyName("SERVER_STATUS"))
                         .mapField("code").toColumn("STATUS_CODE")
                         .mapField("message").toColumn("MESSAGE")));
 
