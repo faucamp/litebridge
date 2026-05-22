@@ -481,18 +481,18 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     protected Map<ColumnMetaData, Object> extractGeneratedKeys(final TableMetaData tableMetaData, final PreparedStatement preparedStatement) throws SQLException {
         final List<ColumnMetaData> generatedPrimaryKeys = getGeneratedPrimaryKeyColumns(tableMetaData);
         final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(tableMetaData.primaryKey().size());
-        final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
 
-        while (generatedKeysResultSet.next()) {
-            for (ColumnMetaData pkColumn : generatedPrimaryKeys) {
-                final Object generatedId = generatedKeysResultSet.getObject(pkColumn.name());
-                getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
-                generatedKeys.put(pkColumn, generatedId);
+        try (final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys()) {
+            while (generatedKeysResultSet.next()) {
+                for (ColumnMetaData pkColumn : generatedPrimaryKeys) {
+                    final Object generatedId = generatedKeysResultSet.getObject(pkColumn.name());
+                    getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
+                    generatedKeys.put(pkColumn, generatedId);
+                }
             }
-        }
 
-        generatedKeysResultSet.close();
-        return generatedKeys;
+            return generatedKeys;
+        }
     }
 
     /**
@@ -590,33 +590,35 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     protected List<ColumnMetaData> getColumnNames(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
-        final ResultSet dbColumns = databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null);
-        final List<ColumnMetaData> columns = new ArrayList<>();
+        try (final ResultSet dbColumns = databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)) {
+            final List<ColumnMetaData> columns = new ArrayList<>();
 
-        while (dbColumns.next()) {
-            final String name = dbColumns.getString("COLUMN_NAME");
-            final boolean nullable = dbColumns.getBoolean("IS_NULLABLE");
-            final int dataType = dbColumns.getInt("DATA_TYPE");
-            final int size = dbColumns.getInt("COLUMN_SIZE");
+            while (dbColumns.next()) {
+                final String name = dbColumns.getString("COLUMN_NAME");
+                final boolean nullable = dbColumns.getBoolean("IS_NULLABLE");
+                final int dataType = dbColumns.getInt("DATA_TYPE");
+                final int size = dbColumns.getInt("COLUMN_SIZE");
+                final boolean isAutoincrement = dbColumns.getBoolean("IS_AUTOINCREMENT");
+                final int decimalDigits = dbColumns.getInt("DECIMAL_DIGITS");
 
-            columns.add(new ColumnMetaData(table, name, nullable, dataType, size));
+                columns.add(new ColumnMetaData(table, name, nullable, dataType, size, decimalDigits, isAutoincrement, null));
+            }
+
+            return columns;
         }
-
-        dbColumns.close();
-        return columns;
     }
 
     protected List<String> getPrimaryKeyColumnNames(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
-        final ResultSet primaryKeys = databaseMetaData.getPrimaryKeys(table.catalog(), table.schema(), table.name());
-        final List<String> primaryKeyColumnNames = new ArrayList<>();
+        try (final ResultSet primaryKeys = databaseMetaData.getPrimaryKeys(table.catalog(), table.schema(), table.name())) {
+            final List<String> primaryKeyColumnNames = new ArrayList<>();
 
-        while (primaryKeys.next()) {
-            final String columnName = primaryKeys.getString("COLUMN_NAME");
-            primaryKeyColumnNames.add(columnName);
+            while (primaryKeys.next()) {
+                final String columnName = primaryKeys.getString("COLUMN_NAME");
+                primaryKeyColumnNames.add(columnName);
+            }
+
+            return primaryKeyColumnNames;
         }
-
-        primaryKeys.close();
-        return primaryKeyColumnNames;
     }
 
     protected static void verifySchemaAndTableExists(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {

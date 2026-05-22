@@ -15,8 +15,10 @@ To specify a specific database environment, set the `lb.e2e.env` system property
 - `all` - Run against all supported databases (default)
 - `h2` - Run against H2
 - `oracle` - Run against Oracle
+- `sqlite` - Run against SQLite
 - `none` - Disable E2E integration tests
 
+Multiple environments can be specified by separating them with a comma.
 By default, the tests will run against all supported databases (`all`).
 
 ### Examples:

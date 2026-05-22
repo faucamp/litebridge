@@ -17,7 +17,7 @@ To use Litebridge, add the `litebridge-orm` dependency to your `pom.xml`:
 <dependency>
     <groupId>org.litebridgedb</groupId>
     <artifactId>litebridge-orm</artifactId>
-    <version>${project.version}</version>
+    <version>0.1.3</version> <!-- Replace with latest version -->
 </dependency>
 ```
 
@@ -31,6 +31,7 @@ Litebridge uses a modular architecture for database support. You must include a 
 | --- | --- |
 | **H2** | `litebridge-db-h2` |
 | **Oracle** | `litebridge-db-oracle` |
+| **SQLite** | `litebridge-db-sqlite` |
 
 Example for H2:
 
@@ -38,7 +39,7 @@ Example for H2:
 <dependency>
     <groupId>org.litebridgedb</groupId>
     <artifactId>litebridge-db-h2</artifactId>
-    <version>${project.version}</version>
+    <version>0.1.3</version> <!-- Replace with latest version -->
 </dependency>
 ```
 
@@ -54,7 +55,7 @@ The easiest way to integrate Litebridge into a Spring Boot application is using 
 <dependency>
     <groupId>org.litebridgedb</groupId>
     <artifactId>litebridge-spring-boot-starter</artifactId>
-    <version>${project.version}</version>
+    <version>0.1.3</version> <!-- Replace with latest version -->
 </dependency>
 ```
 

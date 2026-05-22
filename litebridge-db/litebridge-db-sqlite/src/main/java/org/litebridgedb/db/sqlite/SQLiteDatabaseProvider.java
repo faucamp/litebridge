@@ -77,17 +77,6 @@ public class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
     }
 
     @Override
-    protected List<String> getPrimaryKeyColumnNames(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
-        try (ResultSet rs = databaseMetaData.getPrimaryKeys(null, null, table.name())) {
-            final List<String> primaryKeyColumnNames = new java.util.ArrayList<>();
-            while (rs.next()) {
-                primaryKeyColumnNames.add(rs.getString("COLUMN_NAME"));
-            }
-            return primaryKeyColumnNames;
-        }
-    }
-
-    @Override
     protected List<ColumnMetaData> getColumnNames(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
         try (ResultSet rs = databaseMetaData.getColumns(null, null, table.name(), null)) {
             final List<ColumnMetaData> columns = new java.util.ArrayList<>();
