@@ -77,11 +77,20 @@
         <module>litebridge-orm</module>
         <module>spring</module>
         <module>litebridge-tracking</module>
-        <module>example</module>
-        <module>jacoco-aggregate-report</module>
     </modules>
 
     <profiles>
+        <profile>
+            <id>non-release</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>example</module>
+                <module>jacoco-aggregate-report</module>
+            </modules>
+        </profile>
+
         <profile>
             <id>release</id>
             <build>

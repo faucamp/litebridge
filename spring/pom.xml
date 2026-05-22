@@ -26,8 +26,22 @@
         <module>litebridge-spring</module>
         <module>litebridge-spring-boot-autoconfigure</module>
         <module>litebridge-spring-boot-starter</module>
-        <module>litebridge-spring-boot3-test</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>non-release</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>litebridge-spring-boot3-test</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>release</id>
+        </profile>
+    </profiles>
 
     <dependencyManagement>
         <dependencies>
