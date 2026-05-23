@@ -1469,7 +1469,7 @@ class AbstractDatabaseProviderTest {
     }
 
     @Test
-    void getColumnNames() throws Exception {
+    void getColumnMetaData() throws Exception {
         // Given
         mockTransactionManagerNoConnectionStub();
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
@@ -1484,7 +1484,7 @@ class AbstractDatabaseProviderTest {
         when(databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)).thenReturn(columnResultSet);
 
         // When
-        final List<ColumnMetaData> result = databaseProvider.getColumnNames(table, databaseMetaData);
+        final List<ColumnMetaData> result = databaseProvider.getColumnMetaData(table, databaseMetaData);
 
         // Then
         assertNotNull(result);

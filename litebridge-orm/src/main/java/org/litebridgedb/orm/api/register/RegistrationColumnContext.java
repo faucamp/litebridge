@@ -18,17 +18,12 @@ public final class RegistrationColumnContext extends RegistrationTableContextImp
         this.registrationTableContext = registrationTableContext;
     }
 
-    public RegistrationTableContext autoIncrement() {
-        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, true, null, null));
-        return registrationTableContext;
-    }
-
     public RegistrationTableContext generateUsingSequence(final String sequence) {
         return generate(databaseProvider().getSequenceColumnValueGenerator(sequence));
     }
 
     public RegistrationTableContext generate(ColumnValueGenerator generator) {
-        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, true, generator, null));
+        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, generator));
         return registrationTableContext;
     }
 
@@ -42,19 +37,19 @@ public final class RegistrationColumnContext extends RegistrationTableContextImp
 
     @Override
     public RegistrationFieldContext mapField(final String fieldName) {
-        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, false, null, null));
+        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column));
         return registrationTableContext.mapField(fieldName);
     }
 
     @Override
     public RegistrationFieldContext mapProperty(final String fieldName) {
-        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, false, null, null));
+        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column));
         return registrationTableContext.mapProperty(fieldName);
     }
 
     @Override
     public DtoTableSpec buildDtoTableSpec(final Class<?> dtoClass) {
-        addFieldColumnMapping(fieldSpec, new ColumnSpec(column, false, null, null));
+        addFieldColumnMapping(fieldSpec, new ColumnSpec(column));
         return super.buildDtoTableSpec(dtoClass);
     }
 }

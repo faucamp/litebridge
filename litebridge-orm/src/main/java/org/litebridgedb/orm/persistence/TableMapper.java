@@ -151,12 +151,8 @@ public final class TableMapper {
 
         final ColumnMetaData column = Objects.requireNonNull(tableMetaData.column(columnSpec.name()), "Column metadata not found: " + columnSpec.name());
 
-        if (columnSpec.isAutoIncrement()) {
-            column.setAutoIncrement(true);
-
-            if (columnSpec.generator() != null) {
-                column.setGenerator(columnSpec.generator());
-            }
+        if (columnSpec.generator() != null) {
+            column.setGenerator(columnSpec.generator());
         }
 
         MappedTable nestedTable = null;
@@ -266,8 +262,8 @@ public final class TableMapper {
     }
 
     private MappedTable mapManyToManyJoinTable(final ManyToMany manyToMany, final MethodHandles.Lookup lookup) {
-        final ColumnSpec joinColumnSpec = new ColumnSpec(manyToMany.joinColumn(), false, null, manyToMany.joinColumn());
-        final ColumnSpec inverseJoinColumnSpec = new ColumnSpec(manyToMany.inverseJoinColumn(), false, null, manyToMany.inverseJoinColumn());
+        final ColumnSpec joinColumnSpec = new ColumnSpec(manyToMany.joinColumn(), null, manyToMany.joinColumn());
+        final ColumnSpec inverseJoinColumnSpec = new ColumnSpec(manyToMany.inverseJoinColumn(), null, manyToMany.inverseJoinColumn());
 
         final TableSpec tableSpec = new TableSpec(manyToMany.joinTable(), Map.of(
                 new NoFieldMapping(), joinColumnSpec,

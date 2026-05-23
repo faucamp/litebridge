@@ -23,7 +23,7 @@ class RegistrationTest {
         DtoTableSpec spec = ((DtoTableSpecBuilder) context
                 .allowInterface(TestInterface.class)
                 .mapToTable("test_table")
-                .mapField("id").toColumn("ID").autoIncrement()
+                .mapField("id").toColumn("ID")
                 .mapField("name").toColumn("NAME")
                 .mapField("address").toColumn("ADDR")
                 .mapField("category").toColumn("CAT_ID").joinOn("CAT_ID")

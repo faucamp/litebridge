@@ -28,25 +28,25 @@ public final class RegistrationJoinStep extends RegistrationTableContextImpl {
     public RegistrationTableContext withMappedTable(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) {
         final DtoTableSpecBuilder dtoTableSpecBuilder = (DtoTableSpecBuilder) rc.apply(new RegistrationContext(registrationTableContext.databaseProvider()));
         final DtoTableSpec dtoTableSpec = dtoTableSpecBuilder.buildDtoTableSpec(dtoClass);
-        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, false, null, joinColumn, new TableMapping(dtoClass, dtoTableSpec.tableSpec())));
+        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, null, joinColumn, new TableMapping(dtoClass, dtoTableSpec.tableSpec())));
         return registrationTableContext;
     }
 
     @Override
     public RegistrationFieldContext mapField(final String fieldName) {
-        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, false, null, joinColumn));
+        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, null, joinColumn));
         return registrationTableContext.mapField(fieldName);
     }
 
     @Override
     public RegistrationFieldContext mapProperty(final String fieldName) {
-        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, false, null, joinColumn));
+        registrationTableContext.addFieldColumnMapping(fieldSpec, new ColumnSpec(column, null, joinColumn));
         return registrationTableContext.mapProperty(fieldName);
     }
 
     @Override
     public DtoTableSpec buildDtoTableSpec(final Class<?> dtoClass) {
-        addFieldColumnMapping(fieldSpec, new ColumnSpec(column, false, null, joinColumn));
+        addFieldColumnMapping(fieldSpec, new ColumnSpec(column,  null, joinColumn));
         return super.buildDtoTableSpec(dtoClass);
     }
 }

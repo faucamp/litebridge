@@ -215,7 +215,7 @@ class SQLiteDatabaseProviderTest {
     }
 
     @Test
-    void getColumnNames_whenNoColumns_returnsEmptyList() throws SQLException {
+    void getColumnMetaData_whenNoColumns_returnsEmptyList() throws SQLException {
         // Given
         final SQLiteDatabaseProvider provider = new SQLiteDatabaseProvider();
         final Table table = new Table("catalog", "schema", "empty_table");
@@ -227,7 +227,7 @@ class SQLiteDatabaseProviderTest {
         when(mockColumns.next()).thenReturn(false);
 
         // When
-        final List<ColumnMetaData> result = provider.getColumnNames(table, mockDatabaseMetaData);
+        final List<ColumnMetaData> result = provider.getColumnMetaData(table, mockDatabaseMetaData);
 
         // Then
         assertNotNull(result);

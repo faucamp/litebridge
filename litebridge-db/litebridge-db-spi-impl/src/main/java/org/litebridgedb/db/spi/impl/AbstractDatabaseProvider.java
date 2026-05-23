@@ -474,7 +474,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     protected List<ColumnMetaData> getGeneratedPrimaryKeyColumns(final TableMetaData tableMetaData) {
         return tableMetaData.primaryKey().stream()
-                .filter(ColumnMetaData::isAutoIncrement)
+                .filter(columnMetadata -> columnMetadata.isAutoIncrement()
+                        || (columnMetadata.getGenerator() != null && SequenceColumnValueGenerator.class.isAssignableFrom(columnMetadata.getGenerator().getClass())))
                 .toList();
     }
 
@@ -589,7 +590,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return dbAlias;
     }
 
-    protected List<ColumnMetaData> getColumnNames(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
+    protected List<ColumnMetaData> getColumnMetaData(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
         try (final ResultSet dbColumns = databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)) {
             final List<ColumnMetaData> columns = new ArrayList<>();
 
@@ -802,7 +803,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
         // Load table metadata
         final List<String> primaryKeys = getPrimaryKeyColumnNames(table, databaseMetaData);
-        final List<ColumnMetaData> columns = getColumnNames(table, databaseMetaData);
+        final List<ColumnMetaData> columns = getColumnMetaData(table, databaseMetaData);
         return new TableMetaData(table, primaryKeys, columns);
     }
 

@@ -17,7 +17,7 @@ public class SQLiteDbEnvDtoTableMapper implements DbEnvDtoTableMapper {
     @Override
     public void registerPersonDtoTableMapping(final Litebridge litebridge) {
         litebridge.register(Person.class, rc -> rc.mapToTable("PERSON")
-                .mapField("id").toColumn("PERSON_ID").autoIncrement()
+                .mapField("id").toColumn("PERSON_ID")
                 .mapField("name").toColumn("FIRST_NAME")
                 .mapField("surname").toColumn("SURNAME")
                 .mapField("age").toColumn("AGE")
@@ -28,7 +28,7 @@ public class SQLiteDbEnvDtoTableMapper implements DbEnvDtoTableMapper {
     @Override
     public void registerAccountDtoTableMapping(final Litebridge litebridge) {
         litebridge.register(Account.class, rc -> rc.mapToTable("ACCOUNT")
-                .mapField("id").toColumn("ACCOUNT_ID").autoIncrement()
+                .mapField("id").toColumn("ACCOUNT_ID")
                 .mapField("name").toColumn("ACCOUNT_NAME")
                 .mapField("balance").toColumn("BALANCE")
                 .mapField("owner").toColumn("PERSON_ID").joinUsing());

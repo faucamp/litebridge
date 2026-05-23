@@ -72,12 +72,12 @@ public class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
         // Load table metadata using table name only for SQLite compatibility
         final Table tableNoSchema = new Table("", "", table.name());
         final List<String> primaryKeys = getPrimaryKeyColumnNames(tableNoSchema, databaseMetaData);
-        final List<ColumnMetaData> columns = getColumnNames(table, databaseMetaData);
+        final List<ColumnMetaData> columns = getColumnMetaData(table, databaseMetaData);
         return new TableMetaData(table, primaryKeys, columns);
     }
 
     @Override
-    protected List<ColumnMetaData> getColumnNames(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
+    protected List<ColumnMetaData> getColumnMetaData(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
         try (ResultSet rs = databaseMetaData.getColumns(null, null, table.name(), null)) {
             final List<ColumnMetaData> columns = new java.util.ArrayList<>();
             while (rs.next()) {

@@ -6,20 +6,21 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
-import org.litebridgedb.orm.api.spec.TableSpec;
 import org.litebridgedb.orm.Litebridge;
+import org.litebridgedb.orm.api.spec.TableSpec;
 import org.litebridgedb.tracking.ChangeTracker;
 
 import javax.sql.DataSource;
+import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
-import java.lang.invoke.MethodHandles;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class TableMapperTest {
     private DatabaseProvider databaseProvider;
@@ -31,11 +32,11 @@ class TableMapperTest {
         databaseProvider = mock(DatabaseProvider.class);
         DataSource dataSource = mock(DataSource.class);
         litebridge = new Litebridge(databaseProvider, dataSource);
-        
+
         TableRegistry tableRegistry = (TableRegistry) org.litebridgedb.commons.ObjectUtils.getFieldValue(litebridge, "tableRegistry", TableRegistry.class);
         ChangeTracker changeTracker = (ChangeTracker) org.litebridgedb.commons.ObjectUtils.getFieldValue(litebridge, "changeTracker", ChangeTracker.class);
         TransactionalDatabaseProvider transactionalDatabaseProvider = (TransactionalDatabaseProvider) org.litebridgedb.commons.ObjectUtils.getFieldValue(litebridge, "databaseProvider", TransactionalDatabaseProvider.class);
-        
+
         tableMapper = new TableMapper(transactionalDatabaseProvider, tableRegistry, changeTracker);
     }
 
@@ -45,12 +46,12 @@ class TableMapperTest {
         Table table = new Table(null, null, "TEST");
         ColumnMetaData idCol = new ColumnMetaData(table, "ID", true, Types.BIGINT, 19);
         when(databaseProvider.tableMetaData(any(), any())).thenReturn(new TableMetaData(table, List.of("ID"), List.of(idCol)));
-        
-        TableSpec tableSpec = new TableSpec(null, null, "TEST", Map.of(new org.litebridgedb.orm.api.spec.FieldSpec("id", false), new org.litebridgedb.orm.api.spec.ColumnSpec("ID", false, null, null)));
-        
+
+        TableSpec tableSpec = new TableSpec(null, null, "TEST", Map.of(new org.litebridgedb.orm.api.spec.FieldSpec("id", false), new org.litebridgedb.orm.api.spec.ColumnSpec("ID")));
+
         // When
         TableMapper.MappedTable mappedTable = tableMapper.mapToTable(MethodHandles.lookup(), TestDto.class, tableSpec);
-        
+
         // Then
         assertNotNull(mappedTable);
         assertNotNull(mappedTable.ormTable());

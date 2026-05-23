@@ -243,7 +243,7 @@ class ManyToManyE2eTest extends AbstractE2eTest {
             litebridge.register(GroupedPerson.class, rc -> rc
                     .allowInterface(Person.class)
                     .mapToTable(tableMapper.qualifyName("PERSON"))
-                    .mapField("id").toColumn("PERSON_ID").autoIncrement()
+                    .mapField("id").toColumn("PERSON_ID")
                     .mapField("name").toColumn("FIRST_NAME")
                     .mapField("groups").manyToMany(c -> c.joinTable(tableMapper.qualifyName("PERSON_GROUP"))
                             .joinColumn("PERSON_ID")

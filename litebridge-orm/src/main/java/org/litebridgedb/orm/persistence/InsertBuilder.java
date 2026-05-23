@@ -1,6 +1,7 @@
 package org.litebridgedb.orm.persistence;
 
 import org.litebridgedb.db.spi.ColumnMetaData;
+import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.update.Insert;
 
 import java.util.ArrayList;
@@ -28,7 +29,8 @@ final class InsertBuilder extends AbstractStatementBuilder<Insert> {
 
     private boolean returnGeneratedKeys() {
         final Set<String> autoIncrementingPks = ormTable.getMetaData().primaryKey().stream()
-                .filter(ColumnMetaData::isAutoIncrement)
+                .filter(columnMetadata -> columnMetadata.isAutoIncrement()
+                        || (columnMetadata.getGenerator() != null && SequenceColumnValueGenerator.class.isAssignableFrom(columnMetadata.getGenerator().getClass())))
                 .map(ColumnMetaData::name)
                 .collect(Collectors.toSet());
 

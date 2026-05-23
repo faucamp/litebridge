@@ -54,7 +54,7 @@ class LitebridgeTest {
         final TransactionManager transactionManager = new DefaultTransactionManager(dataSource);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
-        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR", false, null, null);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
         final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
         final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
@@ -79,7 +79,7 @@ class LitebridgeTest {
         final TransactionManager transactionManager = new DefaultTransactionManager(dataSource);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
-        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR", false, null, null);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
         final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
         final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
@@ -105,9 +105,9 @@ class LitebridgeTest {
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpecMyId = new FieldSpec("myId", false);
-        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", true, new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
+        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
         final FieldSpec fieldSpecMyVar = new FieldSpec("myVar", false);
-        final ColumnSpec columnSpecMyVar = new ColumnSpec("MY_VAR", false, null, null);
+        final ColumnSpec columnSpecMyVar = new ColumnSpec("MY_VAR");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(
                 fieldSpecMyId, columnSpecMyId,
                 fieldSpecMyVar, columnSpecMyVar);
@@ -153,9 +153,9 @@ class LitebridgeTest {
         final TransactionManager transactionManager = new DefaultTransactionManager(dataSource);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpecMyId = new FieldSpec("myId", false);
-        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", true, new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
+        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
         final FieldSpec fieldSpecMyVar = new FieldSpec("myVar", false);
-        final ColumnSpec columnSpecMyVar = new ColumnSpec("MY_VAR", false, null, null);
+        final ColumnSpec columnSpecMyVar = new ColumnSpec("MY_VAR");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(
                 fieldSpecMyId, columnSpecMyId,
                 fieldSpecMyVar, columnSpecMyVar);
@@ -187,9 +187,9 @@ class LitebridgeTest {
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpecMyId = new FieldSpec("myId", false);
-        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", true, new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
+        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
         final FieldSpec fieldSpecMyVar = new FieldSpec("myVar", false);
-        final ColumnSpec columnSpecMyVar = new ColumnSpec("MY_VAR", false, null, null);
+        final ColumnSpec columnSpecMyVar = new ColumnSpec("MY_VAR");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(
                 fieldSpecMyId, columnSpecMyId,
                 fieldSpecMyVar, columnSpecMyVar);
@@ -236,9 +236,9 @@ class LitebridgeTest {
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpecMyId = new FieldSpec("myId", false);
-        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", true, new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
+        final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
         final FieldSpec fieldSpecMyVar = new FieldSpec("myVar", false);
-        final ColumnSpec columnSpecMyVar = new ColumnSpec("MY_VAR", false, null, null);
+        final ColumnSpec columnSpecMyVar = new ColumnSpec("MY_VAR");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(
                 fieldSpecMyId, columnSpecMyId,
                 fieldSpecMyVar, columnSpecMyVar);
@@ -281,7 +281,7 @@ class LitebridgeTest {
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
-        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR", false, null, null);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
         final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
         final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
@@ -303,7 +303,7 @@ class LitebridgeTest {
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
-        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR", false, null, null);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
         final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
         final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
@@ -325,7 +325,7 @@ class LitebridgeTest {
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
-        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR", false, null, null);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
         final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
         final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
@@ -347,7 +347,7 @@ class LitebridgeTest {
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
-        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR", false, null, null);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
         final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
         final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
@@ -371,7 +371,7 @@ class LitebridgeTest {
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
-        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR", false, null, null);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
         final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
         final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
@@ -397,7 +397,7 @@ class LitebridgeTest {
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myId", false);
-        final ColumnSpec columnSpec = new ColumnSpec("MY_ID", false, null, null);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_ID");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
         final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
         final ColumnMetaData idColumn = new ColumnMetaData(tableSpec, "MY_ID", false, Types.BIGINT);
@@ -422,7 +422,7 @@ class LitebridgeTest {
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
-        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR", false, null, null);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
         final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
         final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
