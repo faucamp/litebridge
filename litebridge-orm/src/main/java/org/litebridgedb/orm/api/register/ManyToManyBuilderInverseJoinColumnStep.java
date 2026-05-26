@@ -2,12 +2,12 @@ package org.litebridgedb.orm.api.register;
 
 import org.litebridgedb.orm.api.spec.ManyToMany;
 
-public final class RegistrationManyToManyInverseJoinColumnStep {
+public final class ManyToManyBuilderInverseJoinColumnStep {
 
     private final String joinTable;
     private final String joinColumn;
 
-    RegistrationManyToManyInverseJoinColumnStep(final String joinTable, final String joinColumn) {
+    ManyToManyBuilderInverseJoinColumnStep(final String joinTable, final String joinColumn) {
         this.joinTable = joinTable;
         this.joinColumn = joinColumn;
     }

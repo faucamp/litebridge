@@ -29,6 +29,11 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     }
 
     @Override
+    public SqlJoinConditionClause and(final FieldColumnSpec column) {
+        return and(column.columnSpec().name());
+    }
+
+    @Override
     public SqlJoinClause join(final String table) {
         return new SqlJoinClause(selectSpec.newJoinSpec(table), delegate);
     }
@@ -37,6 +42,11 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     public SqlWhereConditionClause where(final String column) {
         final Column spiColumn = new Column(selectSpec.getTable(), column);
         return new SqlWhereConditionClause(selectSpec.newWhereCondition(spiColumn), new SqlWhereConditionClauseTerminal((SqlSelector) delegate));
+    }
+
+    @Override
+    public SqlWhereConditionClause where(final FieldColumnSpec column) {
+        return where(column.columnSpec().name());
     }
 
     @Override

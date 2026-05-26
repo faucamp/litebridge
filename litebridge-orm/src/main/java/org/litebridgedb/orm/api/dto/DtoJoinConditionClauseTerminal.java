@@ -5,6 +5,7 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.orm.api.select.JoinClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.orm.persistence.OrmTable;
 
@@ -30,25 +31,35 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
         DtoJoinClassTerminal<DTO> {
 
-    private final OrmTable table;
+    private final OrmTable ormTable;
     private final AliasGenerator aliasGenerator;
 
     public DtoJoinConditionClauseTerminal(final DtoJoinSpec joinSpec, final DtoSelector<DTO> delegate, final AliasGenerator aliasGenerator) {
         super(joinSpec, delegate);
-        this.table = delegate.table();
+        this.ormTable = delegate.table();
         this.aliasGenerator = aliasGenerator;
     }
 
     @Override
     public DtoJoinConditionClause<DTO> and(final String field) {
-        final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), table.getColumnForFieldName(field));
+        final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), ormTable.getColumnForFieldName(field));
         return new DtoJoinConditionClause<>(joinSpec.newCondition(column), this);
     }
 
     @Override
+    public DtoJoinConditionClause<DTO> and(final FieldColumnSpec field) {
+        return and(field.field().name());
+    }
+
+    @Override
     public DtoWhereConditionClause<DTO> where(final String field) {
-        final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), table.getColumnForFieldName(field));
+        final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), ormTable.getColumnForFieldName(field));
         return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate));
+    }
+
+    @Override
+    public DtoWhereConditionClause<DTO> where(final FieldColumnSpec field) {
+        return where(field.field().name());
     }
 
     @Override
@@ -59,7 +70,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
         final String[] columns = Arrays.stream(fields)
-                .map(table::getColumnForFieldName)
+                .map(ormTable::getColumnForFieldName)
                 .map(ColumnMetaData::name)
                 .toArray(String[]::new);
         return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);

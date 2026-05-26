@@ -22,18 +22,20 @@ class SharedDtoE2eTest extends AbstractE2eTest {
     void sharedDto_differentTables(final DbEnvDtoTableMapper tableMapper) {
         // Register DTOs and construct data
         litebridge.register(Application.class, rc -> rc.mapToTable(tableMapper.qualifyName("APPLICATION"))
-                .mapField("name").toColumn("NAME")
-                .mapField("status").toColumn("STATUS_CODE").joinOn("CODE")
-                .withMappedTable(Status.class, src -> src.mapToTable(tableMapper.qualifyName("APPLICATION_STATUS"))
-                        .mapField("code").toColumn("CODE")
-                        .mapField("message").toColumn("MESSAGE")));
+                .with(spec -> spec.mapField("name").toColumn("NAME"))
+                .with(spec -> spec.mapField("status").toColumn("STATUS_CODE")
+                        .joinOn("CODE")
+                        .withMappedTable(Status.class, src -> src.mapToTable(tableMapper.qualifyName("APPLICATION_STATUS"))
+                                .with(s -> s.mapField("code").toColumn("CODE"))
+                                .with(s -> s.mapField("message").toColumn("MESSAGE")))));
 
         litebridge.register(Server.class, rc -> rc.mapToTable(tableMapper.qualifyName("SERVER"))
-                .mapField("host").toColumn("HOST")
-                .mapField("status").toColumn("SERVER_STATUS_CODE").joinOn("STATUS_CODE")
-                .withMappedTable(Status.class, src -> src.mapToTable(tableMapper.qualifyName("SERVER_STATUS"))
-                        .mapField("code").toColumn("STATUS_CODE")
-                        .mapField("message").toColumn("MESSAGE")));
+                .with(spec -> spec.mapField("host").toColumn("HOST"))
+                .with(spec -> spec.mapField("status").toColumn("SERVER_STATUS_CODE")
+                        .joinOn("STATUS_CODE")
+                        .withMappedTable(Status.class, src -> src.mapToTable(tableMapper.qualifyName("SERVER_STATUS"))
+                                .with(s -> s.mapField("code").toColumn("STATUS_CODE"))
+                                .with(s -> s.mapField("message").toColumn("MESSAGE")))));
 
         final Application application = new Application();
         application.setName("MyApp");

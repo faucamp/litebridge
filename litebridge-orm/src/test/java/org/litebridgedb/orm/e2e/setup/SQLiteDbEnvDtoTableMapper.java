@@ -15,22 +15,22 @@ public class SQLiteDbEnvDtoTableMapper implements DbEnvDtoTableMapper {
     }
 
     @Override
-    public void registerPersonDtoTableMapping(final Litebridge litebridge) {
+    public void registerPersonDtoTableMapping(final Litebridge litebridge, final boolean typeSafe) {
         litebridge.register(Person.class, rc -> rc.mapToTable("PERSON")
-                .mapField("id").toColumn("PERSON_ID")
-                .mapField("name").toColumn("FIRST_NAME")
-                .mapField("surname").toColumn("SURNAME")
-                .mapField("age").toColumn("AGE")
-                .mapProperty("eyeColour").toColumn("EYE_COLOUR")
-                .mapField("accounts").oneToMany(c -> c.mappedByField("owner")));
+                .with(spec -> spec.mapField("id").toColumn("PERSON_ID"))
+                .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
+                .with(spec -> spec.mapField("surname").toColumn("SURNAME"))
+                .with(spec -> spec.mapField("age").toColumn("AGE"))
+                .with(spec -> spec.mapProperty("eyeColour").toColumn("EYE_COLOUR"))
+                .with(spec -> spec.mapField("accounts").oneToMany(c -> c.mappedByField("owner"))));
     }
 
     @Override
-    public void registerAccountDtoTableMapping(final Litebridge litebridge) {
+    public void registerAccountDtoTableMapping(final Litebridge litebridge, final boolean typeSafe) {
         litebridge.register(Account.class, rc -> rc.mapToTable("ACCOUNT")
-                .mapField("id").toColumn("ACCOUNT_ID")
-                .mapField("name").toColumn("ACCOUNT_NAME")
-                .mapField("balance").toColumn("BALANCE")
-                .mapField("owner").toColumn("PERSON_ID").joinUsing());
+                .with(spec -> spec.mapField("id").toColumn("ACCOUNT_ID"))
+                .with(spec -> spec.mapField("name").toColumn("ACCOUNT_NAME"))
+                .with(spec -> spec.mapField("balance").toColumn("BALANCE"))
+                .with(spec -> spec.mapField("owner").toColumn("PERSON_ID").joinUsing()));
     }
 }

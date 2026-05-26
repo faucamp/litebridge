@@ -3,6 +3,8 @@ package org.litebridgedb.orm.e2e.setup;
 import org.litebridgedb.orm.Litebridge;
 import org.litebridgedb.orm.e2e.basic.dto.Account;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
+import org.litebridgedb.orm.e2e.basic.mapping.AccountMapping;
+import org.litebridgedb.orm.e2e.basic.mapping.PersonMapping;
 
 /**
  * Default DTO-table regisration mapping
@@ -15,22 +17,30 @@ public class DefaultDtoTableMapper implements DbEnvDtoTableMapper {
     }
 
     @Override
-    public void registerPersonDtoTableMapping(final Litebridge litebridge) {
-        litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
-                .mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ")
-                .mapField("name").toColumn("FIRST_NAME")
-                .mapField("surname").toColumn("SURNAME")
-                .mapField("age").toColumn("AGE")
-                .mapProperty("eyeColour").toColumn("EYE_COLOUR")
-                .mapField("accounts").oneToMany(c -> c.mappedByField("owner")));
+    public void registerPersonDtoTableMapping(final Litebridge litebridge, final boolean typeSafe) {
+        if (typeSafe) {
+            litebridge.register(new PersonMapping());
+        } else {
+            litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
+                    .with(spec -> spec.mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ"))
+                    .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
+                    .with(spec -> spec.mapField("surname").toColumn("SURNAME"))
+                    .with(spec -> spec.mapField("age").toColumn("AGE"))
+                    .with(spec -> spec.mapProperty("eyeColour").toColumn("EYE_COLOUR"))
+                    .with(spec -> spec.mapField("accounts").oneToMany(c -> c.mappedByField("owner"))));
+        }
     }
 
     @Override
-    public void registerAccountDtoTableMapping(final Litebridge litebridge) {
-        litebridge.register(Account.class, rc -> rc.mapToTable("LB.ACCOUNT")
-                .mapField("id").toColumn("ACCOUNT_ID").generateUsingSequence("LB.ACCOUNT_SEQ")
-                .mapField("name").toColumn("ACCOUNT_NAME")
-                .mapField("balance").toColumn("BALANCE")
-                .mapField("owner").toColumn("PERSON_ID").joinUsing());
+    public void registerAccountDtoTableMapping(final Litebridge litebridge, final boolean typeSafe) {
+        if (typeSafe) {
+            litebridge.register(new AccountMapping());
+        } else {
+            litebridge.register(Account.class, rc -> rc.mapToTable("LB.ACCOUNT")
+                    .with(spec -> spec.mapField("id").toColumn("ACCOUNT_ID").generateUsingSequence("LB.ACCOUNT_SEQ"))
+                    .with(spec -> spec.mapField("name").toColumn("ACCOUNT_NAME"))
+                    .with(spec -> spec.mapField("balance").toColumn("BALANCE"))
+                    .with(spec -> spec.mapField("owner").toColumn("PERSON_ID").joinUsing()));
+        }
     }
 }

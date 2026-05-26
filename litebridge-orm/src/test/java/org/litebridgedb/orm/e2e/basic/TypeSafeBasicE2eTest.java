@@ -26,15 +26,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.litebridgedb.orm.api.spec.FieldMapping.f;
 
-public class BasicE2eTest extends AbstractE2eTest {
+public class TypeSafeBasicE2eTest extends AbstractE2eTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BasicE2eTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TypeSafeBasicE2eTest.class);
 
     @TestTemplate
-    @DisplayName("Select DTO and join fetch related DTOs")
+    @DisplayName("Type safe: Select DTO and join fetch related DTOs")
     void nestedDtos_fetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, true);
 
         // Setup DTOs
         final Person person = new Person();
@@ -57,8 +57,8 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Retrieve the account record and associated owner
         final Account result = litebridge.select(Account.class)
-                .join(Person.class).on("owner")
-                .where("id").eq(person.getId())
+                .join(Person.class).on(AccountMapping.owner)
+                .where(PersonMapping.id).eq(person.getId())
                 .oneOrThrow();
 
         // Then
@@ -66,10 +66,10 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Select DTO without related DTOs")
+    @DisplayName("Type safe: Select DTO without related DTOs")
     void nestedDtos_dontfetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, true);
 
         final Person person = new Person();
         person.setName("Alice");
@@ -87,7 +87,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // When
         final Account result = litebridge.select(Account.class)
-                .where("id").eq(person.getId())
+                .where(PersonMapping.id).eq(person.getId())
                 .oneOrThrow();
 
         // Then
@@ -95,10 +95,10 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Nested DTOs mapped to separate tables, cascading save, no transactions (autocommit)")
+    @DisplayName("Type safe: Nested DTOs mapped to separate tables, cascading save, no transactions (autocommit)")
     void nestedDtos_oneTablePerDto_cascadeSave_autoCommit(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, true);
 
         // Create DTOs and enable change tracking
         final Person person = litebridge.track(new Person());
@@ -133,8 +133,8 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Then
         final Person fetchedPerson = litebridge.select(Person.class)
-                .join(Account.class).on("accounts")
-                .where("id").eq(person.getId())
+                .join(Account.class).on(PersonMapping.accounts)
+                .where(PersonMapping.id).eq(person.getId())
                 .oneOrThrow();
         assertEquals("Alice", fetchedPerson.getName());
         assertNotNull(fetchedPerson.getAccounts());
@@ -143,8 +143,8 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertTrue(fetchedPerson.getAccounts().contains(account2));
 
         final Account fetchedAccount = litebridge.select(Account.class)
-                .join(Person.class).on("owner")
-                .where("id").eq(account2.getId())
+                .join(Person.class).on(AccountMapping.owner)
+                .where(AccountMapping.id).eq(account2.getId())
                 .oneOrThrow();
 
         assertEquals("Account 2", fetchedAccount.getName());
@@ -154,10 +154,10 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Nested DTOs mapped to separate tables, cascading save in transaction")
+    @DisplayName("Type safe: Nested DTOs mapped to separate tables, cascading save in transaction")
     void nestedDtos_oneTablePerDto_cascadeSave_transaction(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, true);
 
         // Create DTOs and enable change tracking
         final Person person = litebridge.track(new Person());
@@ -192,8 +192,8 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertEquals(2, person.getAccounts().size(), "Person should have exactly two accounts");
 
         final Person fetchedPerson = litebridge.select(Person.class)
-                .join(Account.class).on("accounts")
-                .where("id").eq(person.getId())
+                .join(Account.class).on(PersonMapping.accounts)
+                .where(AccountMapping.id).eq(person.getId())
                 .oneOrThrow();
         assertEquals("Alice", fetchedPerson.getName());
         assertNotNull(fetchedPerson.getAccounts());
@@ -202,8 +202,8 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertTrue(fetchedPerson.getAccounts().contains(account2));
 
         final Account fetchedAccount = litebridge.select(Account.class)
-                .join(Person.class).on("owner")
-                .where("id").eq(account2.getId())
+                .join(Person.class).on(AccountMapping.owner)
+                .where(AccountMapping.id).eq(account2.getId())
                 .oneOrThrow();
 
         assertEquals("Account 2", fetchedAccount.getName());
@@ -213,7 +213,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Single DTO mapped to multiple tables")
+    @DisplayName("Type safe: Single DTO mapped to multiple tables")
     void singleDto_multipleTables(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Create our "original"/unmapped DTO (unmapped since Litebridge expects one table per DTO)
         final PersonAccount personAccount = new PersonAccount();
@@ -227,9 +227,10 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Register DTO-table mappings (a client using the above "PersonMapping" DTO would need
         // to create these "entities", as the query API would not make sense for multi-table DTOs)
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, true);
 
         // Create entity-DTO mapper
+        //TODO: make this type safe
         final EntityDtoMapper<PersonAccount> entityDtoMapper = litebridge.entityDtoMapper(PersonAccount.class,
                 List.of(new DtoEntityMapping(Person.class,
                                 Map.of(
@@ -250,8 +251,8 @@ public class BasicE2eTest extends AbstractE2eTest {
         entityDtoMapper.entities(personAccount).forEach(litebridge::save);
 
         // Load the indidual entities and reconstruct the composite DTO
-        final Person person = litebridge.select(Person.class).where("id").eq(personAccount.getId()).oneOrThrow();
-        final Account account = litebridge.select(Account.class).where("id").eq(personAccount.getAccountId()).oneOrThrow();
+        final Person person = litebridge.select(Person.class).where(PersonMapping.id).eq(personAccount.getId()).oneOrThrow();
+        final Account account = litebridge.select(Account.class).where(AccountMapping.id).eq(personAccount.getAccountId()).oneOrThrow();
         final PersonAccount result = entityDtoMapper.dto(person, account);
 
         // Then
@@ -259,10 +260,10 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Delete DTOs, no transactions (autocommit)")
+    @DisplayName("Type safe: Delete DTOs, no transactions (autocommit)")
     void delete_autoCommit(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, true);
 
         // Create DTOs and enable change tracking
         final Person person1 = new Person();
@@ -292,14 +293,14 @@ public class BasicE2eTest extends AbstractE2eTest {
         litebridge.save(person1, person2, person3, person4);
 
         // Delete DTO directly
-        assertNotNull(litebridge.select(Person.class).where("name").eq("Bob").oneOrNull());
+        assertNotNull(litebridge.select(Person.class).where(PersonMapping.name).eq("Bob").oneOrNull());
         litebridge.delete(person2);
-        assertNull(litebridge.select(Person.class).where("name").eq("Bob").oneOrNull());
+        assertNull(litebridge.select(Person.class).where(PersonMapping.name).eq("Bob").oneOrNull());
 
         // Delete DTO via query
-        assertNotNull(litebridge.select(Person.class).where("name").eq("Alice").oneOrNull());
-        litebridge.delete(Person.class, p -> p.where("name").eq("Alice").and("age").eq(20));
-        assertNull(litebridge.select(Person.class).where("name").eq("Alice").oneOrNull());
+        assertNotNull(litebridge.select(Person.class).where(PersonMapping.name).eq("Alice").oneOrNull());
+        litebridge.delete(Person.class, p -> p.where(PersonMapping.name).eq("Alice").and(PersonMapping.age).eq(20));
+        assertNull(litebridge.select(Person.class).where(PersonMapping.name).eq("Alice").oneOrNull());
 
         // Delete all Person records
         assertEquals(2, litebridge.select(Person.class).list().size());
@@ -311,7 +312,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Update DTOs, no transactions (autocommit)")
     void update(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, true);
 
         final Person person1 = new Person();
         person1.setName("Alice");
@@ -333,7 +334,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         litebridge.save(person1, person2);
         assumeTrue(litebridge.select(Person.class).list().size() == 2);
-        assumeTrue(litebridge.select(Person.class).where("name").eq("Jane").oneOrNull() == null);
+        assumeTrue(litebridge.select(Person.class).where(PersonMapping.name).eq("Jane").oneOrNull() == null);
 
         // Update the person's first name directly
         person1.setName("Jane");
@@ -342,24 +343,24 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Update multiple records for the Person DTO via a query
         litebridge.update(Person.class, p -> p
-                .set("name").to("John")
-                .set("surname").to("Doe")
-                .set("age").to(18)
-                .where("age").gt(18));
+                .set(PersonMapping.name).to("John")
+                .set(PersonMapping.surname).to("Doe")
+                .set(PersonMapping.age).to(18)
+                .where(PersonMapping.age).gt(18));
 
         assertTrue(litebridge.select(Person.class).stream().allMatch(p -> p.getName().equals("John") && p.getSurname().equals("Doe") && p.getAge() == 18));
 
         // Adjust the age of all persons
         litebridge.update(Person.class, p ->
-                p.set("age").increment()
-                        .where("surname").eq("Doe"));
+                p.set(PersonMapping.age).increment()
+                        .where(PersonMapping.surname).eq("Doe"));
 
         assertTrue(litebridge.select(Person.class).stream().allMatch(p -> p.getAge() == 19));
 
         // Update a specific record using the SQL API
         litebridge.update(tableMapper.qualifyName("PERSON"), p ->
-                p.set("EYE_COLOUR").to("unknown")
-                        .where("EYE_COLOUR").eq("blue"));
+                p.set(PersonMapping.eyeColour).to("unknown")
+                        .where(PersonMapping.eyeColour).eq("blue"));
 
         assertEquals(1, litebridge.select(Person.class).stream().filter(p -> p.getEyeColour().equals("unknown")).count());
     }

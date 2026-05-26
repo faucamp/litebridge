@@ -7,6 +7,8 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinClause;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
+import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.orm.persistence.MappedManyToMany;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -53,6 +55,10 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
                         .map(this::manyToManyJoin)
                         // Regular join
                         .orElseGet(() -> joinOn(table, fieldAccessor.name())));
+    }
+
+    public DtoJoinConditionClauseTerminal<DTO> on(final FieldColumnSpec field) {
+        return on(field.field().name());
     }
 
     private DtoJoinConditionClauseTerminal<DTO> joinOn(final OrmTable ormTable, final String field) {

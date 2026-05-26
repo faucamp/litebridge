@@ -35,6 +35,11 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     }
 
     @Override
+    public SqlWhereConditionClause where(final FieldColumnSpec column) {
+        return where(column.columnSpec().name());
+    }
+
+    @Override
     public SqlOrderByClause orderBy(final String... columns) {
         return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
     }

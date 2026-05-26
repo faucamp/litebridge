@@ -37,6 +37,10 @@ public class Table extends Aliased {
         this(StringUtils.splitArray(name, '.', 3, true), alias);
     }
 
+    public Table(final String name) {
+        this(name, null);
+    }
+
     private Table(final String[] catalogSchemaTable, final @Nullable String alias) {
         this(catalogSchemaTable[0], catalogSchemaTable[1], catalogSchemaTable[2], alias);
     }

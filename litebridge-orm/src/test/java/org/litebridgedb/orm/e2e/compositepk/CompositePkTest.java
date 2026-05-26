@@ -22,13 +22,13 @@ class CompositePkTest extends AbstractE2eTest {
     void compositePk_foreignKey(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         litebridge.register(CompositePkLookup.class, rc -> rc.mapToTable(tableMapper.qualifyName("COMP_PK_LOOKUP"))
-                .mapField("id").toColumn("LOOKUP_ID")
-                .mapField("name").toColumn("LOOKUP_NAME"));
+                .with(spec -> spec.mapField("id").toColumn("LOOKUP_ID"))
+                .with(spec -> spec.mapField("name").toColumn("LOOKUP_NAME")));
 
         litebridge.register(CompositePkFkTest.class, rc -> rc.mapToTable(tableMapper.qualifyName("COMP_PK_FK_TEST"))
-                .mapField("lookup").toColumn("LOOKUP_ID").joinUsing()
-                .mapField("testId").toColumn("TEST_ID")
-                .mapField("description").toColumn("TEST_DESC"));
+                .with(spec -> spec.mapField("lookup").toColumn("LOOKUP_ID").joinUsing())
+                .with(spec -> spec.mapField("testId").toColumn("TEST_ID"))
+                .with(spec -> spec.mapField("description").toColumn("TEST_DESC")));
 
         final CompositePkLookup lookup = new CompositePkLookup(123L, "Category 1");
         final CompositePkFkTest test1 = new CompositePkFkTest(lookup, 1L, "Test 1");
@@ -55,10 +55,11 @@ class CompositePkTest extends AbstractE2eTest {
         assumeTrue(!dbEnv.getName().equals("SQLite"), "SQLite does not support multiple auto-incrementing columns");
 
         // Given
-        litebridge.register(CompositePkSimple.class, rc -> rc.mapToTable(tableMapper.qualifyName("COMP_PK_SIMPLE"))
-                .mapField("pk1").toColumn("PK1").generateUsingSequence("LB.COMPOSITE_PK1_SEQ")
-                .mapField("pk2").toColumn("PK2").generateUsingSequence("LB.COMPOSITE_PK2_SEQ")
-                .mapField("description").toColumn("TEST_DESC"));
+        litebridge.register(CompositePkSimple.class, rc -> rc
+                .mapToTable(tableMapper.qualifyName("COMP_PK_SIMPLE"))
+                .with(spec -> spec.mapField("pk1").toColumn("PK1").generateUsingSequence("LB.COMPOSITE_PK1_SEQ"))
+                .with(spec -> spec.mapField("pk2").toColumn("PK2").generateUsingSequence("LB.COMPOSITE_PK2_SEQ"))
+                .with(spec -> spec.mapField("description").toColumn("TEST_DESC")));
 
         final CompositePkSimple dto = new CompositePkSimple(null, null, "test");
 

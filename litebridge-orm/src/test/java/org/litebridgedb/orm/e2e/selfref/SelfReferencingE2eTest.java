@@ -151,8 +151,8 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
 
     private void registerDtoTableMappings(final DbEnvDtoTableMapper tableMapper) throws SQLException {
         litebridge.register(SelfReferencingDto.class, rc -> rc.mapToTable(tableMapper.qualifyName("SELF_REFERENCING"))
-                .mapField("id").toColumn("ID")
-                .mapField("myVar").toColumn("MY_VAR")
-                .mapField("parent").toColumn("PARENT_ID").joinOn("ID"));
+                .with(spec -> spec.mapField("id").toColumn("ID"))
+                .with(spec -> spec.mapField("myVar").toColumn("MY_VAR"))
+                .with(spec -> spec.mapField("parent").toColumn("PARENT_ID").joinOn("ID")));
     }
 }

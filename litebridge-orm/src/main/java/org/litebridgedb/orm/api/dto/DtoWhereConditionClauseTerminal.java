@@ -43,6 +43,7 @@ public final class DtoWhereConditionClauseTerminal<DTO>
         return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), this);
     }
 
+    @Override
     public DtoWhereConditionClause<DTO> and(final FieldColumnSpec field) {
         return and(field.field().name());
     }

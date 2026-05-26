@@ -18,9 +18,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class PersistenceFacadeCascadingTest {
 
@@ -33,7 +37,7 @@ class PersistenceFacadeCascadingTest {
         databaseProvider = mock(DatabaseProvider.class);
         DataSource dataSource = mock(DataSource.class);
         litebridge = new Litebridge(databaseProvider, dataSource);
-        
+
         // Use reflection to get persistenceFacade or just use litebridgedb.save()
         // Actually litebridgedb.save() calls persistenceFacade.save()
     }
@@ -42,11 +46,11 @@ class PersistenceFacadeCascadingTest {
     void save_cascadingOneToOne() throws SQLException {
         // Given
         registerOneToOne();
-        
+
         ParentDto parent = new ParentDto();
         parent.id = 1L;
         parent.name = "parent";
-        
+
         ChildDto child = new ChildDto();
         child.id = 2L;
         child.name = "child";
@@ -77,32 +81,32 @@ class PersistenceFacadeCascadingTest {
                 .when(databaseProvider).tableMetaData(argThat(t -> t != null && "PARENT".equals(t.name())), any());
 
         litebridge.register(ChildDto.class, rc -> rc.mapToTable("LB.CHILD")
-                .mapField("id").toColumn("ID")
-                .mapField("name").toColumn("NAME"));
+                .with(spec -> spec.mapField("id").toColumn("ID"))
+                .with(spec -> spec.mapField("name").toColumn("NAME")));
 
         litebridge.register(ParentDto.class, rc -> rc.mapToTable("LB.PARENT")
-                .mapField("id").toColumn("ID")
-                .mapField("name").toColumn("NAME")
-                .mapField("child").toColumn("CHILD_ID").joinOn("ID"));
+                .with(spec -> spec.mapField("id").toColumn("ID"))
+                .with(spec -> spec.mapField("name").toColumn("NAME"))
+                .with(spec -> spec.mapField("child").toColumn("CHILD_ID").joinOn("ID")));
     }
 
     @Test
     void save_cascadingOneToMany() throws SQLException {
         // Given
         registerOneToMany();
-        
+
         ParentDto1Nm parent = new ParentDto1Nm();
         parent.id = 1L;
         parent.name = "parent";
-        
+
         ChildDto1Nm child1 = new ChildDto1Nm();
         child1.id = 101L;
         child1.name = "child1";
-        
+
         ChildDto1Nm child2 = new ChildDto1Nm();
         child2.id = 102L;
         child2.name = "child2";
-        
+
         parent.children = new ArrayList<>(List.of(child1, child2));
 
         when(databaseProvider.insert(any(Insert.class), any(ConnectionProvider.class)))
@@ -131,14 +135,14 @@ class PersistenceFacadeCascadingTest {
                 .when(databaseProvider).tableMetaData(argThat(t -> t != null && "PARENT_1NM".equals(t.name())), any());
 
         litebridge.register(ChildDto1Nm.class, rc -> rc.mapToTable("LB.CHILD_1NM")
-                .mapField("id").toColumn("ID")
-                .mapField("name").toColumn("NAME")
-                .mapField("parentId").toColumn("PARENT_ID"));
+                .with(spec -> spec.mapField("id").toColumn("ID"))
+                .with(spec -> spec.mapField("name").toColumn("NAME"))
+                .with(spec -> spec.mapField("parentId").toColumn("PARENT_ID")));
 
         litebridge.register(ParentDto1Nm.class, rc -> rc.mapToTable("LB.PARENT_1NM")
-                .mapField("id").toColumn("ID")
-                .mapField("name").toColumn("NAME")
-                .mapField("children").oneToMany(b -> b.mappedByField("parentId")));
+                .with(spec -> spec.mapField("id").toColumn("ID"))
+                .with(spec -> spec.mapField("name").toColumn("NAME"))
+                .with(spec -> spec.mapField("children").oneToMany(b -> b.mappedByField("parentId"))));
     }
 
     public static class ParentDto1Nm {
@@ -168,15 +172,15 @@ class PersistenceFacadeCascadingTest {
     void save_cascadingManyToMany() throws SQLException {
         // Given
         registerManyToMany();
-        
+
         GroupDto group = new GroupDto();
         group.id = 1L;
         group.name = "group";
-        
+
         UserDto user1 = new UserDto();
         user1.id = 10L;
         user1.name = "user1";
-        
+
         group.users = new ArrayList<>(List.of(user1));
 
         when(databaseProvider.insert(any(Insert.class), any(ConnectionProvider.class)))
@@ -210,13 +214,13 @@ class PersistenceFacadeCascadingTest {
                 .when(databaseProvider).tableMetaData(argThat(t -> t != null && "GROUP_USER".equals(t.name())), any());
 
         litebridge.register(UserDto.class, rc -> rc.mapToTable("LB.USERS")
-                .mapField("id").toColumn("ID")
-                .mapField("name").toColumn("NAME"));
+                .with(spec -> spec.mapField("id").toColumn("ID"))
+                .with(spec -> spec.mapField("name").toColumn("NAME")));
 
         litebridge.register(GroupDto.class, rc -> rc.mapToTable("LB.GROUPS")
-                .mapField("id").toColumn("ID")
-                .mapField("name").toColumn("NAME")
-                .mapField("users").manyToMany(b -> b.joinTable("GROUP_USER").joinColumn("GROUP_ID").inverseJoinColumn("USER_ID")));
+                .with(spec -> spec.mapField("id").toColumn("ID"))
+                .with(spec -> spec.mapField("name").toColumn("NAME"))
+                .with(spec -> spec.mapField("users").manyToMany(b -> b.joinTable("GROUP_USER").joinColumn("GROUP_ID").inverseJoinColumn("USER_ID"))));
     }
 
     public static class GroupDto {

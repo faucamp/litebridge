@@ -25,8 +25,13 @@ public record FieldColumnSpec(FieldSpec field, ColumnMapping column) {
      * metadata of the target database column.
      *
      * @return The {@link ColumnSpec} representing the column mapping for the field in the DTO.
+     * @throws IllegalArgumentException if the provided column mapping is not an instance of {@link ColumnSpec}.
      */
     public ColumnSpec columnSpec() {
-        return (ColumnSpec) column();
+        if (column instanceof ColumnSpec columnSpec) {
+            return columnSpec;
+        } else {
+            throw new IllegalArgumentException("Invalid column mapping provided: " + column);
+        }
     }
 }

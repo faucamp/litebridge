@@ -243,27 +243,27 @@ class ManyToManyE2eTest extends AbstractE2eTest {
             litebridge.register(GroupedPerson.class, rc -> rc
                     .allowInterface(Person.class)
                     .mapToTable(tableMapper.qualifyName("PERSON"))
-                    .mapField("id").toColumn("PERSON_ID")
-                    .mapField("name").toColumn("FIRST_NAME")
-                    .mapField("groups").manyToMany(c -> c.joinTable(tableMapper.qualifyName("PERSON_GROUP"))
+                    .with(spec -> spec.mapField("id").toColumn("PERSON_ID"))
+                    .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
+                    .with(spec -> spec.mapField("groups").manyToMany(c -> c.joinTable(tableMapper.qualifyName("PERSON_GROUP"))
                             .joinColumn("PERSON_ID")
-                            .inverseJoinColumn("GROUP_NAME")));
+                            .inverseJoinColumn("GROUP_NAME"))));
         } else {
             litebridge.register(GroupedPerson.class, rc -> rc
                     .allowInterface(Person.class)
                     .mapToTable(tableMapper.qualifyName("PERSON"))
-                    .mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ")
-                    .mapField("name").toColumn("FIRST_NAME")
-                    .mapField("groups").manyToMany(c -> c.joinTable(tableMapper.qualifyName("PERSON_GROUP"))
+                    .with(spec -> spec.mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ"))
+                    .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
+                    .with(spec -> spec.mapField("groups").manyToMany(c -> c.joinTable(tableMapper.qualifyName("PERSON_GROUP"))
                             .joinColumn("PERSON_ID")
-                            .inverseJoinColumn("GROUP_NAME")));
+                            .inverseJoinColumn("GROUP_NAME"))));
         }
 
         litebridge.register(Group.class, rc -> rc.mapToTable(tableMapper.qualifyName("GROUP"))
-                .mapField("name").toColumn("GROUP_NAME")
-                .mapField("description").toColumn("GROUP_DESC")
-                .mapField("members").manyToMany(c -> c.joinTable(tableMapper.qualifyName("PERSON_GROUP"))
+                .with(spec -> spec.mapField("name").toColumn("GROUP_NAME"))
+                .with(spec -> spec.mapField("description").toColumn("GROUP_DESC"))
+                .with(spec -> spec.mapField("members").manyToMany(c -> c.joinTable(tableMapper.qualifyName("PERSON_GROUP"))
                         .joinColumn("GROUP_NAME")
-                        .inverseJoinColumn("PERSON_ID")));
+                        .inverseJoinColumn("PERSON_ID"))));
     }
 }

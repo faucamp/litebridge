@@ -1,8 +1,19 @@
 package org.litebridgedb.orm.api.register;
 
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
+import org.litebridgedb.orm.api.spec.TableSpec;
 
-public sealed interface DtoTableSpecBuilder permits RegistrationTableContextImpl {
+import java.util.Collections;
 
-    DtoTableSpec buildDtoTableSpec(final Class<?> dtoClass);
+public class DtoTableSpecBuilder {
+
+    private final RegistrationContextTerminal context;
+
+    public DtoTableSpecBuilder(final RegistrationContextTerminal context) {
+        this.context = context;
+    }
+
+    public DtoTableSpec build() {
+        return new DtoTableSpec(context.dtoClass, new TableSpec(context.tableName, context.fieldColumnMap), context.dtoInterfaces != null ? context.dtoInterfaces : Collections.emptyList());
+    }
 }

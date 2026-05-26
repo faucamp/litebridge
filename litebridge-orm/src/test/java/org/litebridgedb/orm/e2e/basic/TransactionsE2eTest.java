@@ -29,7 +29,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     void transaction_commit_manual(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
-        tableMapper.registerPersonDtoTableMapping(litebridge);
+        tableMapper.registerPersonDtoTableMapping(litebridge, false);
 
         final Person person = new Person();
         person.setName("Alice");
@@ -53,7 +53,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     void transaction_commit_tryWithResources(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
-        tableMapper.registerPersonDtoTableMapping(litebridge);
+        tableMapper.registerPersonDtoTableMapping(litebridge, false);
 
         final Person person = new Person();
         person.setName("Alice");
@@ -78,7 +78,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     void transaction_commit_lambda(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
-        tableMapper.registerPersonDtoTableMapping(litebridge);
+        tableMapper.registerPersonDtoTableMapping(litebridge, false);
 
         final Person person = new Person();
         person.setName("Alice");
@@ -100,7 +100,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     void transaction_rollback_manual(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
-        tableMapper.registerPersonDtoTableMapping(litebridge);
+        tableMapper.registerPersonDtoTableMapping(litebridge, false);
 
         final Person person = new Person();
         person.setSurname("NoFirstName");
@@ -130,7 +130,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     void transaction_rollback_tryWithResources(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
-        tableMapper.registerPersonDtoTableMapping(litebridge);
+        tableMapper.registerPersonDtoTableMapping(litebridge, false);
 
         final Person person = new Person();
         person.setSurname("NoFirstName");
@@ -156,7 +156,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     void transaction_explicitRollback_tryWithResources(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
-        tableMapper.registerPersonDtoTableMapping(litebridge);
+        tableMapper.registerPersonDtoTableMapping(litebridge, false);
 
         final Person person = new Person();
         person.setName("Alice");
@@ -187,7 +187,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
         final String accountTableName = tableMapper.qualifyName("ACCOUNT");
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
 
         // Create DTOs and enable change tracking
         final Person person = litebridge.track(new Person());
@@ -230,7 +230,7 @@ class TransactionsE2eTest extends AbstractE2eTest {
     void transaction_rollback_lambda(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
-        tableMapper.registerPersonDtoTableMapping(litebridge);
+        tableMapper.registerPersonDtoTableMapping(litebridge, false);
 
         final Person person = new Person();
         person.setSurname("NoFirstName");

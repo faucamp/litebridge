@@ -1,5 +1,7 @@
 package org.litebridgedb.orm.api.select;
 
+import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+
 /**
  * Terminal interface for building SQL condition clauses in a fluent and type-safe manner.
  * <p>
@@ -26,4 +28,5 @@ public interface ConditionClauseTerminal<DTO,
      */
     CC and(String column);
 
+    CC and(FieldColumnSpec column);
 }

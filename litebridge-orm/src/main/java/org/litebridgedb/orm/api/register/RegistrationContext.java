@@ -8,10 +8,12 @@ import java.util.List;
 
 public final class RegistrationContext {
 
+    private final Class<?> dtoClass;
     private final DatabaseProvider databaseProvider;
     private @Nullable List<Class<?>> dtoInterfaces;
 
-    public RegistrationContext(final DatabaseProvider databaseProvider) {
+    public RegistrationContext(final Class<?> dtoClass, final DatabaseProvider databaseProvider) {
+        this.dtoClass = dtoClass;
         this.databaseProvider = databaseProvider;
     }
 
@@ -24,7 +26,7 @@ public final class RegistrationContext {
         return this;
     }
 
-    public RegistrationTableContext mapToTable(final String tableName) {
-        return new RegistrationTableContextImpl(tableName, databaseProvider, dtoInterfaces);
+    public RegistrationContextTerminal mapToTable(final String tableName) {
+        return new RegistrationContextTerminal(dtoClass, tableName, databaseProvider, dtoInterfaces);
     }
 }

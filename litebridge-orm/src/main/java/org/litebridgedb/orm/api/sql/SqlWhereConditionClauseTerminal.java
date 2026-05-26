@@ -27,6 +27,11 @@ public final class SqlWhereConditionClauseTerminal
     }
 
     @Override
+    public SqlWhereConditionClause and(final FieldColumnSpec column) {
+        return and(column.columnSpec().name());
+    }
+
+    @Override
     public SqlOrderByClause orderBy(final String... columns) {
         return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
     }

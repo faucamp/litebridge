@@ -17,19 +17,19 @@ class RegistrationTest {
     @Test
     void fullRegistrationFlow() {
         // Given
-        RegistrationContext context = new RegistrationContext(mock(DatabaseProvider.class));
+        final RegistrationContext context = new RegistrationContext(TestDto.class, mock(DatabaseProvider.class));
 
         // When
-        DtoTableSpec spec = ((DtoTableSpecBuilder) context
+        DtoTableSpec spec = new DtoTableSpecBuilder(context
                 .allowInterface(TestInterface.class)
                 .mapToTable("test_table")
-                .mapField("id").toColumn("ID")
-                .mapField("name").toColumn("NAME")
-                .mapField("address").toColumn("ADDR")
-                .mapField("category").toColumn("CAT_ID").joinOn("CAT_ID")
-                .mapField("items").oneToMany(b -> b.mappedByField("order"))
-                .mapField("tags").manyToMany(b -> b.joinTable("ORDER_TAGS").joinColumn("ORDER_ID").inverseJoinColumn("TAG_ID")))
-                .buildDtoTableSpec(TestDto.class);
+                .with(s -> s.mapField("id").toColumn("ID"))
+                .with(s -> s.mapField("name").toColumn("NAME"))
+                .with(s -> s.mapField("address").toColumn("ADDR"))
+                .with(s -> s.mapField("category").toColumn("CAT_ID").joinOn("CAT_ID"))
+                .with(s -> s.mapField("items").oneToMany(b -> b.mappedByField("order")))
+                .with(s -> s.mapField("tags").manyToMany(b -> b.joinTable("ORDER_TAGS").joinColumn("ORDER_ID").inverseJoinColumn("TAG_ID"))))
+                .build();
 
         // Then
         assertNotNull(spec);
@@ -42,13 +42,13 @@ class RegistrationTest {
     @Test
     void mapProperty() {
         // Given
-        RegistrationContext context = new RegistrationContext(mock(DatabaseProvider.class));
+        final RegistrationContext context = new RegistrationContext(TestDto.class, mock(DatabaseProvider.class));
 
         // When
-        DtoTableSpec spec = ((DtoTableSpecBuilder) context
+        final DtoTableSpec spec = new DtoTableSpecBuilder(context
                 .mapToTable("test_table")
-                .mapProperty("name").toColumn("NAME"))
-                .buildDtoTableSpec(TestDto.class);
+                .with(s -> s.mapProperty("name").toColumn("NAME")))
+                .build();
 
         // Then
         assertNotNull(spec);

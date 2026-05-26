@@ -1,6 +1,7 @@
 package org.litebridgedb.orm.api.dto.update;
 
 import org.litebridgedb.db.spi.update.UpdateResult;
+import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.api.update.UpdateTerminal;
 import org.litebridgedb.orm.api.update.model.UpdateSpec;
 
@@ -15,8 +16,13 @@ public final class DtoUpdateWhereConditionClauseTerminalImpl<DTO>
     }
 
     @Override
-    public DtoUpdateWhereConditionClause<DTO> and(final String column) {
-        return delegate.where(column);
+    public DtoUpdateWhereConditionClause<DTO> and(final String field) {
+        return delegate.where(field);
+    }
+
+    @Override
+    public DtoUpdateWhereConditionClause<DTO> and(final FieldColumnSpec field) {
+        return and(field.field().name());
     }
 
     @Override

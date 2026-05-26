@@ -18,7 +18,8 @@ import org.litebridgedb.orm.api.dto.update.DtoUpdateStart;
 import org.litebridgedb.orm.api.dto.update.DtoUpdater;
 import org.litebridgedb.orm.api.register.DtoTableSpecBuilder;
 import org.litebridgedb.orm.api.register.RegistrationContext;
-import org.litebridgedb.orm.api.register.RegistrationTableContext;
+import org.litebridgedb.orm.api.register.RegistrationContextTerminal;
+import org.litebridgedb.orm.api.register.TypeSafeDtoTableMapping;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
 import org.litebridgedb.orm.api.sql.SqlFromClause;
 import org.litebridgedb.orm.api.sql.SqlSelector;
@@ -69,7 +70,7 @@ import java.util.function.Function;
  * database interactions, ensuring that operations are performed safely and
  * efficiently.
  */
-public class Litebridge {
+public final class Litebridge {
 
     private static final Aliased[] ALL_COLUMNS = new Aliased[0];
 
@@ -135,9 +136,9 @@ public class Litebridge {
      * @param dtoClass The class object of the DTO (Data Transfer Object) to be registered.
      * @param rc       A function that takes a RegistrationContext instance to configure the table mapping.
      */
-    public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) {
-        final DtoTableSpecBuilder dtoTableSpecBuilder = (DtoTableSpecBuilder) rc.apply(new RegistrationContext(databaseProvider));
-        register(lookup, dtoTableSpecBuilder.buildDtoTableSpec(dtoClass));
+    public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final Function<RegistrationContext, RegistrationContextTerminal> rc) {
+        final RegistrationContextTerminal context = rc.apply(new RegistrationContext(dtoClass, databaseProvider));
+        register(lookup, new DtoTableSpecBuilder(context).build());
     }
 
     /**
@@ -148,7 +149,7 @@ public class Litebridge {
      * @param dtoClass The class object of the DTO (Data Transfer Object) to be registered.
      * @param rc       A function that takes a RegistrationContext instance to configure the table mapping.
      */
-    public void register(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationTableContext> rc) {
+    public void register(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationContextTerminal> rc) {
         register(MethodHandles.lookup(), dtoClass, rc);
     }
 
@@ -164,6 +165,14 @@ public class Litebridge {
      */
     public void register(final DtoTableSpec dtoTableSpec) {
         register(MethodHandles.lookup(), dtoTableSpec);
+    }
+
+    public void register(final MethodHandles.Lookup lookup, final TypeSafeDtoTableMapping typeSafeDtoTableMapping) {
+        register(lookup, typeSafeDtoTableMapping.createDtoTableSpec(databaseProvider));
+    }
+
+    public void register(final TypeSafeDtoTableMapping typeSafeDtoTableMapping) {
+        register(MethodHandles.lookup(), typeSafeDtoTableMapping);
     }
 
     /**
