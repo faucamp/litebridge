@@ -70,12 +70,12 @@ Litebridge litebridge = new Litebridge(new H2DatabaseProvider(), dataSource, new
 
 // Register the table mapping for the Person DTO class
 litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
-    .mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ")
-    .mapField("name").toColumn("FIRST_NAME")
-    .mapField("surname").toColumn("SURNAME")
-    .mapField("age").toColumn("AGE")
-    .mapProperty("eyeColour").toColumn("EYE_COLOUR")
-    .mapField("accounts").oneToMany(c -> c.mappedByField("owner")));
+    .with(spec -> spec.mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ"))
+    .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
+    .with(spec -> spec.mapField("surname").toColumn("SURNAME"))
+    .with(spec -> spec.mapField("age").toColumn("AGE"))
+    .with(spec -> spec.mapProperty("eyeColour").toColumn("EYE_COLOUR"))
+    .with(spec -> spec.mapField("accounts").oneToMany(c -> c.mappedByField("owner"))));
 ```
 
 The `register()` method is used to register a DTO-table mapping. It takes a DTO class and a callback that
@@ -157,18 +157,18 @@ The corresponding mapping can be specified as follows:
 litebridge.register(GroupedPerson.class, rc -> rc
         .allowInterface(Person.class)
         .mapToTable("LB.PERSON")
-        .mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ")
-        .mapField("name").toColumn("FIRST_NAME")
-        .mapField("groups").manyToMany(c -> c.joinTable("LB.PERSON_GROUP")
+        .with(spec -> spec.mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ"))
+        .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
+        .with(spec -> spec.mapField("groups").manyToMany(c -> c.joinTable("LB.PERSON_GROUP")
             .joinColumn("PERSON_ID")
-            .inverseJoinColumn("GROUP_NAME")));
+            .inverseJoinColumn("GROUP_NAME"))));
 
 litebridge.register(Group.class, rc -> rc.mapToTable("LB.GROUP")
-        .mapField("name").toColumn("GROUP_NAME")
-        .mapField("description").toColumn("GROUP_DESC")
-        .mapField("members").manyToMany(c -> c.joinTable("LB.PERSON_GROUP")
+        .with(spec -> spec.mapField("name").toColumn("GROUP_NAME"))
+        .with(spec -> spec.mapField("description").toColumn("GROUP_DESC"))
+        .with(spec -> spec.mapField("members").manyToMany(c -> c.joinTable("LB.PERSON_GROUP")
             .joinColumn("GROUP_NAME")
-            .inverseJoinColumn("PERSON_ID")));
+            .inverseJoinColumn("PERSON_ID"))));
 ```
 
 The `Group` class:
@@ -183,9 +183,9 @@ Litebridge supports mapping nested DTOs to the same table as the parent DTO by u
 
 ```java
 litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
-    .mapField("name").toColumn("FIRST_NAME")
-    .mapField("address.street").toColumn("STREET")
-    .mapField("address.city").toColumn("CITY"));
+    .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
+    .with(spec -> spec.mapField("address.street").toColumn("STREET"))
+    .with(spec -> spec.mapField("address.city").toColumn("CITY")));
 ```
 
 This is useful for flattening a complex DTO structure into a single database table.
@@ -196,18 +196,18 @@ Sometimes the same DTO class needs to be mapped to different tables depending on
 
 ```java
 litebridge.register(Application.class, rc -> rc.mapToTable("LB.APPLICATION")
-    .mapField("name").toColumn("NAME")
-    .mapField("status").toColumn("STATUS_CODE").joinOn("CODE")
-    .withMappedTable(Status.class, src -> src.mapToTable("LB.APPLICATION_STATUS")
-        .mapField("code").toColumn("CODE")
-        .mapField("message").toColumn("MESSAGE")));
+    .with(spec -> spec.mapField("name").toColumn("NAME"))
+    .with(spec -> spec.mapField("status").toColumn("STATUS_CODE").joinOn("CODE")
+        .withMappedTable(Status.class, src -> src.mapToTable("LB.APPLICATION_STATUS")
+            .with(spec -> spec.mapField("code").toColumn("CODE"))
+            .with(spec -> spec.mapField("message").toColumn("MESSAGE")))));
 
 litebridge.register(Server.class, rc -> rc.mapToTable("LB.SERVER")
-    .mapField("host").toColumn("HOST")
-    .mapField("status").toColumn("SERVER_STATUS_CODE").joinOn("STATUS_CODE")
-    .withMappedTable(Status.class, src -> src.mapToTable("LB.SERVER_STATUS")
-        .mapField("code").toColumn("STATUS_CODE")
-        .mapField("message").toColumn("MESSAGE")));
+    .with(spec -> spec.mapField("host").toColumn("HOST"))
+    .with(spec -> spec.mapField("status").toColumn("SERVER_STATUS_CODE").joinOn("STATUS_CODE")
+        .withMappedTable(Status.class, src -> src.mapToTable("LB.SERVER_STATUS")
+            .with(spec -> spec.mapField("code").toColumn("STATUS_CODE"))
+            .with(spec -> spec.mapField("message").toColumn("MESSAGE")))));
 ```
 
 When querying a shared DTO, you must specify the context (the parent DTO) to disambiguate which table to use:
@@ -235,7 +235,7 @@ Map<FieldMapping, ColumnMapping> personMap = Map.of(
                 f("name"),         c("FIRST_NAME"),
                 f("surname"),      c("SURNAME"),
                 f("age"),          c("AGE"),
-                p("eyeColour"), c("EYE_COLOUR"),
+                p("eyeColour"),    c("EYE_COLOUR"),
                 f("accounts"),     oneToMany(f("owner"))
         );
 

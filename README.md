@@ -70,19 +70,19 @@ Litebridge litebridge = new Litebridge(new H2DatabaseProvider(connection));
 
 // Register the table mapping for the Person DTO class
 litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
-    .mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ")
-    .mapField("name").toColumn("FIRST_NAME")
-    .mapField("surname").toColumn("SURNAME")
-    .mapField("age").toColumn("AGE")
-    .mapProperty("eyeColour").toColumn("EYE_COLOUR")
-    .mapField("accounts").oneToMany(c -> c.mappedByField("owner")));
+    .with(spec -> spec.mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ"))
+    .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
+    .with(spec -> spec.mapField("surname").toColumn("SURNAME"))
+    .with(spec -> spec.mapField("age").toColumn("AGE"))
+    .with(spec -> spec.mapProperty("eyeColour").toColumn("EYE_COLOUR"))
+    .with(spec -> spec.mapField("accounts").oneToMany(c -> c.mappedByField("owner"))));
 
 // Register the table mapping for the Account DTO class
 litebridge.register(Account.class, rc -> rc.mapToTable("LB.ACCOUNT")
-    .mapField("id").toColumn("ACCOUNT_ID").generateUsingSequence("LB.ACCOUNT_SEQ")
-    .mapField("name").toColumn("ACCOUNT_NAME")
-    .mapField("balance").toColumn("BALANCE")
-    .mapField("owner").toColumn("PERSON_ID").joinUsing());
+    .with(spec -> spec.mapField("id").toColumn("ACCOUNT_ID").generateUsingSequence("LB.ACCOUNT_SEQ"))
+    .with(spec -> spec.mapField("name").toColumn("ACCOUNT_NAME"))
+    .with(spec -> spec.mapField("balance").toColumn("BALANCE"))
+    .with(spec -> spec.mapField("owner").toColumn("PERSON_ID").joinUsing()));
 ```
 
 The `register()` method is used to register a DTO-table mapping. It takes a DTO class and a callback that 
