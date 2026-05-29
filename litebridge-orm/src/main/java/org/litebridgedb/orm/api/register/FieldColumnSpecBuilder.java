@@ -18,12 +18,14 @@ import java.util.function.Function;
  * stage in defining the field-column specification. The result of the configuration is encapsulated
  * in a {@link FieldColumnSpec}, which can later be used for persistence or ORM-related operations.
  * <p>
- * The following steps summarize how this builder operates:
- * - A field or property in a DTO is mapped to begin configuration using {@code mapField}
- * or {@code mapProperty}.
- * - Subsequent methods allow specifying database column names, or defining relationships
- * like one-to-many or many-to-many.
- * - The resulting configuration is finalized and returned as a complete, immutable spec.
+ * The following steps summarise how this builder operates:
+ * <ul>
+ *  <li>A field or property in a DTO is mapped to begin configuration using {@code mapField}
+ * or {@code mapProperty}.</li>
+ *  <li>Subsequent methods allow specifying database column names, or defining relationships
+ * like one-to-many or many-to-many.</li>
+ *  <li>The resulting configuration is finalised and returned as a complete, immutable spec.</li>
+ * </ul>
  * <p>
  * This class supports the creation of specifications using a declarative and type-safe approach.
  * Any ambiguities and potential misconfigurations are resolved at runtime while ensuring a fluent,

@@ -15,9 +15,9 @@ import java.util.Collections;
  * The {@link DtoTableSpecBuilder} processes the provided registration context and produces an immutable
  * {@link DtoTableSpec} that encapsulates the following:
  * <ul>
- * - The DTO class being registered.
- * - The database table specification ({@link TableSpec}), including the table name and field-to-column mappings.
- * - A list of optional superinterfaces for the DTO class.
+ *  <li>The DTO class being registered.</li>
+ *  <li>The database table specification ({@link TableSpec}), including the table name and field-to-column mappings.</li>
+ *  <li>A list of optional superinterfaces for the DTO class.</li>
  * </ul>
  * Instances of this class are not reusable once the {@link #build()} method has been invoked.
  */

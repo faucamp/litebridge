@@ -12,16 +12,20 @@ import java.util.function.Function;
  * mappings, one-to-many relationships, and many-to-many relationships in a structured and readable way.
  *
  * <h2>Responsibilities:</h2>
- * - Provide a mechanism to transition to the column mapping step.
- * - Enable the specification of one-to-many relationships.
- * - Enable the specification of many-to-many relationships.
+ * <ul>
+ *  <li>Provide a mechanism to transition to the column mapping step.</li>
+ *  <li>Enable the specification of one-to-many relationships.</li>
+ *  <li>Enable the specification of many-to-many relationships.</li>
+ * </ul>
  *
  * <h2>Key Operations:</h2>
- * - `toColumn(String column)`: Advances the builder to the column mapping step for the current field.
- * - `oneToMany(Function<OneToManyBuilder, OneToMany> c)`: Defines a one-to-many relationship for the field
- * using a functional builder.
- * - `manyToMany(Function<ManyToManyBuilder, ManyToMany> c)`: Defines a many-to-many relationship for the
- * field using a functional builder.
+ * <ul>
+ *  <li>{@code toColumn(String column)}: Advances the builder to the column mapping step for the current field.</li>
+ *  <li>{@code oneToMany(Function<OneToManyBuilder, OneToMany> c)}: Defines a one-to-many relationship for the field
+ * using a functional builder.</li>
+ *  <li>{@code manyToMany(Function<ManyToManyBuilder, ManyToMany> c)}: Defines a many-to-many relationship for the
+ * field using a functional builder.</li>
+ * </ul>
  * <p>
  * This class operates in conjunction with other builder steps such as
  * {@link FieldColumnSpecBuilderColumnStep}, {@link OneToManyBuilder}, and {@link ManyToManyBuilder}
