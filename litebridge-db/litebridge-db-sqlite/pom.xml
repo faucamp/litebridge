@@ -13,6 +13,9 @@
 
     <artifactId>litebridge-db-sqlite</artifactId>
 
+    <name>Litebridge DB SQLite</name>
+    <description>SQLite database provider for Litebridge</description>
+
     <build>
         <plugins>
             <plugin>
