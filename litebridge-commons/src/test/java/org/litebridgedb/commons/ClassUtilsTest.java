@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,71 @@ class ClassUtilsTest {
         assertTrue(result.stream().anyMatch(field -> field.getName().equals("staticField")));
         assertTrue(result.stream().anyMatch(field -> field.getName().equals("name")));
         assertTrue(result.stream().anyMatch(field -> field.getName().equals("age")));
+    }
+
+    @Test
+    void getAllMethods_illegalAccess() {
+        // Given
+        final MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getAllMethods(TestDto.class, false, lookup));
+    }
+
+    @Test
+    void getAllMethods() {
+        // When
+        final List<Method> result = ClassUtils.getAllMethods(TestDto.class, false, MethodHandles.lookup());
+
+        // Then
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("getName")));
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("setName")));
+        assertFalse(result.stream().anyMatch(method -> method.getName().equals("staticMethod")));
+        assertFalse(result.stream().anyMatch(method -> method.getDeclaringClass().equals(Object.class)));
+    }
+
+    @Test
+    void getAllMethods_includeStatic() {
+        // When
+        final List<Method> result = ClassUtils.getAllMethods(TestDto.class, true, MethodHandles.lookup());
+
+        // Then
+        assertEquals(3, result.size());
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("getName")));
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("setName")));
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("staticMethod")));
+        assertFalse(result.stream().anyMatch(method -> method.getDeclaringClass().equals(Object.class)));
+    }
+
+    @Test
+    void getAllMethods_inheritance() {
+        // When
+        final List<Method> result = ClassUtils.getAllMethods(ChildTestDto.class, false, MethodHandles.lookup());
+
+        // Then
+        assertEquals(3, result.size());
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("isActive")));
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("getName")));
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("setName")));
+        assertFalse(result.stream().anyMatch(method -> method.getName().equals("staticMethod")));
+        assertFalse(result.stream().anyMatch(method -> method.getName().equals("childStaticMethod")));
+        assertFalse(result.stream().anyMatch(method -> method.getDeclaringClass().equals(Object.class)));
+    }
+
+    @Test
+    void getAllMethods_inheritance_includeStatic() {
+        // When
+        final List<Method> result = ClassUtils.getAllMethods(ChildTestDto.class, true, MethodHandles.lookup());
+
+        // Then
+        assertEquals(5, result.size());
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("isActive")));
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("childStaticMethod")));
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("getName")));
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("setName")));
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("staticMethod")));
+        assertFalse(result.stream().anyMatch(method -> method.getDeclaringClass().equals(Object.class)));
     }
 
     @Test
@@ -488,6 +554,10 @@ class ClassUtilsTest {
         public void setName(final String name) {
             this.name = name;
         }
+
+        public static String staticMethod() {
+            return staticField;
+        }
     }
 
     private static class TestDtoWithList {
@@ -507,6 +577,14 @@ class ClassUtilsTest {
 
     private static class ChildTestDto extends TestDto {
         private boolean active;
+
+        public boolean isActive() {
+            return active;
+        }
+
+        public static boolean childStaticMethod() {
+            return true;
+        }
     }
 
     private enum TestEnum {
