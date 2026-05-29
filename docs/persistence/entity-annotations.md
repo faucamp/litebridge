@@ -127,11 +127,35 @@ public class Group {
 - `joinColumn`: The column in the join table referencing the current entity (`Group`).
 - `inverseJoinColumn`: The column in the join table referencing the target entity (`Person`).
 
+### Handling Interfaces and Base Classes (`@AllowInterface`)
+
+Litebridge does not automatically assume that a base class or interface can be used as a stand-in for a specific registered entity, as there could be multiple entities implementing the same interface.
+
+To allow an entity to be referenced via its interface or base class in relationships (One-to-One, One-to-Many, or Many-to-Many), use the `@AllowInterface` annotation on the entity class.
+
+```java
+@Table("LB.PERSON")
+@AllowInterface(Person.class) // Allows using 'Person' as a reference to 'GroupedPerson'
+public class GroupedPerson extends Person {
+    // ...
+}
+
+@Table("LB.GROUP")
+public class Group {
+    @ManyToMany(...)
+    private List<Person> members; // Litebridge now knows it can use 'GroupedPerson' here
+}
+```
+
 ## Annotation Reference
 
 ### `@Table`
 Applied to the class level to specify the target database table.
 - `value`: The name of the table (e.g., `"LB.PERSON"`).
+
+### `@AllowInterface`
+Applied to the class level. Specifies interfaces or base classes that should be recognized as this entity type when used in relationships.
+- `value`: An array of `Class` objects.
 
 ### `@Column`
 Applied to fields or getter methods.
