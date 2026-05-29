@@ -67,12 +67,13 @@ public final class ClassUtils {
             throw new IllegalArgumentException("No access to class: %s. Please provide a suitable MethodHandles.Lookup or 'opens %s to %s;' to your module-info.java\",".formatted(type.getName(), lookup.getClass().getModule().getName(), ClassUtils.class.getModule().getName()), e);
         }
 
-        // Add fields declared in the current class
+        // Add methods declared in the current class
         final List<Method> methods = Arrays.stream(type.getDeclaredMethods())
+                .filter(method -> !method.isSynthetic())
                 .filter(method -> includeStatic || !Modifier.isStatic(method.getModifiers()))
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        // Recursively get fields from the superclass
+        // Recursively get methods from the superclass
         if (!type.getSuperclass().equals(Object.class)) {
             methods.addAll(getAllMethods(type.getSuperclass(), includeStatic, lookup));
         }

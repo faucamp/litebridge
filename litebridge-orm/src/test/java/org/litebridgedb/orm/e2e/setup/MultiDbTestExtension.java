@@ -23,11 +23,15 @@ public class MultiDbTestExtension implements TestTemplateInvocationContextProvid
     public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
         final String[] envs = StringUtils.splitArray(System.getProperty("lb.e2e.env", "all"), ',', 0, false);
 
-        if (envs.length == 1 && envs[0].equals("all")) {
-            return Stream.of(
-                    invocationContext(new H2DbEnvironment()),
-                    invocationContext(new OracleDbEnvironment()),
-                    invocationContext(new SQLiteDbEnvironment()));
+        if (envs.length == 1) {
+            if (envs[0].equals("all")) {
+                return Stream.of(
+                        invocationContext(new H2DbEnvironment()),
+                        invocationContext(new OracleDbEnvironment()),
+                        invocationContext(new SQLiteDbEnvironment()));
+            } else if (envs[0].equals("none")) {
+                return Stream.empty();
+            }
         }
 
         final TestTemplateInvocationContext[] tests = new TestTemplateInvocationContext[envs.length];
