@@ -110,7 +110,12 @@ The table mappings above specify the following:
 
 Data types, nullability and other column details are inferred from reflection and database metadata.
 
-There are different mechanisms available for registering a DTO
+There are different mechanisms available for registering a DTO:
+* **Fluent API**: Programmatic registration (as shown above).
+* **[Entity Annotations](docs/persistence/entity-annotations.md)**: Annotation-based registration on DTO classes.
+* **Low-level API**: Manual creation of mapping specifications.
+
+See the [DTO-table mapping documentation](docs/persistence/dto-table-mapping.md) for more details.
 
 ### Persisting a DTO:
 
