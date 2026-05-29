@@ -27,6 +27,13 @@ jobs:
     - name: Build with Maven and generate JaCoCo report
       run: mvn -B clean verify
 
+    - name: "Generate JaCoCo Badge: litebridge-annotations"
+      uses: cicirello/jacoco-badge-generator@v2
+      with:
+        jacoco-csv-file: litebridge-annotations/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-annotations
+        generate-branches-badge: true
+
     - name: "Generate JaCoCo Badge: litebridge-commons"
       uses: cicirello/jacoco-badge-generator@v2
       with:

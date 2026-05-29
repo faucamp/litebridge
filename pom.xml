@@ -71,6 +71,7 @@
     </properties>
 
     <modules>
+        <module>litebridge-annotations</module>
         <module>litebridge-commons</module>
         <module>litebridge-converter</module>
         <module>litebridge-db</module>
@@ -256,6 +257,11 @@
     <dependencyManagement>
         <dependencies>
             <!-- Project dependencies -->
+            <dependency>
+                <groupId>org.litebridgedb</groupId>
+                <artifactId>litebridge-annotations</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.litebridgedb</groupId>
                 <artifactId>litebridge-commons</artifactId>

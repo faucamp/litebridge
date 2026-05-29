@@ -17,6 +17,15 @@ import org.litebridgedb.db.spi.update.UpdateResult;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * A placeholder implementation of the {@link DatabaseProvider} interface.
+ * <p>
+ * This class is designed to act as a stub for the {@code DatabaseProvider}
+ * interface, with all methods throwing {@link UnsupportedOperationException}.
+ * <p>
+ * It is not intended to provide actual database functionality and serves
+ * purely as a placeholder which is overridden by the actual database provider during registration.
+ */
 final class PlaceHolderDatabaseProvider implements DatabaseProvider {
 
     @Override

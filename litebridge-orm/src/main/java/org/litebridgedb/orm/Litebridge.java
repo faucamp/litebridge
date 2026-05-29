@@ -41,6 +41,7 @@ import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridgedb.orm.persistence.alias.NoOpAliasGenerator;
+import org.litebridgedb.orm.persistence.register.AnnotationMapper;
 import org.litebridgedb.orm.tx.DefaultTransactionManager;
 import org.litebridgedb.tracking.ChangeTracker;
 import org.litebridgedb.tracking.FieldAccessor;
@@ -167,12 +168,53 @@ public final class Litebridge {
         register(MethodHandles.lookup(), dtoTableSpec);
     }
 
+    /**
+     * Registers a DTO table specification using the provided lookup instance and type-safe DTO table mapping.
+     *
+     * @param lookup                  the MethodHandles.Lookup instance to use for method and field lookups
+     * @param typeSafeDtoTableMapping the type-safe DTO table mapping to create and register the DTO table specification
+     */
     public void register(final MethodHandles.Lookup lookup, final TypeSafeDtoTableMapping typeSafeDtoTableMapping) {
         register(lookup, typeSafeDtoTableMapping.createDtoTableSpec(databaseProvider));
     }
 
+    /**
+     * Registers a DTO table specification using the provided type-safe DTO table mapping.
+     * <p>
+     * It uses a local `MethodHandles.lookup()` to reflect the DTO and optional interfaces.
+     *
+     * @param typeSafeDtoTableMapping the type-safe DTO table mapping to create and register the DTO table specification
+     */
     public void register(final TypeSafeDtoTableMapping typeSafeDtoTableMapping) {
         register(MethodHandles.lookup(), typeSafeDtoTableMapping);
+    }
+
+    /**
+     * Registers an annotated entity class.
+     * <p>
+     * The annotated entity must be annotated with {@link Table} and contain at least one field annotated with
+     * {@link org.litebridgedb.orm.annotation.Column}, {@link org.litebridgedb.orm.annotation.OneToMany} or {@link org.litebridgedb.orm.annotation.ManyToMany}.
+     *
+     * @param lookup      the lookup context for method handles, typically used to access private members.
+     * @param entityClass the class of the entity to be registered.
+     */
+    public void register(final MethodHandles.Lookup lookup, final Class<?> entityClass) {
+        final DtoTableSpec dtoTableSpec = AnnotationMapper.createDtoTableSpec(entityClass, databaseProvider, lookup);
+        register(lookup, dtoTableSpec);
+    }
+
+    /**
+     * Registers an annotated entity class.
+     * <p>
+     * The annotated entity must be annotated with {@link Table} and contain at least one field annotated with
+     * {@link org.litebridgedb.orm.annotation.Column}, {@link org.litebridgedb.orm.annotation.OneToMany} or {@link org.litebridgedb.orm.annotation.ManyToMany}.
+     * <p>
+     * It uses a local `MethodHandles.lookup()` to reflect the DTO and optional interfaces.
+     *
+     * @param entityClass the class of the entity to be registered.
+     */
+    public void register(Class<?> entityClass) {
+        register(MethodHandles.lookup(), entityClass);
     }
 
     /**

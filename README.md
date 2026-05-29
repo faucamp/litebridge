@@ -370,6 +370,13 @@ A collection of database provider modules. You only need to include the specific
 
 Exposes the `ChangeTracker` API. This provides lightweight change tracking for arbitrary DTOs. While the ORM uses this internally for SQL optimisation, it can be used independently for other state-tracking needs.
 
+#### `litebridge-annotations`
+
+![Coverage](.github/badges/litebridge-annotations/jacoco.svg)
+![Branches](.github/badges/litebridge-annotations/branches.svg)
+
+Optional Litebridge ORM annotations for constructing database entities similar to other ORMs.
+
 ### Supporting modules
 
 #### `litebridge-converter`

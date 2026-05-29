@@ -47,12 +47,16 @@
                         --add-opens litebridge.orm/org.litebridgedb.orm.persistence=litebridge.commons
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e=ALL-UNNAMED
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.setup=ALL-UNNAMED
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.annotation.entity=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.annotation.entity=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.basic.dto=litebridge.commons
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.basic.dto=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.compositepk.dto=litebridge.commons
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.compositepk.dto=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.manytomany.dto=litebridge.commons
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.manytomany.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.manytomany.entity=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.manytomany.entity=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.selfref.dto=litebridge.commons
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.selfref.dto=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.shareddto.dto=litebridge.commons
@@ -67,6 +71,10 @@
 
     <dependencies>
         <!-- Project dependencies -->
+        <dependency>
+            <groupId>org.litebridgedb</groupId>
+            <artifactId>litebridge-annotations</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.litebridgedb</groupId>
             <artifactId>litebridge-converter</artifactId>

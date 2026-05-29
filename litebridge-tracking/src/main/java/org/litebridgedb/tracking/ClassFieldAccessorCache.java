@@ -41,7 +41,7 @@ public class ClassFieldAccessorCache {
             final FieldAccessor fieldAccessor = ensureFieldAccessors(dtoClass).get(field);
 
             if (fieldAccessor == null) {
-                throw new IllegalArgumentException("No field accessor found for field " + field + " in class " + dtoClass.getName());
+                throw new IllegalArgumentException("No field accessor found for field '" + field + "' in class " + dtoClass.getName());
             }
 
             return fieldAccessor;

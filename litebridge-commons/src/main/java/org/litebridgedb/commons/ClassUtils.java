@@ -3,6 +3,7 @@ package org.litebridgedb.commons;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -57,6 +58,26 @@ public final class ClassUtils {
         }
 
         return fields;
+    }
+
+    public static List<Method> getAllMethods(final Class<?> type, final boolean includeStatic, final MethodHandles.Lookup lookup) {
+        try {
+            lookup.accessClass(type);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException("No access to class: %s. Please provide a suitable MethodHandles.Lookup or 'opens %s to %s;' to your module-info.java\",".formatted(type.getName(), lookup.getClass().getModule().getName(), ClassUtils.class.getModule().getName()), e);
+        }
+
+        // Add fields declared in the current class
+        final List<Method> methods = Arrays.stream(type.getDeclaredMethods())
+                .filter(method -> includeStatic || !Modifier.isStatic(method.getModifiers()))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        // Recursively get fields from the superclass
+        if (!type.getSuperclass().equals(Object.class)) {
+            methods.addAll(getAllMethods(type.getSuperclass(), includeStatic, lookup));
+        }
+
+        return methods;
     }
 
     /**

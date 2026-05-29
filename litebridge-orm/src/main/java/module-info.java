@@ -8,11 +8,11 @@ module litebridge.orm {
     requires java.sql;
     requires org.jspecify;
     requires org.slf4j;
+    requires litebridge.annotations;
     requires litebridge.commons;
     requires litebridge.converter;
     requires litebridge.db.spi;
     requires litebridge.tracking;
-    requires java.xml.crypto;
 
     exports org.litebridgedb.orm;
     exports org.litebridgedb.orm.api.delete;

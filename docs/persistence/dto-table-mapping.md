@@ -127,7 +127,7 @@ public class Group {
 
 public class GroupedPerson extends Person {
 
-    private List<Group> groups;
+    private List<Group> groupEntities;
 
     // Getters and setters, etc
 }
@@ -159,7 +159,7 @@ litebridge.register(GroupedPerson.class, rc -> rc
         .mapToTable("LB.PERSON")
         .with(spec -> spec.mapField("id").toColumn("PERSON_ID").generateUsingSequence("LB.PERSON_SEQ"))
         .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
-        .with(spec -> spec.mapField("groups").manyToMany(c -> c.joinTable("LB.PERSON_GROUP")
+        .with(spec -> spec.mapField("groupEntities").manyToMany(c -> c.joinTable("LB.PERSON_GROUP")
             .joinColumn("PERSON_ID")
             .inverseJoinColumn("GROUP_NAME"))));
 
