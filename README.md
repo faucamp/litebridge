@@ -347,7 +347,7 @@ A collection of database provider modules. You only need to include the specific
 
   Oracle database provider.
 
-* **`litebridge-db-postgresql`**:
+* **`litebridge-db-postgres`**:
 
   ![Coverage](.github/badges/litebridge-db/litebridge-db-postgres/jacoco.svg)
   ![Branches](.github/badges/litebridge-db/litebridge-db-postgres/branches.svg)
