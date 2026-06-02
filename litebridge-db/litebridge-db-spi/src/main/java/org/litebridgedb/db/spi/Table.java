@@ -17,20 +17,30 @@ public class Table extends Aliased {
     /**
      * Database catalog name
      */
-    private final String catalog;
+    private final @Nullable String catalog;
     /**
      * Database schema name
      */
-    private final String schema;
+    private final @Nullable String schema;
 
-    public Table(final String catalog, final String schema, final String name) {
+    public Table(final @Nullable String catalog, final @Nullable String schema, final String name) {
         this(catalog, schema, name, null);
     }
 
-    public Table(final String catalog, final String schema, final String name, final @Nullable String alias) {
+    public Table(final @Nullable String catalog, final @Nullable String schema, final String name, final @Nullable String alias) {
         super(name, alias);
-        this.catalog = catalog;
-        this.schema = schema;
+
+        if (!StringUtils.isBlank(catalog)) {
+            this.catalog = catalog;
+        } else {
+            this.catalog = null;
+        }
+
+        if (!StringUtils.isBlank(schema)) {
+            this.schema = schema;
+        } else {
+            this.schema = null;
+        }
     }
 
     public Table(final String name, final @Nullable String alias) {
@@ -50,11 +60,11 @@ public class Table extends Aliased {
         this(other.catalog(), other.schema(), other.name(), other.alias());
     }
 
-    public String catalog() {
+    public @Nullable String catalog() {
         return catalog;
     }
 
-    public String schema() {
+    public @Nullable String schema() {
         return schema;
     }
 

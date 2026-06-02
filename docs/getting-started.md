@@ -27,11 +27,12 @@ Litebridge uses a modular architecture for database support. You must include a 
 
 ### Supported Database Providers
 
-| Database | Artifact ID |
-| --- | --- |
-| **H2** | `litebridge-db-h2` |
-| **Oracle** | `litebridge-db-oracle` |
-| **SQLite** | `litebridge-db-sqlite` |
+| Database       | Artifact ID              |
+|----------------|--------------------------|
+| **H2**         | `litebridge-db-h2`       |
+| **Oracle**     | `litebridge-db-oracle`   |
+| **PostgreSQL** | `litebridge-db-postgres` |
+| **SQLite**     | `litebridge-db-sqlite`   |
 
 Example for H2:
 

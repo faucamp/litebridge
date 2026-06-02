@@ -65,7 +65,7 @@ public final class TableRegistry {
 
     public void addTable(final Class<?> dtoClass, final OrmTable table) {
         dtoTableMap.put(dtoClass, table);
-        schemaTableMap.computeIfAbsent(table.getMetaData().schema(), k -> new ConcurrentHashMap<>())
+        schemaTableMap.computeIfAbsent(StringUtils.blankIfNull(table.getMetaData().schema()), k -> new ConcurrentHashMap<>())
                 .put(table.getMetaData().name(), table);
     }
 

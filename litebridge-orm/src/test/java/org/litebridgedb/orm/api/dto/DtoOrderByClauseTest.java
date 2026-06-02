@@ -40,7 +40,7 @@ class DtoOrderByClauseTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator);
         final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"myVar"});
 
@@ -66,7 +66,7 @@ class DtoOrderByClauseTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator);
         final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"myVar"});
 

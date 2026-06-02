@@ -21,9 +21,9 @@ class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
 
         // Register DTO-table mapping
         litebridge.register(SingleTableNestedParent.class, rc -> rc.mapToTable(tableMapper.qualifyName("NESTED_DTO"))
-                .with(spec -> spec.mapField("parentValue1").toColumn("PARENT_VALUE1"))
-                .with(spec -> spec.mapField("nestedChild.childValue1").toColumn("CHILD_VALUE1"))
-                .with(spec -> spec.mapField("nestedChild.grandChild.grandChildValue1").toColumn("GRANDCHILD_VALUE1")));
+                .with(spec -> spec.mapField("parentValue1").toColumn(tableMapper.transformColumnName("PARENT_VALUE1")))
+                .with(spec -> spec.mapField("nestedChild.childValue1").toColumn(tableMapper.transformColumnName("CHILD_VALUE1")))
+                .with(spec -> spec.mapField("nestedChild.grandChild.grandChildValue1").toColumn(tableMapper.transformColumnName("GRANDCHILD_VALUE1"))));
 
         // Create DTOs and enable change tracking
         final SingleTableNestedParent singleTableNestedParent = litebridge.track(new SingleTableNestedParent());

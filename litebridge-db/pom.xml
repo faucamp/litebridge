@@ -24,6 +24,7 @@
         <module>litebridge-db-h2</module>
         <module>litebridge-db-oracle</module>
         <module>litebridge-db-sqlite</module>
+        <module>litebridge-db-postgres</module>
     </modules>
 
 </project>

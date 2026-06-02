@@ -9,6 +9,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TableSpecTest {
@@ -36,8 +37,8 @@ class TableSpecTest {
         final TableSpec result = new TableSpec(null, null, "users", fieldColumnMap);
 
         // Then
-        assertEquals("", result.catalog());
-        assertEquals("", result.schema());
+        assertNull(result.catalog());
+        assertNull(result.schema());
         assertEquals("users", result.name());
     }
 
@@ -83,7 +84,7 @@ class TableSpecTest {
 
         // Then
         assertNotNull(result);
-        assertEquals("", result.catalog());
+        assertNull(result.catalog());
         assertEquals("TEST_SCHEMA", result.schema());
         assertEquals("TEST_TABLE", result.name());
         assertNotSame(fieldColumnMap, result.fieldColumnMap());
@@ -100,8 +101,8 @@ class TableSpecTest {
 
         // Then
         assertNotNull(result);
-        assertEquals("", result.catalog());
-        assertEquals("", result.schema());
+        assertNull(result.catalog());
+        assertNull(result.schema());
         assertEquals("TEST_TABLE", result.name());
         assertNotSame(fieldColumnMap, result.fieldColumnMap());
         assertEquals(fieldColumnMap, result.fieldColumnMap());

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TableTest {
@@ -75,10 +75,22 @@ class TableTest {
         final Table result = new Table("TEST_SCHEMA.TEST_TABLE", "testAlias");
 
         // Then
-        assertEquals("", result.catalog());
+        assertNull(result.catalog());
         assertEquals("TEST_SCHEMA", result.schema());
         assertEquals("TEST_TABLE", result.name());
         assertEquals("testAlias", result.alias());
+    }
+
+    @Test
+    void constructor_tableName() {
+        // When
+        final Table result = new Table("TEST_SCHEMA.TEST_TABLE");
+
+        // Then
+        assertNull(result.catalog());
+        assertEquals("TEST_SCHEMA", result.schema());
+        assertEquals("TEST_TABLE", result.name());
+        assertNull(result.alias());
     }
 
     @Test

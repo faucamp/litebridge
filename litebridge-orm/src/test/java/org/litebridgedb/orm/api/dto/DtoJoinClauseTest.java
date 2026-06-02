@@ -22,7 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class DtoJoinClauseTest {
 
@@ -44,7 +46,8 @@ class DtoJoinClauseTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        when(databaseProvider.transformAlias(anyString())).then(i -> i.getArgument(0));
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator);
         dtoSelector.select();
         final DtoJoinClause<TestDto> dtoJoinClause = new DtoJoinClause<>(TestDto.class, ormTable, dtoSelector);

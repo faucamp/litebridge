@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -60,8 +61,9 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        when(databaseProvider.transformAlias(anyString())).then(i -> i.getArgument(0));
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
 
@@ -85,8 +87,9 @@ class DtoSelectorTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        when(databaseProvider.transformAlias(anyString())).then(i -> i.getArgument(0));
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final Aliased aliased = new Aliased("myVar", "myVarAlias");
@@ -112,7 +115,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
 
@@ -138,7 +141,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
@@ -172,7 +175,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
@@ -204,7 +207,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
@@ -235,7 +238,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
@@ -268,7 +271,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
@@ -296,7 +299,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
@@ -330,7 +333,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
@@ -361,7 +364,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
@@ -396,7 +399,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
@@ -429,7 +432,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
@@ -457,7 +460,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
@@ -493,7 +496,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
@@ -530,7 +533,7 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), transactionalDatabaseProvider, aliasGenerator);
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);

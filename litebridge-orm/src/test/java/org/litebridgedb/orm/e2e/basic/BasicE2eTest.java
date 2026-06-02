@@ -358,8 +358,8 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Update a specific record using the SQL API
         litebridge.update(tableMapper.qualifyName("PERSON"), p ->
-                p.set("EYE_COLOUR").to("unknown")
-                        .where("EYE_COLOUR").eq("blue"));
+                p.set(tableMapper.transformColumnName("EYE_COLOUR")).to("unknown")
+                        .where(tableMapper.transformColumnName("EYE_COLOUR")).eq("blue"));
 
         assertEquals(1, litebridge.select(Person.class).stream().filter(p -> p.getEyeColour().equals("unknown")).count());
     }

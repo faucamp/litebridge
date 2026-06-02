@@ -3,6 +3,7 @@ package org.litebridgedb.orm.persistence.alias;
 import org.litebridgedb.commons.StringUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
+import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -11,6 +12,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class DefaultAliasGenerator implements AliasGenerator {
+
+    private final DatabaseProvider databaseProvider;
+
+    public DefaultAliasGenerator(final DatabaseProvider databaseProvider) {
+        this.databaseProvider = databaseProvider;
+    }
 
     /**
      * Map of name -> alias base string
@@ -36,7 +43,7 @@ public final class DefaultAliasGenerator implements AliasGenerator {
     }
 
     private String newAlias(final String name) {
-        final String alias = aliasMap.computeIfAbsent(name, StringUtils::abbreviate).toUpperCase();
+        final String alias = aliasMap.computeIfAbsent(name, v -> databaseProvider.transformAlias(StringUtils.abbreviate(v)));
         final int count = aliasCount.compute(alias, (k, v) -> v == null ? 0 : v + 1);
 
         if (count >= 1) {

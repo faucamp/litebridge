@@ -26,8 +26,8 @@ public class AnnotationE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("Select DTO and join fetch related DTOs")
     void entityRegistration_oneToMany() throws Exception {
-        // Test entities specify the "LB" schema in the @Table annotation, so skip SQLite
-        assumeTrue(!dbEnv.getName().equals("SQLite"));
+        // Test entities specify the "LB" schema in the @Table annotation, so skip SQLite (no schemas) and Postgres (lowercase)
+        assumeTrue(!dbEnv.getName().equals("SQLite") && !dbEnv.getName().equals("PostgreSQL"));
 
         // Register DTO-table mappings
         litebridge.register(Person.class);

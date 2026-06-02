@@ -28,6 +28,7 @@ public class MultiDbTestExtension implements TestTemplateInvocationContextProvid
                 return Stream.of(
                         invocationContext(new H2DbEnvironment()),
                         invocationContext(new OracleDbEnvironment()),
+                        invocationContext(new PostgresDbEnvironment()),
                         invocationContext(new SQLiteDbEnvironment()));
             } else if (envs[0].equals("none")) {
                 return Stream.empty();
@@ -45,6 +46,9 @@ public class MultiDbTestExtension implements TestTemplateInvocationContextProvid
                     break;
                 case "oracle":
                     tests[i] = invocationContext(new OracleDbEnvironment());
+                    break;
+                case "postgres":
+                    tests[i] = invocationContext(new PostgresDbEnvironment());
                     break;
                 case "sqlite":
                     tests[i] = invocationContext(new SQLiteDbEnvironment());

@@ -309,6 +309,7 @@ Litebridge currently supports the following databases via the following modules:
 | --- | --- |
 | **H2** | `litebridge-db-h2` |
 | **Oracle** | `litebridge-db-oracle` |
+| **PostgreSQL** | `litebridge-db-postgresql` |
 | **SQLite** | `litebridge-db-sqlite` |
 
 ## Documentation
@@ -345,6 +346,13 @@ A collection of database provider modules. You only need to include the specific
   ![Branches](.github/badges/litebridge-db/litebridge-db-oracle/branches.svg)
 
   Oracle database provider.
+
+* **`litebridge-db-postgresql`**:
+
+  ![Coverage](.github/badges/litebridge-db/litebridge-db-postgres/jacoco.svg)
+  ![Branches](.github/badges/litebridge-db/litebridge-db-postgres/branches.svg)
+
+  PostgreSQL database provider.
 
 * **`litebridge-db-sqlite`**:
 
