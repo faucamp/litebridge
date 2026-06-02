@@ -12,7 +12,7 @@ Add the following dependency to your `pom.xml`:
 <dependency>
     <groupId>org.litebridgedb</groupId>
     <artifactId>litebridge-spring-boot-starter</artifactId>
-    <version>0.2.0</version> <!-- Replace with latest version -->
+    <version>0.2.1</version> <!-- Replace with latest version -->
 </dependency>
 ```
 

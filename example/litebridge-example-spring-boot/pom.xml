@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>litebridge-example-spring-boot</artifactId>
-    <version>0.2.1-SNAPSHOT</version>
+    <version>0.2.1</version>
 
     <name>Spring Boot Example</name>
     <description>Demonstrates Litebridge usage in Spring Boot 4</description>
@@ -46,7 +46,7 @@
             <dependency>
                 <groupId>org.litebridgedb.example</groupId>
                 <artifactId>litebridge-example</artifactId>
-                <version>0.2.1-SNAPSHOT</version>
+                <version>0.2.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
