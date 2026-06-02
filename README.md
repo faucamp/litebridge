@@ -309,7 +309,7 @@ Litebridge currently supports the following databases via the following modules:
 | --- | --- |
 | **H2** | `litebridge-db-h2` |
 | **Oracle** | `litebridge-db-oracle` |
-| **PostgreSQL** | `litebridge-db-postgresql` |
+| **PostgreSQL** | `litebridge-db-postgres` |
 | **SQLite** | `litebridge-db-sqlite` |
 
 ## Documentation
