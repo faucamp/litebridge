@@ -21,7 +21,7 @@ minimizing magic and favoring programmatic configuration over heavy abstraction 
 Litebridge is modular and uses JPMS (`module-info.java`).
 
 - `litebridge-orm`: The core engine and primary entry point. Contains the `Litebridge` class.
-- `litebridge-db`: Contains the `DatabaseProvider` SPI and its implementations (e.g. `litebridge-db-h2`).
+- `litebridge-db`: Contains the `DatabaseProvider` SPI and its implementations (e.g. `litebridge-db-h2`, `litebridge-db-postgres`, etc.).
 - `litebridge-tracking`: An independent change tracking API for arbitrary Java objects.
 - `litebridge-converter`: Type conversion utilities for translating between Java and SQL types.
 - `litebridge-commons`: Internal utility classes used across the project to minimize external dependencies.
@@ -67,6 +67,7 @@ Litebridge is modular and uses JPMS (`module-info.java`).
   Oracle, etc.). These can be set via command line/Maven by using the `lb.e2e.env` property. Valid values are:
     - `all` - Run against all supported databases (this is the default no `lb.e2e.env` property is provided)
     - `h2` - Run against an in-memory H2 database
+    - `postgres` - Run against a PostgreSQL database via testcontainers
     - `sqlite` - Run against an in-memory SQLite database
     - `oracle` - Run against Oracle XE via testcontainers
     - `none` - Disable E2E integration tests. This is useful when making targeted changes that need quick testing.
@@ -89,6 +90,6 @@ Litebridge is modular and uses JPMS (`module-info.java`).
   directory.
 - **Fixing a Bug**: Create a reproduction test case in the `e2e` package of `litebridge-orm`.
 - **Adding a Feature**: Start by defining the API in `Litebridge` or relevant spec classes, then implement the logic in
-  `litebridge-orm`. Add E2E tests.
+  `litebridge-orm`. Add E2E tests and unit tests.
 - **Adding a DB Provider**: Implement the `DatabaseProvider` SPI in a new module and ensure it passes the SPI TCK/common
-  tests. Update relevant documentation to reflect the new provider.
+  tests. Update relevant documentation to reflect the new provider. Add unit tests and E2E tests for the new provider.

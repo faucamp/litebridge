@@ -1,5 +1,6 @@
 package org.litebridgedb.db.spi;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.query.Select;
@@ -78,4 +79,8 @@ public interface DatabaseProvider {
     TypeConverter getTypeConverter();
 
     SequenceColumnValueGenerator getSequenceColumnValueGenerator(String sequence) throws UnsupportedOperationException;
+
+    default @Nullable String transformAlias(@Nullable String dbAlias) {
+        return dbAlias;
+    }
 }

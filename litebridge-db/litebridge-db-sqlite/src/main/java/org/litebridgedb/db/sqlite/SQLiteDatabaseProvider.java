@@ -25,7 +25,7 @@ import java.util.Map;
  * <p>
  * This class provides SQLite-specific implementations for database interactions.
  */
-public class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
+public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SQLiteDatabaseProvider.class);
 

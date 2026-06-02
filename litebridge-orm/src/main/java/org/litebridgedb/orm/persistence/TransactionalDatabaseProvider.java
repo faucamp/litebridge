@@ -1,5 +1,6 @@
 package org.litebridgedb.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
@@ -70,6 +71,11 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     @Override
     public TypeConverter getTypeConverter() {
         return databaseProvider.getTypeConverter();
+    }
+
+    @Override
+    public @Nullable String transformAlias(@Nullable final String dbAlias) {
+        return databaseProvider.transformAlias(dbAlias);
     }
 
     private <T> T executeAndCleanupIfNeeded(final SqlOperationSupplier<T> supplier) throws SQLException {

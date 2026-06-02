@@ -39,7 +39,7 @@ class DtoOrderByClauseChainTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator);
 
         final DtoOrderByClauseChain<TestDto> dtoDtoOrderByClauseChain = new DtoOrderByClauseChain<>(dtoSelector);

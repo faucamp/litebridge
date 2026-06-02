@@ -202,7 +202,7 @@ class TableRegistryTest {
         final Table result = tableRegistry.getOrCreateSpiTable("public.test_table");
 
         // Then
-        assertEquals("", result.catalog());
+        assertNull(result.catalog());
         assertEquals("public", result.schema());
         assertEquals("test_table", result.name());
     }
@@ -216,7 +216,7 @@ class TableRegistryTest {
         final Table result = tableRegistry.getOrCreateSpiTable("public.test_table");
 
         // Then
-        assertEquals("", result.catalog());
+        assertNull(result.catalog());
         assertEquals("public", result.schema());
         assertEquals("test_table", result.name());
     }

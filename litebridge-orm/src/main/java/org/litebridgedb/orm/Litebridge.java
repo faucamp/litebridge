@@ -401,14 +401,14 @@ public final class Litebridge {
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass) {
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
         return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator).select();
     }
 
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
         final OrmTable table = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
         return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator).select();
     }
 

@@ -32,7 +32,7 @@ import java.util.Map;
  * It uses a {@link DefaultTypeConverter} for handling type conversions between
  * database values and Java data types.
  */
-public class OracleDatabaseProvider extends AbstractDatabaseProvider {
+public final class OracleDatabaseProvider extends AbstractDatabaseProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OracleDatabaseProvider.class);
 

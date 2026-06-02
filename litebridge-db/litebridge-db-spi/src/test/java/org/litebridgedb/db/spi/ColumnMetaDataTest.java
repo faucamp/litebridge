@@ -127,6 +127,41 @@ class ColumnMetaDataTest {
     }
 
     @Test
+    void equals_sameOptionalFieldsAreEqual() {
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final ColumnValueGenerator generator = mock(ColumnValueGenerator.class);
+
+        final ColumnMetaData a = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
+        a.setJoinColumn("JOIN");
+
+        final ColumnMetaData b = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
+        b.setJoinColumn("JOIN");
+
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+    }
+
+    @Test
+    void equals_optionalFieldsDifferWhenOnlyOneSideIsNull() {
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final ColumnValueGenerator generator = mock(ColumnValueGenerator.class);
+
+        final ColumnMetaData withGenerator = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
+        final ColumnMetaData withoutGenerator = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null);
+
+        assertNotEquals(withGenerator, withoutGenerator);
+        assertNotEquals(withoutGenerator, withGenerator);
+
+        final ColumnMetaData withJoin = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
+        withJoin.setJoinColumn("JOIN");
+
+        final ColumnMetaData withoutJoin = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
+
+        assertNotEquals(withJoin, withoutJoin);
+        assertNotEquals(withoutJoin, withJoin);
+    }
+
+    @Test
     void equals_sameInstance() {
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnMetaData column = new ColumnMetaData(table, "id", false, 1);

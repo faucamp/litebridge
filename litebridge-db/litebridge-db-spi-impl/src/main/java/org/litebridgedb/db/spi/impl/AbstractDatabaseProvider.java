@@ -537,7 +537,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.columns().size());
 
         for (Column column : select.columns()) {
-            final String key = column.alias() != null ? column.alias() : column.name();
+            final String key = transformAlias(column.alias() != null ? column.alias() : column.name());
             final TableMetaData table = ensureTableMetaData(column.table(), connectionProvider);
             final ColumnMetaData columnMetaData = table.column(column.name());
             columnLabelsToColumnMetaData.put(key, columnMetaData);
@@ -571,7 +571,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                         final String columnAlias = resultSet.getMetaData().getColumnLabel(i);
                         final int dataType = resultSet.getMetaData().getColumnType(i);
 
-                        final Table table = new Table("", schemaName, tableName);
+                        final Table table = new Table(null, schemaName, tableName);
                         final Column column = new Column(table, columnName, columnAlias);
 
                         final Object value = typeConverter.convert(resultSet.getObject(i), dataType);
@@ -586,8 +586,9 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
-    protected @Nullable String transformAlias(final @Nullable String dbAlias) {
-        return dbAlias;
+    @Override
+    public @Nullable String transformAlias(final @Nullable String dbAlias) {
+        return dbAlias != null ? dbAlias.toUpperCase() : null;
     }
 
     protected List<ColumnMetaData> getColumnMetaData(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {

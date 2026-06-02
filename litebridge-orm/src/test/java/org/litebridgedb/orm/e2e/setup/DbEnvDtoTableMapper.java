@@ -16,6 +16,10 @@ public interface DbEnvDtoTableMapper {
 
     String qualifyName(final String tableName);
 
+    default String transformColumnName(final String columnName) {
+        return columnName;
+    };
+
     void registerPersonDtoTableMapping(final Litebridge litebridge, final boolean typeSafe);
 
     void registerAccountDtoTableMapping(final Litebridge litebridge, final boolean typeSafe);

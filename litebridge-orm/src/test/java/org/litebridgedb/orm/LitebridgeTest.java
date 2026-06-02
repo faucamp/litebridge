@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -278,6 +279,7 @@ class LitebridgeTest {
     void select_dto() throws Exception {
         // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        when(databaseProvider.transformAlias(anyString())).then(i -> i.getArgument(0));
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);

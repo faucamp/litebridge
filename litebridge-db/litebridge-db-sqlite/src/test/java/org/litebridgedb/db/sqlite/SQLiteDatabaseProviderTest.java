@@ -138,7 +138,7 @@ class SQLiteDatabaseProviderTest {
         when(mockDatabaseMetaData.getTables(null, null, "test", null)).thenReturn(mockTables);
         when(mockTables.next()).thenReturn(true);
 
-        when(mockDatabaseMetaData.getPrimaryKeys("", "", "test")).thenReturn(mockPrimaryKeys);
+        when(mockDatabaseMetaData.getPrimaryKeys(null, null, "test")).thenReturn(mockPrimaryKeys);
         when(mockPrimaryKeys.next()).thenReturn(true, false);
         when(mockPrimaryKeys.getString("COLUMN_NAME")).thenReturn("id");
 
@@ -179,7 +179,7 @@ class SQLiteDatabaseProviderTest {
         assertFalse(nameColumn.isAutoIncrement());
 
         verify(mockDatabaseMetaData, times(1)).getTables(null, null, "test", null);
-        verify(mockDatabaseMetaData, times(1)).getPrimaryKeys("", "", "test");
+        verify(mockDatabaseMetaData, times(1)).getPrimaryKeys(null, null, "test");
         verify(mockDatabaseMetaData, times(1)).getColumns(null, null, "test", null);
         verify(mockTables, times(1)).close();
         verify(mockPrimaryKeys, times(1)).close();

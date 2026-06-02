@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ColumnTest {
@@ -98,8 +99,8 @@ class ColumnTest {
         final Column result = Column.c("TEST_TABLE", "testName");
 
         // Then
-        assertEquals("", result.table().catalog());
-        assertEquals("", result.table().schema());
+        assertNull(result.table().catalog());
+        assertNull(result.table().schema());
         assertEquals("TEST_TABLE", result.table().name());
         assertEquals("testName", result.name());
     }
@@ -110,7 +111,7 @@ class ColumnTest {
         final Column result = Column.c("TEST_SCHEMA", "TEST_TABLE", "testName");
 
         // Then
-        assertEquals("", result.table().catalog());
+        assertNull(result.table().catalog());
         assertEquals("TEST_SCHEMA", result.table().schema());
         assertEquals("TEST_TABLE", result.table().name());
         assertEquals("testName", result.name());

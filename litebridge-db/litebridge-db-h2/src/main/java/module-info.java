@@ -4,6 +4,7 @@ import org.jspecify.annotations.NullMarked;
  * H2 Database Provider
  */
 @NullMarked
+@SuppressWarnings("module")
 module litebridge.db.h2 {
     requires org.jspecify;
     requires litebridge.converter;

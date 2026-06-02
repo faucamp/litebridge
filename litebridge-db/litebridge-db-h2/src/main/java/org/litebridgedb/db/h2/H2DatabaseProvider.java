@@ -17,7 +17,7 @@ import java.sql.Statement;
  * <p>
  * This class provides H2-specific implementations for database
  */
-public class H2DatabaseProvider extends AbstractDatabaseProvider {
+public final class H2DatabaseProvider extends AbstractDatabaseProvider {
 
     private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(H2DatabaseProvider.class);
 

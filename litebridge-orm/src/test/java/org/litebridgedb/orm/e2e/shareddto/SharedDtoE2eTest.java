@@ -22,20 +22,20 @@ class SharedDtoE2eTest extends AbstractE2eTest {
     void sharedDto_differentTables(final DbEnvDtoTableMapper tableMapper) {
         // Register DTOs and construct data
         litebridge.register(Application.class, rc -> rc.mapToTable(tableMapper.qualifyName("APPLICATION"))
-                .with(spec -> spec.mapField("name").toColumn("NAME"))
-                .with(spec -> spec.mapField("status").toColumn("STATUS_CODE")
-                        .joinOn("CODE")
+                .with(spec -> spec.mapField("name").toColumn(tableMapper.transformColumnName("NAME")))
+                .with(spec -> spec.mapField("status").toColumn(tableMapper.transformColumnName("STATUS_CODE"))
+                        .joinOn(tableMapper.transformColumnName(tableMapper.transformColumnName("CODE")))
                         .withMappedTable(Status.class, src -> src.mapToTable(tableMapper.qualifyName("APPLICATION_STATUS"))
-                                .with(s -> s.mapField("code").toColumn("CODE"))
-                                .with(s -> s.mapField("message").toColumn("MESSAGE")))));
+                                .with(s -> s.mapField("code").toColumn(tableMapper.transformColumnName("CODE")))
+                                .with(s -> s.mapField("message").toColumn(tableMapper.transformColumnName("MESSAGE"))))));
 
         litebridge.register(Server.class, rc -> rc.mapToTable(tableMapper.qualifyName("SERVER"))
-                .with(spec -> spec.mapField("host").toColumn("HOST"))
-                .with(spec -> spec.mapField("status").toColumn("SERVER_STATUS_CODE")
-                        .joinOn("STATUS_CODE")
+                .with(spec -> spec.mapField("host").toColumn(tableMapper.transformColumnName("HOST")))
+                .with(spec -> spec.mapField("status").toColumn(tableMapper.transformColumnName("SERVER_STATUS_CODE"))
+                        .joinOn(tableMapper.transformColumnName(tableMapper.transformColumnName("STATUS_CODE")))
                         .withMappedTable(Status.class, src -> src.mapToTable(tableMapper.qualifyName("SERVER_STATUS"))
-                                .with(s -> s.mapField("code").toColumn("STATUS_CODE"))
-                                .with(s -> s.mapField("message").toColumn("MESSAGE")))));
+                                .with(s -> s.mapField("code").toColumn(tableMapper.transformColumnName("STATUS_CODE")))
+                                .with(s -> s.mapField("message").toColumn(tableMapper.transformColumnName("MESSAGE"))))));
 
         final Application application = new Application();
         application.setName("MyApp");
