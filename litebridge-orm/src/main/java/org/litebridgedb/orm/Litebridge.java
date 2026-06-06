@@ -45,6 +45,8 @@ import org.litebridgedb.orm.persistence.register.AnnotationMapper;
 import org.litebridgedb.orm.tx.DefaultTransactionManager;
 import org.litebridgedb.tracking.ChangeTracker;
 import org.litebridgedb.tracking.FieldAccessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
@@ -76,6 +78,7 @@ import java.util.function.Function;
  */
 public final class Litebridge {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(Litebridge.class);
     private static final Aliased[] ALL_COLUMNS = new Aliased[0];
 
     private final TableRegistry tableRegistry = new TableRegistry();
@@ -209,6 +212,7 @@ public final class Litebridge {
         final DtoTableSpec[] dtoTableSpecs = new DtoTableSpec[entityClasses.length];
 
         for (int i = 0; i < entityClasses.length; i++) {
+            LOGGER.debug("Registering entity class '{}'", entityClasses[i]);
             dtoTableSpecs[i] = AnnotationMapper.createDtoTableSpec(entityClasses[i], databaseProvider, lookup);
         }
 
@@ -248,6 +252,7 @@ public final class Litebridge {
         }
 
         for (final DtoTableSpec dtoTableSpec : dtoTableSpecs) {
+            LOGGER.trace("Registering DtoTableSpec for DTO class '{}'", dtoTableSpec.dtoClass());
             final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoTableSpec.dtoClass(), dtoTableSpec.tableSpec(), allDtoClasses);
             final OrmTable ormTable = mappedTable.ormTable();
             tableRegistry.addTable(dtoTableSpec.dtoClass(), mappedTable.ormTable());
