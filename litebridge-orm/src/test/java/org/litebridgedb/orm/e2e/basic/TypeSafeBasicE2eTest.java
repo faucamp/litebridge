@@ -33,6 +33,7 @@ public class TypeSafeBasicE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("Type safe: Select DTO and join fetch related DTOs")
     void nestedDtos_fetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
+
         // Test mappings specify uppercase schema/table/column names, so skip Postgres
         assumeTrue(!dbEnv.getName().equals("PostgreSQL"));
 

@@ -50,10 +50,13 @@ import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -171,11 +174,15 @@ public final class Litebridge {
     /**
      * Registers a DTO table specification using the provided lookup instance and type-safe DTO table mapping.
      *
-     * @param lookup                  the MethodHandles.Lookup instance to use for method and field lookups
-     * @param typeSafeDtoTableMapping the type-safe DTO table mapping to create and register the DTO table specification
+     * @param lookup                   the MethodHandles.Lookup instance to use for method and field lookups
+     * @param typeSafeDtoTableMappings the type-safe DTO table mapping(s) to create and register the DTO table specification
      */
-    public void register(final MethodHandles.Lookup lookup, final TypeSafeDtoTableMapping typeSafeDtoTableMapping) {
-        register(lookup, typeSafeDtoTableMapping.createDtoTableSpec(databaseProvider));
+    public void register(final MethodHandles.Lookup lookup, final TypeSafeDtoTableMapping... typeSafeDtoTableMappings) {
+        final DtoTableSpec[] dtoTableSpecs = Arrays.stream(typeSafeDtoTableMappings)
+                .map(typeSafeDtoTableMapping -> typeSafeDtoTableMapping.createDtoTableSpec(databaseProvider))
+                .toArray(DtoTableSpec[]::new);
+
+        register(lookup, dtoTableSpecs);
     }
 
     /**
@@ -183,10 +190,10 @@ public final class Litebridge {
      * <p>
      * It uses a local `MethodHandles.lookup()` to reflect the DTO and optional interfaces.
      *
-     * @param typeSafeDtoTableMapping the type-safe DTO table mapping to create and register the DTO table specification
+     * @param typeSafeDtoTableMappings one or more type-safe DTO table mappings to create and register DTO table specifications for
      */
-    public void register(final TypeSafeDtoTableMapping typeSafeDtoTableMapping) {
-        register(MethodHandles.lookup(), typeSafeDtoTableMapping);
+    public void register(final TypeSafeDtoTableMapping... typeSafeDtoTableMappings) {
+        register(MethodHandles.lookup(), typeSafeDtoTableMappings);
     }
 
     /**
@@ -195,12 +202,17 @@ public final class Litebridge {
      * The annotated entity must be annotated with {@link Table} and contain at least one field annotated with
      * {@link org.litebridgedb.orm.annotation.Column}, {@link org.litebridgedb.orm.annotation.OneToMany} or {@link org.litebridgedb.orm.annotation.ManyToMany}.
      *
-     * @param lookup      the lookup context for method handles, typically used to access private members.
-     * @param entityClass the class of the entity to be registered.
+     * @param lookup        the lookup context for method handles, typically used to access private members.
+     * @param entityClasses the class(es) of the entity/entities to be registered.
      */
-    public void register(final MethodHandles.Lookup lookup, final Class<?> entityClass) {
-        final DtoTableSpec dtoTableSpec = AnnotationMapper.createDtoTableSpec(entityClass, databaseProvider, lookup);
-        register(lookup, dtoTableSpec);
+    public void register(final MethodHandles.Lookup lookup, final Class<?>... entityClasses) {
+        final DtoTableSpec[] dtoTableSpecs = new DtoTableSpec[entityClasses.length];
+
+        for (int i = 0; i < entityClasses.length; i++) {
+            dtoTableSpecs[i] = AnnotationMapper.createDtoTableSpec(entityClasses[i], databaseProvider, lookup);
+        }
+
+        register(lookup, dtoTableSpecs);
     }
 
     /**
@@ -211,10 +223,10 @@ public final class Litebridge {
      * <p>
      * It uses a local `MethodHandles.lookup()` to reflect the DTO and optional interfaces.
      *
-     * @param entityClass the class of the entity to be registered.
+     * @param entityClasses the class(es) of the entity/entities to be registered.
      */
-    public void register(Class<?> entityClass) {
-        register(MethodHandles.lookup(), entityClass);
+    public void register(Class<?>... entityClasses) {
+        register(MethodHandles.lookup(), entityClasses);
     }
 
     /**
@@ -224,50 +236,59 @@ public final class Litebridge {
      * This method maps the DTO class to a database table and stores the association
      * in the table registry to enable database operations such as insert, update, or query.
      *
-     * @param lookup       Lookup object used for reflecting the DTO and optional interfaces.
-     * @param dtoTableSpec DTO-to-table mapping details
+     * @param lookup        Lookup object used for reflecting the DTO and optional interfaces.
+     * @param dtoTableSpecs One or more DTO-to-table mapping details
      */
-    public void register(final MethodHandles.Lookup lookup, final DtoTableSpec dtoTableSpec) {
-        final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoTableSpec.dtoClass(), dtoTableSpec.tableSpec());
-        final OrmTable ormTable = mappedTable.ormTable();
-        tableRegistry.addTable(dtoTableSpec.dtoClass(), mappedTable.ormTable());
+    public void register(final MethodHandles.Lookup lookup, final DtoTableSpec... dtoTableSpecs) {
+        final Set<Class<?>> allDtoClasses = new HashSet<>(dtoTableSpecs.length);
 
-        if (!CollectionUtils.isEmpty(dtoTableSpec.dtoInterfaces())) {
-            dtoTableSpec.dtoInterfaces().forEach(dtoInterface -> tableRegistry.addTable(dtoInterface, ormTable));
+        for (final DtoTableSpec dtoTableSpec : dtoTableSpecs) {
+            allDtoClasses.add(dtoTableSpec.dtoClass());
+            allDtoClasses.addAll(dtoTableSpec.dtoInterfaces());
         }
 
-        if (!ormTable.getNestedDtoClasses().isEmpty()) {
-            ormTable.getNestedDtoClasses().forEach(nestedDtoClass -> tableRegistry.addTable(nestedDtoClass, ormTable));
-        }
+        for (final DtoTableSpec dtoTableSpec : dtoTableSpecs) {
+            final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoTableSpec.dtoClass(), dtoTableSpec.tableSpec(), allDtoClasses);
+            final OrmTable ormTable = mappedTable.ormTable();
+            tableRegistry.addTable(dtoTableSpec.dtoClass(), mappedTable.ormTable());
 
-        // Process pending many-to-one dependencies for this class
-        if (!CollectionUtils.isEmpty(pendingManyToOneDependencies)) {
-            final Iterator<FieldAccessor> iterator = pendingManyToOneDependencies.iterator();
+            if (!CollectionUtils.isEmpty(dtoTableSpec.dtoInterfaces())) {
+                dtoTableSpec.dtoInterfaces().forEach(dtoInterface -> tableRegistry.addTable(dtoInterface, ormTable));
+            }
 
-            while (iterator.hasNext()) {
-                final FieldAccessor fieldAccessor = iterator.next();
+            if (!ormTable.getNestedDtoClasses().isEmpty()) {
+                ormTable.getNestedDtoClasses().forEach(nestedDtoClass -> tableRegistry.addTable(nestedDtoClass, ormTable));
+            }
 
-                if (fieldAccessor.genericType() == dtoTableSpec.dtoClass()) {
-                    ormTable.addOneToManyReverseMapping(fieldAccessor);
-                    iterator.remove();
+            // Process pending many-to-one dependencies for this class
+            if (!CollectionUtils.isEmpty(pendingManyToOneDependencies)) {
+                final Iterator<FieldAccessor> iterator = pendingManyToOneDependencies.iterator();
+
+                while (iterator.hasNext()) {
+                    final FieldAccessor fieldAccessor = iterator.next();
+
+                    if (fieldAccessor.genericType() == dtoTableSpec.dtoClass()) {
+                        ormTable.addOneToManyReverseMapping(fieldAccessor);
+                        iterator.remove();
+                    }
                 }
             }
-        }
 
-        // Process/pend this table's dependants)
-        mappedTable.manyToOneDependencies().forEach(fieldAccessor -> {
-            final OrmTable targetOrmTable = tableRegistry.getTable(fieldAccessor.genericType());
+            // Process/pend this table's dependants)
+            mappedTable.manyToOneDependencies().forEach(fieldAccessor -> {
+                final OrmTable targetOrmTable = tableRegistry.getTable(fieldAccessor.genericType());
 
-            if (targetOrmTable != null) {
-                targetOrmTable.addOneToManyReverseMapping(fieldAccessor);
-            } else {
-                if (pendingManyToOneDependencies == null) {
-                    pendingManyToOneDependencies = new ArrayList<>();
+                if (targetOrmTable != null) {
+                    targetOrmTable.addOneToManyReverseMapping(fieldAccessor);
+                } else {
+                    if (pendingManyToOneDependencies == null) {
+                        pendingManyToOneDependencies = new ArrayList<>();
+                    }
+
+                    pendingManyToOneDependencies.add(fieldAccessor);
                 }
-
-                pendingManyToOneDependencies.add(fieldAccessor);
-            }
-        });
+            });
+        }
     }
 
     /**

@@ -59,6 +59,8 @@
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.manytomany.entity=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.selfref.dto=litebridge.commons
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.selfref.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.registration.entities=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.registration.entities=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.shareddto.dto=litebridge.commons
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.shareddto.dto=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.singletable_multidto.dto=litebridge.commons

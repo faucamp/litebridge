@@ -16,6 +16,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,7 +51,7 @@ class TableMapperTest {
         TableSpec tableSpec = new TableSpec(null, null, "TEST", Map.of(new org.litebridgedb.orm.api.spec.FieldSpec("id", false), new org.litebridgedb.orm.api.spec.ColumnSpec("ID")));
 
         // When
-        TableMapper.MappedTable mappedTable = tableMapper.mapToTable(MethodHandles.lookup(), TestDto.class, tableSpec);
+        TableMapper.MappedTable mappedTable = tableMapper.mapToTable(MethodHandles.lookup(), TestDto.class, tableSpec, Set.of(TestDto.class));
 
         // Then
         assertNotNull(mappedTable);
