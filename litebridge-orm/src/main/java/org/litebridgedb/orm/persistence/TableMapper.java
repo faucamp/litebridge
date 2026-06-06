@@ -236,8 +236,11 @@ public final class TableMapper {
         final ConcurrentLazy<OrmTable> targetTable = new ConcurrentLazy<>(() -> tableRegistry.getTableOrThrow(targetDto));
 
         final MappedManyToMany mappedManyToMany = new MappedManyToMany(
-                joinTable, manyToMany.joinColumn(), fieldAccessor,
-                targetTable, manyToMany.inverseJoinColumn());
+                joinTable,
+                manyToMany.joinColumn(),
+                fieldAccessor,
+                targetTable,
+                manyToMany.inverseJoinColumn());
         mappedFields.put(fieldAccessor, mappedManyToMany);
     }
 
