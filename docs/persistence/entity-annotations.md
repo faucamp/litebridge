@@ -73,6 +73,12 @@ litebridge.register(Person.class);
 litebridge.register(MethodHandles.lookup(), Person.class);
 ```
 
+You can also register multiple entities at once, which is particularly useful if they refer to each other:
+
+```java
+litebridge.register(Person.class, Account.class);
+```
+
 ## Relationships
 
 Litebridge annotations support one-to-many and many-to-many relationships.
@@ -145,6 +151,45 @@ public class Group {
     @ManyToMany(...)
     private List<Person> members; // Litebridge now knows it can use 'GroupedPerson' here
 }
+```
+
+## Package Scanning
+
+If you have many annotated entities, manually registering each one can be tedious. The `litebridge-orm-support` module provides the `EntityPackageRegistrationSupport` class to scan packages for classes annotated with `@Table` and register them automatically.
+
+### Dependencies
+
+To use the registration support, include the `litebridge-orm-support` module:
+
+```xml
+<dependency>
+    <groupId>org.litebridgedb</groupId>
+    <artifactId>litebridge-orm-support</artifactId>
+    <version>${litebridge.version}</version>
+</dependency>
+```
+
+And update your `module-info.java`:
+
+```java
+module my.module {
+    requires org.litebridgedb.orm;
+    requires org.litebridgedb.orm.support;
+}
+```
+
+### Usage
+
+Use `EntityPackageRegistrationSupport` to scan one or more packages:
+
+```java
+import org.litebridgedb.orm.support.EntityPackageRegistrationSupport;
+
+// Create the scanner with your Litebridge instance
+EntityPackageRegistrationSupport scanner = new EntityPackageRegistrationSupport(litebridge);
+
+// Scan and register all @Table annotated classes in the specified packages
+scanner.scanBasePackage("com.example.app.entities", "com.example.app.other.entities");
 ```
 
 ## Annotation Reference
