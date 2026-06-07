@@ -331,8 +331,8 @@ The core engine. This is the primary dependency required for all applications us
 
 #### `litebridge-orm-support`
 
-![Coverage](.github/badges/litebridge-orm/jacoco.svg)
-![Branches](.github/badges/litebridge-orm/branches.svg)
+![Coverage](.github/badges/litebridge-orm-support/jacoco.svg)
+![Branches](.github/badges/litebridge-orm-support/branches.svg)
 
 Supporting utilities for Litebridge ORM, allowing classpath scanning for entities/DTO-table mappings.
 
