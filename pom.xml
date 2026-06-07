@@ -58,6 +58,7 @@
         <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
 
         <!-- Library versions -->
+        <classgraph.version>4.8.184</classgraph.version>
         <flyway.version>12.6.2</flyway.version>
         <flyway-postgresql.version>11.3.4</flyway-postgresql.version>
         <h2.version>2.4.240</h2.version>
@@ -78,6 +79,7 @@
         <module>litebridge-converter</module>
         <module>litebridge-db</module>
         <module>litebridge-orm</module>
+        <module>litebridge-orm-support</module>
         <module>spring</module>
         <module>litebridge-tracking</module>
     </modules>
@@ -336,6 +338,11 @@
             </dependency>
 
             <!-- External dependencies -->
+            <dependency>
+                <groupId>io.github.classgraph</groupId>
+                <artifactId>classgraph</artifactId>
+                <version>${classgraph.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-core</artifactId>

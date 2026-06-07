@@ -113,6 +113,15 @@ jobs:
         badges-directory: .github/badges/litebridge-orm
         generate-branches-badge: true
 
+    - name: "Generate JaCoCo Badge: litebridge-orm-support"
+      # Run on main branch only
+      if: github.ref == 'refs/heads/main'
+      uses: cicirello/jacoco-badge-generator@v2
+      with:
+        jacoco-csv-file: litebridge-orm-support/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-orm-support
+        generate-branches-badge: true
+
     - name: "Generate JaCoCo Badge: litebridge-tracking"
       # Run on main branch only
       if: github.ref == 'refs/heads/main'

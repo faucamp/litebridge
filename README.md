@@ -333,6 +333,13 @@ The core engine. This is the primary dependency required for all applications us
 
 A collection of database provider modules. You only need to include the specific implementation for your database (or multiple if needed).
 
+#### `litebridge-orm-support`
+
+![Coverage](.github/badges/litebridge-orm/jacoco.svg)
+![Branches](.github/badges/litebridge-orm/branches.svg)
+
+Supporting utilities for Litebridge ORM, allowing classpath scanning for entities/DTO-table mappings.
+
 * **`litebridge-db-h2`**:
 
   ![Coverage](.github/badges/litebridge-db/litebridge-db-h2/jacoco.svg)
