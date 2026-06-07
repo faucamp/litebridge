@@ -2,6 +2,11 @@ package org.litebridgedb.convert.converter;
 
 import org.jspecify.annotations.Nullable;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.sql.Blob;
+import java.sql.SQLException;
 import java.sql.Types;
 
 /**
@@ -11,7 +16,7 @@ import java.sql.Types;
  */
 public class ByteArrayConverter implements SqlConverter<byte[]> {
 
-    private static final int[] SQL_TYPES = new int[]{Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY};
+    private static final int[] SQL_TYPES = new int[]{Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY, Types.BLOB};
 
     /**
      * Converts the given value to a {@code byte[]}.
@@ -30,6 +35,8 @@ public class ByteArrayConverter implements SqlConverter<byte[]> {
 
         if (value instanceof byte[] bytes) {
             return bytes;
+        } else if (value instanceof String string) {
+            return string.getBytes(StandardCharsets.UTF_8);
         } else if (Number[].class.isAssignableFrom(value.getClass())) {
             final Number[] numbers = (Number[]) value;
             final byte[] primitiveBytes = new byte[numbers.length];
@@ -39,6 +46,22 @@ public class ByteArrayConverter implements SqlConverter<byte[]> {
             }
 
             return primitiveBytes;
+        } else if (value instanceof Blob blob) {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+            try (InputStream is = blob.getBinaryStream()) {
+                is.transferTo(baos);
+            } catch (final Exception ex) {
+                throw new IllegalStateException("Failed to read BLOB data", ex);
+            } finally {
+                try {
+                    blob.free();
+                } catch (final SQLException ex) {
+                    throw new IllegalStateException("Failed to free BLOB resources", ex);
+                }
+            }
+
+            return baos.toByteArray();
         } else {
             throw new IllegalArgumentException("Cannot convert value of type " + value.getClass() + " to byte[]");
         }

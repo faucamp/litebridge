@@ -31,12 +31,14 @@ import org.litebridgedb.db.spi.util.SqlReservedWords;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -695,6 +697,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                     continue;
                 }
 
+                if (bindValue.sqlDataType() == Types.BLOB
+                        && bindValue.value() instanceof byte[] bytes) {
+                    preparedStatement.setBinaryStream(ordinal[0]++, new ByteArrayInputStream(bytes));
+                    continue;
+                }
+
                 switch (bindValue.value()) {
                     case Integer integer -> preparedStatement.setInt(ordinal[0]++, integer);
                     case Long longValue -> preparedStatement.setLong(ordinal[0]++, longValue);
@@ -705,6 +713,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                     case Boolean bool -> preparedStatement.setBoolean(ordinal[0]++, bool);
                     case String string -> preparedStatement.setString(ordinal[0]++, string);
                     case Timestamp timestamp -> preparedStatement.setTimestamp(ordinal[0]++, timestamp);
+                    case byte[] bytes -> preparedStatement.setBytes(ordinal[0]++, bytes);
                     default -> preparedStatement.setObject(ordinal[0]++, bindValue.value(), bindValue.sqlDataType());
                 }
             }

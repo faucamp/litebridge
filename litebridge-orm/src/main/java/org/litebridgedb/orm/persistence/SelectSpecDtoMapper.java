@@ -115,18 +115,21 @@ public class SelectSpecDtoMapper {
         return toDto(dtoData.dtoClass(), dtoData.spec().dtoTable(), dtoData, fieldColumns);
     }
 
-    private @Nullable PartiallyConstructedDto toDto(final Class<?> dtoClass, final OrmTable table, final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
+    private @Nullable PartiallyConstructedDto toDto(final Class<?> dtoClass, final OrmTable ormTable, final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
         if (CollectionUtils.isEmpty(fieldColumns)) {
             return null;
         }
 
-        final PartiallyConstructedDto cachedDto = dtoData.primaryKey().isEmpty() ? null : dtoCache.get(dtoClass, dtoData.primaryKey());
+        // Ensure we target the correct DTO class (in case "allowed interfaces" is used)
+        final Class<?> targetDtoClass = dtoClass == ormTable.dtoClass() ? dtoClass : ormTable.dtoClass();
+
+        final PartiallyConstructedDto cachedDto = dtoData.primaryKey().isEmpty() ? null : dtoCache.get(targetDtoClass, dtoData.primaryKey());
 
         if (cachedDto != null) {
             return cachedDto;
         }
 
-        final PartiallyConstructedDto partialDto = createDto(dtoClass, table, dtoData, fieldColumns);
+        final PartiallyConstructedDto partialDto = createDto(targetDtoClass, ormTable, dtoData, fieldColumns);
         dtoCache.put(dtoData.primaryKey(), partialDto);
         return partialDto;
     }

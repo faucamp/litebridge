@@ -2,6 +2,10 @@ package org.litebridgedb.convert.converter;
 
 import org.jspecify.annotations.Nullable;
 
+import java.io.Reader;
+import java.io.StringWriter;
+import java.sql.Clob;
+import java.sql.SQLException;
 import java.sql.Types;
 
 /**
@@ -11,7 +15,7 @@ import java.sql.Types;
  */
 public class StringConverter implements SqlConverter<String> {
 
-    private static final int[] SQL_TYPES = new int[]{Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR};
+    private static final int[] SQL_TYPES = new int[]{Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.CLOB};
 
     /**
      * Converts the given value to a {@link String}.
@@ -41,6 +45,19 @@ public class StringConverter implements SqlConverter<String> {
                 valueStr = new String((char[]) value);
             } else {
                 valueStr = value.toString();
+            }
+        } else if (value instanceof Clob clob) {
+            try (Reader reader = clob.getCharacterStream(); final StringWriter writer = new StringWriter()) {
+                reader.transferTo(writer);
+                return writer.toString();
+            } catch (final Exception ex) {
+                throw new IllegalStateException("Failed to read CLOB data", ex);
+            } finally {
+                try {
+                    clob.free();
+                } catch (final SQLException ex) {
+                    throw new IllegalStateException("Failed to free CLOB resources", ex);
+                }
             }
         } else {
             valueStr = value.toString();

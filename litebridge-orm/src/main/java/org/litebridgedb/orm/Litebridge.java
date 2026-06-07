@@ -255,7 +255,7 @@ public final class Litebridge {
             LOGGER.trace("Registering DtoTableSpec for DTO class '{}'", dtoTableSpec.dtoClass());
             final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoTableSpec.dtoClass(), dtoTableSpec.tableSpec(), allDtoClasses);
             final OrmTable ormTable = mappedTable.ormTable();
-            tableRegistry.addTable(dtoTableSpec.dtoClass(), mappedTable.ormTable());
+            tableRegistry.addTable(dtoTableSpec.dtoClass(), ormTable);
 
             if (!CollectionUtils.isEmpty(dtoTableSpec.dtoInterfaces())) {
                 dtoTableSpec.dtoInterfaces().forEach(dtoInterface -> tableRegistry.addTable(dtoInterface, ormTable));

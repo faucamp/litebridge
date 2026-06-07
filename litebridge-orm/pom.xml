@@ -51,6 +51,9 @@
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.annotation.entity=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.basic.dto=litebridge.commons
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.basic.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.lob.entity=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.lob.entity=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.lob.entity=ALL-UNNAMED
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.compositepk.dto=litebridge.commons
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.compositepk.dto=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.manytomany.dto=litebridge.commons

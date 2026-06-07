@@ -24,10 +24,12 @@ import org.litebridgedb.db.spi.update.InsertResult;
 import org.litebridgedb.db.spi.update.RowValue;
 import org.litebridgedb.db.spi.update.Update;
 import org.litebridgedb.db.spi.update.UpdateResult;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -42,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -718,6 +721,8 @@ class AbstractDatabaseProviderTest {
         // Given
         mockTransactionManager();
         final Object objectVal = new Object();
+        final byte[] blobBytes = "blob-data".getBytes();
+        final byte[] binaryBytes = "binary-data".getBytes();
         final List<AbstractDatabaseProvider.BindValue> bindValues = List.of(
                 new AbstractDatabaseProvider.BindValue(123, Types.INTEGER),
                 new AbstractDatabaseProvider.BindValue(12345L, Types.BIGINT),
@@ -728,6 +733,9 @@ class AbstractDatabaseProviderTest {
                 new AbstractDatabaseProvider.BindValue(true, Types.BOOLEAN),
                 new AbstractDatabaseProvider.BindValue("Hello World!", Types.VARCHAR),
                 new AbstractDatabaseProvider.BindValue(Timestamp.valueOf("2021-01-01 00:00:00"), Types.TIMESTAMP),
+                new AbstractDatabaseProvider.BindValue(blobBytes, Types.BLOB),
+                new AbstractDatabaseProvider.BindValue(binaryBytes, Types.VARBINARY),
+                new AbstractDatabaseProvider.BindValue("blob-as-string", Types.BLOB),
                 new AbstractDatabaseProvider.BindValue(null, Types.NUMERIC),
                 new AbstractDatabaseProvider.BindValue(objectVal, Types.OTHER)
         );
@@ -749,8 +757,20 @@ class AbstractDatabaseProviderTest {
         verify(result).setBoolean(7, true);
         verify(result).setString(8, "Hello World!");
         verify(result).setTimestamp(9, Timestamp.valueOf("2021-01-01 00:00:00"));
-        verify(result).setNull(10, Types.NUMERIC);
-        verify(result).setObject(11, objectVal, Types.OTHER);
+
+        final ArgumentCaptor<InputStream> blobStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+        verify(result).setBinaryStream(eq(10), blobStreamCaptor.capture());
+        assertArrayEquals(blobBytes, blobStreamCaptor.getValue().readAllBytes());
+
+        verify(result).setBytes(11, binaryBytes);
+        verify(result).setString(12, "blob-as-string");
+        verify(result).setNull(13, Types.NUMERIC);
+        verify(result).setObject(14, objectVal, Types.OTHER);
+        verify(result).setBinaryStream(eq(10), any(InputStream.class));
+        verify(result).setBytes(11, binaryBytes);
+        verify(result).setString(12, "blob-as-string");
+        verify(result).setNull(13, Types.NUMERIC);
+        verify(result).setObject(14, objectVal, Types.OTHER);
     }
 
     @Test
