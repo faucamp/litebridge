@@ -121,7 +121,13 @@ public class SelectSpecDtoMapper {
         }
 
         // Ensure we target the correct DTO class (in case "allowed interfaces" is used)
-        final Class<?> targetDtoClass = dtoClass == ormTable.dtoClass() ? dtoClass : ormTable.dtoClass();
+        final Class<?> targetDtoClass;
+
+        if (dtoClass != ormTable.dtoClass() && ormTable.getDtoClassInterfaces().contains(dtoClass)) {
+            targetDtoClass = ormTable.dtoClass();
+        } else {
+            targetDtoClass = dtoClass;
+        }
 
         final PartiallyConstructedDto cachedDto = dtoData.primaryKey().isEmpty() ? null : dtoCache.get(targetDtoClass, dtoData.primaryKey());
 

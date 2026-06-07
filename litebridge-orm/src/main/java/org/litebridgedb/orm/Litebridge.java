@@ -258,6 +258,7 @@ public final class Litebridge {
             tableRegistry.addTable(dtoTableSpec.dtoClass(), ormTable);
 
             if (!CollectionUtils.isEmpty(dtoTableSpec.dtoInterfaces())) {
+                ormTable.setDtoClassInterfaces(new HashSet<>(dtoTableSpec.dtoInterfaces()));
                 dtoTableSpec.dtoInterfaces().forEach(dtoInterface -> tableRegistry.addTable(dtoInterface, ormTable));
             }
 

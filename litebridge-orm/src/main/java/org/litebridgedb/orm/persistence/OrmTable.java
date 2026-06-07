@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -46,8 +47,8 @@ public class OrmTable {
     private final List<Class<?>> nestedDtoClasses;
     private final TableRegistry contextTableRegistry = new TableRegistry();
     private final ClassFieldAccessorCache classFieldAccessorCache;
-    @Nullable
-    private List<FieldAccessor> oneToManyReverseMappings;
+    private @Nullable List<FieldAccessor> oneToManyReverseMappings;
+    private Set<Class<?>> dtoClassInterfaces = Collections.emptySet();
 
     /**
      * Constructs a new {@code OrmTable} instance, initializing table metadata, field-to-column mappings,
@@ -312,5 +313,13 @@ public class OrmTable {
 
     public @Nullable List<FieldAccessor> getOneToManyReverseMappings() {
         return oneToManyReverseMappings;
+    }
+
+    public Set<Class<?>> getDtoClassInterfaces() {
+        return dtoClassInterfaces;
+    }
+
+    public void setDtoClassInterfaces(final Set<Class<?>> dtoClassInterfaces) {
+        this.dtoClassInterfaces = dtoClassInterfaces;
     }
 }
