@@ -329,16 +329,16 @@ Litebridge is modular, allowing you to include only the components you need.
 
 The core engine. This is the primary dependency required for all applications using the ORM.
 
-#### `litebridge-db`
-
-A collection of database provider modules. You only need to include the specific implementation for your database (or multiple if needed).
-
 #### `litebridge-orm-support`
 
 ![Coverage](.github/badges/litebridge-orm/jacoco.svg)
 ![Branches](.github/badges/litebridge-orm/branches.svg)
 
 Supporting utilities for Litebridge ORM, allowing classpath scanning for entities/DTO-table mappings.
+
+#### `litebridge-db`
+
+A collection of database provider modules. You only need to include the specific implementation for your database (or multiple if needed).
 
 * **`litebridge-db-h2`**:
 

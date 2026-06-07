@@ -21,6 +21,7 @@ minimizing magic and favoring programmatic configuration over heavy abstraction 
 Litebridge is modular and uses JPMS (`module-info.java`).
 
 - `litebridge-orm`: The core engine and primary entry point. Contains the `Litebridge` class.
+- `litebridge-orm-support`: Supporting utilities for Litebridge ORM, allowing classpath scanning for entities/DTO-table mappings.
 - `litebridge-db`: Contains the `DatabaseProvider` SPI and its implementations (e.g. `litebridge-db-h2`, `litebridge-db-postgres`, etc.).
 - `litebridge-tracking`: An independent change tracking API for arbitrary Java objects.
 - `litebridge-converter`: Type conversion utilities for translating between Java and SQL types.
