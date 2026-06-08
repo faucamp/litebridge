@@ -27,9 +27,18 @@ public class ClassFieldAccessorCache {
     private final Map<Class<?>, Map<String, FieldAccessor>> classFieldAccessors = new ConcurrentHashMap<>();
     private final Map<Type, Class<?>[]> genericTypesMap = new ConcurrentHashMap<>();
     private final MethodHandles.Lookup lookup;
+    private final Map<Class<?>, MethodHandles.Lookup> elevatedLookups = new ConcurrentHashMap<>();
+
+    public ClassFieldAccessorCache() {
+        this(MethodHandles.lookup());
+    }
 
     public ClassFieldAccessorCache(final MethodHandles.Lookup lookup) {
         this.lookup = lookup;
+    }
+
+    public void registerElevatedLookup(final Class<?> dtoClass, final MethodHandles.Lookup elevatedLookup) {
+        this.elevatedLookups.put(dtoClass, elevatedLookup);
     }
 
     public FieldAccessor fieldAccessorOrThrow(final Class<?> dtoClass, final String field) {
@@ -109,15 +118,22 @@ public class ClassFieldAccessorCache {
                 .map(field -> {
                     final MethodHandles.Lookup declaringClassLookup;
 
-                    try {
-                        declaringClassLookup = MethodHandles.privateLookupIn(field.getDeclaringClass(), lookup);
-                    } catch (IllegalAccessException ex) {
-                        throw new IllegalArgumentException(
-                                "Cannot create private lookup for declaring class: " + field.getDeclaringClass().getName() +
-                                        " while building accessors for DTO: " + dtoClass.getName() +
-                                        ". Ensure the module is open to litebridgedb or use register(Lookup, Class, TableSpec)",
-                                ex
-                        );
+                    final Class<?> declaringClass = field.getDeclaringClass();
+                    final MethodHandles.Lookup elevatedLookup = elevatedLookups.get(declaringClass);
+
+                    if (elevatedLookup != null && (elevatedLookup.lookupModes() & MethodHandles.Lookup.PRIVATE) != 0) {
+                        declaringClassLookup = elevatedLookup;
+                    } else {
+                        try {
+                            declaringClassLookup = MethodHandles.privateLookupIn(declaringClass, lookup);
+                        } catch (IllegalAccessException ex) {
+                            throw new IllegalArgumentException(
+                                    "Cannot create private lookup for declaring class: " + declaringClass.getName() +
+                                            " while building accessors for DTO: " + dtoClass.getName() +
+                                            ". Ensure the module is open to " + lookup.lookupClass().getModule().getName() + " or use register(Lookup, Class, TableSpec)",
+                                    ex
+                            );
+                        }
                     }
 
                     return new DirectFieldAccessor(field, declaringClassLookup);

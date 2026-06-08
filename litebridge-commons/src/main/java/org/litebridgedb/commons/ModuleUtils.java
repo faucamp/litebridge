@@ -6,6 +6,10 @@ public class ModuleUtils {
     }
 
     public static <T> Class<T> requireAccessible(final Class<T> dtoClass) {
+        return requireAccessible(dtoClass, ModuleUtils.class.getModule());
+    }
+
+    public static <T> Class<T> requireAccessible(final Class<T> dtoClass, final Module targetModule) {
         final Module clientModule = dtoClass.getModule();
 
         // If it's the unnamed module (classpath), it's 'open' by default
@@ -14,14 +18,13 @@ public class ModuleUtils {
         }
 
         // If it's a named module, check if it has 'opened' the package to us
-        final Module litebridgeModule = ModuleUtils.class.getModule();
         final String packageName = dtoClass.getPackageName();
 
-        if (!clientModule.isOpen(packageName, litebridgeModule)) {
-            throw new IllegalArgumentException(String.format("Module '%s' does not open package '%s' to Litebridge. " +
+        if (!clientModule.isOpen(packageName, targetModule)) {
+            throw new IllegalArgumentException(String.format("Module '%s' does not open package '%s' to '%s'. " +
                             "Please use the register(Lookup, Class, TableSpec) method " +
                             "or add 'opens %s to %s;' to your module-info.java",
-                    clientModule.getName(), packageName, packageName, litebridgeModule.getName()));
+                    clientModule.getName(), packageName, targetModule.getName(), packageName, targetModule.getName()));
         }
 
         return dtoClass;

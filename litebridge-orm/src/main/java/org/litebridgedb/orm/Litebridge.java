@@ -198,8 +198,19 @@ public final class Litebridge {
         }
 
         for (final DtoTableSpec dtoTableSpec : dtoTableSpecs) {
-            LOGGER.trace("Registering DtoTableSpec for DTO class '{}'", dtoTableSpec.dtoClass());
-            final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoTableSpec.dtoClass(), dtoTableSpec.tableSpec(), allDtoClasses);
+            final Class<?> dtoClass = dtoTableSpec.dtoClass();
+            try {
+                final MethodHandles.Lookup elevatedLookup = MethodHandles.privateLookupIn(dtoClass, lookup);
+                changeTracker.classFieldAccessorCache().registerElevatedLookup(dtoClass, elevatedLookup);
+            } catch (IllegalAccessException e) {
+                // If we can't create a private lookup, the tracking will fall back to the provided lookup
+                // which might fail if the module is not open to litebridge-tracking.
+                // This is expected if the user hasn't opened their module to litebridge.orm either.
+                LOGGER.warn("Failed to create elevated lookup for DTO class '{}'. Ensure the module is open to litebridge.orm.", dtoClass.getName());
+            }
+
+            LOGGER.trace("Registering DtoTableSpec for DTO class '{}'", dtoClass);
+            final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoClass, dtoTableSpec.tableSpec(), allDtoClasses);
             final OrmTable ormTable = mappedTable.ormTable();
             tableRegistry.addTable(dtoTableSpec.dtoClass(), ormTable);
 

@@ -28,7 +28,6 @@ public final class DirectFieldAccessor implements FieldAccessor {
     public DirectFieldAccessor(final Field field, final MethodHandles.Lookup lookup) {
         this.field = field;
         try {
-            field.setAccessible(true);
             this.varHandle = lookup.unreflectVarHandle(field);
         } catch (IllegalAccessException ex) {
             throw new IllegalArgumentException("Failed to unreflect VarHandle for field: '%s' of class: %s".formatted(field.getName(), field.getDeclaringClass().getName()), ex);

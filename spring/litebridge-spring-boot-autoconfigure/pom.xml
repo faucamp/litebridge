@@ -38,10 +38,7 @@
                         --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.entity=spring.beans
                         --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.mapping=spring.beans
                         --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.mapping=litebridge.orm
-                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.mapping=litebridge.commons
-                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.mapping=litebridge.tracking
-                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.entity=litebridge.commons
-                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.entity=litebridge.tracking
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.entity=litebridge.orm
                     </argLine>
                 </configuration>
             </plugin>

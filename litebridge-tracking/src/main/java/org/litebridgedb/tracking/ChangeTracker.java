@@ -50,6 +50,10 @@ public final class ChangeTracker {
     private final Map<Object, TrackedDto<?>> trackedDtos = Collections.synchronizedMap(new WeakIdentityMap<>());
     private final ClassFieldAccessorCache classFieldAccessorCache;
 
+    public ChangeTracker() {
+        this(MethodHandles.lookup());
+    }
+
     public ChangeTracker(final MethodHandles.Lookup lookup) {
         this.classFieldAccessorCache = new ClassFieldAccessorCache(lookup);
     }

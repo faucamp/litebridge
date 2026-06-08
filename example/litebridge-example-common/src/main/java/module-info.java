@@ -14,7 +14,7 @@ module litebridge.example.common {
     exports org.litebridgedb.example.common.entity;
     exports org.litebridgedb.example.common.mapping;
 
-    opens org.litebridgedb.example.common.dto to litebridge.commons, litebridge.orm, litebridge.tracking, litebridge.example.h2.jpms;
-    opens org.litebridgedb.example.common.entity to litebridge.commons, litebridge.orm, litebridge.tracking;
-    opens org.litebridgedb.example.common.mapping to litebridge.commons, litebridge.orm, litebridge.tracking;
+    opens org.litebridgedb.example.common.dto to litebridge.orm, litebridge.example.h2.jpms;
+    opens org.litebridgedb.example.common.entity to litebridge.orm;
+    opens org.litebridgedb.example.common.mapping to litebridge.orm;
 }

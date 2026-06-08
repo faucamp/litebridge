@@ -8,6 +8,7 @@ import org.litebridgedb.commons.type.ConcurrentLazy;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.orm.Litebridge;
 import org.litebridgedb.orm.api.spec.ColumnMapping;
 import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldMapping;
@@ -58,7 +59,7 @@ public final class TableMapper {
 
         // HiddenJoinEntity is used for intermediate join tables and is a JDK proxy - don't check module accessiblity for those
         if (!HiddenJoinEntity.class.isAssignableFrom(dtoClass)) {
-            ModuleUtils.requireAccessible(dtoClass);
+            ModuleUtils.requireAccessible(dtoClass, Litebridge.class.getModule());
         }
 
         if (ClassUtils.isBasicType(dtoClass)) {
