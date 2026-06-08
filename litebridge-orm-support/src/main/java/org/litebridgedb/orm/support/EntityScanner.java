@@ -6,11 +6,11 @@ import io.github.classgraph.ScanResult;
 import org.litebridgedb.orm.Litebridge;
 import org.litebridgedb.orm.annotation.Table;
 
-public class EntityPackageRegistrationSupport implements PackageRegistrationSupport {
+public final class EntityScanner {
 
     private final Litebridge litebridge;
 
-    public EntityPackageRegistrationSupport(final Litebridge litebridge) {
+    public EntityScanner(final Litebridge litebridge) {
         this.litebridge = litebridge;
     }
 
@@ -19,19 +19,16 @@ public class EntityPackageRegistrationSupport implements PackageRegistrationSupp
      *
      * @param packageNames Base package(s) to scan for entity classes
      */
-    @Override
-    public void scanBasePackage(final String... packageNames) {
+    public Class<?>[] scanBasePackage(final String... packageNames) {
         try (final ScanResult scanResult = new ClassGraph()
                 .enableClassInfo()
                 .enableAnnotationInfo()
                 .acceptPackages(packageNames)
                 .scan()) {
 
-            final Class<?>[] entityClasses = scanResult.getClassesWithAnnotation(Table.class.getName()).stream()
+            return scanResult.getClassesWithAnnotation(Table.class.getName()).stream()
                     .map(ClassInfo::loadClass)
                     .toArray(Class<?>[]::new);
-
-            litebridge.register(entityClasses);
         }
     }
 }

@@ -1,7 +1,6 @@
 package org.litebridgedb.example.spring.db;
 
 import org.litebridgedb.example.common.dto.Person;
-import org.litebridgedb.example.common.mapping.CommonDtoRegistration;
 import org.litebridgedb.orm.Litebridge;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +14,6 @@ public class DatabaseFacade {
     private final Litebridge litebridge;
 
     public DatabaseFacade(final Litebridge litebridge) {
-        CommonDtoRegistration.registerPersonAndAccount(litebridge);
         this.litebridge = litebridge;
     }
 

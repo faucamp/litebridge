@@ -302,7 +302,7 @@ module my.module {
 Use `TypesafeRegistrationSupport` to scan one or more packages:
 
 ```java
-import org.litebridgedb.orm.support.TypesafeRegistrationSupport;
+import org.litebridgedb.orm.support.TypeSafeDtoMappingScanner;
 
 // Create the scanner with your Litebridge instance
 TypesafeRegistrationSupport scanner = new TypesafeRegistrationSupport(litebridge);

@@ -101,9 +101,9 @@ public abstract class TypeSafeDtoTableMapping {
 
         while (current != null && current != TypeSafeDtoTableMapping.class) {
             for (Field field : current.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers())
-                        && Modifier.isFinal(field.getModifiers())
-                        && field.canAccess(null)) {
+                if (Modifier.isPublic(field.getModifiers())
+                        && Modifier.isStatic(field.getModifiers())
+                        && Modifier.isFinal(field.getModifiers())) {
                     staticFields.add(field);
                 }
             }

@@ -183,7 +183,7 @@ module my.module {
 Use `EntityPackageRegistrationSupport` to scan one or more packages:
 
 ```java
-import org.litebridgedb.orm.support.EntityPackageRegistrationSupport;
+import org.litebridgedb.orm.support.EntityScanner;
 
 // Create the scanner with your Litebridge instance
 EntityPackageRegistrationSupport scanner = new EntityPackageRegistrationSupport(litebridge);

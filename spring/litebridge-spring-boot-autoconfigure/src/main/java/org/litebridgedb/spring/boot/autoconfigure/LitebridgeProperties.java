@@ -7,13 +7,18 @@ import org.springframework.boot.context.properties.bind.Name;
 /**
  * Spring Boot configuration properties for Litebridge.
  */
-@ConfigurationProperties(prefix = "litebridgedb")
+@ConfigurationProperties(prefix = "litebridge")
 public class LitebridgeProperties {
 
     /**
      * Database provider configuration.
      */
     private DatabaseProviderProperties databaseProvider = new DatabaseProviderProperties();
+
+    /**
+     * One or more base packages to scan for Litebridge entities or type-safe DTO mappings.
+     */
+    private @Nullable String[] scanBasePackage;
 
     /**
      * Get the database provider configuration.
@@ -31,6 +36,24 @@ public class LitebridgeProperties {
      */
     public void setDatabaseProvider(final DatabaseProviderProperties databaseProvider) {
         this.databaseProvider = databaseProvider;
+    }
+
+    /**
+     * Get the base packages to scan for Litebridge entities or type-safe DTO mappings.
+     *
+     * @return base packages to scan
+     */
+    public @Nullable String[] getScanBasePackage() {
+        return scanBasePackage;
+    }
+
+    /**
+     * Set the base packages to scan for Litebridge entities or type-safe DTO mappings.
+     *
+     * @param scanBasePackage base packages to scan
+     */
+    public void setScanBasePackage(final @Nullable String[] scanBasePackage) {
+        this.scanBasePackage = scanBasePackage;
     }
 
     /**

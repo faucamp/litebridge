@@ -44,7 +44,7 @@ public final class ClassUtils {
         try {
             lookup.accessClass(type);
         } catch (IllegalAccessException e) {
-            throw new IllegalArgumentException("No access to class: %s. Please provide a suitable MethodHandles.Lookup or 'opens %s to %s;' to your module-info.java\",".formatted(type.getName(), lookup.getClass().getModule().getName(), ClassUtils.class.getModule().getName()), e);
+            throw new IllegalArgumentException("No access to class: %s. Please provide a suitable MethodHandles.Lookup or 'opens %s to %s;' to your module-info.java.".formatted(type.getName(), type.getPackageName(), lookup.lookupClass().getModule().getName()), e);
         }
 
         // Add fields declared in the current class
@@ -64,7 +64,7 @@ public final class ClassUtils {
         try {
             lookup.accessClass(type);
         } catch (IllegalAccessException e) {
-            throw new IllegalArgumentException("No access to class: %s. Please provide a suitable MethodHandles.Lookup or 'opens %s to %s;' to your module-info.java\",".formatted(type.getName(), lookup.getClass().getModule().getName(), ClassUtils.class.getModule().getName()), e);
+            throw new IllegalArgumentException("No access to class: %s. Please provide a suitable MethodHandles.Lookup or 'opens %s to %s;' to your module-info.java.".formatted(type.getName(), type.getPackageName(), lookup.lookupClass().getModule().getName()), e);
         }
 
         // Add methods declared in the current class

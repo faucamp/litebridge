@@ -22,7 +22,10 @@ server:
     context-path: /
 
 litebridge:
-  database-provider-class: org.litebridgedb.db.h2.H2DatabaseProvider
+  scan-base-package:
+    - org.litebridgedb.example.common.entity
+  database-provider:
+    class: org.litebridgedb.db.h2.H2DatabaseProvider
 
 springdoc:
   api-docs:
@@ -33,5 +36,5 @@ springdoc:
 logging:
   level:
     root: INFO
-    org.litebridge: TRACE
+    org.litebridgedb: TRACE
 

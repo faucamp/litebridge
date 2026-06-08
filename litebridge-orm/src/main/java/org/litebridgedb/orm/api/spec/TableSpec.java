@@ -30,7 +30,7 @@ public final class TableSpec extends Table {
         super(StringUtils.blankIfNull(catalog),
                 StringUtils.blankIfNull(schema),
                 StringUtils.requireNonBlank(table, "Table name cannot be blank"));
-        this.fieldColumnMap = Collections.unmodifiableMap(CollectionUtils.requireNonEmpty(fieldColumnMap, "Field-column map cannot be null"));
+        this.fieldColumnMap = Collections.unmodifiableMap(CollectionUtils.requireNonEmpty(fieldColumnMap, "Field-column map cannot be null or empty"));
     }
 
     public TableSpec(final String name, final Map<FieldMapping, ColumnMapping> fieldColumnMap) {

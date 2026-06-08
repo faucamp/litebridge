@@ -21,9 +21,11 @@ import org.litebridgedb.orm.api.spec.TableSpec;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class AnnotationMapper {
 
@@ -49,6 +51,7 @@ public final class AnnotationMapper {
         }
 
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = new LinkedHashMap<>();
+        final Set<String> mappedFieldNames = new HashSet<>();;
 
         // Maps annotated fields to column specifications
         ClassUtils.getAllFields(entityClass, false, lookup)
@@ -73,6 +76,7 @@ public final class AnnotationMapper {
                     }
 
                     fieldColumnMap.put(new FieldSpec(field.getName(), false), columnMapping);
+                    mappedFieldNames.add(field.getName());
                 });
 
         // Maps annotated methods to column specifications for table binding
@@ -112,7 +116,10 @@ public final class AnnotationMapper {
                         fieldName = method.getName();
                     }
 
-                    fieldColumnMap.put(new FieldSpec(fieldName, true), columnMapping);
+                    if (!mappedFieldNames.contains(fieldName)) {
+                        fieldColumnMap.put(new FieldSpec(fieldName, true), columnMapping);
+                        mappedFieldNames.add(fieldName);
+                    }
                 });
 
         if (fieldColumnMap.isEmpty()) {

@@ -2,7 +2,10 @@ package org.litebridgedb.spring.boot.autoconfigure;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class LitebridgePropertiesTest {
 
@@ -29,5 +32,13 @@ class LitebridgePropertiesTest {
         final LitebridgeProperties.DatabaseProviderProperties databaseProviderProperties = new LitebridgeProperties.DatabaseProviderProperties();
         litebridgeProperties.setDatabaseProvider(databaseProviderProperties);
         assertEquals(databaseProviderProperties, litebridgeProperties.getDatabaseProvider());
+    }
+
+    @Test
+    void getScanBasePackage() {
+        final LitebridgeProperties litebridgeProperties = new LitebridgeProperties();
+        assertNull(litebridgeProperties.getScanBasePackage());
+        litebridgeProperties.setScanBasePackage(new String[]{"com.example"});
+        assertArrayEquals(new String[]{"com.example"}, litebridgeProperties.getScanBasePackage());
     }
 }

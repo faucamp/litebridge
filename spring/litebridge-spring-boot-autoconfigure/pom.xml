@@ -33,7 +33,16 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+                    <argLine>@{argLine}
+                        -javaagent:${org.mockito:mockito-core:jar}
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.entity=spring.beans
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.mapping=spring.beans
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.mapping=litebridge.orm
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.mapping=litebridge.commons
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.mapping=litebridge.tracking
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.entity=litebridge.commons
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.entity=litebridge.tracking
+                    </argLine>
                 </configuration>
             </plugin>
         </plugins>
@@ -85,6 +94,16 @@
         </dependency>
 
         <!-- Test dependencies -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.litebridgedb.db</groupId>
             <artifactId>litebridge-db-h2</artifactId>

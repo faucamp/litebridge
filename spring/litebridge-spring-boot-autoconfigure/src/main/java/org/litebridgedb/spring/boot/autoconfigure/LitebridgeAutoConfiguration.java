@@ -2,7 +2,10 @@ package org.litebridgedb.spring.boot.autoconfigure;
 
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.orm.Litebridge;
+import org.litebridgedb.orm.api.register.TypeSafeDtoTableMapping;
+import org.litebridgedb.spring.LitebridgeEntityScanner;
 import org.litebridgedb.spring.LitebridgeTransactionManager;
+import org.litebridgedb.spring.LitebridgeTypeSafeDtoMappingScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -20,8 +23,10 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
 import javax.sql.DataSource;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -59,7 +64,10 @@ public class LitebridgeAutoConfiguration {
      */
     @Bean(name = "litebridge")
     @ConditionalOnMissingBean
-    public Litebridge litebridge(final LitebridgeProperties properties, final LitebridgeTransactionManager transactionManager) {
+    public Litebridge litebridge(final LitebridgeProperties properties,
+                                 final LitebridgeTransactionManager transactionManager,
+                                 final Optional<LitebridgeConfigurer> configurer) {
+        LOGGER.trace("Starting Litebridge Spring Boot autoconfiguration");
         final DatabaseProvider databaseProvider;
 
         if (properties.getDatabaseProvider().getProviderClass() != null) {
@@ -70,7 +78,40 @@ public class LitebridgeAutoConfiguration {
             databaseProvider = autoDetectDatabaseProvider(properties);
         }
 
-        return new Litebridge(databaseProvider, transactionManager);
+        LOGGER.trace("Creating Litebridge instance with DatabaseProvider: {} (transaction manager: {})", databaseProvider.getClass().getName(), transactionManager.getClass().getName());
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final Litebridge litebridge = new Litebridge(databaseProvider, transactionManager, lookup);
+
+        if (properties.getScanBasePackage() != null) {
+            final Class<?>[] entityClasses = new LitebridgeEntityScanner().scanBasePackage(properties.getScanBasePackage());
+            LOGGER.debug("Found {} entity classes after scanning base packages: {}", entityClasses.length, properties.getScanBasePackage());
+            LOGGER.trace("Found entity classes: {}", (Object) entityClasses);
+
+            if (entityClasses.length > 0) {
+                litebridge.register(lookup, entityClasses);
+            }
+
+            final TypeSafeDtoTableMapping[] typeSafeMappings = new LitebridgeTypeSafeDtoMappingScanner().scanBasePackage(properties.getScanBasePackage());
+            LOGGER.debug("Found {} typesafe DTO mappings after scanning base package: {}", typeSafeMappings.length, properties.getScanBasePackage());
+            LOGGER.trace("Found typesafe DTO mappings: {}", (Object) typeSafeMappings);
+
+            if (typeSafeMappings.length > 0) {
+                try {
+                    litebridge.register(lookup, typeSafeMappings);
+                } catch (Exception ex) {
+                    LOGGER.error("Failed to register typesafe DTO mappings:`` {}", typeSafeMappings, ex);
+                    throw new IllegalStateException("Litebridge failed to register typesafe DTO mappings", ex);
+                }
+            }
+        }
+
+        configurer.ifPresent(litebridgeConfigurer -> {
+            LOGGER.trace("Applying LitebridgeConfigurer: {}", litebridgeConfigurer.getClass().getName());
+            litebridgeConfigurer.configure(litebridge);
+        });
+
+        LOGGER.trace("Litebridge Spring Boot autoconfiguration complete");
+        return litebridge;
     }
 
     /**
@@ -81,7 +122,7 @@ public class LitebridgeAutoConfiguration {
     @SuppressWarnings("unchecked")
     private static DatabaseProvider configBasedDatabaseProvider(final LitebridgeProperties properties) {
         final String databaseProviderClassName = Objects.requireNonNull(properties.getDatabaseProvider().getProviderClass());
-        LOGGER.debug("Litebridge: Initialising configured DatabaseProvider class: {}", databaseProviderClassName);
+        LOGGER.debug("Initialising configured DatabaseProvider class: {}", databaseProviderClassName);
         final Class<? extends DatabaseProvider> databaseProviderClass;
 
         try {
@@ -113,7 +154,7 @@ public class LitebridgeAutoConfiguration {
      * It enforces uniqueness - ensures that only one {@link DatabaseProvider} implementation is used per application.
      */
     private static DatabaseProvider autoDetectDatabaseProvider(final LitebridgeProperties properties) {
-        LOGGER.debug("Litebridge: Auto-detecting DatabaseProvider from classpath");
+        LOGGER.debug("Auto-detecting DatabaseProvider from classpath");
         final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AssignableTypeFilter(DatabaseProvider.class));
         final Set<BeanDefinition> candidates = scanner.findCandidateComponents(properties.getDatabaseProvider().getScanBasePackage());
@@ -126,7 +167,7 @@ public class LitebridgeAutoConfiguration {
 
         final BeanDefinition candidate = candidates.iterator().next();
         final Class<?> databaseProviderClass = ClassUtils.resolveClassName(Objects.requireNonNull(candidate.getBeanClassName()), ClassUtils.getDefaultClassLoader());
-        LOGGER.debug("Litebridge: Auto-detected DatabaseProvider class: {}", databaseProviderClass.getName());
+        LOGGER.debug("Auto-detected DatabaseProvider class: {}", databaseProviderClass.getName());
         return (DatabaseProvider) BeanUtils.instantiateClass(databaseProviderClass);
     }
 }

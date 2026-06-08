@@ -7,9 +7,15 @@ import org.jspecify.annotations.NullMarked;
 module litebridge.spring {
     requires java.sql;
     requires litebridge.db.spi;
+    requires org.jspecify;
     requires spring.jdbc;
     requires spring.tx;
-    requires org.jspecify;
+    requires spring.context;
+    requires spring.core;
+    requires spring.beans;
+    requires litebridge.annotations;
+    requires litebridge.orm;
+    requires org.slf4j;
 
     exports org.litebridgedb.spring;
 }
