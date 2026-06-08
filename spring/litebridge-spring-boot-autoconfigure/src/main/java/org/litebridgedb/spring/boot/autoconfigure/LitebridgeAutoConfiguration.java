@@ -79,8 +79,7 @@ public class LitebridgeAutoConfiguration {
         }
 
         LOGGER.trace("Creating Litebridge instance with DatabaseProvider: {} (transaction manager: {})", databaseProvider.getClass().getName(), transactionManager.getClass().getName());
-        final MethodHandles.Lookup lookup = MethodHandles.lookup();
-        final Litebridge litebridge = new Litebridge(databaseProvider, transactionManager, lookup);
+        final Litebridge litebridge = new Litebridge(databaseProvider, transactionManager, MethodHandles.lookup());
 
         if (properties.getScanBasePackage() != null) {
             final Class<?>[] entityClasses = new LitebridgeEntityScanner().scanBasePackage(properties.getScanBasePackage());
@@ -88,7 +87,7 @@ public class LitebridgeAutoConfiguration {
             LOGGER.trace("Found entity classes: {}", (Object) entityClasses);
 
             if (entityClasses.length > 0) {
-                litebridge.register(lookup, entityClasses);
+                litebridge.register(entityClasses);
             }
 
             final TypeSafeDtoTableMapping[] typeSafeMappings = new LitebridgeTypeSafeDtoMappingScanner().scanBasePackage(properties.getScanBasePackage());
@@ -97,7 +96,7 @@ public class LitebridgeAutoConfiguration {
 
             if (typeSafeMappings.length > 0) {
                 try {
-                    litebridge.register(lookup, typeSafeMappings);
+                    litebridge.register(typeSafeMappings);
                 } catch (Exception ex) {
                     LOGGER.error("Failed to register typesafe DTO mappings:`` {}", typeSafeMappings, ex);
                     throw new IllegalStateException("Litebridge failed to register typesafe DTO mappings", ex);

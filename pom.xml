@@ -251,7 +251,7 @@
                 <version>${maven-javadoc-plugin.version}</version>
                 <configuration>
                     <skippedModules>
-                        litebridge-example-common,litebridge-example-h2,litebridge-example-oracle,litebridge-example-spring-boot,litebridge-example-spring-boot3,litebridge-example-spring-boot-manual-config
+                        litebridge-example-common,litebridge-example-h2,litebridge-example-h2-jpms,litebridge-example-oracle,litebridge-example-spring-boot,litebridge-example-spring-boot3,litebridge-example-spring-boot-manual-config
                     </skippedModules>
                 </configuration>
             </plugin>

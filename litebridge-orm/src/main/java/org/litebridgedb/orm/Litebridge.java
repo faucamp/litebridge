@@ -87,6 +87,7 @@ public final class Litebridge {
     private final PersistenceFacade persistenceFacade;
     private final TableMapper tableMapper;
     private final ChangeTracker changeTracker;
+    private final MethodHandles.Lookup lookup;
     private @Nullable List<FieldAccessor> pendingManyToOneDependencies;
 
     /**
@@ -133,82 +134,43 @@ public final class Litebridge {
         this.transactionContext = new TransactionContext(transactionManager);
         this.changeTracker = new ChangeTracker(lookup);
         this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker);
+        this.lookup = lookup;
         this.tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker);
     }
 
     /**
-     * Registers a DTO class along with its associated table specification using the provided lookup and registration context.
-     *
-     * @param lookup   An instance of MethodHandles.Lookup used to access caller-sensitive methods.
-     * @param dtoClass The class object of the DTO (Data Transfer Object) to be registered.
-     * @param rc       A function that takes a RegistrationContext instance to configure the table mapping.
-     */
-    public void register(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final Function<RegistrationContext, RegistrationContextTerminal> rc) {
-        final RegistrationContextTerminal context = rc.apply(new RegistrationContext(dtoClass, databaseProvider));
-        register(lookup, new DtoTableSpecBuilder(context).build());
-    }
-
-    /**
-     * Registers a DTO class along with its associated table specification using the provided lookup and registration context.
-     * <p>
-     * This uses a local `MethodHandles.lookup()` to reflect the DTO and optional interfaces.
+     * Registers a DTO class along with its associated table specification using the provided registration context function.
      *
      * @param dtoClass The class object of the DTO (Data Transfer Object) to be registered.
      * @param rc       A function that takes a RegistrationContext instance to configure the table mapping.
      */
     public void register(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationContextTerminal> rc) {
-        register(MethodHandles.lookup(), dtoClass, rc);
+        final RegistrationContextTerminal context = rc.apply(new RegistrationContext(dtoClass, databaseProvider));
+        register(new DtoTableSpecBuilder(context).build());
     }
 
     /**
-     * Register a Data Transfer Object (DTO) class with its corresponding table specification.
-     * <p>
-     * This method maps the DTO class to a database table and stores the association
-     * in the table registry to enable database operations such as insert, update, or query.
-     * <p>
-     * It uses a local `MethodHandles.lookup()` to reflect the DTO and optional interfaces.
-     *
-     * @param dtoTableSpec DTO-to-table mapping details
-     */
-    public void register(final DtoTableSpec dtoTableSpec) {
-        register(MethodHandles.lookup(), dtoTableSpec);
-    }
-
-    /**
-     * Registers a DTO table specification using the provided lookup instance and type-safe DTO table mapping.
-     *
-     * @param lookup                   the MethodHandles.Lookup instance to use for method and field lookups
-     * @param typeSafeDtoTableMappings the type-safe DTO table mapping(s) to create and register the DTO table specification
-     */
-    public void register(final MethodHandles.Lookup lookup, final TypeSafeDtoTableMapping... typeSafeDtoTableMappings) {
-        final DtoTableSpec[] dtoTableSpecs = Arrays.stream(typeSafeDtoTableMappings)
-                .map(typeSafeDtoTableMapping -> typeSafeDtoTableMapping.createDtoTableSpec(databaseProvider))
-                .toArray(DtoTableSpec[]::new);
-
-        register(lookup, dtoTableSpecs);
-    }
-
-    /**
-     * Registers a DTO table specification using the provided type-safe DTO table mapping.
-     * <p>
-     * It uses a local `MethodHandles.lookup()` to reflect the DTO and optional interfaces.
+     * Registers DTO table specification(s) using the provided type-safe DTO table mapping(s).
      *
      * @param typeSafeDtoTableMappings one or more type-safe DTO table mappings to create and register DTO table specifications for
      */
     public void register(final TypeSafeDtoTableMapping... typeSafeDtoTableMappings) {
-        register(MethodHandles.lookup(), typeSafeDtoTableMappings);
+        final DtoTableSpec[] dtoTableSpecs = Arrays.stream(typeSafeDtoTableMappings)
+                .map(typeSafeDtoTableMapping -> typeSafeDtoTableMapping.createDtoTableSpec(databaseProvider))
+                .toArray(DtoTableSpec[]::new);
+
+        register(dtoTableSpecs);
     }
 
     /**
-     * Registers an annotated entity class.
+     * Registers annotated entity class(es).
      * <p>
      * The annotated entity must be annotated with {@link Table} and contain at least one field annotated with
      * {@link org.litebridgedb.orm.annotation.Column}, {@link org.litebridgedb.orm.annotation.OneToMany} or {@link org.litebridgedb.orm.annotation.ManyToMany}.
      *
-     * @param lookup        the lookup context for method handles, typically used to access private members.
      * @param entityClasses the class(es) of the entity/entities to be registered.
      */
-    public void register(final MethodHandles.Lookup lookup, final Class<?>... entityClasses) {
+    public void register(final Class<?>... entityClasses) {
         final DtoTableSpec[] dtoTableSpecs = new DtoTableSpec[entityClasses.length];
 
         for (int i = 0; i < entityClasses.length; i++) {
@@ -216,34 +178,18 @@ public final class Litebridge {
             dtoTableSpecs[i] = AnnotationMapper.createDtoTableSpec(entityClasses[i], databaseProvider, lookup);
         }
 
-        register(lookup, dtoTableSpecs);
+        register(dtoTableSpecs);
     }
 
     /**
-     * Registers an annotated entity class.
-     * <p>
-     * The annotated entity must be annotated with {@link Table} and contain at least one field annotated with
-     * {@link org.litebridgedb.orm.annotation.Column}, {@link org.litebridgedb.orm.annotation.OneToMany} or {@link org.litebridgedb.orm.annotation.ManyToMany}.
-     * <p>
-     * It uses a local `MethodHandles.lookup()` to reflect the DTO and optional interfaces.
-     *
-     * @param entityClasses the class(es) of the entity/entities to be registered.
-     */
-    public void register(Class<?>... entityClasses) {
-        register(MethodHandles.lookup(), entityClasses);
-    }
-
-    /**
-     * Register a Data Transfer Object (DTO) class with its corresponding table specification,
-     * using the provided lookup object to reflect the DTO and optional interfaces.
+     * Register a Data Transfer Object (DTO) class(es) with its corresponding table specification(s).
      * <p>
      * This method maps the DTO class to a database table and stores the association
      * in the table registry to enable database operations such as insert, update, or query.
      *
-     * @param lookup        Lookup object used for reflecting the DTO and optional interfaces.
      * @param dtoTableSpecs One or more DTO-to-table mapping details
      */
-    public void register(final MethodHandles.Lookup lookup, final DtoTableSpec... dtoTableSpecs) {
+    public void register(final DtoTableSpec... dtoTableSpecs) {
         final Set<Class<?>> allDtoClasses = new HashSet<>(dtoTableSpecs.length);
 
         for (final DtoTableSpec dtoTableSpec : dtoTableSpecs) {
