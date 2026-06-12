@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Base specification for constructing a SQL DELETE statement.
+ * Base specification for constructing a SQL UPDATE statement.
  */
 public class UpdateSpec {
 
@@ -24,7 +24,7 @@ public class UpdateSpec {
     protected List<ConditionSpec> whereConditions;
 
     public Table getTable() {
-        return ObjectUtils.requireNonNull(table, () -> new IllegalStateException("DeleteSpec.table not set"));
+        return ObjectUtils.requireNonNull(table, () -> new IllegalStateException("UpdateSpec.table not set"));
     }
 
     public void setTable(final Table table) {

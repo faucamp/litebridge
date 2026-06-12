@@ -13,8 +13,7 @@ class EntityScannerTest {
     @Test
     void scanBasePackage() {
         // Given
-        final Litebridge litebridge = mock(Litebridge.class);
-        final EntityScanner entityScanner = new EntityScanner(litebridge);
+        final EntityScanner entityScanner = new EntityScanner();
 
         // When
         final Class<?>[] result = entityScanner.scanBasePackage("org.litebridgedb.orm.support.entities");
