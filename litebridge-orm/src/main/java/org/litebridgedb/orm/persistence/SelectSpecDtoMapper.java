@@ -1,5 +1,6 @@
 package org.litebridgedb.orm.persistence;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.ClassUtils;
 import org.litebridgedb.commons.CollectionUtils;
@@ -10,6 +11,8 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.dto.DtoJoinSpec;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
+import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.tracking.FieldAccessor;
 import org.litebridgedb.tracking.FieldAccessorChain;
 import org.slf4j.Logger;
@@ -33,13 +36,21 @@ public class SelectSpecDtoMapper {
     private final PartiallyConstructedDtoCache dtoCache;
     private final TypeConverter typeConverter;
     private final DtoSelectSpec selectSpec;
-
+    private final TableRegistry tableRegistry;
+    private final DtoConstructor dtoConstructor;
+    private final LitebridgeConfig litebridgeConfig;
 
     public SelectSpecDtoMapper(final DtoSelectSpec dtoSelectSpec,
-                               final TypeConverter typeConverter) {
+                               final TypeConverter typeConverter,
+                               final TableRegistry tableRegistry,
+                               final DtoConstructor dtoConstructor,
+                               final LitebridgeConfig litebridgeConfig) {
         this.dtoCache = new PartiallyConstructedDtoCache();
         this.typeConverter = typeConverter;
         this.selectSpec = dtoSelectSpec;
+        this.tableRegistry = tableRegistry;
+        this.dtoConstructor = dtoConstructor;
+        this.litebridgeConfig = litebridgeConfig;
     }
 
     public <DTO> List<DTO> toDtos(final Class<DTO> dtoClass, final List<Row> rows) {
@@ -83,7 +94,7 @@ public class SelectSpecDtoMapper {
         PartiallyConstructedDto currentDto = partialDto;
 
         for (final DtoConstructor.DtoDependency dependency : partialDto.dependencies()) {
-            final PartiallyConstructedDto relatedDto = dtoCache.get(dependency.targetDtoClass(), dependency.targetPrimaryKey());
+            final PartiallyConstructedDto relatedDto = dtoCache.get(dependency.targetDtoClass(), dependency.targetPrimaryKeyValue());
 
             if (relatedDto != null) {
                 if (relatedDto.dto() instanceof Record) {
@@ -194,23 +205,71 @@ public class SelectSpecDtoMapper {
                 fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, convertedValue));
             } else {
                 // Related DTO: note dependency and allow outer process populate these
-                final Row.RowColumn rowColumn = row.column(fieldColumn.column())
-                        .orElseThrow(() -> new IllegalStateException("No column found for alias '%s' in row: %s".formatted(fieldColumn.column().alias(), row)));
-                final Object targetPkValue = rowColumn.value();
-                final List<Object> targetPk = targetPkValue instanceof List<?> ? (List<Object>) targetPkValue : Collections.singletonList(targetPkValue);
-                final DtoConstructor.DtoDependency dependency = new DtoConstructor.DtoDependency(field, field.type(), targetPk);
+                final DtoConstructor.DtoDependency dependency = createDtoDependency(table, fieldColumn, row);
                 dependencies.add(dependency);
                 fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, dependency));
             }
         });
 
-        final Object dto = constructDto(dtoClass, fieldAccessorValues);
+        final Object dto = switch (litebridgeConfig.getRelatedDtoStrategy()) {
+            case PARTIAL_OBJECT_IF_NO_JOIN -> constructDtoResolveDeps(dtoClass, fieldAccessorValues);
+            case NULL_IF_NO_JOIN -> constructDto(dtoClass, fieldAccessorValues);
+        };
+
         return new PartiallyConstructedDto(dto, table, dtoData, fieldColumns, dependencies);
     }
 
+    private DtoConstructor.@NonNull DtoDependency createDtoDependency(final OrmTable ormTable, final DtoSelectSpec.FieldColumn fieldColumn, final Row row) {
+        final FieldAccessor field = fieldColumn.fieldAccessor();
+        final Row.RowColumn rowColumn = row.column(fieldColumn.column())
+                .orElseThrow(() -> new IllegalStateException("No column found for alias '%s' in row: %s".formatted(fieldColumn.column().alias(), row)));
+        final Object targetPkValue = rowColumn.value();
+        // Get the table and column for the related DTO
+        final ColumnMetaData columnMetaData = ormTable.getColumnForFieldName(field.name());
+
+        if (columnMetaData.getJoinColumn() == null) {
+            throw new IllegalStateException("No join column found for column '%s' in table '%s'".formatted(columnMetaData.name(), ormTable.getMetaData().name()));
+        }
+
+        final OrmTable relatedOrmTable = tableRegistry.getTableOrThrow(field.type());
+        final FieldAccessor pkFieldAccessor = relatedOrmTable.getFieldForColumnName(columnMetaData.getJoinColumn());
+        final List<DtoConstructor.FieldAccessorValue> relatedPkFieldAccessorValues = new ArrayList<>();
+        final Object convertedTargetPkValue = typeConverter.convert(targetPkValue, pkFieldAccessor.type());
+        relatedPkFieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(pkFieldAccessor, convertedTargetPkValue));
+
+        final DtoConstructor.DtoDependency dependency = new DtoConstructor.DtoDependency(field, field.type(), relatedPkFieldAccessorValues);
+        return dependency;
+    }
+
+    private <DTO> DTO constructDtoResolveDeps(final Class<DTO> dtoClass, final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues) {
+        final List<DtoConstructor.FieldAccessorValue> processedFieldAccessorValues = new ArrayList<>();
+
+        for (DtoConstructor.FieldAccessorValue fieldAccessorValue : fieldAccessorValues) {
+            if (fieldAccessorValue.value() instanceof DtoConstructor.DtoDependency dependency) {
+                final PartiallyConstructedDto cachedDto = dtoCache.get(dependency.targetDtoClass(), dependency.targetPrimaryKeyValue());
+
+                if (cachedDto != null) {
+                    fieldAccessorValue = new DtoConstructor.FieldAccessorValue(fieldAccessorValue.field(), cachedDto.dto());
+                } else {
+                    // Construct partial DTO if not in cache
+                    final Object relatedDtoPkOnly = constructDtoResolveDeps(dependency.targetDtoClass(), dependency.targetPrimaryKey());
+                    fieldAccessorValue = new DtoConstructor.FieldAccessorValue(fieldAccessorValue.field(), relatedDtoPkOnly);
+                }
+            }
+
+            processedFieldAccessorValues.add(fieldAccessorValue);
+        }
+
+        return constructDto(dtoClass, processedFieldAccessorValues);
+    }
+
     @SuppressWarnings("unchecked")
-    static <DTO> DTO constructDto(final Class<DTO> dtoClass, final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues) {
-        final DtoConstructor.ConstructionResult<?> constructionResult = DtoConstructor.newInstance(dtoClass, fieldAccessorValues);
+    <DTO> DTO constructDto(final Class<DTO> dtoClass, final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues) {
+        return constructDto(dtoClass, fieldAccessorValues, dtoConstructor);
+    }
+
+    static <DTO> DTO constructDto(final Class<DTO> dtoClass, final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues, final DtoConstructor dtoConstructor) {
+        final DtoConstructor.ConstructionResult<?> constructionResult = dtoConstructor.newInstance(dtoClass, fieldAccessorValues);
         final DTO dto = (DTO) constructionResult.dto();
 
         if (constructionResult.defaultConstructorUsed()) {
@@ -274,8 +333,11 @@ public class SelectSpecDtoMapper {
                                 final List<@Nullable Object> joinPkValues = joinPkFieldColumns.stream()
                                         .filter(joinPkFieldColumn -> joinPkFieldColumn.column().alias() != null)
                                         .map(joinPkFieldColumn -> row.column(joinPkFieldColumn.column())
-                                                .orElseThrow(() -> new IllegalStateException("No primary key column found for join table '%s' in row: %s".formatted(ormTable.getMetaData().name(), row)))
-                                                .value())
+                                                .map(rowColumn -> {
+                                                    final FieldAccessor relatedFieldAccessor = dtoJoinSpec.dtoTable().getFieldForColumnName(rowColumn.column().name());
+                                                    return (Object) typeConverter.convert(rowColumn.value(), relatedFieldAccessor.type());
+                                                })
+                                                .orElseThrow(() -> new IllegalStateException("No primary key column found for join table '%s' in row: %s".formatted(ormTable.getMetaData().name(), row))))
                                         .toList();
 
                                 relatedDtoRows.computeIfAbsent(joinPkValues, k -> row);

@@ -1,13 +1,17 @@
 package org.litebridgedb.orm.persistence;
 
 import org.junit.jupiter.api.Test;
+import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
 import org.litebridgedb.tracking.FieldAccessor;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class DtoConstructorExtraTest {
 
@@ -16,13 +20,18 @@ class DtoConstructorExtraTest {
         ClassFieldAccessorCache cache = new ClassFieldAccessorCache(MethodHandles.lookup());
         FieldAccessor idAccessor = cache.fieldAccessor(TestRecord.class, "id");
         FieldAccessor nameAccessor = cache.fieldAccessor(TestRecord.class, "name");
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final OrmTable ormTable = mock(OrmTable.class);
+        when(tableRegistry.getTableOrThrow(MultiConstructorDto.class)).thenReturn(ormTable);
+        when(ormTable.fieldAcessorStream()).thenReturn(Stream.of(idAccessor, nameAccessor));
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
 
         List<DtoConstructor.FieldAccessorValue> values = List.of(
                 new DtoConstructor.FieldAccessorValue(idAccessor, 1L),
                 new DtoConstructor.FieldAccessorValue(nameAccessor, "test")
         );
 
-        DtoConstructor.ConstructionResult<TestRecord> result = DtoConstructor.newInstance(TestRecord.class, values);
+        DtoConstructor.ConstructionResult<TestRecord> result = dtoConstructor.newInstance(TestRecord.class, values);
         assertNotNull(result.dto());
         assertEquals(1L, result.dto().id());
         assertEquals("test", result.dto().name());
@@ -33,13 +42,18 @@ class DtoConstructorExtraTest {
         ClassFieldAccessorCache cache = new ClassFieldAccessorCache(MethodHandles.lookup());
         FieldAccessor idAccessor = cache.fieldAccessor(MultiConstructorDto.class, "id");
         FieldAccessor nameAccessor = cache.fieldAccessor(MultiConstructorDto.class, "name");
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final OrmTable ormTable = mock(OrmTable.class);
+        when(tableRegistry.getTableOrThrow(MultiConstructorDto.class)).thenReturn(ormTable);
+        when(ormTable.fieldAcessorStream()).thenReturn(Stream.of(idAccessor, nameAccessor));
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
 
         List<DtoConstructor.FieldAccessorValue> values = List.of(
                 new DtoConstructor.FieldAccessorValue(idAccessor, 1L),
                 new DtoConstructor.FieldAccessorValue(nameAccessor, "test")
         );
 
-        DtoConstructor.ConstructionResult<MultiConstructorDto> result = DtoConstructor.newInstance(MultiConstructorDto.class, values);
+        DtoConstructor.ConstructionResult<MultiConstructorDto> result = dtoConstructor.newInstance(MultiConstructorDto.class, values);
         assertNotNull(result.dto());
         assertEquals(1L, result.dto().id);
         assertEquals("test", result.dto().name);

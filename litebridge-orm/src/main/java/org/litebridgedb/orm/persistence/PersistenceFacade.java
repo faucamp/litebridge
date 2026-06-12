@@ -62,15 +62,18 @@ public class PersistenceFacade {
     private final TransactionManager transactionManager;
     private final ChangeTracker changeTracker;
     private final ClassFieldAccessorCache classFieldAccessorCache;
+    private final DtoConstructor dtoConstructor;
 
     public PersistenceFacade(final TableRegistry tableRegistry,
                              final TransactionalDatabaseProvider databaseProvider,
-                             final ChangeTracker changeTracker) {
+                             final ChangeTracker changeTracker,
+                             final DtoConstructor dtoConstructor) {
         this.tableProvider = new TableProvider(tableRegistry);
         this.databaseProvider = databaseProvider;
         this.transactionManager = databaseProvider.transactionManager();
         this.changeTracker = changeTracker;
         this.classFieldAccessorCache = changeTracker.classFieldAccessorCache();
+        this.dtoConstructor = dtoConstructor;
     }
 
     /**
@@ -451,7 +454,7 @@ public class PersistenceFacade {
                     })
                     .toList();
 
-            currentDto = SelectSpecDtoMapper.constructDto(dto.getClass(), fieldAccessorValues);
+            currentDto = SelectSpecDtoMapper.constructDto(dto.getClass(), fieldAccessorValues, dtoConstructor);
         } else {
             // Normal class
             generatedPkValues.forEach((field, value) -> {

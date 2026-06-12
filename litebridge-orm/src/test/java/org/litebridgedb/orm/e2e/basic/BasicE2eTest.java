@@ -2,6 +2,7 @@ package org.litebridgedb.orm.e2e.basic;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
+import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Account;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -92,6 +94,21 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Then
         assertNull(result.getOwner());
+
+        // Execute the same query, but this time create a partially-constructed related DTO
+        final Account result2 = litebridge.select(Account.class, RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN)
+                .where("id").eq(person.getId())
+                .oneOrThrow();
+
+        // Then
+        assertNotNull(result2.getOwner());
+        assertNotEquals(person, result2.getOwner());
+        assertEquals(person.getId(), result2.getOwner().getId());
+        assertNull(result2.getOwner().getName());
+        assertNull(result2.getOwner().getSurname());
+        assertNull(result2.getOwner().getAccounts());
+        assertNull(result2.getOwner().getEyeColour());
+        assertEquals(0, result2.getOwner().getAge());
     }
 
     @TestTemplate

@@ -30,6 +30,9 @@ import org.litebridgedb.orm.api.sql.update.SqlUpdater;
 import org.litebridgedb.orm.api.tx.TransactionContext;
 import org.litebridgedb.orm.api.update.UpdateQuery;
 import org.litebridgedb.orm.api.update.UpdateTerminal;
+import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.config.RelatedDtoStrategy;
+import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
 import org.litebridgedb.orm.persistence.EntityDtoMapper;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -88,6 +91,8 @@ public final class Litebridge {
     private final TableMapper tableMapper;
     private final ChangeTracker changeTracker;
     private final MethodHandles.Lookup lookup;
+    private final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+    private final LitebridgeConfig litebridgeConfig;
     private @Nullable List<FieldAccessor> pendingManyToOneDependencies;
 
     /**
@@ -104,7 +109,20 @@ public final class Litebridge {
      */
     public Litebridge(final DatabaseProvider databaseProvider,
                       final DataSource dataSource) {
-        this(databaseProvider, new DefaultTransactionManager(dataSource), MethodHandles.lookup());
+        this(databaseProvider, dataSource, null, MethodHandles.lookup());
+    }
+
+    public Litebridge(final DatabaseProvider databaseProvider,
+                      final DataSource dataSource,
+                      final @Nullable LitebridgeConfig litebridgeConfig) {
+        this(databaseProvider, dataSource, litebridgeConfig, MethodHandles.lookup());
+    }
+
+    public Litebridge(final DatabaseProvider databaseProvider,
+                      final DataSource dataSource,
+                      final @Nullable LitebridgeConfig litebridgeConfig,
+                      final MethodHandles.Lookup lookup) {
+        this(databaseProvider, new DefaultTransactionManager(dataSource), litebridgeConfig, lookup);
     }
 
     /**
@@ -116,7 +134,13 @@ public final class Litebridge {
      */
     public Litebridge(final DatabaseProvider databaseProvider,
                       final TransactionManager transactionManager) {
-        this(databaseProvider, transactionManager, MethodHandles.lookup());
+        this(databaseProvider, transactionManager, new LitebridgeConfig());
+    }
+
+    public Litebridge(final DatabaseProvider databaseProvider,
+                      final TransactionManager transactionManager,
+                      final LitebridgeConfig litebridgeConfig) {
+        this(databaseProvider, transactionManager, litebridgeConfig, MethodHandles.lookup());
     }
 
     /**
@@ -130,10 +154,27 @@ public final class Litebridge {
     public Litebridge(final DatabaseProvider databaseProvider,
                       final TransactionManager transactionManager,
                       final MethodHandles.Lookup lookup) {
+        this(databaseProvider, transactionManager, null, lookup);
+    }
+
+    /**
+     * Constructs an instance of Litebridge, responsible for managing database operations,
+     * transaction contexts, change tracking, and persistence functionality.
+     *
+     * @param databaseProvider   the provider responsible for supplying database connections and operations
+     * @param transactionManager the manager that handles transaction lifecycles and operations
+     * @param litebridgeConfig   global runtime configuration
+     * @param lookup             the MethodHandles.Lookup instance used for method and field lookups during change tracking
+     */
+    public Litebridge(final DatabaseProvider databaseProvider,
+                      final TransactionManager transactionManager,
+                      final @Nullable LitebridgeConfig litebridgeConfig,
+                      final MethodHandles.Lookup lookup) {
         this.databaseProvider = new TransactionalDatabaseProvider(transactionManager, databaseProvider);
         this.transactionContext = new TransactionContext(transactionManager);
+        this.litebridgeConfig = litebridgeConfig != null ? litebridgeConfig : new LitebridgeConfig();
         this.changeTracker = new ChangeTracker(lookup);
-        this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker);
+        this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor);
         this.lookup = lookup;
         this.tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker);
     }
@@ -385,15 +426,37 @@ public final class Litebridge {
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass) {
+        return select(dtoClass, (RelatedDtoStrategy) null);
+    }
+
+    /**
+     * Select a registered Data Transfer Object (DTO) type for database query operations.
+     *
+     * @param <DTO>    The type of the DTO to select.
+     * @param dtoClass The class of the DTO to be queried, which must already be registered.
+     * @return A {@link DtoSelector} instance for querying and retrieving data for the specified DTO class.
+     * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
+     */
+    public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
-        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator).select();
+
+        final LitebridgeConfig activeConfig;
+
+        if (relatedDtoStrategy != null) {
+            activeConfig = new LitebridgeConfig(litebridgeConfig);
+            activeConfig.setRelatedDtoStrategy(relatedDtoStrategy);
+        } else {
+            activeConfig = litebridgeConfig;
+        }
+
+        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, activeConfig).select();
     }
 
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
         final OrmTable table = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
-        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider, aliasGenerator).select();
+        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, litebridgeConfig).select();
     }
 
     /**
@@ -411,7 +474,7 @@ public final class Litebridge {
      * the SQL query, such as specifying the table or additional clauses.
      */
     public SqlFromClause select(final String... columns) {
-        return new SqlSelector(databaseProvider, tableRegistry).select(columns);
+        return new SqlSelector(databaseProvider, tableRegistry, litebridgeConfig).select(columns);
     }
 
     /**
@@ -429,7 +492,7 @@ public final class Litebridge {
      * of the query, such as specifying the table or additional clauses.
      */
     public SqlFromClause select(final Aliased... columns) {
-        return new SqlSelector(databaseProvider, tableRegistry).select(columns);
+        return new SqlSelector(databaseProvider, tableRegistry, litebridgeConfig).select(columns);
     }
 
     /**
@@ -443,7 +506,7 @@ public final class Litebridge {
      * of the query, such as specifying the table or additional clauses.
      */
     public SqlFromClause select() {
-        return new SqlSelector(databaseProvider, tableRegistry).select(ALL_COLUMNS);
+        return new SqlSelector(databaseProvider, tableRegistry, litebridgeConfig).select(ALL_COLUMNS);
     }
 
     /**
@@ -525,7 +588,7 @@ public final class Litebridge {
                 })
                 .toList());
 
-        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter());
+        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, litebridgeConfig);
 
         final List<DTO> dtos = selectSpecDtoMapper.toDtos(dtoClass, List.of(row));
 

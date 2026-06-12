@@ -7,6 +7,8 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
+import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.SelectSpecDtoMapper;
@@ -22,17 +24,21 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
 
     private final TableRegistry tableRegistry;
     private final ClassFieldAccessorCache classFieldAccessorCache;
+    private final DtoConstructor dtoConstructor;
     private final AliasGenerator aliasGenerator;
 
     public DtoSelector(final Class<DTO> dtoClass,
                        final OrmTable dtoTable,
                        final TableRegistry tableRegistry,
                        final ClassFieldAccessorCache classFieldAccessorCache,
+                       final DtoConstructor dtoConstructor,
                        final TransactionalDatabaseProvider databaseProvider,
-                       final AliasGenerator aliasGenerator) {
-        super(new DtoSelectSpec(dtoClass, dtoTable, aliasGenerator), databaseProvider, dtoClass);
+                       final AliasGenerator aliasGenerator,
+                       final LitebridgeConfig litebridgeConfig) {
+        super(new DtoSelectSpec(dtoClass, dtoTable, aliasGenerator), databaseProvider, dtoClass, litebridgeConfig);
         this.tableRegistry = tableRegistry;
         this.classFieldAccessorCache = classFieldAccessorCache;
+        this.dtoConstructor = dtoConstructor;
         this.aliasGenerator = aliasGenerator;
     }
 
@@ -99,7 +105,7 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
 
     @Override
     public List<DTO> list() {
-        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter());
+        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, litebridgeConfig);
         return selectSpecDtoMapper.toDtos(dtoClass, executeQuery());
     }
 

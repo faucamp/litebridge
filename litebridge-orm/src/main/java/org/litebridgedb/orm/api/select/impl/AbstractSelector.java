@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.SelectTerminal;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
+import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,17 +22,20 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
     protected final SSP selectSpec;
     protected final TransactionalDatabaseProvider databaseProvider;
     protected final Class<DTO> dtoClass;
+    protected final LitebridgeConfig litebridgeConfig;
 
     protected AbstractSelector(final SSP selectSpec,
                                final TransactionalDatabaseProvider databaseProvider,
-                               final Class<DTO> dtoClass) {
+                               final Class<DTO> dtoClass,
+                               final LitebridgeConfig litebridgeConfig) {
         this.selectSpec = selectSpec;
         this.databaseProvider = databaseProvider;
         this.dtoClass = dtoClass;
+        this.litebridgeConfig = litebridgeConfig;
     }
 
     protected AbstractSelector(final AbstractSelector<DTO, SSP> delegate) {
-        this(delegate.selectSpec, delegate.databaseProvider, delegate.dtoClass);
+        this(delegate.selectSpec, delegate.databaseProvider, delegate.dtoClass, delegate.litebridgeConfig);
     }
 
     @Override

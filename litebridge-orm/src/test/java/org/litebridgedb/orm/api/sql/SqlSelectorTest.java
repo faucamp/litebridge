@@ -7,6 +7,7 @@ import org.junit.platform.commons.support.HierarchyTraversalMode;
 import org.junit.platform.commons.support.ReflectionSupport;
 import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.db.spi.query.Operator;
+import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.mockito.Mock;
@@ -31,7 +32,7 @@ class SqlSelectorTest {
     @BeforeEach
     void beforeEach() {
         tableRegistry = new TableRegistry();
-        sqlSelector = new SqlSelector(databaseProvider, tableRegistry);
+        sqlSelector = new SqlSelector(databaseProvider, tableRegistry, new LitebridgeConfig());
     }
 
     @Test

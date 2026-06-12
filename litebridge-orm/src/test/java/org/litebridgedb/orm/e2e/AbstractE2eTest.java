@@ -5,6 +5,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.litebridgedb.orm.Litebridge;
+import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.e2e.setup.DbEnvironment;
 import org.litebridgedb.orm.e2e.setup.MultiDbTestExtension;
 import org.litebridgedb.orm.tx.DefaultTransactionManager;
@@ -18,6 +19,7 @@ public abstract class AbstractE2eTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractE2eTest.class);
     protected Litebridge litebridge;
     protected DbEnvironment dbEnv;
+    protected LitebridgeConfig litebridgeConfig;
     private Flyway flyway;
 
     @BeforeEach
@@ -29,10 +31,12 @@ public abstract class AbstractE2eTest {
         runFlywayMigration(env);
 
         LitebridgeDriverManagerDataSource ds = dbEnv.getDataSource();
+        this.litebridgeConfig = new LitebridgeConfig();
 
         this.litebridge = new Litebridge(
                 dbEnv.getDatabaseProvider(),
-                new DefaultTransactionManager(ds)
+                new DefaultTransactionManager(ds),
+                litebridgeConfig
         );
     }
 
