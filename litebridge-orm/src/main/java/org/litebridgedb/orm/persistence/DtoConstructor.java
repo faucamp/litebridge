@@ -33,7 +33,7 @@ public final class DtoConstructor {
     }
 
     public <DTO> ConstructionResult<DTO> newInstance(final Class<DTO> dtoClass, final List<FieldAccessorValue> fieldAccessorValues) {
-        cacheConstructors(dtoClass);
+        cacheConstructors(dtoClass, null);
         return defaultConstructor(dtoClass)
                 .map(dtoConstructor -> new ConstructionResult<>(ClassUtils.newInstance(dtoClass, dtoConstructor), true))
                 .orElseGet(() -> {
@@ -86,14 +86,21 @@ public final class DtoConstructor {
         return Optional.of((Constructor<DTO>) cachedConstructor);
     }
 
-    private <DTO> void cacheConstructors(final Class<DTO> dtoClass) {
+    private <DTO> void cacheConstructors(final Class<DTO> dtoClass, final @Nullable Class<?> parentDtoClass) {
         if (defaultConstructorCache.containsKey(dtoClass)) {
             return;
         }
 
-        final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final List<FieldAccessor> fieldAccessors = ormTable.fieldAcessorStream().toList();
+        final OrmTable ormTable;
 
+        if (parentDtoClass != null) {
+            ormTable = tableRegistry.getTableInContext(dtoClass, parentDtoClass)
+                    .orElseGet(() -> tableRegistry.getTableOrThrow(dtoClass));
+        } else {
+            ormTable = tableRegistry.getTableOrThrow(dtoClass);
+        }
+
+        final List<FieldAccessor> fieldAccessors = ormTable.fieldAcessorStream().toList();
         final Set<Class<?>> fieldAccessorTypes = new HashSet<>(fieldAccessors.size());
         final boolean matchParameterNames = fieldAccessors.stream().anyMatch(fieldAccessor -> !fieldAccessorTypes.add(fieldAccessor.type()));
 
@@ -207,6 +214,9 @@ public final class DtoConstructor {
         defaultConstructorCache.put(dtoClass, defaultConstructor != null ? defaultConstructor : NO_CONSTRUCTOR);
         canonicalConstructorCache.put(dtoClass, canonicalConstructor != null ? canonicalConstructor : NO_CONSTRUCTOR);
         canonicalConstructorFieldAccessorCache.put(dtoClass, canonicalConstructorFieldAccessors != null ? canonicalConstructorFieldAccessors : Collections.emptyList());
+
+        // Cache related DTO constructors
+        ormTable.getRelatedDtoClasses().forEach(relatedDtoClass -> cacheConstructors(relatedDtoClass, dtoClass));
     }
 
     public record ConstructionResult<DTO>(DTO dto, boolean defaultConstructorUsed) {

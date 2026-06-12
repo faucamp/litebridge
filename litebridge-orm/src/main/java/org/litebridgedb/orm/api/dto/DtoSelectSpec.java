@@ -3,6 +3,7 @@ package org.litebridgedb.orm.api.dto;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;

@@ -12,7 +12,6 @@ import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.dto.DtoJoinSpec;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
-import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.tracking.FieldAccessor;
 import org.litebridgedb.tracking.FieldAccessorChain;
 import org.slf4j.Logger;
@@ -205,7 +204,7 @@ public class SelectSpecDtoMapper {
                 fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, convertedValue));
             } else {
                 // Related DTO: note dependency and allow outer process populate these
-                final DtoConstructor.DtoDependency dependency = createDtoDependency(table, fieldColumn, row);
+                final DtoConstructor.DtoDependency dependency = createDtoDependency(table, fieldColumn, row, dtoClass);
                 dependencies.add(dependency);
                 fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, dependency));
             }
@@ -219,7 +218,7 @@ public class SelectSpecDtoMapper {
         return new PartiallyConstructedDto(dto, table, dtoData, fieldColumns, dependencies);
     }
 
-    private DtoConstructor.@NonNull DtoDependency createDtoDependency(final OrmTable ormTable, final DtoSelectSpec.FieldColumn fieldColumn, final Row row) {
+    private DtoConstructor.@NonNull DtoDependency createDtoDependency(final OrmTable ormTable, final DtoSelectSpec.FieldColumn fieldColumn, final Row row, final Class<?> parentDtoClass) {
         final FieldAccessor field = fieldColumn.fieldAccessor();
         final Row.RowColumn rowColumn = row.column(fieldColumn.column())
                 .orElseThrow(() -> new IllegalStateException("No column found for alias '%s' in row: %s".formatted(fieldColumn.column().alias(), row)));
@@ -231,7 +230,8 @@ public class SelectSpecDtoMapper {
             throw new IllegalStateException("No join column found for column '%s' in table '%s'".formatted(columnMetaData.name(), ormTable.getMetaData().name()));
         }
 
-        final OrmTable relatedOrmTable = tableRegistry.getTableOrThrow(field.type());
+        final OrmTable relatedOrmTable = tableRegistry.getTableInContext(field.type(), parentDtoClass)
+                .orElseGet(() -> tableRegistry.getTableOrThrow(field.type()));
         final FieldAccessor pkFieldAccessor = relatedOrmTable.getFieldForColumnName(columnMetaData.getJoinColumn());
         final List<DtoConstructor.FieldAccessorValue> relatedPkFieldAccessorValues = new ArrayList<>();
         final Object convertedTargetPkValue = typeConverter.convert(targetPkValue, pkFieldAccessor.type());
@@ -304,7 +304,21 @@ public class SelectSpecDtoMapper {
         for (final Row row : rows) {
             final List<Object> pkValues = pkFieldColumns.stream()
                     .map(pkFieldColumn -> row.column(pkFieldColumn.column())
-                            .map(Row.RowColumn::value)
+                            .map(rowColumn -> {
+                                final ColumnMetaData columnMetaData = ormTable.getColumnMetaData(rowColumn.column().name());
+                                final Class<?> pkFieldType = pkFieldColumn.fieldAccessor().type();
+
+                                if (columnMetaData.getJoinColumn() != null
+                                        && !ClassUtils.isBasicType(pkFieldType)) {
+                                    // Primary foreign key mapped to a DTO field; get the related DTO's primary key/join column field
+                                    final OrmTable relatedOrmTable = tableRegistry.getTableInContext(pkFieldType, ormTable.dtoClass())
+                                            .orElseGet(() -> tableRegistry.getTableOrThrow(pkFieldType));
+                                    final FieldAccessor relatedPkFieldAccessor = relatedOrmTable.getFieldForColumnName(columnMetaData.getJoinColumn());
+                                    return (Object) typeConverter.convert(rowColumn.value(), relatedPkFieldAccessor.type());
+                                }
+
+                                return (Object) typeConverter.convert(rowColumn.value(), pkFieldColumn.fieldAccessor().type());
+                            })
                             // No PK present in selected columns; use a hash of the row as the identifier
                             .orElseGet(row::hashCode))
                     .toList();

@@ -112,12 +112,39 @@ public final class Litebridge {
         this(databaseProvider, dataSource, null, MethodHandles.lookup());
     }
 
+    /**
+     * Constructs a Litebridge instance with the specified database provider and data source.
+     * <p>
+     * It uses the default method handle lookup, and Litebridge's {@link DefaultTransactionManager} to manage transactions.
+     *
+     * @param databaseProvider the database provider to be used by Litebridge.
+     *                         This parameter is required to set up database operations
+     *                         and facilitate persistence functionalities. Must not be null.
+     * @param dataSource       the data source to be used by Litebridge.
+     *                         This parameter is required to provide database connectivity
+     *                         and facilitate persistence operations. Must not be null.
+     * @param litebridgeConfig global runtime configuration
+     */
     public Litebridge(final DatabaseProvider databaseProvider,
                       final DataSource dataSource,
                       final @Nullable LitebridgeConfig litebridgeConfig) {
         this(databaseProvider, dataSource, litebridgeConfig, MethodHandles.lookup());
     }
 
+    /**
+     * Constructs a Litebridge instance with the specified database provider and data source.
+     * <p>
+     * It uses Litebridge's {@link DefaultTransactionManager} to manage transactions.
+     *
+     * @param databaseProvider the database provider to be used by Litebridge.
+     *                         This parameter is required to set up database operations
+     *                         and facilitate persistence functionalities. Must not be null.
+     * @param dataSource       the data source to be used by Litebridge.
+     *                         This parameter is required to provide database connectivity
+     *                         and facilitate persistence operations. Must not be null.
+     * @param litebridgeConfig global runtime configuration
+     * @param lookup           the MethodHandles.Lookup instance used for method and field lookups during change tracking
+     */
     public Litebridge(final DatabaseProvider databaseProvider,
                       final DataSource dataSource,
                       final @Nullable LitebridgeConfig litebridgeConfig,
@@ -137,6 +164,14 @@ public final class Litebridge {
         this(databaseProvider, transactionManager, new LitebridgeConfig());
     }
 
+    /**
+     * Constructs a Litebridge instance with the specified database provider,
+     * transaction manager, and default method handle lookup.
+     *
+     * @param databaseProvider   the provider responsible for managing database connections
+     * @param transactionManager the manager responsible for handling database transactions
+     * @param litebridgeConfig   global runtime configuration
+     */
     public Litebridge(final DatabaseProvider databaseProvider,
                       final TransactionManager transactionManager,
                       final LitebridgeConfig litebridgeConfig) {

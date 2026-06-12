@@ -51,7 +51,7 @@ class OrmTableTest {
         assertEquals(tableMetaData("test_table", idColumn, nameColumn), ormTable.getMetaData());
         assertSame(idColumn, ormTable.getColumnForFieldName("id"));
         assertSame(nameColumn, ormTable.getColumnForFieldName("name"));
-        assertSame(idColumn, ormTable.getColumn("id"));
+        assertSame(idColumn, ormTable.getColumnMetaData("id"));
         assertSame(nameField, ormTable.getFieldForColumnName("name"));
         assertSame(idField, ormTable.fieldForColumnNameOrNull("id"));
         assertNull(ormTable.fieldForColumnNameOrNull("unknown"));
@@ -60,7 +60,7 @@ class OrmTableTest {
     }
 
     @Test
-    void getColumnForFieldName_notFound() {
+    void getColumnMetaDataForFieldName_notFound() {
         // Given
         final OrmTable ormTable = simpleOrmTable();
 
@@ -69,12 +69,12 @@ class OrmTableTest {
     }
 
     @Test
-    void getColumn_notFound() {
+    void getColumn_MetaData_notFound() {
         // Given
         final OrmTable ormTable = simpleOrmTable();
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> ormTable.getColumn("unknown"));
+        assertThrows(IllegalArgumentException.class, () -> ormTable.getColumnMetaData("unknown"));
     }
 
     @Test
@@ -282,7 +282,7 @@ class OrmTableTest {
     }
 
     @Test
-    void getColumnForFieldName_nestedFieldWithoutParentColumnThrowsNullPointerException() {
+    void getColumnForFieldName_nestedFieldWithoutParentColumnMetaDataThrowsNullPointerException() {
         // Given
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final ClassFieldAccessorCache classFieldAccessorCache = changeTracker.classFieldAccessorCache();

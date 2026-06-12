@@ -180,7 +180,7 @@ public class OrmTable {
      * @param columnName the column name to retrieve the metadata for
      * @return the column metadata for the specified column name, or null if not found
      */
-    public ColumnMetaData getColumn(final String columnName) {
+    public ColumnMetaData getColumnMetaData(final String columnName) {
         return ObjectUtils.requireNonNull(columnMap.get(columnName), () -> new IllegalArgumentException("No column '" + columnName + "' in table '" + metaData.name() + "'"));
     }
 

@@ -30,7 +30,8 @@ public enum RelatedDtoStrategy {
      * class MyDto {
      * private MyRelatedDto relatedDto;
      * }
-     * <p>
+     * </code>
+     * <code>
      * class MyRelatedDto {
      * // Primary key
      * private Long id;
@@ -40,7 +41,7 @@ public enum RelatedDtoStrategy {
      * </code>
      * <p>
      * The related DTO field {@code relatedDto} will contain an instance of {@code MyRelatedDto} with only the primary
-     * key field {@id} set if the JOIN clause doesn't include the @{code relatedDto} field.
+     * key field {@code id} set if the JOIN clause doesn't include the @{code relatedDto} field.
      */
     PARTIAL_OBJECT_IF_NO_JOIN;
 }
