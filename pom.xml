@@ -62,7 +62,7 @@
         <flyway.version>12.6.2</flyway.version>
         <flyway-postgresql.version>11.3.4</flyway-postgresql.version>
         <h2.version>2.4.240</h2.version>
-        <jackson-annotations.version>2.21</jackson-annotations.version>
+        <jackson-annotations.version>2.22</jackson-annotations.version>
         <jspecify.version>1.0.0</jspecify.version>
         <junit-jupiter.version>6.1.0</junit-jupiter.version>
         <mockito.version>5.23.0</mockito.version>
