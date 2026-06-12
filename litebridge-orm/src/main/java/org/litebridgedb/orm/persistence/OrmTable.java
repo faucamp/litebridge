@@ -1,6 +1,7 @@
 package org.litebridgedb.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridgedb.commons.ClassUtils;
 import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.commons.type.WeakIdentitySet;
 import org.litebridgedb.db.spi.ColumnMetaData;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -49,6 +51,7 @@ public class OrmTable {
     private final ClassFieldAccessorCache classFieldAccessorCache;
     private @Nullable List<FieldAccessor> oneToManyReverseMappings;
     private Set<Class<?>> dtoClassInterfaces = Collections.emptySet();
+    private Set<Class<?>> relatedDtoClasses = new HashSet<>();
 
     /**
      * Constructs a new {@code OrmTable} instance, initializing table metadata, field-to-column mappings,
@@ -99,6 +102,11 @@ public class OrmTable {
                             .forEach(field -> nestedDtoClasses.add(field.dtoClass()));
                 } else {
                     fieldNameColumnMap.put(fieldAccessor.name(), column);
+
+                    if (!ClassUtils.isBasicType(fieldAccessor.type())) {
+                        // Related DTO - mark for partial creation later if necessary (e.g. when no JOINs are specified)
+                        relatedDtoClasses.add(fieldAccessor.type());
+                    }
                 }
             }
         }));
@@ -172,7 +180,7 @@ public class OrmTable {
      * @param columnName the column name to retrieve the metadata for
      * @return the column metadata for the specified column name, or null if not found
      */
-    public ColumnMetaData getColumn(final String columnName) {
+    public ColumnMetaData getColumnMetaData(final String columnName) {
         return ObjectUtils.requireNonNull(columnMap.get(columnName), () -> new IllegalArgumentException("No column '" + columnName + "' in table '" + metaData.name() + "'"));
     }
 
@@ -321,5 +329,9 @@ public class OrmTable {
 
     public void setDtoClassInterfaces(final Set<Class<?>> dtoClassInterfaces) {
         this.dtoClassInterfaces = dtoClassInterfaces;
+    }
+
+    public Set<Class<?>> getRelatedDtoClasses() {
+        return relatedDtoClasses;
     }
 }

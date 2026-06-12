@@ -7,6 +7,7 @@ import org.litebridgedb.db.spi.Table;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -37,6 +38,16 @@ public final class TableRegistry {
 
     public OrmTable getTableOrThrow(final Class<?> dtoClass) throws IllegalArgumentException {
         return Objects.requireNonNull(getTable(dtoClass), "DTO class not registered: '%s'".formatted(dtoClass.getName()));
+    }
+
+    public Optional<@Nullable OrmTable> getTableInContext(final Class<?> dtoClass, final Class<?> contextClass) {
+        final OrmTable contextOrmTable = getTable(contextClass);
+
+        if (contextOrmTable != null) {
+            return Optional.ofNullable(contextOrmTable.getContextTableRegistry().getTable(dtoClass));
+        } else {
+            return Optional.empty();
+        }
     }
 
     public OrmTable getTableInContextOrThrow(final Class<?> dtoClass, final Class<?> contextClass) {

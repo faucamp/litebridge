@@ -29,7 +29,8 @@ class PersistenceFacadeTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto dto = new CustomerDto();
         dto.name = "test";
@@ -51,7 +52,8 @@ class PersistenceFacadeTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto dto = new CustomerDto();
         dto.id = 1L;
@@ -79,7 +81,8 @@ class PersistenceFacadeTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto dto = new CustomerDto();
         dto.id = 1L;
@@ -104,7 +107,8 @@ class PersistenceFacadeTest {
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto customer = new CustomerDto();
         customer.name = "cust";

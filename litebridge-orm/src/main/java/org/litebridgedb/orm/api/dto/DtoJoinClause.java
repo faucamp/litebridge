@@ -8,7 +8,6 @@ import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinClause;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.orm.persistence.MappedManyToMany;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -91,7 +90,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
                 .findFirst().orElseThrow(() -> new IllegalArgumentException("Left JOIN column not found"));
 
         final ConditionSpec conditionSpec = joinSpec.newCondition(leftColumn);
-        final ColumnMetaData targetColumnMetaData = rightOrmTable.getColumn(rightColumnMetaData.getJoinColumn());
+        final ColumnMetaData targetColumnMetaData = rightOrmTable.getColumnMetaData(rightColumnMetaData.getJoinColumn());
 
         if (rightColumnMetaData.name().equals(targetColumnMetaData.name())) {
             conditionSpec.setOperator(Operator.USING);
@@ -113,7 +112,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
 
         // Join with the target table
         final Table leftTable = intermediateJoinSpec.table();
-        final Column leftColumn = aliasGenerator.aliasColumn(leftTable, mappedManyToMany.joinTable().getColumn(mappedManyToMany.inverseJoinColumn()));
+        final Column leftColumn = aliasGenerator.aliasColumn(leftTable, mappedManyToMany.joinTable().getColumnMetaData(mappedManyToMany.inverseJoinColumn()));
 
         final OrmTable rightOrmTable = mappedManyToMany.targetTable().optional().orElseThrow();
         final Table rightTable = joinSpec.table();
@@ -133,7 +132,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         // Create JOIN clause
         joinSpec.setFieldColumns(joinFieldColumns);
 
-        final Column rightColumn = aliasGenerator.aliasColumn(rightTable, rightOrmTable.getColumn(mappedManyToMany.inverseJoinColumn()));
+        final Column rightColumn = aliasGenerator.aliasColumn(rightTable, rightOrmTable.getColumnMetaData(mappedManyToMany.inverseJoinColumn()));
 
         final ConditionSpec conditionSpec = joinSpec.newCondition(leftColumn);
         conditionSpec.setOperator(Operator.EQ);
@@ -152,7 +151,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         // Right table: intermediate join table
         final OrmTable rightOrmTable = mappedManyToMany.joinTable();
         final Table rightTable = aliasGenerator.aliasTable(rightOrmTable);
-        final Column rightColumn = aliasGenerator.aliasColumn(rightTable, rightOrmTable.getColumn(mappedManyToMany.joinColumn()));
+        final Column rightColumn = aliasGenerator.aliasColumn(rightTable, rightOrmTable.getColumnMetaData(mappedManyToMany.joinColumn()));
 
         final DtoJoinSpec intermediateJoinSpec = selectSpec.newJoinSpecBefore(joinSpec, selectSpec.dtoClass(), rightOrmTable, rightTable);
         final ConditionSpec intermediateJoinCondition = intermediateJoinSpec.newCondition(leftColumn);

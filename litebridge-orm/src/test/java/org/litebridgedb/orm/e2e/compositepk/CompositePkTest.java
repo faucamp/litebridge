@@ -1,7 +1,9 @@
 package org.litebridgedb.orm.e2e.compositepk;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
+import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.compositepk.dto.CompositePkFkTest;
 import org.litebridgedb.orm.e2e.compositepk.dto.CompositePkLookup;
@@ -11,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class CompositePkTest extends AbstractE2eTest {
@@ -46,6 +50,26 @@ class CompositePkTest extends AbstractE2eTest {
                 .and("testId").eq(1L)
                 .oneOrThrow();
         assertEquals(test1, test1Result);
+
+        // Retrieve without join - NULL non-joined fields (default behaviour)
+        final CompositePkFkTest testResult2 = litebridge.select(CompositePkFkTest.class)
+                .where("lookup.id").eq(123L)
+                .and("testId").eq(1L)
+                .oneOrThrow();
+        assertEquals(test1.testId(), testResult2.testId());
+        assertEquals(test1.description(), testResult2.description());
+        assertNull(testResult2.lookup());
+
+        // Retrieve without join - partially construct related DTOs since no JOIN is specified
+        final CompositePkFkTest testResult3 = litebridge.select(CompositePkFkTest.class, RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN)
+                .where("lookup.id").eq(123L)
+                .and("testId").eq(1L)
+                .oneOrThrow();
+        assertEquals(test1.testId(), testResult3.testId());
+        assertEquals(test1.description(), testResult3.description());
+        assertNotEquals(test1.lookup(), testResult3.lookup());
+        assertEquals(test1.lookup().id(), testResult3.lookup().id());
+        assertNull(testResult3.lookup().name());
     }
 
     @TestTemplate

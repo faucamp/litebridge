@@ -5,6 +5,7 @@ import org.litebridgedb.commons.CollectionUtils;
 import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
+import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
@@ -16,8 +17,9 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
     private final TableRegistry tableRegistry;
 
     public SqlSelector(final TransactionalDatabaseProvider databaseProvider,
-                       final TableRegistry tableRegistry) {
-        super(new SqlSelectSpec(), databaseProvider, Row.class);
+                       final TableRegistry tableRegistry,
+                       final LitebridgeConfig litebridgeConfig) {
+        super(new SqlSelectSpec(), databaseProvider, Row.class, litebridgeConfig);
         this.tableRegistry = tableRegistry;
     }
 

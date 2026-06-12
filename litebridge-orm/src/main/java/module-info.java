@@ -29,6 +29,7 @@ module litebridge.orm {
     exports org.litebridgedb.orm.api.tx;
     exports org.litebridgedb.orm.api.update;
     exports org.litebridgedb.orm.api.update.model;
+    exports org.litebridgedb.orm.config;
     exports org.litebridgedb.orm.persistence;
     exports org.litebridgedb.orm.tx;
 
