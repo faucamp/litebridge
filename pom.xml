@@ -59,7 +59,7 @@
 
         <!-- Library versions -->
         <classgraph.version>4.8.184</classgraph.version>
-        <flyway.version>12.6.2</flyway.version>
+        <flyway.version>12.8.1</flyway.version>
         <flyway-postgresql.version>11.3.4</flyway-postgresql.version>
         <h2.version>2.4.240</h2.version>
         <jackson-annotations.version>2.22</jackson-annotations.version>
