@@ -7,8 +7,6 @@ import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Account;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.basic.dto.PersonAccount;
-import org.litebridgedb.orm.e2e.basic.mapping.AccountMapping;
-import org.litebridgedb.orm.e2e.basic.mapping.PersonMapping;
 import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
 import org.litebridgedb.orm.persistence.EntityDtoMapper;
@@ -19,11 +17,14 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.litebridgedb.orm.api.spec.FieldMapping.f;
@@ -276,6 +277,47 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
+    @DisplayName("Select DTO by ID")
+    void selectDtoById(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+
+        // Setup DTOs
+        final Person person = new Person();
+        person.setId(123L);
+        person.setName("Alice");
+        person.setSurname("Smith");
+        person.setAge(20);
+        person.setEyeColour("blue");
+
+        litebridge.save(person);
+
+        // When/Then
+        final Optional<Person> result1 = litebridge.select(Person.class).withId(123L);
+        assertTrue(result1.isPresent());
+        assertEquals(person, result1.get());
+
+        final Optional<Person> result2 = litebridge.select(Person.class).withId(234L);
+        assertTrue(result2.isEmpty());
+
+        final Person result3 = litebridge.select(Person.class).withIdOrNull(123L);
+        assertEquals(person, result3);
+
+        final Person result4 = litebridge.select(Person.class).withIdOrNull(234L);
+        assertNull(result4);
+
+        final Person result5 = litebridge.select(Person.class).withIdOrThrow(123L);
+        assertEquals(person, result3);
+
+        assertThrows(NoSuchElementException.class, () -> litebridge.select(Person.class).withIdOrThrow(234L));
+
+        final Person result6 = litebridge.select(Person.class).withIdOrThrow(123L, TestException::new);
+        assertEquals(person, result3);
+
+        assertThrows(TestException.class, () -> litebridge.select(Person.class).withIdOrThrow(234L, TestException::new));
+    }
+
+    @TestTemplate
     @DisplayName("Delete DTOs, no transactions (autocommit)")
     void delete_autoCommit(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
@@ -379,5 +421,8 @@ public class BasicE2eTest extends AbstractE2eTest {
                         .where(tableMapper.transformColumnName("EYE_COLOUR")).eq("blue"));
 
         assertEquals(1, litebridge.select(Person.class).stream().filter(p -> p.getEyeColour().equals("unknown")).count());
+    }
+
+    private class TestException extends RuntimeException {
     }
 }
