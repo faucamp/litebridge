@@ -26,7 +26,7 @@ class SelectTest {
         // When
         final Select result = new Select(
                 table,
-                List.of(column),
+                List.of(new TestColumnExpression(column)),
                 List.of(join),
                 List.of(orderBy),
                 List.of(condition),
@@ -35,10 +35,22 @@ class SelectTest {
 
         // Then
         assertEquals(table, result.table());
-        assertEquals(List.of(column), result.columns());
+        assertEquals(List.of(column), result.expressions());
         assertEquals(List.of(join), result.joins());
         assertEquals(List.of(orderBy), result.orderBy());
         assertEquals(List.of(condition), result.where());
         assertEquals(Optional.of(limit), result.limit());
+    }
+
+    private final class TestColumnExpression extends ColumnExpression {
+
+        public TestColumnExpression(final Column column) {
+            super(column);
+        }
+
+        @Override
+        public String toSql() {
+            return column.name();
+        }
     }
 }

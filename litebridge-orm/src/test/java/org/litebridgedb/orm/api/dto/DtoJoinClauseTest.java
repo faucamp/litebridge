@@ -6,6 +6,7 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
@@ -49,8 +50,8 @@ class DtoJoinClauseTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        when(databaseProvider.transformAlias(anyString())).then(i -> i.getArgument(0));
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
+        
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, new LitebridgeConfig());
         dtoSelector.select();
         final DtoJoinClause<TestDto> dtoJoinClause = new DtoJoinClause<>(TestDto.class, ormTable, dtoSelector);

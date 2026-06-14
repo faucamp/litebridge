@@ -6,6 +6,8 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
+import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
@@ -54,7 +56,7 @@ class OracleDatabaseProviderTest {
         final Column column = new Column(table, "TEST_COLUMN");
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -76,7 +78,7 @@ class OracleDatabaseProviderTest {
         final Join join = new Join(table, List.of(new Condition(column, Operator.EQ, "TEST_VALUE")));
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 List.of(join),
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -99,7 +101,7 @@ class OracleDatabaseProviderTest {
         final Join join = new Join(table, List.of(new Condition(otherColumn, Operator.USING, null)));
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 List.of(join),
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -123,7 +125,7 @@ class OracleDatabaseProviderTest {
         final Join join = new Join(joinedTable, List.of(new Condition(joinColumn, Operator.USING, null)));
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 List.of(join),
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -147,7 +149,7 @@ class OracleDatabaseProviderTest {
         final Join join = new Join(joinedTable, List.of(new Condition(selectColumn, Operator.USING, null)));
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 List.of(join),
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -172,7 +174,7 @@ class OracleDatabaseProviderTest {
         final Join join = new Join(joinedTable, List.of(new Condition(selectColumn, Operator.USING, null)));
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 List.of(join),
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -194,7 +196,7 @@ class OracleDatabaseProviderTest {
         final Join join = new Join(table, List.of(new Condition(column, Operator.USING, null)));
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 List.of(join),
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -216,7 +218,7 @@ class OracleDatabaseProviderTest {
         final Join join = new Join(table, List.of(new Condition(column, Operator.USING, null)));
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 List.of(join),
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -238,7 +240,7 @@ class OracleDatabaseProviderTest {
         final Join join = new Join(table, List.of(new Condition(column, Operator.USING, null)));
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 List.of(join),
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -260,7 +262,7 @@ class OracleDatabaseProviderTest {
         final Join join = new Join(table, List.of(new Condition(column, Operator.USING, null)));
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 List.of(join),
                 Collections.emptyList(),
                 Collections.emptyList(),

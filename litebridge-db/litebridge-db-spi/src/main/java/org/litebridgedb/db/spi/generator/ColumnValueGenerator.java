@@ -8,7 +8,7 @@ import org.litebridgedb.db.spi.ColumnMetaData;
  * the column, potentially based on the column's metadata information.
  * <p>
  * The {@code ColumnValueGenerator} interface is typically used in scenarios where
- * custom or dynamic values need to be generated for database columns during operations like
+ * custom or dynamic values need to be generated for database expressions during operations like
  * data insertion or updates.
  * <p>
  * This interface enforces the implementation of a single method {@code generate}, which is expected

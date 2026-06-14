@@ -295,7 +295,7 @@ public class SelectSpecDtoMapper {
 
         // Find the primary key(s) for this table
         final List<ColumnMetaData> pkColumns = ormTable.getMetaData().primaryKey();
-        // Match that to aliased columns (if any) in the select spec
+        // Match that to aliased expressions (if any) in the select spec
         final List<DtoSelectSpec.FieldColumn> pkFieldColumns = extractPrimaryKeyFieldColumns(pkColumns, selectSpec.getTable(), selectSpec.getFieldColumns());
 
         // Group rows by the DTO table's primary key value for DTO assembly
@@ -319,7 +319,7 @@ public class SelectSpecDtoMapper {
 
                                 return (Object) typeConverter.convert(rowColumn.value(), pkFieldColumn.fieldAccessor().type());
                             })
-                            // No PK present in selected columns; use a hash of the row as the identifier
+                            // No PK present in selected expressions; use a hash of the row as the identifier
                             .orElseGet(row::hashCode))
                     .toList();
 

@@ -8,6 +8,8 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
+import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.impl.DefaultSequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
@@ -22,6 +24,7 @@ import org.litebridgedb.orm.api.spec.FieldMapping;
 import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.api.spec.TableSpec;
 import org.litebridgedb.orm.api.sql.SqlFromClause;
+import org.litebridgedb.orm.function.TestColumnExpressionFactory;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.tx.DefaultTransactionManager;
@@ -38,7 +41,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -279,7 +281,10 @@ class LitebridgeTest {
     void select_dto() throws Exception {
         // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        when(databaseProvider.transformAlias(anyString())).then(i -> i.getArgument(0));
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.getAliasTransformer()).thenReturn(new DefaultAliasTransformer());
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
@@ -302,6 +307,9 @@ class LitebridgeTest {
     void select_columns() throws Exception {
         // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
@@ -324,6 +332,9 @@ class LitebridgeTest {
     void select_allColumns() throws Exception {
         // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
@@ -346,6 +357,9 @@ class LitebridgeTest {
     void select_aliased() throws Exception {
         // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);

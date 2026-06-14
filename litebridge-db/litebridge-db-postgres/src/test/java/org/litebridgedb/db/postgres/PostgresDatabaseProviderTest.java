@@ -11,10 +11,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -75,30 +73,6 @@ class PostgresDatabaseProviderTest {
 
         // Then
         assertInstanceOf(PostgresSequenceColumnValueGenerator.class, result);
-    }
-
-    @Test
-    void transformAlias_withAlias() {
-        // Given
-        final PostgresDatabaseProvider provider = new PostgresDatabaseProvider();
-
-        // When
-        final String result = provider.transformAlias("TEST_ALIAS");
-
-        // Then
-        assertEquals("test_alias", result);
-    }
-
-    @Test
-    void transformAlias_withNullAlias() {
-        // Given
-        final PostgresDatabaseProvider provider = new PostgresDatabaseProvider();
-
-        // When
-        final String result = provider.transformAlias(null);
-
-        // Then
-        assertNull(result);
     }
 
     @Test

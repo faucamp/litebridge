@@ -473,7 +473,7 @@ public final class Litebridge {
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
 
         final LitebridgeConfig activeConfig;
@@ -490,18 +490,18 @@ public final class Litebridge {
 
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
         final OrmTable table = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
         return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, litebridgeConfig).select();
     }
 
     /**
      * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
      * <p>
-     * Creates a SQL SELECT statement with the specified columns; the source table is specified
+     * Creates a SQL SELECT statement with the specified expressions; the source table is specified
      * via a chained {@code from()} call.
      * <p>
      * This method constructs a {@link SqlFromClause} for further query composition
-     * by specifying the columns to be included in the SELECT clause.
+     * by specifying the expressions to be included in the SELECT clause.
      *
      * @param columns An array of column names to be included in the SELECT statement.
      *                Each column name must be a valid, non-null string.
@@ -515,12 +515,12 @@ public final class Litebridge {
     /**
      * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
      * <p>
-     * Creates a SQL SELECT statement with the specified columns the source table is specified
+     * Creates a SQL SELECT statement with the specified expressions the source table is specified
      * via a chained {@code from()} call.
      * <p>
      * This method constructs a {@link SqlFromClause} to enable further query composition.
      *
-     * @param columns An array of {@link Aliased} objects representing the columns
+     * @param columns An array of {@link Aliased} objects representing the expressions
      *                to be part of the SELECT statement. Each column must have
      *                a valid name and may optionally include an alias.
      * @return A {@link SqlFromClause} instance that allows further refinement
@@ -533,7 +533,7 @@ public final class Litebridge {
     /**
      * Query data from the database, without mapping results to Data Transfer Object (DTOs).
      * <p>
-     * Creates a SQL SELECT statement with all columns. The source table is specified
+     * Creates a SQL SELECT statement with all expressions. The source table is specified
      * via a chained {@code from()} call.
      * This method constructs a {@link SqlFromClause} to enable further query composition.
      *
@@ -615,7 +615,7 @@ public final class Litebridge {
      */
     public <DTO> DTO toDto(final Row row, final Class<DTO> dtoClass) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, new NoOpAliasGenerator());
+        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, new NoOpAliasGenerator(), databaseProvider.getSqlFunctionRegistry());
         selectSpec.setFieldColumns(row.columnStream()
                 .map(rowColumn -> {
                     final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(rowColumn.column().name());

@@ -7,6 +7,7 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
@@ -109,7 +110,7 @@ class DtoJoinConditionClauseTerminalTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(
                 TestDto.class,
                 ormTable,

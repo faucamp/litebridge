@@ -4,7 +4,7 @@ package org.litebridgedb.orm.api.spec;
  * Represents a base type for various kinds of database column mappings.
  * <p>
  * The {@code ColumnMapping} interface serves as a common contract for modelling different
- * types of mappings between fields in a data transfer object (DTO) and database columns.
+ * types of mappings between fields in a data transfer object (DTO) and database expressions.
  * It is a sealed interface, allowing only specific permitted implementations to be used.
  * <p>
  * Permitted implementations:

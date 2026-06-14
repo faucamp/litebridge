@@ -7,7 +7,7 @@ import java.util.function.Function;
 
 /**
  * A builder for specifying mappings between fields or properties in a DTO (Data Transfer Object)
- * and database columns. This class is part of the fluent API for creating field-to-column mapping
+ * and database expressions. This class is part of the fluent API for creating field-to-column mapping
  * specifications in the ORM framework.
  * <p>
  * The mappings allow developers to configure how fields or properties should map to database

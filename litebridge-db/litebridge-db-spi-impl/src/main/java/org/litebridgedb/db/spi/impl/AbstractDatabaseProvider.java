@@ -3,21 +3,31 @@ package org.litebridgedb.db.spi.impl;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.CollectionUtils;
 import org.litebridgedb.commons.StringUtils;
+import org.litebridgedb.commons.type.ConcurrentLazy;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.DatabaseProvider;
+import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.AliasTransformer;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
+import org.litebridgedb.db.spi.impl.alias.UppercaseAliasTransformer;
+import org.litebridgedb.db.spi.impl.function.AliasedColumnExpression;
+import org.litebridgedb.db.spi.impl.function.SelectColumn;
+import org.litebridgedb.db.spi.impl.function.SqlFunctionRegistryFactory;
 import org.litebridgedb.db.spi.math.MathOperation;
+import org.litebridgedb.db.spi.query.ColumnExpression;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
+import org.litebridgedb.db.spi.query.SelectExpression;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.ManagedConnection;
 import org.litebridgedb.db.spi.update.ColumnValue;
@@ -65,6 +75,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * Map of qualified table name -> table metadata.
      */
     private final Map<String, TableMetaData> tableMetaDataCache = new ConcurrentHashMap<>();
+    private final ConcurrentLazy<SqlFunctionRegistry> sqlFunctionRegistry = new ConcurrentLazy<>(() -> createSqlFunctionRegistryFactory().create());
+    private final ConcurrentLazy<AliasTransformer> aliasTransformer = new ConcurrentLazy<>(this::createAliasTransformer);
 
     public AbstractDatabaseProvider(final TypeConverter typeConverter) {
         this.typeConverter = Objects.requireNonNull(typeConverter, "No TypeConverter provided");
@@ -111,25 +123,32 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return new DefaultSequenceColumnValueGenerator(sequence);
     }
 
-    @Override
-    public String toSql(final Select select) {
+    protected PreparedSql prepareSql(final Select select, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = new StringBuilder("SELECT ");
 
         boolean first = true;
 
-        // Select columns
-        if (!CollectionUtils.isEmpty(select.columns())) {
-            for (final Column column : select.columns()) {
+        // Select expressions
+        if (!CollectionUtils.isEmpty(select.expressions())) {
+            for (final SelectExpression expression : select.expressions()) {
                 if (first) {
                     first = false;
                 } else {
                     sql.append(", ");
                 }
 
-                sql.append(createColumnIdentifier(column, true, select));
+                final String identifier;
+
+                if (expression instanceof AliasedColumnExpression aliasedColumnExpression) {
+                    identifier = aliasedColumnExpression.toSqlWithAlias();
+                } else {
+                    identifier = expression.toSql();
+                }
+
+                sql.append(identifier);
             }
         } else {
-            // Empty select clause; return all columns
+            // Empty select clause; return all expressions
             sql.append("*");
         }
 
@@ -185,20 +204,30 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             appendLimitClause(limit, sql);
         });
 
-        return sql.toString();
+        final TableMetaData fromTable = ensureTableMetaData(select.table(), connectionProvider);
+        final List<BindValue> bindValues = select.where().stream()
+                .filter(condition -> condition.operator() != Operator.IS_NULL && condition.operator() != Operator.IS_NOT_NULL)
+                .map(condition -> {
+                    final ColumnMetaData column = fromTable.column(condition.column().name());
+                    final Object convertedValue = typeConverter.convert(condition.value(), column.getDataType());
+                    return new BindValue(convertedValue, column.getDataType());
+                })
+                .toList();
+
+        return new PreparedSql(sql.toString(), bindValues);
     }
 
     /**
      * Prepare a SQL INSERT statement along with its bind values for execution.
      * <p>
      * This method constructs the SQL query string based on the provided {@link Insert} object,
-     * which contains the table's metadata, columns, and rows to be inserted.
+     * which contains the table's metadata, expressions, and rows to be inserted.
      * The bind values are derived from the rows and included in the returned {@link  PreparedSql}.
      *
-     * @param insert the {@link Insert} object containing the table metadata, columns, and rows for the SQL INSERT operation
+     * @param insert the {@link Insert} object containing the table metadata, expressions, and rows for the SQL INSERT operation
      * @return a {@link AbstractDatabaseProvider.PreparedSql} object containing the generated SQL query string and the list of bind values
      */
-    protected PreparedSql prepareSql(final Insert insert, final ConnectionProvider connectionProvider) throws SQLException {
+    protected PreparedSql prepareSql(final Insert insert, final ConnectionProvider connectionProvider) {
         final List<String> columnNames = insert.columns().stream().map(Column::name).toList();
 
         final StringBuilder sql = appendTable(new StringBuilder("INSERT INTO "), insert.table())
@@ -237,7 +266,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      *               and conditions for the WHERE clause to specify target rows.
      * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values.
      */
-    protected PreparedSql prepareSql(final Update update, final ConnectionProvider connectionProvider) throws SQLException {
+    protected PreparedSql prepareSql(final Update update, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = appendTable(new StringBuilder("UPDATE "), update.table())
                 .append(" SET ");
 
@@ -295,7 +324,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return "%s %s %s".formatted(quoteIdentifier(column.name()), mathOperation.operator().symbol(), convertedValue);
     }
 
-    protected PreparedSql prepareSql(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
+    protected PreparedSql prepareSql(final Delete delete, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = appendTable(new StringBuilder("DELETE FROM "), delete.table());
 
         final List<BindValue> bindValues = new ArrayList<>();
@@ -517,7 +546,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     /**
-     * Execute the given SQL query with specified columns, conditions, and table, and returns the result as a list of rows.
+     * Execute the given SQL query with specified expressions, conditions, and table, and returns the result as a list of rows.
      *
      * @param select             the SQL select query to be executed
      * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
@@ -525,27 +554,23 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @throws SQLException if an SQL error occurs while executing the query
      */
     private List<Row> executeSqlQuery(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
-        final String sql = toSql(select);
+        final PreparedSql preparedSql = prepareSql(select, connectionProvider);
+        final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.expressions().size());
+
+        select.expressions().stream()
+                .filter(expression -> expression instanceof SelectColumn)
+                .map(expression -> (SelectColumn) expression)
+                .forEach(selectColumn -> {
+                    final Column column = selectColumn.column();
+                    final String key = aliasTransformer.orThrow().transformAlias(column.alias() != null ? column.alias() : column.name());
+                    final TableMetaData table = ensureTableMetaData(column.table(), connectionProvider);
+                    final ColumnMetaData columnMetaData = table.column(column.name());
+                    columnLabelsToColumnMetaData.put(key, columnMetaData);
+                });
+
         final TableMetaData fromTable = ensureTableMetaData(select.table(), connectionProvider);
-        final List<BindValue> bindValues = select.where().stream()
-                .filter(condition -> condition.operator() != Operator.IS_NULL && condition.operator() != Operator.IS_NOT_NULL)
-                .map(condition -> {
-                    final ColumnMetaData column = fromTable.column(condition.column().name());
-                    final Object convertedValue = typeConverter.convert(condition.value(), column.getDataType());
-                    return new BindValue(convertedValue, column.getDataType());
-                })
-                .toList();
 
-        final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.columns().size());
-
-        for (Column column : select.columns()) {
-            final String key = transformAlias(column.alias() != null ? column.alias() : column.name());
-            final TableMetaData table = ensureTableMetaData(column.table(), connectionProvider);
-            final ColumnMetaData columnMetaData = table.column(column.name());
-            columnLabelsToColumnMetaData.put(key, columnMetaData);
-        }
-
-        try (final PreparedStatement preparedStatement = prepareStatement(new PreparedSql(sql, bindValues), false, fromTable, connectionProvider)) {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false, fromTable, connectionProvider)) {
             // Execute SQL query
             final ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -557,7 +582,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 final int columnCount = resultSet.getMetaData().getColumnCount();
 
                 for (int i = 1; i <= columnCount; i++) {
-                    final String alias = transformAlias(resultSet.getMetaData().getColumnLabel(i));
+                    final String alias = aliasTransformer.orThrow().transformAlias(resultSet.getMetaData().getColumnLabel(i));
                     final ColumnMetaData columnMetaData = columnLabelsToColumnMetaData.get(alias);
 
                     if (columnMetaData != null) {
@@ -589,8 +614,23 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public @Nullable String transformAlias(final @Nullable String dbAlias) {
-        return dbAlias != null ? dbAlias.toUpperCase() : null;
+    public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
+        return switch (operation) {
+            case Select select -> prepareSql(select, connectionProvider).sql();
+            case Insert insert -> prepareSql(insert, connectionProvider).sql();
+            case Update update -> prepareSql(update, connectionProvider).sql();
+            case Delete delete -> prepareSql(delete, connectionProvider).sql();
+        };
+    }
+
+    @Override
+    public SqlFunctionRegistry getSqlFunctionRegistry() {
+        return sqlFunctionRegistry.orThrow();
+    }
+
+    @Override
+    public AliasTransformer getAliasTransformer() {
+        return aliasTransformer.orThrow();
     }
 
     protected List<ColumnMetaData> getColumnMetaData(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
@@ -749,14 +789,14 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     /**
      * Prepare a row for insertion based on the provided row value. This includes
      * processing column values, converting them to a suitable format, and generating
-     * value specifiers and bind values for the prepared row. Handles nullable columns,
-     * auto-increment columns, and sequence-based value generation as necessary.
+     * value specifiers and bind values for the prepared row. Handles nullable expressions,
+     * auto-increment expressions, and sequence-based value generation as necessary.
      *
      * @param rowValue the row value object containing the column definitions and their values
      * @return a PreparedRow instance containing processed value specifiers and bind values
      * @throws IllegalArgumentException if a non-nullable column without an auto-increment or sequence value is attempted to be set to NULL
      */
-    protected PreparedRow prepareRow(final RowValue rowValue, final ConnectionProvider connectionProvider) throws SQLException {
+    protected PreparedRow prepareRow(final RowValue rowValue, final ConnectionProvider connectionProvider) {
         final List<String> valueSpecifiers = new ArrayList<>(rowValue.columns().size());
         final List<BindValue> bindValues = new ArrayList<>(rowValue.columns().size());
 
@@ -797,7 +837,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     /**
-     * Retrieve metadata for the specified table, including its primary keys and columns.
+     * Retrieve metadata for the specified table, including its primary keys and expressions.
      * <p>
      * This executes a database query to fetch database metadata.
      *
@@ -829,6 +869,22 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
+    /**
+     * Create a {@link SqlFunctionRegistryFactory} instance for the generation of a SQL function registry.
+     * <p>
+     * This method may be overridden to provide a custom {@link SqlFunctionRegistryFactory} instance, allowing
+     * overriding/disabling of specific SQL functions.
+     *
+     * @return a {@link SqlFunctionRegistryFactory} implementation instance
+     */
+    protected SqlFunctionRegistryFactory createSqlFunctionRegistryFactory() {
+        return new SqlFunctionRegistryFactory();
+    }
+
+    protected AliasTransformer createAliasTransformer() {
+        return new UppercaseAliasTransformer();
+    }
+
     protected String createAlias(final String alias) {
         return "AS %s".formatted(alias);
     }
@@ -838,7 +894,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         limit.offset().ifPresent(offset -> sql.append(" OFFSET ").append(offset));
     }
 
-    protected ColumnMetaData ensureColumnMetaData(final Column column, final ConnectionProvider connectionProvider) throws SQLException {
+    protected ColumnMetaData ensureColumnMetaData(final Column column, final ConnectionProvider connectionProvider) {
         return ensureTableMetaData(column.table(), connectionProvider).column(column.name());
     }
 

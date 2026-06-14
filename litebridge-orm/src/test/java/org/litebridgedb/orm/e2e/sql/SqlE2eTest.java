@@ -57,14 +57,14 @@ class SqlE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Select specific columns and filter records using a query")
+    @DisplayName("Select specific expressions and filter records using a query")
     void selectQuery(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
         insertTestPersonRecords(personTableName);
 
         // When
-        LOGGER.info("Selecting specific columns and filtering records using a query");
+        LOGGER.info("Selecting specific expressions and filtering records using a query");
         final List<Row> result =
                 litebridge.select(tableMapper.transformColumnName("FIRST_NAME"),
                                 tableMapper.transformColumnName("SURNAME"),
@@ -90,7 +90,7 @@ class SqlE2eTest extends AbstractE2eTest {
         tableMapper.registerPersonDtoTableMapping(litebridge, false);
 
         // When
-        LOGGER.info("Selecting specific columns and filtering records using a query");
+        LOGGER.info("Selecting specific expressions and filtering records using a query");
         final List<Person> result =
                 litebridge.select(tableMapper.transformColumnName("FIRST_NAME"),
                                 tableMapper.transformColumnName("SURNAME"),

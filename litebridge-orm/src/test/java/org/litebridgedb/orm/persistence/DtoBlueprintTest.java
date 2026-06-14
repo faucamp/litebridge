@@ -7,6 +7,8 @@ import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
+import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
 import org.litebridgedb.orm.api.dto.DtoJoinSpec;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
 import org.litebridgedb.orm.persistence.alias.DefaultAliasGenerator;
@@ -27,8 +29,7 @@ class DtoBlueprintTest {
     @Test
     void constructor() {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoSelectSpec dtoSelectSpec = new DtoSelectSpec(TestDto.class, createOrmTable(TestDto.class, "test_table"), new DefaultAliasGenerator(databaseProvider));
+        final DtoSelectSpec dtoSelectSpec = new DtoSelectSpec(TestDto.class, createOrmTable(TestDto.class, "test_table"), new DefaultAliasGenerator(new DefaultAliasTransformer()), mock(SqlFunctionRegistry.class));
         final List<Object> primaryKey = List.of(123L);
         final Row row = new Row().withColumn(new Column(new Table("", "public", "test_table"), "id"), 123L);
         dtoSelectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(null, new Column(new Table("", "public", "test_table"), "id"))));
@@ -49,7 +50,7 @@ class DtoBlueprintTest {
         // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final OrmTable ormTable = createOrmTable(TestDto.class, "test_table");
-        final DtoSelectSpec dtoSelectSpec = new DtoSelectSpec(TestDto.class, ormTable, new DefaultAliasGenerator(databaseProvider));
+        final DtoSelectSpec dtoSelectSpec = new DtoSelectSpec(TestDto.class, ormTable, new DefaultAliasGenerator(new DefaultAliasTransformer()), mock(SqlFunctionRegistry.class));
         dtoSelectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(null, new Column(new Table(ormTable.getMetaData().catalog(), ormTable.getMetaData().schema(), ormTable.getMetaData().name()), "id"))));
         final List<Object> primaryKey = List.of(123L);
         final Row row = new Row().withColumn(new Column(ormTable.getMetaData().toTable(), "id"), 123L);

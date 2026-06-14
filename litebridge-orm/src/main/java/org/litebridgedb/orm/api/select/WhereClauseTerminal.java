@@ -17,11 +17,11 @@ public interface WhereClauseTerminal<DTO,
         extends OrderByClauseTerminal<DTO> {
 
     /**
-     * Adds an ORDER BY clause to the query, specifying the columns to sort the results by.
+     * Adds an ORDER BY clause to the query, specifying the expressions to sort the results by.
      *
-     * @param columns the columns that determine the order of the results. Each column
+     * @param columns the expressions that determine the order of the results. Each column
      *                must be valid for the associated table or view in the query.
-     *                The order in which the columns are specified determines the
+     *                The order in which the expressions are specified determines the
      *                priority of ordering.
      * @return an instance of the type representing the ORDER BY clause, allowing
      * further specification of ordering or transitioning to the next query stage.
@@ -29,7 +29,7 @@ public interface WhereClauseTerminal<DTO,
     OBC orderBy(String... columns);
 
     /**
-     * Adds an ORDER BY clause to the query, specifying the fields and columns to sort the results by.
+     * Adds an ORDER BY clause to the query, specifying the fields and expressions to sort the results by.
      *
      * @param columns the field and column specifications that determine the order of the results.
      *                Each specification includes a mapping of a field to a column. The order in

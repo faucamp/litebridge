@@ -84,7 +84,7 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
 
     @Override
     public String toSql() {
-        return databaseProvider.toSql(selectSpec.toSelect());
+        return databaseProvider.toSql(selectSpec.toSelect(), databaseProvider.transactionManager());
     }
 
     protected List<Row> executeQuery() {

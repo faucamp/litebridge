@@ -4,6 +4,8 @@ import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.query.ColumnExpressionFactory;
+import org.litebridgedb.db.spi.query.SelectExpression;
 import org.litebridgedb.orm.api.select.FromClause;
 import org.litebridgedb.orm.persistence.TableRegistry;
 
@@ -23,6 +25,7 @@ public final class SqlFromClause implements FromClause<Row,
     private final SqlSelectSpec selectSpec;
     private final TableRegistry tableRegistry;
     private final SqlSelector delegate;
+    private final ColumnExpressionFactory columnExpressionFactory;
 
     public SqlFromClause(final Aliased[] columns,
                          final SqlSelectSpec selectSpec,
@@ -30,6 +33,7 @@ public final class SqlFromClause implements FromClause<Row,
                          final SqlSelector delegate) {
         this.columns = columns;
         this.selectSpec = selectSpec;
+        this.columnExpressionFactory = selectSpec.sqlFunctionRegistry().selectColumnFactory();
         this.tableRegistry = tableRegistry;
         this.delegate = delegate;
     }
@@ -38,7 +42,7 @@ public final class SqlFromClause implements FromClause<Row,
     public SqlFromClauseTerminal from(final String table) {
         final Table spiTable = tableRegistry.getOrCreateSpiTable(table);
         selectSpec.setTable(spiTable);
-        selectSpec.setColumns(Arrays.stream(columns)
+        selectSpec.setExpressions(Arrays.stream(columns)
                 .map(aliased -> {
                     if (aliased instanceof Column column) {
                         return column;
@@ -46,6 +50,7 @@ public final class SqlFromClause implements FromClause<Row,
                         return new Column(spiTable, aliased.name(), aliased.alias());
                     }
                 })
+                .map(column -> (SelectExpression) columnExpressionFactory.create(column))
                 .toList());
         return new SqlFromClauseTerminal(delegate);
     }

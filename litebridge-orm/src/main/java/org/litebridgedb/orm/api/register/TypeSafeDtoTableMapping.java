@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  * with {@code public static final} constants containing {@link FieldColumnSpec} instances representing the field-to-column mappings.
  * <p>
  * The {@code TypeSafeDtoTableMapping} class facilitates the creation of mappings between fields in the DTOs
- * and columns in the database. It provides utility methods to define {@code FieldColumnSpec} and creates
+ * and expressions in the database. It provides utility methods to define {@code FieldColumnSpec} and creates
  * a specification that links the DTO and the corresponding database table structure.
  */
 public abstract class TypeSafeDtoTableMapping {
@@ -57,7 +57,7 @@ public abstract class TypeSafeDtoTableMapping {
      * transformations on column value generators.
      *
      * @param databaseProvider the {@link DatabaseProvider} used to resolve database-specific configurations, such as
-     *                         sequence generators for placeholder columns; must not be null.
+     *                         sequence generators for placeholder expressions; must not be null.
      * @return a {@link DtoTableSpec} instance containing the DTO-to-table mapping details, including resolved field
      * to column mappings ready for use in database operations.
      */

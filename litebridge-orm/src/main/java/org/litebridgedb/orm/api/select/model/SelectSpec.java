@@ -4,8 +4,11 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
+import org.litebridgedb.db.spi.query.ColumnExpression;
 import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
+import org.litebridgedb.db.spi.query.SelectExpression;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +42,11 @@ public abstract class SelectSpec {
     protected LimitSpec limit;
     @Nullable
     protected Map<Class<?>, String> dtoAliases;
+    protected final SqlFunctionRegistry sqlFunctionRegistry;
+
+    public SelectSpec(final SqlFunctionRegistry sqlFunctionRegistry) {
+        this.sqlFunctionRegistry = sqlFunctionRegistry;
+    }
 
     public Table getTable() {
         return ObjectUtils.requireNonNull(table, () -> new IllegalStateException("SelectSpec.table not set"));
@@ -127,24 +135,30 @@ public abstract class SelectSpec {
         }
     }
 
-    protected abstract List<Column> columns();
+    public @Nullable SqlFunctionRegistry sqlFunctionRegistry() {
+        return sqlFunctionRegistry;
+    }
+
+    protected abstract List<SelectExpression> expressions();
 
     public Select toSelect() {
         if (table == null) {
             throw new IllegalStateException("Table not specified");
         }
 
-        final List<Column> columns = columns();
+        final List<SelectExpression> expressions = expressions();
 
         return new Select(table,
-                Collections.unmodifiableList(columns),
+                Collections.unmodifiableList(expressions),
                 joins != null ? joins.stream()
                         .map(JoinSpec::toJoin)
                         .toList() : Collections.emptyList(),
                 orderBys != null ? orderBys.stream()
-                        // Resolves order-by columns from select list or synthesizes new ones
+                        // Resolves order-by expressions from select list or synthesizes new ones
                         .flatMap(orderBySpec -> Arrays.stream(orderBySpec.columns())
-                                .map(columnName -> columns.stream()
+                                .map(columnName -> expressions.stream()
+                                        .filter(expression -> expression instanceof ColumnExpression)
+                                        .map(expression -> ((ColumnExpression) expression).column())
                                         .filter(column -> Objects.equals(column.name(), columnName))
                                         .findFirst()
                                         // Column not specified in select list

@@ -30,7 +30,7 @@ import java.util.stream.Stream;
  * A table known by/registered with the ORM, facilitating the relationship between Java objects (DTOs)
  * and database table schema.
  * <p>
- * This class maintains metadata and mappings between object field accessors and database columns.
+ * This class maintains metadata and mappings between object field accessors and database expressions.
  * It tracks changes made to objects and their associated database states for ORM operations.
  */
 public class OrmTable {
@@ -111,7 +111,7 @@ public class OrmTable {
             }
         }));
 
-        // Add mapped field-target entries in the order of the db columns
+        // Add mapped field-target entries in the order of the db expressions
         this.metaData.columns().forEach(column -> {
             processedFieldTargetMap.entrySet().stream()
                     .filter(entry ->

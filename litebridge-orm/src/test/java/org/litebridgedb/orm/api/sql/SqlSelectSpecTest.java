@@ -3,8 +3,12 @@ package org.litebridgedb.orm.api.sql;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
+import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
+import org.litebridgedb.db.spi.query.SelectExpression;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.JoinSpec;
 import org.litebridgedb.orm.api.select.model.LimitSpec;
@@ -13,18 +17,20 @@ import org.litebridgedb.orm.api.select.model.OrderBySpec;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 class SqlSelectSpecTest {
 
     @Test
     void getTable() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
 
@@ -38,56 +44,58 @@ class SqlSelectSpecTest {
     @Test
     void getTable_null() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
 
         // When/Then
         assertThrows(IllegalStateException.class, () -> sqlSelectSpec.getTable());
     }
 
     @Test
-    void setColumns() {
+    void setExpressions() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
 
         // When
-        sqlSelectSpec.setColumns(List.of(column));
-        final List<Column> result = sqlSelectSpec.getColumns();
+        sqlSelectSpec.setExpressions(List.of(new SelectColumn(column, new ColumnIdentifierGenerator())));
+        final List<SelectExpression> result = sqlSelectSpec.getExpressions();
 
         // Then
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertSame(column, result.getFirst());
+        assertInstanceOf(SelectColumn.class, result.getFirst());
+        assertSame(column, ((SelectColumn) result.getFirst()).column());
     }
 
     @Test
-    void addColumns() {
+    void addExpressions() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
 
         // When
-        sqlSelectSpec.addColumns(List.of(column));
-        final List<Column> result = sqlSelectSpec.getColumns();
+        sqlSelectSpec.addExpressions(List.of(new SelectColumn(column, new ColumnIdentifierGenerator())));
+        final List<SelectExpression> result = sqlSelectSpec.getExpressions();
 
         // Then
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertSame(column, result.getFirst());
+        assertInstanceOf(SelectColumn.class, result.getFirst());
+        assertSame(column, ((SelectColumn) result.getFirst()).column());
     }
 
     @Test
     void getJoins() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setExpressions(List.of(new SelectColumn(column, new ColumnIdentifierGenerator())));
         final JoinSpec joinSpec = sqlSelectSpec.newJoinSpec("TEST_SCHEMA.TEST_TABLE");
 
         // When
@@ -103,11 +111,11 @@ class SqlSelectSpecTest {
     @Test
     void newJoinSpec() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setExpressions(List.of(new SelectColumn(column, new ColumnIdentifierGenerator())));
 
         // When
         final JoinSpec result = sqlSelectSpec.newJoinSpec("TEST_SCHEMA.TEST_TABLE2");
@@ -122,11 +130,11 @@ class SqlSelectSpecTest {
     @Test
     void newJoinSpec_noSchema() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setExpressions(List.of(new SelectColumn(column, new ColumnIdentifierGenerator())));
 
         // When
         final JoinSpec result = sqlSelectSpec.newJoinSpec("TEST_TABLE2");
@@ -141,11 +149,11 @@ class SqlSelectSpecTest {
     @Test
     void setWhereConditions() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setExpressions(List.of(new SelectColumn(column, new ColumnIdentifierGenerator())));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
@@ -164,11 +172,11 @@ class SqlSelectSpecTest {
     @Test
     void newWhereCondition() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setExpressions(List.of(new SelectColumn(column, new ColumnIdentifierGenerator())));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
@@ -187,11 +195,11 @@ class SqlSelectSpecTest {
     @Test
     void setOrderBys() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setExpressions(List.of(new SelectColumn(column, new ColumnIdentifierGenerator())));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
@@ -212,11 +220,11 @@ class SqlSelectSpecTest {
     @Test
     void newOrderBy() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setExpressions(List.of(new SelectColumn(column, new ColumnIdentifierGenerator())));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
@@ -236,11 +244,11 @@ class SqlSelectSpecTest {
     @Test
     void setLimit() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setExpressions(List.of(new SelectColumn(column, new ColumnIdentifierGenerator())));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
@@ -263,11 +271,11 @@ class SqlSelectSpecTest {
     @Test
     void ensureLimit() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setExpressions(List.of(new SelectColumn(column, new ColumnIdentifierGenerator())));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
@@ -286,7 +294,7 @@ class SqlSelectSpecTest {
     @Test
     void setDtoAlias() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         sqlSelectSpec.setDtoAlias(TestDto.class, "TEST_ALIAS");
 
         // When
@@ -299,7 +307,7 @@ class SqlSelectSpecTest {
     @Test
     void getDtoAlias_null() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
 
         // When
         final String result = sqlSelectSpec.getDtoAlias(TestDto.class);
@@ -311,11 +319,11 @@ class SqlSelectSpecTest {
     @Test
     void toSelect() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setColumns(List.of(column));
+        sqlSelectSpec.setExpressions(List.of(new SelectColumn(column, new ColumnIdentifierGenerator())));
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setColumn(column);
         conditionSpec.setOperator(Operator.LTE);
@@ -334,15 +342,16 @@ class SqlSelectSpecTest {
         // Then
         assertNotNull(result);
         assertEquals(table, result.table());
-        assertNotNull(result.columns());
-        assertEquals(1, result.columns().size());
-        assertEquals(column, result.columns().getFirst());
+        assertNotNull(result.expressions());
+        assertEquals(1, result.expressions().size());
+        assertInstanceOf(SelectColumn.class, result.expressions().getFirst());
+        assertEquals(column, ((SelectColumn) result.expressions().getFirst()).column());
     }
 
     @Test
-    void toSelect_columnsNotSet() {
+    void toSelect_expressionsNotSet() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
 
@@ -352,14 +361,14 @@ class SqlSelectSpecTest {
         // Then
         assertNotNull(result);
         assertEquals(table, result.table());
-        assertNotNull(result.columns());
-        assertTrue(result.columns().isEmpty());
+        assertNotNull(result.expressions());
+        assertTrue(result.expressions().isEmpty());
     }
 
     @Test
     void toSelect_tableNotSet() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec();
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
 
         // When/Then
         assertThrows(IllegalStateException.class, sqlSelectSpec::toSelect);

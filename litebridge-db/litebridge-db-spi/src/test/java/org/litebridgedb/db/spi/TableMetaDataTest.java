@@ -79,7 +79,7 @@ class TableMetaDataTest {
     }
 
     /**
-     * Test to verify that primaryKey method filters out non-primary key columns.
+     * Test to verify that primaryKey method filters out non-primary key expressions.
      */
     @Test
     void primaryKey_excludesNonPKColumns() {
@@ -380,7 +380,7 @@ class TableMetaDataTest {
         assertTrue(result.contains("schema='TEST_SCHEMA'"));
         assertTrue(result.contains("name='TEST_TABLE'"));
         assertTrue(result.contains("primaryKey="));
-        assertTrue(result.contains("columns="));
+        assertTrue(result.contains("expressions="));
     }
 
     @Test

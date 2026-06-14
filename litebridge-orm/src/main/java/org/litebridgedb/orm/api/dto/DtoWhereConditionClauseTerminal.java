@@ -2,6 +2,8 @@ package org.litebridgedb.orm.api.dto;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
+import org.litebridgedb.db.spi.query.ColumnExpression;
+import org.litebridgedb.db.spi.query.SelectExpression;
 import org.litebridgedb.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractWhereClauseTerminal;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
@@ -40,7 +42,15 @@ public final class DtoWhereConditionClauseTerminal<DTO>
         Column column = table.getColumnForFieldName(field).toColumn();
 
         // Use the aliased column if it is part of the SELECT clause, else use the unaliased column
-        for (Column selectedColumn : selectSpec.columns()) {
+        for (SelectExpression expression : selectSpec.expressions()) {
+            Column selectedColumn;
+
+            if (expression instanceof ColumnExpression columnExpression) {
+                selectedColumn = columnExpression.column();
+            } else {
+                continue;
+            }
+
             if (selectedColumn.equalsIgnoreAlias(column)) {
                 column = selectedColumn;
                 break;

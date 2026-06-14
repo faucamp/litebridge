@@ -12,8 +12,8 @@ import java.util.stream.Stream;
 /**
  * A row of data returned by a query. Holds a collection of column-value pairs.
  * <p>
- * This class provides methods to add columns with associated values,
- * retrieve specific columns, and stream through all columns in the row.
+ * This class provides methods to add expressions with associated values,
+ * retrieve specific expressions, and stream through all expressions in the row.
  */
 public final class Row implements Result {
 
@@ -37,7 +37,7 @@ public final class Row implements Result {
      * Return a stream of {@link Row.RowColumn} objects, each representing a column in the current row
      * along with its associated value.
      *
-     * @return a stream of {@code RowColumn} objects for all columns in the row
+     * @return a stream of {@code RowColumn} objects for all expressions in the row
      */
     public Stream<RowColumn> columnStream() {
         return columns.keySet().stream()
@@ -81,7 +81,7 @@ public final class Row implements Result {
     }
 
     /**
-     * Returns the total number of columns in the current row.
+     * Returns the total number of expressions in the current row.
      *
      * @return the size of the column collection for the row
      */

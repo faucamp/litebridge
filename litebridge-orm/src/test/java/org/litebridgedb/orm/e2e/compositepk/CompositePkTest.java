@@ -76,7 +76,7 @@ class CompositePkTest extends AbstractE2eTest {
     @DisplayName("Composite auto-incrementing PK")
     void compositePk_autoIncrement(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Not applicable for SQLite
-        assumeTrue(!dbEnv.getName().equals("SQLite"), "SQLite does not support multiple auto-incrementing columns");
+        assumeTrue(!dbEnv.getName().equals("SQLite"), "SQLite does not support multiple auto-incrementing expressions");
 
         // Given
         litebridge.register(CompositePkSimple.class, rc -> rc

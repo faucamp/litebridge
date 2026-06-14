@@ -9,6 +9,7 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
+import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
@@ -396,7 +397,7 @@ class AbstractDatabaseProviderTest {
 
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 List.of(new Join(table, List.of(new Condition(column, Operator.USING, null),
                         new Condition(column, Operator.EQ, "TEST_VALUE")))),
                 List.of(new OrderBy(column, true)),
@@ -437,7 +438,7 @@ class AbstractDatabaseProviderTest {
 
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -463,7 +464,7 @@ class AbstractDatabaseProviderTest {
     }
 
     @Test
-    void toSql() throws Exception {
+    void prepareSql() throws Exception {
         // Given
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), "t1");
@@ -471,10 +472,11 @@ class AbstractDatabaseProviderTest {
         column1.table().setAlias("t1");
         final Column column2 = tableMetaData.column("TEST_COLUMN").toColumn().as("col2");
         column2.table().setAlias("t1");
+        final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
 
         final Select select = new Select(
                 table,
-                List.of(column1, column2),
+                List.of(new SelectColumn(column1, columnIdentifierGenerator), new SelectColumn(column2, columnIdentifierGenerator)),
                 List.of(new Join(table, List.of(new Condition(column2, Operator.EQ, "TEST_VALUE")))),
                 List.of(new OrderBy(column1, true)),
                 List.of(new Condition(column2, Operator.EQ, "TEST_VALUE"),
@@ -482,7 +484,7 @@ class AbstractDatabaseProviderTest {
                 Optional.of(new Limit(Optional.of(10), Optional.of(20))));
 
         // When
-        final String result = databaseProvider.toSql(select);
+        final String result = databaseProvider.toSql(select, transactionManager);
 
         // Then
         assertNotNull(result);
@@ -490,7 +492,7 @@ class AbstractDatabaseProviderTest {
     }
 
     @Test
-    void toSql_selectAllColumns() throws Exception {
+    void prepareSql_selectAllColumns() throws Exception {
         // Given
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name());
@@ -504,7 +506,7 @@ class AbstractDatabaseProviderTest {
                 Optional.empty());
 
         // When
-        final String result = databaseProvider.toSql(select);
+        final String result = databaseProvider.toSql(select, transactionManager);
 
         // Then
         assertEquals("SELECT * FROM TEST_SCHEMA.TEST_TABLE", result);
@@ -1100,7 +1102,7 @@ class AbstractDatabaseProviderTest {
     }
 
     @Test
-    void toSql_withOrderByDesc() throws Exception {
+    void prepareSql_withOrderByDesc() throws Exception {
         // Given
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name());
@@ -1108,14 +1110,14 @@ class AbstractDatabaseProviderTest {
 
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 List.of(new OrderBy(column, false)),
                 Collections.emptyList(),
                 Optional.empty());
 
         // When
-        final String result = databaseProvider.toSql(select);
+        final String result = databaseProvider.toSql(select, transactionManager);
 
         // Then
         System.out.println(result);
@@ -1123,7 +1125,7 @@ class AbstractDatabaseProviderTest {
     }
 
     @Test
-    void toSql_withLimitNoOffset() throws Exception {
+    void prepareSql_withLimitNoOffset() throws Exception {
         // Given
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name());
@@ -1137,14 +1139,14 @@ class AbstractDatabaseProviderTest {
                 Optional.of(new Limit(Optional.of(10), Optional.empty())));
 
         // When
-        final String result = databaseProvider.toSql(select);
+        final String result = databaseProvider.toSql(select, transactionManager);
 
         // Then
         assertTrue(result.endsWith("LIMIT 10"));
     }
 
     @Test
-    void toSql_withOffsetNoLimit() throws Exception {
+    void prepareSql_withOffsetNoLimit() throws Exception {
         // Given
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name());
@@ -1158,7 +1160,7 @@ class AbstractDatabaseProviderTest {
                 Optional.of(new Limit(Optional.empty(), Optional.of(20))));
 
         // When
-        final String result = databaseProvider.toSql(select);
+        final String result = databaseProvider.toSql(select, transactionManager);
 
         // Then
         assertTrue(result.endsWith("OFFSET 20"));
@@ -1418,30 +1420,6 @@ class AbstractDatabaseProviderTest {
     }
 
     @Test
-    void transformAlias() {
-        // Given
-        final String dbAlias = "TEST_ALIAS";
-
-        // When
-        final String result = databaseProvider.transformAlias(dbAlias);
-
-        // Then
-        assertEquals("TEST_ALIAS", result);
-    }
-
-    @Test
-    void transformAlias_null() {
-        // Given
-        final String dbAlias = null;
-
-        // When
-        final String result = databaseProvider.transformAlias(dbAlias);
-
-        // Then
-        assertNull(result);
-    }
-
-    @Test
     void select_withColumnNotInMetadata() throws Exception {
         // Given
         final TableMetaData tableMetaData = tableMetaDataImpl();
@@ -1450,7 +1428,7 @@ class AbstractDatabaseProviderTest {
 
         final Select select = new Select(
                 table,
-                List.of(column),
+                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),

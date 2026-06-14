@@ -3,11 +3,12 @@ package org.litebridgedb.orm.api.dto;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.Column;
-import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
+import org.litebridgedb.db.spi.query.SelectExpression;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
-import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.orm.persistence.OrmTable;
+import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.tracking.FieldAccessor;
 
 import java.util.ArrayList;
@@ -21,7 +22,8 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
     @Nullable
     private List<FieldColumn> fieldColumns;
 
-    public DtoSelectSpec(final Class<?> dtoClass, final OrmTable dtoTable, final AliasGenerator aliasGenerator) {
+    public DtoSelectSpec(final Class<?> dtoClass, final OrmTable dtoTable, final AliasGenerator aliasGenerator, final SqlFunctionRegistry sqlFunctionRegistry) {
+        super(sqlFunctionRegistry);
         this.dtoClass = dtoClass;
         this.dtoTable = dtoTable;
         this.table = aliasGenerator.aliasTable(dtoTable);
@@ -45,8 +47,12 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
     }
 
     @Override
-    protected List<Column> columns() {
-        return fieldColumns != null ? fieldColumns.stream().map(FieldColumn::column).toList() : Collections.emptyList();
+    protected List<SelectExpression> expressions() {
+        return fieldColumns != null ?
+                fieldColumns.stream()
+                        .map(fieldColumn -> (SelectExpression) sqlFunctionRegistry.selectColumnFactory().create(fieldColumn.column()))
+                        .toList()
+                : Collections.emptyList();
     }
 
     public record FieldColumn(FieldAccessor fieldAccessor, Column column) {

@@ -5,9 +5,9 @@ import org.litebridgedb.db.spi.query.OrderBy;
 /**
  * Specification for an "ORDER BY" clause in a database query.
  * <p>
- * This class allows specifying the columns to order by and the sort direction
+ * This class allows specifying the expressions to order by and the sort direction
  * (ascending or descending). It provides methods to retrieve the specified
- * columns, check the ordering direction, and convert the specification into a
+ * expressions, check the ordering direction, and convert the specification into a
  * list of {@link OrderBy} objects.
  */
 public class OrderBySpec {

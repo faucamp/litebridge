@@ -565,7 +565,7 @@ public class PersistenceFacade {
         try {
             updateStatement = statementBuilder.build();
         } catch (final IllegalArgumentException ex) {
-            // No columns to update
+            // No expressions to update
             updateStatement = null;
         }
 

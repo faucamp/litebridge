@@ -9,6 +9,8 @@ import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
+import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
@@ -17,6 +19,7 @@ import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.function.TestColumnExpressionFactory;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
@@ -261,9 +264,11 @@ class DtoFromClauseTerminalTest {
         tableRegistry.addTable(dtoClass, ormTable);
 
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        when(databaseProvider.transformAlias(any())).then(invocation -> invocation.getArgument(0));
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(transactionalDatabaseProvider);
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final DtoSelector<DTO> dtoSelector = new DtoSelector<>(dtoClass, ormTable, tableRegistry, classFieldAccessorCache, dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
 

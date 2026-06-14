@@ -5,10 +5,10 @@ package org.litebridgedb.orm.api.select;
  * and fluent API for SQL query construction.
  * <p>
  * This interface allows chaining of multiple ORDER BY expressions, enabling the specification
- * of ordering for various columns or fields with explicit directions.
+ * of ordering for various expressions or fields with explicit directions.
  *
  * @param <DTO>  the data transfer object (DTO) type that represents the result of the query
- * @param <OBC>  the type of the {@code OrderByClause} used to define the ordering for a single set of columns
+ * @param <OBC>  the type of the {@code OrderByClause} used to define the ordering for a single set of expressions
  * @param <OBCC> the type of the {@code OrderByClauseChain} used to continue chaining additional ordering clauses
  */
 public interface OrderByClauseChain<DTO,

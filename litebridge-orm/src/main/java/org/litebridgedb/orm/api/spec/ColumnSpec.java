@@ -5,7 +5,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.generator.ColumnValueGenerator;
 
 /**
- * Specification of a database column, used to map DTO fields to target columns.
+ * Specification of a database column, used to map DTO fields to target expressions.
  * <p>
  * This class is immutable and provides various factory methods to create instances
  * with different configurations.

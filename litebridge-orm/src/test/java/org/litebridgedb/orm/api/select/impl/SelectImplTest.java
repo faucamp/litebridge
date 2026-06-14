@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
 import org.litebridgedb.orm.api.sql.SqlSelectSpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
@@ -11,8 +12,11 @@ import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class SelectImplTest {
 
@@ -22,7 +26,7 @@ class SelectImplTest {
 
     @BeforeEach
     void setUp() {
-        selectSpec = new SqlSelectSpec();
+        selectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
         selectSpec.setTable(new Table("CATALOG", "SCHEMA", "TABLE"));
         databaseProvider = mock(TransactionalDatabaseProvider.class);
         selector = new TestSelector(selectSpec, databaseProvider);
@@ -37,23 +41,23 @@ class SelectImplTest {
     @Test
     void delegatingSelector_methods() {
         DelegatingSelector<Object, SqlSelectSpec> delegating = new DelegatingSelector<>(selector);
-        
+
         selector.setResult("one");
         assertEquals(Optional.of("one"), delegating.one());
         assertEquals("one", delegating.oneOrNull());
         assertEquals("one", delegating.oneOrThrow());
         assertEquals("one", delegating.oneOrThrow(() -> new RuntimeException()));
-        
+
         assertEquals(Optional.of("one"), delegating.first());
         assertEquals("one", delegating.firstOrNull());
         assertEquals("one", delegating.firstOrThrow());
         assertEquals("one", delegating.firstOrThrow(() -> new RuntimeException()));
-        
+
         selector.setResultList(List.of("one", "two"));
         assertEquals(2, delegating.stream().count());
         assertEquals(2, delegating.list().size());
-        
-        when(databaseProvider.toSql(any())).thenReturn("SELECT 1");
+
+        when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
         assertEquals("SELECT 1", delegating.toSql());
     }
 
