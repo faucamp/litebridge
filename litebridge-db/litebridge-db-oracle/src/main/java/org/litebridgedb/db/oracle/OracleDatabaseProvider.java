@@ -39,11 +39,6 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider {
     }
 
     @Override
-    protected String createAlias(final String alias) {
-        return alias;
-    }
-
-    @Override
     protected void appendLimitClause(final Limit limit, final StringBuilder sql) {
         limit.offset().ifPresent(offset -> sql.append(" OFFSET ").append(offset).append(" ROWS"));
         limit.limit().ifPresent(limitVal -> sql.append(" FETCH FIRST ").append(limitVal).append(" ROWS ONLY"));

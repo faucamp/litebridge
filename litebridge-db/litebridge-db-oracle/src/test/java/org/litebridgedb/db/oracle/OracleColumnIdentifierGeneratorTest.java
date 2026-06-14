@@ -249,4 +249,16 @@ class OracleColumnIdentifierGeneratorTest {
         // Then
         assertEquals("TEST_COLUMN", result);
     }
+
+    @Test
+    void createAlias_validAlias() {
+        // Given
+        final String alias = "MY_ALIAS";
+
+        // When
+        String result = generator.createAlias(alias);
+
+        // Then
+        assertEquals("MY_ALIAS", result);
+    }
 }

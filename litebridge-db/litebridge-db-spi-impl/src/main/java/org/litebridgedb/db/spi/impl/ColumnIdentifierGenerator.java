@@ -39,6 +39,6 @@ public class ColumnIdentifierGenerator {
     }
 
     protected String createAlias(final String alias) {
-        return "AS %s".formatted(alias);
+        return "AS %s".formatted(quoteIdentifier(alias));
     }
 }

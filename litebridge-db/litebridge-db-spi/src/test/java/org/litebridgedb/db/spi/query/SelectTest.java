@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 class SelectTest {
 
@@ -36,7 +37,9 @@ class SelectTest {
 
         // Then
         assertEquals(table, result.table());
-        assertEquals(List.of(column), result.expressions());
+        assertEquals(1, result.expressions().size());
+        assertInstanceOf(TestColumnExpression.class, result.expressions().getFirst());
+        assertEquals(column, ((TestColumnExpression) result.expressions().getFirst()).column());
         assertEquals(List.of(join), result.joins());
         assertEquals(List.of(orderBy), result.orderBy());
         assertEquals(List.of(condition), result.where());

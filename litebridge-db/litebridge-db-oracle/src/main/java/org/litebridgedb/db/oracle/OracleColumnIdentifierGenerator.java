@@ -54,6 +54,6 @@ public class OracleColumnIdentifierGenerator extends ColumnIdentifierGenerator {
 
     @Override
     protected String createAlias(final String alias) {
-        return alias;
+        return quoteIdentifier(alias);
     }
 }

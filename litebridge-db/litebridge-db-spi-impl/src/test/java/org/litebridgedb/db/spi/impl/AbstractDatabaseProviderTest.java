@@ -50,7 +50,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -974,42 +973,6 @@ class AbstractDatabaseProviderTest {
     }
 
     @Test
-    void quoteIdentifier_reservedKeyword() {
-        // Given
-        final String identifier = "TABLE";
-
-        // When
-        final String result = databaseProvider.quoteIdentifier(identifier);
-
-        // Then
-        assertEquals("\"TABLE\"", result);
-    }
-
-    @Test
-    void quoteIdentifier_notNeeded() {
-        // Given
-        final String identifier = "TEST";
-
-        // When
-        final String result = databaseProvider.quoteIdentifier(identifier);
-
-        // Then
-        assertEquals("TEST", result);
-    }
-
-    @Test
-    void quoteIdentifier_null() {
-        // Given
-        final String identifier = null;
-
-        // When
-        final String result = databaseProvider.quoteIdentifier(identifier);
-
-        // Then
-        assertNull(result);
-    }
-
-    @Test
     void getLogger() {
         assertNotNull(databaseProvider.getLogger());
     }
@@ -1515,18 +1478,6 @@ class AbstractDatabaseProviderTest {
         assertNotNull(result);
         assertEquals("TEST_TABLE", result.name());
         assertEquals("TEST_SCHEMA", result.schema());
-    }
-
-    @Test
-    void createAlias() {
-        // Given
-        final String alias = "my_alias";
-
-        // When
-        final String result = databaseProvider.createAlias(alias);
-
-        // Then
-        assertEquals("AS my_alias", result);
     }
 
     @Test

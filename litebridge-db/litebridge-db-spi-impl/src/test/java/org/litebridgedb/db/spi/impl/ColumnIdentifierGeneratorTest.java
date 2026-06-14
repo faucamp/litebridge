@@ -6,6 +6,7 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.query.Select;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 
 class ColumnIdentifierGeneratorTest {
@@ -47,5 +48,53 @@ class ColumnIdentifierGeneratorTest {
 
         // Then
         assertEquals("t1.TEST_COLUMN", result);
+    }
+
+    @Test
+    void quoteIdentifier_reservedKeyword() {
+        // Given
+        final String identifier = "TABLE";
+
+        // When
+        final String result = generator.quoteIdentifier(identifier);
+
+        // Then
+        assertEquals("\"TABLE\"", result);
+    }
+
+    @Test
+    void quoteIdentifier_notNeeded() {
+        // Given
+        final String identifier = "TEST";
+
+        // When
+        final String result = generator.quoteIdentifier(identifier);
+
+        // Then
+        assertEquals("TEST", result);
+    }
+
+    @Test
+    void quoteIdentifier_null() {
+        // Given
+        final String identifier = null;
+
+        // When
+        final String result = generator.quoteIdentifier(identifier);
+
+        // Then
+        assertNull(result);
+    }
+
+    @Test
+    void createAlias() {
+        // Given
+        final String alias = "my_alias";
+
+        // When
+        final String result = generator.createAlias(alias);
+
+        // Then
+        assertEquals("AS my_alias", result);
     }
 }

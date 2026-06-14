@@ -156,7 +156,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         appendTable(sql, select.table());
 
         if (select.table().alias() != null) {
-            sql.append(' ').append(createAlias(quoteIdentifier(select.table().alias())));
+            sql.append(' ').append(columnIdentifierGenerator.orThrow().createAlias(select.table().alias()));
         }
 
         // Joins
@@ -227,11 +227,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @return a {@link AbstractDatabaseProvider.PreparedSql} object containing the generated SQL query string and the list of bind values
      */
     protected PreparedSql prepareSql(final Insert insert, final ConnectionProvider connectionProvider) {
+        final ColumnIdentifierGenerator cig = columnIdentifierGenerator.orThrow();
         final List<String> columnNames = insert.columns().stream().map(Column::name).toList();
 
         final StringBuilder sql = appendTable(new StringBuilder("INSERT INTO "), insert.table())
                 .append(" (")
-                .append(String.join(", ", columnNames.stream().map(this::quoteIdentifier).toList()))
+                .append(String.join(", ", columnNames.stream().map(cig::quoteIdentifier).toList()))
                 .append(") VALUES ");
 
         final List<BindValue> bindValues = new ArrayList<>(insert.rows().size() * columnNames.size());
@@ -280,7 +281,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 sql.append(", ");
             }
 
-            sql.append(quoteIdentifier(columnValue.column().name())).append(" = ");
+            sql.append(columnIdentifierGenerator.orThrow().quoteIdentifier(columnValue.column().name())).append(" = ");
             final ColumnMetaData columnMetaData = ensureColumnMetaData(columnValue.column(), connectionProvider);
 
             if (columnValue.value() instanceof MathOperation mathOperation) {
@@ -320,7 +321,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     protected String createMathOperation(final ColumnMetaData column, final MathOperation mathOperation) {
         final Object convertedValue = typeConverter.convert(mathOperation.value(), column.getDataType());
-        return "%s %s %s".formatted(quoteIdentifier(column.name()), mathOperation.operator().symbol(), convertedValue);
+        return "%s %s %s".formatted(columnIdentifierGenerator.orThrow().quoteIdentifier(column.name()), mathOperation.operator().symbol(), convertedValue);
     }
 
     protected PreparedSql prepareSql(final Delete delete, final ConnectionProvider connectionProvider) {
@@ -369,7 +370,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         final StringBuilder sb = appendTable(new StringBuilder(" JOIN "), join.table());
 
         if (join.table().alias() != null) {
-            sb.append(' ').append(createAlias(quoteIdentifier(join.table().alias())));
+            sb.append(' ').append(columnIdentifierGenerator.orThrow().createAlias(join.table().alias()));
         }
 
         if (join.conditions().getFirst().operator() != Operator.USING) {
@@ -403,8 +404,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @return a {@code String} representing the constructed SQL condition fragment
      */
     protected String createCondition(final Condition condition, @Nullable final Select select) {
-        final String column = columnIdentifierGenerator.orThrow()
-                .createColumnIdentifier(condition.column(), false, select);
+        final ColumnIdentifierGenerator cig = columnIdentifierGenerator.orThrow();
+        final String column = cig.createColumnIdentifier(condition.column(), false, select);
 
         if (condition.operator() == Operator.IS_NULL || condition.operator() == Operator.IS_NOT_NULL) {
             return "%s %s".formatted(column, mapOperator(condition.operator()));
@@ -413,7 +414,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         } else {
             // If the target value is a column, reference that
             if (condition.value() instanceof Column targetColumn) {
-                return "%s %s %s.%s".formatted(column, mapOperator(condition.operator()), quoteIdentifier(targetColumn.table().aliasOrName()), quoteIdentifier(targetColumn.name()));
+                return "%s %s %s.%s".formatted(column, mapOperator(condition.operator()), cig.quoteIdentifier(targetColumn.table().aliasOrName()), cig.quoteIdentifier(targetColumn.name()));
             } else {
                 return "%s %s ?".formatted(column, mapOperator(condition.operator()));
             }
@@ -429,11 +430,13 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     protected StringBuilder appendTable(final StringBuilder sql, final String schema, final String table) {
+        final ColumnIdentifierGenerator cig = columnIdentifierGenerator.orThrow();
+
         if (!StringUtils.isBlank(schema)) {
-            sql.append(quoteIdentifier(schema)).append('.');
+            sql.append(cig.quoteIdentifier(schema)).append('.');
         }
 
-        sql.append(quoteIdentifier(table));
+        sql.append(cig.quoteIdentifier(table));
         return sql;
     }
 
@@ -839,10 +842,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return new TableMetaData(table, primaryKeys, columns);
     }
 
-    protected @Nullable String quoteIdentifier(final @Nullable String identifier) {
-        return columnIdentifierGenerator.orThrow().quoteIdentifier(identifier);
-    }
-
     /**
      * Create a {@link SqlFunctionRegistryFactory} instance for the generation of a SQL function registry.
      * <p>
@@ -861,10 +860,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     protected ColumnIdentifierGenerator createColumnIdentifierGenerator() {
         return new ColumnIdentifierGenerator();
-    }
-
-    protected String createAlias(final String alias) {
-        return "AS %s".formatted(alias);
     }
 
     protected void appendLimitClause(final Limit limit, final StringBuilder sql) {

@@ -40,19 +40,6 @@ class OracleDatabaseProviderTest {
     }
 
     @Test
-    void createAlias_validAlias() {
-        // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final String alias = "MY_ALIAS";
-
-        // When
-        String result = provider.createAlias(alias);
-
-        // Then
-        assertEquals("MY_ALIAS", result);
-    }
-
-    @Test
     void appendLimitClause_withOffsetAndLimit() {
         // Given
         final OracleDatabaseProvider provider = new OracleDatabaseProvider();
