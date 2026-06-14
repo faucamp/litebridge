@@ -12,7 +12,11 @@ import org.litebridgedb.db.spi.query.SelectExpression;
 
 public class SqlFunctionRegistryFactory {
 
-    protected final ConcurrentLazy<ColumnIdentifierGenerator> columnIdentifierGenerator = new ConcurrentLazy<>(this::createColumnIdentifierGenerator);
+    protected final ColumnIdentifierGenerator columnIdentifierGenerator;
+
+    public SqlFunctionRegistryFactory(final ColumnIdentifierGenerator columnIdentifierGenerator) {
+        this.columnIdentifierGenerator = columnIdentifierGenerator;
+    }
 
     public SqlFunctionRegistry create() {
         return new SqlFunctionRegistry(
@@ -25,11 +29,11 @@ public class SqlFunctionRegistryFactory {
     }
 
     protected SelectColumn createSelectColumn(final Column column) {
-        return new SelectColumn(column, columnIdentifierGenerator.orThrow());
+        return new SelectColumn(column, columnIdentifierGenerator);
     }
 
     protected ColumnExpression createAverage(final Column column) {
-        return new Average(column, columnIdentifierGenerator.orThrow());
+        return new Average(column, columnIdentifierGenerator);
     }
 
     protected SelectExpression createCount() {
@@ -37,10 +41,6 @@ public class SqlFunctionRegistryFactory {
     }
 
     protected ColumnExpression createUCase(final Column column) {
-        return new UCase(column, columnIdentifierGenerator.orThrow());
-    }
-
-    protected ColumnIdentifierGenerator createColumnIdentifierGenerator() {
-        return new ColumnIdentifierGenerator();
+        return new UCase(column, columnIdentifierGenerator);
     }
 }

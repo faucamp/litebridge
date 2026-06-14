@@ -20,7 +20,6 @@ import org.litebridgedb.db.spi.impl.function.AliasedColumnExpression;
 import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.impl.function.SqlFunctionRegistryFactory;
 import org.litebridgedb.db.spi.math.MathOperation;
-import org.litebridgedb.db.spi.query.ColumnExpression;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
@@ -37,7 +36,6 @@ import org.litebridgedb.db.spi.update.InsertResult;
 import org.litebridgedb.db.spi.update.RowValue;
 import org.litebridgedb.db.spi.update.Update;
 import org.litebridgedb.db.spi.update.UpdateResult;
-import org.litebridgedb.db.spi.util.SqlReservedWords;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,6 +75,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     private final Map<String, TableMetaData> tableMetaDataCache = new ConcurrentHashMap<>();
     private final ConcurrentLazy<SqlFunctionRegistry> sqlFunctionRegistry = new ConcurrentLazy<>(() -> createSqlFunctionRegistryFactory().create());
     private final ConcurrentLazy<AliasTransformer> aliasTransformer = new ConcurrentLazy<>(this::createAliasTransformer);
+    protected final ConcurrentLazy<ColumnIdentifierGenerator> columnIdentifierGenerator = new ConcurrentLazy<>(this::createColumnIdentifierGenerator);
 
     public AbstractDatabaseProvider(final TypeConverter typeConverter) {
         this.typeConverter = Objects.requireNonNull(typeConverter, "No TypeConverter provided");
@@ -140,9 +139,9 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 final String identifier;
 
                 if (expression instanceof AliasedColumnExpression aliasedColumnExpression) {
-                    identifier = aliasedColumnExpression.toSqlWithAlias();
+                    identifier = aliasedColumnExpression.toSqlWithAlias(select);
                 } else {
-                    identifier = expression.toSql();
+                    identifier = expression.toSql(select);
                 }
 
                 sql.append(identifier);
@@ -195,7 +194,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                     sql.append(", ");
                 }
 
-                sql.append(quoteIdentifier(createColumnIdentifier(orderBy.column(), false, select)))
+                sql.append(columnIdentifierGenerator.orThrow().createColumnIdentifier(orderBy.column(), false, select))
                         .append(orderBy.asc() ? " ASC" : " DESC");
             }
         }
@@ -404,7 +403,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @return a {@code String} representing the constructed SQL condition fragment
      */
     protected String createCondition(final Condition condition, @Nullable final Select select) {
-        final String column = createColumnIdentifier(condition.column(), false, select);
+        final String column = columnIdentifierGenerator.orThrow()
+                .createColumnIdentifier(condition.column(), false, select);
 
         if (condition.operator() == Operator.IS_NULL || condition.operator() == Operator.IS_NOT_NULL) {
             return "%s %s".formatted(column, mapOperator(condition.operator()));
@@ -435,24 +435,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
         sql.append(quoteIdentifier(table));
         return sql;
-    }
-
-    protected String createColumnIdentifier(final Column column, boolean includeColumnAlias, final @Nullable Select select) {
-        final StringBuilder columnSql = new StringBuilder();
-
-        if (!StringUtils.isEmpty(column.table().alias())) {
-            columnSql.append(quoteIdentifier(column.table().alias()));
-        } else {
-            columnSql.append(quoteIdentifier(column.table().name()));
-        }
-
-        columnSql.append('.').append(quoteIdentifier(column.name()));
-
-        if (includeColumnAlias && !StringUtils.isBlank(column.alias())) {
-            columnSql.append(' ').append(createAlias(quoteIdentifier(column.alias())));
-        }
-
-        return columnSql.toString();
     }
 
     /**
@@ -858,15 +840,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     protected @Nullable String quoteIdentifier(final @Nullable String identifier) {
-        if (identifier == null) {
-            return null;
-        }
-
-        if (SqlReservedWords.contains(identifier)) {
-            return "\"%s\"".formatted(identifier);
-        } else {
-            return identifier;
-        }
+        return columnIdentifierGenerator.orThrow().quoteIdentifier(identifier);
     }
 
     /**
@@ -878,11 +852,15 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @return a {@link SqlFunctionRegistryFactory} implementation instance
      */
     protected SqlFunctionRegistryFactory createSqlFunctionRegistryFactory() {
-        return new SqlFunctionRegistryFactory();
+        return new SqlFunctionRegistryFactory(columnIdentifierGenerator.orThrow());
     }
 
     protected AliasTransformer createAliasTransformer() {
         return new UppercaseAliasTransformer();
+    }
+
+    protected ColumnIdentifierGenerator createColumnIdentifierGenerator() {
+        return new ColumnIdentifierGenerator();
     }
 
     protected String createAlias(final String alias) {

@@ -1,6 +1,7 @@
 package org.litebridgedb.orm.function;
 
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.query.ColumnExpression;
 
 public class TestColumnExpression extends ColumnExpression {
@@ -10,7 +11,7 @@ public class TestColumnExpression extends ColumnExpression {
     }
 
     @Override
-    public String toSql() {
+    public String toSql(final Operation operation) {
         return column().name();
     }
 }

@@ -1,6 +1,7 @@
 package org.litebridgedb.db.spi.impl.function.aggregate;
 
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.AliasedColumnExpression;
 
@@ -11,12 +12,12 @@ public class Average extends AliasedColumnExpression {
     }
 
     @Override
-    public String toSqlWithAlias() {
-        return "AVG(%s)".formatted(idWithAlias(column));
+    public String toSqlWithAlias(final Operation operation) {
+        return "AVG(%s)".formatted(idWithAlias(column, operation));
     }
 
     @Override
-    public String toSql() {
-        return "AVG(%s)".formatted(id(column));
+    public String toSql(final Operation operation) {
+        return "AVG(%s)".formatted(id(column, operation));
     }
 }

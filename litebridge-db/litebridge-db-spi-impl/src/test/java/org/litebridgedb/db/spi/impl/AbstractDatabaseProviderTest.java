@@ -1307,43 +1307,6 @@ class AbstractDatabaseProviderTest {
     }
 
     @Test
-    void createColumnIdentifier_withoutAlias() throws Exception {
-        // Given
-        final Column column = tableMetaDataImpl().column("TEST_COLUMN").toColumn();
-
-        // When
-        final String result = databaseProvider.createColumnIdentifier(column, false, mock(Select.class));
-
-        // Then
-        assertEquals("TEST_TABLE.TEST_COLUMN", result);
-    }
-
-    @Test
-    void createColumnIdentifier_withAlias_notIncluded() throws Exception {
-        // Given
-        final Column column = tableMetaDataImpl().column("TEST_COLUMN").toColumn().as("col_alias");
-
-        // When
-        final String result = databaseProvider.createColumnIdentifier(column, false, mock(Select.class));
-
-        // Then
-        assertEquals("TEST_TABLE.TEST_COLUMN", result);
-    }
-
-    @Test
-    void createColumnIdentifier_withTableAlias() throws Exception {
-        // Given
-        final Column column = tableMetaDataImpl().column("TEST_COLUMN").toColumn();
-        column.table().setAlias("t1");
-
-        // When
-        final String result = databaseProvider.createColumnIdentifier(column, false, mock(Select.class));
-
-        // Then
-        assertEquals("t1.TEST_COLUMN", result);
-    }
-
-    @Test
     void executeSqlInsert_returnGeneratedKeysFalse() throws Exception {
         // Given
         final TableMetaData tableMetaData = tableMetaDataImpl();

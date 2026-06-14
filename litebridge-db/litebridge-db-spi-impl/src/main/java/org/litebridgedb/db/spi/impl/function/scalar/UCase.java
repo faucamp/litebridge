@@ -1,6 +1,7 @@
 package org.litebridgedb.db.spi.impl.function.scalar;
 
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.AliasedColumnExpression;
 
@@ -11,12 +12,12 @@ public class UCase extends AliasedColumnExpression {
     }
 
     @Override
-    public String toSql() {
-        return "UCASE(%s)".formatted(id(column));
+    public String toSql(final Operation operation) {
+        return "UCASE(%s)".formatted(id(column, operation));
     }
 
     @Override
-    public String toSqlWithAlias() {
-        return "UCASE(%s)".formatted(idWithAlias(column));
+    public String toSqlWithAlias(final Operation operation) {
+        return "UCASE(%s)".formatted(idWithAlias(column, operation));
     }
 }

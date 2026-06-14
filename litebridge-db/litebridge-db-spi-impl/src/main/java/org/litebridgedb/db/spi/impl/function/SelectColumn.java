@@ -1,6 +1,7 @@
 package org.litebridgedb.db.spi.impl.function;
 
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 
 public class SelectColumn extends AliasedColumnExpression {
@@ -10,7 +11,7 @@ public class SelectColumn extends AliasedColumnExpression {
     }
 
     @Override
-    public String toSql() {
+    public String toSql(final Operation operation) {
         return column.name();
     }
 }

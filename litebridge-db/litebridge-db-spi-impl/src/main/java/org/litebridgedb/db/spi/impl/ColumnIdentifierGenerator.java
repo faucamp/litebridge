@@ -3,11 +3,12 @@ package org.litebridgedb.db.spi.impl;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.StringUtils;
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.util.SqlReservedWords;
 
 public class ColumnIdentifierGenerator {
 
-    public String createColumnIdentifier(final Column column, boolean includeColumnAlias) {
+    public String createColumnIdentifier(final Column column, boolean includeColumnAlias, final Operation operation) {
         final StringBuilder columnSql = new StringBuilder();
 
         if (!StringUtils.isEmpty(column.table().alias())) {
@@ -25,7 +26,7 @@ public class ColumnIdentifierGenerator {
         return columnSql.toString();
     }
 
-    protected @Nullable String quoteIdentifier(final @Nullable String identifier) {
+    public @Nullable String quoteIdentifier(final @Nullable String identifier) {
         if (identifier == null) {
             return null;
         }

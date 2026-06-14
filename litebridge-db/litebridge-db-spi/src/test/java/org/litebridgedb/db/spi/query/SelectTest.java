@@ -2,6 +2,7 @@ package org.litebridgedb.db.spi.query;
 
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Table;
 
 import java.util.List;
@@ -49,7 +50,7 @@ class SelectTest {
         }
 
         @Override
-        public String toSql() {
+        public String toSql(final Operation operation) {
             return column.name();
         }
     }

@@ -1,11 +1,12 @@
 package org.litebridgedb.db.spi.impl.function.aggregate;
 
+import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.query.SelectExpression;
 
 public class Count implements SelectExpression {
 
     @Override
-    public String toSql() {
+    public String toSql(final Operation operation) {
         return "COUNT(*)";
     }
 }
