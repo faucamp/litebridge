@@ -17,13 +17,13 @@ import org.litebridgedb.db.spi.update.Insert;
 import org.litebridgedb.db.spi.update.InsertResult;
 import org.litebridgedb.db.spi.update.Update;
 import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
+import org.litebridgedb.orm.api.select.FromClauseStart;
 import org.litebridgedb.orm.api.spec.ColumnMapping;
 import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
 import org.litebridgedb.orm.api.spec.FieldMapping;
 import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.api.spec.TableSpec;
-import org.litebridgedb.orm.api.sql.SqlFromClause;
 import org.litebridgedb.orm.function.TestColumnExpressionFactory;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
@@ -179,6 +179,7 @@ class LitebridgeTest {
         litebridge.save(testDto);
 
         // Then
+        verify(databaseProvider).getSqlFunctionRegistry();
         verify(databaseProvider).tableMetaData(eq(tableSpec), any(ConnectionProvider.class));
         verifyNoMoreInteractions(databaseProvider);
     }
@@ -322,7 +323,7 @@ class LitebridgeTest {
         litebridge.register(dtoTableSpec);
 
         // When
-        final SqlFromClause result = litebridge.select("MY_VAR");
+        final FromClauseStart result = litebridge.select("MY_VAR");
 
         // Then
         assertNotNull(result);
@@ -347,7 +348,7 @@ class LitebridgeTest {
         litebridge.register(dtoTableSpec);
 
         // When
-        final SqlFromClause result = litebridge.select();
+        final FromClauseStart result = litebridge.select();
 
         // Then
         assertNotNull(result);
@@ -374,7 +375,7 @@ class LitebridgeTest {
         final Aliased aliased = new Aliased("TEST_COLUMN", "testAlias");
 
         // When
-        final SqlFromClause result = litebridge.select(aliased);
+        final FromClauseStart result = litebridge.select(aliased);
 
         // Then
         assertNotNull(result);

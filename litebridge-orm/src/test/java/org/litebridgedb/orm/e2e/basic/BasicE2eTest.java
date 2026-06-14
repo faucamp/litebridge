@@ -423,6 +423,36 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertEquals(1, litebridge.select(Person.class).stream().filter(p -> p.getEyeColour().equals("unknown")).count());
     }
 
+    @TestTemplate
+    @DisplayName("Select specific fields")
+    void select_specificFields(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+
+        // Setup data
+        final Person[] persons = new Person[3];
+        for (int i = 0; i < 3; i++) {
+            persons[i] = new Person();
+            persons[i].setName("Name" + i);
+            persons[i].setSurname("Surname" + i);
+            persons[i].setAge(20 + i);
+        }
+
+        litebridge.save((Object[]) persons);
+
+        // Read and populate specific fields only
+        final List<Person> result = litebridge.select("id", "surname").from(Person.class).list();
+
+        assertEquals(3, result.size());
+        for (int i = 0; i < 3; i++) {
+            final Person p = result.get(i);
+            assertNotNull(p.getId());
+            assertEquals(persons[i].getSurname(), p.getSurname());
+            assertNull(p.getName());
+            assertEquals(0, p.getAge());
+        }
+    }
+
     private class TestException extends RuntimeException {
     }
 }
