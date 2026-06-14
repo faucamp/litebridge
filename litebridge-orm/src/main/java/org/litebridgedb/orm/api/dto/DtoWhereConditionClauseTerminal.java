@@ -28,6 +28,13 @@ public final class DtoWhereConditionClauseTerminal<DTO>
         table = delegate.table();
     }
 
+    /**
+     * Adds an "AND" condition to the current condition clause using the specified column.
+     * This method is used to chain additional conditions in a SQL query in a type-safe and fluent manner.
+     *
+     * @param field the name of the DTO field to be used in the "AND" condition
+     * @return the parent condition clause interface, allowing further chaining of conditions
+     */
     @Override
     public DtoWhereConditionClause<DTO> and(final String field) {
         Column column = table.getColumnForFieldName(field).toColumn();
@@ -43,6 +50,13 @@ public final class DtoWhereConditionClauseTerminal<DTO>
         return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), this);
     }
 
+    /**
+     * Adds an "AND" condition to the current condition clause using the specified column.
+     * This method is used to chain additional conditions in a SQL query in a type-safe and fluent manner.
+     *
+     * @param field the field to be used in the "AND" condition
+     * @return the parent condition clause interface, allowing further chaining of conditions
+     */
     @Override
     public DtoWhereConditionClause<DTO> and(final FieldColumnSpec field) {
         return and(field.field().name());

@@ -21,12 +21,19 @@ public interface ConditionClauseTerminal<DTO,
 
     /**
      * Adds an "AND" condition to the current condition clause using the specified column.
-     * This method is used to chain additional conditions in a SQL query in a type-safe and fluent manner.
+     * This method is used to chain additional conditions in a SQL query in a fluent manner.
      *
      * @param column the name of the column to be used in the "AND" condition
      * @return the parent condition clause interface, allowing further chaining of conditions
      */
     CC and(String column);
 
+    /**
+     * Adds an "AND" condition to the current condition clause using the specified column.
+     * This method is used to chain additional conditions in a SQL query in a type-safe and fluent manner.
+     *
+     * @param column the column to be used in the "AND" condition
+     * @return the parent condition clause interface, allowing further chaining of conditions
+     */
     CC and(FieldColumnSpec column);
 }
