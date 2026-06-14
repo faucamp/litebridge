@@ -51,4 +51,9 @@ public class OracleColumnIdentifierGenerator extends ColumnIdentifierGenerator {
 
         return columnSql.toString();
     }
+
+    @Override
+    protected String createAlias(final String alias) {
+        return alias;
+    }
 }
