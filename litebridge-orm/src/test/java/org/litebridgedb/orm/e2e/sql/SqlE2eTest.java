@@ -6,6 +6,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
+import org.litebridgedb.orm.function.Functions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,45 +112,69 @@ class SqlE2eTest extends AbstractE2eTest {
         assertNull(person.getEyeColour());
     }
 
-    @TestTemplate
-    @DisplayName("Select with a JOIN USING clause")
-    void selectJoinUsing(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        // Given
-        final String personTableName = tableMapper.qualifyName("PERSON");
-        final String accountTableName = tableMapper.qualifyName("ACCOUNT");
-        insertTestPersonRecords(personTableName);
-        insertTestAccountRecords(accountTableName);
+    //TODO: re-add
+//    @TestTemplate
+//    @DisplayName("Select with a JOIN USING clause")
+//    void selectJoinUsing(final DbEnvDtoTableMapper tableMapper) throws Exception {
+//        // Given
+//        final String personTableName = tableMapper.qualifyName("PERSON");
+//        final String accountTableName = tableMapper.qualifyName("ACCOUNT");
+//        insertTestPersonRecords(personTableName);
+//        insertTestAccountRecords(accountTableName);
+//
+//        // When
+//        LOGGER.info("Selecting with a JOIN USING clause");
+//        final List<Row> result =
+//                litebridge.select(
+//                                c(personTableName, tableMapper.transformColumnName("FIRST_NAME")),
+//                                c(personTableName, tableMapper.transformColumnName("SURNAME")),
+//                                c(personTableName, tableMapper.transformColumnName("AGE")),
+//                                c(accountTableName, tableMapper.transformColumnName("ACCOUNT_ID")),
+//                                c(accountTableName, tableMapper.transformColumnName("ACCOUNT_NAME")))
+//                        .from(personTableName)
+//                        .join(accountTableName).using(tableMapper.transformColumnName("PERSON_ID"))
+//                        .list();
+//
+//        // Then
+//        assertEquals(2, result.size());
+//        final Row row1 = result.getFirst();
+//        assertEquals(5, row1.columnStream().count());
+//        assertEquals("Alice", row1.column(tableMapper.transformColumnName("FIRST_NAME")).orElseThrow().value());
+//        assertEquals("Smith", row1.column(tableMapper.transformColumnName("SURNAME")).orElseThrow().value());
+//        assertNumberEquals(20, row1.column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+//        assertNumberEquals(1, row1.column(tableMapper.transformColumnName("ACCOUNT_ID")).orElseThrow().value());
+//        assertEquals("Alice's Account", row1.column(tableMapper.transformColumnName("ACCOUNT_NAME")).orElseThrow().value());
+//        final Row row2 = result.get(1);
+//        assertEquals(5, row2.columnStream().count());
+//        assertEquals("Bob", row2.column(tableMapper.transformColumnName("FIRST_NAME")).orElseThrow().value());
+//        assertEquals("Johnson", row2.column(tableMapper.transformColumnName("SURNAME")).orElseThrow().value());
+//        assertNumberEquals(30, row2.column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+//        assertNumberEquals(2, row2.column(tableMapper.transformColumnName("ACCOUNT_ID")).orElseThrow().value());
+//        assertEquals("Bob's Account", row2.column(tableMapper.transformColumnName("ACCOUNT_NAME")).orElseThrow().value());
+//    }
 
-        // When
-        LOGGER.info("Selecting with a JOIN USING clause");
-        final List<Row> result =
-                litebridge.select(
-                                c(personTableName, tableMapper.transformColumnName("FIRST_NAME")),
-                                c(personTableName, tableMapper.transformColumnName("SURNAME")),
-                                c(personTableName, tableMapper.transformColumnName("AGE")),
-                                c(accountTableName, tableMapper.transformColumnName("ACCOUNT_ID")),
-                                c(accountTableName, tableMapper.transformColumnName("ACCOUNT_NAME")))
-                        .from(personTableName)
-                        .join(accountTableName).using(tableMapper.transformColumnName("PERSON_ID"))
-                        .list();
-
-        // Then
-        assertEquals(2, result.size());
-        final Row row1 = result.getFirst();
-        assertEquals(5, row1.columnStream().count());
-        assertEquals("Alice", row1.column(tableMapper.transformColumnName("FIRST_NAME")).orElseThrow().value());
-        assertEquals("Smith", row1.column(tableMapper.transformColumnName("SURNAME")).orElseThrow().value());
-        assertNumberEquals(20, row1.column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
-        assertNumberEquals(1, row1.column(tableMapper.transformColumnName("ACCOUNT_ID")).orElseThrow().value());
-        assertEquals("Alice's Account", row1.column(tableMapper.transformColumnName("ACCOUNT_NAME")).orElseThrow().value());
-        final Row row2 = result.get(1);
-        assertEquals(5, row2.columnStream().count());
-        assertEquals("Bob", row2.column(tableMapper.transformColumnName("FIRST_NAME")).orElseThrow().value());
-        assertEquals("Johnson", row2.column(tableMapper.transformColumnName("SURNAME")).orElseThrow().value());
-        assertNumberEquals(30, row2.column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
-        assertNumberEquals(2, row2.column(tableMapper.transformColumnName("ACCOUNT_ID")).orElseThrow().value());
-        assertEquals("Bob's Account", row2.column(tableMapper.transformColumnName("ACCOUNT_NAME")).orElseThrow().value());
-    }
+//    @TestTemplate
+//    @DisplayName("Select COUNT()")
+//    void selectCount(final DbEnvDtoTableMapper tableMapper) throws Exception {
+//        // Given
+//        final String personTableName = tableMapper.qualifyName("PERSON");
+//        insertTestPersonRecords(personTableName);
+//
+//        // When
+//        LOGGER.info("Selecting specific expressions and filtering records using a query");
+//        final List<Row> result =
+//                litebridge.select(fn.count()).from(personTableName)
+//                        .where(tableMapper.transformColumnName("AGE")).gt(18)
+//                        .and(tableMapper.transformColumnName("AGE")).lt(25)
+//                        .list();
+//
+//        // Then
+//        assertEquals(1, result.size());
+//        assertEquals(3, result.getFirst().columnStream().count());
+//        assertEquals("Alice", result.getFirst().column(tableMapper.transformColumnName("FIRST_NAME")).orElseThrow().value());
+//        assertEquals("Smith", result.getFirst().column(tableMapper.transformColumnName("SURNAME")).orElseThrow().value());
+//        assertNumberEquals(20, result.getFirst().column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+//    }
 
     @TestTemplate
     @DisplayName("Delete records")

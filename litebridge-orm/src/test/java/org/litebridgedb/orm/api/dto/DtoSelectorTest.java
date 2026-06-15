@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.litebridgedb.commons.ClassUtils;
 import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.convert.DefaultTypeConverter;
-import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.DatabaseProvider;
@@ -19,6 +18,7 @@ import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.function.SelectField;
 import org.litebridgedb.orm.function.TestColumnExpressionFactory;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -72,35 +72,7 @@ class DtoSelectorTest {
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
 
         // When
-        final DtoFromClauseTerminal<TestDto> result = dtoSelector.select("myVar");
-
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
-    void select_aliased() {
-        // Given
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
-        final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", List.of("MY_VAR"), List.of(columnMetaData));
-        final FieldAccessor fieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup());
-        final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
-        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
-        final TableRegistry tableRegistry = new TableRegistry();
-        tableRegistry.addTable(TestDto.class, ormTable);
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-
-        final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
-        final Aliased aliased = new Aliased("myVar", "myVarAlias");
-
-        // When
-        final DtoFromClauseTerminal<TestDto> result = dtoSelector.select(aliased);
+        final DtoFromClauseTerminal<TestDto> result = dtoSelector.select(new SelectField("myVar"));
 
         // Then
         assertNotNull(result);
@@ -157,7 +129,7 @@ class DtoSelectorTest {
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
         final Column column = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        selectSpec.setExpressions(List.of(new SelectField(fieldAccessor, column)));
         final Row row = new Row().withColumn(column, "testValue");
         when(databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(List.of(row));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
@@ -195,7 +167,7 @@ class DtoSelectorTest {
         selectSpec.setTable(aliasedTable);
         final Column column = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
 
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        selectSpec.setExpressions(List.of(new SelectField(fieldAccessor, column)));
         final Row row1 = new Row().withColumn(column, "testValue1");
         final Row row2 = new Row().withColumn(column, "testValue2");
         when(databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(List.of(row1, row2));
@@ -230,7 +202,7 @@ class DtoSelectorTest {
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
         final Column column = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        selectSpec.setExpressions(List.of(new SelectField(fieldAccessor, column)));
         when(databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
 
         // When
@@ -265,7 +237,7 @@ class DtoSelectorTest {
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
         final Column column = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        selectSpec.setExpressions(List.of(new SelectField(fieldAccessor, column)));
         final Row row = new Row().withColumn(column, "testValue");
         when(databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(List.of(row));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
@@ -301,7 +273,7 @@ class DtoSelectorTest {
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
         final Column column = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        selectSpec.setExpressions(List.of(new SelectField(fieldAccessor, column)));
         when(databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
 
         // When/Then
@@ -332,7 +304,7 @@ class DtoSelectorTest {
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
         final Column column = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        selectSpec.setExpressions(List.of(new SelectField(fieldAccessor, column)));
         final Row row = new Row().withColumn(column, "testValue");
         when(databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(List.of(row));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
@@ -370,7 +342,7 @@ class DtoSelectorTest {
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
         final Column column = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        selectSpec.setExpressions(List.of(new SelectField(fieldAccessor, column)));
         when(databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
 
         // When
@@ -404,7 +376,7 @@ class DtoSelectorTest {
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
         final Column column = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        selectSpec.setExpressions(List.of(new SelectField(fieldAccessor, column)));
         final Row row1 = new Row().withColumn(column, "testValue1");
         final Row row2 = new Row().withColumn(column, "testValue2");
         when(databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(List.of(row1, row2));
@@ -443,7 +415,7 @@ class DtoSelectorTest {
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
         final Column column = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        selectSpec.setExpressions(List.of(new SelectField(fieldAccessor, column)));
         final Row row = new Row().withColumn(column, "testValue");
         when(databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(List.of(row));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
@@ -479,7 +451,7 @@ class DtoSelectorTest {
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
         final Column column = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        selectSpec.setExpressions(List.of(new SelectField(fieldAccessor, column)));
         when(databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
 
         // When/Then
@@ -510,7 +482,7 @@ class DtoSelectorTest {
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
         final Column column = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        selectSpec.setExpressions(List.of(new SelectField(fieldAccessor, column)));
         final Row row1 = new Row().withColumn(column, "testValue1");
         final Row row2 = new Row().withColumn(column, "testValue2");
         when(databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(List.of(row1, row2));
@@ -550,11 +522,12 @@ class DtoSelectorTest {
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
         final Column column = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
-        selectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(fieldAccessor, column)));
+        selectSpec.setExpressions(List.of(new SelectField(fieldAccessor, column)));
         final Row row1 = new Row().withColumn(column, "testValue1");
         final Row row2 = new Row().withColumn(column, "testValue2");
         when(databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(List.of(row1, row2));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
 
         // When
         final Stream<TestDto> result = dtoSelector.stream();
@@ -582,10 +555,14 @@ class DtoSelectorTest {
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
 
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
+        final SelectSpec selectSpec = dtoSelector.selectSpec();
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
+        selectSpec.setExpressions(List.of(new SelectField(fieldAccessor, columnMetaData.toColumn())));
 
         // When
         final String result = dtoSelector.toSql();

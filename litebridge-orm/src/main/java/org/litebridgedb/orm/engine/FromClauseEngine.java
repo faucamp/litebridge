@@ -8,6 +8,7 @@ import org.litebridgedb.orm.api.sql.SqlFromClauseTerminal;
 import org.litebridgedb.orm.api.sql.SqlSelector;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
+import org.litebridgedb.orm.function.Expression;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
@@ -30,10 +31,10 @@ public final class FromClauseEngine {
     private final LitebridgeConfig litebridgeConfig;
 
     public FromClauseEngine(final TransactionalDatabaseProvider databaseProvider,
-                           final TableRegistry tableRegistry,
-                           final ChangeTracker changeTracker,
-                           final DtoConstructor dtoConstructor,
-                           final LitebridgeConfig litebridgeConfig) {
+                            final TableRegistry tableRegistry,
+                            final ChangeTracker changeTracker,
+                            final DtoConstructor dtoConstructor,
+                            final LitebridgeConfig litebridgeConfig) {
         this.databaseProvider = databaseProvider;
         this.tableRegistry = tableRegistry;
         this.changeTracker = changeTracker;
@@ -41,7 +42,7 @@ public final class FromClauseEngine {
         this.litebridgeConfig = litebridgeConfig;
     }
 
-    public <DTO> DtoFromClauseTerminal<DTO> from(final Aliased[] fields, final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
+    public <DTO> DtoFromClauseTerminal<DTO> from(final Expression[] expressions, final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
 
@@ -56,10 +57,10 @@ public final class FromClauseEngine {
 
         final DtoSelector<DTO> dtoSelector = new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, activeConfig);
 
-        if (fields == ALL_COLUMNS) {
-            return dtoSelector.select();
+        if (expressions.length > 0) {
+            return dtoSelector.select(expressions);
         } else {
-            return dtoSelector.select(fields);
+            return dtoSelector.select();
         }
     }
 
@@ -70,7 +71,7 @@ public final class FromClauseEngine {
                 .select();
     }
 
-    public SqlFromClauseTerminal from(final Aliased[] columns, final String table) {
-        return new SqlSelector(databaseProvider, tableRegistry, litebridgeConfig).select(columns).from(table);
+    public SqlFromClauseTerminal from(final Expression[] expressions, final String table) {
+        return new SqlSelector(databaseProvider, tableRegistry, litebridgeConfig).select(expressions).from(table);
     }
 }

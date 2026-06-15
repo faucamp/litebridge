@@ -1,15 +1,15 @@
 package org.litebridgedb.orm.api.sql;
 
-import org.litebridgedb.db.spi.Aliased;
-import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.db.spi.query.ColumnExpressionFactory;
-import org.litebridgedb.db.spi.query.SelectExpression;
 import org.litebridgedb.orm.api.select.FromClause;
+import org.litebridgedb.orm.function.Expression;
+import org.litebridgedb.orm.function.ProtoSelectColumn;
+import org.litebridgedb.orm.function.SelectColumn;
 import org.litebridgedb.orm.persistence.TableRegistry;
 
 import java.util.Arrays;
+import java.util.List;
 
 public final class SqlFromClause implements FromClause<Row,
         SqlFromClauseTerminal,
@@ -21,19 +21,17 @@ public final class SqlFromClause implements FromClause<Row,
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
-    private final Aliased[] columns;
+    private final Expression[] expressions;
     private final SqlSelectSpec selectSpec;
     private final TableRegistry tableRegistry;
     private final SqlSelector delegate;
-    private final ColumnExpressionFactory columnExpressionFactory;
 
-    public SqlFromClause(final Aliased[] columns,
+    public SqlFromClause(final Expression[] expressions,
                          final SqlSelectSpec selectSpec,
                          final TableRegistry tableRegistry,
                          final SqlSelector delegate) {
-        this.columns = columns;
+        this.expressions = expressions;
         this.selectSpec = selectSpec;
-        this.columnExpressionFactory = selectSpec.sqlFunctionRegistry().selectColumnFactory();
         this.tableRegistry = tableRegistry;
         this.delegate = delegate;
     }
@@ -42,16 +40,22 @@ public final class SqlFromClause implements FromClause<Row,
     public SqlFromClauseTerminal from(final String table) {
         final Table spiTable = tableRegistry.getOrCreateSpiTable(table);
         selectSpec.setTable(spiTable);
-        selectSpec.setExpressions(Arrays.stream(columns)
-                .map(aliased -> {
-                    if (aliased instanceof Column column) {
-                        return column;
-                    } else {
-                        return new Column(spiTable, aliased.name(), aliased.alias());
-                    }
-                })
-                .map(column -> (SelectExpression) columnExpressionFactory.create(column))
-                .toList());
+
+        if (expressions.length > 0) {
+            // Resolve all proto-SelectColumn expressions since we have the target table now
+            final List<Expression> resolvedExpressions = Arrays.stream(expressions)
+                    .map(expression -> {
+                        if (expression instanceof ProtoSelectColumn protoSelectColumn) {
+                            return new SelectColumn(protoSelectColumn, spiTable);
+                        } else {
+                            return expression;
+                        }
+                    })
+                    .toList();
+
+            selectSpec.setExpressions(resolvedExpressions);
+        }
+
         return new SqlFromClauseTerminal(delegate);
     }
 }

@@ -1,7 +1,6 @@
 package org.litebridgedb.orm;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
@@ -30,7 +29,8 @@ import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.engine.FromClauseEngine;
 import org.litebridgedb.orm.engine.RegistrationEngine;
-import org.litebridgedb.orm.function.Functions;
+import org.litebridgedb.orm.function.Expression;
+import org.litebridgedb.orm.function.SelectField;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
 import org.litebridgedb.orm.persistence.EntityDtoMapper;
@@ -83,7 +83,6 @@ public final class Litebridge {
     private final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
     private final RegistrationEngine registrationEngine;
     private final FromClauseEngine fromClauseEngine;
-    private final Functions functions;
     private final LitebridgeConfig litebridgeConfig;
 
     /**
@@ -204,7 +203,6 @@ public final class Litebridge {
         final TableMapper tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker);
         this.registrationEngine = new RegistrationEngine(this.databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
         this.fromClauseEngine = new FromClauseEngine(this.databaseProvider, tableRegistry, changeTracker, dtoConstructor, this.litebridgeConfig);
-        this.functions = new Functions(databaseProvider.getSqlFunctionRegistry());
     }
 
     /**
@@ -429,7 +427,7 @@ public final class Litebridge {
      * @return A {@link FromClauseStart} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
     public FromClauseStart select(final String... fieldsOrColumns) {
-        return new FromClauseStart(Arrays.stream(fieldsOrColumns).map(Aliased::new).toArray(Aliased[]::new), fromClauseEngine);
+        return new FromClauseStart(Arrays.stream(fieldsOrColumns).map(SelectField::new).toArray(SelectField[]::new), fromClauseEngine);
     }
 
     /**
@@ -441,13 +439,12 @@ public final class Litebridge {
      * This method constructs a {@link FromClauseStart} for further query composition
      * by specifying the target DTO or table for the query.
      *
-     * @param fieldsOrColumns An array of {@link Aliased} objects representing the expressions
-     *                        to be part of the SELECT statement. Each field/column must have
-     *                        a valid name and may optionally include an alias.
+     * @param expressions An array of {@link Expression} objects representing the expressions
+     *                    to be part of the SELECT statement.
      * @return A {@link FromClauseStart} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
-    public FromClauseStart select(final Aliased... fieldsOrColumns) {
-        return new FromClauseStart(fieldsOrColumns, fromClauseEngine);
+    public FromClauseStart select(final Expression... expressions) {
+        return new FromClauseStart(expressions, fromClauseEngine);
     }
 
     /**
@@ -537,10 +534,10 @@ public final class Litebridge {
     public <DTO> DTO toDto(final Row row, final Class<DTO> dtoClass) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
         final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, new NoOpAliasGenerator(), databaseProvider.getSqlFunctionRegistry());
-        selectSpec.setFieldColumns(row.columnStream()
+        selectSpec.setExpressions(row.columnStream()
                 .map(rowColumn -> {
                     final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(rowColumn.column().name());
-                    return new DtoSelectSpec.FieldColumn(fieldAccessor, rowColumn.column());
+                    return (Expression) new SelectField(fieldAccessor, rowColumn.column());
                 })
                 .toList());
 
@@ -577,9 +574,5 @@ public final class Litebridge {
      */
     public TransactionContext transaction() {
         return transactionContext;
-    }
-
-    public Functions functions() {
-        return functions;
     }
 }

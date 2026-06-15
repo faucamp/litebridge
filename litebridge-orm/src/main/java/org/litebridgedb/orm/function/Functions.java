@@ -1,18 +1,25 @@
 package org.litebridgedb.orm.function;
 
-import org.litebridgedb.db.spi.Column;
-import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
-import org.litebridgedb.db.spi.query.ColumnExpression;
+import org.jspecify.annotations.Nullable;
 
 public final class Functions {
 
-    private final SqlFunctionRegistry sqlFunctionRegistry;
-
-    public Functions(final SqlFunctionRegistry sqlFunctionRegistry) {
-        this.sqlFunctionRegistry = sqlFunctionRegistry;
+    private Functions() {
     }
 
-    public ColumnExpression col(final String column) {
-        return sqlFunctionRegistry.selectColumnFactory().create(new Column(null, column));
+    public static Expression f(final String field) {
+        return new SelectField(field);
+    }
+
+    public static Expression c(final String column) {
+        return c(column, null);
+    }
+
+    public static Expression c(final String column, final @Nullable String alias) {
+        return new ProtoSelectColumn(column, alias);
+    }
+
+    public static Expression count() {
+        return new Count();
     }
 }

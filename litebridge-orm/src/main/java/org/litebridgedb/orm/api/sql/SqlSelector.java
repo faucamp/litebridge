@@ -6,6 +6,9 @@ import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.function.Expression;
+import org.litebridgedb.orm.function.ProtoSelectColumn;
+import org.litebridgedb.orm.function.SelectField;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
@@ -23,12 +26,19 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
         this.tableRegistry = tableRegistry;
     }
 
-    public SqlFromClause select(final String... columns) {
-        return select(Arrays.stream(columns).map(Aliased::new).toArray(Aliased[]::new));
-    }
+    public SqlFromClause select(final Expression... expressions) {
+        final Expression[] transformedExpressions = Arrays.stream(expressions)
+                .map(expression -> {
+                    // Transform SelectFields to ProtoSelectColumns since we're dealing with "raw" SQL
+                    if (expression instanceof SelectField selectField) {
+                        return new ProtoSelectColumn(selectField.fieldName(), null);
+                    } else {
+                        return expression;
+                    }
+                })
+                .toArray(Expression[]::new);
 
-    public SqlFromClause select(final Aliased... columns) {
-        return new SqlFromClause(columns, selectSpec, tableRegistry, this);
+        return new SqlFromClause(transformedExpressions, selectSpec, tableRegistry, this);
     }
 
     @Override

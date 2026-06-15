@@ -8,9 +8,10 @@ import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinClause;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-import org.litebridgedb.orm.persistence.alias.AliasGenerator;
+import org.litebridgedb.orm.function.SelectField;
 import org.litebridgedb.orm.persistence.MappedManyToMany;
 import org.litebridgedb.orm.persistence.OrmTable;
+import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
 import org.litebridgedb.tracking.FieldAccessor;
 
@@ -69,22 +70,24 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
             throw new IllegalStateException("No join column specified for column '%s' %s".formatted(rightColumnMetaData.name(), field != null ? "mapped to field '%s'".formatted(field) : "(no field)"));
         }
 
-        final List<DtoSelectSpec.FieldColumn> joinFieldColumns = rightOrmTable.getMetaData().columns().stream()
+        final List<SelectField> joinFieldColumns = rightOrmTable.getMetaData().columns().stream()
                 .map(joinColumn -> {
                     final FieldAccessor joinColumnField = rightOrmTable.getFieldForColumnName(joinColumn.name());
-                    return new DtoSelectSpec.FieldColumn(joinColumnField, aliasGenerator.aliasColumn(rightTable, joinColumn));
+                    final Column column = aliasGenerator.aliasColumn(rightTable, joinColumn);
+                    return new SelectField(joinColumnField, column);
                 })
                 .toList();
 
         // Extend selects
-        selectSpec.addFieldColumns(joinFieldColumns);
+        selectSpec.addExpressions(joinFieldColumns);
 
         // Create JOIN clause
-        joinSpec.setFieldColumns(joinFieldColumns);
+        joinSpec.setFieldColumns(joinFieldColumns.stream().map(selectField -> new DtoSelectSpec.FieldColumn(selectField.getFieldAccessor(), selectField.getColumn())).toList());
         final Column rightColumn = rightColumnMetaData.toColumn();
 
-        final Column leftColumn = selectSpec.getFieldColumns().stream()
-                .map(DtoSelectSpec.FieldColumn::column)
+        final Column leftColumn = selectSpec.getExpressions().stream()
+                .filter(expression -> expression instanceof SelectField)
+                .map(expression -> ((SelectField) expression).getColumn())
                 .filter(column -> column.table().equalsIgnoreAlias(rightColumnMetaData.table())
                         && column.equalsIgnoreAlias(rightColumn))
                 .findFirst().orElseThrow(() -> new IllegalArgumentException("Left JOIN column not found"));
@@ -96,7 +99,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
             conditionSpec.setOperator(Operator.USING);
         } else {
             final Column targetColumn = joinFieldColumns.stream()
-                    .map(DtoSelectSpec.FieldColumn::column)
+                    .map(SelectField::getColumn)
                     .filter(c -> c.name().equals(targetColumnMetaData.name()))
                     .findFirst().orElseThrow(() -> new IllegalArgumentException("Target JOIN column not found"));
             conditionSpec.setOperator(Operator.EQ);
@@ -117,20 +120,21 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         final OrmTable rightOrmTable = mappedManyToMany.targetTable().optional().orElseThrow();
         final Table rightTable = joinSpec.table();
 
-        final List<DtoSelectSpec.FieldColumn> joinFieldColumns = rightOrmTable.mappedFieldTargets().stream()
+        final List<SelectField> joinFieldColumns = rightOrmTable.mappedFieldTargets().stream()
                 .filter(entry -> entry.getValue() instanceof ColumnMetaData)
                 .map(entry -> {
                     final FieldAccessor field = entry.getKey();
-                    final ColumnMetaData column = (ColumnMetaData) entry.getValue();
-                    return new DtoSelectSpec.FieldColumn(field, aliasGenerator.aliasColumn(rightTable, column));
+                    final ColumnMetaData columnMetaData = (ColumnMetaData) entry.getValue();
+                    final Column column = aliasGenerator.aliasColumn(rightTable, columnMetaData);
+                    return new SelectField(field, column);
                 })
                 .toList();
 
         // Extend selects
-        selectSpec.addFieldColumns(joinFieldColumns);
+        selectSpec.addExpressions(joinFieldColumns);
 
         // Create JOIN clause
-        joinSpec.setFieldColumns(joinFieldColumns);
+        joinSpec.setFieldColumns(joinFieldColumns.stream().map(selectField ->  new DtoSelectSpec.FieldColumn(selectField.getFieldAccessor(), selectField.getColumn())).toList());
 
         final Column rightColumn = aliasGenerator.aliasColumn(rightTable, rightOrmTable.getColumnMetaData(mappedManyToMany.inverseJoinColumn()));
 

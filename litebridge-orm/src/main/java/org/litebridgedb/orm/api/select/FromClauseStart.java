@@ -1,33 +1,33 @@
 package org.litebridgedb.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridgedb.orm.api.sql.SqlFromClauseTerminal;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.engine.FromClauseEngine;
+import org.litebridgedb.orm.function.Expression;
 
 public class FromClauseStart {
 
-    private final Aliased[] fieldsOrColumns;
+    private final Expression[] expressions;
     private final FromClauseEngine fromClauseEngine;
 
     public FromClauseStart(FromClauseEngine fromClauseEngine) {
-        this(FromClauseEngine.ALL_COLUMNS, fromClauseEngine);
+        this(new Expression[0], fromClauseEngine);
     }
 
-    public FromClauseStart(final Aliased[] fieldsOrColumns,
+    public FromClauseStart(final Expression[] expressions,
                            final FromClauseEngine fromClauseEngine) {
-        this.fieldsOrColumns = fieldsOrColumns;
+        this.expressions = expressions;
         this.fromClauseEngine = fromClauseEngine;
     }
 
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass) {
-        return fromClauseEngine.from(fieldsOrColumns, dtoClass, (RelatedDtoStrategy) null);
+        return fromClauseEngine.from(expressions, dtoClass, (RelatedDtoStrategy) null);
     }
 
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        return fromClauseEngine.from(fieldsOrColumns, dtoClass, relatedDtoStrategy);
+        return fromClauseEngine.from(expressions, dtoClass, relatedDtoStrategy);
     }
 
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
@@ -35,6 +35,6 @@ public class FromClauseStart {
     }
 
     public SqlFromClauseTerminal from(final String table) {
-        return fromClauseEngine.from(fieldsOrColumns, table);
+        return fromClauseEngine.from(expressions, table);
     }
 }

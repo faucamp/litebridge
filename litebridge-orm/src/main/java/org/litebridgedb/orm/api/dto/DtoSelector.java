@@ -2,12 +2,13 @@ package org.litebridgedb.orm.api.dto;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.CollectionUtils;
-import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.function.Expression;
+import org.litebridgedb.orm.function.SelectField;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.SelectSpecDtoMapper;
@@ -15,6 +16,7 @@ import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
+import org.litebridgedb.tracking.FieldAccessor;
 
 import java.util.Arrays;
 import java.util.List;
@@ -45,22 +47,18 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
         this.aliasGenerator = aliasGenerator;
     }
 
-    public DtoFromClauseTerminal<DTO> select(final String... fields) {
-        return selectImpl(selectSpec.getTable(), Arrays.stream(fields)
-                .map(field -> {
-                    // Map the input DTO field names to database column names
-                    final ColumnMetaData columnMetaData = selectSpec.dtoTable().getColumnForFieldName(field);
-                    return new DtoSelectSpec.FieldColumn(classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, field), aliasGenerator.aliasColumn(selectSpec.getTable(), columnMetaData));
-                })
-                .toList());
-    }
+    public DtoFromClauseTerminal<DTO> select(final Expression... expressions) {
+        return selectImpl(selectSpec.getTable(), Arrays.stream(expressions)
+                .peek(expression -> {
+                    if (expression instanceof SelectField selectField) {
+                        // Map the input DTO field names to database column names
+                        final ColumnMetaData columnMetaData = selectSpec.dtoTable().getColumnForFieldName(selectField.fieldName());
+                        final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), columnMetaData);
+                        selectField.setColumn(column);
 
-    public DtoFromClauseTerminal<DTO> select(final Aliased... fields) {
-        return selectImpl(selectSpec.getTable(), Arrays.stream(fields)
-                .map(field -> {
-                    // Map the input DTO field names to database column names
-                    final ColumnMetaData columnMetaData = selectSpec.dtoTable().getColumnForFieldName(field.name());
-                    return new DtoSelectSpec.FieldColumn(classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, field.name()), aliasGenerator.aliasColumn(selectSpec.getTable(), columnMetaData));
+                        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, selectField.fieldName());
+                        selectField.setFieldAccessor(fieldAccessor);
+                    }
                 })
                 .toList());
     }
@@ -71,16 +69,17 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
                 .map(entry -> (ColumnMetaData) entry.getValue())
                 .map(columnMetaData -> {
                     final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), columnMetaData);
-                    return new DtoSelectSpec.FieldColumn(selectSpec.dtoTable().getFieldForColumnName(column.name()), column);
+                    final FieldAccessor fieldAccessor = selectSpec.dtoTable().getFieldForColumnName(column.name());
+                    return (Expression) new SelectField(fieldAccessor, column);
                 })
                 .toList());
     }
 
-    private DtoFromClauseTerminal<DTO> selectImpl(final Table table, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
+    private DtoFromClauseTerminal<DTO> selectImpl(final Table table, final List<Expression> expressions) {
         assert table.alias() != null;
         selectSpec.setTable(table);
         selectSpec.setDtoAlias(selectSpec.dtoClass(), Objects.requireNonNull(table.alias()));
-        selectSpec.setFieldColumns(fieldColumns);
+        selectSpec.setExpressions(expressions);
         return new DtoFromClauseTerminal<>(this);
     }
 

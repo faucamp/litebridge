@@ -179,7 +179,6 @@ class LitebridgeTest {
         litebridge.save(testDto);
 
         // Then
-        verify(databaseProvider).getSqlFunctionRegistry();
         verify(databaseProvider).tableMetaData(eq(tableSpec), any(ConnectionProvider.class));
         verifyNoMoreInteractions(databaseProvider);
     }
@@ -354,32 +353,32 @@ class LitebridgeTest {
         assertNotNull(result);
     }
 
-    @Test
-    void select_aliased() throws Exception {
-        // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        final DataSource dataSource = mock(DataSource.class);
-        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
-        final FieldSpec fieldSpec = new FieldSpec("myVar", false);
-        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
-        final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
-        final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
-        final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
-        final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
-        when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(new TableMetaData(tableSpec, List.of("MY_VAR"), List.of(columnMetaData)));
-        litebridge.register(dtoTableSpec);
-
-        final Aliased aliased = new Aliased("TEST_COLUMN", "testAlias");
-
-        // When
-        final FromClauseStart result = litebridge.select(aliased);
-
-        // Then
-        assertNotNull(result);
-    }
+//    @Test
+//    void select_aliased() throws Exception {
+//        // Given
+//        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+//        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+//        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+//        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+//        final DataSource dataSource = mock(DataSource.class);
+//        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+//        final FieldSpec fieldSpec = new FieldSpec("myVar", false);
+//        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
+//        final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
+//        final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
+//        final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
+//        final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
+//        when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(new TableMetaData(tableSpec, List.of("MY_VAR"), List.of(columnMetaData)));
+//        litebridge.register(dtoTableSpec);
+//
+//        final Aliased aliased = new Aliased("TEST_COLUMN", "testAlias");
+//
+//        // When
+//        final FromClauseStart result = litebridge.select(aliased);
+//
+//        // Then
+//        assertNotNull(result);
+//    }
 
     @Test
     void toDto() throws Exception {

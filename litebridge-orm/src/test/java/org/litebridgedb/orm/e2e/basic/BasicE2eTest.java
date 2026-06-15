@@ -8,6 +8,7 @@ import org.litebridgedb.orm.e2e.basic.dto.Account;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.basic.dto.PersonAccount;
 import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
+import org.litebridgedb.orm.function.Functions;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
 import org.litebridgedb.orm.persistence.EntityDtoMapper;
 import org.litebridgedb.orm.tx.Transaction;
@@ -424,8 +425,8 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Select specific fields")
-    void select_specificFields(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    @DisplayName("Select specific fields, names only")
+    void select_specificFields_strings(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
 
@@ -442,6 +443,36 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Read and populate specific fields only
         final List<Person> result = litebridge.select("id", "surname").from(Person.class).list();
+
+        assertEquals(3, result.size());
+        for (int i = 0; i < 3; i++) {
+            final Person p = result.get(i);
+            assertNotNull(p.getId());
+            assertEquals(persons[i].getSurname(), p.getSurname());
+            assertNull(p.getName());
+            assertEquals(0, p.getAge());
+        }
+    }
+
+    @TestTemplate
+    @DisplayName("Select specific fields using functions")
+    void select_specificFields_functions(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+
+        // Setup data
+        final Person[] persons = new Person[3];
+        for (int i = 0; i < 3; i++) {
+            persons[i] = new Person();
+            persons[i].setName("Name" + i);
+            persons[i].setSurname("Surname" + i);
+            persons[i].setAge(20 + i);
+        }
+
+        litebridge.save((Object[]) persons);
+
+        // Read and populate specific fields only
+        final List<Person> result = litebridge.select(Functions.f("id"), Functions.f("surname")).from(Person.class).list();
 
         assertEquals(3, result.size());
         for (int i = 0; i < 3; i++) {

@@ -6,11 +6,11 @@ public abstract class ColumnExpression implements SelectExpression {
 
     protected final Column column;
 
-    public ColumnExpression(Column column) {
+    protected ColumnExpression(final Column column) {
         this.column = column;
     }
 
-    public Column column() {
+    public final Column column() {
         return column;
     }
 }

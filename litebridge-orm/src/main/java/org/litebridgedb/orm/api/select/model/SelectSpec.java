@@ -9,6 +9,7 @@ import org.litebridgedb.db.spi.query.ColumnExpression;
 import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.query.SelectExpression;
+import org.litebridgedb.orm.function.Expression;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,22 +31,17 @@ import java.util.Optional;
  */
 public abstract class SelectSpec {
 
-    @Nullable
-    protected Table table;
-    @Nullable
-    protected List<JoinSpec> joins;
-    @Nullable
-    protected List<ConditionSpec> whereConditions;
-    @Nullable
-    protected List<OrderBySpec> orderBys;
-    @Nullable
-    protected LimitSpec limit;
-    @Nullable
-    protected Map<Class<?>, String> dtoAliases;
-    protected final SqlFunctionRegistry sqlFunctionRegistry;
+    protected @Nullable Table table;
+    protected List<Expression> expressions = new ArrayList<>();
+    protected @Nullable List<JoinSpec> joins;
+    protected @Nullable List<ConditionSpec> whereConditions;
+    protected @Nullable List<OrderBySpec> orderBys;
+    protected @Nullable LimitSpec limit;
+    protected @Nullable Map<Class<?>, String> dtoAliases;
+    protected final SelectExpressionMapper selectExpressionMapper;
 
     public SelectSpec(final SqlFunctionRegistry sqlFunctionRegistry) {
-        this.sqlFunctionRegistry = sqlFunctionRegistry;
+        this.selectExpressionMapper = new SelectExpressionMapper(sqlFunctionRegistry);
     }
 
     public Table getTable() {
@@ -54,6 +50,22 @@ public abstract class SelectSpec {
 
     public void setTable(final Table table) {
         this.table = table;
+    }
+
+    public List<Expression> getExpressions() {
+        return expressions;
+    }
+
+    public void setExpressions(final List<Expression> expressions) {
+        if (expressions instanceof ArrayList) {
+            this.expressions = expressions;
+        } else {
+            this.expressions = new ArrayList<>(expressions);
+        }
+    }
+
+    public void addExpressions(final List<? extends Expression> expressions) {
+        this.expressions.addAll(expressions);
     }
 
     public @Nullable List<JoinSpec> getJoins() {
@@ -135,28 +147,31 @@ public abstract class SelectSpec {
         }
     }
 
-    public @Nullable SqlFunctionRegistry sqlFunctionRegistry() {
-        return sqlFunctionRegistry;
-    }
-
-    protected abstract List<SelectExpression> expressions();
-
     public Select toSelect() {
         if (table == null) {
             throw new IllegalStateException("Table not specified");
         }
 
-        final List<SelectExpression> expressions = expressions();
+        final List<Expression> expressions = getExpressions();
+        final List<SelectExpression> selectExpressions;
+
+        if (!expressions.isEmpty()) {
+            selectExpressions = expressions.stream()
+                    .map(selectExpressionMapper::toSelectExpression)
+                    .toList();
+        } else {
+            selectExpressions = Collections.emptyList();
+        }
 
         return new Select(table,
-                Collections.unmodifiableList(expressions),
+                Collections.unmodifiableList(selectExpressions),
                 joins != null ? joins.stream()
                         .map(JoinSpec::toJoin)
                         .toList() : Collections.emptyList(),
                 orderBys != null ? orderBys.stream()
                         // Resolves order-by expressions from select list or synthesizes new ones
                         .flatMap(orderBySpec -> Arrays.stream(orderBySpec.columns())
-                                .map(columnName -> expressions.stream()
+                                .map(columnName -> selectExpressions.stream()
                                         .filter(expression -> expression instanceof ColumnExpression)
                                         .map(expression -> ((ColumnExpression) expression).column())
                                         .filter(column -> Objects.equals(column.name(), columnName))

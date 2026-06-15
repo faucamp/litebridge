@@ -3,10 +3,10 @@ package org.litebridgedb.orm.api.dto;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
-import org.litebridgedb.db.spi.query.ColumnExpression;
-import org.litebridgedb.db.spi.query.SelectExpression;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.function.Expression;
+import org.litebridgedb.orm.function.SelectField;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
 
@@ -41,18 +41,25 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         Column column = ormTable.getColumnForFieldName(field).toColumn();
 
         // Use the aliased column if it is part of the SELECT clause, else use the unaliased column
-        for (SelectExpression expression : selectSpec.expressions()) {
-            Column selectedColumn;
+        if (!selectSpec.getExpressions().isEmpty()) {
+            for (Expression expression : selectSpec.getExpressions()) {
+                Column selectedColumn;
 
-            if (expression instanceof ColumnExpression columnExpression) {
-                selectedColumn = columnExpression.column();
-            } else {
-                continue;
+                if (expression instanceof SelectField selectField) {
+                    selectedColumn = selectField.getColumn();
+                } else {
+                    continue;
+                }
+
+                if (selectedColumn.equalsIgnoreAlias(column)) {
+                    column = selectedColumn;
+                    break;
+                }
             }
-
-            if (selectedColumn.equalsIgnoreAlias(column)) {
-                column = selectedColumn;
-                break;
+        } else {
+            // Select all - override the column's table with the selected one
+            if (column.table() != selectSpec.getTable() && column.table().equalsIgnoreAlias(selectSpec.getTable())) {
+                column = new Column(selectSpec.getTable(), column.name(), column.alias());
             }
         }
 

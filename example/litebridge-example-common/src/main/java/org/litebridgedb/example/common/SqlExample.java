@@ -47,16 +47,17 @@ public class SqlExample extends AbstractExample {
                 .forEach(p -> LOGGER.info("SQL result: Mapped Person object: {}", p));
 
         LOGGER.info("[EXAMPLE] Using joins");
-        litebridge.select(
-                        c("LB.PERSON", "FIRST_NAME"),
-                        c("LB.PERSON", "SURNAME"),
-                        c("LB.PERSON", "AGE"),
-                        c("LB.ACCOUNT", "ACCOUNT_ID"),
-                        c("LB.ACCOUNT", "ACCOUNT_NAME"))
-                .from("LB.PERSON")
-                .join("LB.ACCOUNT").using("PERSON_ID")
-                .stream()
-                .forEach(p -> LOGGER.info("Joined result: {}", p));
+        //TODO: re-add
+//        litebridge.select(
+//                        c("LB.PERSON", "FIRST_NAME"),
+//                        c("LB.PERSON", "SURNAME"),
+//                        c("LB.PERSON", "AGE"),
+//                        c("LB.ACCOUNT", "ACCOUNT_ID"),
+//                        c("LB.ACCOUNT", "ACCOUNT_NAME"))
+//                .from("LB.PERSON")
+//                .join("LB.ACCOUNT").using("PERSON_ID")
+//                .stream()
+//                .forEach(p -> LOGGER.info("Joined result: {}", p));
     }
 
 }
