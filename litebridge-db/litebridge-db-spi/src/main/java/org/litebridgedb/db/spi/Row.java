@@ -3,6 +3,7 @@ package org.litebridgedb.db.spi;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.query.Result;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Optional;
@@ -37,11 +38,20 @@ public final class Row implements Result {
      * Return a stream of {@link Row.RowColumn} objects, each representing a column in the current row
      * along with its associated value.
      *
-     * @return a stream of {@code RowColumn} objects for all expressions in the row
+     * @return a stream of {@code RowColumn} objects for all columns in the row
      */
     public Stream<RowColumn> columnStream() {
-        return columns.keySet().stream()
+        return columns.sequencedKeySet().stream()
                 .map(RowColumn::new);
+    }
+
+    /**
+     * Return a stream of objects containing the values of the results in this row.
+     *
+     * @return a stream of objects for all values in the row
+     */
+    public Stream<@Nullable Object> valueStream() {
+        return columns.sequencedValues().stream();
     }
 
     /**
@@ -55,6 +65,24 @@ public final class Row implements Result {
         return columnStream()
                 .filter(rc -> Objects.equals(rc.column().name(), column))
                 .findFirst();
+    }
+
+    public RowColumn column(final int index) {
+        if (index < 0) {
+            throw new IndexOutOfBoundsException("Index " + index + " is negative");
+        }
+
+        final Iterator<Column> iterator = columns.keySet().iterator();
+
+        for (int i = 0; i <= index && iterator.hasNext(); i++) {
+            if (i == index) {
+                return new RowColumn(iterator.next());
+            }
+
+            iterator.next();
+        }
+
+        throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for size " + columns.size());
     }
 
     /**

@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.platform.commons.support.HierarchyTraversalMode;
 import org.junit.platform.commons.support.ReflectionSupport;
-import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.config.LitebridgeConfig;
@@ -20,7 +19,8 @@ import java.lang.reflect.Field;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.litebridgedb.orm.function.Functions.c;
+import static org.litebridgedb.orm.function.Fn.c;
+import static org.litebridgedb.orm.function.Fn.ca;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -79,7 +79,7 @@ class SqlSelectorTest {
     @Test
     void select_basic_aliased() throws Exception {
         // When
-        final SqlWhereConditionClauseTerminal result = sqlSelector.select(c("COL1", "col1Alias"), c("COL2", "col2Alias"))
+        final SqlWhereConditionClauseTerminal result = sqlSelector.select(ca("COL1", "col1Alias"), ca("COL2", "col2Alias"))
                 .from("TABLE")
                 .where("col1Alias").eq(123);
 

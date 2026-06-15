@@ -17,6 +17,7 @@ import org.litebridgedb.orm.api.register.RegistrationContext;
 import org.litebridgedb.orm.api.register.RegistrationContextTerminal;
 import org.litebridgedb.orm.api.register.TypeSafeDtoTableMapping;
 import org.litebridgedb.orm.api.select.FromClauseStart;
+import org.litebridgedb.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
 import org.litebridgedb.orm.api.sql.delete.SqlDeleteWhereClause;
 import org.litebridgedb.orm.api.sql.delete.SqlDeletor;
@@ -31,6 +32,7 @@ import org.litebridgedb.orm.engine.FromClauseEngine;
 import org.litebridgedb.orm.engine.RegistrationEngine;
 import org.litebridgedb.orm.function.Expression;
 import org.litebridgedb.orm.function.SelectField;
+import org.litebridgedb.orm.function.TypeOverrideExpression;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
 import org.litebridgedb.orm.persistence.EntityDtoMapper;
@@ -55,6 +57,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Primary entry point for Litebridge.
@@ -418,13 +421,13 @@ public final class Litebridge {
      * Creates a SQL SELECT statement with the specified fields/columns; the source table is specified
      * via a chained {@code from()} call.
      * <p>
-     * This method constructs a {@link FromClauseStart} for further query composition
+     * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
      * by specifying the target DTO or table for the query.
      *
      * @param fieldsOrColumns An array of field/column names to be included in the SELECT statement, dependent on
      *                        whether a DTO or raw SQL is selected in the chained {@code from()} call.
      *                        Each field/column name must be a valid, non-null string.
-     * @return A {@link FromClauseStart} instance allowing further refinement of the SQL query by specifying the target DTO or table.
+     * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
     public FromClauseStart select(final String... fieldsOrColumns) {
         return new FromClauseStart(Arrays.stream(fieldsOrColumns).map(SelectField::new).toArray(SelectField[]::new), fromClauseEngine);
@@ -436,15 +439,20 @@ public final class Litebridge {
      * Creates a SQL SELECT statement with the specified fields/columns; the source table is specified
      * via a chained {@code from()} call.
      * <p>
-     * This method constructs a {@link FromClauseStart} for further query composition
+     * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
      * by specifying the target DTO or table for the query.
      *
      * @param expressions An array of {@link Expression} objects representing the expressions
      *                    to be part of the SELECT statement.
-     * @return A {@link FromClauseStart} instance allowing further refinement of the SQL query by specifying the target DTO or table.
+     * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
     public FromClauseStart select(final Expression... expressions) {
         return new FromClauseStart(expressions, fromClauseEngine);
+    }
+
+    public <TypeOverride> FromClauseStartTypeOverride<TypeOverride> select(final TypeOverrideExpression<TypeOverride> expression, final Expression... otherExpressions) {
+        final Expression[] allExpressions = Stream.concat(Stream.of(expression), Arrays.stream(otherExpressions)).toArray(Expression[]::new);
+        return new FromClauseStartTypeOverride<>(expression.type(), allExpressions, fromClauseEngine);
     }
 
     /**
@@ -453,13 +461,13 @@ public final class Litebridge {
      * Creates a SQL SELECT statement with all fields/columns. The source table is specified
      * via a chained {@code from()} call.
      * <p>
-     * This method constructs a {@link FromClauseStart} for further query composition
+     * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
      * by specifying the target DTO or table for the query.
      *
-     * @return A {@link FromClauseStart} instance allowing further refinement of the SQL query by specifying the target DTO or table.
+     * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
-    public FromClauseStart select() {
-        return new FromClauseStart(fromClauseEngine);
+    public FromClauseStartTypeOverride<?> select() {
+        return new FromClauseStartTypeOverride<>(Void.class, fromClauseEngine);
     }
 
     /**

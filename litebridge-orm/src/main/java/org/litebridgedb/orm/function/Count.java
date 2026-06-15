@@ -3,5 +3,10 @@ package org.litebridgedb.orm.function;
 /**
  * {@code COUNT()}: Selects the count of rows matching the query.
  */
-public record Count() implements Expression {
+public record Count() implements TypeOverrideExpression<Long> {
+
+    @Override
+    public Class<Long> type() {
+        return Long.class;
+    }
 }

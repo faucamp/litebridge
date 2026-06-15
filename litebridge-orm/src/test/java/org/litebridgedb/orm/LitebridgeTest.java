@@ -3,7 +3,6 @@ package org.litebridgedb.orm;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.convert.DefaultTypeConverter;
-import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Row;
@@ -18,6 +17,7 @@ import org.litebridgedb.db.spi.update.InsertResult;
 import org.litebridgedb.db.spi.update.Update;
 import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridgedb.orm.api.select.FromClauseStart;
+import org.litebridgedb.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridgedb.orm.api.spec.ColumnMapping;
 import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
@@ -347,7 +347,7 @@ class LitebridgeTest {
         litebridge.register(dtoTableSpec);
 
         // When
-        final FromClauseStart result = litebridge.select();
+        final FromClauseStartTypeOverride result = litebridge.select();
 
         // Then
         assertNotNull(result);

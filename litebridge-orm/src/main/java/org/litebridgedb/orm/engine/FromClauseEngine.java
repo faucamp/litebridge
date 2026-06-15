@@ -1,5 +1,6 @@
 package org.litebridgedb.orm.engine;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
@@ -43,6 +44,21 @@ public final class FromClauseEngine {
     }
 
     public <DTO> DtoFromClauseTerminal<DTO> from(final Expression[] expressions, final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
+        final DtoSelector<DTO> dtoSelector = createDtoSelectorForType(dtoClass, dtoClass, relatedDtoStrategy);
+        return select(expressions, dtoSelector);
+    }
+
+    public <TypeOverride> DtoFromClauseTerminal<TypeOverride> from(final Expression[] expressions, final Class<?> dtoClass, final Class<TypeOverride> typeOverrideClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
+        final DtoSelector<TypeOverride> dtoSelector = createDtoSelectorForType(typeOverrideClass, dtoClass, relatedDtoStrategy);
+
+        if (expressions.length > 0) {
+            return dtoSelector.select(expressions);
+        } else {
+            return dtoSelector.select();
+        }
+    }
+
+    private <TypeOverride> DtoSelector<TypeOverride> createDtoSelectorForType(final Class<TypeOverride> typeOverride, final Class<?> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
 
@@ -55,13 +71,7 @@ public final class FromClauseEngine {
             activeConfig = litebridgeConfig;
         }
 
-        final DtoSelector<DTO> dtoSelector = new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, activeConfig);
-
-        if (expressions.length > 0) {
-            return dtoSelector.select(expressions);
-        } else {
-            return dtoSelector.select();
-        }
+        return new DtoSelector<>(typeOverride, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, activeConfig);
     }
 
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
@@ -73,5 +83,13 @@ public final class FromClauseEngine {
 
     public SqlFromClauseTerminal from(final Expression[] expressions, final String table) {
         return new SqlSelector(databaseProvider, tableRegistry, litebridgeConfig).select(expressions).from(table);
+    }
+
+    private static <DTO> DtoFromClauseTerminal<DTO> select(final Expression[] expressions, final DtoSelector<DTO> dtoSelector) {
+        if (expressions.length > 0) {
+            return dtoSelector.select(expressions);
+        } else {
+            return dtoSelector.select();
+        }
     }
 }

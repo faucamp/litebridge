@@ -4,7 +4,9 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.CollectionUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
+import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.function.Expression;
@@ -30,14 +32,14 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
     private final AliasGenerator aliasGenerator;
 
     public DtoSelector(final Class<DTO> dtoClass,
-                       final OrmTable dtoTable,
+                       final OrmTable ormTable,
                        final TableRegistry tableRegistry,
                        final ClassFieldAccessorCache classFieldAccessorCache,
                        final DtoConstructor dtoConstructor,
                        final TransactionalDatabaseProvider databaseProvider,
                        final AliasGenerator aliasGenerator,
                        final LitebridgeConfig litebridgeConfig) {
-        super(new DtoSelectSpec(dtoClass, dtoTable, aliasGenerator, databaseProvider.getSqlFunctionRegistry()),
+        super(new DtoSelectSpec(dtoClass, ormTable, aliasGenerator, databaseProvider.getSqlFunctionRegistry()),
                 databaseProvider,
                 dtoClass,
                 litebridgeConfig);
@@ -107,8 +109,17 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
 
     @Override
     public List<DTO> list() {
-        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, litebridgeConfig);
-        return selectSpecDtoMapper.toDtos(dtoClass, executeQuery());
+        final List<Row> rows = executeQuery();
+
+        if (dtoClass == selectSpec.dtoTable().dtoClass()
+                || selectSpec.dtoTable().getDtoClassInterfaces().contains(dtoClass)) {
+            // Selecting the actual DTO
+            final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, litebridgeConfig);
+            return selectSpecDtoMapper.toDtos(dtoClass, rows);
+        } else {
+            // Type overridden-select (e.g. by a SQL function); <DTO> generic is not set to the actual DTO class
+            return unwrap(dtoClass, rows);
+        }
     }
 
     @Override
@@ -137,5 +148,13 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
         }
 
         return result.getFirst();
+    }
+
+    private <T> List<T> unwrap(final Class<T> type, final List<Row> rows) {
+        final TypeConverter typeConverter = databaseProvider.getTypeConverter();
+        return rows.stream()
+                .map(row -> typeConverter.convert(row.column(0).value(), type))
+                .filter(Objects::nonNull)
+                .toList();
     }
 }

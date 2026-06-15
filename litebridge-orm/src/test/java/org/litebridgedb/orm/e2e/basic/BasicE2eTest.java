@@ -8,7 +8,7 @@ import org.litebridgedb.orm.e2e.basic.dto.Account;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.basic.dto.PersonAccount;
 import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
-import org.litebridgedb.orm.function.Functions;
+import org.litebridgedb.orm.function.Fn;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
 import org.litebridgedb.orm.persistence.EntityDtoMapper;
 import org.litebridgedb.orm.tx.Transaction;
@@ -472,7 +472,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         litebridge.save((Object[]) persons);
 
         // Read and populate specific fields only
-        final List<Person> result = litebridge.select(Functions.f("id"), Functions.f("surname")).from(Person.class).list();
+        final List<Person> result = litebridge.select(Fn.f("id"), Fn.f("surname")).from(Person.class).list();
 
         assertEquals(3, result.size());
         for (int i = 0; i < 3; i++) {
@@ -482,6 +482,28 @@ public class BasicE2eTest extends AbstractE2eTest {
             assertNull(p.getName());
             assertEquals(0, p.getAge());
         }
+    }
+
+    @TestTemplate
+    @DisplayName("Select COUNT()")
+    void selectCount(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+
+        // Setup data
+        final Person[] persons = new Person[3];
+        for (int i = 0; i < 3; i++) {
+            persons[i] = new Person();
+            persons[i].setName("Name" + i);
+            persons[i].setSurname("Surname" + i);
+            persons[i].setAge(20 + i);
+        }
+
+        litebridge.save((Object[]) persons);
+
+        // Count the records
+        final Long result = litebridge.select(Fn.count()).from(Person.class).oneOrThrow();
+        assertEquals(3, result);
     }
 
     private class TestException extends RuntimeException {

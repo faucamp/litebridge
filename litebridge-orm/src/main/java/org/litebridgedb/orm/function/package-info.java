@@ -6,8 +6,8 @@
  * queries. These expressions are used to specify what data should be retrieved
  * from the database.
  * <p>
- * The main entry point is the {@link org.litebridgedb.orm.function.Functions} utility class.
+ * The main entry point is the {@link org.litebridgedb.orm.function.Fn} (Functions) utility class.
  *
- * @see org.litebridgedb.orm.function.Functions
+ * @see org.litebridgedb.orm.function.Fn
  */
 package org.litebridgedb.orm.function;
