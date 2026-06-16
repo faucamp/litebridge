@@ -10,6 +10,7 @@ import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.function.Expression;
+import org.litebridgedb.orm.function.ProtoColumnExpression;
 import org.litebridgedb.orm.function.SelectField;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -50,18 +51,9 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
     }
 
     public DtoFromClauseTerminal<DTO> select(final Expression... expressions) {
+        final DtoExpressionResolver dtoExpressionResolver = new DtoExpressionResolver(selectSpec, aliasGenerator, classFieldAccessorCache);
         return selectImpl(selectSpec.getTable(), Arrays.stream(expressions)
-                .peek(expression -> {
-                    if (expression instanceof SelectField selectField) {
-                        // Map the input DTO field names to database column names
-                        final ColumnMetaData columnMetaData = selectSpec.dtoTable().getColumnForFieldName(selectField.fieldName());
-                        final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), columnMetaData);
-                        selectField.setColumn(column);
-
-                        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, selectField.fieldName());
-                        selectField.setFieldAccessor(fieldAccessor);
-                    }
-                })
+                .map(dtoExpressionResolver::resolveExpression)
                 .toList());
     }
 
@@ -157,4 +149,6 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
                 .filter(Objects::nonNull)
                 .toList();
     }
+
+
 }

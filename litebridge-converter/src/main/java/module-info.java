@@ -35,7 +35,8 @@ module litebridge.converter {
             org.litebridgedb.convert.converter.SqlDateConverter,
             org.litebridgedb.convert.converter.SqlTimeConverter,
             org.litebridgedb.convert.converter.SqlTimestampConverter,
-            org.litebridgedb.convert.converter.StringConverter;
+            org.litebridgedb.convert.converter.StringConverter,
+            org.litebridgedb.convert.converter.ObjectConverter;
 
     provides SqlConverter with
             org.litebridgedb.convert.converter.BigDecimalConverter,

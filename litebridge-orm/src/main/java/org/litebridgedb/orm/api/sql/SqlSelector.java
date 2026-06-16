@@ -2,12 +2,12 @@ package org.litebridgedb.orm.api.sql;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.CollectionUtils;
-import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.function.Expression;
-import org.litebridgedb.orm.function.ProtoSelectColumn;
+import org.litebridgedb.orm.function.ProtoColumnExpression;
+import org.litebridgedb.orm.function.SelectColumn;
 import org.litebridgedb.orm.function.SelectField;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
@@ -27,18 +27,7 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
     }
 
     public SqlFromClause select(final Expression... expressions) {
-        final Expression[] transformedExpressions = Arrays.stream(expressions)
-                .map(expression -> {
-                    // Transform SelectFields to ProtoSelectColumns since we're dealing with "raw" SQL
-                    if (expression instanceof SelectField selectField) {
-                        return new ProtoSelectColumn(selectField.fieldName(), null);
-                    } else {
-                        return expression;
-                    }
-                })
-                .toArray(Expression[]::new);
-
-        return new SqlFromClause(transformedExpressions, selectSpec, tableRegistry, this);
+        return new SqlFromClause(expressions, selectSpec, tableRegistry, this);
     }
 
     @Override

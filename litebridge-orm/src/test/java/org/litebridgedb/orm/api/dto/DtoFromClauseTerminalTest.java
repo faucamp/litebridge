@@ -19,6 +19,7 @@ import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.function.ProtoColumnExpression;
 import org.litebridgedb.orm.function.SelectField;
 import org.litebridgedb.orm.function.TestColumnExpressionFactory;
 import org.litebridgedb.orm.persistence.DtoConstructor;
@@ -102,7 +103,7 @@ class DtoFromClauseTerminalTest {
     void where_usesSelectedColumnAliasWhenSelectedColumnMatches() {
         // Given
         final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new SelectField("myVar"));
+        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpression(SelectField.class, "myVar"));
 
         // When
         final DtoWhereConditionClause<TestDto> result = dtoFromClauseTerminal.where("myVar");
@@ -115,7 +116,7 @@ class DtoFromClauseTerminalTest {
     void where_keepsUnaliasedColumnWhenSelectedColumnDoesNotMatch() {
         // Given
         final TestContext<CompositeKeyDto> context = testContext(CompositeKeyDto.class, List.of("ID1", "ID2"), "id1", "id2");
-        final DtoFromClauseTerminal<CompositeKeyDto> dtoFromClauseTerminal = context.dtoSelector.select(new SelectField("id2"));
+        final DtoFromClauseTerminal<CompositeKeyDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpression(SelectField.class, "id2"));
 
         // When
         final DtoWhereConditionClause<CompositeKeyDto> result = dtoFromClauseTerminal.where("id1");
@@ -148,7 +149,7 @@ class DtoFromClauseTerminalTest {
         when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
 
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new SelectField("myVar"));
+        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpression(SelectField.class, "myVar"));
 
         // When
         final Optional<TestDto> result = dtoFromClauseTerminal.withId("testValue");
@@ -165,7 +166,7 @@ class DtoFromClauseTerminalTest {
         when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
 
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new SelectField("myVar"));
+        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpression(SelectField.class, "myVar"));
 
         // When
         final TestDto result = dtoFromClauseTerminal.withIdOrNull("testValue");
@@ -182,7 +183,7 @@ class DtoFromClauseTerminalTest {
         when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
 
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new SelectField("myVar"));
+        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpression(SelectField.class, "myVar"));
 
         // When / Then
         assertThrows(NoSuchElementException.class, () -> dtoFromClauseTerminal.withIdOrThrow("testValue"));
@@ -196,7 +197,7 @@ class DtoFromClauseTerminalTest {
         when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
 
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new SelectField("myVar"));
+        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpression(SelectField.class, "myVar"));
 
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> dtoFromClauseTerminal.withIdOrThrow("testValue", IllegalArgumentException::new));
@@ -210,7 +211,7 @@ class DtoFromClauseTerminalTest {
         when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
 
-        final DtoFromClauseTerminal<CompositeKeyDto> dtoFromClauseTerminal = context.dtoSelector.select(new SelectField("id1"), new SelectField("id2"));
+        final DtoFromClauseTerminal<CompositeKeyDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpression(SelectField.class, "id1"), new ProtoColumnExpression(SelectField.class, "id2"));
 
         // When
         final Optional<CompositeKeyDto> result = dtoFromClauseTerminal.withId("testValue");

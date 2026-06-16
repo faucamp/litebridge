@@ -18,6 +18,8 @@ public final class Fn {
     private Fn() {
     }
 
+    // Field/column selectors
+
     /**
      * Selects a DTO field by name.
      * <p>
@@ -27,7 +29,7 @@ public final class Fn {
      * @return a {@link SelectField} expression instance to select the specified field.
      */
     public static Expression f(final String field) {
-        return new SelectField(field);
+        return new ProtoColumnExpression(SelectField.class, field, null);
     }
 
     /**
@@ -45,10 +47,10 @@ public final class Fn {
      * <p>
      * This is shorthand for {@link #column(String)}.
      * <p>
-     * The returned {@link ProtoSelectColumn} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
      *
      * @param column The name of the column to select.
-     * @return a {@link ProtoSelectColumn} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
      */
     public static Expression c(final String column) {
         return ca(column, null);
@@ -57,10 +59,10 @@ public final class Fn {
     /**
      * Selects a database column by name.
      * <p>
-     * The returned {@link ProtoSelectColumn} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
      *
      * @param column The name of the column to select.
-     * @return a {@link ProtoSelectColumn} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
      */
     public static Expression column(final String column) {
         return c(column);
@@ -71,11 +73,11 @@ public final class Fn {
      * <p>
      * Shorthand for {@link #column(String, String)}
      * <p>
-     * The returned {@link ProtoSelectColumn} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
      *
      * @param table  The table to select the column from.
      * @param column The name of the column to select.
-     * @return a {@link ProtoSelectColumn} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
      */
     public static Expression c(final String table, final String column) {
         return ca(table, column, null);
@@ -84,11 +86,11 @@ public final class Fn {
     /**
      * Selects a database column by name.
      * <p>
-     * The returned {@link ProtoSelectColumn} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
      *
      * @param table  The table to select the column from.
      * @param column The name of the column to select.
-     * @return a {@link ProtoSelectColumn} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
      */
     public static Expression column(final String table, final String column) {
         return c(table, column);
@@ -99,11 +101,11 @@ public final class Fn {
      * <p>
      * Shorthand for {@link #column(Table, String)}
      * <p>
-     * The returned {@link ProtoSelectColumn} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
      *
      * @param table  The table to select the column from.
      * @param column The name of the column to select.
-     * @return a {@link ProtoSelectColumn} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
      */
     public static Expression c(final Table table, final String column) {
         return ca(table, column, null);
@@ -112,11 +114,11 @@ public final class Fn {
     /**
      * Selects a database column by name.
      * <p>
-     * The returned {@link ProtoSelectColumn} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
      *
      * @param table  The table to select the column from.
      * @param column The name of the column to select.
-     * @return a {@link ProtoSelectColumn} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
      */
     public static Expression column(final Table table, final String column) {
         return c(table, column);
@@ -127,12 +129,12 @@ public final class Fn {
      * <p>
      * Shorthand for {@link #columnAlias(Table, String, String)} (Table, String, String)}
      * <p>
-     * The returned {@link ProtoSelectColumn} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
      *
      * @param table       The table to select the column from.
      * @param column      The name of the column to select.
      * @param columnAlias The alias to use for the column; may be {@code null}.
-     * @return a {@link ProtoSelectColumn} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
      */
     public static Expression ca(final Table table, final String column, final @Nullable String columnAlias) {
         return new SelectColumn(new Column(table, column, columnAlias));
@@ -141,12 +143,12 @@ public final class Fn {
     /**
      * Selects a database column by name and alias.
      * <p>
-     * The returned {@link ProtoSelectColumn} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
      *
      * @param table       The table to select the column from.
      * @param column      The name of the column to select.
      * @param columnAlias The alias to use for the column; may be {@code null}.
-     * @return a {@link ProtoSelectColumn} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
      */
     public static Expression columnAlias(final Table table, final String column, final @Nullable String columnAlias) {
         return ca(table, column, columnAlias);
@@ -157,24 +159,24 @@ public final class Fn {
      * <p>
      * Shorthand for {@link #columnAlias(String, String)}
      * <p>
-     * The returned {@link ProtoSelectColumn} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
      *
      * @param column The name of the column to select.
      * @param alias  The alias to use for the column.
-     * @return a {@link ProtoSelectColumn} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
      */
     public static Expression ca(final String column, final @Nullable String alias) {
-        return new ProtoSelectColumn(column, alias);
+        return new ProtoColumnExpression(SelectColumn.class, column, alias);
     }
 
     /**
      * Selects a database column by name and alias.
      * <p>
-     * The returned {@link ProtoSelectColumn} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
      *
      * @param column The name of the column to select.
      * @param alias  The alias to use for the column.
-     * @return a {@link ProtoSelectColumn} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
      */
     public static Expression columnAlias(final String column, final @Nullable String alias) {
         return ca(column, alias);
@@ -185,12 +187,12 @@ public final class Fn {
      * <p>
      * Shorthand for {@link #columnAlias(Table, String, String)}
      * <p>
-     * The returned {@link ProtoSelectColumn} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
      *
      * @param table       The table to select the column from.
      * @param column      The name of the column to select.
      * @param columnAlias The alias to use for the column.
-     * @return a {@link ProtoSelectColumn} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
      */
     public static Expression ca(final String table, final String column, final @Nullable String columnAlias) {
         return ca(new Table(table), column, columnAlias);
@@ -199,15 +201,24 @@ public final class Fn {
     /**
      * Selects a database column by name and alias.
      * <p>
-     * The returned {@link ProtoSelectColumn} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
      *
      * @param table       The table to select the column from.
      * @param column      The name of the column to select.
      * @param columnAlias The alias to use for the column.
-     * @return a {@link ProtoSelectColumn} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
      */
     public static Expression columnAlias(final String table, final String column, final @Nullable String columnAlias) {
         return ca(table, column, columnAlias);
+    }
+
+    // SQL functions
+    public static TypeOverrideExpression<Object> avg(final String column) {
+        return avg(column, Object.class);
+    }
+
+    public static <T> TypeOverrideExpression<T> avg(final String column, final Class<T> returnType) {
+        return new ProtoTOColumnExpression<>(returnType, Avg.class, column, null);
     }
 
     /**
@@ -215,7 +226,7 @@ public final class Fn {
      *
      * @return a {@link Count} expression instance to select the count of rows.
      */
-    public static Count count() {
+    public static TypeOverrideExpression<Long> count() {
         return new Count();
     }
 }

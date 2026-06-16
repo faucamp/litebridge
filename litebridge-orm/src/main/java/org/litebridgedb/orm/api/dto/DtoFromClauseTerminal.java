@@ -5,6 +5,7 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.function.ColumnExpression;
 import org.litebridgedb.orm.function.Expression;
 import org.litebridgedb.orm.function.SelectField;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -45,8 +46,8 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
             for (Expression expression : selectSpec.getExpressions()) {
                 Column selectedColumn;
 
-                if (expression instanceof SelectField selectField) {
-                    selectedColumn = selectField.getColumn();
+                if (expression instanceof ColumnExpression columnExpression) {
+                    selectedColumn = columnExpression.column();
                 } else {
                     continue;
                 }

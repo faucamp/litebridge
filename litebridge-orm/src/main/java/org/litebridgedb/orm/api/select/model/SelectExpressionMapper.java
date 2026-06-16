@@ -4,9 +4,12 @@ import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.ColumnExpression;
 import org.litebridgedb.db.spi.query.SelectExpression;
+import org.litebridgedb.orm.function.Avg;
 import org.litebridgedb.orm.function.Count;
 import org.litebridgedb.orm.function.Expression;
-import org.litebridgedb.orm.function.ProtoSelectColumn;
+import org.litebridgedb.orm.function.ProtoColumnExpression;
+import org.litebridgedb.orm.function.ProtoExpression;
+import org.litebridgedb.orm.function.ProtoTOColumnExpression;
 import org.litebridgedb.orm.function.SelectColumn;
 import org.litebridgedb.orm.function.SelectField;
 
@@ -21,16 +24,17 @@ final class SelectExpressionMapper {
     SelectExpression toSelectExpression(final Expression expression) {
         return switch (expression) {
             case SelectField selectField -> toSelectColumn(selectField);
-            case Count count -> sqlFunctionRegistry.aggregate().count();
             case SelectColumn selectColumn -> toSelectColumn(selectColumn);
-            case ProtoSelectColumn protoSelectColumn ->
-                    throw new IllegalStateException("Proto-SelectColumn not resolved to SelectColumn: " + protoSelectColumn);
+            case Avg avg -> sqlFunctionRegistry.aggregate().avg().create(avg.column());
+            case Count count -> sqlFunctionRegistry.aggregate().count();
+            case ProtoExpression protoExpression ->
+                    throw new IllegalStateException("ProtoExpression not resolved: " + protoExpression);
         };
     }
 
     ColumnExpression toSelectColumn(final SelectField selectField) {
         return sqlFunctionRegistry.selectColumnFactory()
-                .create(ObjectUtils.requireNonNull(selectField.getColumn(),
+                .create(ObjectUtils.requireNonNull(selectField.column(),
                         () -> new IllegalStateException("SelectField.column not set")));
     }
 

@@ -18,6 +18,7 @@ import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.function.ProtoColumnExpression;
 import org.litebridgedb.orm.function.SelectField;
 import org.litebridgedb.orm.function.TestColumnExpressionFactory;
 import org.litebridgedb.orm.persistence.DtoConstructor;
@@ -72,7 +73,7 @@ class DtoSelectorTest {
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
 
         // When
-        final DtoFromClauseTerminal<TestDto> result = dtoSelector.select(new SelectField("myVar"));
+        final DtoFromClauseTerminal<TestDto> result = dtoSelector.select(new ProtoColumnExpression(SelectField.class , "myVar"));
 
         // Then
         assertNotNull(result);

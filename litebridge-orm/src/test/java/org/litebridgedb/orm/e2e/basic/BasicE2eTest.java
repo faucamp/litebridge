@@ -22,6 +22,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -485,8 +486,8 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Select COUNT()")
-    void selectCount(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    @DisplayName("Functions: COUNT(), AVG()")
+    void select_functions(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
 
@@ -496,14 +497,23 @@ public class BasicE2eTest extends AbstractE2eTest {
             persons[i] = new Person();
             persons[i].setName("Name" + i);
             persons[i].setSurname("Surname" + i);
-            persons[i].setAge(20 + i);
+            persons[i].setAge(20 + (i * 5));
         }
 
         litebridge.save((Object[]) persons);
 
         // Count the records
-        final Long result = litebridge.select(Fn.count()).from(Person.class).oneOrThrow();
-        assertEquals(3, result);
+        final Long personCount = litebridge.select(Fn.count()).from(Person.class).oneOrThrow();
+        assertEquals(3, personCount);
+
+        // Get the average age in the database's native type
+        final Object averageAge = litebridge.select(Fn.avg("age")).from(Person.class).oneOrThrow();
+        assertInstanceOf(Number.class, averageAge);
+        assertEquals(25, ((Number) averageAge).intValue());
+
+        // Get the average age and specify the return type
+        final Double averageAgeDouble = litebridge.select(Fn.avg("age", Double.class)).from(Person.class).oneOrThrow();
+        assertEquals(25.0, averageAgeDouble);
     }
 
     private class TestException extends RuntimeException {

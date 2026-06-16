@@ -69,8 +69,8 @@ public class DtoBlueprint {
                     dtoSelectSpec.getExpressions().stream()
                             .filter(expression -> expression instanceof SelectField)
                             .map(expression -> (SelectField) expression)
-                            .filter(selectField -> selectField.getColumn().table().equals(dtoSelectSpec.getTable()))
-                            .map(selectField -> new DtoSelectSpec.FieldColumn(selectField.getFieldAccessor(), selectField.getColumn()))
+                            .filter(selectField -> selectField.column().table().equals(dtoSelectSpec.getTable()))
+                            .map(selectField -> new DtoSelectSpec.FieldColumn(selectField.field(), selectField.column()))
                             .toList(),
                     primaryKey,
                     dtoRows);

@@ -4,8 +4,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.orm.api.select.FromClause;
 import org.litebridgedb.orm.function.Expression;
-import org.litebridgedb.orm.function.ProtoSelectColumn;
-import org.litebridgedb.orm.function.SelectColumn;
+import org.litebridgedb.orm.function.ProtoColumnExpression;
 import org.litebridgedb.orm.persistence.TableRegistry;
 
 import java.util.Arrays;
@@ -45,8 +44,8 @@ public final class SqlFromClause implements FromClause<Row,
             // Resolve all proto-SelectColumn expressions since we have the target table now
             final List<Expression> resolvedExpressions = Arrays.stream(expressions)
                     .map(expression -> {
-                        if (expression instanceof ProtoSelectColumn protoSelectColumn) {
-                            return new SelectColumn(protoSelectColumn, spiTable);
+                        if (expression instanceof ProtoColumnExpression protoSelectColumn) {
+                            return protoSelectColumn.resolve(spiTable);
                         } else {
                             return expression;
                         }

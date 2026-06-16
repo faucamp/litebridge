@@ -3,7 +3,7 @@ package org.litebridgedb.orm.function;
 /**
  * A query expression that overrides the type of the result.
  */
-public sealed interface TypeOverrideExpression<T> extends Expression permits Count {
+public sealed interface TypeOverrideExpression<T> extends Expression permits Avg, Count, ProtoTOColumnExpression {
 
-    Class<T> type();
+    Class<T> returnType();
 }

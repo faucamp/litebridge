@@ -48,7 +48,7 @@ public final class DtoWhereConditionClauseTerminal<DTO>
                 Column selectedColumn;
 
                 if (expression instanceof SelectField selectField) {
-                    selectedColumn = selectField.getColumn();
+                    selectedColumn = selectField.column();
                 } else {
                     continue;
                 }

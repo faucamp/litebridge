@@ -31,6 +31,7 @@ import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.engine.FromClauseEngine;
 import org.litebridgedb.orm.engine.RegistrationEngine;
 import org.litebridgedb.orm.function.Expression;
+import org.litebridgedb.orm.function.ProtoColumnExpression;
 import org.litebridgedb.orm.function.SelectField;
 import org.litebridgedb.orm.function.TypeOverrideExpression;
 import org.litebridgedb.orm.persistence.DtoConstructor;
@@ -430,7 +431,10 @@ public final class Litebridge {
      * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
     public FromClauseStart select(final String... fieldsOrColumns) {
-        return new FromClauseStart(Arrays.stream(fieldsOrColumns).map(SelectField::new).toArray(SelectField[]::new), fromClauseEngine);
+        return new FromClauseStart(Arrays.stream(fieldsOrColumns)
+                .map(fieldOrColumn -> new ProtoColumnExpression(SelectField.class, fieldOrColumn, null))
+                .toArray(ProtoColumnExpression[]::new),
+                fromClauseEngine);
     }
 
     /**
@@ -450,9 +454,24 @@ public final class Litebridge {
         return new FromClauseStart(expressions, fromClauseEngine);
     }
 
+    /**
+     * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
+     * <p>
+     * Creates a SQL SELECT statement with the specified fields/columns; the source table is specified
+     * via a chained {@code from()} call.
+     * <p>
+     * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
+     * by specifying the target DTO or table for the query.
+     *
+     * @param <TypeOverride>   The return type of the query
+     * @param expression       Return type-overriding expression
+     * @param otherExpressions An array of {@link Expression} objects representing additional expressions
+     *                         to be part of the SELECT statement.
+     * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
+     */
     public <TypeOverride> FromClauseStartTypeOverride<TypeOverride> select(final TypeOverrideExpression<TypeOverride> expression, final Expression... otherExpressions) {
         final Expression[] allExpressions = Stream.concat(Stream.of(expression), Arrays.stream(otherExpressions)).toArray(Expression[]::new);
-        return new FromClauseStartTypeOverride<>(expression.type(), allExpressions, fromClauseEngine);
+        return new FromClauseStartTypeOverride<>(expression.returnType(), allExpressions, fromClauseEngine);
     }
 
     /**

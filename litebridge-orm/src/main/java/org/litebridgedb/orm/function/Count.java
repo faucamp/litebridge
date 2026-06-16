@@ -6,7 +6,7 @@ package org.litebridgedb.orm.function;
 public record Count() implements TypeOverrideExpression<Long> {
 
     @Override
-    public Class<Long> type() {
+    public Class<Long> returnType() {
         return Long.class;
     }
 }
