@@ -6,6 +6,7 @@ org.litebridgedb.convert.converter.DoubleConverter
 org.litebridgedb.convert.converter.FloatConverter
 org.litebridgedb.convert.converter.IntegerConverter
 org.litebridgedb.convert.converter.LongConverter
+org.litebridgedb.convert.converter.OffsetDateTimeConverter
 org.litebridgedb.convert.converter.ShortConverter
 org.litebridgedb.convert.converter.SqlDateConverter
 org.litebridgedb.convert.converter.SqlTimeConverter

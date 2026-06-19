@@ -2,7 +2,6 @@ package org.litebridgedb.db.spi.impl.function;
 
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
-import org.litebridgedb.db.spi.expression.NestableExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 
 /**
@@ -59,13 +58,6 @@ public abstract class FunctionExpression extends AliasedNestableExpression {
         } else {
             return sql;
         }
-
-//        if (alias) {
-//            return "%s %s".formatted(template().formatted(localId(operation)),
-//                    columnIdentifierGenerator.createAlias(column.alias()));
-//        } else {
-//            return template().formatted(localId(operation));
-//        }
     }
 
     /**

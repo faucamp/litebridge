@@ -11,10 +11,12 @@ import org.litebridgedb.orm.expression.Fn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertLinesMatch;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class FunctionsE2eTest extends AbstractE2eTest {
 
@@ -148,5 +150,13 @@ public class FunctionsE2eTest extends AbstractE2eTest {
         // Nested SQL functions
         final List<String> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring("surname", 4))).from(Person.class).list();
         assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings);
+    }
+
+    @TestTemplate
+    @DisplayName("CURRENT_TIMESTAMP")
+    void currentTimestamp(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Nested SQL functions
+        final ZonedDateTime sysdate = litebridge.select(Fn.currentTimestamp()).from(Person.class).firstOrThrow();
+        assertNotNull(sysdate);
     }
 }
