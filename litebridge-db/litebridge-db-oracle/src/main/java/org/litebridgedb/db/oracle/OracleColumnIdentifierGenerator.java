@@ -53,7 +53,7 @@ public class OracleColumnIdentifierGenerator extends ColumnIdentifierGenerator {
     }
 
     @Override
-    protected String createAlias(final String alias) {
+    public String createAlias(final String alias) {
         return quoteIdentifier(alias);
     }
 }

@@ -9,9 +9,8 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 import org.litebridgedb.orm.config.LitebridgeConfig;
-import org.litebridgedb.orm.function.Expression;
-import org.litebridgedb.orm.function.ProtoColumnExpression;
-import org.litebridgedb.orm.function.SelectField;
+import org.litebridgedb.orm.expression.Expression;
+import org.litebridgedb.orm.expression.select.SelectField;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.SelectSpecDtoMapper;
@@ -149,6 +148,4 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
                 .filter(Objects::nonNull)
                 .toList();
     }
-
-
 }

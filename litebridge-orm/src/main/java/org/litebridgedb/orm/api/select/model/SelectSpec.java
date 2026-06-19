@@ -4,12 +4,12 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
-import org.litebridgedb.db.spi.query.ColumnExpression;
+import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
+import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
-import org.litebridgedb.db.spi.query.SelectExpression;
-import org.litebridgedb.orm.function.Expression;
+import org.litebridgedb.db.spi.expression.SelectExpression;
+import org.litebridgedb.orm.expression.Expression;
 
 import java.util.ArrayList;
 import java.util.Arrays;

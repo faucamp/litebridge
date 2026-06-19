@@ -1,17 +1,19 @@
 package org.litebridgedb.orm.api.select.model;
 
 import org.litebridgedb.commons.ObjectUtils;
-import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
-import org.litebridgedb.db.spi.query.ColumnExpression;
-import org.litebridgedb.db.spi.query.SelectExpression;
-import org.litebridgedb.orm.function.Avg;
-import org.litebridgedb.orm.function.Count;
-import org.litebridgedb.orm.function.Expression;
-import org.litebridgedb.orm.function.ProtoColumnExpression;
-import org.litebridgedb.orm.function.ProtoExpression;
-import org.litebridgedb.orm.function.ProtoTOColumnExpression;
-import org.litebridgedb.orm.function.SelectColumn;
-import org.litebridgedb.orm.function.SelectField;
+import org.litebridgedb.db.spi.expression.ColumnExpression;
+import org.litebridgedb.db.spi.expression.SelectExpression;
+import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
+import org.litebridgedb.orm.expression.Expression;
+import org.litebridgedb.orm.expression.NestableExpression;
+import org.litebridgedb.orm.expression.ProtoExpression;
+import org.litebridgedb.orm.expression.function.aggregate.AvgSpec;
+import org.litebridgedb.orm.expression.function.aggregate.CountSpec;
+import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
+import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
+import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
+import org.litebridgedb.orm.expression.select.SelectColumn;
+import org.litebridgedb.orm.expression.select.SelectField;
 
 final class SelectExpressionMapper {
 
@@ -23,12 +25,40 @@ final class SelectExpressionMapper {
 
     SelectExpression toSelectExpression(final Expression expression) {
         return switch (expression) {
+            // Select columns
             case SelectField selectField -> toSelectColumn(selectField);
             case SelectColumn selectColumn -> toSelectColumn(selectColumn);
-            case Avg avg -> sqlFunctionRegistry.aggregate().avg().create(avg.column());
-            case Count count -> sqlFunctionRegistry.aggregate().count();
+
+            // Aggregate functions
+            case CountSpec countSpec -> sqlFunctionRegistry.aggregate().count();
+
+            // Nestable expressions
+            case NestableExpression nestableExpression -> resolveNestedExpression(nestableExpression);
+
+            // Unsupported
             case ProtoExpression protoExpression ->
                     throw new IllegalStateException("ProtoExpression not resolved: " + protoExpression);
+        };
+    }
+
+    private ColumnExpression resolveNestedExpression(final NestableExpression expression) {
+        final ColumnExpression nestedExpression;
+
+        if (expression.target() instanceof NestableExpression targetNestableExpression) {
+            nestedExpression = resolveNestedExpression(targetNestableExpression);
+        } else {
+            nestedExpression = (ColumnExpression) toSelectExpression(expression.target());
+        }
+
+        return switch (expression) {
+            // Aggregate functions
+            case AvgSpec<?> avgSpec -> sqlFunctionRegistry.aggregate().avg().create(nestedExpression);
+
+            // Scalar functions
+            case UpperSpec upperSpec -> sqlFunctionRegistry.scalar().upper().create(nestedExpression);
+            case LowerSpec lowerSpec -> sqlFunctionRegistry.scalar().lower().create(nestedExpression);
+            case SubstringSpec substringSpec ->
+                    sqlFunctionRegistry.scalar().substring().create(nestedExpression, substringSpec.start(), substringSpec.length());
         };
     }
 

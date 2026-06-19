@@ -5,9 +5,8 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-import org.litebridgedb.orm.function.ColumnExpression;
-import org.litebridgedb.orm.function.Expression;
-import org.litebridgedb.orm.function.SelectField;
+import org.litebridgedb.orm.expression.ColumnExpression;
+import org.litebridgedb.orm.expression.Expression;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
 

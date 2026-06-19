@@ -66,12 +66,12 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
 
     @Override
     public DTO firstOrThrow() {
-        return oneOrThrow(() -> new NoSuchElementException("No record found for query"));
+        return firstOrThrow(() -> new NoSuchElementException("No record found for query"));
     }
 
     @Override
     public <X extends Throwable> DTO firstOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
-        return one().orElseThrow(exceptionSupplier);
+        return first().orElseThrow(exceptionSupplier);
     }
 
     @Override

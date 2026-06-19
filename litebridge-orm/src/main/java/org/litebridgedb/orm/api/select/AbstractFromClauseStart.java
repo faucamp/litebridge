@@ -2,7 +2,7 @@ package org.litebridgedb.orm.api.select;
 
 import org.litebridgedb.orm.api.sql.SqlFromClauseTerminal;
 import org.litebridgedb.orm.engine.FromClauseEngine;
-import org.litebridgedb.orm.function.Expression;
+import org.litebridgedb.orm.expression.Expression;
 
 abstract sealed class AbstractFromClauseStart permits FromClauseStart, FromClauseStartTypeOverride{
 

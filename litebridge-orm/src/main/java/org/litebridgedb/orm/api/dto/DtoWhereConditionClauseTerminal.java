@@ -2,12 +2,11 @@ package org.litebridgedb.orm.api.dto;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
-import org.litebridgedb.db.spi.query.ColumnExpression;
 import org.litebridgedb.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractWhereClauseTerminal;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-import org.litebridgedb.orm.function.Expression;
-import org.litebridgedb.orm.function.SelectField;
+import org.litebridgedb.orm.expression.Expression;
+import org.litebridgedb.orm.expression.select.SelectField;
 import org.litebridgedb.orm.persistence.OrmTable;
 
 import java.util.Arrays;

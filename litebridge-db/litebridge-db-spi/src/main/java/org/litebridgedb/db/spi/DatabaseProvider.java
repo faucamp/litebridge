@@ -2,7 +2,7 @@ package org.litebridgedb.db.spi;
 
 import org.litebridgedb.db.spi.alias.AliasTransformer;
 import org.litebridgedb.db.spi.convert.TypeConverter;
-import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
+import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;

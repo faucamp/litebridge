@@ -8,7 +8,7 @@ import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinClause;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-import org.litebridgedb.orm.function.SelectField;
+import org.litebridgedb.orm.expression.select.SelectField;
 import org.litebridgedb.orm.persistence.MappedManyToMany;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;

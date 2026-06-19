@@ -4,6 +4,8 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.convert.converter.Converter;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -96,7 +98,7 @@ class ConfigurableTypeConverterTest {
         ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> typeConverter.convert("test", String.class));
+        assertThrows(IllegalArgumentException.class, () -> typeConverter.convert("test", Map.class));
     }
 
     @Test
@@ -119,13 +121,13 @@ class ConfigurableTypeConverterTest {
         // Given
         ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(new TestConverter<>(String.class));
-        assertNotNull(typeConverter.convert("test", String.class));
+        assertNotNull(typeConverter.convert(123, String.class));
 
         // When
         typeConverter.unregister(String.class);
 
         // Then
-        assertThrows(IllegalArgumentException.class, () -> typeConverter.convert("test", String.class));
+        assertThrows(IllegalArgumentException.class, () -> typeConverter.convert(123, String.class));
     }
 
     @Test

@@ -8,7 +8,7 @@ import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
-import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
+import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.impl.DefaultSequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
@@ -17,14 +17,13 @@ import org.litebridgedb.db.spi.update.InsertResult;
 import org.litebridgedb.db.spi.update.Update;
 import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridgedb.orm.api.select.FromClauseStart;
-import org.litebridgedb.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridgedb.orm.api.spec.ColumnMapping;
 import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
 import org.litebridgedb.orm.api.spec.FieldMapping;
 import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.api.spec.TableSpec;
-import org.litebridgedb.orm.function.TestColumnExpressionFactory;
+import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.tx.DefaultTransactionManager;
@@ -347,7 +346,7 @@ class LitebridgeTest {
         litebridge.register(dtoTableSpec);
 
         // When
-        final FromClauseStartTypeOverride result = litebridge.select();
+        final FromClauseStart result = litebridge.select();
 
         // Then
         assertNotNull(result);

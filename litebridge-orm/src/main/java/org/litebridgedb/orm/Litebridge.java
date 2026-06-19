@@ -30,10 +30,10 @@ import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.engine.FromClauseEngine;
 import org.litebridgedb.orm.engine.RegistrationEngine;
-import org.litebridgedb.orm.function.Expression;
-import org.litebridgedb.orm.function.ProtoColumnExpression;
-import org.litebridgedb.orm.function.SelectField;
-import org.litebridgedb.orm.function.TypeOverrideExpression;
+import org.litebridgedb.orm.expression.Expression;
+import org.litebridgedb.orm.expression.ProtoColumnExpression;
+import org.litebridgedb.orm.expression.select.SelectField;
+import org.litebridgedb.orm.expression.TypeOverrideExpression;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
 import org.litebridgedb.orm.persistence.EntityDtoMapper;
@@ -485,8 +485,8 @@ public final class Litebridge {
      *
      * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
-    public FromClauseStartTypeOverride<?> select() {
-        return new FromClauseStartTypeOverride<>(Void.class, fromClauseEngine);
+    public FromClauseStart select() {
+        return new FromClauseStart(fromClauseEngine);
     }
 
     /**

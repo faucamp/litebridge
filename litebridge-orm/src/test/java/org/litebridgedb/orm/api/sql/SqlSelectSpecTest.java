@@ -3,17 +3,17 @@ package org.litebridgedb.orm.api.sql;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.db.spi.function.SqlFunctionRegistry;
+import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.JoinSpec;
 import org.litebridgedb.orm.api.select.model.LimitSpec;
 import org.litebridgedb.orm.api.select.model.OrderBySpec;
-import org.litebridgedb.orm.function.Expression;
-import org.litebridgedb.orm.function.SelectColumn;
-import org.litebridgedb.orm.function.TestColumnExpression;
-import org.litebridgedb.orm.function.TestColumnExpressionFactory;
+import org.litebridgedb.orm.expression.Expression;
+import org.litebridgedb.orm.expression.select.SelectColumn;
+import org.litebridgedb.orm.expression.TestColumnExpression;
+import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
 
 import java.util.List;
 

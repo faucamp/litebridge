@@ -1,6 +1,5 @@
 package org.litebridgedb.orm.engine;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
@@ -9,7 +8,7 @@ import org.litebridgedb.orm.api.sql.SqlFromClauseTerminal;
 import org.litebridgedb.orm.api.sql.SqlSelector;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
-import org.litebridgedb.orm.function.Expression;
+import org.litebridgedb.orm.expression.Expression;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;

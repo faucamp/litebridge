@@ -6,7 +6,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
-import org.litebridgedb.orm.function.Fn;
+import org.litebridgedb.orm.expression.Fn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.litebridgedb.orm.function.Fn.c;
+import static org.litebridgedb.orm.expression.Fn.c;
 
 class SqlE2eTest extends AbstractE2eTest {
 

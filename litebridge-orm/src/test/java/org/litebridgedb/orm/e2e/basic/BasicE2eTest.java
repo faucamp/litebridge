@@ -2,13 +2,15 @@ package org.litebridgedb.orm.e2e.basic;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
+import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
+import org.litebridgedb.orm.api.dto.DtoWhereConditionClauseTerminal;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Account;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.basic.dto.PersonAccount;
 import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
-import org.litebridgedb.orm.function.Fn;
+import org.litebridgedb.orm.expression.Fn;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
 import org.litebridgedb.orm.persistence.EntityDtoMapper;
 import org.litebridgedb.orm.tx.Transaction;
@@ -23,6 +25,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertLinesMatch;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -507,13 +510,28 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertEquals(3, personCount);
 
         // Get the average age in the database's native type
-        final Object averageAge = litebridge.select(Fn.avg("age")).from(Person.class).oneOrThrow();
-        assertInstanceOf(Number.class, averageAge);
+        final Number averageAge = litebridge.select(Fn.avg("age")).from(Person.class).oneOrThrow();
         assertEquals(25, ((Number) averageAge).intValue());
 
         // Get the average age and specify the return type
         final Double averageAgeDouble = litebridge.select(Fn.avg("age", Double.class)).from(Person.class).oneOrThrow();
         assertEquals(25.0, averageAgeDouble);
+
+        // Get the uppercase names of the stored persons
+        final List<String> uppercaseNames = litebridge.select(Fn.upper("name")).from(Person.class).list();
+        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseNames);
+
+        // Get the lowercase names of the stored persons
+        final List<String> lowercaseNames = litebridge.select(Fn.lower("name")).from(Person.class).list();
+        assertLinesMatch(List.of("name0", "name1", "name2"), lowercaseNames);
+
+        // Get substrings of the surnames
+        final List<String> surnameSubstrings = litebridge.select(Fn.substring("surname", 2, 5)).from(Person.class).list();
+        assertLinesMatch(List.of("urnam", "urnam", "urnam"), surnameSubstrings);
+
+        // Nested SQL functions
+        final List<String> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring("surname", 4))).from(Person.class).list();
+        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings);
     }
 
     private class TestException extends RuntimeException {

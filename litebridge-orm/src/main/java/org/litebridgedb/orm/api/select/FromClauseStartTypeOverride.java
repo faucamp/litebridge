@@ -4,7 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.engine.FromClauseEngine;
-import org.litebridgedb.orm.function.Expression;
+import org.litebridgedb.orm.expression.Expression;
 
 public final class FromClauseStartTypeOverride<TypeOverride> extends AbstractFromClauseStart {
 

@@ -2,6 +2,7 @@ package org.litebridgedb.db.spi.query;
 
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.SelectExpression;
 
 import java.util.List;
 import java.util.Optional;

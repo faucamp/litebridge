@@ -5,14 +5,10 @@ import org.litebridgedb.commons.CollectionUtils;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 import org.litebridgedb.orm.config.LitebridgeConfig;
-import org.litebridgedb.orm.function.Expression;
-import org.litebridgedb.orm.function.ProtoColumnExpression;
-import org.litebridgedb.orm.function.SelectColumn;
-import org.litebridgedb.orm.function.SelectField;
+import org.litebridgedb.orm.expression.Expression;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
-import java.util.Arrays;
 import java.util.List;
 
 public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {

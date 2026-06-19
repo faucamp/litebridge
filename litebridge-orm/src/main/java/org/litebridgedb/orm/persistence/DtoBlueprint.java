@@ -4,7 +4,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.dto.DtoDataSpec;
 import org.litebridgedb.orm.api.dto.DtoJoinSpec;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
-import org.litebridgedb.orm.function.SelectField;
+import org.litebridgedb.orm.expression.select.SelectField;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -7,6 +7,7 @@ import org.jspecify.annotations.NullMarked;
 @SuppressWarnings("module")
 module litebridge.db.h2 {
     requires org.jspecify;
+    requires litebridge.commons;
     requires litebridge.converter;
     requires litebridge.db.spi;
     requires litebridge.db.spi.impl;

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.ColumnExpression;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,11 +1,13 @@
 package org.litebridgedb.db.oracle;
 
 import org.litebridgedb.convert.DefaultTypeConverter;
+import org.litebridgedb.db.oracle.function.OracleSqlFunctionRegistryFactory;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.AbstractDatabaseProvider;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridgedb.db.spi.impl.function.SqlFunctionRegistryFactory;
 import org.litebridgedb.db.spi.query.Limit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +68,11 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider {
     @Override
     protected ColumnIdentifierGenerator createColumnIdentifierGenerator() {
         return new OracleColumnIdentifierGenerator();
+    }
+
+    @Override
+    protected SqlFunctionRegistryFactory createSqlFunctionRegistryFactory() {
+        return new OracleSqlFunctionRegistryFactory(columnIdentifierGenerator.orThrow());
     }
 
     @Override

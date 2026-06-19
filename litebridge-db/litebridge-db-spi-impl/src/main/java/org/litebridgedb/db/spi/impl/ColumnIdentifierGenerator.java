@@ -38,7 +38,7 @@ public class ColumnIdentifierGenerator {
         }
     }
 
-    protected String createAlias(final String alias) {
+    public String createAlias(final String alias) {
         return "AS %s".formatted(quoteIdentifier(alias));
     }
 }
