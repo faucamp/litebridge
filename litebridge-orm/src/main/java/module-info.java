@@ -33,6 +33,7 @@ module litebridge.orm {
     exports org.litebridgedb.orm.engine;
     exports org.litebridgedb.orm.expression;
     exports org.litebridgedb.orm.expression.function.aggregate;
+    exports org.litebridgedb.orm.expression.function.date;
     exports org.litebridgedb.orm.expression.function.scalar;
     exports org.litebridgedb.orm.expression.select;
     exports org.litebridgedb.orm.persistence;

@@ -17,7 +17,7 @@ import org.litebridgedb.orm.expression.select.SelectColumn;
  */
 public record ProtoNestableTOExpr<T>(Class<T> typeOverride,
                                      Class<? extends Expression> type,
-                                     ProtoExpression target,
+                                     Expression target,
                                      @Nullable String alias,
                                      @Nullable Object @Nullable [] args)
         implements ProtoNestableExpression, TypeOverrideExpression<T> {
@@ -30,7 +30,7 @@ public record ProtoNestableTOExpr<T>(Class<T> typeOverride,
      * @param alias        The column alias to use, or {@code null} if not specified.
      * @param type         The type of expression to create.
      */
-    public ProtoNestableTOExpr(final Class<T> typeOverride, final Class<? extends Expression> type, final ProtoExpression target, @Nullable final String alias) {
+    public ProtoNestableTOExpr(final Class<T> typeOverride, final Class<? extends Expression> type, final Expression target, @Nullable final String alias) {
         this(typeOverride, type, target, alias, null);
     }
 

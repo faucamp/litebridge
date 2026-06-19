@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -36,34 +37,40 @@ public class StringConverter implements SqlConverter<String> {
             return str;
         }
 
-        final String valueStr;
-
         if (value.getClass().isArray()) {
             if (value.getClass().getComponentType() == Byte.TYPE) {
-                valueStr = new String((byte[]) value);
+                return new String((byte[]) value);
             } else if (value.getClass().getComponentType() == Character.TYPE) {
-                valueStr = new String((char[]) value);
+                return new String((char[]) value);
             } else {
-                valueStr = value.toString();
+                return value.toString();
             }
-        } else if (value instanceof Clob clob) {
-            try (Reader reader = clob.getCharacterStream(); final StringWriter writer = new StringWriter()) {
-                reader.transferTo(writer);
-                return writer.toString();
-            } catch (final Exception ex) {
-                throw new IllegalStateException("Failed to read CLOB data", ex);
-            } finally {
-                try {
-                    clob.free();
-                } catch (final SQLException ex) {
-                    throw new IllegalStateException("Failed to free CLOB resources", ex);
-                }
-            }
-        } else {
-            valueStr = value.toString();
         }
 
-        return valueStr;
+        return switch (value) {
+            case Clob clob -> {
+                try (Reader reader = clob.getCharacterStream(); final StringWriter writer = new StringWriter()) {
+                    reader.transferTo(writer);
+                    yield writer.toString();
+                } catch (final Exception ex) {
+                    throw new IllegalStateException("Failed to read CLOB data", ex);
+                } finally {
+                    try {
+                        clob.free();
+                    } catch (final SQLException ex) {
+                        throw new IllegalStateException("Failed to free CLOB resources", ex);
+                    }
+                }
+            }
+            case BigDecimal bigDecimal -> {
+                try {
+                    yield bigDecimal.toBigIntegerExact().toString();
+                } catch (final ArithmeticException ex) {
+                    yield bigDecimal.toString();
+                }
+            }
+            default -> value.toString();
+        };
     }
 
     /**

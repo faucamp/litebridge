@@ -9,6 +9,11 @@ import org.litebridgedb.orm.expression.NestableExpression;
 import org.litebridgedb.orm.expression.ProtoExpression;
 import org.litebridgedb.orm.expression.function.aggregate.AvgSpec;
 import org.litebridgedb.orm.expression.function.aggregate.CountSpec;
+import org.litebridgedb.orm.expression.function.aggregate.MaxSpec;
+import org.litebridgedb.orm.expression.function.aggregate.MinSpec;
+import org.litebridgedb.orm.expression.function.date.CurrentTimestampSpec;
+import org.litebridgedb.orm.expression.function.java.ConvertSpec;
+import org.litebridgedb.orm.expression.function.scalar.AbsSpec;
 import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
 import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
@@ -35,7 +40,11 @@ final class SelectExpressionMapper {
             // Nestable expressions
             case NestableExpression nestableExpression -> resolveNestedExpression(nestableExpression);
 
+            // Date/time
+            case CurrentTimestampSpec currentTimestampSpec -> sqlFunctionRegistry.date().currentTimestamp();
+
             // Unsupported
+            case ConvertSpec<?> convertSpec -> throw new IllegalStateException("ConvertSpec is ORM-side only");
             case ProtoExpression protoExpression ->
                     throw new IllegalStateException("ProtoExpression not resolved: " + protoExpression);
         };
@@ -53,12 +62,15 @@ final class SelectExpressionMapper {
         return switch (expression) {
             // Aggregate functions
             case AvgSpec<?> avgSpec -> sqlFunctionRegistry.aggregate().avg().create(nestedExpression);
+            case MaxSpec<?> maxSpec -> sqlFunctionRegistry.aggregate().max().create(nestedExpression);
+            case MinSpec<?> minSpec -> sqlFunctionRegistry.aggregate().min().create(nestedExpression);
 
             // Scalar functions
             case UpperSpec upperSpec -> sqlFunctionRegistry.scalar().upper().create(nestedExpression);
             case LowerSpec lowerSpec -> sqlFunctionRegistry.scalar().lower().create(nestedExpression);
             case SubstringSpec substringSpec ->
                     sqlFunctionRegistry.scalar().substring().create(nestedExpression, substringSpec.start(), substringSpec.length());
+            case AbsSpec absSpec -> sqlFunctionRegistry.scalar().abs().create(nestedExpression);
         };
     }
 

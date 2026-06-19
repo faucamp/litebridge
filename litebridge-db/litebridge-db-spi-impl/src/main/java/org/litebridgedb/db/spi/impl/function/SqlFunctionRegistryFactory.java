@@ -2,17 +2,20 @@ package org.litebridgedb.db.spi.impl.function;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.expression.NestableExpression;
-import org.litebridgedb.db.spi.expression.NestableExpressionFactory;
+import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.aggregate.Avg;
 import org.litebridgedb.db.spi.impl.function.aggregate.Count;
+import org.litebridgedb.db.spi.impl.function.aggregate.Max;
+import org.litebridgedb.db.spi.impl.function.aggregate.Min;
+import org.litebridgedb.db.spi.impl.function.date.CurrentTimestamp;
+import org.litebridgedb.db.spi.impl.function.scalar.Abs;
 import org.litebridgedb.db.spi.impl.function.scalar.Lower;
 import org.litebridgedb.db.spi.impl.function.scalar.Substring;
 import org.litebridgedb.db.spi.impl.function.scalar.Upper;
-import org.litebridgedb.db.spi.expression.ColumnExpression;
-import org.litebridgedb.db.spi.expression.SelectExpression;
 
 /**
  * Factory for creating {@link SqlFunctionRegistry} instances.
@@ -42,13 +45,19 @@ public class SqlFunctionRegistryFactory {
         return new SqlFunctionRegistry(
                 this::createSelectColumn,
                 new SqlFunctionRegistry.Aggregate(
-                        this::createAverage,
+                        this::createAvg,
+                        this::createMin,
+                        this::createMax,
                         createCount()
                 ),
                 new SqlFunctionRegistry.Scalar(
                         this::createUpper,
                         this::createLower,
-                        this::createSubstring
+                        this::createSubstring,
+                        this::createAbs
+                ),
+                new SqlFunctionRegistry.Date(
+                        createCurrentTimestamp()
                 ));
     }
 
@@ -64,14 +73,36 @@ public class SqlFunctionRegistryFactory {
     }
 
     /**
-     * Creates a AVG-implementing expression.
+     * Creates an AVG-implementing expression.
      *
      * @param target Target expression to encapsulate.
      * @param args   Not used; empty array
      * @return A AVG-implementing expression
      */
-    protected NestableExpression createAverage(final ColumnExpression target, final Object... args) {
+    protected NestableExpression createAvg(final ColumnExpression target, final Object... args) {
         return new Avg(target, columnIdentifierGenerator);
+    }
+
+    /**
+     * Creates an MIN-implementing expression.
+     *
+     * @param target Target expression to encapsulate.
+     * @param args   Not used; empty array
+     * @return A MIN-implementing expression
+     */
+    protected NestableExpression createMin(final ColumnExpression target, final Object... args) {
+        return new Min(target, columnIdentifierGenerator);
+    }
+
+    /**
+     * Creates an MAX-implementing expression.
+     *
+     * @param target Target expression to encapsulate.
+     * @param args   Not used; empty array
+     * @return A MAX-implementing expression
+     */
+    protected NestableExpression createMax(final ColumnExpression target, final Object... args) {
+        return new Max(target, columnIdentifierGenerator);
     }
 
     /**
@@ -87,7 +118,7 @@ public class SqlFunctionRegistryFactory {
      * Creates an UPPER-implementing expression.
      *
      * @param columnExpression Target expression to encapsulate.
-     * @param args   Not used; empty array
+     * @param args             Not used; empty array
      * @return An UPPER-implementing expression
      */
     protected NestableExpression createUpper(final ColumnExpression columnExpression, final Object... args) {
@@ -128,5 +159,20 @@ public class SqlFunctionRegistryFactory {
      */
     protected NestableExpression createSubstring(final ColumnExpression target, final int start, @Nullable Integer length) {
         return new Substring(target, start, length, columnIdentifierGenerator);
+    }
+
+    /**
+     * Creates an ABS-implementing expression.
+     *
+     * @param target Target expression to encapsulate.
+     * @param args   Not used; empty array
+     * @return An ABS-implementing expression
+     */
+    protected NestableExpression createAbs(final ColumnExpression target, final Object... args) {
+        return new Abs(target, columnIdentifierGenerator);
+    }
+
+    protected SelectExpression createCurrentTimestamp() {
+        return new CurrentTimestamp();
     }
 }

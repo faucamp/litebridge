@@ -5,15 +5,19 @@ import org.litebridgedb.db.spi.Table;
 
 public sealed interface ProtoNestableExpression extends ProtoExpression permits ProtoNestableBasicExpr, ProtoNestableTOExpr {
 
-    ProtoExpression target();
+    Expression target();
 
     default String column() {
-        return target().column();
+        return switch (target()) {
+            case ProtoExpression protoExpression -> protoExpression.column();
+            case ColumnExpression columnExpression -> columnExpression.column().name();
+            default -> throw new IllegalArgumentException("Invalid target expression: " + target());
+        };
     }
 
     @Override
     default Expression resolve(final Table table) {
-        return ProtoExpressionRegistry.resolveNestableExpression(this, new Column(table, target().column(), alias()));
+        return ProtoExpressionRegistry.resolveNestableExpression(this, new Column(table, column(), alias()));
     }
 
     @Override

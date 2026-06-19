@@ -9,6 +9,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 import java.lang.reflect.Proxy;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Clob;
 import java.sql.SQLException;
@@ -88,6 +89,30 @@ class StringConverterTest {
 
         // Then
         assertEquals("123", result);
+    }
+
+    @Test
+    void convert_BigDecimal_zeroFractionalPart() {
+        // Given
+        final BigDecimal input = new BigDecimal("123.0");
+
+        // When
+        final String result = converter.convert(input);
+
+        // Then
+        assertEquals("123", result);
+    }
+
+    @Test
+    void convert_BigDecimal_nonZeroFractionalPart() {
+        // Given
+        final BigDecimal input = new BigDecimal("123.345");
+
+        // When
+        final String result = converter.convert(input);
+
+        // Then
+        assertEquals("123.345", result);
     }
 
     @Test

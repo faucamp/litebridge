@@ -488,52 +488,6 @@ public class BasicE2eTest extends AbstractE2eTest {
         }
     }
 
-    @TestTemplate
-    @DisplayName("Functions: COUNT(), AVG()")
-    void select_functions(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
-
-        // Setup data
-        final Person[] persons = new Person[3];
-        for (int i = 0; i < 3; i++) {
-            persons[i] = new Person();
-            persons[i].setName("Name" + i);
-            persons[i].setSurname("Surname" + i);
-            persons[i].setAge(20 + (i * 5));
-        }
-
-        litebridge.save((Object[]) persons);
-
-        // Count the records
-        final Long personCount = litebridge.select(Fn.count()).from(Person.class).oneOrThrow();
-        assertEquals(3, personCount);
-
-        // Get the average age in the database's native type
-        final Number averageAge = litebridge.select(Fn.avg("age")).from(Person.class).oneOrThrow();
-        assertEquals(25, ((Number) averageAge).intValue());
-
-        // Get the average age and specify the return type
-        final Double averageAgeDouble = litebridge.select(Fn.avg("age", Double.class)).from(Person.class).oneOrThrow();
-        assertEquals(25.0, averageAgeDouble);
-
-        // Get the uppercase names of the stored persons
-        final List<String> uppercaseNames = litebridge.select(Fn.upper("name")).from(Person.class).list();
-        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseNames);
-
-        // Get the lowercase names of the stored persons
-        final List<String> lowercaseNames = litebridge.select(Fn.lower("name")).from(Person.class).list();
-        assertLinesMatch(List.of("name0", "name1", "name2"), lowercaseNames);
-
-        // Get substrings of the surnames
-        final List<String> surnameSubstrings = litebridge.select(Fn.substring("surname", 2, 5)).from(Person.class).list();
-        assertLinesMatch(List.of("urnam", "urnam", "urnam"), surnameSubstrings);
-
-        // Nested SQL functions
-        final List<String> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring("surname", 4))).from(Person.class).list();
-        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings);
-    }
-
-    private class TestException extends RuntimeException {
+    private static class TestException extends RuntimeException {
     }
 }

@@ -5,6 +5,11 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.orm.expression.function.aggregate.AvgSpec;
 import org.litebridgedb.orm.expression.function.aggregate.CountSpec;
+import org.litebridgedb.orm.expression.function.aggregate.MaxSpec;
+import org.litebridgedb.orm.expression.function.aggregate.MinSpec;
+import org.litebridgedb.orm.expression.function.date.CurrentTimestampSpec;
+import org.litebridgedb.orm.expression.function.java.ConvertSpec;
+import org.litebridgedb.orm.expression.function.scalar.AbsSpec;
 import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
 import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
@@ -219,6 +224,30 @@ public final class Fn {
         return ca(table, column, columnAlias);
     }
 
+    // Java helper functions
+
+    /**
+     * Converts a database result into the specified Java type.
+     * <p>
+     * This uses Litebridge's registered type converter to perform the conversion;
+     * it is not a database operation.
+     * <p>
+     * It can be used to ensure that the return value of a nested expression is converted to the specified Java type
+     * on the ORM side; e.g. {@link #avg(Expression)} returns a @{Number} instance by default,
+     * with the actual return type being determined by the database. To convert the return type to a {@code Long},
+     * {@code convert()} can be used to convert it before returning:
+     * <code>
+     * litebridge.select(Fn.convert(Fn.avg(column), Long.class));
+     * </code>
+     *
+     * @param expression The target expression result to convert
+     * @param returnType The type to convert the expression result to
+     * @return a {@link ProtoColumnExpression} expression instance to convert the return value of the nested expression
+     */
+    public static <T> TypeOverrideExpression<T> convert(final Expression expression, final Class<T> returnType) {
+        return new ProtoNestableTOExpr<>(returnType, ConvertSpec.class, expression, null);
+    }
+
     // SQL aggregate functions
 
     /**
@@ -228,17 +257,57 @@ public final class Fn {
      * @return a {@link ProtoNestableTOExpr} expression instance to select the average value of a column/field.
      */
     public static TypeOverrideExpression<Number> avg(final String column) {
-        return avg(column, Number.class);
+        return new ProtoNestableTOExpr<>(Number.class, AvgSpec.class, column, null);
     }
 
     /**
      * {@code AVG()}: Returns the average value of a column/field.
      *
-     * @param column Name of the target column/field to calculate the average value of.
+     * @param expression Target nested expression to calculate the average value of.
      * @return a {@link ProtoNestableTOExpr} expression instance to select the average value of a column/field.
      */
-    public static <T extends Number> TypeOverrideExpression<T> avg(final String column, final Class<T> returnType) {
-        return new ProtoNestableTOExpr<>(returnType, AvgSpec.class, column, null);
+    public static TypeOverrideExpression<Number> avg(final Expression expression) {
+        return new ProtoNestableTOExpr<>(Number.class, AvgSpec.class, expression, null);
+    }
+
+    /**
+     * {@code MAX()}: Returns the highest or largest value within a specified column/field.
+     *
+     * @param column Name of the target column/field to calculate the maximum value of.
+     * @return a {@link ProtoNestableTOExpr} expression instance to select the maximum value of a column/field.
+     */
+    public static TypeOverrideExpression<Number> max(final String column) {
+        return new ProtoNestableTOExpr<>(Number.class, MaxSpec.class, column, null);
+    }
+
+    /**
+     * {@code MAX()}: Returns the highest or largest value within a specified expression.
+     *
+     * @param expression Target nested expression to calculate the maximum value of.
+     * @return a {@link ProtoNestableTOExpr} expression instance to select the maximum value of a column/field.
+     */
+    public static TypeOverrideExpression<Number> max(final Expression expression) {
+        return new ProtoNestableTOExpr<>(Number.class, MaxSpec.class, expression, null);
+    }
+
+    /**
+     * {@code MIN()}: Returns the lowest or smallest value within a specified column or expression
+     *
+     * @param column Name of the target column/field to calculate the maximum value of.
+     * @return a {@link ProtoNestableTOExpr} expression instance to select the maximum value of a column/field.
+     */
+    public static TypeOverrideExpression<Number> min(final String column) {
+        return new ProtoNestableTOExpr<>(Number.class, MinSpec.class, column, null);
+    }
+
+    /**
+     * {@code MIN()}: Returns the lowest or smallest value within a specified column or expression
+     *
+     * @param expression Target nested expression to calculate the maximum value of.
+     * @return a {@link ProtoNestableTOExpr} expression instance to select the maximum value of a column/field.
+     */
+    public static TypeOverrideExpression<Number> min(final Expression expression) {
+        return new ProtoNestableTOExpr<>(Number.class, MinSpec.class, expression, null);
     }
 
     /**
@@ -255,26 +324,40 @@ public final class Fn {
     /**
      * {@code UPPER()}: Returns the uppercase value of a column's text.
      *
+     * @param column Target column/field name
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      */
     public static ProtoNestableTOExpr<String> upper(final String column) {
         return new ProtoNestableTOExpr<>(String.class, UpperSpec.class, column, null);
     }
 
-    public static ProtoNestableTOExpr<String> upper(final ProtoExpression expression) {
+    /**
+     * {@code UPPER()}: Returns the uppercase value of a column's text.
+     *
+     * @param expression Target nested expression
+     * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
+     */
+    public static ProtoNestableTOExpr<String> upper(final Expression expression) {
         return new ProtoNestableTOExpr<>(String.class, UpperSpec.class, expression, null);
     }
 
     /**
      * {@code LOWER()}: Returns the lowercase value of a column's text.
      *
+     * @param column Target column/field name
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      */
     public static ProtoNestableTOExpr<String> lower(final String column) {
         return new ProtoNestableTOExpr<>(String.class, LowerSpec.class, column, null);
     }
 
-    public static ProtoNestableTOExpr<String> lower(final ProtoExpression expression) {
+    /**
+     * {@code LOWER()}: Returns the lowercase value of a column's text.
+     *
+     * @param expression Target nested expression
+     * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
+     */
+    public static ProtoNestableTOExpr<String> lower(final Expression expression) {
         return new ProtoNestableTOExpr<>(String.class, LowerSpec.class, expression, null);
     }
 
@@ -295,6 +378,21 @@ public final class Fn {
 
     /**
      * {@code SUBSTRING()}: Returns the lowercase value of a column's text.
+     * <p>
+     * This shorthand version omits the "length" parameter and thus
+     * extracts everything from the start position to the end of the text.
+     *
+     * @param expression Target nested expression to extract characters from.
+     * @param start      The starting position. The first character of a database string is always 1.
+     * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
+     * @see #substring(String, int, int)
+     */
+    public static ProtoNestableTOExpr<String> substring(final Expression expression, final int start) {
+        return new ProtoNestableTOExpr<>(String.class, SubstringSpec.class, expression, null, new Object[]{start, null});
+    }
+
+    /**
+     * {@code SUBSTRING()}: Returns the lowercase value of a column's text.
      *
      * @param column Target column to extract characters from.
      * @param start  The starting position. The first character of a database string is always 1.
@@ -304,5 +402,43 @@ public final class Fn {
      */
     public static ProtoNestableTOExpr<String> substring(final String column, final int start, final int length) {
         return new ProtoNestableTOExpr<>(String.class, SubstringSpec.class, column, null, new Object[]{start, length});
+    }
+
+    /**
+     * {@code SUBSTRING()}: Returns the lowercase value of a column's text.
+     *
+     * @param expression Target nested expression to extract characters from.
+     * @param start      The starting position. The first character of a database string is always 1.
+     * @param length     The number of characters to return.
+     * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
+     * @see #substring(String, int)
+     */
+    public static ProtoNestableTOExpr<String> substring(final Expression expression, final int start, final int length) {
+        return new ProtoNestableTOExpr<>(String.class, SubstringSpec.class, expression, null, new Object[]{start, length});
+    }
+
+    /**
+     * {@code ABS()}: Absolute value of a number.
+     *
+     * @param column Target column/field.
+     * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
+     */
+    public static ProtoNestableTOExpr<Number> abs(final String column) {
+        return new ProtoNestableTOExpr<>(Number.class, AbsSpec.class, column, null);
+    }
+
+    /**
+     * {@code ABS()}: Absolute value of a number.
+     *
+     * @param expression Target nested expression.
+     * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
+     */
+    public static ProtoNestableTOExpr<Number> abs(final Expression expression) {
+        return new ProtoNestableTOExpr<>(Number.class, AbsSpec.class, expression, null);
+    }
+
+    // Current system date/time
+    public static CurrentTimestampSpec currentTimestamp() {
+        return new CurrentTimestampSpec();
     }
 }

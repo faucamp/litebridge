@@ -4,6 +4,10 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.type.TriFunction;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.orm.expression.function.aggregate.AvgSpec;
+import org.litebridgedb.orm.expression.function.aggregate.MaxSpec;
+import org.litebridgedb.orm.expression.function.aggregate.MinSpec;
+import org.litebridgedb.orm.expression.function.java.ConvertSpec;
+import org.litebridgedb.orm.expression.function.scalar.AbsSpec;
 import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
 import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
@@ -22,10 +26,13 @@ final class ProtoExpressionRegistry {
 
     private static final Map<Class<? extends Expression>, Function<ColumnExpression, NestableExpression>> nestableColumnExpressions = Map.of(
             UpperSpec.class, UpperSpec::new,
-            LowerSpec.class, LowerSpec::new);
+            LowerSpec.class, LowerSpec::new,
+            AbsSpec.class, AbsSpec::new);
 
     private static final Map<Class<? extends Expression>, BiFunction<ColumnExpression, Class<?>, NestableExpression>> typeOverrideColumnExpressions = Map.of(
-            AvgSpec.class, AvgSpec::new);
+            AvgSpec.class, AvgSpec::new,
+            MinSpec.class, MinSpec::new,
+            MaxSpec.class, MaxSpec::new);
 
     private static final Map<Class<? extends Expression>, TriFunction<ColumnExpression, Class<?>, @Nullable Object[], NestableExpression>> argTypeOverrideExpressions = Map.of(
             SubstringSpec.class, (target, type, args) -> new SubstringSpec(target, (int) args[0], (Integer) args[1]));
@@ -44,15 +51,20 @@ final class ProtoExpressionRegistry {
 
     static ColumnExpression resolveNestableExpression(final ProtoNestableExpression expression,
                                                       final Column column) {
-        final ProtoExpression nestedExpression = expression.target();
-        final ColumnExpression resolvedNestedExpression;
+        final Expression nestedExpression = expression.target();
 
-        if (nestedExpression instanceof ProtoNestableExpression targetNestedExpression) {
-            resolvedNestedExpression = resolveNestableExpression(targetNestedExpression, column);
-        } else if (expression.target() instanceof ProtoColumnExpression protoColumnExpression) {
-            resolvedNestedExpression = (ColumnExpression) resolve(protoColumnExpression.type(), column, protoColumnExpression.args());
-        } else {
-            throw new IllegalStateException("Unsupported expression: " + expression);
+        final ColumnExpression resolvedNestedExpression = switch (nestedExpression) {
+            case ColumnExpression columnExpression -> columnExpression;
+            case ProtoNestableExpression protoNestableExpression ->
+                    resolveNestableExpression(protoNestableExpression, column);
+            case ProtoColumnExpression protoColumnExpression ->
+                    (ColumnExpression) resolve(protoColumnExpression.type(), column, protoColumnExpression.args());
+            default -> throw new IllegalStateException("Unsupported expression: " + expression);
+        };
+
+        if (ConvertSpec.class.isAssignableFrom(expression.type())) {
+            // Skip over the convert wrapper when dealing with the database; the inferred type is already propagated
+            return resolvedNestedExpression;
         }
 
         if (expression.args() == null) {
