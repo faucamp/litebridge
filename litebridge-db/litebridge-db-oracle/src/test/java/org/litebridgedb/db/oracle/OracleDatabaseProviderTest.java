@@ -1,11 +1,13 @@
 package org.litebridgedb.db.oracle;
 
 import org.junit.jupiter.api.Test;
+import org.litebridgedb.db.oracle.function.OracleSqlFunctionRegistryFactory;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridgedb.db.spi.impl.function.SqlFunctionRegistryFactory;
 import org.litebridgedb.db.spi.query.Limit;
 
 import java.sql.PreparedStatement;
@@ -154,6 +156,18 @@ class OracleDatabaseProviderTest {
 
         // Then
         assertInstanceOf(OracleColumnIdentifierGenerator.class, result);
+    }
+
+    @Test
+    void createSqlFunctionRegistryFactory() {
+        // Given
+        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
+
+        // When
+        final SqlFunctionRegistryFactory result = provider.createSqlFunctionRegistryFactory();
+
+        // Then
+        assertInstanceOf(OracleSqlFunctionRegistryFactory.class, result);
     }
 
     @Test

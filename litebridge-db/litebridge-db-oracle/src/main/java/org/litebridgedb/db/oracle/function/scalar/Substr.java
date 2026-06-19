@@ -5,7 +5,7 @@ import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.scalar.Substring;
 
-public class Substr extends Substring {
+public final class Substr extends Substring {
 
     /**
      * Construct a {@code SUBSTR} function.

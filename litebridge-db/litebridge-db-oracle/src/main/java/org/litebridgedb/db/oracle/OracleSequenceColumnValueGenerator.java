@@ -9,7 +9,7 @@ import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
  * This class generates SQL fragments to retrieve the next value from an Oracle sequence
  * when used in SQL statements like INSERT or UPDATE.
  */
-public class OracleSequenceColumnValueGenerator extends SequenceColumnValueGenerator {
+public final class OracleSequenceColumnValueGenerator extends SequenceColumnValueGenerator {
 
     public OracleSequenceColumnValueGenerator(final String sequence) {
         super(sequence);

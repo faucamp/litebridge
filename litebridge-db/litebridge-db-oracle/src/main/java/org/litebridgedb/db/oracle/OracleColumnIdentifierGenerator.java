@@ -9,7 +9,7 @@ import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
 
-public class OracleColumnIdentifierGenerator extends ColumnIdentifierGenerator {
+public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGenerator {
 
     @Override
     public String createColumnIdentifier(final Column column, final boolean includeColumnAlias, final Operation operation) {
