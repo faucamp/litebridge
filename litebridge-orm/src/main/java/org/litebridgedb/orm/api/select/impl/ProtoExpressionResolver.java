@@ -85,8 +85,9 @@ public abstract class ProtoExpressionResolver {
 
     protected abstract ExpressionSpec resolveConvertSpec(final ConvertSpec<?> convertSpec);
 
-    static boolean isSupported(final Class<? extends ExpressionSpec> type) {
+    public static boolean isSupported(final Class<? extends ExpressionSpec> type) {
         return columnExpressions.containsKey(type)
+                || nestableColumnExpressions.containsKey(type)
                 || typeOverrideColumnExpressions.containsKey(type)
                 || argTypeOverrideExpressions.containsKey(type);
     }

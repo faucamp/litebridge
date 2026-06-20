@@ -5,40 +5,14 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.orm.api.select.impl.ProtoExpressionResolver;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
-import org.litebridgedb.orm.expression.NestableExpressionSpec;
 import org.litebridgedb.orm.expression.Resolvable;
-import org.litebridgedb.orm.expression.function.aggregate.AvgSpec;
-import org.litebridgedb.orm.expression.function.aggregate.MaxSpec;
-import org.litebridgedb.orm.expression.function.aggregate.MinSpec;
-import org.litebridgedb.orm.expression.function.scalar.AbsSpec;
-import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
-import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
 import org.litebridgedb.orm.expression.intent.ConvertSpec;
-import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
 import org.litebridgedb.tracking.FieldAccessor;
 
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
-
-    private static final Map<Class<? extends ExpressionSpec>, Function<Column, ExpressionSpec>> columnExpressions = Map.of(
-            SelectColumnSpec.class, SelectColumnSpec::new,
-            SelectFieldSpec.class, SelectColumnSpec::new);
-
-    private static final Map<Class<? extends ExpressionSpec>, Function<ColumnExpressionSpec, NestableExpressionSpec>> nestableColumnExpressions = Map.of(
-            UpperSpec.class, UpperSpec::new,
-            LowerSpec.class, LowerSpec::new,
-            AbsSpec.class, AbsSpec::new);
-
-    private static final Map<Class<? extends ExpressionSpec>, BiFunction<ColumnExpressionSpec, Class<?>, NestableExpressionSpec>> typeOverrideColumnExpressions = Map.of(
-            AvgSpec.class, AvgSpec::new,
-            MinSpec.class, MinSpec::new,
-            MaxSpec.class, MaxSpec::new);
 
     private final DtoSelectSpec selectSpec;
     private final AliasGenerator aliasGenerator;

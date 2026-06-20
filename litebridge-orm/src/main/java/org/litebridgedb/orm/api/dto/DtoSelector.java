@@ -8,9 +8,10 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
-import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.api.select.impl.ProtoExpressionResolver;
+import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.function.aggregate.MaxSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -21,9 +22,12 @@ import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
 import org.litebridgedb.tracking.FieldAccessor;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec> {
 
@@ -58,7 +62,11 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
     }
 
     public DtoFromClauseTerminal<DTO> select() {
-        return selectImpl(selectSpec.getTable(), selectSpec.dtoTable().mappedFieldTargets().stream()
+        return selectImpl(selectSpec.getTable(), createAllFieldsSelectExpressions());
+    }
+
+    private List<ExpressionSpec> createAllFieldsSelectExpressions() {
+        return selectSpec.dtoTable().mappedFieldTargets().stream()
                 .filter(entry -> entry.getValue() instanceof ColumnMetaData)
                 .map(entry -> (ColumnMetaData) entry.getValue())
                 .map(columnMetaData -> {
@@ -66,7 +74,7 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
                     final FieldAccessor fieldAccessor = selectSpec.dtoTable().getFieldForColumnName(column.name());
                     return (ExpressionSpec) new SelectFieldSpec(fieldAccessor, column);
                 })
-                .toList());
+                .toList();
     }
 
     private DtoFromClauseTerminal<DTO> selectImpl(final Table table, final List<ExpressionSpec> expressionSpecs) {
