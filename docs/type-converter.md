@@ -43,7 +43,25 @@ A functional interface with a single method `@Nullable T convert(@Nullable Objec
 
 ### `DefaultTypeConverter`
 
-`DefaultTypeConverter` extends `ConfigurableTypeConverter` and automatically populates itself with all `Converter` implementations found on the classpath using the Java `ServiceLoader` mechanism. This is the implementation typically used by Litebridge database providers.
+`DefaultTypeConverter` extends `ConfigurableTypeConverter` and automatically populates itself with all `Converter` implementations found using the Java `ServiceLoader` mechanism. 
+
+#### Dynamic Loading via JPMS
+
+Litebridge leverages the Java Platform Module System (JPMS) to allow for dynamic and extensible type conversion. The `litebridge-converter` module defines the `Converter` and `SqlConverter` service interfaces. 
+
+The `DefaultTypeConverter` uses `ServiceLoader.load(Converter.class)` to discover and register all available converter implementations at runtime. This allows:
+- **Modular Extensibility**: Custom modules can provide their own `Converter` implementations by including a `provides` clause in their `module-info.java`.
+- **Automatic Registration**: Any converter service found on the module path or classpath is automatically picked up and registered by the `DefaultTypeConverter` without any manual configuration.
+- **Dynamic Overrides**: By providing a custom converter with higher precedence or by registering it manually in a `ConfigurableTypeConverter`, you can easily customize the conversion logic for any type.
+
+For example, a module providing a custom converter for a specific library type would include:
+
+```java
+module my.custom.module {
+    requires litebridge.converter;
+    provides org.litebridgedb.convert.converter.Converter with my.package.MyCustomConverter;
+}
+```
 
 ## Standalone Usage
 
@@ -95,6 +113,7 @@ Litebridge comes with a wide range of built-in converters for common Java and SQ
 - **Primitive & Wrapper Types**: `Boolean`, `Byte`, `Character`, `Short`, `Integer`, `Long`, `Float`, `Double`.
 - **Numeric Types**: `BigDecimal`, `BigInteger`.
 - **String Types**: `String`.
+- **Date & Time Types**: `java.util.Date`, `java.time.LocalDate`, `java.time.LocalDateTime`, `java.time.OffsetDateTime`, `java.time.ZonedDateTime`.
 - **SQL Date/Time Types**: `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp`.
 - **Other**: `byte[]` (Binary data).
 
