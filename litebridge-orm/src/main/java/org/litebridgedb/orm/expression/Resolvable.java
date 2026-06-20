@@ -1,30 +1,24 @@
 package org.litebridgedb.orm.expression;
 
-import org.jspecify.annotations.Nullable;
-import org.litebridgedb.db.spi.Column;
-import org.litebridgedb.db.spi.Table;
-
+/**
+ * Represents an entity that can be resolved into an {@link ExpressionSpec}.
+ * <p>
+ * The resolution can be based on a database table or a specific column.
+ * Implementations may provide concrete logic for resolution depending on the type.
+ */
 public interface Resolvable {
 
+    /**
+     * Returns the target column name for this expression.
+     *
+     * @return the target column name.
+     */
     String column();
 
+    /**
+     * Returns the type of {@link ExpressionSpec} that this {@code Resolvable} can resolve to.
+     *
+     * @return the type of {@link ExpressionSpec} that this {@code Resolvable} can resolve to.
+     */
     Class<? extends ExpressionSpec> type();
-
-    /**
-     * Resolves this {@code Resolvable} into an {@link ExpressionSpec} using the specified table.
-     *
-     * @param table the table to use for resolution
-     * @return the resolved {@link ExpressionSpec} corresponding to the provide table
-     */
-//    ExpressionSpec resolve(Table table);
-
-    /**
-     * Resolves this {@code Resolvable} into an {@link ExpressionSpec} using the specified column.
-     * <p>
-     * Implementations may differ in handling {@code null} values for the {@code column} parameter.
-     *
-     * @param column the column to use for resolution; may be {@code null}
-     * @return the resolved {@link ExpressionSpec} corresponding to the provided column
-     */
-//    ExpressionSpec resolve(@Nullable Column column);
 }

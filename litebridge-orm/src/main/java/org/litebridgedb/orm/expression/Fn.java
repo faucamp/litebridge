@@ -17,7 +17,7 @@ import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 
 /**
- * Functions: Utility class that provides methods for constructing query expressions.
+ * Functions: Utility class that provides static methods for constructing query expressions.
  * <p>
  * This class is a collection of static functions to create different types
  * of select expressions within a database query. This includes selecting DTO
