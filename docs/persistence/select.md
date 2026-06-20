@@ -41,12 +41,50 @@ The `first()` call is a terminal operation that executes the query and returns t
 
 #### DTO-level queries
 
-DTOs must first be registered with Litebridge with via a database table mapping before they can be queried.
+##### Setup
 
-Once a DTO class is registered, it can be queried using the `litebridge.select(Class<?>)` method, e.g.:
+DTOs must first be registered with Litebridge with via a database table mapping before they can be queried.
+Once a DTO class is registered, it can be queried using the Litebridge DTO select API.
+
+##### Basic querying
+
+The `litebridge.select(Class<?>)` method is the basic entry point for DTO-level queries, and returns fully-populated
+DTOs (dependent on join conditions/strategy if applicable):
 
 ```java
-litebridge.select(Person.class).list();
+// List contains fully-populated Person objects
+List<Person> persons = litebridge.select(Person.class).list();
+
+// Retrieve a single fully-populated Person object
+Person person = litebridge.select(Person.class).where("id").eq(123L).oneOrThrow();
+```
+
+The `litebridge.select(String)` method is a convenient equivalent to 
+the general-form Litebridge "select from" call with no arguments:
+
+```java
+litebridge.select().from(Person.class).list();
+```
+
+##### General form querying
+
+Partially-populated DTOs can be retrieved using the general-form Litebridge "select from" method:
+
+```java
+// Retrieve a single Person object with only the "id" and "age" fields populated
+Person personIdAgeOnly = litebridge.select("id", "age").from(Person.class).oneOrThrow();
+```
+
+[Query expressions](#advanced-query-expressions) can be used with DTO-level queries:
+
+```java
+import static org.litebridgedb.orm.expression.Fn.*;
+
+// Count the number of Person entites matching the query
+Long personCount = litebridge.select(count()).from(Person.class).oneOrThrow();
+
+// Select the Person with the highest age
+Person highestAge = litebridge.select(max("age")).from(Person.class).oneOrThrow();
 ```
 
 #### SQL-level queries
