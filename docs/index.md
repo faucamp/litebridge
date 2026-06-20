@@ -4,7 +4,11 @@
 
 Litebridge is a fast, lightweight Object-Relational Mapper (ORM) for Java 21+.
 
-It simplifies persistence by treating SQL as a first-class citizen, balancing relational power with the flexibility of plain Java objects - without requiring annotations or complex toolchains.
+It simplifies persistence by treating SQL as a first-class citizen, balancing relational power with the flexibility 
+of plain Java objects - without requiring annotations or complex toolchains.
+
+Litebridge features a fluent query API that supports DTO-based queries and "raw SQL", 
+with advanced query expressions including SQL functions and explicit ORM-side type conversions.
 
 ## Contents
 
