@@ -73,7 +73,8 @@ litebridge.select("FIRST_NAME", "ACCOUNT_NAME")
 Advanced queries can be constructed using "query expressions". These allow selecting SQL functions, aliased columns, 
 or performing ORM-side type conversions. They work in both DTO-level and SQL-level contexts.
 
-Expressions are primarily created using the `Fn` utility class.
+Expressions are primarily created using the `Fn` utility class. 
+See the [Query Expressions](expressions.md) page for a full list of available expressions.
 
 ```java
 import static org.litebridgedb.orm.expression.Fn.*;
@@ -260,6 +261,8 @@ table being queried; in the DTO examples, the identifiers are mapped DTO field n
 ## Advanced Query Expressions
 
 Query expressions (via the `Fn` class) provide a powerful way to interact with the database beyond simple column selection.
+
+A complete list of available expressions and functions can be found on the [Query Expressions](expressions.md) page.
 
 ### SQL Functions
 
