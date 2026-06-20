@@ -30,10 +30,12 @@ import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.engine.FromClauseEngine;
 import org.litebridgedb.orm.engine.RegistrationEngine;
-import org.litebridgedb.orm.expression.Expression;
-import org.litebridgedb.orm.expression.ProtoColumnExpression;
-import org.litebridgedb.orm.expression.select.SelectField;
-import org.litebridgedb.orm.expression.TypeOverrideExpression;
+import org.litebridgedb.orm.expression.ExpressionModifier;
+import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.ProtoColumnExpressionSpec;
+import org.litebridgedb.orm.expression.TypeOverride;
+import org.litebridgedb.orm.expression.TypeOverrideExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
 import org.litebridgedb.orm.persistence.EntityDtoMapper;
@@ -311,7 +313,7 @@ public final class Litebridge {
     }
 
     /**
-     * Insert the specified Data Transfer Object (DTO) into the database via a SQL INSERT statement.
+     * Inserts the specified Data Transfer Object (DTO) into the database via a SQL INSERT statement.
      * <p>
      * This method uses the persistence facade to perform the insertion
      * and handles any SQL exceptions that might occur during the process.
@@ -432,8 +434,8 @@ public final class Litebridge {
      */
     public FromClauseStart select(final String... fieldsOrColumns) {
         return new FromClauseStart(Arrays.stream(fieldsOrColumns)
-                .map(fieldOrColumn -> new ProtoColumnExpression(SelectField.class, fieldOrColumn, null))
-                .toArray(ProtoColumnExpression[]::new),
+                .map(fieldOrColumn -> new ProtoColumnExpressionSpec(SelectFieldSpec.class, fieldOrColumn, null))
+                .toArray(ProtoColumnExpressionSpec[]::new),
                 fromClauseEngine);
     }
 
@@ -446,12 +448,12 @@ public final class Litebridge {
      * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
      * by specifying the target DTO or table for the query.
      *
-     * @param expressions An array of {@link Expression} objects representing the expressions
-     *                    to be part of the SELECT statement.
+     * @param expressionSpecs An array of {@link ExpressionSpec} objects representing the expressions
+     *                        to be part of the SELECT statement.
      * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
-    public FromClauseStart select(final Expression... expressions) {
-        return new FromClauseStart(expressions, fromClauseEngine);
+    public FromClauseStart select(final ExpressionSpec... expressionSpecs) {
+        return new FromClauseStart(expressionSpecs, fromClauseEngine);
     }
 
     /**
@@ -463,15 +465,55 @@ public final class Litebridge {
      * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
      * by specifying the target DTO or table for the query.
      *
-     * @param <TypeOverride>   The return type of the query
-     * @param expression       Return type-overriding expression
-     * @param otherExpressions An array of {@link Expression} objects representing additional expressions
-     *                         to be part of the SELECT statement.
+     * @param <T>                  The return type of the query
+     * @param expression           Return type-overriding expression
+     * @param otherExpressionSpecs An array of {@link ExpressionSpec} objects representing additional expressions
+     *                             to be part of the SELECT statement.
      * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
-    public <TypeOverride> FromClauseStartTypeOverride<TypeOverride> select(final TypeOverrideExpression<TypeOverride> expression, final Expression... otherExpressions) {
-        final Expression[] allExpressions = Stream.concat(Stream.of(expression), Arrays.stream(otherExpressions)).toArray(Expression[]::new);
-        return new FromClauseStartTypeOverride<>(expression.returnType(), allExpressions, fromClauseEngine);
+    public <T> FromClauseStartTypeOverride<T> select(final TypeOverride<T> expression, final ExpressionSpec... otherExpressionSpecs) {
+        if (otherExpressionSpecs.length == 0) {
+            final ExpressionSpec[] expressionSpecs = {switch (expression) {
+                case TypeOverrideExpressionSpec<?> typeOverrideExpression -> typeOverrideExpression;
+                case ExpressionModifier expressionModifier -> expressionModifier.toExpression();
+            }};
+
+            return new FromClauseStartTypeOverride<>(expression.returnType(), expressionSpecs, fromClauseEngine);
+        } else {
+            final ExpressionSpec[] allExpressionSpecs = switch (expression) {
+                case TypeOverrideExpressionSpec<?> typeOverrideExpression ->
+                        Stream.concat(Stream.of(typeOverrideExpression), Arrays.stream(otherExpressionSpecs)).toArray(ExpressionSpec[]::new);
+                case ExpressionModifier expressionModifier ->
+                        Stream.concat(Stream.of(expressionModifier.toExpression()), Arrays.stream(otherExpressionSpecs)).toArray(ExpressionSpec[]::new);
+            };
+
+//        if (expression instanceof TypeOverrideExpression<T>) {
+//            allExpressions = Stream.concat(Stream.of(expression), Arrays.stream(otherExpressions)).toArray(Expression[]::new);
+//        } else {
+//            allExpressions = otherExpressions;
+//        }
+
+            return new FromClauseStartTypeOverride<>(expression.returnType(), allExpressionSpecs, fromClauseEngine);
+        }
+    }
+
+    /**
+     * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
+     * <p>
+     * Creates a SQL SELECT statement with the specified fields/columns; the source table is specified
+     * via a chained {@code from()} call.
+     * <p>
+     * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
+     * by specifying the target DTO or table for the query.
+     *
+     * @param <T>                  The return type of the query
+     * @param expression           Return type-overriding expression
+     * @param otherExpressionSpecs An array of {@link ExpressionSpec} objects representing additional expressions
+     *                             to be part of the SELECT statement.
+     * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
+     */
+    public <T> FromClauseStartTypeOverride<T> select(final TypeOverrideExpressionSpec<T> expression, final ExpressionSpec... otherExpressionSpecs) {
+        return select((TypeOverride<T>) expression, otherExpressionSpecs);
     }
 
     /**
@@ -564,7 +606,7 @@ public final class Litebridge {
         selectSpec.setExpressions(row.columnStream()
                 .map(rowColumn -> {
                     final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(rowColumn.column().name());
-                    return (Expression) new SelectField(fieldAccessor, rowColumn.column());
+                    return (ExpressionSpec) new SelectFieldSpec(fieldAccessor, rowColumn.column());
                 })
                 .toList());
 

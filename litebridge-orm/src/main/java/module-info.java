@@ -41,7 +41,6 @@ module litebridge.orm {
 
     opens org.litebridgedb.orm to litebridge.tracking;
     opens org.litebridgedb.orm.api.dto to litebridge.commons, litebridge.tracking;
-    opens org.litebridgedb.orm.api.select.impl to litebridge.commons;
     opens org.litebridgedb.orm.persistence to litebridge.commons, litebridge.tracking;
     opens org.litebridgedb.orm.persistence.alias to litebridge.commons, litebridge.tracking;
     opens org.litebridgedb.orm.api.select to litebridge.commons, litebridge.tracking;

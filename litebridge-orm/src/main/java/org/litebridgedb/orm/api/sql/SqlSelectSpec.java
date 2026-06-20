@@ -1,5 +1,6 @@
 package org.litebridgedb.orm.api.sql;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
@@ -13,6 +14,8 @@ import java.util.ArrayList;
  * and limit specifications for building a query.
  */
 public class SqlSelectSpec extends SelectSpec {
+
+    private @Nullable Class<?> valueTypeOverride;
 
     public SqlSelectSpec(final SqlFunctionRegistry sqlFunctionRegistry) {
         super(sqlFunctionRegistry);
@@ -30,5 +33,13 @@ public class SqlSelectSpec extends SelectSpec {
         final SqlJoinSpec joinSpec = new SqlJoinSpec(table);
         joins.add(joinSpec);
         return joinSpec;
+    }
+
+    public @Nullable Class<?> getValueTypeOverride() {
+        return valueTypeOverride;
+    }
+
+    public void setValueTypeOverride(@Nullable final Class<?> valueTypeOverride) {
+        this.valueTypeOverride = valueTypeOverride;
     }
 }

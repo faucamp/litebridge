@@ -8,7 +8,7 @@ import org.litebridgedb.orm.api.sql.SqlFromClauseTerminal;
 import org.litebridgedb.orm.api.sql.SqlSelector;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
-import org.litebridgedb.orm.expression.Expression;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
@@ -42,16 +42,16 @@ public final class FromClauseEngine {
         this.litebridgeConfig = litebridgeConfig;
     }
 
-    public <DTO> DtoFromClauseTerminal<DTO> from(final Expression[] expressions, final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
+    public <DTO> DtoFromClauseTerminal<DTO> from(final ExpressionSpec[] expressionSpecs, final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
         final DtoSelector<DTO> dtoSelector = createDtoSelectorForType(dtoClass, dtoClass, relatedDtoStrategy);
-        return select(expressions, dtoSelector);
+        return select(expressionSpecs, dtoSelector);
     }
 
-    public <TypeOverride> DtoFromClauseTerminal<TypeOverride> from(final Expression[] expressions, final Class<?> dtoClass, final Class<TypeOverride> typeOverrideClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
+    public <TypeOverride> DtoFromClauseTerminal<TypeOverride> from(final ExpressionSpec[] expressionSpecs, final Class<?> dtoClass, final Class<TypeOverride> typeOverrideClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
         final DtoSelector<TypeOverride> dtoSelector = createDtoSelectorForType(typeOverrideClass, dtoClass, relatedDtoStrategy);
 
-        if (expressions.length > 0) {
-            return dtoSelector.select(expressions);
+        if (expressionSpecs.length > 0) {
+            return dtoSelector.select(expressionSpecs);
         } else {
             return dtoSelector.select();
         }
@@ -80,13 +80,13 @@ public final class FromClauseEngine {
                 .select();
     }
 
-    public SqlFromClauseTerminal from(final Expression[] expressions, final String table) {
-        return new SqlSelector(databaseProvider, tableRegistry, litebridgeConfig).select(expressions).from(table);
+    public SqlFromClauseTerminal from(final ExpressionSpec[] expressionSpecs, final String table) {
+        return new SqlSelector(databaseProvider, tableRegistry, litebridgeConfig).select(expressionSpecs).from(table);
     }
 
-    private static <DTO> DtoFromClauseTerminal<DTO> select(final Expression[] expressions, final DtoSelector<DTO> dtoSelector) {
-        if (expressions.length > 0) {
-            return dtoSelector.select(expressions);
+    private static <DTO> DtoFromClauseTerminal<DTO> select(final ExpressionSpec[] expressionSpecs, final DtoSelector<DTO> dtoSelector) {
+        if (expressionSpecs.length > 0) {
+            return dtoSelector.select(expressionSpecs);
         } else {
             return dtoSelector.select();
         }

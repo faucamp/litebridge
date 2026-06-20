@@ -1,7 +1,9 @@
 package org.litebridgedb.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
+import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.orm.api.select.SelectTerminal;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
@@ -10,7 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Supplier;

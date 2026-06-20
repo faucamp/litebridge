@@ -48,6 +48,13 @@ public class FunctionsE2eTest extends AbstractE2eTest {
         // Count the records
         final Long personCount = litebridge.select(Fn.count()).from(Person.class).oneOrThrow();
         assertEquals(3, personCount);
+
+        // Type override
+        final double personCountDouble = litebridge.select(Fn.convert(Fn.count(), Double.class)).from(Person.class).oneOrThrow();
+        assertEquals(3.0, personCountDouble);
+
+        final String personCountString = litebridge.select(Fn.convert(Fn.count(), String.class)).from(Person.class).oneOrThrow();
+        assertEquals("3", personCountString);
     }
 
     @TestTemplate
@@ -75,7 +82,13 @@ public class FunctionsE2eTest extends AbstractE2eTest {
         assertEquals((short) 25, averageAgeShort);
 
         final String averageAgeString = litebridge.select(Fn.convert(Fn.avg("age"), String.class)).from(Person.class).oneOrThrow();
-        assertEquals("25", averageAgeString);
+
+        if (dbEnv.getName().equals("SQLite")) {
+            // SQLite returns a Double
+            assertEquals("25.0", averageAgeString);
+        } else {
+            assertEquals("25", averageAgeString);
+        }
     }
 
     @TestTemplate

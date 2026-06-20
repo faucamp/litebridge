@@ -1,6 +1,5 @@
 package org.litebridgedb.orm.expression;
 
-import org.litebridgedb.orm.expression.function.scalar.AbsSpec;
 import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
 import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
@@ -10,9 +9,9 @@ import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
  * <p>
  * A nestable column expression that overrides the type of the result to {@code String}.
  */
-public sealed interface NumberTONestableExpression
-        extends NestableExpression, TypeOverrideExpression<Number>
-        permits AbsSpec {
+public sealed interface StringTONestableExpressionSpec
+        extends NestableExpressionSpec, TypeOverrideExpressionSpec<String>
+        permits LowerSpec, SubstringSpec, UpperSpec {
 
     /**
      * Gets the return type override of the query result.
@@ -22,7 +21,7 @@ public sealed interface NumberTONestableExpression
      * @return {@code String.class}
      */
     @Override
-    default Class<Number> returnType() {
-        return Number.class;
+    default Class<String> returnType() {
+        return String.class;
     }
 }

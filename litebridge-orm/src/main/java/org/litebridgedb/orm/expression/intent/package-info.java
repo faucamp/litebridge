@@ -1,7 +1,7 @@
 /**
- * Java-based expressions.
+ * Java-based query expression modifier "expressions"/intents.
  * <p>
  * These expressions are not translated to SQL; rather, they change the
  * behaviour of the query on the ORM side.
  */
-package org.litebridgedb.orm.expression.function.java;
+package org.litebridgedb.orm.expression.intent;

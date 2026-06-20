@@ -11,7 +11,7 @@ import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.orm.api.dto.DtoJoinSpec;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
-import org.litebridgedb.orm.expression.select.SelectField;
+import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridgedb.tracking.ChangeTracker;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
@@ -37,7 +37,7 @@ class DtoBlueprintTest {
         final Row row = new Row().withColumn(new Column(new Table("", "public", "test_table"), "id"), 123L);
         final FieldAccessor fieldAccessor = mock(FieldAccessor.class);
         when(fieldAccessor.name()).thenReturn("id");
-        dtoSelectSpec.setExpressions(List.of(new SelectField(fieldAccessor, new Column(new Table("", "public", "test_table"), "id"))));
+        dtoSelectSpec.setExpressions(List.of(new SelectFieldSpec(fieldAccessor, new Column(new Table("", "public", "test_table"), "id"))));
 
         // When
         final DtoBlueprint dtoBlueprint = new DtoBlueprint(dtoSelectSpec, primaryKey, row);
@@ -58,7 +58,7 @@ class DtoBlueprintTest {
         final DtoSelectSpec dtoSelectSpec = new DtoSelectSpec(TestDto.class, ormTable, new DefaultAliasGenerator(new DefaultAliasTransformer()), mock(SqlFunctionRegistry.class));
         final FieldAccessor fieldAccessor = mock(FieldAccessor.class);
         when(fieldAccessor.name()).thenReturn("id");
-        dtoSelectSpec.setExpressions(List.of(new SelectField(fieldAccessor, new Column(new Table(ormTable.getMetaData().catalog(), ormTable.getMetaData().schema(), ormTable.getMetaData().name()), "id"))));
+        dtoSelectSpec.setExpressions(List.of(new SelectFieldSpec(fieldAccessor, new Column(new Table(ormTable.getMetaData().catalog(), ormTable.getMetaData().schema(), ormTable.getMetaData().name()), "id"))));
         final List<Object> primaryKey = List.of(123L);
         final Row row = new Row().withColumn(new Column(ormTable.getMetaData().toTable(), "id"), 123L);
         final DtoBlueprint dtoBlueprint = new DtoBlueprint(dtoSelectSpec, primaryKey, row);

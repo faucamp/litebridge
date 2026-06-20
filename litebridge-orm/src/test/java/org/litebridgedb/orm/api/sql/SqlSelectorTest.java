@@ -8,7 +8,7 @@ import org.junit.platform.commons.support.ReflectionSupport;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.config.LitebridgeConfig;
-import org.litebridgedb.orm.expression.select.SelectColumn;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.mockito.Mock;
@@ -63,10 +63,10 @@ class SqlSelectorTest {
 
         assertNotNull(selectSpec.getExpressions());
         assertEquals(2, selectSpec.getExpressions().size());
-        assertEquals("COL1", ((SelectColumn) selectSpec.getExpressions().get(0)).column().name());
-        assertNull(((SelectColumn) selectSpec.getExpressions().get(0)).column().alias());
-        assertEquals("COL2", ((SelectColumn) selectSpec.getExpressions().get(1)).column().name());
-        assertNull(((SelectColumn) selectSpec.getExpressions().get(1)).column().alias());
+        assertEquals("COL1", ((SelectColumnSpec) selectSpec.getExpressions().get(0)).column().name());
+        assertNull(((SelectColumnSpec) selectSpec.getExpressions().get(0)).column().alias());
+        assertEquals("COL2", ((SelectColumnSpec) selectSpec.getExpressions().get(1)).column().name());
+        assertNull(((SelectColumnSpec) selectSpec.getExpressions().get(1)).column().alias());
 
         assertNotNull(selectSpec.getWhereConditions());
         assertEquals(1, selectSpec.getWhereConditions().size());
@@ -97,10 +97,10 @@ class SqlSelectorTest {
 
         assertNotNull(selectSpec.getExpressions());
         assertEquals(2, selectSpec.getExpressions().size());
-        assertEquals("COL1", ((SelectColumn) selectSpec.getExpressions().get(0)).column().name());
-        assertEquals("col1Alias", ((SelectColumn) selectSpec.getExpressions().get(0)).column().alias());
-        assertEquals("COL2", ((SelectColumn) selectSpec.getExpressions().get(1)).column().name());
-        assertEquals("col2Alias", ((SelectColumn) selectSpec.getExpressions().get(1)).column().alias());
+        assertEquals("COL1", ((SelectColumnSpec) selectSpec.getExpressions().get(0)).column().name());
+        assertEquals("col1Alias", ((SelectColumnSpec) selectSpec.getExpressions().get(0)).column().alias());
+        assertEquals("COL2", ((SelectColumnSpec) selectSpec.getExpressions().get(1)).column().name());
+        assertEquals("col2Alias", ((SelectColumnSpec) selectSpec.getExpressions().get(1)).column().alias());
 
         assertNotNull(selectSpec.getWhereConditions());
         assertEquals(1, selectSpec.getWhereConditions().size());

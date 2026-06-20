@@ -5,8 +5,8 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-import org.litebridgedb.orm.expression.ColumnExpression;
-import org.litebridgedb.orm.expression.Expression;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
 
@@ -42,10 +42,10 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
         // Use the aliased column if it is part of the SELECT clause, else use the unaliased column
         if (!selectSpec.getExpressions().isEmpty()) {
-            for (Expression expression : selectSpec.getExpressions()) {
+            for (ExpressionSpec expressionSpec : selectSpec.getExpressions()) {
                 Column selectedColumn;
 
-                if (expression instanceof ColumnExpression columnExpression) {
+                if (expressionSpec instanceof ColumnExpressionSpec columnExpression) {
                     selectedColumn = columnExpression.column();
                 } else {
                     continue;

@@ -12,8 +12,8 @@ import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.dto.DtoJoinSpec;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
-import org.litebridgedb.orm.expression.Expression;
-import org.litebridgedb.orm.expression.select.SelectField;
+import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.tracking.FieldAccessor;
 import org.litebridgedb.tracking.FieldAccessorChain;
 import org.slf4j.Logger;
@@ -385,13 +385,13 @@ public class SelectSpecDtoMapper {
         return pkFieldColumns;
     }
 
-    private List<DtoSelectSpec.FieldColumn> extractPrimaryKeyFieldColumns(final List<ColumnMetaData> pkColumns, final Table table, final List<Expression> expressions) {
+    private List<DtoSelectSpec.FieldColumn> extractPrimaryKeyFieldColumns(final List<ColumnMetaData> pkColumns, final Table table, final List<ExpressionSpec> expressionSpecs) {
         final List<DtoSelectSpec.FieldColumn> pkFieldColumns = new ArrayList<>(pkColumns.size());
 
         for (ColumnMetaData pkColumnn : pkColumns) {
-            expressions.stream()
-                    .filter(expression -> expression instanceof SelectField)
-                    .map(expression -> (SelectField) expression)
+            expressionSpecs.stream()
+                    .filter(expression -> expression instanceof SelectFieldSpec)
+                    .map(expression -> (SelectFieldSpec) expression)
                     .filter(selectField -> selectField.column().table().equals(table))
                     .filter(selectField -> selectField.column().name().equals(pkColumnn.name()))
                     .map(selectField -> new DtoSelectSpec.FieldColumn(selectField.field(), selectField.column()))

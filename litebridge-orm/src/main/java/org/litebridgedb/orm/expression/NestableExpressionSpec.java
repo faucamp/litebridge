@@ -5,10 +5,10 @@ import org.litebridgedb.orm.expression.function.aggregate.AvgSpec;
 import org.litebridgedb.orm.expression.function.aggregate.MaxSpec;
 import org.litebridgedb.orm.expression.function.aggregate.MinSpec;
 
-public sealed interface NestableExpression extends ColumnExpression
-        permits NumberTONestableExpression, StringTONestableExpression, AvgSpec, MaxSpec, MinSpec {
+public sealed interface NestableExpressionSpec extends ColumnExpressionSpec
+        permits NumberTONestableExpressionSpec, StringTONestableExpressionSpec, AvgSpec, MaxSpec, MinSpec {
 
-    ColumnExpression target();
+    ColumnExpressionSpec target();
 
     default Column column() {
         return target().column();

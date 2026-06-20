@@ -222,10 +222,6 @@ class SqlE2eTest extends AbstractE2eTest {
         }
     }
 
-    private String tableName(final String tableName) {
-        return dbEnv.getName().equals("SQLite") ? tableName.replace("LB.", "") : tableName;
-    }
-
     private String sql(final String sql) {
         return dbEnv.getName().equals("SQLite") ? sql.replace("LB.", "") : sql;
     }

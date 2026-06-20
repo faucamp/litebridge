@@ -9,7 +9,7 @@ import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.expression.SelectExpression;
-import org.litebridgedb.orm.expression.Expression;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,7 +32,7 @@ import java.util.Optional;
 public abstract class SelectSpec {
 
     protected @Nullable Table table;
-    protected List<Expression> expressions = new ArrayList<>();
+    protected List<ExpressionSpec> expressionSpecs = new ArrayList<>();
     protected @Nullable List<JoinSpec> joins;
     protected @Nullable List<ConditionSpec> whereConditions;
     protected @Nullable List<OrderBySpec> orderBys;
@@ -52,20 +52,20 @@ public abstract class SelectSpec {
         this.table = table;
     }
 
-    public List<Expression> getExpressions() {
-        return expressions;
+    public List<ExpressionSpec> getExpressions() {
+        return expressionSpecs;
     }
 
-    public void setExpressions(final List<Expression> expressions) {
-        if (expressions instanceof ArrayList) {
-            this.expressions = expressions;
+    public void setExpressions(final List<ExpressionSpec> expressionSpecs) {
+        if (expressionSpecs instanceof ArrayList) {
+            this.expressionSpecs = expressionSpecs;
         } else {
-            this.expressions = new ArrayList<>(expressions);
+            this.expressionSpecs = new ArrayList<>(expressionSpecs);
         }
     }
 
-    public void addExpressions(final List<? extends Expression> expressions) {
-        this.expressions.addAll(expressions);
+    public void addExpressions(final List<? extends ExpressionSpec> expressions) {
+        this.expressionSpecs.addAll(expressions);
     }
 
     public @Nullable List<JoinSpec> getJoins() {
@@ -152,11 +152,11 @@ public abstract class SelectSpec {
             throw new IllegalStateException("Table not specified");
         }
 
-        final List<Expression> expressions = getExpressions();
+        final List<ExpressionSpec> expressionSpecs = getExpressions();
         final List<SelectExpression> selectExpressions;
 
-        if (!expressions.isEmpty()) {
-            selectExpressions = expressions.stream()
+        if (!expressionSpecs.isEmpty()) {
+            selectExpressions = expressionSpecs.stream()
                     .map(selectExpressionMapper::toSelectExpression)
                     .toList();
         } else {

@@ -4,21 +4,21 @@ import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
-import org.litebridgedb.orm.expression.Expression;
-import org.litebridgedb.orm.expression.NestableExpression;
-import org.litebridgedb.orm.expression.ProtoExpression;
+import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.NestableExpressionSpec;
+import org.litebridgedb.orm.expression.ProtoExpressionSpec;
 import org.litebridgedb.orm.expression.function.aggregate.AvgSpec;
 import org.litebridgedb.orm.expression.function.aggregate.CountSpec;
 import org.litebridgedb.orm.expression.function.aggregate.MaxSpec;
 import org.litebridgedb.orm.expression.function.aggregate.MinSpec;
 import org.litebridgedb.orm.expression.function.date.CurrentTimestampSpec;
-import org.litebridgedb.orm.expression.function.java.ConvertSpec;
 import org.litebridgedb.orm.expression.function.scalar.AbsSpec;
 import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
 import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
-import org.litebridgedb.orm.expression.select.SelectColumn;
-import org.litebridgedb.orm.expression.select.SelectField;
+import org.litebridgedb.orm.expression.intent.ConvertSpec;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
+import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 
 final class SelectExpressionMapper {
 
@@ -28,32 +28,32 @@ final class SelectExpressionMapper {
         this.sqlFunctionRegistry = sqlFunctionRegistry;
     }
 
-    SelectExpression toSelectExpression(final Expression expression) {
-        return switch (expression) {
+    SelectExpression toSelectExpression(final ExpressionSpec expressionSpec) {
+        return switch (expressionSpec) {
             // Select columns
-            case SelectField selectField -> toSelectColumn(selectField);
-            case SelectColumn selectColumn -> toSelectColumn(selectColumn);
+            case SelectFieldSpec selectFieldSpec -> toSelectColumn(selectFieldSpec);
+            case SelectColumnSpec selectColumnSpec -> toSelectColumn(selectColumnSpec);
 
             // Aggregate functions
             case CountSpec countSpec -> sqlFunctionRegistry.aggregate().count();
 
             // Nestable expressions
-            case NestableExpression nestableExpression -> resolveNestedExpression(nestableExpression);
+            case NestableExpressionSpec nestableExpression -> resolveNestedExpression(nestableExpression);
 
             // Date/time
             case CurrentTimestampSpec currentTimestampSpec -> sqlFunctionRegistry.date().currentTimestamp();
 
             // Unsupported
-            case ConvertSpec<?> convertSpec -> throw new IllegalStateException("ConvertSpec is ORM-side only");
-            case ProtoExpression protoExpression ->
+            case ConvertSpec convertSpec -> throw new IllegalStateException("ConvertSpec is ORM-side only");
+            case ProtoExpressionSpec protoExpression ->
                     throw new IllegalStateException("ProtoExpression not resolved: " + protoExpression);
         };
     }
 
-    private ColumnExpression resolveNestedExpression(final NestableExpression expression) {
+    private ColumnExpression resolveNestedExpression(final NestableExpressionSpec expression) {
         final ColumnExpression nestedExpression;
 
-        if (expression.target() instanceof NestableExpression targetNestableExpression) {
+        if (expression.target() instanceof NestableExpressionSpec targetNestableExpression) {
             nestedExpression = resolveNestedExpression(targetNestableExpression);
         } else {
             nestedExpression = (ColumnExpression) toSelectExpression(expression.target());
@@ -74,14 +74,14 @@ final class SelectExpressionMapper {
         };
     }
 
-    ColumnExpression toSelectColumn(final SelectField selectField) {
+    ColumnExpression toSelectColumn(final SelectFieldSpec selectFieldSpec) {
         return sqlFunctionRegistry.selectColumnFactory()
-                .create(ObjectUtils.requireNonNull(selectField.column(),
+                .create(ObjectUtils.requireNonNull(selectFieldSpec.column(),
                         () -> new IllegalStateException("SelectField.column not set")));
     }
 
-    ColumnExpression toSelectColumn(final SelectColumn selectColumn) {
+    ColumnExpression toSelectColumn(final SelectColumnSpec selectColumnSpec) {
         return sqlFunctionRegistry.selectColumnFactory()
-                .create(selectColumn.column());
+                .create(selectColumnSpec.column());
     }
 }

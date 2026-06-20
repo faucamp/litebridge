@@ -8,13 +8,13 @@ import org.litebridgedb.orm.expression.function.aggregate.CountSpec;
 import org.litebridgedb.orm.expression.function.aggregate.MaxSpec;
 import org.litebridgedb.orm.expression.function.aggregate.MinSpec;
 import org.litebridgedb.orm.expression.function.date.CurrentTimestampSpec;
-import org.litebridgedb.orm.expression.function.java.ConvertSpec;
+import org.litebridgedb.orm.expression.intent.ConvertIntent;
 import org.litebridgedb.orm.expression.function.scalar.AbsSpec;
 import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
 import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
-import org.litebridgedb.orm.expression.select.SelectColumn;
-import org.litebridgedb.orm.expression.select.SelectField;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
+import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 
 /**
  * Functions: Utility class that provides methods for constructing query expressions.
@@ -38,19 +38,19 @@ public final class Fn {
      * Shorthand for {@link #field(String)}.
      *
      * @param field The name of the DTO field to select.
-     * @return a {@link SelectField} expression instance to select the specified field.
+     * @return a {@link SelectFieldSpec} expression instance to select the specified field.
      */
-    public static Expression f(final String field) {
-        return new ProtoColumnExpression(SelectField.class, field, null);
+    public static ExpressionSpec f(final String field) {
+        return new ProtoColumnExpressionSpec(SelectFieldSpec.class, field, null);
     }
 
     /**
      * Selects a DTO field by name.
      *
      * @param field The name of the DTO field to select.
-     * @return a {@link SelectField} expression instance to select the specified field.
+     * @return a {@link SelectFieldSpec} expression instance to select the specified field.
      */
-    public static Expression field(final String field) {
+    public static ExpressionSpec field(final String field) {
         return f(field);
     }
 
@@ -59,24 +59,24 @@ public final class Fn {
      * <p>
      * This is shorthand for {@link #column(String)}.
      * <p>
-     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
      *
      * @param column The name of the column to select.
-     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
      */
-    public static Expression c(final String column) {
+    public static ExpressionSpec c(final String column) {
         return ca(column, null);
     }
 
     /**
      * Selects a database column by name.
      * <p>
-     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
      *
      * @param column The name of the column to select.
-     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
      */
-    public static Expression column(final String column) {
+    public static ExpressionSpec column(final String column) {
         return c(column);
     }
 
@@ -85,26 +85,26 @@ public final class Fn {
      * <p>
      * Shorthand for {@link #column(String, String)}
      * <p>
-     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
      *
      * @param table  The table to select the column from.
      * @param column The name of the column to select.
-     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
      */
-    public static Expression c(final String table, final String column) {
+    public static ExpressionSpec c(final String table, final String column) {
         return ca(table, column, null);
     }
 
     /**
      * Selects a database column by name.
      * <p>
-     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
      *
      * @param table  The table to select the column from.
      * @param column The name of the column to select.
-     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
      */
-    public static Expression column(final String table, final String column) {
+    public static ExpressionSpec column(final String table, final String column) {
         return c(table, column);
     }
 
@@ -113,26 +113,26 @@ public final class Fn {
      * <p>
      * Shorthand for {@link #column(Table, String)}
      * <p>
-     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
      *
      * @param table  The table to select the column from.
      * @param column The name of the column to select.
-     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
      */
-    public static Expression c(final Table table, final String column) {
+    public static ExpressionSpec c(final Table table, final String column) {
         return ca(table, column, null);
     }
 
     /**
      * Selects a database column by name.
      * <p>
-     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
      *
      * @param table  The table to select the column from.
      * @param column The name of the column to select.
-     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
      */
-    public static Expression column(final Table table, final String column) {
+    public static ExpressionSpec column(final Table table, final String column) {
         return c(table, column);
     }
 
@@ -141,28 +141,28 @@ public final class Fn {
      * <p>
      * Shorthand for {@link #columnAlias(Table, String, String)} (Table, String, String)}
      * <p>
-     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
      *
      * @param table       The table to select the column from.
      * @param column      The name of the column to select.
      * @param columnAlias The alias to use for the column; may be {@code null}.
-     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
      */
-    public static Expression ca(final Table table, final String column, final @Nullable String columnAlias) {
-        return new SelectColumn(new Column(table, column, columnAlias));
+    public static ExpressionSpec ca(final Table table, final String column, final @Nullable String columnAlias) {
+        return new SelectColumnSpec(new Column(table, column, columnAlias));
     }
 
     /**
      * Selects a database column by name and alias.
      * <p>
-     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
      *
      * @param table       The table to select the column from.
      * @param column      The name of the column to select.
      * @param columnAlias The alias to use for the column; may be {@code null}.
-     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
      */
-    public static Expression columnAlias(final Table table, final String column, final @Nullable String columnAlias) {
+    public static ExpressionSpec columnAlias(final Table table, final String column, final @Nullable String columnAlias) {
         return ca(table, column, columnAlias);
     }
 
@@ -171,26 +171,26 @@ public final class Fn {
      * <p>
      * Shorthand for {@link #columnAlias(String, String)}
      * <p>
-     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
      *
      * @param column The name of the column to select.
      * @param alias  The alias to use for the column.
-     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
      */
-    public static Expression ca(final String column, final @Nullable String alias) {
-        return new ProtoColumnExpression(SelectColumn.class, column, alias);
+    public static ExpressionSpec ca(final String column, final @Nullable String alias) {
+        return new ProtoColumnExpressionSpec(SelectColumnSpec.class, column, alias);
     }
 
     /**
      * Selects a database column by name and alias.
      * <p>
-     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
      *
      * @param column The name of the column to select.
      * @param alias  The alias to use for the column.
-     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
      */
-    public static Expression columnAlias(final String column, final @Nullable String alias) {
+    public static ExpressionSpec columnAlias(final String column, final @Nullable String alias) {
         return ca(column, alias);
     }
 
@@ -199,28 +199,28 @@ public final class Fn {
      * <p>
      * Shorthand for {@link #columnAlias(Table, String, String)}
      * <p>
-     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
      *
      * @param table       The table to select the column from.
      * @param column      The name of the column to select.
      * @param columnAlias The alias to use for the column.
-     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
      */
-    public static Expression ca(final String table, final String column, final @Nullable String columnAlias) {
+    public static ExpressionSpec ca(final String table, final String column, final @Nullable String columnAlias) {
         return ca(new Table(table), column, columnAlias);
     }
 
     /**
      * Selects a database column by name and alias.
      * <p>
-     * The returned {@link ProtoColumnExpression} value has no context of the table it is selecting from yet.
+     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
      *
      * @param table       The table to select the column from.
      * @param column      The name of the column to select.
      * @param columnAlias The alias to use for the column.
-     * @return a {@link ProtoColumnExpression} expression instance to select a specific column.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
      */
-    public static Expression columnAlias(final String table, final String column, final @Nullable String columnAlias) {
+    public static ExpressionSpec columnAlias(final String table, final String column, final @Nullable String columnAlias) {
         return ca(table, column, columnAlias);
     }
 
@@ -233,19 +233,19 @@ public final class Fn {
      * it is not a database operation.
      * <p>
      * It can be used to ensure that the return value of a nested expression is converted to the specified Java type
-     * on the ORM side; e.g. {@link #avg(Expression)} returns a @{Number} instance by default,
+     * on the ORM side; e.g. {@link #avg(ExpressionSpec)} returns a @{Number} instance by default,
      * with the actual return type being determined by the database. To convert the return type to a {@code Long},
      * {@code convert()} can be used to convert it before returning:
      * <code>
      * litebridge.select(Fn.convert(Fn.avg(column), Long.class));
      * </code>
      *
-     * @param expression The target expression result to convert
+     * @param expressionSpec The target expression result to convert
      * @param returnType The type to convert the expression result to
-     * @return a {@link ProtoColumnExpression} expression instance to convert the return value of the nested expression
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to convert the return value of the nested expression
      */
-    public static <T> TypeOverrideExpression<T> convert(final Expression expression, final Class<T> returnType) {
-        return new ProtoNestableTOExpr<>(returnType, ConvertSpec.class, expression, null);
+    public static <T> ConvertIntent<T> convert(final ExpressionSpec expressionSpec, final Class<T> returnType) {
+        return new ConvertIntent<>(expressionSpec, returnType);
     }
 
     // SQL aggregate functions
@@ -256,18 +256,18 @@ public final class Fn {
      * @param column Name of the target column/field to calculate the average value of.
      * @return a {@link ProtoNestableTOExpr} expression instance to select the average value of a column/field.
      */
-    public static TypeOverrideExpression<Number> avg(final String column) {
+    public static TypeOverrideExpressionSpec<Number> avg(final String column) {
         return new ProtoNestableTOExpr<>(Number.class, AvgSpec.class, column, null);
     }
 
     /**
      * {@code AVG()}: Returns the average value of a column/field.
      *
-     * @param expression Target nested expression to calculate the average value of.
+     * @param expressionSpec Target nested expression to calculate the average value of.
      * @return a {@link ProtoNestableTOExpr} expression instance to select the average value of a column/field.
      */
-    public static TypeOverrideExpression<Number> avg(final Expression expression) {
-        return new ProtoNestableTOExpr<>(Number.class, AvgSpec.class, expression, null);
+    public static TypeOverrideExpressionSpec<Number> avg(final ExpressionSpec expressionSpec) {
+        return new ProtoNestableTOExpr<>(Number.class, AvgSpec.class, expressionSpec, null);
     }
 
     /**
@@ -276,18 +276,18 @@ public final class Fn {
      * @param column Name of the target column/field to calculate the maximum value of.
      * @return a {@link ProtoNestableTOExpr} expression instance to select the maximum value of a column/field.
      */
-    public static TypeOverrideExpression<Number> max(final String column) {
+    public static TypeOverrideExpressionSpec<Number> max(final String column) {
         return new ProtoNestableTOExpr<>(Number.class, MaxSpec.class, column, null);
     }
 
     /**
      * {@code MAX()}: Returns the highest or largest value within a specified expression.
      *
-     * @param expression Target nested expression to calculate the maximum value of.
+     * @param expressionSpec Target nested expression to calculate the maximum value of.
      * @return a {@link ProtoNestableTOExpr} expression instance to select the maximum value of a column/field.
      */
-    public static TypeOverrideExpression<Number> max(final Expression expression) {
-        return new ProtoNestableTOExpr<>(Number.class, MaxSpec.class, expression, null);
+    public static TypeOverrideExpressionSpec<Number> max(final ExpressionSpec expressionSpec) {
+        return new ProtoNestableTOExpr<>(Number.class, MaxSpec.class, expressionSpec, null);
     }
 
     /**
@@ -296,18 +296,18 @@ public final class Fn {
      * @param column Name of the target column/field to calculate the maximum value of.
      * @return a {@link ProtoNestableTOExpr} expression instance to select the maximum value of a column/field.
      */
-    public static TypeOverrideExpression<Number> min(final String column) {
+    public static TypeOverrideExpressionSpec<Number> min(final String column) {
         return new ProtoNestableTOExpr<>(Number.class, MinSpec.class, column, null);
     }
 
     /**
      * {@code MIN()}: Returns the lowest or smallest value within a specified column or expression
      *
-     * @param expression Target nested expression to calculate the maximum value of.
+     * @param expressionSpec Target nested expression to calculate the maximum value of.
      * @return a {@link ProtoNestableTOExpr} expression instance to select the maximum value of a column/field.
      */
-    public static TypeOverrideExpression<Number> min(final Expression expression) {
-        return new ProtoNestableTOExpr<>(Number.class, MinSpec.class, expression, null);
+    public static TypeOverrideExpressionSpec<Number> min(final ExpressionSpec expressionSpec) {
+        return new ProtoNestableTOExpr<>(Number.class, MinSpec.class, expressionSpec, null);
     }
 
     /**
@@ -315,7 +315,7 @@ public final class Fn {
      *
      * @return a {@link CountSpec} expression instance to select the count of rows.
      */
-    public static TypeOverrideExpression<Long> count() {
+    public static TypeOverrideExpressionSpec<Long> count() {
         return new CountSpec();
     }
 
@@ -334,11 +334,11 @@ public final class Fn {
     /**
      * {@code UPPER()}: Returns the uppercase value of a column's text.
      *
-     * @param expression Target nested expression
+     * @param expressionSpec Target nested expression
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      */
-    public static ProtoNestableTOExpr<String> upper(final Expression expression) {
-        return new ProtoNestableTOExpr<>(String.class, UpperSpec.class, expression, null);
+    public static ProtoNestableTOExpr<String> upper(final ExpressionSpec expressionSpec) {
+        return new ProtoNestableTOExpr<>(String.class, UpperSpec.class, expressionSpec, null);
     }
 
     /**
@@ -354,11 +354,11 @@ public final class Fn {
     /**
      * {@code LOWER()}: Returns the lowercase value of a column's text.
      *
-     * @param expression Target nested expression
+     * @param expressionSpec Target nested expression
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      */
-    public static ProtoNestableTOExpr<String> lower(final Expression expression) {
-        return new ProtoNestableTOExpr<>(String.class, LowerSpec.class, expression, null);
+    public static ProtoNestableTOExpr<String> lower(final ExpressionSpec expressionSpec) {
+        return new ProtoNestableTOExpr<>(String.class, LowerSpec.class, expressionSpec, null);
     }
 
     /**
@@ -382,13 +382,13 @@ public final class Fn {
      * This shorthand version omits the "length" parameter and thus
      * extracts everything from the start position to the end of the text.
      *
-     * @param expression Target nested expression to extract characters from.
+     * @param expressionSpec Target nested expression to extract characters from.
      * @param start      The starting position. The first character of a database string is always 1.
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      * @see #substring(String, int, int)
      */
-    public static ProtoNestableTOExpr<String> substring(final Expression expression, final int start) {
-        return new ProtoNestableTOExpr<>(String.class, SubstringSpec.class, expression, null, new Object[]{start, null});
+    public static ProtoNestableTOExpr<String> substring(final ExpressionSpec expressionSpec, final int start) {
+        return new ProtoNestableTOExpr<>(String.class, SubstringSpec.class, expressionSpec, null, new Object[]{start, null});
     }
 
     /**
@@ -407,14 +407,14 @@ public final class Fn {
     /**
      * {@code SUBSTRING()}: Returns the lowercase value of a column's text.
      *
-     * @param expression Target nested expression to extract characters from.
+     * @param expressionSpec Target nested expression to extract characters from.
      * @param start      The starting position. The first character of a database string is always 1.
      * @param length     The number of characters to return.
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      * @see #substring(String, int)
      */
-    public static ProtoNestableTOExpr<String> substring(final Expression expression, final int start, final int length) {
-        return new ProtoNestableTOExpr<>(String.class, SubstringSpec.class, expression, null, new Object[]{start, length});
+    public static ProtoNestableTOExpr<String> substring(final ExpressionSpec expressionSpec, final int start, final int length) {
+        return new ProtoNestableTOExpr<>(String.class, SubstringSpec.class, expressionSpec, null, new Object[]{start, length});
     }
 
     /**
@@ -430,11 +430,11 @@ public final class Fn {
     /**
      * {@code ABS()}: Absolute value of a number.
      *
-     * @param expression Target nested expression.
+     * @param expressionSpec Target nested expression.
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      */
-    public static ProtoNestableTOExpr<Number> abs(final Expression expression) {
-        return new ProtoNestableTOExpr<>(Number.class, AbsSpec.class, expression, null);
+    public static ProtoNestableTOExpr<Number> abs(final ExpressionSpec expressionSpec) {
+        return new ProtoNestableTOExpr<>(Number.class, AbsSpec.class, expressionSpec, null);
     }
 
     // Current system date/time
