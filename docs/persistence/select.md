@@ -83,8 +83,8 @@ import static org.litebridgedb.orm.expression.Fn.*;
 // Count the number of Person entites matching the query
 Long personCount = litebridge.select(count()).from(Person.class).oneOrThrow();
 
-// Select the Person with the highest age
-Person highestAge = litebridge.select(max("age")).from(Person.class).oneOrThrow();
+// Select the highest age from Person.age
+Long maxAge = litebridge.select(max("age")).from(Person.class).oneOrThrow();
 ```
 
 #### SQL-level queries
