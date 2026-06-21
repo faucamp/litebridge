@@ -7,7 +7,7 @@ import org.junit.platform.commons.support.HierarchyTraversalMode;
 import org.junit.platform.commons.support.ReflectionSupport;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Operator;
-import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.litebridgedb.orm.expression.Fn.c;
 import static org.litebridgedb.orm.expression.Fn.ca;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SqlSelectorTest {
@@ -38,8 +37,7 @@ class SqlSelectorTest {
     void beforeEach() {
         tableRegistry = new TableRegistry();
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        sqlSelector = new SqlSelector(databaseProvider, tableRegistry, new LitebridgeConfig());
+        sqlSelector = new SqlSelector(databaseProvider, tableRegistry, mock(LitebridgeContext.class));
     }
 
     @Test

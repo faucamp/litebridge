@@ -1,7 +1,6 @@
 package org.litebridgedb.db.spi.update;
 
 import org.litebridgedb.db.spi.Operation;
-import org.litebridgedb.db.spi.Table;
 
 /**
  * Common marker interface for database update operations.
@@ -18,11 +17,4 @@ import org.litebridgedb.db.spi.Table;
  * This interface is part of the update-related models for database operations.
  */
 public sealed interface UpdateStatement extends Operation permits Delete, Insert, Update {
-
-    /**
-     * Get the target table for the update statement.
-     *
-     * @return the target table of the update statement
-     */
-    Table table();
 }

@@ -3,6 +3,7 @@ package org.litebridgedb.db.spi.query;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.LiteralExpression;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ class JoinTest {
         final Column column = new Column(table, "TEST_COLUMN");
         final Operator operator = Operator.EQ;
         final Object value = "testValue";
-        final Condition condition = new Condition(column, operator, value);
+        final Condition condition = new Condition(column, operator, new LiteralExpression(value));
 
         // When
         final Join result = new Join(table, List.of(condition));

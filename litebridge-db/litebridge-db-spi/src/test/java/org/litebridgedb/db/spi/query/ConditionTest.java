@@ -3,6 +3,7 @@ package org.litebridgedb.db.spi.query;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.LiteralExpression;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -20,12 +21,12 @@ class ConditionTest {
         final Object value = "testValue";
 
         // When
-        final Condition result = new Condition(column, operator, value);
+        final Condition result = new Condition(column, operator, new LiteralExpression(value));
 
         // Then
         assertEquals(column, result.column());
         assertEquals(operator, result.operator());
-        assertEquals(value, result.value());
+        assertEquals(value, ((LiteralExpression) result.value()).value());
     }
 
     @Test

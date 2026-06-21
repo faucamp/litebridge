@@ -25,7 +25,7 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
     public SqlJoinConditionClause on(final String column) {
         final Column spiColumn = new Column(joinSpec.table(), column);
         final SqlJoinConditionClauseTerminal joinConditionClauseTerminal = new SqlJoinConditionClauseTerminal(joinSpec, delegate);
-        return new SqlJoinConditionClause(joinSpec.newCondition(spiColumn), joinConditionClauseTerminal);
+        return new SqlJoinConditionClause(joinSpec.newCondition(spiColumn), joinConditionClauseTerminal, delegate.litebridgeContext());
     }
 
     /**

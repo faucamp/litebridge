@@ -9,6 +9,7 @@ import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.expression.SelectExpression;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 
 import java.util.ArrayList;
@@ -31,6 +32,9 @@ import java.util.Optional;
  */
 public abstract class SelectSpec {
 
+    protected final SelectExpressionMapper selectExpressionMapper;
+    protected final LitebridgeContext litebridgeContext;
+
     protected @Nullable Table table;
     protected List<ExpressionSpec> expressionSpecs = new ArrayList<>();
     protected @Nullable List<JoinSpec> joins;
@@ -38,10 +42,10 @@ public abstract class SelectSpec {
     protected @Nullable List<OrderBySpec> orderBys;
     protected @Nullable LimitSpec limit;
     protected @Nullable Map<Class<?>, String> dtoAliases;
-    protected final SelectExpressionMapper selectExpressionMapper;
 
-    public SelectSpec(final SqlFunctionRegistry sqlFunctionRegistry) {
-        this.selectExpressionMapper = new SelectExpressionMapper(sqlFunctionRegistry);
+    public SelectSpec(final LitebridgeContext litebridgeContext) {
+        this.selectExpressionMapper = new SelectExpressionMapper(litebridgeContext.sqlFunctionRegistry());
+        this.litebridgeContext = litebridgeContext;
     }
 
     public Table getTable() {
@@ -181,7 +185,7 @@ public abstract class SelectSpec {
                                 .map(column -> new OrderBy(column, orderBySpec.isAsc())))
                         .toList() : Collections.emptyList(),
                 whereConditions != null ? whereConditions.stream()
-                        .map(ConditionSpec::toCondition)
+                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper))
                         .toList() : Collections.emptyList(),
                 limit != null ? limit.toLimit() : Optional.empty());
     }

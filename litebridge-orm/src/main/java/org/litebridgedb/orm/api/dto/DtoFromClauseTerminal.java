@@ -42,6 +42,9 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
         // Use the aliased column if it is part of the SELECT clause, else use the unaliased column
         if (!selectSpec.getExpressions().isEmpty()) {
+            Column replacementColumn = null;
+
+            // Look for an exact column match
             for (ExpressionSpec expressionSpec : selectSpec.getExpressions()) {
                 Column selectedColumn;
 
@@ -52,9 +55,18 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
                 }
 
                 if (selectedColumn.equalsIgnoreAlias(column)) {
-                    column = selectedColumn;
+                    replacementColumn = selectedColumn;
                     break;
                 }
+            }
+
+            // No exact match; use the table's alias if it matches
+            if (replacementColumn == null && column.table().equalsIgnoreAlias(selectSpec.getTable())) {
+                replacementColumn = new Column(selectSpec.getTable(), column.name(), column.alias());
+            }
+
+            if (replacementColumn != null) {
+                column = replacementColumn;
             }
         } else {
             // Select all - override the column's table with the selected one
@@ -63,7 +75,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
             }
         }
 
-        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate));
+        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate), delegate.litebridgeContext());
     }
 
     @Override

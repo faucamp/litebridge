@@ -21,4 +21,11 @@ import org.litebridgedb.db.spi.update.UpdateStatement;
  * for interacting with SQL queries or statements.
  */
 public sealed interface Operation permits Select, UpdateStatement {
+
+    /**
+     * Get the target table for the operation.
+     *
+     * @return the target table of the operation
+     */
+    Table table();
 }

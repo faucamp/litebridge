@@ -20,7 +20,7 @@ class ConditionClauseImplTest {
     void setUp() {
         conditionSpec = new ConditionSpec();
         terminal = mock(TestConditionClauseTerminal.class);
-        clause = new ConditionClauseImpl<>(conditionSpec, terminal);
+        clause = new ConditionClauseImpl<>(conditionSpec, terminal, mock(LitebridgeContext.class));
     }
 
     @Test
@@ -32,7 +32,7 @@ class ConditionClauseImplTest {
 
     @Test
     void eq_null() {
-        clause.eq(null);
+        clause.eq((Object) null);
         assertEquals(Operator.IS_NULL, conditionSpec.getOperator());
         assertEquals(null, conditionSpec.getValue());
     }

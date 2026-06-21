@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.orm.api.delete.DeleteQuery;
 import org.litebridgedb.orm.api.delete.DeleteTerminal;
@@ -18,6 +19,9 @@ import org.litebridgedb.orm.api.register.RegistrationContextTerminal;
 import org.litebridgedb.orm.api.register.TypeSafeDtoTableMapping;
 import org.litebridgedb.orm.api.select.FromClauseStart;
 import org.litebridgedb.orm.api.select.FromClauseStartTypeOverride;
+import org.litebridgedb.orm.api.select.SelectApi;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
 import org.litebridgedb.orm.api.sql.delete.SqlDeleteWhereClause;
 import org.litebridgedb.orm.api.sql.delete.SqlDeletor;
@@ -77,7 +81,7 @@ import java.util.stream.Stream;
  * database interactions, ensuring that operations are performed safely and
  * efficiently.
  */
-public final class Litebridge {
+public final class Litebridge implements SelectApi {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Litebridge.class);
 
@@ -208,7 +212,7 @@ public final class Litebridge {
         this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor);
         final TableMapper tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker);
         this.registrationEngine = new RegistrationEngine(this.databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
-        this.fromClauseEngine = new FromClauseEngine(this.databaseProvider, tableRegistry, changeTracker, dtoConstructor, this.litebridgeConfig);
+        this.fromClauseEngine = new FromClauseEngine(this.databaseProvider, tableRegistry, changeTracker, dtoConstructor, this::createLitebridgeContext);
     }
 
     /**
@@ -357,7 +361,7 @@ public final class Litebridge {
      */
     public <DTO> void update(final Class<DTO> dtoClass, final Function<DtoUpdateStart<DTO>, UpdateQuery> update) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoUpdater<DTO> dtoUpdater = new DtoUpdater<>(dtoClass, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider);
+        final DtoUpdater<DTO> dtoUpdater = new DtoUpdater<>(dtoClass, ormTable, databaseProvider, createLitebridgeContext());
         final UpdateTerminal updateTerminal = (UpdateTerminal) update.apply(dtoUpdater);
         updateTerminal.execute();
     }
@@ -371,67 +375,27 @@ public final class Litebridge {
      */
     public void update(final String tableName, final Function<SqlUpdateStart, UpdateQuery> query) {
         final Table table = tableRegistry.getOrCreateSpiTable(tableName);
-        final SqlUpdater sqlUpdater = new SqlUpdater(table, databaseProvider);
+        final SqlUpdater sqlUpdater = new SqlUpdater(table, databaseProvider, createLitebridgeContext());
         final UpdateTerminal updateTerminal = (UpdateTerminal) query.apply(sqlUpdater);
         updateTerminal.execute();
     }
 
-    /**
-     * Select a registered Data Transfer Object (DTO) type for database query operations.
-     * <p>
-     * Shortcut method; equivalent to {@code select().from(dtoClass)}.
-     *
-     * @param <DTO>    The type of the DTO to select.
-     * @param dtoClass The class of the DTO to be queried, which must already be registered.
-     * @return A {@link DtoFromClauseTerminal} instance for querying and retrieving data for the specified DTO class.
-     * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
-     */
+    @Override
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass) {
         return select(dtoClass, (RelatedDtoStrategy) null);
     }
 
-    /**
-     * Select a registered Data Transfer Object (DTO) type for database query operations.
-     * <p>
-     * Shortcut method; equivalent to {@code select().from(dtoClass, relatedDtoStrategy)}.
-     *
-     * @param <DTO>    The type of the DTO to select.
-     * @param dtoClass The class of the DTO to be queried, which must already be registered.
-     * @return A {@link DtoFromClauseTerminal} instance for querying and retrieving data for the specified DTO class.
-     * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
-     */
+    @Override
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
         return new FromClauseStart(fromClauseEngine).from(dtoClass, relatedDtoStrategy);
     }
 
-    /**
-     * Select a contextually-registered Data Transfer Object (DTO) type for database query operations.
-     * <p>
-     * Shortcut method; equivalent to {@code select().from(dtoClass, contextDtoClass)}.
-     *
-     * @param <DTO>    The type of the DTO to select.
-     * @param dtoClass The class of the DTO to be queried, which must already be registered.
-     * @return A {@link DtoFromClauseTerminal} instance for querying and retrieving data for the specified DTO class.
-     * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
-     */
+    @Override
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
         return new FromClauseStart(fromClauseEngine).from(dtoClass, contextDtoClass);
     }
 
-    /**
-     * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
-     * <p>
-     * Creates a SQL SELECT statement with the specified fields/columns; the source table is specified
-     * via a chained {@code from()} call.
-     * <p>
-     * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
-     * by specifying the target DTO or table for the query.
-     *
-     * @param fieldsOrColumns An array of field/column names to be included in the SELECT statement, dependent on
-     *                        whether a DTO or raw SQL is selected in the chained {@code from()} call.
-     *                        Each field/column name must be a valid, non-null string.
-     * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
-     */
+    @Override
     public FromClauseStart select(final String... fieldsOrColumns) {
         return new FromClauseStart(Arrays.stream(fieldsOrColumns)
                 .map(fieldOrColumn -> new ProtoColumnExpressionSpec(SelectFieldSpec.class, fieldOrColumn, null))
@@ -439,38 +403,12 @@ public final class Litebridge {
                 fromClauseEngine);
     }
 
-    /**
-     * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
-     * <p>
-     * Creates a SQL SELECT statement with the specified fields/columns; the source table is specified
-     * via a chained {@code from()} call.
-     * <p>
-     * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
-     * by specifying the target DTO or table for the query.
-     *
-     * @param expressionSpecs An array of {@link ExpressionSpec} objects representing the expressions
-     *                        to be part of the SELECT statement.
-     * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
-     */
+    @Override
     public FromClauseStart select(final ExpressionSpec... expressionSpecs) {
         return new FromClauseStart(expressionSpecs, fromClauseEngine);
     }
 
-    /**
-     * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
-     * <p>
-     * Creates a SQL SELECT statement with the specified fields/columns; the source table is specified
-     * via a chained {@code from()} call.
-     * <p>
-     * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
-     * by specifying the target DTO or table for the query.
-     *
-     * @param <T>                  The return type of the query
-     * @param expression           Return type-overriding expression
-     * @param otherExpressionSpecs An array of {@link ExpressionSpec} objects representing additional expressions
-     *                             to be part of the SELECT statement.
-     * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
-     */
+    @Override
     public <T> FromClauseStartTypeOverride<T> select(final TypeOverride<T> expression, final ExpressionSpec... otherExpressionSpecs) {
         if (otherExpressionSpecs.length == 0) {
             final ExpressionSpec[] expressionSpecs = {switch (expression) {
@@ -497,36 +435,12 @@ public final class Litebridge {
         }
     }
 
-    /**
-     * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
-     * <p>
-     * Creates a SQL SELECT statement with the specified fields/columns; the source table is specified
-     * via a chained {@code from()} call.
-     * <p>
-     * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
-     * by specifying the target DTO or table for the query.
-     *
-     * @param <T>                  The return type of the query
-     * @param expression           Return type-overriding expression
-     * @param otherExpressionSpecs An array of {@link ExpressionSpec} objects representing additional expressions
-     *                             to be part of the SELECT statement.
-     * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
-     */
+    @Override
     public <T> FromClauseStartTypeOverride<T> select(final TypeOverrideExpressionSpec<T> expression, final ExpressionSpec... otherExpressionSpecs) {
         return select((TypeOverride<T>) expression, otherExpressionSpecs);
     }
 
-    /**
-     * Query data from the database, without mapping results to Data Transfer Object (DTOs).
-     * <p>
-     * Creates a SQL SELECT statement with all fields/columns. The source table is specified
-     * via a chained {@code from()} call.
-     * <p>
-     * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
-     * by specifying the target DTO or table for the query.
-     *
-     * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
-     */
+    @Override
     public FromClauseStart select() {
         return new FromClauseStart(fromClauseEngine);
     }
@@ -554,7 +468,7 @@ public final class Litebridge {
      */
     public <DTO> void delete(final Class<DTO> dtoClass, final Function<DtoDeleteWhereClause<DTO>, DeleteQuery> query) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoDeletor<DTO> dtoDtoDeletor = new DtoDeletor<>(dtoClass, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider);
+        final DtoDeletor<DTO> dtoDtoDeletor = new DtoDeletor<>(dtoClass, ormTable, databaseProvider, createLitebridgeContext());
         final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(dtoDtoDeletor);
         deleteTerminal.execute();
     }
@@ -577,7 +491,7 @@ public final class Litebridge {
      *                  specifying the conditions for deleting the records
      */
     public void delete(final String tableName, final Function<SqlDeleteWhereClause, DeleteQuery> query) {
-        final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName, null), databaseProvider);
+        final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName, null), databaseProvider, createLitebridgeContext());
         final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(sqlDeletor);
         deleteTerminal.execute();
     }
@@ -602,7 +516,7 @@ public final class Litebridge {
      */
     public <DTO> DTO toDto(final Row row, final Class<DTO> dtoClass) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, new NoOpAliasGenerator(), databaseProvider.getSqlFunctionRegistry());
+        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, new NoOpAliasGenerator(), createLitebridgeContext());
         selectSpec.setExpressions(row.columnStream()
                 .map(rowColumn -> {
                     final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(rowColumn.column().name());
@@ -610,7 +524,7 @@ public final class Litebridge {
                 })
                 .toList());
 
-        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, litebridgeConfig);
+        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, createLitebridgeContext());
 
         final List<DTO> dtos = selectSpecDtoMapper.toDtos(dtoClass, List.of(row));
 
@@ -643,5 +557,10 @@ public final class Litebridge {
      */
     public TransactionContext transaction() {
         return transactionContext;
+    }
+
+    private LitebridgeContext createLitebridgeContext() {
+        final SqlFunctionRegistry sqlFunctionRegistry = databaseProvider.getSqlFunctionRegistry();
+        return new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
     }
 }

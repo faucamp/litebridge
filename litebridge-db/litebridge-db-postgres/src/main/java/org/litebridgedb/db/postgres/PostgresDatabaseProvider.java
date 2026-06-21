@@ -5,6 +5,7 @@ import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.alias.AliasTransformer;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.AbstractDatabaseProvider;
+import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ManagedConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

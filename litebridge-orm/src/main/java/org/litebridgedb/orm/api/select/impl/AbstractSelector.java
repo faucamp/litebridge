@@ -1,20 +1,15 @@
 package org.litebridgedb.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
-import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.orm.api.select.SelectTerminal;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
-import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -26,20 +21,20 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
     protected final SSP selectSpec;
     protected final TransactionalDatabaseProvider databaseProvider;
     protected final Class<DTO> dtoClass;
-    protected final LitebridgeConfig litebridgeConfig;
+    protected final LitebridgeContext litebridgeContext;
 
     protected AbstractSelector(final SSP selectSpec,
                                final TransactionalDatabaseProvider databaseProvider,
                                final Class<DTO> dtoClass,
-                               final LitebridgeConfig litebridgeConfig) {
+                               final LitebridgeContext litebridgeContext) {
         this.selectSpec = selectSpec;
         this.databaseProvider = databaseProvider;
         this.dtoClass = dtoClass;
-        this.litebridgeConfig = litebridgeConfig;
+        this.litebridgeContext = litebridgeContext;
     }
 
     protected AbstractSelector(final AbstractSelector<DTO, SSP> delegate) {
-        this(delegate.selectSpec, delegate.databaseProvider, delegate.dtoClass, delegate.litebridgeConfig);
+        this(delegate.selectSpec, delegate.databaseProvider, delegate.dtoClass, delegate.litebridgeContext);
     }
 
     @Override
@@ -112,5 +107,9 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
 
     protected SSP selectSpec() {
         return selectSpec;
+    }
+
+    public LitebridgeContext litebridgeContext() {
+        return litebridgeContext;
     }
 }

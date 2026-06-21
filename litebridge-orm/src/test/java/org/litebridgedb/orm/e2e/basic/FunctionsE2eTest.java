@@ -168,7 +168,6 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("CURRENT_TIMESTAMP")
     void currentTimestamp(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        // Nested SQL functions
         final ZonedDateTime sysdate = litebridge.select(Fn.currentTimestamp()).from(Person.class).firstOrThrow();
         assertNotNull(sysdate);
     }

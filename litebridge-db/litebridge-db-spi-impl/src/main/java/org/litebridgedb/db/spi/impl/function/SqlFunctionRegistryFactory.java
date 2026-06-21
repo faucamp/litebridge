@@ -3,9 +3,12 @@ package org.litebridgedb.db.spi.impl.function;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
+import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.NestableExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
+import org.litebridgedb.db.spi.expression.SelectReference;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
+import org.litebridgedb.db.spi.expression.SubselectExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.aggregate.Avg;
 import org.litebridgedb.db.spi.impl.function.aggregate.Count;
@@ -16,6 +19,8 @@ import org.litebridgedb.db.spi.impl.function.scalar.Abs;
 import org.litebridgedb.db.spi.impl.function.scalar.Lower;
 import org.litebridgedb.db.spi.impl.function.scalar.Substring;
 import org.litebridgedb.db.spi.impl.function.scalar.Upper;
+import org.litebridgedb.db.spi.impl.sql.SelectSqlGenerator;
+import org.litebridgedb.db.spi.query.Select;
 
 /**
  * Factory for creating {@link SqlFunctionRegistry} instances.
@@ -26,14 +31,18 @@ import org.litebridgedb.db.spi.impl.function.scalar.Upper;
 public class SqlFunctionRegistryFactory {
 
     protected final ColumnIdentifierGenerator columnIdentifierGenerator;
+    protected final SelectSqlGenerator selectSqlGenerator;
 
     /**
      * Constructs a new {@code SqlFunctionRegistryFactory}.
      *
      * @param columnIdentifierGenerator The database provider's column identifier generator
+     * @param selectSqlGenerator        The database provider's select SQL generator
      */
-    public SqlFunctionRegistryFactory(final ColumnIdentifierGenerator columnIdentifierGenerator) {
+    public SqlFunctionRegistryFactory(final ColumnIdentifierGenerator columnIdentifierGenerator,
+                                      final SelectSqlGenerator selectSqlGenerator) {
         this.columnIdentifierGenerator = columnIdentifierGenerator;
+        this.selectSqlGenerator = selectSqlGenerator;
     }
 
     /**
@@ -43,7 +52,12 @@ public class SqlFunctionRegistryFactory {
      */
     public SqlFunctionRegistry create() {
         return new SqlFunctionRegistry(
-                this::createSelectColumn,
+                new SqlFunctionRegistry.Select(
+                        this::createSelectColumn,
+                        this::createSubselect,
+                        this::createLiteral,
+                        this::createSelectReference
+                ),
                 new SqlFunctionRegistry.Aggregate(
                         this::createAvg,
                         this::createMin,
@@ -70,6 +84,18 @@ public class SqlFunctionRegistryFactory {
      */
     protected SelectColumn createSelectColumn(final Column column, final Object... args) {
         return new SelectColumn(column, columnIdentifierGenerator);
+    }
+
+    protected SubselectExpression createSubselect(final Select subselect) {
+        return new Subselect(subselect, selectSqlGenerator);
+    }
+
+    protected LiteralExpression createLiteral(final @Nullable Object value) {
+        return new LiteralExpression(value);
+    }
+
+    protected SelectReference createSelectReference(Column column) {
+        return new SelectReferenceImpl(column);
     }
 
     /**

@@ -5,6 +5,7 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.expression.SelectExpression;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
@@ -19,8 +20,11 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
     private final OrmTable dtoTable;
     private @Nullable List<SelectExpression> expressions;
 
-    public DtoSelectSpec(final Class<?> dtoClass, final OrmTable dtoTable, final AliasGenerator aliasGenerator, final SqlFunctionRegistry sqlFunctionRegistry) {
-        super(sqlFunctionRegistry);
+    public DtoSelectSpec(final Class<?> dtoClass,
+                         final OrmTable dtoTable,
+                         final AliasGenerator aliasGenerator,
+                         final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
         this.dtoClass = dtoClass;
         this.dtoTable = dtoTable;
         this.table = aliasGenerator.aliasTable(dtoTable);
@@ -48,7 +52,7 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
             joins = new ArrayList<>();
         }
 
-        final DtoJoinSpec joinSpec = new DtoJoinSpec(dtoClass, ormTable, table);
+        final DtoJoinSpec joinSpec = new DtoJoinSpec(dtoClass, ormTable, table, litebridgeContext.selectExpressionMapper());
 
         if (other != null) {
             joins.add(joins.indexOf(other), joinSpec);

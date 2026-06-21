@@ -2,8 +2,6 @@ package org.litebridgedb.orm.e2e.basic;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
-import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
-import org.litebridgedb.orm.api.dto.DtoWhereConditionClauseTerminal;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Account;
@@ -24,8 +22,6 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertLinesMatch;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -486,6 +482,34 @@ public class BasicE2eTest extends AbstractE2eTest {
             assertNull(p.getName());
             assertEquals(0, p.getAge());
         }
+    }
+
+    @TestTemplate
+    @DisplayName("Select with subselect")
+    void select_subselect(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+
+        // Setup data
+        final Person[] persons = new Person[3];
+        for (int i = 0; i < 3; i++) {
+            persons[i] = new Person();
+            persons[i].setId(1L + i);
+            persons[i].setName("Name" + i);
+            persons[i].setSurname("Surname" + i);
+            persons[i].setAge(20 + i);
+        }
+
+        litebridge.save((Object[]) persons);
+
+        // Select DTO via subselect
+        final Person result = litebridge.select().from(Person.class)
+                .where("id").eq(sb ->
+                        sb.select("id").from(Person.class)
+                                .where("name").eq("Name1"))
+                .oneOrThrow();
+
+        assertEquals(persons[1], result);
     }
 
     private static class TestException extends RuntimeException {

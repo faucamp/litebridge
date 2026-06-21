@@ -1,6 +1,7 @@
 package org.litebridgedb.orm.api.dto.update;
 
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.api.update.UpdateSetStep;
 import org.litebridgedb.orm.api.update.impl.AbstractUpdater;
@@ -13,16 +14,15 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
 
     public DtoUpdater(final Class<DTO> dtoClass,
                       final OrmTable dtoTable,
-                      final TableRegistry tableRegistry,
-                      final ClassFieldAccessorCache classFieldAccessorCache,
-                      final TransactionalDatabaseProvider databaseProvider) {
-        super(new DtoUpdateSpec(dtoClass, dtoTable), databaseProvider);
+                      final TransactionalDatabaseProvider databaseProvider,
+                      final LitebridgeContext litebridgeContext) {
+        super(new DtoUpdateSpec(dtoClass, dtoTable, litebridgeContext.selectExpressionMapper()), databaseProvider, litebridgeContext);
     }
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> where(final String field) {
         final Column column = updateSpec.dtoTable().getColumnForFieldName(field).toColumn();
-        return new DtoUpdateWhereConditionClause<>(updateSpec.newWhereCondition(column), new DtoUpdateWhereConditionClauseTerminalImpl<>(this));
+        return new DtoUpdateWhereConditionClause<>(updateSpec.newWhereCondition(column), new DtoUpdateWhereConditionClauseTerminalImpl<>(this), litebridgeContext);
     }
 
     @Override

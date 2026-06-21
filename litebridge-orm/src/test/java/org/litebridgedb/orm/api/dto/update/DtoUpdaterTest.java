@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.api.update.UpdateSetStep;
@@ -29,9 +30,7 @@ class DtoUpdaterTest {
         // Given
         OrmTable ormTable = ormTable();
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        TableRegistry tableRegistry = mock(TableRegistry.class);
-        ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
-        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, tableRegistry, classFieldAccessorCache, databaseProvider);
+        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, databaseProvider, mock(LitebridgeContext.class));
 
         // When
         DtoUpdateWhereConditionClause<TestDto> result = updater.where("id");
@@ -47,7 +46,7 @@ class DtoUpdaterTest {
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         TableRegistry tableRegistry = mock(TableRegistry.class);
         ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
-        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, tableRegistry, classFieldAccessorCache, databaseProvider);
+        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, databaseProvider, mock(LitebridgeContext.class));
 
         FieldColumnSpec fieldColumnSpec = mock(FieldColumnSpec.class);
         FieldSpec fieldSpec = mock(FieldSpec.class);
@@ -68,7 +67,7 @@ class DtoUpdaterTest {
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         TableRegistry tableRegistry = mock(TableRegistry.class);
         ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
-        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, tableRegistry, classFieldAccessorCache, databaseProvider);
+        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, databaseProvider, mock(LitebridgeContext.class));
 
         // When
         UpdateSetStep<DtoUpdateStep<TestDto>> result = updater.set("id");
@@ -84,7 +83,7 @@ class DtoUpdaterTest {
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         TableRegistry tableRegistry = mock(TableRegistry.class);
         ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
-        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, tableRegistry, classFieldAccessorCache, databaseProvider);
+        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, databaseProvider, mock(LitebridgeContext.class));
 
         FieldColumnSpec fieldColumnSpec = mock(FieldColumnSpec.class);
         FieldSpec fieldSpec = mock(FieldSpec.class);

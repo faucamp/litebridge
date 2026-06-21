@@ -3,7 +3,7 @@ package org.litebridgedb.db.postgres;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
-import org.litebridgedb.db.spi.impl.AbstractDatabaseProvider;
+import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ManagedConnection;
 import org.mockito.Mockito;
 
@@ -26,7 +26,7 @@ class PostgresDatabaseProviderTest {
         final PostgresDatabaseProvider provider = new PostgresDatabaseProvider();
         final ManagedConnection mockConnection = Mockito.mock(ManagedConnection.class);
         final PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
-        final AbstractDatabaseProvider.PreparedSql mockPreparedSql = new AbstractDatabaseProvider.PreparedSql("SELECT * FROM test", null);
+        final PreparedSql mockPreparedSql = new PreparedSql("SELECT * FROM test", null);
         final TableMetaData mockTableMetaData = mock(TableMetaData.class);
 
         when(mockConnection.prepareStatement(mockPreparedSql.sql(), Statement.RETURN_GENERATED_KEYS))
@@ -48,7 +48,7 @@ class PostgresDatabaseProviderTest {
         final PostgresDatabaseProvider provider = new PostgresDatabaseProvider();
         final ManagedConnection mockConnection = Mockito.mock(ManagedConnection.class);
         final PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
-        final AbstractDatabaseProvider.PreparedSql mockPreparedSql = new AbstractDatabaseProvider.PreparedSql("SELECT * FROM test", null);
+        final PreparedSql mockPreparedSql = new PreparedSql("SELECT * FROM test", null);
         final TableMetaData mockTableMetaData = mock(TableMetaData.class);
 
         when(mockConnection.prepareStatement(mockPreparedSql.sql())).thenReturn(mockPreparedStatement);

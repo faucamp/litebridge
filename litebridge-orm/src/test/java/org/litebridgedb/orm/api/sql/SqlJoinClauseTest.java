@@ -5,8 +5,12 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 class SqlJoinClauseTest {
@@ -14,7 +18,7 @@ class SqlJoinClauseTest {
     @Test
     void constructorCreatesClause() {
         // Given
-        final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("joined_table", null));
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("joined_table", null), mock(SelectExpressionMapper.class));
         final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
 
         // When
@@ -29,7 +33,7 @@ class SqlJoinClauseTest {
     void onAddsConditionForJoinTableColumnAndReturnsConditionClause() {
         // Given
         final Table joinTable = new Table("joined_table", null);
-        final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable);
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable, mock(SelectExpressionMapper.class));
         final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
         final SqlJoinClause clause = new SqlJoinClause(joinSpec, castDelegate(delegate));
 
@@ -51,7 +55,7 @@ class SqlJoinClauseTest {
     void onConditionWithNonNullValueSetsOperatorAndValue() {
         // Given
         final Table joinTable = new Table("joined_table", null);
-        final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable);
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable, mock(SelectExpressionMapper.class));
         final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
         final SqlJoinClause clause = new SqlJoinClause(joinSpec, castDelegate(delegate));
 
@@ -73,12 +77,12 @@ class SqlJoinClauseTest {
     void onConditionWithNullEqValueTranslatesOperatorToIsNull() {
         // Given
         final Table joinTable = new Table("joined_table", null);
-        final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable);
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable, mock(SelectExpressionMapper.class));
         final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
         final SqlJoinClause clause = new SqlJoinClause(joinSpec, castDelegate(delegate));
 
         // When
-        final SqlJoinConditionClauseTerminal terminal = clause.on("optional_id").eq(null);
+        final SqlJoinConditionClauseTerminal terminal = clause.on("optional_id").eq((Object) null);
 
         // Then
         assertNotNull(terminal);
@@ -95,7 +99,7 @@ class SqlJoinClauseTest {
     void usingAddsUsingConditionAndReturnsTerminalClause() {
         // Given
         final Table joinTable = new Table("joined_table", null);
-        final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable);
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable, mock(SelectExpressionMapper.class));
         final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
         final SqlJoinClause clause = new SqlJoinClause(joinSpec, castDelegate(delegate));
 

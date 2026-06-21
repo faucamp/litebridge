@@ -655,7 +655,7 @@ public class PersistenceFacade {
      * @param statementBuilder the statement builder to add conditions to. Must be an {@link UpdateBuilder} or {@link DeleteBuilder}.
      * @param <DTO>            class of the DTO
      */
-    private static <DTO> void addPrimaryKeyConditions(final DTO dto, final OrmTable table, final AbstractStatementBuilder<?> statementBuilder) {
+    private <DTO> void addPrimaryKeyConditions(final DTO dto, final OrmTable table, final AbstractStatementBuilder<?> statementBuilder) {
         table.getMetaData().primaryKey().forEach(columnMetaData -> {
             final Column pkColumn = columnMetaData.toColumn();
             final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
@@ -663,7 +663,7 @@ public class PersistenceFacade {
             final Condition condition;
 
             if (pkValue != null) {
-                condition = new Condition(pkColumn, Operator.EQ, pkValue);
+                condition = new Condition(pkColumn, Operator.EQ, this.databaseProvider.getSqlFunctionRegistry().select().literal().create(pkValue));
             } else {
                 condition = new Condition(pkColumn, Operator.IS_NULL);
             }

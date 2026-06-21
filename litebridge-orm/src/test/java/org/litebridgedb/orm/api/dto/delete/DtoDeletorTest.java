@@ -4,10 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
-import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridgedb.tracking.ChangeTracker;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
@@ -26,14 +26,12 @@ class DtoDeletorTest {
     @Test
     void where_string() {
         // Given
-        OrmTable ormTable = ormTable();
-        TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        TableRegistry tableRegistry = mock(TableRegistry.class);
-        ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
-        DtoDeletor<TestDto> deletor = new DtoDeletor<>(TestDto.class, ormTable, tableRegistry, classFieldAccessorCache, databaseProvider);
+        final OrmTable ormTable = ormTable();
+        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        final DtoDeletor<TestDto> deletor = new DtoDeletor<>(TestDto.class, ormTable, databaseProvider, mock(LitebridgeContext.class));
 
         // When
-        DtoDeleteWhereConditionClause<TestDto> result = deletor.where("id");
+        final DtoDeleteWhereConditionClause<TestDto> result = deletor.where("id");
 
         // Then
         assertNotNull(result);
@@ -42,19 +40,17 @@ class DtoDeletorTest {
     @Test
     void where_fieldSpec() {
         // Given
-        OrmTable ormTable = ormTable();
-        TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        TableRegistry tableRegistry = mock(TableRegistry.class);
-        ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
-        DtoDeletor<TestDto> deletor = new DtoDeletor<>(TestDto.class, ormTable, tableRegistry, classFieldAccessorCache, databaseProvider);
+        final OrmTable ormTable = ormTable();
+        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        final DtoDeletor<TestDto> deletor = new DtoDeletor<>(TestDto.class, ormTable, databaseProvider, mock(LitebridgeContext.class));
 
-        FieldColumnSpec fieldColumnSpec = mock(FieldColumnSpec.class);
-        FieldSpec fieldSpec = mock(FieldSpec.class);
+        final FieldColumnSpec fieldColumnSpec = mock(FieldColumnSpec.class);
+        final FieldSpec fieldSpec = mock(FieldSpec.class);
         when(fieldColumnSpec.field()).thenReturn(fieldSpec);
         when(fieldSpec.name()).thenReturn("id");
 
         // When
-        DtoDeleteWhereConditionClause<TestDto> result = deletor.where(fieldColumnSpec);
+        final DtoDeleteWhereConditionClause<TestDto> result = deletor.where(fieldColumnSpec);
 
         // Then
         assertNotNull(result);

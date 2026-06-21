@@ -7,6 +7,7 @@ import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.OrderBySpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.persistence.DtoConstructor;
@@ -45,7 +46,7 @@ class DtoOrderByClauseTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, new LitebridgeConfig());
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class));
         final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"myVar"});
 
         final DtoOrderByClause<TestDto> dtoDtoOrderByClause = new DtoOrderByClause<>(orderBySpec, dtoSelector);
@@ -72,7 +73,7 @@ class DtoOrderByClauseTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, new LitebridgeConfig());
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class));
         final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"myVar"});
 
         final DtoOrderByClause<TestDto> dtoDtoOrderByClause = new DtoOrderByClause<>(orderBySpec, dtoSelector);

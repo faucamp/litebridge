@@ -5,6 +5,7 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
+import org.litebridgedb.db.spi.expression.LiteralExpression;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +22,7 @@ class SelectTest {
         final Column column = new Column(table, "TEST_COLUMN");
         final Operator operator = Operator.EQ;
         final Object value = "testValue";
-        final Condition condition = new Condition(column, operator, value);
+        final Condition condition = new Condition(column, operator, new LiteralExpression(value));
         final Join join = new Join(table, List.of(condition));
         final OrderBy orderBy = new OrderBy(column, true);
         final Limit limit = new Limit(Optional.of(10), Optional.of(20));

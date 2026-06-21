@@ -3,17 +3,19 @@ package org.litebridgedb.orm.api.sql;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.JoinSpec;
 import org.litebridgedb.orm.api.select.model.LimitSpec;
 import org.litebridgedb.orm.api.select.model.OrderBySpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
-import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.TestColumnExpression;
 import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 import java.util.List;
 
@@ -32,7 +34,7 @@ class SqlSelectSpecTest {
     @Test
     void getTable() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
 
@@ -46,7 +48,7 @@ class SqlSelectSpecTest {
     @Test
     void getTable_null() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
 
         // When/Then
         assertThrows(IllegalStateException.class, () -> sqlSelectSpec.getTable());
@@ -55,7 +57,7 @@ class SqlSelectSpecTest {
     @Test
     void setExpressions() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -74,7 +76,7 @@ class SqlSelectSpecTest {
     @Test
     void addExpressions() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -93,7 +95,7 @@ class SqlSelectSpecTest {
     @Test
     void getJoins() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -113,7 +115,7 @@ class SqlSelectSpecTest {
     @Test
     void newJoinSpec() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -132,7 +134,7 @@ class SqlSelectSpecTest {
     @Test
     void newJoinSpec_noSchema() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -151,7 +153,7 @@ class SqlSelectSpecTest {
     @Test
     void setWhereConditions() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -174,7 +176,7 @@ class SqlSelectSpecTest {
     @Test
     void newWhereCondition() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -197,7 +199,7 @@ class SqlSelectSpecTest {
     @Test
     void setOrderBys() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -222,7 +224,7 @@ class SqlSelectSpecTest {
     @Test
     void newOrderBy() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -246,7 +248,7 @@ class SqlSelectSpecTest {
     @Test
     void setLimit() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -273,7 +275,7 @@ class SqlSelectSpecTest {
     @Test
     void ensureLimit() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -296,7 +298,7 @@ class SqlSelectSpecTest {
     @Test
     void setDtoAlias() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         sqlSelectSpec.setDtoAlias(TestDto.class, "TEST_ALIAS");
 
         // When
@@ -309,7 +311,7 @@ class SqlSelectSpecTest {
     @Test
     void getDtoAlias_null() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
 
         // When
         final String result = sqlSelectSpec.getDtoAlias(TestDto.class);
@@ -322,8 +324,14 @@ class SqlSelectSpecTest {
     void toSelect() {
         // Given
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(sqlFunctionRegistry);
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+        when(litebridgeContext.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(litebridgeContext);
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -355,7 +363,7 @@ class SqlSelectSpecTest {
     @Test
     void toSelect_expressionsNotSet() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
 
@@ -372,7 +380,7 @@ class SqlSelectSpecTest {
     @Test
     void toSelect_tableNotSet() {
         // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
 
         // When/Then
         assertThrows(IllegalStateException.class, sqlSelectSpec::toSelect);

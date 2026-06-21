@@ -2,6 +2,8 @@ package org.litebridgedb.db.spi.query;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.expression.LiteralExpression;
+import org.litebridgedb.db.spi.expression.SelectExpression;
 
 /**
  * A condition in a database query, specifying a column, operator, and value/operand.
@@ -12,7 +14,20 @@ import org.litebridgedb.db.spi.Column;
  * @see Operator
  * @see Join
  */
-public record Condition(Column column, Operator operator, @Nullable Object value) {
+public record Condition(Column column, Operator operator, SelectExpression value) {
+
+    /**
+     * Convenience constructor that wraps the given value into a {@link LiteralExpression}.
+     * <p>
+     * Equivalent to {@code Condition(column, operator, new LiteralExpression(value))}.
+     *
+     * @param column   Name of the column associated with this condition.
+     * @param operator {@code IS_NULL} or {@code IS_NOT_NULL} operator
+     * @throws IllegalArgumentException if {@code operator} is not {@code IS_NULL} or {@code IS_NOT_NULL}
+     */
+    public Condition(final Column column, final Operator operator, final @Nullable Object value) {
+        this(column, operator, new LiteralExpression(value));
+    }
 
     /**
      * Convenience constructor for {@code Operator.IS_NULL} and @{code Operator.IS_NOT_NULL} operators.

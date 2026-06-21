@@ -2,6 +2,7 @@ package org.litebridgedb.orm.api.dto;
 
 import org.litebridgedb.orm.api.select.WhereConditionClause;
 import org.litebridgedb.orm.api.select.impl.ConditionClauseImpl;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 
 public final class DtoWhereConditionClause<DTO>
@@ -15,7 +16,7 @@ public final class DtoWhereConditionClause<DTO>
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 
-    public DtoWhereConditionClause(final ConditionSpec conditionSpec, final DtoWhereConditionClauseTerminal<DTO> conditionTerminal) {
-        super(conditionSpec, conditionTerminal);
+    public DtoWhereConditionClause(final ConditionSpec conditionSpec, final DtoWhereConditionClauseTerminal<DTO> conditionTerminal, final LitebridgeContext litebridgeContext) {
+        super(conditionSpec, conditionTerminal, litebridgeContext);
     }
 }

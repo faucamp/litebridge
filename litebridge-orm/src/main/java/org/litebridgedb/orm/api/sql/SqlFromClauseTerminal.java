@@ -31,7 +31,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     @Override
     public SqlWhereConditionClause where(final String column) {
         final Column spiColumn = new Column(selectSpec.getTable(), column);
-        return new SqlWhereConditionClause(selectSpec.newWhereCondition(spiColumn), new SqlWhereConditionClauseTerminal((SqlSelector) delegate));
+        return new SqlWhereConditionClause(selectSpec.newWhereCondition(spiColumn), new SqlWhereConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
     }
 
     @Override

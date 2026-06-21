@@ -8,10 +8,9 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.select.impl.ProtoExpressionResolver;
-import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.expression.ExpressionSpec;
-import org.litebridgedb.orm.expression.function.aggregate.MaxSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -22,12 +21,9 @@ import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
 import org.litebridgedb.tracking.FieldAccessor;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec> {
 
@@ -43,11 +39,11 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
                        final DtoConstructor dtoConstructor,
                        final TransactionalDatabaseProvider databaseProvider,
                        final AliasGenerator aliasGenerator,
-                       final LitebridgeConfig litebridgeConfig) {
-        super(new DtoSelectSpec(dtoClass, ormTable, aliasGenerator, databaseProvider.getSqlFunctionRegistry()),
+                       final LitebridgeContext litebridgeContext) {
+        super(new DtoSelectSpec(dtoClass, ormTable, aliasGenerator, litebridgeContext),
                 databaseProvider,
                 dtoClass,
-                litebridgeConfig);
+                litebridgeContext);
         this.tableRegistry = tableRegistry;
         this.classFieldAccessorCache = classFieldAccessorCache;
         this.dtoConstructor = dtoConstructor;
@@ -114,7 +110,7 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
         if (dtoClass == selectSpec.dtoTable().dtoClass()
                 || selectSpec.dtoTable().getDtoClassInterfaces().contains(dtoClass)) {
             // Selecting the actual DTO
-            final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, litebridgeConfig);
+            final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, litebridgeContext);
             return selectSpecDtoMapper.toDtos(dtoClass, rows);
         } else {
             // Type overridden-select (e.g. by a SQL function); <DTO> generic is not set to the actual DTO class

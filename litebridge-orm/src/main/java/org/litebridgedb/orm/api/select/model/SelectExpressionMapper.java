@@ -19,20 +19,27 @@ import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
 import org.litebridgedb.orm.expression.intent.ConvertSpec;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
+import org.litebridgedb.orm.expression.select.SubselectSpec;
 
-final class SelectExpressionMapper {
+public final class SelectExpressionMapper {
 
     private final SqlFunctionRegistry sqlFunctionRegistry;
 
-    SelectExpressionMapper(final SqlFunctionRegistry sqlFunctionRegistry) {
+    public SelectExpressionMapper(final SqlFunctionRegistry sqlFunctionRegistry) {
         this.sqlFunctionRegistry = sqlFunctionRegistry;
+    }
+
+    SqlFunctionRegistry sqlFunctionRegistry() {
+        return sqlFunctionRegistry;
     }
 
     SelectExpression toSelectExpression(final ExpressionSpec expressionSpec) {
         return switch (expressionSpec) {
-            // Select columns
+            // Select targets
             case SelectFieldSpec selectFieldSpec -> toSelectColumn(selectFieldSpec);
             case SelectColumnSpec selectColumnSpec -> toSelectColumn(selectColumnSpec);
+            case SubselectSpec subselectSpec ->
+                    sqlFunctionRegistry.select().subselect().create(subselectSpec.selectSpec().toSelect());
 
             // Aggregate functions
             case CountSpec countSpec -> sqlFunctionRegistry.aggregate().count();
@@ -74,14 +81,12 @@ final class SelectExpressionMapper {
         };
     }
 
-    ColumnExpression toSelectColumn(final SelectFieldSpec selectFieldSpec) {
-        return sqlFunctionRegistry.selectColumnFactory()
-                .create(ObjectUtils.requireNonNull(selectFieldSpec.column(),
-                        () -> new IllegalStateException("SelectField.column not set")));
+    private ColumnExpression toSelectColumn(final SelectFieldSpec selectFieldSpec) {
+        return sqlFunctionRegistry.select().column().create(ObjectUtils.requireNonNull(selectFieldSpec.column(),
+                () -> new IllegalStateException("SelectField.column not set")));
     }
 
-    ColumnExpression toSelectColumn(final SelectColumnSpec selectColumnSpec) {
-        return sqlFunctionRegistry.selectColumnFactory()
-                .create(selectColumnSpec.column());
+    private ColumnExpression toSelectColumn(final SelectColumnSpec selectColumnSpec) {
+        return sqlFunctionRegistry.select().column().create(selectColumnSpec.column());
     }
 }

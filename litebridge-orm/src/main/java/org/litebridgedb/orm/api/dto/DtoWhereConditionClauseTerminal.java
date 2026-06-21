@@ -59,7 +59,7 @@ public final class DtoWhereConditionClauseTerminal<DTO>
             }
         }
 
-        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), this);
+        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), this, delegate.litebridgeContext());
     }
 
     /**

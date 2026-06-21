@@ -8,7 +8,6 @@ import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.SqlFunctionRegistryFactory;
-import org.litebridgedb.db.spi.query.Limit;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,7 +15,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -39,62 +37,6 @@ class OracleDatabaseProviderTest {
 
         // Then
         assertInstanceOf(OracleSequenceColumnValueGenerator.class, result);
-    }
-
-    @Test
-    void appendLimitClause_withOffsetAndLimit() {
-        // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final Limit limit = new Limit(Optional.of(10), Optional.of(5));
-        final StringBuilder sql = new StringBuilder("SELECT * FROM TEST_TABLE");
-
-        // When
-        provider.appendLimitClause(limit, sql);
-
-        // Then
-        assertEquals("SELECT * FROM TEST_TABLE OFFSET 5 ROWS FETCH FIRST 10 ROWS ONLY", sql.toString());
-    }
-
-    @Test
-    void appendLimitClause_withOffsetOnly() {
-        // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final Limit limit = new Limit(Optional.empty(), Optional.of(5));
-        final StringBuilder sql = new StringBuilder("SELECT * FROM TEST_TABLE");
-
-        // When
-        provider.appendLimitClause(limit, sql);
-
-        // Then
-        assertEquals("SELECT * FROM TEST_TABLE OFFSET 5 ROWS", sql.toString());
-    }
-
-    @Test
-    void appendLimitClause_withLimitOnly() {
-        // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final Limit limit = new Limit(Optional.of(10), Optional.empty());
-        final StringBuilder sql = new StringBuilder("SELECT * FROM TEST_TABLE");
-
-        // When
-        provider.appendLimitClause(limit, sql);
-
-        // Then
-        assertEquals("SELECT * FROM TEST_TABLE FETCH FIRST 10 ROWS ONLY", sql.toString());
-    }
-
-    @Test
-    void appendLimitClause_withoutOffsetAndLimit() {
-        // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final Limit limit = new Limit(Optional.empty(), Optional.empty());
-        final StringBuilder sql = new StringBuilder("SELECT * FROM TEST_TABLE");
-
-        // When
-        provider.appendLimitClause(limit, sql);
-
-        // Then
-        assertEquals("SELECT * FROM TEST_TABLE", sql.toString());
     }
 
     @Test

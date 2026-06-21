@@ -3,6 +3,7 @@ package org.litebridgedb.orm.api.sql;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 
 import java.util.ArrayList;
@@ -17,8 +18,8 @@ public class SqlSelectSpec extends SelectSpec {
 
     private @Nullable Class<?> valueTypeOverride;
 
-    public SqlSelectSpec(final SqlFunctionRegistry sqlFunctionRegistry) {
-        super(sqlFunctionRegistry);
+    public SqlSelectSpec(final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
     }
 
     public SqlJoinSpec newJoinSpec(final String table) {
@@ -30,7 +31,7 @@ public class SqlSelectSpec extends SelectSpec {
             joins = new ArrayList<>();
         }
 
-        final SqlJoinSpec joinSpec = new SqlJoinSpec(table);
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(table, selectExpressionMapper);
         joins.add(joinSpec);
         return joinSpec;
     }

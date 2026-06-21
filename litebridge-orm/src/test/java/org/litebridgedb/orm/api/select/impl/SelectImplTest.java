@@ -4,7 +4,6 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.orm.api.sql.SqlSelectSpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
@@ -26,7 +25,7 @@ class SelectImplTest {
 
     @BeforeEach
     void setUp() {
-        selectSpec = new SqlSelectSpec(mock(SqlFunctionRegistry.class));
+        selectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         selectSpec.setTable(new Table("CATALOG", "SCHEMA", "TABLE"));
         databaseProvider = mock(TransactionalDatabaseProvider.class);
         selector = new TestSelector(selectSpec, databaseProvider);
@@ -80,7 +79,7 @@ class SelectImplTest {
         private List<Object> resultList;
 
         protected TestSelector(SqlSelectSpec selectSpec, TransactionalDatabaseProvider databaseProvider) {
-            super(selectSpec, databaseProvider, Object.class, new LitebridgeConfig());
+            super(selectSpec, databaseProvider, Object.class, mock(LitebridgeContext.class));
         }
 
         public void setResult(Object result) {

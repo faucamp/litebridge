@@ -7,6 +7,7 @@ import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.orm.Litebridge;
+import org.litebridgedb.orm.api.select.SelectApi;
 import org.litebridgedb.orm.api.spec.TableSpec;
 import org.litebridgedb.tracking.ChangeTracker;
 
@@ -25,7 +26,7 @@ import static org.mockito.Mockito.when;
 
 class TableMapperTest {
     private DatabaseProvider databaseProvider;
-    private Litebridge litebridge;
+    private SelectApi litebridge;
     private TableMapper tableMapper;
 
     @BeforeEach

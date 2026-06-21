@@ -2,13 +2,14 @@ package org.litebridgedb.db.oracle;
 
 import org.litebridgedb.convert.DefaultTypeConverter;
 import org.litebridgedb.db.oracle.function.OracleSqlFunctionRegistryFactory;
+import org.litebridgedb.db.oracle.sql.OracleSelectSqlGenerator;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.AbstractDatabaseProvider;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.SqlFunctionRegistryFactory;
-import org.litebridgedb.db.spi.query.Limit;
+import org.litebridgedb.db.spi.impl.sql.SelectSqlGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +42,18 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider {
     }
 
     @Override
-    protected void appendLimitClause(final Limit limit, final StringBuilder sql) {
-        limit.offset().ifPresent(offset -> sql.append(" OFFSET ").append(offset).append(" ROWS"));
-        limit.limit().ifPresent(limitVal -> sql.append(" FETCH FIRST ").append(limitVal).append(" ROWS ONLY"));
+    protected ColumnIdentifierGenerator createColumnIdentifierGenerator() {
+        return new OracleColumnIdentifierGenerator();
+    }
+
+    @Override
+    protected SqlFunctionRegistryFactory createSqlFunctionRegistryFactory() {
+        return new OracleSqlFunctionRegistryFactory(columnIdentifierGenerator.orThrow(), selectSqlGenerator.orThrow());
+    }
+
+    @Override
+    protected SelectSqlGenerator createSelectSqlGenerator() {
+        return new OracleSelectSqlGenerator(typeConverter, columnIdentifierGenerator.orThrow(), this::ensureTableMetaData);
     }
 
     @Override
@@ -63,16 +73,6 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider {
 
         generatedKeysResultSet.close();
         return generatedKeys;
-    }
-
-    @Override
-    protected ColumnIdentifierGenerator createColumnIdentifierGenerator() {
-        return new OracleColumnIdentifierGenerator();
-    }
-
-    @Override
-    protected SqlFunctionRegistryFactory createSqlFunctionRegistryFactory() {
-        return new OracleSqlFunctionRegistryFactory(columnIdentifierGenerator.orThrow());
     }
 
     @Override

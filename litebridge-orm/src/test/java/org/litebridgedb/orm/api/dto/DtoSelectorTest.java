@@ -12,15 +12,19 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
+import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.engine.FromClauseEngine;
 import org.litebridgedb.orm.expression.ProtoColumnExpressionSpec;
-import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
+import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
@@ -67,13 +71,21 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
 
         // When
-        final DtoFromClauseTerminal<TestDto> result = dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class , "myVar"));
+        final DtoFromClauseTerminal<TestDto> result = dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
 
         // Then
         assertNotNull(result);
@@ -93,10 +105,18 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
 
         // When
         final OrmTable result = dtoSelector.table();
@@ -121,11 +141,16 @@ class DtoSelectorTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
@@ -158,11 +183,16 @@ class DtoSelectorTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
@@ -193,12 +223,16 @@ class DtoSelectorTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
@@ -228,12 +262,17 @@ class DtoSelectorTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
@@ -265,11 +304,16 @@ class DtoSelectorTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
@@ -296,11 +340,16 @@ class DtoSelectorTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
@@ -333,12 +382,17 @@ class DtoSelectorTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
@@ -368,11 +422,16 @@ class DtoSelectorTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
@@ -406,12 +465,17 @@ class DtoSelectorTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
@@ -443,11 +507,16 @@ class DtoSelectorTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
@@ -474,11 +543,16 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
@@ -512,13 +586,18 @@ class DtoSelectorTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
         final DtoSelectSpec selectSpec = (DtoSelectSpec) ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         final Table aliasedTable = aliasGenerator.aliasTable(ormTable);
         selectSpec.setTable(aliasedTable);
@@ -558,9 +637,14 @@ class DtoSelectorTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
         final SelectSpec selectSpec = dtoSelector.selectSpec();
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
         selectSpec.setExpressions(List.of(new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn())));

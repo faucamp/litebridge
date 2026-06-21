@@ -6,19 +6,22 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.persistence.OrmTable;
-import org.mockito.Mockito;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Mockito.mock;
 
 class DtoJoinSpecTest {
 
     private final List<DtoSelectSpec.FieldColumn> fieldColumns = List.of();
-    private final OrmTable ormTable = Mockito.mock(OrmTable.class);
+    private final OrmTable ormTable = mock(OrmTable.class);
     private final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-    private final DtoJoinSpec dtoJoinSpec = new DtoJoinSpec(TestDto.class, ormTable, table);
+    private final DtoJoinSpec dtoJoinSpec = new DtoJoinSpec(TestDto.class, ormTable, table, mock(SelectExpressionMapper.class));
 
     @BeforeEach
     void beforeEach() {

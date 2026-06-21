@@ -23,7 +23,7 @@ public final class SqlWhereConditionClauseTerminal
     @Override
     public SqlWhereConditionClause and(final String column) {
         final Column spiColumn = new Column(selectSpec.getTable(), column);
-        return new SqlWhereConditionClause(selectSpec.newWhereCondition(spiColumn), this);
+        return new SqlWhereConditionClause(selectSpec.newWhereCondition(spiColumn), this, delegate.litebridgeContext());
     }
 
     @Override

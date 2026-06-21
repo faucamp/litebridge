@@ -11,7 +11,7 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.dto.DtoJoinSpec;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
-import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.tracking.FieldAccessor;
@@ -39,19 +39,19 @@ public class SelectSpecDtoMapper {
     private final DtoSelectSpec selectSpec;
     private final TableRegistry tableRegistry;
     private final DtoConstructor dtoConstructor;
-    private final LitebridgeConfig litebridgeConfig;
+    private final LitebridgeContext litebridgeContext;
 
     public SelectSpecDtoMapper(final DtoSelectSpec dtoSelectSpec,
                                final TypeConverter typeConverter,
                                final TableRegistry tableRegistry,
                                final DtoConstructor dtoConstructor,
-                               final LitebridgeConfig litebridgeConfig) {
+                               final LitebridgeContext litebridgeContext) {
         this.dtoCache = new PartiallyConstructedDtoCache();
         this.typeConverter = typeConverter;
         this.selectSpec = dtoSelectSpec;
         this.tableRegistry = tableRegistry;
         this.dtoConstructor = dtoConstructor;
-        this.litebridgeConfig = litebridgeConfig;
+        this.litebridgeContext = litebridgeContext;
     }
 
     public <DTO> List<DTO> toDtos(final Class<DTO> dtoClass, final List<Row> rows) {
@@ -212,7 +212,7 @@ public class SelectSpecDtoMapper {
             }
         });
 
-        final Object dto = switch (litebridgeConfig.getRelatedDtoStrategy()) {
+        final Object dto = switch (litebridgeContext.config().getRelatedDtoStrategy()) {
             case PARTIAL_OBJECT_IF_NO_JOIN -> constructDtoResolveDeps(dtoClass, fieldAccessorValues);
             case NULL_IF_NO_JOIN -> constructDto(dtoClass, fieldAccessorValues);
         };
