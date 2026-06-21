@@ -97,7 +97,7 @@ class LocalDateTimeConverterTest {
         final LocalDateTime result = converter.convert(value);
 
         // Then
-        assertEquals(TimeUtils.toLocalDateTime(value), result);
+        assertEquals(TimeUtils.toLocalDateTime("2025-12-31T10:44:00"), result);
     }
 
     @Test
