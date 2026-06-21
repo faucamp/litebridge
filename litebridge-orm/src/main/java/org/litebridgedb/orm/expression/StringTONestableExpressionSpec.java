@@ -5,7 +5,7 @@ import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
 
 /**
- * String Type Override Nestable Expression.
+ * String type-overriding nestable expression.
  * <p>
  * A nestable column expression that overrides the type of the result to {@code String}.
  */
