@@ -5,6 +5,8 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
 
@@ -39,14 +41,41 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         Column column = ormTable.getColumnForFieldName(field).toColumn();
 
         // Use the aliased column if it is part of the SELECT clause, else use the unaliased column
-        for (Column selectedColumn : selectSpec.columns()) {
-            if (selectedColumn.equalsIgnoreAlias(column)) {
-                column = selectedColumn;
-                break;
+        if (!selectSpec.getExpressions().isEmpty()) {
+            Column replacementColumn = null;
+
+            // Look for an exact column match
+            for (ExpressionSpec expressionSpec : selectSpec.getExpressions()) {
+                Column selectedColumn;
+
+                if (expressionSpec instanceof ColumnExpressionSpec columnExpression) {
+                    selectedColumn = columnExpression.column();
+                } else {
+                    continue;
+                }
+
+                if (selectedColumn.equalsIgnoreAlias(column)) {
+                    replacementColumn = selectedColumn;
+                    break;
+                }
+            }
+
+            // No exact match; use the table's alias if it matches
+            if (replacementColumn == null && column.table().equalsIgnoreAlias(selectSpec.getTable())) {
+                replacementColumn = new Column(selectSpec.getTable(), column.name(), column.alias());
+            }
+
+            if (replacementColumn != null) {
+                column = replacementColumn;
+            }
+        } else {
+            // Select all - override the column's table with the selected one
+            if (column.table() != selectSpec.getTable() && column.table().equalsIgnoreAlias(selectSpec.getTable())) {
+                column = new Column(selectSpec.getTable(), column.name(), column.alias());
             }
         }
 
-        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate));
+        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate), delegate.litebridgeContext());
     }
 
     @Override

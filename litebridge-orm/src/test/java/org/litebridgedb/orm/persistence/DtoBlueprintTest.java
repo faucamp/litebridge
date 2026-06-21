@@ -7,11 +7,17 @@ import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
+import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.orm.api.dto.DtoJoinSpec;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
+import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridgedb.tracking.ChangeTracker;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
+import org.litebridgedb.tracking.FieldAccessor;
 
 import java.lang.invoke.MethodHandles;
 import java.sql.Types;
@@ -21,17 +27,19 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class DtoBlueprintTest {
 
     @Test
     void constructor() {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final DtoSelectSpec dtoSelectSpec = new DtoSelectSpec(TestDto.class, createOrmTable(TestDto.class, "test_table"), new DefaultAliasGenerator(databaseProvider));
+        final DtoSelectSpec dtoSelectSpec = new DtoSelectSpec(TestDto.class, createOrmTable(TestDto.class, "test_table"), new DefaultAliasGenerator(new DefaultAliasTransformer()), mock(LitebridgeContext.class));
         final List<Object> primaryKey = List.of(123L);
         final Row row = new Row().withColumn(new Column(new Table("", "public", "test_table"), "id"), 123L);
-        dtoSelectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(null, new Column(new Table("", "public", "test_table"), "id"))));
+        final FieldAccessor fieldAccessor = mock(FieldAccessor.class);
+        when(fieldAccessor.name()).thenReturn("id");
+        dtoSelectSpec.setExpressions(List.of(new SelectFieldSpec(fieldAccessor, new Column(new Table("", "public", "test_table"), "id"))));
 
         // When
         final DtoBlueprint dtoBlueprint = new DtoBlueprint(dtoSelectSpec, primaryKey, row);
@@ -49,15 +57,17 @@ class DtoBlueprintTest {
         // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final OrmTable ormTable = createOrmTable(TestDto.class, "test_table");
-        final DtoSelectSpec dtoSelectSpec = new DtoSelectSpec(TestDto.class, ormTable, new DefaultAliasGenerator(databaseProvider));
-        dtoSelectSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(null, new Column(new Table(ormTable.getMetaData().catalog(), ormTable.getMetaData().schema(), ormTable.getMetaData().name()), "id"))));
+        final DtoSelectSpec dtoSelectSpec = new DtoSelectSpec(TestDto.class, ormTable, new DefaultAliasGenerator(new DefaultAliasTransformer()), mock(LitebridgeContext.class));
+        final FieldAccessor fieldAccessor = mock(FieldAccessor.class);
+        when(fieldAccessor.name()).thenReturn("id");
+        dtoSelectSpec.setExpressions(List.of(new SelectFieldSpec(fieldAccessor, new Column(new Table(ormTable.getMetaData().catalog(), ormTable.getMetaData().schema(), ormTable.getMetaData().name()), "id"))));
         final List<Object> primaryKey = List.of(123L);
         final Row row = new Row().withColumn(new Column(ormTable.getMetaData().toTable(), "id"), 123L);
         final DtoBlueprint dtoBlueprint = new DtoBlueprint(dtoSelectSpec, primaryKey, row);
 
         final Table joinTable = new Table("", "public", "joined_test_table");
         final OrmTable joinOrmTable = createOrmTable(JoinedTestDto.class, joinTable.name());
-        final DtoJoinSpec dtoJoinSpec = new DtoJoinSpec(JoinedTestDto.class, ormTable, joinTable);
+        final DtoJoinSpec dtoJoinSpec = new DtoJoinSpec(JoinedTestDto.class, ormTable, joinTable, mock(SelectExpressionMapper.class));
         dtoJoinSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(null, new Column(joinTable, "id"))));
         final List<Object> joinPrimaryKey = List.of(456L);
         final Row joinRow = new Row().withColumn(new Column(joinTable, "id"), 456L);

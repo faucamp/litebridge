@@ -12,7 +12,7 @@ import java.lang.invoke.MethodHandles;
  * - A {@link TableSpec} instance containing the specification for the database table to map the DTO.
  * <p>
  * The {@code TableMapping} is used as part of an ORM (Object-Relational Mapping) system
- * to relate Java objects to database tables and their respective fields/columns.
+ * to relate Java objects to database tables and their respective fields/expressions.
  * <p>
  * Note:
  * - The primary constructor allows specifying all three components explicitly.

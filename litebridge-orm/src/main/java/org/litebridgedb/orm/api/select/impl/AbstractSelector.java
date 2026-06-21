@@ -4,7 +4,6 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.SelectTerminal;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
-import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,20 +21,20 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
     protected final SSP selectSpec;
     protected final TransactionalDatabaseProvider databaseProvider;
     protected final Class<DTO> dtoClass;
-    protected final LitebridgeConfig litebridgeConfig;
+    protected final LitebridgeContext litebridgeContext;
 
     protected AbstractSelector(final SSP selectSpec,
                                final TransactionalDatabaseProvider databaseProvider,
                                final Class<DTO> dtoClass,
-                               final LitebridgeConfig litebridgeConfig) {
+                               final LitebridgeContext litebridgeContext) {
         this.selectSpec = selectSpec;
         this.databaseProvider = databaseProvider;
         this.dtoClass = dtoClass;
-        this.litebridgeConfig = litebridgeConfig;
+        this.litebridgeContext = litebridgeContext;
     }
 
     protected AbstractSelector(final AbstractSelector<DTO, SSP> delegate) {
-        this(delegate.selectSpec, delegate.databaseProvider, delegate.dtoClass, delegate.litebridgeConfig);
+        this(delegate.selectSpec, delegate.databaseProvider, delegate.dtoClass, delegate.litebridgeContext);
     }
 
     @Override
@@ -66,12 +65,12 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
 
     @Override
     public DTO firstOrThrow() {
-        return oneOrThrow(() -> new NoSuchElementException("No record found for query"));
+        return firstOrThrow(() -> new NoSuchElementException("No record found for query"));
     }
 
     @Override
     public <X extends Throwable> DTO firstOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
-        return one().orElseThrow(exceptionSupplier);
+        return first().orElseThrow(exceptionSupplier);
     }
 
     @Override
@@ -84,7 +83,7 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
 
     @Override
     public String toSql() {
-        return databaseProvider.toSql(selectSpec.toSelect());
+        return databaseProvider.toSql(selectSpec.toSelect(), databaseProvider.transactionManager());
     }
 
     protected List<Row> executeQuery() {
@@ -108,5 +107,9 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
 
     protected SSP selectSpec() {
         return selectSpec;
+    }
+
+    public LitebridgeContext litebridgeContext() {
+        return litebridgeContext;
     }
 }

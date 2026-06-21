@@ -10,10 +10,11 @@ import java.util.List;
  * A SQL UPDATE statement targeting a specific table, with associated column values and conditions.
  * <p>
  * This class is a record that combines:
- * - A target {@link TableMetaData} representing the table to update.
- * - A list of {@link ColumnValue} objects specifying the columns and their new values.
- * - A list of {@link Condition} objects that define the WHERE clause conditions for the update operation.
- * <p>
+ * <ul>
+ *     <li>A target {@link TableMetaData} representing the table to update.</li>
+ *     <li>A list of {@link ColumnValue} objects specifying the columns and their new values.</li>
+ *     <li>A list of {@link Condition} objects that define the WHERE clause conditions for the update operation.</li>
+ * </ul>
  * This class is immutable and serves as part of the structure for creating and representing
  * SQL UPDATE operations in a database context.
  *

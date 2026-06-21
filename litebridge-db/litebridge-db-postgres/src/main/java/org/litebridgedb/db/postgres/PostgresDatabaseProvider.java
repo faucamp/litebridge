@@ -1,10 +1,11 @@
 package org.litebridgedb.db.postgres;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridgedb.convert.DefaultTypeConverter;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.AliasTransformer;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.AbstractDatabaseProvider;
+import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ManagedConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +44,8 @@ public final class PostgresDatabaseProvider extends AbstractDatabaseProvider {
     }
 
     @Override
-    public  @Nullable String transformAlias(final @Nullable String dbAlias) {
-        return dbAlias != null ? dbAlias.toLowerCase() : null;
+    protected AliasTransformer createAliasTransformer() {
+        return new PostgresAliasTransformer();
     }
 
     @Override

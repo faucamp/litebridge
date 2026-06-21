@@ -9,7 +9,7 @@ package org.litebridgedb.orm.api.register;
  * details of the join table used in the many-to-many relationship.
  * <p>
  * Methods in this class return intermediate steps that allow further configuration of the
- * relationship, such as specifying the join columns and inverse join columns.
+ * relationship, such as specifying the join expressions and inverse join expressions.
  * <p>
  * This builder is intended to simplify many-to-many table relationship configuration as part
  * of the table registration process within Litebridge ORM.
@@ -19,12 +19,12 @@ public class ManyToManyBuilder {
     /**
      * Specifies the name of the join table to be used in a many-to-many relationship.
      * This method serves as the starting point for further configuration of the join
-     * table, including definition of join columns and inverse join columns.
+     * table, including definition of join expressions and inverse join expressions.
      *
      * @param table The name of the join table representing the many-to-many relationship
      *              in the underlying database. Must not be null or empty.
      * @return An instance of {@link ManyToManyBuilderJoinColumnStep} to allow further
-     * configuration of the join columns for the specified join table.
+     * configuration of the join expressions for the specified join table.
      */
     public ManyToManyBuilderJoinColumnStep joinTable(final String table) {
         return new ManyToManyBuilderJoinColumnStep(table);

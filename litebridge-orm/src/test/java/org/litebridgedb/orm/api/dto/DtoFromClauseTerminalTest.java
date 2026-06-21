@@ -9,14 +9,23 @@ import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
+import org.litebridgedb.db.spi.expression.LiteralExpression;
+import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.engine.FromClauseEngine;
+import org.litebridgedb.orm.expression.ProtoColumnExpressionSpec;
+import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
+import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
@@ -98,7 +107,7 @@ class DtoFromClauseTerminalTest {
     void where_usesSelectedColumnAliasWhenSelectedColumnMatches() {
         // Given
         final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select("myVar");
+        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
 
         // When
         final DtoWhereConditionClause<TestDto> result = dtoFromClauseTerminal.where("myVar");
@@ -111,7 +120,7 @@ class DtoFromClauseTerminalTest {
     void where_keepsUnaliasedColumnWhenSelectedColumnDoesNotMatch() {
         // Given
         final TestContext<CompositeKeyDto> context = testContext(CompositeKeyDto.class, List.of("ID1", "ID2"), "id1", "id2");
-        final DtoFromClauseTerminal<CompositeKeyDto> dtoFromClauseTerminal = context.dtoSelector.select("id2");
+        final DtoFromClauseTerminal<CompositeKeyDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "id2"));
 
         // When
         final DtoWhereConditionClause<CompositeKeyDto> result = dtoFromClauseTerminal.where("id1");
@@ -143,8 +152,12 @@ class DtoFromClauseTerminalTest {
         final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
         when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select("myVar");
+        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
 
         // When
         final Optional<TestDto> result = dtoFromClauseTerminal.withId("testValue");
@@ -160,8 +173,12 @@ class DtoFromClauseTerminalTest {
         final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
         when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select("myVar");
+        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
 
         // When
         final TestDto result = dtoFromClauseTerminal.withIdOrNull("testValue");
@@ -177,8 +194,12 @@ class DtoFromClauseTerminalTest {
         final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
         when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select("myVar");
+        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
 
         // When / Then
         assertThrows(NoSuchElementException.class, () -> dtoFromClauseTerminal.withIdOrThrow("testValue"));
@@ -191,8 +212,12 @@ class DtoFromClauseTerminalTest {
         final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
         when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select("myVar");
+        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
 
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> dtoFromClauseTerminal.withIdOrThrow("testValue", IllegalArgumentException::new));
@@ -205,8 +230,12 @@ class DtoFromClauseTerminalTest {
         final TestContext<CompositeKeyDto> context = testContext(CompositeKeyDto.class, List.of("ID1", "ID2"), "id1", "id2");
         when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
-        final DtoFromClauseTerminal<CompositeKeyDto> dtoFromClauseTerminal = context.dtoSelector.select("id1", "id2");
+        final DtoFromClauseTerminal<CompositeKeyDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "id1"), new ProtoColumnExpressionSpec(SelectFieldSpec.class, "id2"));
 
         // When
         final Optional<CompositeKeyDto> result = dtoFromClauseTerminal.withId("testValue");
@@ -260,14 +289,23 @@ class DtoFromClauseTerminalTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(dtoClass, ormTable);
 
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        when(databaseProvider.transformAlias(any())).then(invocation -> invocation.getArgument(0));
+        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(transactionalDatabaseProvider);
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final DtoSelector<DTO> dtoSelector = new DtoSelector<>(dtoClass, ormTable, tableRegistry, classFieldAccessorCache, dtoConstructor, transactionalDatabaseProvider, aliasGenerator, new LitebridgeConfig());
+        final FromClauseEngine fromClauseEngine = new FromClauseEngine(databaseProvider, tableRegistry, changeTracker, dtoConstructor, () -> mock(LitebridgeContext.class));
+        final SelectExpressionMapper selectExpressionMapper = new SelectExpressionMapper(sqlFunctionRegistry);
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), fromClauseEngine, sqlFunctionRegistry, selectExpressionMapper);
 
-        return new TestContext<>(ormTable, tableRegistry, databaseProvider, aliasGenerator, dtoSelector);
+        final DtoSelector<DTO> dtoSelector = new DtoSelector<>(dtoClass, ormTable, tableRegistry, classFieldAccessorCache, dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
+
+        return new TestContext<>(ormTable, tableRegistry, databaseProvider, sqlFunctionRegistry, aliasGenerator, dtoSelector);
     }
 
     private static Map<FieldAccessor, MappedFieldTarget> fieldColumnMap(final Class<?> dtoClass, final Table table, final String... fieldNames) {
@@ -297,6 +335,7 @@ class DtoFromClauseTerminalTest {
     private record TestContext<DTO>(OrmTable ormTable,
                                     TableRegistry tableRegistry,
                                     DatabaseProvider databaseProvider,
+                                    SqlFunctionRegistry sqlFunctionRegistry,
                                     AliasGenerator aliasGenerator,
                                     DtoSelector<DTO> dtoSelector) {
     }

@@ -29,7 +29,7 @@ public interface FromClause<DTO,
 
     /**
      * Specifies the source table and schema for the SQL query, setting the base
-     * table and columns used in the query construction.
+     * table and expressions used in the query construction.
      * <p>
      * If the table is not already registered, it is created and associated with an empty schema and given
      * table name.

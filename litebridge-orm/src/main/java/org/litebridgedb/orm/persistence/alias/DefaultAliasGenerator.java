@@ -3,9 +3,9 @@ package org.litebridgedb.orm.persistence.alias;
 import org.litebridgedb.commons.StringUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
-import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.AliasTransformer;
 import org.litebridgedb.orm.persistence.OrmTable;
 
 import java.util.HashMap;
@@ -13,12 +13,7 @@ import java.util.Map;
 
 public final class DefaultAliasGenerator implements AliasGenerator {
 
-    private final DatabaseProvider databaseProvider;
-
-    public DefaultAliasGenerator(final DatabaseProvider databaseProvider) {
-        this.databaseProvider = databaseProvider;
-    }
-
+    private final AliasTransformer aliasTransformer;
     /**
      * Map of name -> alias base string
      */
@@ -27,6 +22,10 @@ public final class DefaultAliasGenerator implements AliasGenerator {
      * Map of alias base string -> count (number of times used)
      */
     private final Map<String, Integer> aliasCount = new HashMap<>();
+
+    public DefaultAliasGenerator(final AliasTransformer aliasTransformer) {
+        this.aliasTransformer = aliasTransformer;
+    }
 
     @Override
     public Table aliasTable(final OrmTable ormTable) {
@@ -43,7 +42,7 @@ public final class DefaultAliasGenerator implements AliasGenerator {
     }
 
     private String newAlias(final String name) {
-        final String alias = aliasMap.computeIfAbsent(name, v -> databaseProvider.transformAlias(StringUtils.abbreviate(v)));
+        final String alias = aliasMap.computeIfAbsent(name, v -> aliasTransformer.transformAlias(StringUtils.abbreviate(v)));
         final int count = aliasCount.compute(alias, (k, v) -> v == null ? 0 : v + 1);
 
         if (count >= 1) {

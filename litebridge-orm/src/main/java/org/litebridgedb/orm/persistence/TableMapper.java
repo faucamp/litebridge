@@ -104,15 +104,15 @@ public final class TableMapper {
             }
         });
 
-        // Check for unmapped columns
+        // Check for unmapped expressions
         if (!unmappedColumns.isEmpty()) {
-            // Check if any non-nullable columns are missing
+            // Check if any non-nullable expressions are missing
             final List<String> missingColumns = unmappedColumns.stream()
                     .filter(columnName -> !tableMetaData.column(columnName).isNullable())
                     .toList();
 
             if (!missingColumns.isEmpty()) {
-                throw new IllegalArgumentException(String.format("Unmapped non-nullable columns for table '%s': %s; DTO class: '%s'", tableMetaData.name(), missingColumns, dtoClass.getName()));
+                throw new IllegalArgumentException(String.format("Unmapped non-nullable expressions for table '%s': %s; DTO class: '%s'", tableMetaData.name(), missingColumns, dtoClass.getName()));
             }
         }
 

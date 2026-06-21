@@ -23,7 +23,7 @@ public abstract class AbstractE2eTest {
     private Flyway flyway;
 
     @BeforeEach
-    void beforeEach(DbEnvironment env) throws Exception {
+    public void beforeEach(DbEnvironment env) throws Exception {
         this.dbEnv = env;
         this.dbEnv.start(); // If not already started
 

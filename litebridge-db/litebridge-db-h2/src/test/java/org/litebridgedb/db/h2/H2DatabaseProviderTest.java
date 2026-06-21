@@ -3,8 +3,8 @@ package org.litebridgedb.db.h2;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
-import org.litebridgedb.db.spi.impl.AbstractDatabaseProvider;
 import org.litebridgedb.db.spi.impl.DefaultSequenceColumnValueGenerator;
+import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ManagedConnection;
 import org.mockito.Mockito;
 
@@ -23,17 +23,17 @@ class H2DatabaseProviderTest {
     @Test
     void createPreparedStatementUsingConnection_withGeneratedKeys() throws SQLException {
         // Given
-        H2DatabaseProvider provider = new H2DatabaseProvider();
-        ManagedConnection mockConnection = Mockito.mock(ManagedConnection.class);
-        PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
-        AbstractDatabaseProvider.PreparedSql mockPreparedSql = new AbstractDatabaseProvider.PreparedSql("SELECT * FROM test", null);
-        TableMetaData mockTableMetaData = mock(TableMetaData.class);
+        final H2DatabaseProvider provider = new H2DatabaseProvider();
+        final ManagedConnection mockConnection = Mockito.mock(ManagedConnection.class);
+        final PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
+        final PreparedSql mockPreparedSql = new PreparedSql("SELECT * FROM test", null);
+        final TableMetaData mockTableMetaData = mock(TableMetaData.class);
 
         when(mockConnection.prepareStatement(mockPreparedSql.sql(), PreparedStatement.RETURN_GENERATED_KEYS))
                 .thenReturn(mockPreparedStatement);
 
         // When
-        PreparedStatement result = provider.createPreparedStatementUsingConnection(
+        final PreparedStatement result = provider.createPreparedStatementUsingConnection(
                 mockPreparedSql, true, mockTableMetaData, mockConnection);
 
         // Then
@@ -45,16 +45,16 @@ class H2DatabaseProviderTest {
     @Test
     void createPreparedStatementUsingConnection_withoutGeneratedKeys() throws SQLException {
         // Given
-        H2DatabaseProvider provider = new H2DatabaseProvider();
-        ManagedConnection mockConnection = Mockito.mock(ManagedConnection.class);
-        PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
-        AbstractDatabaseProvider.PreparedSql mockPreparedSql = new AbstractDatabaseProvider.PreparedSql("SELECT * FROM test", null);
-        TableMetaData mockTableMetaData = mock(TableMetaData.class);
+        final H2DatabaseProvider provider = new H2DatabaseProvider();
+        final ManagedConnection mockConnection = Mockito.mock(ManagedConnection.class);
+        final PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
+        final PreparedSql mockPreparedSql = new PreparedSql("SELECT * FROM test", null);
+        final TableMetaData mockTableMetaData = mock(TableMetaData.class);
 
         when(mockConnection.prepareStatement(mockPreparedSql.sql())).thenReturn(mockPreparedStatement);
 
         // When
-        PreparedStatement result = provider.createPreparedStatementUsingConnection(
+        final PreparedStatement result = provider.createPreparedStatementUsingConnection(
                 mockPreparedSql, false, mockTableMetaData, mockConnection);
 
         // Then

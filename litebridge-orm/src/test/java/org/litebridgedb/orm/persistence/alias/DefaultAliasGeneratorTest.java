@@ -9,6 +9,7 @@ import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.tracking.ChangeTracker;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
@@ -20,10 +21,10 @@ import java.sql.Types;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class DefaultAliasGeneratorTest {
 
@@ -31,8 +32,7 @@ class DefaultAliasGeneratorTest {
     void aliasTable() {
         // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        when(databaseProvider.transformAlias(anyString())).then(i -> i.getArgument(0));
-        final DefaultAliasGenerator defaultAliasGenerator = new DefaultAliasGenerator(databaseProvider);
+        final DefaultAliasGenerator defaultAliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
 
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
@@ -54,9 +54,7 @@ class DefaultAliasGeneratorTest {
     @Test
     void aliasColumn() {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        when(databaseProvider.transformAlias(anyString())).then(i -> i.getArgument(0));
-        final DefaultAliasGenerator defaultAliasGenerator = new DefaultAliasGenerator(databaseProvider);
+        final DefaultAliasGenerator defaultAliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
 
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);

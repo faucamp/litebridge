@@ -4,8 +4,11 @@ import org.junit.jupiter.api.Test;
 import org.litebridgedb.convert.DefaultTypeConverter;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.expression.LiteralExpression;
+import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.db.spi.update.UpdateResult;
+import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
 import org.litebridgedb.tracking.ChangeTracker;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
 
@@ -51,6 +54,11 @@ class PersistenceFacadeTest {
         // Given
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
@@ -80,6 +88,12 @@ class PersistenceFacadeTest {
         // Given
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);

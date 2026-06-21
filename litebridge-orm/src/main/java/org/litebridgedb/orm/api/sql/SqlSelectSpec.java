@@ -1,14 +1,12 @@
 package org.litebridgedb.orm.api.sql;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * Specification for constructing a SQL SELECT statement.
@@ -18,25 +16,10 @@ import java.util.Objects;
  */
 public class SqlSelectSpec extends SelectSpec {
 
-    @Nullable
-    protected List<Column> columns;
+    private @Nullable Class<?> valueTypeOverride;
 
-    public @Nullable List<Column> getColumns() {
-        return columns;
-    }
-
-    public void setColumns(final List<Column> columns) {
-        this.columns = sanitise(columns);
-    }
-
-    public void addColumns(final List<Column> columns) {
-        if (this.columns == null) {
-            this.columns = new ArrayList<>();
-        } else if (!(columns instanceof ArrayList)) {
-            this.columns = new ArrayList<>(this.columns);
-        }
-
-        this.columns.addAll(sanitise((columns)));
+    public SqlSelectSpec(final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
     }
 
     public SqlJoinSpec newJoinSpec(final String table) {
@@ -48,31 +31,16 @@ public class SqlSelectSpec extends SelectSpec {
             joins = new ArrayList<>();
         }
 
-        final SqlJoinSpec joinSpec = new SqlJoinSpec(table);
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(table, selectExpressionMapper);
         joins.add(joinSpec);
         return joinSpec;
     }
 
-    @Override
-    protected List<Column> columns() {
-        return columns != null ? columns : Collections.emptyList();
+    public @Nullable Class<?> getValueTypeOverride() {
+        return valueTypeOverride;
     }
 
-    private List<Column> sanitise(final List<Column> columns) {
-        // Ensure just one instance of the same table is used
-        return columns.stream()
-                .map(this::sanitise)
-                .toList();
-    }
-
-    private Column sanitise(final Column column) {
-        if (table != null && column.table() != table
-                && column.table().alias() == null
-                && Objects.equals(column.table().schema(), table.schema())
-                && Objects.equals(column.table().name(), table.name())) {
-            return new Column(table, column.name(), column.alias());
-        } else {
-            return column;
-        }
+    public void setValueTypeOverride(@Nullable final Class<?> valueTypeOverride) {
+        this.valueTypeOverride = valueTypeOverride;
     }
 }

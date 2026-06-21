@@ -11,7 +11,7 @@ package org.litebridgedb.db.spi;
  * Common use cases include defining the structure or mappings for:
  * - One-to-many relationships between entities.
  * - Many-to-many relationships using a join table.
- * - Database columns and inline tables.
+ * - Database expressions and inline tables.
  * <p>
  * This abstraction enables flexibility and extensibility by allowing multiple
  * forms of field mapping metadata to be handled uniformly.

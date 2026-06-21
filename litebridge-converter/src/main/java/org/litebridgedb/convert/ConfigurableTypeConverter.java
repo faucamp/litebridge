@@ -47,6 +47,11 @@ public class ConfigurableTypeConverter implements TypeConverter {
         final Converter<T> converter = converterRegistry.getConverter(type);
 
         if (converter == null) {
+            if (value != null && type.isAssignableFrom(value.getClass())) {
+                // No conversion needed
+                return type.cast(value);
+            }
+
             throw new IllegalArgumentException("No converter found for class: " + type);
         }
 

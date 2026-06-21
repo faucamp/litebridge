@@ -3,6 +3,7 @@ package org.litebridgedb.orm.api.sql.update;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.update.UpdateResult;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
 import java.sql.SQLException;
@@ -25,7 +26,7 @@ class SqlUpdaterTest {
         UpdateResult expectedResult = mock(UpdateResult.class);
         when(databaseProvider.update(any(), any())).thenReturn(expectedResult);
         Table table = new Table("cat", "sch", "tab");
-        SqlUpdater updater = new SqlUpdater(table, databaseProvider);
+        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(LitebridgeContext.class));
 
         // When
         UpdateResult result = updater.execute();
@@ -41,7 +42,7 @@ class SqlUpdaterTest {
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         when(databaseProvider.update(any(), any())).thenThrow(new SQLException("DB error"));
         Table table = new Table("cat", "sch", "tab");
-        SqlUpdater updater = new SqlUpdater(table, databaseProvider);
+        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(LitebridgeContext.class));
 
         // When / Then
         assertThrows(IllegalStateException.class, updater::execute);
@@ -52,7 +53,7 @@ class SqlUpdaterTest {
         // Given
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         Table table = new Table("cat", "sch", "tab");
-        SqlUpdater updater = new SqlUpdater(table, databaseProvider);
+        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(LitebridgeContext.class));
 
         // When
         SqlUpdateWhereConditionClause result = updater.where("col1");
@@ -66,7 +67,7 @@ class SqlUpdaterTest {
         // Given
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         Table table = new Table("cat", "sch", "tab");
-        SqlUpdater updater = new SqlUpdater(table, databaseProvider);
+        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(LitebridgeContext.class));
 
         // When
         SqlUpdateSetStep result = updater.set("col1");

@@ -2,6 +2,7 @@ package org.litebridgedb.spring.boot.autoconfigure;
 
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.orm.Litebridge;
+import org.litebridgedb.orm.api.select.SelectApi;
 import org.litebridgedb.orm.api.register.TypeSafeDtoTableMapping;
 import org.litebridgedb.spring.LitebridgeEntityScanner;
 import org.litebridgedb.spring.LitebridgeTransactionManager;
@@ -64,9 +65,9 @@ public class LitebridgeAutoConfiguration {
      */
     @Bean(name = "litebridge")
     @ConditionalOnMissingBean
-    public Litebridge litebridge(final LitebridgeProperties properties,
-                                 final LitebridgeTransactionManager transactionManager,
-                                 final Optional<LitebridgeConfigurer> configurer) {
+    public SelectApi litebridge(final LitebridgeProperties properties,
+                                final LitebridgeTransactionManager transactionManager,
+                                final Optional<LitebridgeConfigurer> configurer) {
         LOGGER.trace("Starting Litebridge Spring Boot autoconfiguration");
         final DatabaseProvider databaseProvider;
 

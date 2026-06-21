@@ -7,16 +7,17 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldSpec;
-import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.persistence.DtoConstructor;
-import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridgedb.tracking.ChangeTracker;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
@@ -47,8 +48,8 @@ class DtoWhereConditionClauseTerminalTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         tableRegistry.addTable(TestDto.class, ormTable);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, new LitebridgeConfig());
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class));
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
 
@@ -75,8 +76,8 @@ class DtoWhereConditionClauseTerminalTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         tableRegistry.addTable(TestDto.class, ormTable);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, new LitebridgeConfig());
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class));
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
 
@@ -104,8 +105,8 @@ class DtoWhereConditionClauseTerminalTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, new LitebridgeConfig());
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class));
 
         final DtoWhereConditionClauseTerminal<TestDto> dtoWhereConditionClauseTerminal = new DtoWhereConditionClauseTerminal<>(dtoSelector);
 
@@ -130,8 +131,8 @@ class DtoWhereConditionClauseTerminalTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, new LitebridgeConfig());
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class));
         final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
         selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
 

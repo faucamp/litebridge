@@ -7,6 +7,7 @@ import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.JoinSpec;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,9 +21,11 @@ public class SqlJoinSpec implements JoinSpec {
 
     private final Table table;
     private final List<ConditionSpec> conditions = new ArrayList<>();
+    private final SelectExpressionMapper selectExpressionMapper;
 
-    public SqlJoinSpec(final Table table) {
+    public SqlJoinSpec(final Table table, final SelectExpressionMapper selectExpressionMapper) {
         this.table = table;
+        this.selectExpressionMapper = selectExpressionMapper;
     }
 
 
@@ -53,9 +56,7 @@ public class SqlJoinSpec implements JoinSpec {
     @Override
     public Join toJoin() {
         return new Join(table, conditions.stream()
-                .map(conditionSpec -> new Condition(conditionSpec.getColumn(),
-                        conditionSpec.getOperator(),
-                        conditionSpec.getValue()))
+                .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper))
                 .toList());
     }
 }

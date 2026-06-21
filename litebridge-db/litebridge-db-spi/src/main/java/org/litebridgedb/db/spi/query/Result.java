@@ -5,7 +5,7 @@ package org.litebridgedb.db.spi.query;
  * <p>
  * This interface is designed to provide an abstraction for accessing the
  * results of a database query. Implementations of this interface can define
- * methods for retrieving rows, columns, or other relevant data.
+ * methods for retrieving rows, expressions, or other relevant data.
  * <p>
  * Common use cases include retrieving individual rows, streaming rows
  * for processing, and obtaining metadata about the result set.

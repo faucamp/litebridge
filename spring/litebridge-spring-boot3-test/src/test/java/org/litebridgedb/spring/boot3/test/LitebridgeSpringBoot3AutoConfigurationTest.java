@@ -3,10 +3,13 @@ package org.litebridgedb.spring.boot3.test;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.DatabaseProvider;
+import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.AliasTransformer;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
@@ -207,7 +210,7 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         }
 
         @Override
-        public String toSql(final Select select) {
+        public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
             return "";
         }
 
@@ -219,6 +222,16 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         @Override
         public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public SqlFunctionRegistry getSqlFunctionRegistry() {
+            return null;
+        }
+
+        @Override
+        public AliasTransformer getAliasTransformer() {
+            return null;
         }
     }
 }

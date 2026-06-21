@@ -43,7 +43,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     @Override
     public DtoJoinConditionClause<DTO> and(final String field) {
         final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), ormTable.getColumnForFieldName(field));
-        return new DtoJoinConditionClause<>(joinSpec.newCondition(column), this);
+        return new DtoJoinConditionClause<>(joinSpec.newCondition(column), this, delegate.litebridgeContext());
     }
 
     @Override
@@ -54,7 +54,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     @Override
     public DtoWhereConditionClause<DTO> where(final String field) {
         final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), ormTable.getColumnForFieldName(field));
-        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate));
+        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate), delegate.litebridgeContext());
     }
 
     @Override

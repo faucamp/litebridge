@@ -4,7 +4,11 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.select.ConditionClause;
 import org.litebridgedb.orm.api.select.ConditionClauseTerminal;
+import org.litebridgedb.orm.api.select.SelectTerminal;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
+import org.litebridgedb.orm.api.select.model.SelectSpec;
+
+import java.util.function.Function;
 
 public class ConditionClauseImpl<DTO,
         SELF extends ConditionClause<DTO, SELF, CCT>,
@@ -14,10 +18,12 @@ public class ConditionClauseImpl<DTO,
 
     private final ConditionSpec conditionSpec;
     private final CCT conditionTerminal;
+    private final LitebridgeContext litebridgeContext;
 
-    public ConditionClauseImpl(final ConditionSpec conditionSpec, final CCT conditionTerminal) {
+    public ConditionClauseImpl(final ConditionSpec conditionSpec, final CCT conditionTerminal, final LitebridgeContext litebridgeContext) {
         this.conditionSpec = conditionSpec;
         this.conditionTerminal = conditionTerminal;
+        this.litebridgeContext = litebridgeContext;
     }
 
     /**
@@ -28,6 +34,20 @@ public class ConditionClauseImpl<DTO,
      */
     public CCT eq(final @Nullable Object value) {
         return condition(Operator.EQ, value);
+    }
+
+    public CCT eq(final Function<Subselect, SelectTerminal<?>> sb) {
+        final SelectTerminal<?> selectTerminal = sb.apply(new Subselect(litebridgeContext.fromClauseEngine()));
+        final SelectSpec selectSpec = getSelectSpec(selectTerminal);
+        return condition(Operator.EQ, selectSpec);
+    }
+
+    protected SelectSpec getSelectSpec(final SelectTerminal<?> selectTerminal) {
+        if (selectTerminal instanceof AbstractWhereClauseTerminal<?, ?, ?, ?> terminal) {
+            return terminal.delegate.selectSpec();
+        } else {
+            throw new IllegalArgumentException("Unsupported terminal: " + selectTerminal);
+        }
     }
 
     /**

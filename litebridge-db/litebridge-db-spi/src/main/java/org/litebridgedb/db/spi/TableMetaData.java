@@ -12,9 +12,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Metadata for a database table, including its primary keys and columns.
+ * Metadata for a database table, including its primary keys and expressions.
  * <p>
- * It extends the {@link Table} class and provides additional information about the table's columns,
+ * It extends the {@link Table} class and provides additional information about the table's expressions,
  * primary key, and column mappings.
  * <p>
  * This class is immutable and thread-safe.
@@ -42,7 +42,7 @@ public final class TableMetaData {
      *
      * @param table      the {@code Table} object representing the database table; must not be {@code null}
      * @param primaryKey a list of column names representing the primary key of the table; must not be {@code null}
-     * @param columns    a list of {@code ColumnMetaData} objects representing the columns of the table; must not be {@code null}
+     * @param columns    a list of {@code ColumnMetaData} objects representing the expressions of the table; must not be {@code null}
      * @throws IllegalArgumentException if any primary key column metadata is not found in the provided column metadata
      */
     public TableMetaData(final Table table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
@@ -56,7 +56,7 @@ public final class TableMetaData {
      * @param schema     the schema name of the table; may be {@code null} if not applicable
      * @param table      the name of the table; must not be {@code null}
      * @param primaryKey a list of column names representing the primary key of the table; must not be {@code null}
-     * @param columns    a list of {@link ColumnMetaData} objects representing the columns of the table; must not be {@code null}
+     * @param columns    a list of {@link ColumnMetaData} objects representing the expressions of the table; must not be {@code null}
      * @throws IllegalArgumentException if any primary key column metadata is not found in the provided column metadata
      */
     public TableMetaData(final String catalog, final String schema, final String table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
@@ -89,20 +89,20 @@ public final class TableMetaData {
     }
 
     /**
-     * Retrieve the primary key columns' metadata for the table.
+     * Retrieve the primary key expressions' metadata for the table.
      *
      * @return a list of {@code ColumnMetaData} objects representing the metadata
-     * of the primary key columns in the table.
+     * of the primary key expressions in the table.
      */
     public List<ColumnMetaData> primaryKey() {
         return primaryKey;
     }
 
     /**
-     * Retrieve a list of metadata for the columns in the table.
+     * Retrieve a list of metadata for the expressions in the table.
      *
      * @return a list of {@code ColumnMetaData} objects representing the metadata
-     * of all columns in the table.
+     * of all expressions in the table.
      */
     public List<ColumnMetaData> columns() {
         return columns;
@@ -159,7 +159,7 @@ public final class TableMetaData {
                 .add("schema='" + schema + "'")
                 .add("name='" + name + "'")
                 .add("primaryKey=" + primaryKey)
-                .add("columns=" + columns)
+                .add("expressions=" + columns)
                 .toString();
     }
 }

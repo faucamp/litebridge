@@ -36,6 +36,7 @@
                     <argLine>
                         @{argLine}
                         -javaagent:${org.mockito:mockito-core:jar}
+                        --add-reads litebridge.orm=litebridge.db.spi.impl
                         --add-opens litebridge.orm/org.litebridgedb.orm=litebridge.commons
                         --add-opens litebridge.orm/org.litebridgedb.orm=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridgedb.orm.api.dto=litebridge.commons
@@ -118,6 +119,11 @@
         <dependency>
             <groupId>org.litebridgedb.db</groupId>
             <artifactId>litebridge-db-postgres</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.litebridgedb.db</groupId>
+            <artifactId>litebridge-db-spi-impl</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

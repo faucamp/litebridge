@@ -1,28 +1,28 @@
 package org.litebridgedb.orm;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridgedb.commons.CollectionUtils;
-import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.orm.api.delete.DeleteQuery;
 import org.litebridgedb.orm.api.delete.DeleteTerminal;
 import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
-import org.litebridgedb.orm.api.dto.DtoSelector;
 import org.litebridgedb.orm.api.dto.delete.DtoDeleteWhereClause;
 import org.litebridgedb.orm.api.dto.delete.DtoDeletor;
 import org.litebridgedb.orm.api.dto.update.DtoUpdateStart;
 import org.litebridgedb.orm.api.dto.update.DtoUpdater;
-import org.litebridgedb.orm.api.register.DtoTableSpecBuilder;
 import org.litebridgedb.orm.api.register.RegistrationContext;
 import org.litebridgedb.orm.api.register.RegistrationContextTerminal;
 import org.litebridgedb.orm.api.register.TypeSafeDtoTableMapping;
+import org.litebridgedb.orm.api.select.FromClauseStart;
+import org.litebridgedb.orm.api.select.FromClauseStartTypeOverride;
+import org.litebridgedb.orm.api.select.SelectApi;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
-import org.litebridgedb.orm.api.sql.SqlFromClause;
-import org.litebridgedb.orm.api.sql.SqlSelector;
 import org.litebridgedb.orm.api.sql.delete.SqlDeleteWhereClause;
 import org.litebridgedb.orm.api.sql.delete.SqlDeletor;
 import org.litebridgedb.orm.api.sql.update.SqlUpdateStart;
@@ -32,6 +32,14 @@ import org.litebridgedb.orm.api.update.UpdateQuery;
 import org.litebridgedb.orm.api.update.UpdateTerminal;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
+import org.litebridgedb.orm.engine.FromClauseEngine;
+import org.litebridgedb.orm.engine.RegistrationEngine;
+import org.litebridgedb.orm.expression.ExpressionModifier;
+import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.ProtoColumnExpressionSpec;
+import org.litebridgedb.orm.expression.TypeOverride;
+import org.litebridgedb.orm.expression.TypeOverrideExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
 import org.litebridgedb.orm.persistence.EntityDtoMapper;
@@ -41,10 +49,7 @@ import org.litebridgedb.orm.persistence.SelectSpecDtoMapper;
 import org.litebridgedb.orm.persistence.TableMapper;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
-import org.litebridgedb.orm.persistence.alias.AliasGenerator;
-import org.litebridgedb.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridgedb.orm.persistence.alias.NoOpAliasGenerator;
-import org.litebridgedb.orm.persistence.register.AnnotationMapper;
 import org.litebridgedb.orm.tx.DefaultTransactionManager;
 import org.litebridgedb.tracking.ChangeTracker;
 import org.litebridgedb.tracking.FieldAccessor;
@@ -54,15 +59,12 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Primary entry point for Litebridge.
@@ -79,21 +81,19 @@ import java.util.function.Function;
  * database interactions, ensuring that operations are performed safely and
  * efficiently.
  */
-public final class Litebridge {
+public final class Litebridge implements SelectApi {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Litebridge.class);
-    private static final Aliased[] ALL_COLUMNS = new Aliased[0];
 
     private final TableRegistry tableRegistry = new TableRegistry();
     private final TransactionalDatabaseProvider databaseProvider;
     private final TransactionContext transactionContext;
     private final PersistenceFacade persistenceFacade;
-    private final TableMapper tableMapper;
     private final ChangeTracker changeTracker;
-    private final MethodHandles.Lookup lookup;
     private final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+    private final RegistrationEngine registrationEngine;
+    private final FromClauseEngine fromClauseEngine;
     private final LitebridgeConfig litebridgeConfig;
-    private @Nullable List<FieldAccessor> pendingManyToOneDependencies;
 
     /**
      * Constructs a Litebridge instance with the specified database provider and data source.
@@ -210,8 +210,9 @@ public final class Litebridge {
         this.litebridgeConfig = litebridgeConfig != null ? litebridgeConfig : new LitebridgeConfig();
         this.changeTracker = new ChangeTracker(lookup);
         this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor);
-        this.lookup = lookup;
-        this.tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker);
+        final TableMapper tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker);
+        this.registrationEngine = new RegistrationEngine(this.databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
+        this.fromClauseEngine = new FromClauseEngine(this.databaseProvider, tableRegistry, changeTracker, dtoConstructor, this::createLitebridgeContext);
     }
 
     /**
@@ -221,8 +222,7 @@ public final class Litebridge {
      * @param rc       A function that takes a RegistrationContext instance to configure the table mapping.
      */
     public void register(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationContextTerminal> rc) {
-        final RegistrationContextTerminal context = rc.apply(new RegistrationContext(dtoClass, databaseProvider));
-        register(new DtoTableSpecBuilder(context).build());
+        registrationEngine.register(dtoClass, rc);
     }
 
     /**
@@ -231,11 +231,7 @@ public final class Litebridge {
      * @param typeSafeDtoTableMappings one or more type-safe DTO table mappings to create and register DTO table specifications for
      */
     public void register(final TypeSafeDtoTableMapping... typeSafeDtoTableMappings) {
-        final DtoTableSpec[] dtoTableSpecs = Arrays.stream(typeSafeDtoTableMappings)
-                .map(typeSafeDtoTableMapping -> typeSafeDtoTableMapping.createDtoTableSpec(databaseProvider))
-                .toArray(DtoTableSpec[]::new);
-
-        register(dtoTableSpecs);
+        registrationEngine.register(typeSafeDtoTableMappings);
     }
 
     /**
@@ -247,14 +243,7 @@ public final class Litebridge {
      * @param entityClasses the class(es) of the entity/entities to be registered.
      */
     public void register(final Class<?>... entityClasses) {
-        final DtoTableSpec[] dtoTableSpecs = new DtoTableSpec[entityClasses.length];
-
-        for (int i = 0; i < entityClasses.length; i++) {
-            LOGGER.debug("Registering entity class '{}'", entityClasses[i]);
-            dtoTableSpecs[i] = AnnotationMapper.createDtoTableSpec(entityClasses[i], databaseProvider, lookup);
-        }
-
-        register(dtoTableSpecs);
+        registrationEngine.register(entityClasses);
     }
 
     /**
@@ -266,68 +255,7 @@ public final class Litebridge {
      * @param dtoTableSpecs One or more DTO-to-table mapping details
      */
     public void register(final DtoTableSpec... dtoTableSpecs) {
-        final Set<Class<?>> allDtoClasses = new HashSet<>(dtoTableSpecs.length);
-
-        for (final DtoTableSpec dtoTableSpec : dtoTableSpecs) {
-            allDtoClasses.add(dtoTableSpec.dtoClass());
-            allDtoClasses.addAll(dtoTableSpec.dtoInterfaces());
-        }
-
-        for (final DtoTableSpec dtoTableSpec : dtoTableSpecs) {
-            final Class<?> dtoClass = dtoTableSpec.dtoClass();
-            try {
-                final MethodHandles.Lookup elevatedLookup = MethodHandles.privateLookupIn(dtoClass, lookup);
-                changeTracker.classFieldAccessorCache().registerElevatedLookup(dtoClass, elevatedLookup);
-            } catch (IllegalAccessException e) {
-                // If we can't create a private lookup, the tracking will fall back to the provided lookup
-                // which might fail if the module is not open to litebridge-tracking.
-                // This is expected if the user hasn't opened their module to litebridge.orm either.
-                LOGGER.warn("Failed to create elevated lookup for DTO class '{}'. Ensure the module is open to litebridge.orm.", dtoClass.getName());
-            }
-
-            LOGGER.trace("Registering DtoTableSpec for DTO class '{}'", dtoClass);
-            final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoClass, dtoTableSpec.tableSpec(), allDtoClasses);
-            final OrmTable ormTable = mappedTable.ormTable();
-            tableRegistry.addTable(dtoTableSpec.dtoClass(), ormTable);
-
-            if (!CollectionUtils.isEmpty(dtoTableSpec.dtoInterfaces())) {
-                ormTable.setDtoClassInterfaces(new HashSet<>(dtoTableSpec.dtoInterfaces()));
-                dtoTableSpec.dtoInterfaces().forEach(dtoInterface -> tableRegistry.addTable(dtoInterface, ormTable));
-            }
-
-            if (!ormTable.getNestedDtoClasses().isEmpty()) {
-                ormTable.getNestedDtoClasses().forEach(nestedDtoClass -> tableRegistry.addTable(nestedDtoClass, ormTable));
-            }
-
-            // Process pending many-to-one dependencies for this class
-            if (!CollectionUtils.isEmpty(pendingManyToOneDependencies)) {
-                final Iterator<FieldAccessor> iterator = pendingManyToOneDependencies.iterator();
-
-                while (iterator.hasNext()) {
-                    final FieldAccessor fieldAccessor = iterator.next();
-
-                    if (fieldAccessor.genericType() == dtoTableSpec.dtoClass()) {
-                        ormTable.addOneToManyReverseMapping(fieldAccessor);
-                        iterator.remove();
-                    }
-                }
-            }
-
-            // Process/pend this table's dependants)
-            mappedTable.manyToOneDependencies().forEach(fieldAccessor -> {
-                final OrmTable targetOrmTable = tableRegistry.getTable(fieldAccessor.genericType());
-
-                if (targetOrmTable != null) {
-                    targetOrmTable.addOneToManyReverseMapping(fieldAccessor);
-                } else {
-                    if (pendingManyToOneDependencies == null) {
-                        pendingManyToOneDependencies = new ArrayList<>();
-                    }
-
-                    pendingManyToOneDependencies.add(fieldAccessor);
-                }
-            });
-        }
+        registrationEngine.register(dtoTableSpecs);
     }
 
     /**
@@ -389,7 +317,7 @@ public final class Litebridge {
     }
 
     /**
-     * Insert the specified Data Transfer Object (DTO) into the database via a SQL INSERT statement.
+     * Inserts the specified Data Transfer Object (DTO) into the database via a SQL INSERT statement.
      * <p>
      * This method uses the persistence facade to perform the insertion
      * and handles any SQL exceptions that might occur during the process.
@@ -433,7 +361,7 @@ public final class Litebridge {
      */
     public <DTO> void update(final Class<DTO> dtoClass, final Function<DtoUpdateStart<DTO>, UpdateQuery> update) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoUpdater<DTO> dtoUpdater = new DtoUpdater<>(dtoClass, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider);
+        final DtoUpdater<DTO> dtoUpdater = new DtoUpdater<>(dtoClass, ormTable, databaseProvider, createLitebridgeContext());
         final UpdateTerminal updateTerminal = (UpdateTerminal) update.apply(dtoUpdater);
         updateTerminal.execute();
     }
@@ -447,101 +375,74 @@ public final class Litebridge {
      */
     public void update(final String tableName, final Function<SqlUpdateStart, UpdateQuery> query) {
         final Table table = tableRegistry.getOrCreateSpiTable(tableName);
-        final SqlUpdater sqlUpdater = new SqlUpdater(table, databaseProvider);
+        final SqlUpdater sqlUpdater = new SqlUpdater(table, databaseProvider, createLitebridgeContext());
         final UpdateTerminal updateTerminal = (UpdateTerminal) query.apply(sqlUpdater);
         updateTerminal.execute();
     }
 
-    /**
-     * Select a registered Data Transfer Object (DTO) type for database query operations.
-     *
-     * @param <DTO>    The type of the DTO to select.
-     * @param dtoClass The class of the DTO to be queried, which must already be registered.
-     * @return A {@link DtoSelector} instance for querying and retrieving data for the specified DTO class.
-     * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
-     */
+    @Override
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass) {
         return select(dtoClass, (RelatedDtoStrategy) null);
     }
 
-    /**
-     * Select a registered Data Transfer Object (DTO) type for database query operations.
-     *
-     * @param <DTO>    The type of the DTO to select.
-     * @param dtoClass The class of the DTO to be queried, which must already be registered.
-     * @return A {@link DtoSelector} instance for querying and retrieving data for the specified DTO class.
-     * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
-     */
+    @Override
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
-        final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
-
-        final LitebridgeConfig activeConfig;
-
-        if (relatedDtoStrategy != null) {
-            activeConfig = new LitebridgeConfig(litebridgeConfig);
-            activeConfig.setRelatedDtoStrategy(relatedDtoStrategy);
-        } else {
-            activeConfig = litebridgeConfig;
-        }
-
-        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, activeConfig).select();
+        return new FromClauseStart(fromClauseEngine).from(dtoClass, relatedDtoStrategy);
     }
 
+    @Override
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
-        final OrmTable table = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
-        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, litebridgeConfig).select();
+        return new FromClauseStart(fromClauseEngine).from(dtoClass, contextDtoClass);
     }
 
-    /**
-     * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
-     * <p>
-     * Creates a SQL SELECT statement with the specified columns; the source table is specified
-     * via a chained {@code from()} call.
-     * <p>
-     * This method constructs a {@link SqlFromClause} for further query composition
-     * by specifying the columns to be included in the SELECT clause.
-     *
-     * @param columns An array of column names to be included in the SELECT statement.
-     *                Each column name must be a valid, non-null string.
-     * @return A {@link SqlFromClause} instance allowing further refinement of
-     * the SQL query, such as specifying the table or additional clauses.
-     */
-    public SqlFromClause select(final String... columns) {
-        return new SqlSelector(databaseProvider, tableRegistry, litebridgeConfig).select(columns);
+    @Override
+    public FromClauseStart select(final String... fieldsOrColumns) {
+        return new FromClauseStart(Arrays.stream(fieldsOrColumns)
+                .map(fieldOrColumn -> new ProtoColumnExpressionSpec(SelectFieldSpec.class, fieldOrColumn, null))
+                .toArray(ProtoColumnExpressionSpec[]::new),
+                fromClauseEngine);
     }
 
-    /**
-     * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
-     * <p>
-     * Creates a SQL SELECT statement with the specified columns the source table is specified
-     * via a chained {@code from()} call.
-     * <p>
-     * This method constructs a {@link SqlFromClause} to enable further query composition.
-     *
-     * @param columns An array of {@link Aliased} objects representing the columns
-     *                to be part of the SELECT statement. Each column must have
-     *                a valid name and may optionally include an alias.
-     * @return A {@link SqlFromClause} instance that allows further refinement
-     * of the query, such as specifying the table or additional clauses.
-     */
-    public SqlFromClause select(final Aliased... columns) {
-        return new SqlSelector(databaseProvider, tableRegistry, litebridgeConfig).select(columns);
+    @Override
+    public FromClauseStart select(final ExpressionSpec... expressionSpecs) {
+        return new FromClauseStart(expressionSpecs, fromClauseEngine);
     }
 
-    /**
-     * Query data from the database, without mapping results to Data Transfer Object (DTOs).
-     * <p>
-     * Creates a SQL SELECT statement with all columns. The source table is specified
-     * via a chained {@code from()} call.
-     * This method constructs a {@link SqlFromClause} to enable further query composition.
-     *
-     * @return A {@link SqlFromClause} instance that allows further refinement
-     * of the query, such as specifying the table or additional clauses.
-     */
-    public SqlFromClause select() {
-        return new SqlSelector(databaseProvider, tableRegistry, litebridgeConfig).select(ALL_COLUMNS);
+    @Override
+    public <T> FromClauseStartTypeOverride<T> select(final TypeOverride<T> expression, final ExpressionSpec... otherExpressionSpecs) {
+        if (otherExpressionSpecs.length == 0) {
+            final ExpressionSpec[] expressionSpecs = {switch (expression) {
+                case TypeOverrideExpressionSpec<?> typeOverrideExpression -> typeOverrideExpression;
+                case ExpressionModifier expressionModifier -> expressionModifier.toExpression();
+            }};
+
+            return new FromClauseStartTypeOverride<>(expression.returnType(), expressionSpecs, fromClauseEngine);
+        } else {
+            final ExpressionSpec[] allExpressionSpecs = switch (expression) {
+                case TypeOverrideExpressionSpec<?> typeOverrideExpression ->
+                        Stream.concat(Stream.of(typeOverrideExpression), Arrays.stream(otherExpressionSpecs)).toArray(ExpressionSpec[]::new);
+                case ExpressionModifier expressionModifier ->
+                        Stream.concat(Stream.of(expressionModifier.toExpression()), Arrays.stream(otherExpressionSpecs)).toArray(ExpressionSpec[]::new);
+            };
+
+//        if (expression instanceof TypeOverrideExpression<T>) {
+//            allExpressions = Stream.concat(Stream.of(expression), Arrays.stream(otherExpressions)).toArray(Expression[]::new);
+//        } else {
+//            allExpressions = otherExpressions;
+//        }
+
+            return new FromClauseStartTypeOverride<>(expression.returnType(), allExpressionSpecs, fromClauseEngine);
+        }
+    }
+
+    @Override
+    public <T> FromClauseStartTypeOverride<T> select(final TypeOverrideExpressionSpec<T> expression, final ExpressionSpec... otherExpressionSpecs) {
+        return select((TypeOverride<T>) expression, otherExpressionSpecs);
+    }
+
+    @Override
+    public FromClauseStart select() {
+        return new FromClauseStart(fromClauseEngine);
     }
 
     /**
@@ -567,7 +468,7 @@ public final class Litebridge {
      */
     public <DTO> void delete(final Class<DTO> dtoClass, final Function<DtoDeleteWhereClause<DTO>, DeleteQuery> query) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoDeletor<DTO> dtoDtoDeletor = new DtoDeletor<>(dtoClass, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), databaseProvider);
+        final DtoDeletor<DTO> dtoDtoDeletor = new DtoDeletor<>(dtoClass, ormTable, databaseProvider, createLitebridgeContext());
         final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(dtoDtoDeletor);
         deleteTerminal.execute();
     }
@@ -590,7 +491,7 @@ public final class Litebridge {
      *                  specifying the conditions for deleting the records
      */
     public void delete(final String tableName, final Function<SqlDeleteWhereClause, DeleteQuery> query) {
-        final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName, null), databaseProvider);
+        final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName, null), databaseProvider, createLitebridgeContext());
         final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(sqlDeletor);
         deleteTerminal.execute();
     }
@@ -615,15 +516,15 @@ public final class Litebridge {
      */
     public <DTO> DTO toDto(final Row row, final Class<DTO> dtoClass) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, new NoOpAliasGenerator());
-        selectSpec.setFieldColumns(row.columnStream()
+        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, new NoOpAliasGenerator(), createLitebridgeContext());
+        selectSpec.setExpressions(row.columnStream()
                 .map(rowColumn -> {
                     final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(rowColumn.column().name());
-                    return new DtoSelectSpec.FieldColumn(fieldAccessor, rowColumn.column());
+                    return (ExpressionSpec) new SelectFieldSpec(fieldAccessor, rowColumn.column());
                 })
                 .toList());
 
-        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, litebridgeConfig);
+        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, createLitebridgeContext());
 
         final List<DTO> dtos = selectSpecDtoMapper.toDtos(dtoClass, List.of(row));
 
@@ -656,5 +557,10 @@ public final class Litebridge {
      */
     public TransactionContext transaction() {
         return transactionContext;
+    }
+
+    private LitebridgeContext createLitebridgeContext() {
+        final SqlFunctionRegistry sqlFunctionRegistry = databaseProvider.getSqlFunctionRegistry();
+        return new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
     }
 }

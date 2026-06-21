@@ -6,6 +6,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
+import org.litebridgedb.orm.expression.Fn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,9 +17,10 @@ import java.sql.SQLException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.litebridgedb.db.spi.Column.c;
+import static org.litebridgedb.orm.expression.Fn.c;
 
 class SqlE2eTest extends AbstractE2eTest {
 
@@ -57,14 +59,14 @@ class SqlE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Select specific columns and filter records using a query")
+    @DisplayName("Select specific expressions and filter records using a query")
     void selectQuery(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
         insertTestPersonRecords(personTableName);
 
         // When
-        LOGGER.info("Selecting specific columns and filtering records using a query");
+        LOGGER.info("Selecting specific expressions and filtering records using a query");
         final List<Row> result =
                 litebridge.select(tableMapper.transformColumnName("FIRST_NAME"),
                                 tableMapper.transformColumnName("SURNAME"),
@@ -90,7 +92,7 @@ class SqlE2eTest extends AbstractE2eTest {
         tableMapper.registerPersonDtoTableMapping(litebridge, false);
 
         // When
-        LOGGER.info("Selecting specific columns and filtering records using a query");
+        LOGGER.info("Selecting specific expressions and filtering records using a query");
         final List<Person> result =
                 litebridge.select(tableMapper.transformColumnName("FIRST_NAME"),
                                 tableMapper.transformColumnName("SURNAME"),
@@ -152,6 +154,26 @@ class SqlE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
+    @DisplayName("Select COUNT()")
+    void selectCount(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        insertTestPersonRecords(personTableName);
+
+        // When
+        LOGGER.info("Selecting specific expressions and filtering records using a query");
+        final Row result = litebridge.select(Fn.count()).from(personTableName)
+                .where(tableMapper.transformColumnName("AGE")).gt(18)
+                .and(tableMapper.transformColumnName("AGE")).lt(25)
+                .oneOrThrow();
+
+        // Then
+        assertEquals(1, result.size());
+        assertInstanceOf(Number.class, result.column(0).value());
+        assertEquals(1L, ((Number) result.column(0).value()).longValue());
+    }
+
+    @TestTemplate
     @DisplayName("Delete records")
     void delete(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
@@ -198,10 +220,6 @@ class SqlE2eTest extends AbstractE2eTest {
                 insertAccount(2L, "Bob's Account", 2000L, 2L, preparedStatement);
             }
         }
-    }
-
-    private String tableName(final String tableName) {
-        return dbEnv.getName().equals("SQLite") ? tableName.replace("LB.", "") : tableName;
     }
 
     private String sql(final String sql) {

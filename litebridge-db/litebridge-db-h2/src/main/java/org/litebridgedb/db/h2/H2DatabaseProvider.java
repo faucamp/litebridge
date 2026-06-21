@@ -3,6 +3,7 @@ package org.litebridgedb.db.h2;
 import org.litebridgedb.convert.DefaultTypeConverter;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.impl.AbstractDatabaseProvider;
+import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ManagedConnection;
 import org.slf4j.Logger;
 

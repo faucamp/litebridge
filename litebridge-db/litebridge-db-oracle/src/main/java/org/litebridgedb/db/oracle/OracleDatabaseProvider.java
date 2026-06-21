@@ -1,19 +1,15 @@
 package org.litebridgedb.db.oracle;
 
-import org.jspecify.annotations.Nullable;
-import org.litebridgedb.commons.CollectionUtils;
-import org.litebridgedb.commons.StringUtils;
 import org.litebridgedb.convert.DefaultTypeConverter;
-import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.oracle.function.OracleSqlFunctionRegistryFactory;
+import org.litebridgedb.db.oracle.sql.OracleSelectSqlGenerator;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.AbstractDatabaseProvider;
-import org.litebridgedb.db.spi.query.Condition;
-import org.litebridgedb.db.spi.query.Join;
-import org.litebridgedb.db.spi.query.Limit;
-import org.litebridgedb.db.spi.query.Operator;
-import org.litebridgedb.db.spi.query.Select;
+import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridgedb.db.spi.impl.function.SqlFunctionRegistryFactory;
+import org.litebridgedb.db.spi.impl.sql.SelectSqlGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,60 +37,23 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider {
     }
 
     @Override
-    protected String createColumnIdentifier(final Column column, final boolean includeColumnAlias, final @Nullable Select select) {
-        if (select == null || CollectionUtils.isEmpty(select.joins())) {
-            return super.createColumnIdentifier(column, includeColumnAlias, select);
-        }
-
-        boolean applyTableQualifier = true;
-
-        // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the column
-        for (Join join : select.joins()) {
-            for (Condition condition : join.conditions()) {
-                if (condition.operator() == Operator.USING
-                        // Same column
-                        && (condition.column().equalsIgnoreAlias(column)
-                        // Same column but from other side of join
-                        || (condition.column().equalsColumnOnlyIgnoreAlias(column)
-                        && (select.table().equalsIgnoreAlias(column.table()) || join.table().equalsIgnoreAlias(column.table()))))) {
-                    // Don't include table qualifiers
-                    applyTableQualifier = false;
-                    break;
-                }
-            }
-
-            if (!applyTableQualifier) {
-                break;
-            }
-        }
-
-        if (applyTableQualifier) {
-            return super.createColumnIdentifier(column, includeColumnAlias, select);
-        }
-
-        final StringBuilder columnSql = new StringBuilder(quoteIdentifier(column.name()));
-
-        if (includeColumnAlias && !StringUtils.isBlank(column.alias())) {
-            columnSql.append(' ').append(createAlias(quoteIdentifier(column.alias())));
-        }
-
-        return columnSql.toString();
-    }
-
-    @Override
     public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
         return new OracleSequenceColumnValueGenerator(sequence);
     }
 
     @Override
-    protected String createAlias(final String alias) {
-        return alias;
+    protected ColumnIdentifierGenerator createColumnIdentifierGenerator() {
+        return new OracleColumnIdentifierGenerator();
     }
 
     @Override
-    protected void appendLimitClause(final Limit limit, final StringBuilder sql) {
-        limit.offset().ifPresent(offset -> sql.append(" OFFSET ").append(offset).append(" ROWS"));
-        limit.limit().ifPresent(limitVal -> sql.append(" FETCH FIRST ").append(limitVal).append(" ROWS ONLY"));
+    protected SqlFunctionRegistryFactory createSqlFunctionRegistryFactory() {
+        return new OracleSqlFunctionRegistryFactory(columnIdentifierGenerator.orThrow(), selectSqlGenerator.orThrow());
+    }
+
+    @Override
+    protected SelectSqlGenerator createSelectSqlGenerator() {
+        return new OracleSelectSqlGenerator(typeConverter, columnIdentifierGenerator.orThrow(), this::ensureTableMetaData);
     }
 
     @Override

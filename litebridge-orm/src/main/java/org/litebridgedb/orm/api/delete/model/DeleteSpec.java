@@ -6,6 +6,7 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.update.Delete;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +21,11 @@ public class DeleteSpec {
     protected Table table;
     @Nullable
     protected List<ConditionSpec> whereConditions;
+    private final SelectExpressionMapper selectExpressionMapper;
+
+    public DeleteSpec(final SelectExpressionMapper selectExpressionMapper) {
+        this.selectExpressionMapper = selectExpressionMapper;
+    }
 
     public Table getTable() {
         return ObjectUtils.requireNonNull(table, () -> new IllegalStateException("DeleteSpec.table not set"));
@@ -53,7 +59,7 @@ public class DeleteSpec {
 
         return new Delete(table,
                 whereConditions != null ? whereConditions.stream()
-                        .map(ConditionSpec::toCondition)
+                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper))
                         .toList() : Collections.emptyList());
     }
 }

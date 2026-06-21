@@ -17,7 +17,7 @@ package org.litebridgedb.db.spi.query;
  *  <li>{@link Operator#IN}: Inclusion in a set.</li>
  *  <li>{@link Operator#IS_NULL}: Checks if a value is {@code null}.</li>
  *  <li>{@link Operator#IS_NOT_NULL}: Checks if a value is not {@code null}.</li>
- *  <li>{@link Operator#USING}: Used to specify columns for joining tables.</li>
+ *  <li>{@link Operator#USING}: Used to specify expressions for joining tables.</li>
  * </ul>
  *
  * @see Condition
@@ -60,7 +60,7 @@ public enum Operator {
      */
     IS_NOT_NULL,
     /**
-     * Used to specify columns for joining tables.
+     * Used to specify expressions for joining tables.
      */
     USING
 }

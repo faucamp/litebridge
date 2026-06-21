@@ -1,6 +1,7 @@
 package org.litebridgedb.orm.api.sql;
 
 import org.junit.jupiter.api.Test;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,7 +16,7 @@ class SqlJoinConditionClauseTest {
         final SqlJoinConditionClauseTerminal conditionTerminal = mock(SqlJoinConditionClauseTerminal.class);
 
         // When
-        final SqlJoinConditionClause result = new SqlJoinConditionClause(conditionSpec, conditionTerminal);
+        final SqlJoinConditionClause result = new SqlJoinConditionClause(conditionSpec, conditionTerminal, mock(LitebridgeContext.class));
 
         // Then
         assertNotNull(result);

@@ -1,11 +1,13 @@
 package org.litebridgedb.orm.persistence;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.DatabaseProvider;
+import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.AliasTransformer;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
@@ -59,8 +61,8 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public String toSql(final Select select) {
-        return databaseProvider.toSql(select);
+    public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
+        return databaseProvider.toSql(operation, transactionManager);
     }
 
     @Override
@@ -69,13 +71,18 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
+    public SqlFunctionRegistry getSqlFunctionRegistry() {
+        return databaseProvider.getSqlFunctionRegistry();
+    }
+
+    @Override
     public TypeConverter getTypeConverter() {
         return databaseProvider.getTypeConverter();
     }
 
     @Override
-    public @Nullable String transformAlias(@Nullable final String dbAlias) {
-        return databaseProvider.transformAlias(dbAlias);
+    public AliasTransformer getAliasTransformer() {
+        return databaseProvider.getAliasTransformer();
     }
 
     private <T> T executeAndCleanupIfNeeded(final SqlOperationSupplier<T> supplier) throws SQLException {

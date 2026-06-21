@@ -1,9 +1,12 @@
 package org.litebridgedb.db.spi;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridgedb.commons.type.ConcurrentLazy;
 import org.litebridgedb.db.spi.query.Result;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
@@ -12,12 +15,13 @@ import java.util.stream.Stream;
 /**
  * A row of data returned by a query. Holds a collection of column-value pairs.
  * <p>
- * This class provides methods to add columns with associated values,
- * retrieve specific columns, and stream through all columns in the row.
+ * This class provides methods to add expressions with associated values,
+ * retrieve specific expressions, and stream through all expressions in the row.
  */
 public final class Row implements Result {
 
     private final LinkedHashMap<Column, @Nullable Object> columns = new LinkedHashMap<>();
+    private final ConcurrentLazy<List<RowColumn>> columnList = new ConcurrentLazy<>(() -> columnStream().toList());
 
     /**
      * Add a new column-value pair to the row and return the updated instance.
@@ -33,6 +37,10 @@ public final class Row implements Result {
         return this;
     }
 
+    public void updateColumn(final Column column, final @Nullable Object value) {
+        columns.put(column, value);
+    }
+
     /**
      * Return a stream of {@link Row.RowColumn} objects, each representing a column in the current row
      * along with its associated value.
@@ -40,8 +48,21 @@ public final class Row implements Result {
      * @return a stream of {@code RowColumn} objects for all columns in the row
      */
     public Stream<RowColumn> columnStream() {
-        return columns.keySet().stream()
+        return columns.sequencedKeySet().stream()
                 .map(RowColumn::new);
+    }
+
+    public List<RowColumn> columns() {
+        return columnList.orThrow();
+    }
+
+    /**
+     * Return a stream of objects containing the values of the results in this row.
+     *
+     * @return a stream of objects for all values in the row
+     */
+    public Stream<@Nullable Object> valueStream() {
+        return columns.sequencedValues().stream();
     }
 
     /**
@@ -55,6 +76,10 @@ public final class Row implements Result {
         return columnStream()
                 .filter(rc -> Objects.equals(rc.column().name(), column))
                 .findFirst();
+    }
+
+    public RowColumn column(final int index) {
+        return columns().get(index);
     }
 
     /**
@@ -81,7 +106,7 @@ public final class Row implements Result {
     }
 
     /**
-     * Returns the total number of columns in the current row.
+     * Returns the total number of expressions in the current row.
      *
      * @return the size of the column collection for the row
      */

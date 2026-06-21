@@ -10,10 +10,14 @@ Select statements are constructed via the `litebridge.select()` method. The API 
 covering use cases for both DTO-marshalling and raw SQL queries.
 
 Each query is built-up using a chained sequence of methods corresponding to the SQL clauses. The query is executed
-by invoking a terminal method, which defines how results must be returned, for example:
+by invoking a terminal method, which defines how results must be returned.
 
-Queries are constructed using a chained sequence of methods corresponding to the SQL clauses 
-(like `where()`, `join()`, `orderBy()` etc):
+Litebridge supports three main types of select queries:
+- **DTO-level queries**: Selecting full DTO objects from registered tables.
+- **SQL-level queries**: Selecting specific columns or `*` from any table.
+- **Expression-level queries**: Selecting specific SQL expressions, functions, or using ORM-side conversions.
+
+### Usage
 
 ```java
 final Optional<Person> alice = litebridge.select(Person.class)
@@ -37,12 +41,50 @@ The `first()` call is a terminal operation that executes the query and returns t
 
 #### DTO-level queries
 
-DTOs must first be registered with Litebridge with via a database table mapping before they can be queried.
+##### Setup
 
-Once a DTO class is registered, it can be queried using the `litebridge.select(Class<?>)` method, e.g.:
+DTOs must first be registered with Litebridge with via a database table mapping before they can be queried.
+Once a DTO class is registered, it can be queried using the Litebridge DTO select API.
+
+##### Basic querying
+
+The `litebridge.select(Class<?>)` method is the basic entry point for DTO-level queries, and returns fully-populated
+DTOs (dependent on join conditions/strategy if applicable):
 
 ```java
-litebridge.select(Person.class).list();
+// List contains fully-populated Person objects
+List<Person> persons = litebridge.select(Person.class).list();
+
+// Retrieve a single fully-populated Person object
+Person person = litebridge.select(Person.class).where("id").eq(123L).oneOrThrow();
+```
+
+The `litebridge.select(String)` method is a convenient equivalent to 
+the general-form Litebridge "select from" call with no arguments:
+
+```java
+litebridge.select().from(Person.class).list();
+```
+
+##### General form querying
+
+Partially-populated DTOs can be retrieved using the general-form Litebridge "select from" method:
+
+```java
+// Retrieve a single Person object with only the "id" and "age" fields populated
+Person personIdAgeOnly = litebridge.select("id", "age").from(Person.class).oneOrThrow();
+```
+
+[Query expressions](#advanced-query-expressions) can be used with DTO-level queries:
+
+```java
+import static org.litebridgedb.orm.expression.Fn.*;
+
+// Count the number of Person entites matching the query
+Long personCount = litebridge.select(count()).from(Person.class).oneOrThrow();
+
+// Select the highest age from Person.age
+Long maxAge = litebridge.select(max("age")).from(Person.class).oneOrThrow();
 ```
 
 #### SQL-level queries
@@ -64,6 +106,26 @@ litebridge.select("FIRST_NAME", "ACCOUNT_NAME")
         .list();
 ```
 
+### Expression-level queries
+
+Advanced queries can be constructed using "query expressions". These allow selecting SQL functions, aliased columns, 
+or performing ORM-side type conversions. They work in both DTO-level and SQL-level contexts.
+
+Expressions are primarily created using the `Fn` utility class. 
+See the [Query Expressions](expressions.md) page for a full list of available expressions.
+
+```java
+import static org.litebridgedb.orm.expression.Fn.*;
+
+// Select count of rows
+Long count = litebridge.select(count()).from(Person.class).oneOrThrow();
+
+// Select with SQL functions
+List<Row> names = litebridge.select(upper("FIRST_NAME")).from("LB.PERSON").list();
+
+// Select with ORM-side type conversion
+Double avgAge = litebridge.select(convert(avg("age"), Double.class)).from(Person.class).oneOrThrow();
+```
 
 #### Terminal operations
 
@@ -219,7 +281,80 @@ litebridge.select("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
         .forEach(p -> logger.info("Person DTO: " + p));
 ```
 
+Joins work the same way they do for DTO-level queries:
+
+```java
+litebridge.select("FIRST_NAME", "ACCOUNT_NAME")
+        .from("LB.PERSON")
+        .join("LB.ACCOUNT").using("PERSON_ID")
+        .list();
+```
+
 The `litebridge.toDto(Row, Class)` method is a convenient way to manually map a raw SQL result row to a registered DTO class.
 
 Note the difference between the identifiers used in the query clauses vs the previous DTO-level examples.
-When making a SQL-level query, the identifiers used in the query clauses must match the column names in the database table being queried.
+When making a SQL-level query, the identifiers used in the query clauses must match the column names in the database
+table being queried; in the DTO examples, the identifiers are mapped DTO field names.
+
+## Advanced Query Expressions
+
+Query expressions (via the `Fn` class) provide a powerful way to interact with the database beyond simple column selection.
+
+A complete list of available expressions and functions can be found on the [Query Expressions](expressions.md) page.
+
+### SQL Functions
+
+Common SQL functions are supported and can be nested.
+
+```java
+import static org.litebridgedb.orm.expression.Fn.*;
+
+// Aggregates
+litebridge.select(avg("age")).from(Person.class).oneOrThrow();
+litebridge.select(min("age")).from(Person.class).oneOrThrow();
+litebridge.select(max("age")).from(Person.class).oneOrThrow();
+litebridge.select(count()).from(Person.class).oneOrThrow();
+
+// String functions
+litebridge.select(upper("name")).from(Person.class).list();
+litebridge.select(lower("name")).from(Person.class).list();
+litebridge.select(substring("name", 1, 3)).from(Person.class).list();
+
+// Math functions
+litebridge.select(abs("balance")).from(Account.class).list();
+```
+
+### ORM-side Type Conversion
+
+Litebridge allows the Java type returned by an expression tob overridden using `Fn.convert()`. 
+This uses Litebridge's registered type converters to transform the database result before it is returned to the client application.
+
+This is particularly useful for aggregate functions where the database driver might return a different numeric type than what your application expects (e.g., getting a `Double` from an `AVG()` function when you want a `BigDecimal` or `Long`).
+
+```java
+// Convert the result of COUNT() to a String
+String countStr = litebridge.select(Fn.convert(Fn.count(), String.class))
+        .from(Person.class)
+        .oneOrThrow();
+
+// Convert AVG() result to a Double
+Double avgAge = litebridge.select(Fn.convert(Fn.avg("age"), Double.class))
+        .from(Person.class)
+        .oneOrThrow();
+```
+
+### Column Aliasing
+
+Column selections can be aliased, which is especially useful when selecting from multiple tables 
+or when using expressions in "raw SQL" queries:
+
+```java
+import static org.litebridgedb.orm.expression.Fn.*;
+
+litebridge.select(
+    columnAlias("FIRST_NAME", "firstName"),
+    columnAlias("SURNAME", "lastName")
+).from("LB.PERSON").list();
+```
+
+When using `columnAlias()`, the resulting `Row` will contain the specified aliases as column names.

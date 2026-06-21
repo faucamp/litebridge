@@ -8,6 +8,7 @@ import org.litebridgedb.orm.e2e.basic.dto.Account;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.basic.dto.PersonAccount;
 import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
+import org.litebridgedb.orm.expression.Fn;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
 import org.litebridgedb.orm.persistence.EntityDtoMapper;
 import org.litebridgedb.orm.tx.Transaction;
@@ -423,6 +424,94 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertEquals(1, litebridge.select(Person.class).stream().filter(p -> p.getEyeColour().equals("unknown")).count());
     }
 
-    private class TestException extends RuntimeException {
+    @TestTemplate
+    @DisplayName("Select specific fields, names only")
+    void select_specificFields_strings(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+
+        // Setup data
+        final Person[] persons = new Person[3];
+        for (int i = 0; i < 3; i++) {
+            persons[i] = new Person();
+            persons[i].setName("Name" + i);
+            persons[i].setSurname("Surname" + i);
+            persons[i].setAge(20 + i);
+        }
+
+        litebridge.save((Object[]) persons);
+
+        // Read and populate specific fields only
+        final List<Person> result = litebridge.select("id", "surname").from(Person.class).list();
+
+        assertEquals(3, result.size());
+        for (int i = 0; i < 3; i++) {
+            final Person p = result.get(i);
+            assertNotNull(p.getId());
+            assertEquals(persons[i].getSurname(), p.getSurname());
+            assertNull(p.getName());
+            assertEquals(0, p.getAge());
+        }
+    }
+
+    @TestTemplate
+    @DisplayName("Select specific fields using functions")
+    void select_specificFields_functions(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+
+        // Setup data
+        final Person[] persons = new Person[3];
+        for (int i = 0; i < 3; i++) {
+            persons[i] = new Person();
+            persons[i].setName("Name" + i);
+            persons[i].setSurname("Surname" + i);
+            persons[i].setAge(20 + i);
+        }
+
+        litebridge.save((Object[]) persons);
+
+        // Read and populate specific fields only
+        final List<Person> result = litebridge.select(Fn.f("id"), Fn.f("surname")).from(Person.class).list();
+
+        assertEquals(3, result.size());
+        for (int i = 0; i < 3; i++) {
+            final Person p = result.get(i);
+            assertNotNull(p.getId());
+            assertEquals(persons[i].getSurname(), p.getSurname());
+            assertNull(p.getName());
+            assertEquals(0, p.getAge());
+        }
+    }
+
+    @TestTemplate
+    @DisplayName("Select with subselect")
+    void select_subselect(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+
+        // Setup data
+        final Person[] persons = new Person[3];
+        for (int i = 0; i < 3; i++) {
+            persons[i] = new Person();
+            persons[i].setId(1L + i);
+            persons[i].setName("Name" + i);
+            persons[i].setSurname("Surname" + i);
+            persons[i].setAge(20 + i);
+        }
+
+        litebridge.save((Object[]) persons);
+
+        // Select DTO via subselect
+        final Person result = litebridge.select().from(Person.class)
+                .where("id").eq(sb ->
+                        sb.select("id").from(Person.class)
+                                .where("name").eq("Name1"))
+                .oneOrThrow();
+
+        assertEquals(persons[1], result);
+    }
+
+    private static class TestException extends RuntimeException {
     }
 }

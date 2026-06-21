@@ -1,7 +1,7 @@
 package org.litebridgedb.orm.api.select;
 
 /**
- * Clause in a SQL query for specifying ordering of rows based on one or more columns
+ * Clause in a SQL query for specifying ordering of rows based on one or more expressions
  * or fields.
  * <p>
  * This interface provides methods to define the order by direction, either ascending or

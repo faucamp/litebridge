@@ -4,6 +4,8 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.convert.converter.Converter;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -13,7 +15,7 @@ class ConfigurableTypeConverterTest {
     @Test
     void register_convertByJavaType() {
         // Given
-        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(new TestConverter<>(String.class));
 
         // When
@@ -26,7 +28,7 @@ class ConfigurableTypeConverterTest {
     @Test
     void register_convertBySqlType() {
         // Given
-        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(new TestSqlConverter<>(String.class, new int[]{1}));
 
         // When
@@ -39,7 +41,7 @@ class ConfigurableTypeConverterTest {
     @Test
     void register_multipleConverters() {
         // Given
-        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(new TestConverter<>(String.class));
         typeConverter.register(new TestConverter<>(Integer.class));
 
@@ -55,7 +57,7 @@ class ConfigurableTypeConverterTest {
     @Test
     void register_multipleSqlConverters() {
         // Given
-        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(new TestSqlConverter<>(String.class, new int[]{1}));
         typeConverter.register(new TestSqlConverter<>(Byte.class, new int[]{2}));
 
@@ -71,7 +73,7 @@ class ConfigurableTypeConverterTest {
     @Test
     void register_customFunction() {
         // Given
-        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(Long.class, value -> value == null ? 0L : Long.parseLong(value.toString()));
 
         // When
@@ -84,7 +86,7 @@ class ConfigurableTypeConverterTest {
     @Test
     void convert_bySqlType_notFound() {
         // Given
-        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
 
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> typeConverter.convert("test", 1));
@@ -93,16 +95,28 @@ class ConfigurableTypeConverterTest {
     @Test
     void convert_byJavaType_notFound() {
         // Given
-        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> typeConverter.convert("test", String.class));
+        assertThrows(IllegalArgumentException.class, () -> typeConverter.convert("test", Map.class));
+    }
+    
+    @Test
+    void convert_byJavaType_Object() {
+        // Given
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+
+        // When
+        final Object result = typeConverter.convert("test", Object.class);
+
+        // Then
+        assertEquals("test", result);
     }
 
     @Test
     void register_withFunction() {
         // Given
-        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(String.class, new int[]{1}, value -> value == null ? null : value.toString());
 
         // When
@@ -117,21 +131,21 @@ class ConfigurableTypeConverterTest {
     @Test
     void unregister_byJavaType() {
         // Given
-        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(new TestConverter<>(String.class));
-        assertNotNull(typeConverter.convert("test", String.class));
+        assertNotNull(typeConverter.convert(123, String.class));
 
         // When
         typeConverter.unregister(String.class);
 
         // Then
-        assertThrows(IllegalArgumentException.class, () -> typeConverter.convert("test", String.class));
+        assertThrows(IllegalArgumentException.class, () -> typeConverter.convert(123, String.class));
     }
 
     @Test
     void unregister_bySqlType() {
         // Given
-        ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(new TestSqlConverter<>(String.class, new int[]{1}));
         assertNotNull(typeConverter.convert("test", 1));
 

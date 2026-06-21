@@ -7,11 +7,13 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldSpec;
-import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
@@ -54,7 +56,7 @@ class DtoJoinConditionClauseTerminalTest {
         selectSpec.setTable(aliasedTable);
 
         final DtoJoinConditionClauseTerminal<TestDto> terminal = new DtoJoinConditionClauseTerminal<>(
-                new DtoJoinSpec(TestDto.class, context.ormTable(), aliasedTable),
+                new DtoJoinSpec(TestDto.class, context.ormTable(), aliasedTable, mock(SelectExpressionMapper.class)),
                 context.dtoSelector(),
                 context.aliasGenerator());
 
@@ -109,7 +111,7 @@ class DtoJoinConditionClauseTerminalTest {
         tableRegistry.addTable(TestDto.class, ormTable);
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider);
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(
                 TestDto.class,
                 ormTable,
@@ -118,8 +120,8 @@ class DtoJoinConditionClauseTerminalTest {
                 dtoConstructor,
                 databaseProvider,
                 aliasGenerator,
-                new LitebridgeConfig());
-        final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasGenerator.aliasTable(ormTable));
+                mock(LitebridgeContext.class));
+        final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasGenerator.aliasTable(ormTable), mock(SelectExpressionMapper.class));
         final DtoJoinConditionClauseTerminal<TestDto> terminal = new DtoJoinConditionClauseTerminal<>(
                 joinSpec,
                 dtoSelector,

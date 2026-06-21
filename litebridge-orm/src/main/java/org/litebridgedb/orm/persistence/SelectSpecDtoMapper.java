@@ -11,7 +11,9 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.dto.DtoJoinSpec;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
-import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.tracking.FieldAccessor;
 import org.litebridgedb.tracking.FieldAccessorChain;
 import org.slf4j.Logger;
@@ -37,19 +39,19 @@ public class SelectSpecDtoMapper {
     private final DtoSelectSpec selectSpec;
     private final TableRegistry tableRegistry;
     private final DtoConstructor dtoConstructor;
-    private final LitebridgeConfig litebridgeConfig;
+    private final LitebridgeContext litebridgeContext;
 
     public SelectSpecDtoMapper(final DtoSelectSpec dtoSelectSpec,
                                final TypeConverter typeConverter,
                                final TableRegistry tableRegistry,
                                final DtoConstructor dtoConstructor,
-                               final LitebridgeConfig litebridgeConfig) {
+                               final LitebridgeContext litebridgeContext) {
         this.dtoCache = new PartiallyConstructedDtoCache();
         this.typeConverter = typeConverter;
         this.selectSpec = dtoSelectSpec;
         this.tableRegistry = tableRegistry;
         this.dtoConstructor = dtoConstructor;
-        this.litebridgeConfig = litebridgeConfig;
+        this.litebridgeContext = litebridgeContext;
     }
 
     public <DTO> List<DTO> toDtos(final Class<DTO> dtoClass, final List<Row> rows) {
@@ -210,7 +212,7 @@ public class SelectSpecDtoMapper {
             }
         });
 
-        final Object dto = switch (litebridgeConfig.getRelatedDtoStrategy()) {
+        final Object dto = switch (litebridgeContext.config().getRelatedDtoStrategy()) {
             case PARTIAL_OBJECT_IF_NO_JOIN -> constructDtoResolveDeps(dtoClass, fieldAccessorValues);
             case NULL_IF_NO_JOIN -> constructDto(dtoClass, fieldAccessorValues);
         };
@@ -295,8 +297,8 @@ public class SelectSpecDtoMapper {
 
         // Find the primary key(s) for this table
         final List<ColumnMetaData> pkColumns = ormTable.getMetaData().primaryKey();
-        // Match that to aliased columns (if any) in the select spec
-        final List<DtoSelectSpec.FieldColumn> pkFieldColumns = extractPrimaryKeyFieldColumns(pkColumns, selectSpec.getTable(), selectSpec.getFieldColumns());
+        // Match that to aliased expressions (if any) in the select spec
+        final List<DtoSelectSpec.FieldColumn> pkFieldColumns = extractPrimaryKeyFieldColumns(pkColumns, selectSpec.getTable(), selectSpec.getExpressions());
 
         // Group rows by the DTO table's primary key value for DTO assembly
         final Map<List<Object>, List<Row>> dtoPkGroupedRows = new LinkedHashMap<>();
@@ -319,7 +321,7 @@ public class SelectSpecDtoMapper {
 
                                 return (Object) typeConverter.convert(rowColumn.value(), pkFieldColumn.fieldAccessor().type());
                             })
-                            // No PK present in selected columns; use a hash of the row as the identifier
+                            // No PK present in selected expressions; use a hash of the row as the identifier
                             .orElseGet(row::hashCode))
                     .toList();
 
@@ -340,7 +342,7 @@ public class SelectSpecDtoMapper {
                         .map(DtoJoinSpec.class::cast)
                         .forEach(dtoJoinSpec -> {
                             final List<ColumnMetaData> joinPkColumns = dtoJoinSpec.dtoTable().getMetaData().primaryKey();
-                            final List<DtoSelectSpec.FieldColumn> joinPkFieldColumns = extractPrimaryKeyFieldColumns(joinPkColumns, dtoJoinSpec.table(), dtoJoinSpec.getFieldColumns());
+                            final List<DtoSelectSpec.FieldColumn> joinPkFieldColumns = extractPrimaryKeyFieldColumnsFromFieldColumns(joinPkColumns, dtoJoinSpec.table(), dtoJoinSpec.getFieldColumns());
                             final Map<List<@Nullable Object>, Row> relatedDtoRows = new LinkedHashMap<>();
 
                             for (final Row row : rowGroup) {
@@ -368,13 +370,31 @@ public class SelectSpecDtoMapper {
         return blueprints;
     }
 
-    private List<DtoSelectSpec.FieldColumn> extractPrimaryKeyFieldColumns(final List<ColumnMetaData> pkColumns, final Table table, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
+    @Deprecated
+    private List<DtoSelectSpec.FieldColumn> extractPrimaryKeyFieldColumnsFromFieldColumns(final List<ColumnMetaData> pkColumns, final Table table, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
         final List<DtoSelectSpec.FieldColumn> pkFieldColumns = new ArrayList<>(pkColumns.size());
 
         for (ColumnMetaData pkColumnn : pkColumns) {
             fieldColumns.stream()
                     .filter(fieldColumn -> fieldColumn.column().table().equals(table))
                     .filter(fieldColumn -> fieldColumn.column().name().equals(pkColumnn.name()))
+                    .findFirst()
+                    .ifPresent(pkFieldColumns::add);
+        }
+
+        return pkFieldColumns;
+    }
+
+    private List<DtoSelectSpec.FieldColumn> extractPrimaryKeyFieldColumns(final List<ColumnMetaData> pkColumns, final Table table, final List<ExpressionSpec> expressionSpecs) {
+        final List<DtoSelectSpec.FieldColumn> pkFieldColumns = new ArrayList<>(pkColumns.size());
+
+        for (ColumnMetaData pkColumnn : pkColumns) {
+            expressionSpecs.stream()
+                    .filter(expression -> expression instanceof SelectFieldSpec)
+                    .map(expression -> (SelectFieldSpec) expression)
+                    .filter(selectField -> selectField.column().table().equals(table))
+                    .filter(selectField -> selectField.column().name().equals(pkColumnn.name()))
+                    .map(selectField -> new DtoSelectSpec.FieldColumn(selectField.field(), selectField.column()))
                     .findFirst()
                     .ifPresent(pkFieldColumns::add);
         }

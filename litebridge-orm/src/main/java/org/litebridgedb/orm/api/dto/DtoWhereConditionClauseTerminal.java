@@ -5,6 +5,8 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractWhereClauseTerminal;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 
 import java.util.Arrays;
@@ -40,14 +42,24 @@ public final class DtoWhereConditionClauseTerminal<DTO>
         Column column = table.getColumnForFieldName(field).toColumn();
 
         // Use the aliased column if it is part of the SELECT clause, else use the unaliased column
-        for (Column selectedColumn : selectSpec.columns()) {
-            if (selectedColumn.equalsIgnoreAlias(column)) {
-                column = selectedColumn;
-                break;
+        if (selectSpec.getExpressions() != null) {
+            for (final ExpressionSpec expressionSpec : selectSpec.getExpressions()) {
+                Column selectedColumn;
+
+                if (expressionSpec instanceof SelectFieldSpec selectFieldSpec) {
+                    selectedColumn = selectFieldSpec.column();
+                } else {
+                    continue;
+                }
+
+                if (selectedColumn.equalsIgnoreAlias(column)) {
+                    column = selectedColumn;
+                    break;
+                }
             }
         }
 
-        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), this);
+        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), this, delegate.litebridgeContext());
     }
 
     /**

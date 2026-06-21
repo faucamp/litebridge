@@ -47,7 +47,7 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 - **Null Safety**: Always use JSpecify annotations on public APIs. The project is generally `@NullMarked`.
 - **Modularity**: Respect module boundaries defined in `module-info.java`.
 - **API Design**: Favour fluent builders and functional interfaces for configuration and queries.
-- **Variables and parameters**: Declare variables and parameters as `final` wherever possible.
+- **Variables and parameters**: Declare variables and parameters as `final` wherever possible, including when writing tests.
 
 ### 2. DTO Mappings
 
@@ -75,7 +75,7 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 - **Mocking**: Use Mockito for unit tests that don't require a live database.
 - **Style**: Use JUnit 6 conventions for test classes and methods, and use the existing "Given-When-Then" pattern for
   test setup where possible (E2E tests are mostly exempt from this). Use `// Given`, `// When` and `// Then` comments to
-  document test steps when following this pattern..
+  document test steps when following this pattern.
 - **Coverage**: Aim for 100% test coverage in unit tests, and that E2E tests cover the majority of use cases.
 
 ## Key Classes and APIs
@@ -94,3 +94,4 @@ Litebridge is modular and uses JPMS (`module-info.java`).
   `litebridge-orm`. Add E2E tests and unit tests.
 - **Adding a DB Provider**: Implement the `DatabaseProvider` SPI in a new module and ensure it passes the SPI TCK/common
   tests. Update relevant documentation to reflect the new provider. Add unit tests and E2E tests for the new provider.
+- **Creating tests**: Implement unit tests for new features or bug fixes. Follow the style detailed under section 4, "Testing".

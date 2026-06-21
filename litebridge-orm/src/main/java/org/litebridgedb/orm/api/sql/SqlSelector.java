@@ -2,14 +2,15 @@ package org.litebridgedb.orm.api.sql;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.CollectionUtils;
-import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.db.spi.Row;
+import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
+import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
-import java.util.Arrays;
 import java.util.List;
 
 public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
@@ -18,17 +19,13 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
 
     public SqlSelector(final TransactionalDatabaseProvider databaseProvider,
                        final TableRegistry tableRegistry,
-                       final LitebridgeConfig litebridgeConfig) {
-        super(new SqlSelectSpec(), databaseProvider, Row.class, litebridgeConfig);
+                       final LitebridgeContext litebridgeContext) {
+        super(new SqlSelectSpec(litebridgeContext), databaseProvider, Row.class, litebridgeContext);
         this.tableRegistry = tableRegistry;
     }
 
-    public SqlFromClause select(final String... columns) {
-        return select(Arrays.stream(columns).map(Aliased::new).toArray(Aliased[]::new));
-    }
-
-    public SqlFromClause select(final Aliased... columns) {
-        return new SqlFromClause(columns, selectSpec, tableRegistry, this);
+    public SqlFromClause select(final ExpressionSpec... expressionSpecs) {
+        return new SqlFromClause(expressionSpecs, selectSpec, tableRegistry, this);
     }
 
     @Override
@@ -44,6 +41,23 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
     @Override
     public List<Row> list() {
         return executeQuery();
+    }
+
+    @Override
+    protected List<Row> executeQuery() {
+        if (selectSpec.getValueTypeOverride() == null) {
+            return executeQuery(selectSpec);
+        } else {
+            final List<Row> rows = executeQuery(selectSpec);
+            final TypeConverter typeConverter = databaseProvider.getTypeConverter();
+            final Class<?> valueTypeOverride = selectSpec.getValueTypeOverride();
+
+            // Transforms row column values to the specified override type
+            return rows.stream()
+                    .peek(row -> row.columnStream()
+                            .forEach(rowColumn -> row.updateColumn(rowColumn.column(), typeConverter.convert(rowColumn.value(), valueTypeOverride))))
+                    .toList();
+        }
     }
 
     private @Nullable Row fetchOneRecord(final boolean first) {

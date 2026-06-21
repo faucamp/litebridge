@@ -7,6 +7,7 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.update.ColumnValue;
 import org.litebridgedb.db.spi.update.Update;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,6 +23,12 @@ public class UpdateSpec {
     protected final List<ColumnValue> columnValues = new ArrayList<>();
     @Nullable
     protected List<ConditionSpec> whereConditions;
+
+    private final SelectExpressionMapper selectExpressionMapper;
+
+    public UpdateSpec(final SelectExpressionMapper selectExpressionMapper) {
+        this.selectExpressionMapper = selectExpressionMapper;
+    }
 
     public Table getTable() {
         return ObjectUtils.requireNonNull(table, () -> new IllegalStateException("UpdateSpec.table not set"));
@@ -60,7 +67,7 @@ public class UpdateSpec {
         return new Update(table,
                 columnValues,
                 whereConditions != null ? whereConditions.stream()
-                        .map(ConditionSpec::toCondition)
+                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper))
                         .toList() : Collections.emptyList());
     }
 }
