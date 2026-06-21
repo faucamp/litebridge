@@ -41,14 +41,6 @@ public class DeleteSqlGenerator extends AbstractSqlGenerator {
                 final PreparedSql conditionSql = createCondition(condition, delete, connectionProvider);
                 sql.append(conditionSql.sql());
                 bindValues.addAll(conditionSql.bindValues());
-
-                //TODO: Deprecated
-//                if (condition.value() != null) {
-//                    bindValues.add(new org.litebridgedb.db.spi.sql.BindValue(condition.value(),
-//                            ensureTableMetaData(condition.column().table(), connectionProvider)
-//                                    .column(condition.column().name())
-//                                    .getDataType()));
-//                }
             }
         }
 
