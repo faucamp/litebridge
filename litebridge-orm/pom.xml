@@ -36,7 +36,7 @@
                     <argLine>
                         @{argLine}
                         -javaagent:${org.mockito:mockito-core:jar}
-                        --add-reads litebridge.orm=litebridge.db.spi.impl
+                        --add-reads litebridge.orm=litebridge.db.spi.impl,litebridge.db.oracle
                         --add-opens litebridge.orm/org.litebridgedb.orm=litebridge.commons
                         --add-opens litebridge.orm/org.litebridgedb.orm=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridgedb.orm.api.dto=litebridge.commons
