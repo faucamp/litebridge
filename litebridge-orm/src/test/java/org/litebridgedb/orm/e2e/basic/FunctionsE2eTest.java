@@ -115,11 +115,11 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     @DisplayName("UPPER()")
     void upper(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Get the uppercase names of the stored persons
-        final List<String> uppercaseNames = litebridge.select(Fn.upper("name")).from(Person.class).list();
+        final List<String> uppercaseNames = litebridge.select(Fn.upper("name")).from(Person.class).orderBy("id").asc().list();
         assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseNames);
 
         // Get the uppercase names of the stored persons
-        final List<String> uppercaseNamesExpr = litebridge.select(Fn.upper(Fn.f("name"))).from(Person.class).list();
+        final List<String> uppercaseNamesExpr = litebridge.select(Fn.upper(Fn.f("name"))).from(Person.class).orderBy("id").asc().list();
         assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseNamesExpr);
     }
 
@@ -127,10 +127,10 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     @DisplayName("LOWER()")
     void lower(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Get the lowercase names of the stored persons
-        final List<String> lowercaseNames = litebridge.select(Fn.lower("name")).from(Person.class).list();
+        final List<String> lowercaseNames = litebridge.select(Fn.lower("name")).from(Person.class).orderBy("id").asc().list();
         assertLinesMatch(List.of("name0", "name1", "name2"), lowercaseNames);
 
-        final List<String> lowercaseNamesExpr = litebridge.select(Fn.lower(Fn.f("name"))).from(Person.class).list();
+        final List<String> lowercaseNamesExpr = litebridge.select(Fn.lower(Fn.f("name"))).from(Person.class).orderBy("id").asc().list();
         assertLinesMatch(List.of("name0", "name1", "name2"), lowercaseNamesExpr);
     }
 
@@ -138,11 +138,11 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     @DisplayName("SUBSTRING()")
     void substring(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Get substrings of the surnames
-        final List<String> surnameSubstrings = litebridge.select(Fn.substring("surname", 2, 5)).from(Person.class).list();
+        final List<String> surnameSubstrings = litebridge.select(Fn.substring("surname", 2, 5)).from(Person.class).orderBy("id").asc().list();
         assertLinesMatch(List.of("urnam", "urnam", "urnam"), surnameSubstrings);
 
         // Nested SQL functions
-        final List<String> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring("surname", 4))).from(Person.class).list();
+        final List<String> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring("surname", 4))).from(Person.class).orderBy("id").asc().list();
         assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings);
     }
 
@@ -150,10 +150,10 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     @DisplayName("ABS()")
     void abs(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Get the lowercase names of the stored persons
-        final Number absAge = litebridge.select(Fn.abs("age")).from(Person.class).firstOrThrow();
+        final Number absAge = litebridge.select(Fn.abs("age")).from(Person.class).orderBy("id").asc().firstOrThrow();
         assertEquals(20, absAge.intValue());
 
-        final Number absAgeExpr = litebridge.select(Fn.abs(Fn.f("age"))).from(Person.class).firstOrNull();
+        final Number absAgeExpr = litebridge.select(Fn.abs(Fn.f("age"))).from(Person.class).orderBy("id").asc().firstOrNull();
         assertEquals(20, absAgeExpr.intValue());
     }
 
@@ -161,7 +161,7 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     @DisplayName("Nested functions")
     void nestedFunctions(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Nested SQL functions
-        final List<String> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring("surname", 4))).from(Person.class).list();
+        final List<String> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring("surname", 4))).from(Person.class).orderBy("id").asc().list();
         assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings);
     }
 
