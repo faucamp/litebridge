@@ -2,7 +2,7 @@ package org.litebridgedb.db.oracle.function.scalar;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.litebridgedb.db.spi.expression.ColumnExpression;
+import org.litebridgedb.db.spi.expression.ColumnExpressionImpl;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,7 +20,7 @@ class SubstrTest {
     @Test
     void template() {
         // Given
-        final Substr substr = new Substr(mock(ColumnExpression.class), 2, 5, columnIdentifierGenerator);
+        final Substr substr = new Substr(mock(ColumnExpressionImpl.class), 2, 5, columnIdentifierGenerator);
 
         // When
         final String result = substr.template();
@@ -32,7 +32,7 @@ class SubstrTest {
     @Test
     void template_nullLength() {
         // Given
-        final Substr substr = new Substr(mock(ColumnExpression.class), 3, null, columnIdentifierGenerator);
+        final Substr substr = new Substr(mock(ColumnExpressionImpl.class), 3, null, columnIdentifierGenerator);
 
         // When
         final String result = substr.template();

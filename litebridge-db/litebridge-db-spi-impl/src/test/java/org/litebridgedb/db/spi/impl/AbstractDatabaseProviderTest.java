@@ -400,8 +400,9 @@ class AbstractDatabaseProviderTest {
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 List.of(new Join(table, List.of(new Condition(column, Operator.USING, null),
                         new Condition(column, Operator.EQ, "TEST_VALUE")))),
-                List.of(new OrderBy(column, true)),
                 List.of(new Condition(column, Operator.EQ, "TEST_VALUE")),
+                Optional.empty(),
+                List.of(new OrderBy(column, true)),
                 Optional.of(new Limit(Optional.of(10), Optional.of(20))));
 
         when(typeConverter.convert("TEST_VALUE", Types.VARCHAR)).thenReturn("TEST_VALUE");
@@ -441,6 +442,7 @@ class AbstractDatabaseProviderTest {
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 
@@ -478,9 +480,10 @@ class AbstractDatabaseProviderTest {
                 table,
                 List.of(new SelectColumn(column1, columnIdentifierGenerator), new SelectColumn(column2, columnIdentifierGenerator)),
                 List.of(new Join(table, List.of(new Condition(column2, Operator.EQ, "TEST_VALUE")))),
-                List.of(new OrderBy(column1, true)),
                 List.of(new Condition(column2, Operator.EQ, "TEST_VALUE"),
                         new Condition(column2, Operator.NEQ, "OTHER_VALUE")),
+                Optional.empty(),
+                List.of(new OrderBy(column1, true)),
                 Optional.of(new Limit(Optional.of(10), Optional.of(20))));
 
         // When
@@ -502,6 +505,7 @@ class AbstractDatabaseProviderTest {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 
@@ -818,8 +822,9 @@ class AbstractDatabaseProviderTest {
                 table,
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
-                List.of(new OrderBy(column, false)),
                 Collections.emptyList(),
+                Optional.empty(),
+                List.of(new OrderBy(column, false)),
                 Optional.empty());
 
         // When
@@ -841,6 +846,7 @@ class AbstractDatabaseProviderTest {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.of(new Limit(Optional.of(10), Optional.empty())));
 
@@ -862,6 +868,7 @@ class AbstractDatabaseProviderTest {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.of(new Limit(Optional.empty(), Optional.of(20))));
 
@@ -960,6 +967,7 @@ class AbstractDatabaseProviderTest {
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 

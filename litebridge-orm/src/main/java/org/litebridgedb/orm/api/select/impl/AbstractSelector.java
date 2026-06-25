@@ -2,6 +2,7 @@ package org.litebridgedb.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Row;
+import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.orm.api.select.SelectTerminal;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
@@ -93,15 +94,21 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
     protected List<Row> executeQuery(final SSP selectSpec) {
         // Execute SQL query
         final List<Row> rows;
+        final Select select = selectSpec.toSelect();
 
         try {
-            rows = databaseProvider.select(selectSpec.toSelect(), databaseProvider.transactionManager());
+            rows = databaseProvider.select(select, databaseProvider.transactionManager());
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute select query", ex);
         }
 
         LOGGER.debug("Row count: {}", rows.size());
         LOGGER.trace("Query result: {}", rows);
+
+        selectSpec.expressionTypeOverrides().ifPresent(expressionTypeOverrides -> {
+
+        });
+
         return rows;
     }
 

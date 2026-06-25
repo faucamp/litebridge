@@ -2,12 +2,12 @@ package org.litebridgedb.orm.api.dto;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
+import org.litebridgedb.orm.api.select.GroupByClauseTerminal;
 import org.litebridgedb.orm.api.select.JoinClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-import org.litebridgedb.orm.api.spec.FieldSpec;
-import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.orm.persistence.OrmTable;
+import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 
 import java.util.Arrays;
 
@@ -15,6 +15,9 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         extends AbstractJoinConditionClauseTerminal<DTO,
         DtoJoinConditionClause<DTO>,
         DtoJoinConditionClauseTerminal<DTO>,
+        DtoGroupByClauseTerminal<DTO>,
+        DtoHavingConditionClause<DTO>,
+        DtoHavingConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>,
         DtoSelectSpec,
@@ -26,6 +29,9 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         DtoJoinConditionClauseTerminal<DTO>,
         DtoWhereConditionClause<DTO>,
         DtoWhereConditionClauseTerminal<DTO>,
+        DtoGroupByClauseTerminal<DTO>,
+        DtoHavingConditionClause<DTO>,
+        DtoHavingConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>>,
 
@@ -64,6 +70,11 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoJoinClause<DTO> join(final Class<?> dtoClass) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public DtoGroupByClauseTerminal<DTO> groupBy(final String... columns) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

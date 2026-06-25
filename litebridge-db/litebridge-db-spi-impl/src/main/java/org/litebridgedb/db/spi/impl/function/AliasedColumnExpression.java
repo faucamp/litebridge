@@ -2,8 +2,8 @@ package org.litebridgedb.db.spi.impl.function;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
+import org.litebridgedb.db.spi.expression.ColumnExpressionImpl;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.query.Select;
 
 /**
@@ -15,7 +15,7 @@ import org.litebridgedb.db.spi.query.Select;
  * The primary responsibility of this class is to provide SQL representations
  * of column expressions, either with or without an alias.
  */
-public class AliasedColumnExpression extends ColumnExpression {
+public class AliasedColumnExpression extends ColumnExpressionImpl {
 
     protected final ColumnIdentifierGenerator columnIdentifierGenerator;
 
@@ -48,11 +48,11 @@ public class AliasedColumnExpression extends ColumnExpression {
     }
 
     protected String id(final Column column, final Operation operation) {
-        return columnIdentifierGenerator.createColumnIdentifier(column, false, operation);
+        return columnIdentifierGenerator.createSelectColumnIdentifier(column, false, operation);
     }
 
     protected String idWithAlias(final Column column, final Operation operation) {
-        return columnIdentifierGenerator.createColumnIdentifier(column, true, operation);
+        return columnIdentifierGenerator.createSelectColumnIdentifier(column, true, operation);
     }
 
     protected String localId(final Operation operation) {

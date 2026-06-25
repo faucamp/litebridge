@@ -2,6 +2,7 @@ package org.litebridgedb.orm.api.dto;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
+import org.litebridgedb.orm.api.select.GroupByClauseTerminal;
 import org.litebridgedb.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractWhereClauseTerminal;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
@@ -13,6 +14,9 @@ import java.util.Arrays;
 
 public final class DtoWhereConditionClauseTerminal<DTO>
         extends AbstractWhereClauseTerminal<DTO,
+        DtoGroupByClauseTerminal<DTO>,
+        DtoHavingConditionClause<DTO>,
+        DtoHavingConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>,
         DtoSelectSpec>
@@ -20,6 +24,9 @@ public final class DtoWhereConditionClauseTerminal<DTO>
         implements WhereConditionClauseTerminal<DTO,
         DtoWhereConditionClause<DTO>,
         DtoWhereConditionClauseTerminal<DTO>,
+        DtoGroupByClauseTerminal<DTO>,
+        DtoHavingConditionClause<DTO>,
+        DtoHavingConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 
@@ -72,6 +79,11 @@ public final class DtoWhereConditionClauseTerminal<DTO>
     @Override
     public DtoWhereConditionClause<DTO> and(final FieldColumnSpec field) {
         return and(field.field().name());
+    }
+
+    @Override
+    public DtoGroupByClauseTerminal<DTO> groupBy(final String... columns) {
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override

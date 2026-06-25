@@ -9,10 +9,20 @@ import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import java.util.Arrays;
 
 public final class SqlWhereConditionClauseTerminal
-        extends AbstractWhereClauseTerminal<Row, SqlOrderByClause, SqlOrderByClauseChain, SqlSelectSpec>
+        extends AbstractWhereClauseTerminal<Row,
+        SqlGroupByClauseTerminal,
+        SqlHavingConditionClause,
+        SqlHavingConditionClauseTerminal,
+        SqlOrderByClause,
+        SqlOrderByClauseChain,
+        SqlSelectSpec>
+
         implements WhereConditionClauseTerminal<Row,
         SqlWhereConditionClause,
         SqlWhereConditionClauseTerminal,
+        SqlGroupByClauseTerminal,
+        SqlHavingConditionClause,
+        SqlHavingConditionClauseTerminal,
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
@@ -29,6 +39,11 @@ public final class SqlWhereConditionClauseTerminal
     @Override
     public SqlWhereConditionClause and(final FieldColumnSpec column) {
         return and(column.columnSpec().name());
+    }
+
+    @Override
+    public SqlGroupByClauseTerminal groupBy(final String... columns) {
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override

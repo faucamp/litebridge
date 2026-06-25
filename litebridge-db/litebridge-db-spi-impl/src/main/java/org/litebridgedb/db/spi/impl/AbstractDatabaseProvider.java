@@ -11,18 +11,20 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.alias.AliasTransformer;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.expression.ColumnExpression;
+import org.litebridgedb.db.spi.expression.ConvertExpression;
+import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.alias.UppercaseAliasTransformer;
-import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.impl.function.SqlFunctionRegistryFactory;
-import org.litebridgedb.db.spi.sql.BindValue;
 import org.litebridgedb.db.spi.impl.sql.DeleteSqlGenerator;
 import org.litebridgedb.db.spi.impl.sql.InsertSqlGenerator;
-import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridgedb.db.spi.impl.sql.UpdateSqlGenerator;
 import org.litebridgedb.db.spi.query.Select;
+import org.litebridgedb.db.spi.sql.BindValue;
+import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.ManagedConnection;
 import org.litebridgedb.db.spi.update.Delete;
@@ -200,17 +202,25 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     private List<Row> executeSqlQuery(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
         final PreparedSql preparedSql = selectSqlGenerator.orThrow().prepareSql(select, connectionProvider);
         final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.expressions().size());
+        final Class<?>[] typeOverrides = new Class<?>[select.expressions().size()];
 
-        select.expressions().stream()
-                .filter(expression -> expression instanceof SelectColumn)
-                .map(expression -> (SelectColumn) expression)
-                .forEach(selectColumn -> {
-                    final Column column = selectColumn.column();
-                    final String key = aliasTransformer.orThrow().transformAlias(column.alias() != null ? column.alias() : column.name());
-                    final TableMetaData table = ensureTableMetaData(column.table(), connectionProvider);
-                    final ColumnMetaData columnMetaData = table.column(column.name());
-                    columnLabelsToColumnMetaData.put(key, columnMetaData);
-                });
+        for (int i = 0; i < select.expressions().size(); i++) {
+            SelectExpression expression = select.expressions().get(i);
+
+            if (expression instanceof ConvertExpression convertExpression) {
+                typeOverrides[i] = convertExpression.typeOverride();
+                // Process the nested expression (in case it targets a column)
+                expression = convertExpression.target();
+            }
+
+            if (expression instanceof ColumnExpression columnExpression) {
+                final Column column = columnExpression.column();
+                final String key = aliasTransformer.orThrow().transformAlias(column.alias() != null ? column.alias() : column.name());
+                final TableMetaData table = ensureTableMetaData(column.table(), connectionProvider);
+                final ColumnMetaData columnMetaData = table.column(column.name());
+                columnLabelsToColumnMetaData.put(key, columnMetaData);
+            }
+        }
 
         final TableMetaData fromTable = ensureTableMetaData(select.table(), connectionProvider);
 
@@ -228,26 +238,37 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 for (int i = 1; i <= columnCount; i++) {
                     final String alias = aliasTransformer.orThrow().transformAlias(resultSet.getMetaData().getColumnLabel(i));
                     final ColumnMetaData columnMetaData = columnLabelsToColumnMetaData.get(alias);
+                    final int columnSqlType;
+                    final Column column;
 
                     if (columnMetaData != null) {
                         // Use ORM-side metadata
-                        final Column column = columnMetaData.toColumn().as(alias);
-                        final Object value = typeConverter.convert(resultSet.getObject(i), columnMetaData.getDataType());
-                        row.withColumn(column, value);
+                        columnSqlType = columnMetaData.getDataType();
+                        column = columnMetaData.toColumn().as(alias);
                     } else {
                         // Read the metadata from the result
                         final String schemaName = resultSet.getMetaData().getSchemaName(i);
                         final String tableName = resultSet.getMetaData().getTableName(i);
                         final String columnName = resultSet.getMetaData().getColumnName(i);
                         final String columnAlias = resultSet.getMetaData().getColumnLabel(i);
-                        final int dataType = resultSet.getMetaData().getColumnType(i);
+                        columnSqlType = resultSet.getMetaData().getColumnType(i);
 
                         final Table table = new Table(null, schemaName, tableName);
-                        final Column column = new Column(table, columnName, columnAlias);
-
-                        final Object value = typeConverter.convert(resultSet.getObject(i), dataType);
-                        row.withColumn(column, value);
+                        column = new Column(table, columnName, columnAlias);
                     }
+
+                    final Class<?> typeOverride = i <= typeOverrides.length ? typeOverrides[i - 1] : null;
+                    final Object value;
+
+                    if (typeOverride != null) {
+                        // Override the data type
+                        value = typeConverter.convert(resultSet.getObject(i), typeOverride);
+                    } else {
+                        // Use the column SQL data type
+                        value = typeConverter.convert(resultSet.getObject(i), columnSqlType);
+                    }
+
+                    row.withColumn(column, value);
                 }
 
                 rows.add(row);

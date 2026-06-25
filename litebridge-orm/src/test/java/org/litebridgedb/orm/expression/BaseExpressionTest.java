@@ -4,9 +4,13 @@ import org.junit.jupiter.api.Test;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
 import org.litebridgedb.orm.expression.intent.ConvertIntent;
 import org.litebridgedb.orm.expression.intent.ConvertSpec;
+import org.litebridgedb.orm.expression.intent.ExpressionSpecArray;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class BaseExpressionTest {
 
@@ -92,19 +96,17 @@ class BaseExpressionTest {
         final ExpressionSpec target = new SelectColumnSpec(null);
 
         // When
-        final ConvertIntent<Integer> intent = new ConvertIntent<>(target, Integer.class);
+        final ConvertIntent<Integer> intent = new ConvertIntent<>(new ExpressionSpec[]{target}, Integer.class);
 
         // Then
-        assertEquals(target, intent.target());
+        final ExpressionSpec[] expectedTarget = new ExpressionSpec[]{target};
+        assertArrayEquals(expectedTarget, intent.target());
         assertEquals(Integer.class, intent.returnType());
 
         // When
-        final ConvertSpec<Integer> spec = intent.toExpression();
+        final ExpressionSpecArray spec = intent.toExpression();
 
         // Then
-        assertEquals(target, spec.target());
-        assertEquals(Integer.class, spec.returnType());
-        assertEquals("", spec.column());
-        assertEquals(target.getClass(), spec.type());
+        assertArrayEquals(expectedTarget, spec.expressions());
     }
 }

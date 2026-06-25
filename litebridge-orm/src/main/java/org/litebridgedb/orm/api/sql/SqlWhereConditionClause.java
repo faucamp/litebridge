@@ -14,6 +14,9 @@ public final class SqlWhereConditionClause
         implements WhereConditionClause<Row,
         SqlWhereConditionClause,
         SqlWhereConditionClauseTerminal,
+        SqlGroupByClauseTerminal,
+        SqlHavingConditionClause,
+        SqlHavingConditionClauseTerminal,
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 

@@ -12,9 +12,9 @@ import org.litebridgedb.db.spi.query.Select;
 public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGenerator {
 
     @Override
-    public String createColumnIdentifier(final Column column, final boolean includeColumnAlias, final Operation operation) {
+    public String createSelectColumnIdentifier(final Column column, final boolean includeColumnAlias, final Operation operation) {
         if (!(operation instanceof final Select select)) {
-            return super.createColumnIdentifier(column, includeColumnAlias, operation);
+            return super.createSelectColumnIdentifier(column, includeColumnAlias, operation);
         }
 
         boolean applyTableQualifier = true;
@@ -40,7 +40,7 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
         }
 
         if (applyTableQualifier) {
-            return super.createColumnIdentifier(column, includeColumnAlias, select);
+            return super.createSelectColumnIdentifier(column, includeColumnAlias, select);
         }
 
         final StringBuilder columnSql = new StringBuilder(quoteIdentifier(column.name()));

@@ -3,7 +3,7 @@ package org.litebridgedb.db.spi.impl.function;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
-import org.litebridgedb.db.spi.expression.NestableExpression;
+import org.litebridgedb.db.spi.expression.DelegateColumnExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.query.Select;
 
@@ -16,11 +16,11 @@ import org.litebridgedb.db.spi.query.Select;
  * The primary responsibility of this class is to provide SQL representations
  * of nestable function expressions, either with or without an alias.
  */
-public class AliasedNestableExpression extends NestableExpression {
+public class AliasedDelegateColumnExpression extends DelegateColumnExpression {
 
     protected final ColumnIdentifierGenerator columnIdentifierGenerator;
 
-    public AliasedNestableExpression(final ColumnExpression target, final ColumnIdentifierGenerator columnIdentifierGenerator) {
+    public AliasedDelegateColumnExpression(final ColumnExpression target, final ColumnIdentifierGenerator columnIdentifierGenerator) {
         super(target);
         this.columnIdentifierGenerator = columnIdentifierGenerator;
     }
@@ -49,11 +49,11 @@ public class AliasedNestableExpression extends NestableExpression {
     }
 
     protected String id(final Column column, final Operation operation) {
-        return columnIdentifierGenerator.createColumnIdentifier(column, false, operation);
+        return columnIdentifierGenerator.createSelectColumnIdentifier(column, false, operation);
     }
 
     protected String idWithAlias(final Column column, final Operation operation) {
-        return columnIdentifierGenerator.createColumnIdentifier(column, true, operation);
+        return columnIdentifierGenerator.createSelectColumnIdentifier(column, true, operation);
     }
 
     protected String localId(final Operation operation) {

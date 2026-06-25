@@ -17,6 +17,9 @@ public final class SqlFromClause implements FromClause<Row,
         SqlJoinConditionClauseTerminal,
         SqlWhereConditionClause,
         SqlWhereConditionClauseTerminal,
+        SqlGroupByClauseTerminal,
+        SqlHavingConditionClause,
+        SqlHavingConditionClauseTerminal,
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
@@ -44,7 +47,7 @@ public final class SqlFromClause implements FromClause<Row,
             final ProtoExpressionResolver protoExpressionResolver = new SqlProtoExpressionResolver(selectSpec);
             // Resolve all proto-SelectColumn expressions since we have the target table now
             final List<ExpressionSpec> resolvedExpressionSpecs = Arrays.stream(expressionSpecs)
-                    .map(protoExpressionResolver::resolveExpression)
+                    .flatMap(protoExpressionResolver::resolveExpression)
                     .toList();
 
             selectSpec.setExpressions(resolvedExpressionSpecs);

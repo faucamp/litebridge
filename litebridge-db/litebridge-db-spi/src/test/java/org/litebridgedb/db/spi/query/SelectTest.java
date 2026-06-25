@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.db.spi.expression.ColumnExpression;
+import org.litebridgedb.db.spi.expression.ColumnExpressionImpl;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
 
 import java.util.List;
@@ -24,6 +24,7 @@ class SelectTest {
         final Object value = "testValue";
         final Condition condition = new Condition(column, operator, new LiteralExpression(value));
         final Join join = new Join(table, List.of(condition));
+        final GroupBy groupBy = new GroupBy(List.of(column));
         final OrderBy orderBy = new OrderBy(column, true);
         final Limit limit = new Limit(Optional.of(10), Optional.of(20));
 
@@ -32,8 +33,9 @@ class SelectTest {
                 table,
                 List.of(new TestColumnExpression(column)),
                 List.of(join),
-                List.of(orderBy),
                 List.of(condition),
+                Optional.of(groupBy),
+                List.of(orderBy),
                 Optional.of(limit)
         );
 
@@ -48,7 +50,7 @@ class SelectTest {
         assertEquals(Optional.of(limit), result.limit());
     }
 
-    private final class TestColumnExpression extends ColumnExpression {
+    private final class TestColumnExpression extends ColumnExpressionImpl {
 
         public TestColumnExpression(final Column column) {
             super(column);

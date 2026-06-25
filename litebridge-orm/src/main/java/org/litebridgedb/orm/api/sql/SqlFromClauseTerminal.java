@@ -3,6 +3,7 @@ package org.litebridgedb.orm.api.sql;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
+import org.litebridgedb.orm.api.select.model.GroupBySpec;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 
 import java.util.Arrays;
@@ -13,6 +14,9 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
         SqlJoinConditionClauseTerminal,
         SqlWhereConditionClause,
         SqlWhereConditionClauseTerminal,
+        SqlGroupByClauseTerminal,
+        SqlHavingConditionClause,
+        SqlHavingConditionClauseTerminal,
         SqlOrderByClause,
         SqlOrderByClauseChain,
         SqlSelectSpec>
@@ -37,6 +41,12 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     @Override
     public SqlWhereConditionClause where(final FieldColumnSpec column) {
         return where(column.columnSpec().name());
+    }
+
+    @Override
+    public SqlGroupByClauseTerminal groupBy(final String... columns) {
+        selectSpec.setGroupBy(new GroupBySpec(columns));
+        return new SqlGroupByClauseTerminal((SqlSelector) delegate);
     }
 
     @Override

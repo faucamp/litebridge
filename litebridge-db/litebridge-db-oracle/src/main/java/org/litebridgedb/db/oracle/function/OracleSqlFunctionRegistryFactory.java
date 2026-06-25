@@ -3,7 +3,7 @@ package org.litebridgedb.db.oracle.function;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.oracle.function.scalar.Substr;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
-import org.litebridgedb.db.spi.expression.NestableExpression;
+import org.litebridgedb.db.spi.expression.DelegateColumnExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.SqlFunctionRegistryFactory;
 import org.litebridgedb.db.spi.impl.sql.SelectSqlGenerator;
@@ -35,7 +35,7 @@ public final class OracleSqlFunctionRegistryFactory extends SqlFunctionRegistryF
      * @return a {@link Substr} expression
      */
     @Override
-    protected NestableExpression createSubstring(final ColumnExpression target, final int start, @Nullable final Integer length) {
+    protected DelegateColumnExpression createSubstring(final ColumnExpression target, final int start, @Nullable final Integer length) {
         return new Substr(target, start, length, columnIdentifierGenerator);
     }
 }

@@ -204,6 +204,32 @@ class SqlE2eTest extends AbstractE2eTest {
         assertEquals(1, litebridge.select().from(personTableName).where(tableMapper.transformColumnName("AGE")).lt(50).list().size());
     }
 
+    @TestTemplate
+    @DisplayName("Select using GROUP BY")
+    void selectGroupBy(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        insertTestPersonRecords(personTableName);
+
+        // When
+        final List<Row> result =
+                litebridge.select(Fn.c(tableMapper.transformColumnName("AGE")), Fn.count())
+                        .from(personTableName)
+                        .groupBy(tableMapper.transformColumnName("AGE"))
+                        .orderBy(tableMapper.transformColumnName("AGE")).asc()
+                        .list();
+
+        // Then
+        assertEquals(2, result.size());
+        assertEquals(2, result.getFirst().columns().size());
+        final Row row1 = result.getFirst();
+        assertEquals(20, ((Number) row1.column(tableMapper.transformColumnName("AGE")).orElseThrow().value()).intValue());
+        assertEquals(1, ((Number) row1.column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value()).intValue());
+        final Row row2 = result.get(1);
+        assertEquals(30, ((Number) row2.column(tableMapper.transformColumnName("AGE")).orElseThrow().value()).intValue());
+        assertEquals(1, ((Number) row2.column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value()).intValue());
+    }
+
     private void insertTestPersonRecords(final String personTableName) throws SQLException {
         try (final Connection connection = dbEnv.getDataSource().getConnection()) {
             try (final PreparedStatement preparedStatement = connection.prepareStatement(sql("INSERT INTO " + personTableName + " (PERSON_ID, FIRST_NAME, SURNAME, AGE, EYE_COLOUR) VALUES (?, ?, ?, ?, ?)"))) {

@@ -25,14 +25,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec> {
+public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverride, DtoSelectSpec> {
 
     private final TableRegistry tableRegistry;
     private final ClassFieldAccessorCache classFieldAccessorCache;
     private final DtoConstructor dtoConstructor;
     private final AliasGenerator aliasGenerator;
 
-    public DtoSelector(final Class<DTO> dtoClass,
+    public DtoSelector(final Class<TypeOverride> typeOverride,
                        final OrmTable ormTable,
                        final TableRegistry tableRegistry,
                        final ClassFieldAccessorCache classFieldAccessorCache,
@@ -40,9 +40,9 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
                        final TransactionalDatabaseProvider databaseProvider,
                        final AliasGenerator aliasGenerator,
                        final LitebridgeContext litebridgeContext) {
-        super(new DtoSelectSpec(dtoClass, ormTable, aliasGenerator, litebridgeContext),
+        super(new DtoSelectSpec(typeOverride, ormTable, aliasGenerator, litebridgeContext),
                 databaseProvider,
-                dtoClass,
+                typeOverride,
                 litebridgeContext);
         this.tableRegistry = tableRegistry;
         this.classFieldAccessorCache = classFieldAccessorCache;
@@ -50,14 +50,14 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
         this.aliasGenerator = aliasGenerator;
     }
 
-    public DtoFromClauseTerminal<DTO> select(final ExpressionSpec... expressionSpecs) {
+    public DtoFromClauseTerminal<TypeOverride> select(final ExpressionSpec... expressionSpecs) {
         final ProtoExpressionResolver protoExpressionResolver = new DtoProtoExpressionResolver(selectSpec, aliasGenerator, classFieldAccessorCache);
         return selectImpl(selectSpec.getTable(), Arrays.stream(expressionSpecs)
-                .map(protoExpressionResolver::resolveExpression)
+                .flatMap(protoExpressionResolver::resolveExpression)
                 .toList());
     }
 
-    public DtoFromClauseTerminal<DTO> select() {
+    public DtoFromClauseTerminal<TypeOverride> select() {
         return selectImpl(selectSpec.getTable(), createAllFieldsSelectExpressions());
     }
 
@@ -73,7 +73,7 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
                 .toList();
     }
 
-    private DtoFromClauseTerminal<DTO> selectImpl(final Table table, final List<ExpressionSpec> expressionSpecs) {
+    private DtoFromClauseTerminal<TypeOverride> selectImpl(final Table table, final List<ExpressionSpec> expressionSpecs) {
         assert table.alias() != null;
         selectSpec.setTable(table);
         selectSpec.setDtoAlias(selectSpec.dtoClass(), Objects.requireNonNull(table.alias()));
@@ -94,19 +94,20 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
     }
 
     @Override
-    public @Nullable DTO oneOrNull() {
+    public @Nullable TypeOverride oneOrNull() {
         return fetchOneDto(false);
     }
 
     @Override
-    public @Nullable DTO firstOrNull() {
+    public @Nullable TypeOverride firstOrNull() {
         return fetchOneDto(true);
     }
 
     @Override
-    public List<DTO> list() {
+    public List<TypeOverride> list() {
         final List<Row> rows = executeQuery();
 
+        //TODO: revisit
         if (dtoClass == selectSpec.dtoTable().dtoClass()
                 || selectSpec.dtoTable().getDtoClassInterfaces().contains(dtoClass)) {
             // Selecting the actual DTO
@@ -127,13 +128,13 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
         return classFieldAccessorCache;
     }
 
-    private @Nullable DTO fetchOneDto(final boolean first) {
+    private @Nullable TypeOverride fetchOneDto(final boolean first) {
         if (first) {
             // Set LIMIT since we are only interested in the first record
             selectSpec.ensureLimit().setLimit(1);
         }
 
-        final List<DTO> result = list();
+        final List<TypeOverride> result = list();
 
         if (CollectionUtils.isEmpty(result)) {
             return null;
@@ -147,6 +148,10 @@ public final class DtoSelector<DTO> extends AbstractSelector<DTO, DtoSelectSpec>
     }
 
     private <T> List<T> unwrap(final Class<T> type, final List<Row> rows) {
+        if (type == Row.class) {
+            return (List<T>) rows;
+        }
+
         final TypeConverter typeConverter = databaseProvider.getTypeConverter();
         return rows.stream()
                 .map(row -> typeConverter.convert(row.column(0).value(), type))

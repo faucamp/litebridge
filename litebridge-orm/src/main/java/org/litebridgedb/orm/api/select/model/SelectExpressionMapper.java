@@ -2,6 +2,7 @@ package org.litebridgedb.orm.api.select.model;
 
 import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
+import org.litebridgedb.db.spi.expression.ConvertExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.orm.expression.ExpressionSpec;
@@ -17,6 +18,7 @@ import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
 import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
 import org.litebridgedb.orm.expression.intent.ConvertSpec;
+import org.litebridgedb.orm.expression.intent.ExpressionSpecArray;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.expression.select.SubselectSpec;
@@ -40,6 +42,9 @@ public final class SelectExpressionMapper {
             case SelectColumnSpec selectColumnSpec -> toSelectColumn(selectColumnSpec);
             case SubselectSpec subselectSpec ->
                     sqlFunctionRegistry.select().subselect().create(subselectSpec.selectSpec().toSelect());
+            case ConvertSpec<?> convertSpec -> new ConvertExpression(toSelectExpression(convertSpec.target()), convertSpec.returnType());
+            case ExpressionSpecArray expressionSpecArray ->
+                    throw new IllegalStateException("ExpressionSpecArray not resolved: " + expressionSpecArray);
 
             // Aggregate functions
             case CountSpec countSpec -> sqlFunctionRegistry.aggregate().count();
@@ -51,7 +56,6 @@ public final class SelectExpressionMapper {
             case CurrentTimestampSpec currentTimestampSpec -> sqlFunctionRegistry.date().currentTimestamp();
 
             // Unsupported
-            case ConvertSpec convertSpec -> throw new IllegalStateException("ConvertSpec is ORM-side only");
             case ProtoExpressionSpec protoExpression ->
                     throw new IllegalStateException("ProtoExpression not resolved: " + protoExpression);
         };

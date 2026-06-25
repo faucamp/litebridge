@@ -14,6 +14,7 @@ import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
 import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
 import org.litebridgedb.orm.expression.intent.ConvertIntent;
+import org.litebridgedb.orm.expression.intent.ConvertSpec;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 
@@ -81,8 +82,8 @@ class FnTest {
 
     @Test
     void testConvert() {
-        ExpressionSpec target = new SelectColumnSpec(mock(Column.class));
-        ConvertIntent<Integer> intent = Fn.convert(target, Integer.class);
+        final ExpressionSpec target = new SelectColumnSpec(mock(Column.class));
+        final ConvertSpec<Integer> intent = Fn.convert(target, Integer.class);
         assertEquals(target, intent.target());
         assertEquals(Integer.class, intent.returnType());
     }

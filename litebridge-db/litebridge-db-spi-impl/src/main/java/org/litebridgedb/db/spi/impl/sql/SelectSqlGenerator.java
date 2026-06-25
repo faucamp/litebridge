@@ -2,6 +2,7 @@ package org.litebridgedb.db.spi.impl.sql;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.CollectionUtils;
+import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
@@ -100,6 +101,22 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
             }
         }
 
+        // Group by
+        if (select.groupBy().isPresent()) {
+            sql.append(" GROUP BY ");
+
+            first = true;
+            for (Column column : select.groupBy().get().columns()) {
+                if (first) {
+                    first = false;
+                } else {
+                    sql.append(", ");
+                }
+
+                sql.append(columnIdentifierGenerator.createColumnReference(column));
+            }
+        }
+
         // Order by
         if (!CollectionUtils.isEmpty(select.orderBy())) {
             sql.append(" ORDER BY ");
@@ -112,7 +129,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
                     sql.append(", ");
                 }
 
-                sql.append(columnIdentifierGenerator.createColumnIdentifier(orderBy.column(), false, select))
+                sql.append(columnIdentifierGenerator.createSelectColumnIdentifier(orderBy.column(), false, select))
                         .append(orderBy.asc() ? " ASC" : " DESC");
             }
         }

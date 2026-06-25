@@ -46,7 +46,7 @@ public abstract class AbstractSqlGenerator {
      * @return a {@code String} representing the constructed SQL condition fragment
      */
     protected PreparedSql createCondition(final Condition condition, final Operation operation, final ConnectionProvider connectionProvider) {
-        final String column = columnIdentifierGenerator.createColumnIdentifier(condition.column(), false, operation);
+        final String column = columnIdentifierGenerator.createSelectColumnIdentifier(condition.column(), false, operation);
         final String sql;
 
         if (condition.operator() == Operator.IS_NULL || condition.operator() == Operator.IS_NOT_NULL) {

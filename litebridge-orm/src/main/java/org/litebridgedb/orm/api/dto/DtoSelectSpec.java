@@ -3,7 +3,6 @@ package org.litebridgedb.orm.api.dto;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
@@ -12,31 +11,46 @@ import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.tracking.FieldAccessor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
 
     private final Class<?> dtoClass;
     private final OrmTable dtoTable;
-    private @Nullable List<SelectExpression> expressions;
+    private final @Nullable Class<?> typeOverride;
+
+    public DtoSelectSpec(final Class<?> dtoClass,
+                         final OrmTable dtoTable,
+                         final AliasGenerator aliasGenerator,
+                         final LitebridgeContext litebridgeContext,
+                         final @Nullable Class<?> typeOverride) {
+        super(litebridgeContext);
+        this.dtoClass = dtoClass;
+        this.dtoTable = dtoTable;
+        this.table = aliasGenerator.aliasTable(dtoTable);
+        this.typeOverride = typeOverride;
+    }
 
     public DtoSelectSpec(final Class<?> dtoClass,
                          final OrmTable dtoTable,
                          final AliasGenerator aliasGenerator,
                          final LitebridgeContext litebridgeContext) {
-        super(litebridgeContext);
-        this.dtoClass = dtoClass;
-        this.dtoTable = dtoTable;
-        this.table = aliasGenerator.aliasTable(dtoTable);
+        this (dtoClass, dtoTable, aliasGenerator, litebridgeContext, null);
     }
 
     public Class<?> dtoClass() {
-        return dtoClass;
+        return dtoTable.dtoClass();
     }
 
     @Override
     public OrmTable dtoTable() {
         return dtoTable;
+    }
+
+    public @Nullable Class<?> typeOverride() {
+        return typeOverride;
     }
 
     public DtoJoinSpec newJoinSpec(final Class<?> dtoClass, final OrmTable ormTable, final Table table) {

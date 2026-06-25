@@ -7,7 +7,7 @@ import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 /**
  * Base class for function expressions operating on a column.
  */
-public abstract class FunctionExpression extends AliasedNestableExpression {
+public abstract class FunctionExpression extends AliasedDelegateColumnExpression {
 
     /**
      * Constructor.

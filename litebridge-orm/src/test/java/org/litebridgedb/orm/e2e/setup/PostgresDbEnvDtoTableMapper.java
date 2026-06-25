@@ -18,6 +18,10 @@ public class PostgresDbEnvDtoTableMapper implements DbEnvDtoTableMapper {
 
     @Override
     public String transformColumnName(final String columnName) {
+        if ("COUNT(*)".equals(columnName)) {
+            return "count";
+        }
+
         return columnName.toLowerCase();
     }
 

@@ -13,6 +13,9 @@ public final class DtoWhereConditionClause<DTO>
         implements WhereConditionClause<DTO,
         DtoWhereConditionClause<DTO>,
         DtoWhereConditionClauseTerminal<DTO>,
+        DtoGroupByClauseTerminal<DTO>,
+        DtoHavingConditionClause<DTO>,
+        DtoHavingConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 

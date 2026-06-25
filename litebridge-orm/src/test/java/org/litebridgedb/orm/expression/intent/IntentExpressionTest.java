@@ -37,17 +37,18 @@ class IntentExpressionTest {
         final Class<Integer> returnType = Integer.class;
 
         // When
-        final ConvertIntent<Integer> intent = new ConvertIntent<>(target, returnType);
+        final ConvertIntent<Integer> intent = new ConvertIntent<>(new ExpressionSpec[]{target}, returnType);
 
         // Then
-        assertEquals(target, intent.target());
+        assertEquals(1, intent.target().length);
+        assertEquals(target, intent.target()[0]);
         assertEquals(returnType, intent.returnType());
 
         // When
-        final ConvertSpec<Integer> spec = intent.toExpression();
+        final ExpressionSpecArray spec = intent.toExpression();
 
         // Then
-        assertEquals(target, spec.target());
-        assertEquals(returnType, spec.returnType());
+        assertEquals(1, spec.expressions().length);
+        assertEquals(target, spec.expressions()[0]);
     }
 }

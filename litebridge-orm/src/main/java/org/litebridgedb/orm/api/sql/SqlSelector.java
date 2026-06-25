@@ -3,10 +3,8 @@ package org.litebridgedb.orm.api.sql;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.CollectionUtils;
 import org.litebridgedb.db.spi.Row;
-import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
-import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
@@ -45,19 +43,7 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
 
     @Override
     protected List<Row> executeQuery() {
-        if (selectSpec.getValueTypeOverride() == null) {
-            return executeQuery(selectSpec);
-        } else {
-            final List<Row> rows = executeQuery(selectSpec);
-            final TypeConverter typeConverter = databaseProvider.getTypeConverter();
-            final Class<?> valueTypeOverride = selectSpec.getValueTypeOverride();
-
-            // Transforms row column values to the specified override type
-            return rows.stream()
-                    .peek(row -> row.columnStream()
-                            .forEach(rowColumn -> row.updateColumn(rowColumn.column(), typeConverter.convert(rowColumn.value(), valueTypeOverride))))
-                    .toList();
-        }
+        return executeQuery(selectSpec);
     }
 
     private @Nullable Row fetchOneRecord(final boolean first) {

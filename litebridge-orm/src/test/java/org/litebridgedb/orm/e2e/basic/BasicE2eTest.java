@@ -2,6 +2,7 @@ package org.litebridgedb.orm.e2e.basic;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
+import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Account;
@@ -455,8 +456,8 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Select specific fields using functions")
-    void select_specificFields_functions(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    @DisplayName("Select specific fields using expressions")
+    void select_specificFields_expressions(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
 
@@ -504,12 +505,45 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Select DTO via subselect
         final Person result = litebridge.select().from(Person.class)
-                .where("id").eq(sb ->
-                        sb.select("id").from(Person.class)
+                .where("id").eq(sub ->
+                        sub.select("id").from(Person.class)
                                 .where("name").eq("Name1"))
                 .oneOrThrow();
 
         assertEquals(persons[1], result);
+    }
+
+    @TestTemplate
+    @DisplayName("Select grouping by")
+    void select_groupBy(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+
+        // Setup data
+        final Person[] persons = new Person[3];
+        for (int i = 0; i < 3; i++) {
+            persons[i] = new Person();
+            persons[i].setId(1L + i);
+            persons[i].setName("Name" + i);
+            persons[i].setSurname("Surname" + i);
+        }
+
+        persons[0].setAge(20);
+        persons[1].setAge(25);
+        persons[2].setAge(25);
+
+        litebridge.save((Object[]) persons);
+
+        final List<Row> results = litebridge.select(Fn.row(Fn.convert(Fn.f("age"), Integer.class), Fn.convert(Fn.count(), Long.class)))
+                .from(Person.class)
+                .groupBy("age")
+                .list();
+
+        assertEquals(2, results.size());
+        assertEquals(20, results.get(0).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+        assertEquals(1L, results.get(0).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
+        assertEquals(25, results.get(1).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+        assertEquals(2L, results.get(1).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
     }
 
     private static class TestException extends RuntimeException {

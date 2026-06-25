@@ -34,11 +34,11 @@ import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.engine.FromClauseEngine;
 import org.litebridgedb.orm.engine.RegistrationEngine;
-import org.litebridgedb.orm.expression.ExpressionModifier;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridgedb.orm.expression.TypeOverride;
 import org.litebridgedb.orm.expression.TypeOverrideExpressionSpec;
+import org.litebridgedb.orm.expression.intent.ConvertIntent;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
@@ -64,7 +64,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * Primary entry point for Litebridge.
@@ -404,40 +403,18 @@ public final class Litebridge implements SelectApi {
     }
 
     @Override
-    public FromClauseStart select(final ExpressionSpec... expressionSpecs) {
-        return new FromClauseStart(expressionSpecs, fromClauseEngine);
+    public FromClauseStart select(final ExpressionSpec... expressions) {
+        return new FromClauseStart(expressions, fromClauseEngine);
     }
 
     @Override
-    public <T> FromClauseStartTypeOverride<T> select(final TypeOverride<T> expression, final ExpressionSpec... otherExpressionSpecs) {
-        if (otherExpressionSpecs.length == 0) {
-            final ExpressionSpec[] expressionSpecs = {switch (expression) {
-                case TypeOverrideExpressionSpec<?> typeOverrideExpression -> typeOverrideExpression;
-                case ExpressionModifier expressionModifier -> expressionModifier.toExpression();
-            }};
+    public <T> FromClauseStartTypeOverride<T> select(final TypeOverride<T> expression) {
+        final ExpressionSpec[] expressionSpecs = switch (expression) {
+            case TypeOverrideExpressionSpec<?> typeOverrideExpression -> new ExpressionSpec[]{typeOverrideExpression};
+            case ConvertIntent<T> convertIntent -> convertIntent.target();
+        };
 
-            return new FromClauseStartTypeOverride<>(expression.returnType(), expressionSpecs, fromClauseEngine);
-        } else {
-            final ExpressionSpec[] allExpressionSpecs = switch (expression) {
-                case TypeOverrideExpressionSpec<?> typeOverrideExpression ->
-                        Stream.concat(Stream.of(typeOverrideExpression), Arrays.stream(otherExpressionSpecs)).toArray(ExpressionSpec[]::new);
-                case ExpressionModifier expressionModifier ->
-                        Stream.concat(Stream.of(expressionModifier.toExpression()), Arrays.stream(otherExpressionSpecs)).toArray(ExpressionSpec[]::new);
-            };
-
-//        if (expression instanceof TypeOverrideExpression<T>) {
-//            allExpressions = Stream.concat(Stream.of(expression), Arrays.stream(otherExpressions)).toArray(Expression[]::new);
-//        } else {
-//            allExpressions = otherExpressions;
-//        }
-
-            return new FromClauseStartTypeOverride<>(expression.returnType(), allExpressionSpecs, fromClauseEngine);
-        }
-    }
-
-    @Override
-    public <T> FromClauseStartTypeOverride<T> select(final TypeOverrideExpressionSpec<T> expression, final ExpressionSpec... otherExpressionSpecs) {
-        return select((TypeOverride<T>) expression, otherExpressionSpecs);
+        return new FromClauseStartTypeOverride<>(expression.returnType(), expressionSpecs, fromClauseEngine);
     }
 
     @Override

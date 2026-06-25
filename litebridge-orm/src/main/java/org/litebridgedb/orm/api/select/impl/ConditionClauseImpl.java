@@ -36,14 +36,14 @@ public class ConditionClauseImpl<DTO,
         return condition(Operator.EQ, value);
     }
 
-    public CCT eq(final Function<Subselect, SelectTerminal<?>> sb) {
-        final SelectTerminal<?> selectTerminal = sb.apply(new Subselect(litebridgeContext.fromClauseEngine()));
+    public CCT eq(final Function<Subselect, SelectTerminal<?>> sub) {
+        final SelectTerminal<?> selectTerminal = sub.apply(new Subselect(litebridgeContext.fromClauseEngine()));
         final SelectSpec selectSpec = getSelectSpec(selectTerminal);
         return condition(Operator.EQ, selectSpec);
     }
 
     protected SelectSpec getSelectSpec(final SelectTerminal<?> selectTerminal) {
-        if (selectTerminal instanceof AbstractWhereClauseTerminal<?, ?, ?, ?> terminal) {
+        if (selectTerminal instanceof AbstractWhereClauseTerminal<?, ?, ?, ?, ?, ?, ?> terminal) {
             return terminal.delegate.selectSpec();
         } else {
             throw new IllegalArgumentException("Unsupported terminal: " + selectTerminal);

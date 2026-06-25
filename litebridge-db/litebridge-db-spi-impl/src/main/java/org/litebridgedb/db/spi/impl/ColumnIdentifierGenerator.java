@@ -1,6 +1,5 @@
 package org.litebridgedb.db.spi.impl;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.StringUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
@@ -8,7 +7,7 @@ import org.litebridgedb.db.spi.util.SqlReservedWords;
 
 public class ColumnIdentifierGenerator {
 
-    public String createColumnIdentifier(final Column column, boolean includeColumnAlias, final Operation operation) {
+    public String createSelectColumnIdentifier(final Column column, boolean includeColumnAlias, final Operation operation) {
         final StringBuilder columnSql = new StringBuilder();
 
         if (!StringUtils.isEmpty(column.table().alias())) {
@@ -26,11 +25,11 @@ public class ColumnIdentifierGenerator {
         return columnSql.toString();
     }
 
-    public @Nullable String quoteIdentifier(final @Nullable String identifier) {
-        if (identifier == null) {
-            return null;
-        }
+    public String createColumnReference(final Column column) {
+        return column.alias() != null ? quoteIdentifier(column.alias()) : quoteIdentifier(column.name());
+    }
 
+    public String quoteIdentifier(final String identifier) {
         if (SqlReservedWords.contains(identifier)) {
             return "\"%s\"".formatted(identifier);
         } else {

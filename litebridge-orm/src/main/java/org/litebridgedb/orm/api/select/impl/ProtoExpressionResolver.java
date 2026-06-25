@@ -17,12 +17,15 @@ import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
 import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
 import org.litebridgedb.orm.expression.intent.ConvertSpec;
+import org.litebridgedb.orm.expression.intent.ExpressionSpecArray;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public abstract class ProtoExpressionResolver {
 
@@ -51,11 +54,13 @@ public abstract class ProtoExpressionResolver {
      * @param expressionSpec the proto-expression to resolve
      * @return the resolved {@link ExpressionSpec} corresponding to the provided column
      */
-    public ExpressionSpec resolveExpression(final ExpressionSpec expressionSpec) {
-        if (expressionSpec instanceof Resolvable resolvable) {
+    public Stream<ExpressionSpec> resolveExpression(final ExpressionSpec expressionSpec) {
+        if (expressionSpec instanceof ExpressionSpecArray(ExpressionSpec[] expressions)) {
+            return Arrays.stream(expressions).flatMap(this::resolveExpression);
+        } else if (expressionSpec instanceof Resolvable resolvable) {
             return resolveExpression(resolvable);
         } else {
-            return expressionSpec;
+            return Stream.of(expressionSpec);
         }
     }
 
@@ -67,23 +72,28 @@ public abstract class ProtoExpressionResolver {
      * @param resolvable the {@link Resolvable} to resolve
      * @return the resolved {@link ExpressionSpec} corresponding to the provided column
      */
-    public ExpressionSpec resolveExpression(final Resolvable resolvable) {
+    public Stream<ExpressionSpec> resolveExpression(final Resolvable resolvable) {
         final Class<?> targetType = resolvable.type();
+        final ExpressionSpec resolvedExpressionSpec;
 
         if (targetType == SelectFieldSpec.class) {
-            return resolveSelectField(resolvable);
+            resolvedExpressionSpec = resolveSelectField(resolvable);
         } else if (resolvable instanceof ProtoNestableExpressionSpec protoNestableExpressionSpec) {
-            return resolveNestableExpression(protoNestableExpressionSpec, getColumn(protoNestableExpressionSpec));
+            resolvedExpressionSpec = resolveNestableExpression(protoNestableExpressionSpec, getColumn(protoNestableExpressionSpec));
         } else if (resolvable instanceof ProtoColumnExpressionSpec protoColumnExpressionSpec) {
-            return columnExpressions.get(targetType).apply(getColumn(protoColumnExpressionSpec));
+            resolvedExpressionSpec = columnExpressions.get(targetType).apply(getColumn(protoColumnExpressionSpec));
         } else if (resolvable instanceof ConvertSpec<?> convertSpec) {
             return resolveConvertSpec(convertSpec);
         } else {
             throw new IllegalStateException("Unsupported expression: " + resolvable);
         }
+
+        return Stream.of(resolvedExpressionSpec);
     }
 
-    protected abstract ExpressionSpec resolveConvertSpec(final ConvertSpec<?> convertSpec);
+    protected Stream<ExpressionSpec> resolveConvertSpec(final ConvertSpec<?> convertSpec) {
+        return Stream.of(convertSpec.replaceTarget(resolveExpression(convertSpec.target()).findFirst().orElseThrow()));
+    }
 
     public static boolean isSupported(final Class<? extends ExpressionSpec> type) {
         return columnExpressions.containsKey(type)

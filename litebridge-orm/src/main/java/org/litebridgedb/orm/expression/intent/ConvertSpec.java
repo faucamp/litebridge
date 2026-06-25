@@ -15,7 +15,7 @@ public final class ConvertSpec<T> implements TypeOverrideExpressionSpec<T>, Reso
     private final ExpressionSpec target;
     private final Class<T> returnType;
 
-    ConvertSpec(final ExpressionSpec target, final Class<T> returnType) {
+    public ConvertSpec(final ExpressionSpec target, final Class<T> returnType) {
         this.target = target;
         this.returnType = returnType;
     }
@@ -37,5 +37,9 @@ public final class ConvertSpec<T> implements TypeOverrideExpressionSpec<T>, Reso
     @Override
     public Class<? extends ExpressionSpec> type() {
         return target.getClass();
+    }
+
+    public ConvertSpec<T> replaceTarget(final ExpressionSpec resolvedExpressionSpec) {
+        return new ConvertSpec<>(resolvedExpressionSpec, returnType);
     }
 }

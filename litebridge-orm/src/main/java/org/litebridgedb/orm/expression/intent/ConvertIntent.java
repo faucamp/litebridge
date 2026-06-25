@@ -1,7 +1,7 @@
 package org.litebridgedb.orm.expression.intent;
 
-import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionModifier;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.TypeOverride;
 
 /**
@@ -11,14 +11,13 @@ import org.litebridgedb.orm.expression.TypeOverride;
  * it is not a database operation via creation of a {@link ConvertSpec}.
  * <p>
  * This specific intent class is designed to help with a fluent API flow
- * via the {@link org.litebridgedb.orm.Litebridge#select(TypeOverride, ExpressionSpec...)}
+ * via the {@link org.litebridgedb.orm.Litebridge#select(TypeOverride)}
  * select API.
  */
-public record ConvertIntent<T>(ExpressionSpec target, Class<T> returnType)
+public record ConvertIntent<T>(ExpressionSpec[] target, Class<T> returnType)
         implements ExpressionModifier, TypeOverride<T> {
 
-    public ConvertSpec<T> toExpression() {
-        return new ConvertSpec<>(target, returnType);
+    public ExpressionSpecArray toExpression() {
+        return new ExpressionSpecArray(target);
     }
-
 }

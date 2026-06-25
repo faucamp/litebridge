@@ -3,6 +3,7 @@ package org.litebridgedb.orm.e2e.basic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
+import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
@@ -163,6 +164,29 @@ public class FunctionsE2eTest extends AbstractE2eTest {
         // Nested SQL functions
         final List<String> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring("surname", 4))).from(Person.class).orderBy("id").asc().list();
         assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings);
+    }
+
+    @TestTemplate
+    @DisplayName("Select row data, grouping by, and explicit type conversion")
+    void row_groupingBy(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Setup data: 1 record with age 20, 2 records with age 25
+        litebridge.update(Person.class, update -> update
+                .set("age").to(25)
+                .where("id").eq(3L));
+
+        // Aggregates record counts grouped by age field; returns the underlying row data
+        final List<Row> results = litebridge.select(Fn.row(
+                        Fn.convert(Fn.f("age"), Integer.class),
+                        Fn.convert(Fn.count(), Long.class)))
+                .from(Person.class)
+                .groupBy("age")
+                .list();
+
+        assertEquals(2, results.size());
+        assertEquals(20, results.get(0).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+        assertEquals(1L, results.get(0).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
+        assertEquals(25, results.get(1).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+        assertEquals(2L, results.get(1).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
     }
 
     @TestTemplate

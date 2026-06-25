@@ -24,8 +24,9 @@ import java.util.Optional;
 public record Select(Table table,
                      List<SelectExpression> expressions,
                      List<Join> joins,
-                     List<OrderBy> orderBy,
                      List<Condition> where,
+                     Optional<GroupBy> groupBy,
+                     List<OrderBy> orderBy,
                      Optional<Limit> limit) implements Operation {
 
 }

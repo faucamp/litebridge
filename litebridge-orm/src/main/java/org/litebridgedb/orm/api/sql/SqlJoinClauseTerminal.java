@@ -9,6 +9,9 @@ public interface SqlJoinClauseTerminal extends JoinClauseTerminal<Row,
         SqlJoinConditionClauseTerminal,
         SqlWhereConditionClause,
         SqlWhereConditionClauseTerminal,
+        SqlGroupByClauseTerminal,
+        SqlHavingConditionClause,
+        SqlHavingConditionClauseTerminal,
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 

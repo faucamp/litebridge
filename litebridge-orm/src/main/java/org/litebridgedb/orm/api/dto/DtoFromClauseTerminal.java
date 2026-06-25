@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
+import org.litebridgedb.orm.api.select.model.GroupBySpec;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
@@ -21,6 +22,9 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         DtoJoinConditionClauseTerminal<DTO>,
         DtoWhereConditionClause<DTO>,
         DtoWhereConditionClauseTerminal<DTO>,
+        DtoGroupByClauseTerminal<DTO>,
+        DtoHavingConditionClause<DTO>,
+        DtoHavingConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>,
         DtoSelectSpec>
@@ -141,6 +145,16 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         }
 
         return new DtoJoinClause<>(dtoClass, joinTable, (DtoSelector<DTO>) delegate);
+    }
+
+    @Override
+    public DtoGroupByClauseTerminal<DTO> groupBy(final String... fields) {
+        final String[] columns = Arrays.stream(fields)
+                .map(ormTable::getColumnForFieldName)
+                .map(ColumnMetaData::name)
+                .toArray(String[]::new);
+        selectSpec.setGroupBy(new GroupBySpec(columns));
+        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate);
     }
 
     @Override

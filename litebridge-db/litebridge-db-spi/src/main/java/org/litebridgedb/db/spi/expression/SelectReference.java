@@ -7,7 +7,7 @@ import org.litebridgedb.db.spi.Column;
  * <p>
  * This is used to reference a selected column in condition clauses.
  */
-public abstract class SelectReference extends ColumnExpression {
+public abstract class SelectReference extends ColumnExpressionImpl {
 
     /**
      * Constructor.

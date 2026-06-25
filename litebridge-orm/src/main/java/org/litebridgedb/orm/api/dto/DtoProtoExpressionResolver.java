@@ -7,10 +7,13 @@ import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.Resolvable;
 import org.litebridgedb.orm.expression.intent.ConvertSpec;
+import org.litebridgedb.orm.expression.intent.ExpressionSpecArray;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
 import org.litebridgedb.tracking.FieldAccessor;
+
+import java.util.stream.Stream;
 
 public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
 
@@ -22,11 +25,6 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
         this.selectSpec = selectSpec;
         this.aliasGenerator = aliasGenerator;
         this.classFieldAccessorCache = classFieldAccessorCache;
-    }
-
-    @Override
-    protected ExpressionSpec resolveConvertSpec(final ConvertSpec<?> convertSpec) {
-        return resolveExpression(convertSpec.target());
     }
 
     @Override

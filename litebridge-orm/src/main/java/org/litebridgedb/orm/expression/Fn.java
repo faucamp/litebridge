@@ -2,17 +2,19 @@ package org.litebridgedb.orm.expression;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.orm.expression.function.aggregate.AvgSpec;
 import org.litebridgedb.orm.expression.function.aggregate.CountSpec;
 import org.litebridgedb.orm.expression.function.aggregate.MaxSpec;
 import org.litebridgedb.orm.expression.function.aggregate.MinSpec;
 import org.litebridgedb.orm.expression.function.date.CurrentTimestampSpec;
-import org.litebridgedb.orm.expression.intent.ConvertIntent;
 import org.litebridgedb.orm.expression.function.scalar.AbsSpec;
 import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
 import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
+import org.litebridgedb.orm.expression.intent.ConvertIntent;
+import org.litebridgedb.orm.expression.intent.ConvertSpec;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 
@@ -240,14 +242,21 @@ public final class Fn {
      * litebridge.select(Fn.convert(Fn.avg(column), Long.class));
      * </code>
      *
-     * @param expressionSpec The target expression result to convert
+     * @param expression The target expression result to convert
      * @param returnType The type to convert the expression result to
      * @return a {@link ProtoColumnExpressionSpec} expression instance to convert the return value of the nested expression
      */
-    public static <T> ConvertIntent<T> convert(final ExpressionSpec expressionSpec, final Class<T> returnType) {
-        return new ConvertIntent<>(expressionSpec, returnType);
+    public static <T> ConvertSpec<T> convert(final ExpressionSpec expression, final Class<T> returnType) {
+        return new ConvertSpec<>(expression, returnType);
     }
 
+    public static <T> ConvertIntent<T> convert(final Class<T> returnType, final ExpressionSpec... expressions) {
+        return new ConvertIntent<>(expressions, returnType);
+    }
+
+    public static ConvertIntent<Row> row(final ExpressionSpec... expressions) {
+        return convert(Row.class, expressions);
+    }
     // SQL aggregate functions
 
     /**
@@ -383,7 +392,7 @@ public final class Fn {
      * extracts everything from the start position to the end of the text.
      *
      * @param expressionSpec Target nested expression to extract characters from.
-     * @param start      The starting position. The first character of a database string is always 1.
+     * @param start          The starting position. The first character of a database string is always 1.
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      * @see #substring(String, int, int)
      */
@@ -408,8 +417,8 @@ public final class Fn {
      * {@code SUBSTRING()}: Returns the lowercase value of a column's text.
      *
      * @param expressionSpec Target nested expression to extract characters from.
-     * @param start      The starting position. The first character of a database string is always 1.
-     * @param length     The number of characters to return.
+     * @param start          The starting position. The first character of a database string is always 1.
+     * @param length         The number of characters to return.
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      * @see #substring(String, int)
      */

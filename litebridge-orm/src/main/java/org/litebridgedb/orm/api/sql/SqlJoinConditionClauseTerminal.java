@@ -11,6 +11,9 @@ import java.util.Arrays;
 public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionClauseTerminal<Row,
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal,
+        SqlGroupByClauseTerminal,
+        SqlHavingConditionClause,
+        SqlHavingConditionClauseTerminal,
         SqlOrderByClause,
         SqlOrderByClauseChain,
         SqlSelectSpec,
@@ -47,6 +50,11 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     @Override
     public SqlWhereConditionClause where(final FieldColumnSpec column) {
         return where(column.columnSpec().name());
+    }
+
+    @Override
+    public SqlGroupByClauseTerminal groupBy(final String... columns) {
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override

@@ -4,13 +4,16 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
+import org.litebridgedb.db.spi.expression.ColumnExpressionImpl;
+import org.litebridgedb.db.spi.expression.ConvertExpression;
+import org.litebridgedb.db.spi.expression.SelectExpression;
+import org.litebridgedb.db.spi.query.GroupBy;
 import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
-import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.intent.ExpressionSpecArray;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Base specification for constructing a SQL SELECT statement.
@@ -39,9 +45,11 @@ public abstract class SelectSpec {
     protected List<ExpressionSpec> expressionSpecs = new ArrayList<>();
     protected @Nullable List<JoinSpec> joins;
     protected @Nullable List<ConditionSpec> whereConditions;
+    protected @Nullable GroupBySpec groupBy;
     protected @Nullable List<OrderBySpec> orderBys;
     protected @Nullable LimitSpec limit;
     protected @Nullable Map<Class<?>, String> dtoAliases;
+    private Map<List<SelectExpression>, Class<?>> expressionTypeOverrides;
 
     public SelectSpec(final LitebridgeContext litebridgeContext) {
         this.selectExpressionMapper = new SelectExpressionMapper(litebridgeContext.sqlFunctionRegistry());
@@ -97,6 +105,14 @@ public abstract class SelectSpec {
         conditionSpec.setColumn(column);
         whereConditions.add(conditionSpec);
         return conditionSpec;
+    }
+
+    public @Nullable GroupBySpec getGroupBy() {
+        return groupBy;
+    }
+
+    public void setGroupBy(@Nullable final GroupBySpec groupBy) {
+        this.groupBy = groupBy;
     }
 
     public @Nullable List<OrderBySpec> getOrderBys() {
@@ -157,26 +173,30 @@ public abstract class SelectSpec {
         }
 
         final List<ExpressionSpec> expressionSpecs = getExpressions();
-        final List<SelectExpression> selectExpressions;
+        final List<SelectExpression> selectExpressions = convertToSelectExpressions(expressionSpecs);
 
-        if (!expressionSpecs.isEmpty()) {
-            selectExpressions = expressionSpecs.stream()
-                    .map(selectExpressionMapper::toSelectExpression)
-                    .toList();
-        } else {
-            selectExpressions = Collections.emptyList();
-        }
-
-        return new Select(table,
+        final Select select = new Select(table,
                 Collections.unmodifiableList(selectExpressions),
                 joins != null ? joins.stream()
                         .map(JoinSpec::toJoin)
                         .toList() : Collections.emptyList(),
+                whereConditions != null ? whereConditions.stream()
+                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper))
+                        .toList() : Collections.emptyList(),
+                groupBy != null ? Optional.of(new GroupBy(Arrays.stream(groupBy.columns())
+                        .map(columnName -> selectExpressions.stream()
+                                .filter(expression -> expression instanceof ColumnExpressionImpl)
+                                .map(expression -> ((ColumnExpression) expression).column())
+                                .filter(column -> Objects.equals(column.name(), columnName))
+                                .findFirst()
+                                // Column not specified in select list
+                                .orElseGet(() -> new Column(table, columnName)))
+                        .toList())) : Optional.empty(),
                 orderBys != null ? orderBys.stream()
                         // Resolves order-by expressions from select list or synthesizes new ones
                         .flatMap(orderBySpec -> Arrays.stream(orderBySpec.columns())
                                 .map(columnName -> selectExpressions.stream()
-                                        .filter(expression -> expression instanceof ColumnExpression)
+                                        .filter(expression -> expression instanceof ColumnExpressionImpl)
                                         .map(expression -> ((ColumnExpression) expression).column())
                                         .filter(column -> Objects.equals(column.name(), columnName))
                                         .findFirst()
@@ -184,9 +204,64 @@ public abstract class SelectSpec {
                                         .orElseGet(() -> new Column(table, columnName)))
                                 .map(column -> new OrderBy(column, orderBySpec.isAsc())))
                         .toList() : Collections.emptyList(),
-                whereConditions != null ? whereConditions.stream()
-                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper))
-                        .toList() : Collections.emptyList(),
                 limit != null ? limit.toLimit() : Optional.empty());
+
+        // Validate that the column exists in the select statement if a GROUP BY is present
+        select.groupBy().ifPresent(groupBy -> {
+            final Set<Column> selectedColumns = selectExpressions.stream()
+                    .map(expression -> expression instanceof ConvertExpression convertExpression ? convertExpression.target() : expression)
+                    .map(expression -> expression instanceof ColumnExpression ? ((ColumnExpression) expression).column() : null)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            for (Column column : groupBy.columns()) {
+                if (selectedColumns.stream().noneMatch(column::equalsIgnoreAlias)) {
+                    throw new IllegalArgumentException("Invalid grouped query: ORDER BY column %s must be grouped or aggregated".formatted(column.name()));
+                }
+            }
+        });
+
+        return select;
+    }
+
+    public Optional<Map<List<SelectExpression>, Class<?>>> expressionTypeOverrides() {
+        return Optional.ofNullable(expressionTypeOverrides);
+    }
+
+    private List<SelectExpression> convertToSelectExpressions(final ExpressionSpec[] expressionSpecs) {
+        return convertToSelectExpressions(Arrays.stream(expressionSpecs));
+    }
+
+    private List<SelectExpression> convertToSelectExpressions(final List<ExpressionSpec> expressionSpecs) {
+        return convertToSelectExpressions(expressionSpecs.stream());
+    }
+
+    private List<SelectExpression> convertToSelectExpressions(final Stream<ExpressionSpec> expressionSpecs) {
+        return convertToSelectExpressionStream(expressionSpecs)
+                .toList();
+    }
+
+    private Stream<SelectExpression> convertToSelectExpressionStream(final ExpressionSpec[] expressionSpecs) {
+        return convertToSelectExpressionStream(Arrays.stream(expressionSpecs));
+    }
+
+    private Stream<SelectExpression> convertToSelectExpressionStream(final Stream<ExpressionSpec> expressionSpecs) {
+        return expressionSpecs.flatMap(this::convertToSelectExpressionStream);
+    }
+
+    private Stream<? extends SelectExpression> convertToSelectExpressionStream(final ExpressionSpec expressionSpec) {
+        return switch (expressionSpec) {
+            case ExpressionSpecArray expressionSpecArray ->
+                    convertToSelectExpressionStream(expressionSpecArray.expressions());
+            default -> Stream.of(selectExpressionMapper.toSelectExpression(expressionSpec));
+        };
+    }
+
+    private void addTypeOverride(final List<SelectExpression> expressions, Class<?> typeOverride) {
+        if (expressionTypeOverrides == null) {
+            expressionTypeOverrides = new HashMap<>();
+        }
+
+        expressionTypeOverrides.put(expressions, typeOverride);
     }
 }

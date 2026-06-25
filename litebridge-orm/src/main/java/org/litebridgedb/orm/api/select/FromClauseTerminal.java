@@ -15,6 +15,9 @@ package org.litebridgedb.orm.api.select;
  * @param <JCCT> the terminal type of the JOIN condition clause
  * @param <WCC>  the type of the WHERE condition clause used for query filtering
  * @param <WCCT> the terminal type of the WHERE condition clause
+ * @param <GBCT> the terminal type of the GROUP BY clause, marking the end of GROUP BY clause
+ * @param <HCC>  the type of the HAVING condition clause for further filtering
+ * @param <HCCT> the terminal type of the HAVING condition clause, marking the end of HAVING conditions
  * @param <OBC>  the type of the ORDER BY clause defining result sorting
  * @param <OBCC> the type of the ORDER BY clause chain for chaining multiple sorting expressions
  */
@@ -22,11 +25,14 @@ public interface FromClauseTerminal<DTO,
         JC extends JoinClause<DTO, JCC, JCCT>,
         JCC extends JoinConditionClause<DTO, JCC, JCCT>,
         JCCT extends JoinConditionClauseTerminal<DTO, JCC, JCCT>,
-        WCC extends WhereConditionClause<DTO, WCC, WCCT, OBC, OBCC>,
-        WCCT extends WhereConditionClauseTerminal<DTO, WCC, WCCT, OBC, OBCC>,
+        WCC extends WhereConditionClause<DTO, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC>,
+        WCCT extends WhereConditionClauseTerminal<DTO, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC>,
+        GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
+        HCC extends HavingConditionClause<DTO, HCC, HCCT, OBC, OBCC>,
+        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
         OBC extends OrderByClause<DTO, OBC, OBCC>,
         OBCC extends OrderByClauseChain<DTO, OBC, OBCC>>
 
-        extends JoinClauseTerminal<DTO, JC, JCC, JCCT, WCC, WCCT, OBC, OBCC> {
+        extends JoinClauseTerminal<DTO, JC, JCC, JCCT, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC> {
 
 }

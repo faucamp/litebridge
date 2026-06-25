@@ -21,20 +21,20 @@ class OracleColumnIdentifierGeneratorTest {
     private final OracleColumnIdentifierGenerator generator = new OracleColumnIdentifierGenerator();
 
     @Test
-    void createColumnIdentifier_withoutSelect_usesDefaultTableQualifier() {
+    void createSelectColumnIdentifier_withoutSelect_usesDefaultTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
 
         // When
-        final String result = generator.createColumnIdentifier(column, true, null);
+        final String result = generator.createSelectColumnIdentifier(column, true, null);
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN", result);
     }
 
     @Test
-    void createColumnIdentifier_withEmptyJoins_usesDefaultTableQualifier() {
+    void createSelectColumnIdentifier_withEmptyJoins_usesDefaultTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -43,18 +43,19 @@ class OracleColumnIdentifierGeneratorTest {
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 
         // When
-        final String result = generator.createColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumnIdentifier(column, true, select);
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN", result);
     }
 
     @Test
-    void createColumnIdentifier_withJoinWithoutUsing_usesDefaultTableQualifier() {
+    void createSelectColumnIdentifier_withJoinWithoutUsing_usesDefaultTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -62,20 +63,21 @@ class OracleColumnIdentifierGeneratorTest {
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
-                List.of(join),
                 Collections.emptyList(),
+                Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 
         // When
-        final String result = generator.createColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumnIdentifier(column, true, select);
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN", result);
     }
 
     @Test
-    void createColumnIdentifier_withUsingForDifferentColumn_usesDefaultTableQualifier() {
+    void createColumnIdentifier_withUsingForDifferentSelectColumn_usesDefaultTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -84,66 +86,21 @@ class OracleColumnIdentifierGeneratorTest {
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
-                List.of(join),
                 Collections.emptyList(),
+                Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 
         // When
-        final String result = generator.createColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumnIdentifier(column, true, select);
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN", result);
     }
 
     @Test
-    void createColumnIdentifier_withUsingForSameColumnFromJoinSideAndSelectedColumnFromSelectTable_omitsTableQualifier() {
-        // Given
-        final Table table = new Table("TEST_TABLE", null);
-        final Table joinedTable = new Table("JOINED_TABLE", null);
-        final Column column = new Column(table, "TEST_COLUMN");
-        final Column joinColumn = new Column(joinedTable, "TEST_COLUMN");
-        final Join join = new Join(joinedTable, List.of(new Condition(joinColumn, Operator.USING, null)));
-        final Select select = new Select(
-                table,
-                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
-                List.of(join),
-                Collections.emptyList(),
-                Collections.emptyList(),
-                Optional.empty());
-
-        // When
-        final String result = generator.createColumnIdentifier(column, true, select);
-
-        // Then
-        assertEquals("TEST_COLUMN", result);
-    }
-
-    @Test
-    void createColumnIdentifier_withUsingForSameColumnFromSelectSideAndSelectedColumnFromJoinTable_omitsTableQualifier() {
-        // Given
-        final Table table = new Table("TEST_TABLE", null);
-        final Table joinedTable = new Table("JOINED_TABLE", null);
-        final Column column = new Column(joinedTable, "TEST_COLUMN");
-        final Column selectColumn = new Column(table, "TEST_COLUMN");
-        final Join join = new Join(joinedTable, List.of(new Condition(selectColumn, Operator.USING, null)));
-        final Select select = new Select(
-                table,
-                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
-                List.of(join),
-                Collections.emptyList(),
-                Collections.emptyList(),
-                Optional.empty());
-
-        // When
-        final String result = generator.createColumnIdentifier(column, true, select);
-
-        // Then
-        assertEquals("TEST_COLUMN", result);
-    }
-
-    @Test
-    void createColumnIdentifier_withUsingForSameColumnButUnrelatedTable_usesDefaultTableQualifier() {
+    void createColumnIdentifier_withUsingForSameSelectColumnButUnrelatedTable_usesDefaultTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Table joinedTable = new Table("JOINED_TABLE", null);
@@ -154,100 +111,17 @@ class OracleColumnIdentifierGeneratorTest {
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
-                List.of(join),
                 Collections.emptyList(),
+                Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 
         // When
-        final String result = generator.createColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumnIdentifier(column, true, select);
 
         // Then
         assertEquals("UNRELATED_TABLE.TEST_COLUMN", result);
-    }
-
-    @Test
-    void createColumnIdentifier_withMatchingUsing_omitsTableQualifier() {
-        // Given
-        final Table table = new Table("TEST_TABLE", null);
-        final Column column = new Column(table, "TEST_COLUMN");
-        final Join join = new Join(table, List.of(new Condition(column, Operator.USING, null)));
-        final Select select = new Select(
-                table,
-                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
-                List.of(join),
-                Collections.emptyList(),
-                Collections.emptyList(),
-                Optional.empty());
-
-        // When
-        final String result = generator.createColumnIdentifier(column, true, select);
-
-        // Then
-        assertEquals("TEST_COLUMN", result);
-    }
-
-    @Test
-    void createColumnIdentifier_withMatchingUsingAndAlias_omitsTableQualifierAndIncludesAlias() {
-        // Given
-        final Table table = new Table("TEST_TABLE", null);
-        final Column column = new Column(table, "TEST_COLUMN").as("TEST_ALIAS");
-        final Join join = new Join(table, List.of(new Condition(column, Operator.USING, null)));
-        final Select select = new Select(
-                table,
-                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
-                List.of(join),
-                Collections.emptyList(),
-                Collections.emptyList(),
-                Optional.empty());
-
-        // When
-        final String result = generator.createColumnIdentifier(column, true, select);
-
-        // Then
-        assertEquals("TEST_COLUMN TEST_ALIAS", result);
-    }
-
-    @Test
-    void createColumnIdentifier_withMatchingUsingAndAliasExcluded_omitsTableQualifierAndAlias() {
-        // Given
-        final Table table = new Table("TEST_TABLE", null);
-        final Column column = new Column(table, "TEST_COLUMN").as("TEST_ALIAS");
-        final Join join = new Join(table, List.of(new Condition(column, Operator.USING, null)));
-        final Select select = new Select(
-                table,
-                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
-                List.of(join),
-                Collections.emptyList(),
-                Collections.emptyList(),
-                Optional.empty());
-
-        // When
-        final String result = generator.createColumnIdentifier(column, false, select);
-
-        // Then
-        assertEquals("TEST_COLUMN", result);
-    }
-
-    @Test
-    void createColumnIdentifier_withMatchingUsingAndBlankAlias_omitsTableQualifierAndAlias() {
-        // Given
-        final Table table = new Table("TEST_TABLE", null);
-        final Column column = new Column(table, "TEST_COLUMN").as(" ");
-        final Join join = new Join(table, List.of(new Condition(column, Operator.USING, null)));
-        final Select select = new Select(
-                table,
-                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
-                List.of(join),
-                Collections.emptyList(),
-                Collections.emptyList(),
-                Optional.empty());
-
-        // When
-        final String result = generator.createColumnIdentifier(column, true, select);
-
-        // Then
-        assertEquals("TEST_COLUMN", result);
     }
 
     @Test

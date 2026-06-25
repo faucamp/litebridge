@@ -4,7 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
-import org.litebridgedb.db.spi.expression.NestableExpression;
+import org.litebridgedb.db.spi.expression.DelegateColumnExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.expression.SelectReference;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
@@ -105,7 +105,7 @@ public class SqlFunctionRegistryFactory {
      * @param args   Not used; empty array
      * @return A AVG-implementing expression
      */
-    protected NestableExpression createAvg(final ColumnExpression target, final Object... args) {
+    protected DelegateColumnExpression createAvg(final ColumnExpression target, final Object... args) {
         return new Avg(target, columnIdentifierGenerator);
     }
 
@@ -116,7 +116,7 @@ public class SqlFunctionRegistryFactory {
      * @param args   Not used; empty array
      * @return A MIN-implementing expression
      */
-    protected NestableExpression createMin(final ColumnExpression target, final Object... args) {
+    protected DelegateColumnExpression createMin(final ColumnExpression target, final Object... args) {
         return new Min(target, columnIdentifierGenerator);
     }
 
@@ -127,7 +127,7 @@ public class SqlFunctionRegistryFactory {
      * @param args   Not used; empty array
      * @return A MAX-implementing expression
      */
-    protected NestableExpression createMax(final ColumnExpression target, final Object... args) {
+    protected DelegateColumnExpression createMax(final ColumnExpression target, final Object... args) {
         return new Max(target, columnIdentifierGenerator);
     }
 
@@ -147,7 +147,7 @@ public class SqlFunctionRegistryFactory {
      * @param args             Not used; empty array
      * @return An UPPER-implementing expression
      */
-    protected NestableExpression createUpper(final ColumnExpression columnExpression, final Object... args) {
+    protected DelegateColumnExpression createUpper(final ColumnExpression columnExpression, final Object... args) {
         return new Upper(columnExpression, columnIdentifierGenerator);
     }
 
@@ -158,7 +158,7 @@ public class SqlFunctionRegistryFactory {
      * @param args   Not used; empty array
      * @return A LOWER-implementing expression
      */
-    protected NestableExpression createLower(final ColumnExpression target, final Object... args) {
+    protected DelegateColumnExpression createLower(final ColumnExpression target, final Object... args) {
         return new Lower(target, columnIdentifierGenerator);
     }
 
@@ -169,7 +169,7 @@ public class SqlFunctionRegistryFactory {
      * @param args   expression arguments; should be [int, Inteeger]
      * @return SUBSTRING-implementing expression
      */
-    protected NestableExpression createSubstring(final ColumnExpression target, final Object... args) {
+    protected DelegateColumnExpression createSubstring(final ColumnExpression target, final Object... args) {
         final int start = (int) args[0];
         final Integer length = (Integer) args[1];
         return createSubstring(target, start, length);
@@ -183,7 +183,7 @@ public class SqlFunctionRegistryFactory {
      * @param length Substring length; may be {@code null}
      * @return SUBSTRING-implementing expression
      */
-    protected NestableExpression createSubstring(final ColumnExpression target, final int start, @Nullable Integer length) {
+    protected DelegateColumnExpression createSubstring(final ColumnExpression target, final int start, @Nullable Integer length) {
         return new Substring(target, start, length, columnIdentifierGenerator);
     }
 
@@ -194,7 +194,7 @@ public class SqlFunctionRegistryFactory {
      * @param args   Not used; empty array
      * @return An ABS-implementing expression
      */
-    protected NestableExpression createAbs(final ColumnExpression target, final Object... args) {
+    protected DelegateColumnExpression createAbs(final ColumnExpression target, final Object... args) {
         return new Abs(target, columnIdentifierGenerator);
     }
 

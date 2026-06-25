@@ -5,7 +5,6 @@ import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.TypeOverride;
-import org.litebridgedb.orm.expression.TypeOverrideExpressionSpec;
 
 /**
  * Litebridge ORM select API.
@@ -73,11 +72,11 @@ public interface SelectApi {
      * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
      * by specifying the target DTO or table for the query.
      *
-     * @param expressionSpecs An array of {@link ExpressionSpec} objects representing the expressions
-     *                        to be part of the SELECT statement.
+     * @param expressions An array of {@link ExpressionSpec} objects representing the expressions
+     *                    to be part of the SELECT statement.
      * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
-    FromClauseStart select(ExpressionSpec... expressionSpecs);
+    FromClauseStart select(ExpressionSpec... expressions);
 
     /**
      * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
@@ -88,30 +87,11 @@ public interface SelectApi {
      * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
      * by specifying the target DTO or table for the query.
      *
-     * @param <T>                  The return type of the query
-     * @param expression           Return type-overriding expression
-     * @param otherExpressionSpecs An array of {@link ExpressionSpec} objects representing additional expressions
-     *                             to be part of the SELECT statement.
+     * @param <T>        The return type of the query
+     * @param expression Return type-overriding expression
      * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
-    <T> FromClauseStartTypeOverride<T> select(TypeOverride<T> expression, ExpressionSpec... otherExpressionSpecs);
-
-    /**
-     * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
-     * <p>
-     * Creates a SQL SELECT statement with the specified fields/columns; the source table is specified
-     * via a chained {@code from()} call.
-     * <p>
-     * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
-     * by specifying the target DTO or table for the query.
-     *
-     * @param <T>                  The return type of the query
-     * @param expression           Return type-overriding expression
-     * @param otherExpressionSpecs An array of {@link ExpressionSpec} objects representing additional expressions
-     *                             to be part of the SELECT statement.
-     * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
-     */
-    <T> FromClauseStartTypeOverride<T> select(TypeOverrideExpressionSpec<T> expression, ExpressionSpec... otherExpressionSpecs);
+    <T> FromClauseStartTypeOverride<T> select(TypeOverride<T> expression);
 
     /**
      * Query data from the database, without mapping results to Data Transfer Object (DTOs).
