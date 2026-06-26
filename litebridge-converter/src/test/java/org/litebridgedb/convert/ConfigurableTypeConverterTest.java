@@ -100,6 +100,15 @@ class ConfigurableTypeConverterTest {
         // When/Then
         assertThrows(IllegalArgumentException.class, () -> typeConverter.convert("test", Map.class));
     }
+
+    @Test
+    void convert_byJavaType_nullValueAndConverterNotFound() {
+        // Given
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> typeConverter.convert(null, Object.class));
+    }
     
     @Test
     void convert_byJavaType_Object() {
@@ -126,6 +135,38 @@ class ConfigurableTypeConverterTest {
         // Then
         assertEquals("test", result);
         assertEquals("test", result2);
+    }
+
+    @Test
+    void getDbDataType_withSqlConverter() {
+        // Given
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        typeConverter.register(new TestSqlConverter<>(String.class, new int[]{1, 2}));
+
+        // When
+        final int result = typeConverter.getDbDataType(String.class);
+
+        // Then
+        assertEquals(1, result);
+    }
+
+    @Test
+    void getDbDataType_converterNotFound() {
+        // Given
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> typeConverter.getDbDataType(String.class));
+    }
+
+    @Test
+    void getDbDataType_converterIsNotSqlConverter() {
+        // Given
+        final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
+        typeConverter.register(new TestConverter<>(String.class));
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> typeConverter.getDbDataType(String.class));
     }
 
     @Test
