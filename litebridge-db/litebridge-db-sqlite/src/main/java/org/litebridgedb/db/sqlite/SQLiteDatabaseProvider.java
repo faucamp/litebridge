@@ -12,6 +12,7 @@ import org.litebridgedb.db.spi.tx.ManagedConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -65,15 +66,21 @@ public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
 
     @Override
     protected TableMetaData fetchTableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {
-        final DatabaseMetaData databaseMetaData = connectionProvider.connection().getMetaData();
+        final List<String> primaryKeys;
+        final List<ColumnMetaData> columns;
 
-        // Verify basic details
-        verifyTableExists(table, databaseMetaData);
+        try (Connection connection = connectionProvider.connection()) {
+            final DatabaseMetaData databaseMetaData = connection.getMetaData();
 
-        // Load table metadata using table name only for SQLite compatibility
-        final Table tableNoSchema = new Table("", "", table.name());
-        final List<String> primaryKeys = getPrimaryKeyColumnNames(tableNoSchema, databaseMetaData);
-        final List<ColumnMetaData> columns = getColumnMetaData(table, databaseMetaData);
+            // Verify basic details
+            verifyTableExists(table, databaseMetaData);
+
+            // Load table metadata using table name only for SQLite compatibility
+            final Table tableNoSchema = new Table("", "", table.name());
+            primaryKeys = getPrimaryKeyColumnNames(tableNoSchema, databaseMetaData);
+            columns = getColumnMetaData(table, databaseMetaData);
+        }
+
         return new TableMetaData(table, primaryKeys, columns);
     }
 

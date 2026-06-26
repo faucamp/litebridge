@@ -45,6 +45,6 @@ public class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal
     }
 
     private DtoOrderByClause<DTO> orderByImpl(final String[] columns) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), (DtoSelector<DTO>) delegate);
     }
 }

@@ -39,14 +39,15 @@ final class ConverterRegistry {
 
         LOGGER.debug("Registering converter for type '{}': {}", converter.type(), converter);
         classConverterMap.put(converter.type(), converter);
+        final Class<?> primitiveType = converter.primitiveType();
 
-        if (converter.primitiveType() != null) {
-            if (classConverterMap.containsKey(converter.primitiveType())) {
-                LOGGER.warn("Overriding existing converter for primitive type '{}': {}", converter.type(), classConverterMap.get(converter.primitiveType()));
+        if (primitiveType != null) {
+            if (classConverterMap.containsKey(primitiveType)) {
+                LOGGER.warn("Overriding existing converter for primitive type '{}': {}", converter.type(), classConverterMap.get(primitiveType));
             }
 
-            LOGGER.debug("Registering converter for primitive type '{}': {}", converter.primitiveType(), converter);
-            classConverterMap.put(converter.primitiveType(), converter);
+            LOGGER.debug("Registering converter for primitive type '{}': {}", primitiveType, converter);
+            classConverterMap.put(primitiveType, converter);
         }
 
         if (converter instanceof SqlConverter<?> sqlConverter) {
@@ -65,9 +66,9 @@ final class ConverterRegistry {
     /**
      * Registers a converter for a specific Java type using a functional interface.
      *
-     * @param type the target Java type
+     * @param type              the target Java type
      * @param converterFunction the conversion logic
-     * @param <T> the target Java type
+     * @param <T>               the target Java type
      */
     public <T> void register(final Class<T> type, final ConverterFunction<T> converterFunction) {
         final Converter<T> converter;
@@ -84,10 +85,10 @@ final class ConverterRegistry {
     /**
      * Registers a converter for a specific Java type and its associated SQL types using a functional interface.
      *
-     * @param type the target Java type
-     * @param sqlTypes an array of {@link java.sql.Types} codes associated with this converter
+     * @param type              the target Java type
+     * @param sqlTypes          an array of {@link java.sql.Types} codes associated with this converter
      * @param converterFunction the conversion logic
-     * @param <T> the target Java type
+     * @param <T>               the target Java type
      */
     public <T> void register(final Class<T> type, final int[] sqlTypes, final ConverterFunction<T> converterFunction) {
         final Converter<T> converter;
@@ -137,7 +138,7 @@ final class ConverterRegistry {
      * Returns a converter for the specified Java type.
      *
      * @param type the target Java type
-     * @param <T> the target Java type
+     * @param <T>  the target Java type
      * @return the converter, or {@code null} if none is found
      */
     @SuppressWarnings("unchecked")
@@ -149,7 +150,7 @@ final class ConverterRegistry {
      * Returns a converter for the specified SQL type.
      *
      * @param sqlType the {@link java.sql.Types} code
-     * @param <T> the target Java type
+     * @param <T>     the target Java type
      * @return the converter, or {@code null} if none is found
      */
     @SuppressWarnings("unchecked")

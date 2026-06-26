@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -477,14 +478,20 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @throws SQLException if an error occurs while fetching database metadata
      */
     protected TableMetaData fetchTableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {
-        final DatabaseMetaData databaseMetaData = connectionProvider.connection().getMetaData();
+        final List<String> primaryKeys;
+        final List<ColumnMetaData> columns;
 
-        // Verify basic details
-        verifySchemaAndTableExists(table, databaseMetaData);
+        try (final Connection connection = connectionProvider.connection()) {
+            final DatabaseMetaData databaseMetaData = connection.getMetaData();
 
-        // Load table metadata
-        final List<String> primaryKeys = getPrimaryKeyColumnNames(table, databaseMetaData);
-        final List<ColumnMetaData> columns = getColumnMetaData(table, databaseMetaData);
+            // Verify basic details
+            verifySchemaAndTableExists(table, databaseMetaData);
+
+            // Load table metadata
+            primaryKeys = getPrimaryKeyColumnNames(table, databaseMetaData);
+            columns = getColumnMetaData(table, databaseMetaData);
+        }
+
         return new TableMetaData(table, primaryKeys, columns);
     }
 

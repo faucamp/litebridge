@@ -44,7 +44,7 @@ public final class WeakIdentityMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public V put(final K key, final @Nullable V value) {
+    public @Nullable V put(final K key, final @Nullable V value) {
         expungeStaleEntries();
         return innerMap.put(new IdentityWeakReference<>(key, queue), value);
     }

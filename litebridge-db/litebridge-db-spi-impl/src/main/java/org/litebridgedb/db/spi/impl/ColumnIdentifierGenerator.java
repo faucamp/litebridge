@@ -7,6 +7,7 @@ import org.litebridgedb.db.spi.util.SqlReservedWords;
 
 public class ColumnIdentifierGenerator {
 
+    @SuppressWarnings("ConstantConditions")
     public String createSelectColumnIdentifier(final Column column, boolean includeColumnAlias, final Operation operation) {
         final StringBuilder columnSql = new StringBuilder();
 
@@ -25,6 +26,7 @@ public class ColumnIdentifierGenerator {
         return columnSql.toString();
     }
 
+    @SuppressWarnings("ConstantConditions")
     public String createColumnReference(final Column column) {
         return column.alias() != null ? quoteIdentifier(column.alias()) : quoteIdentifier(column.name());
     }

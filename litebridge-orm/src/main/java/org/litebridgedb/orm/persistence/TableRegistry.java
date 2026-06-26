@@ -67,7 +67,7 @@ public final class TableRegistry {
     }
 
     public @Nullable OrmTable getTable(final Table table) {
-        return getTable(table.schema(), table.name());
+        return getTable(Objects.requireNonNull(table.schema(), "Table schema is null"), table.name());
     }
 
     public boolean containsTable(final Class<?> dtoClass) {

@@ -42,20 +42,18 @@ public final class DtoHavingConditionClauseTerminal<DTO>
         Column column = table.getColumnForFieldName(field).toColumn();
 
         // Use the aliased lhs if it is part of the SELECT clause, else use the unaliased lhs
-        if (selectSpec.getExpressions() != null) {
-            for (final ExpressionSpec expressionSpec : selectSpec.getExpressions()) {
-                Column selectedColumn;
+        for (final ExpressionSpec expressionSpec : selectSpec.getExpressions()) {
+            Column selectedColumn;
 
-                if (expressionSpec instanceof SelectFieldSpec selectFieldSpec) {
-                    selectedColumn = selectFieldSpec.column();
-                } else {
-                    continue;
-                }
+            if (expressionSpec instanceof SelectFieldSpec selectFieldSpec) {
+                selectedColumn = selectFieldSpec.column();
+            } else {
+                continue;
+            }
 
-                if (selectedColumn.equalsIgnoreAlias(column)) {
-                    column = selectedColumn;
-                    break;
-                }
+            if (selectedColumn.equalsIgnoreAlias(column)) {
+                column = selectedColumn;
+                break;
             }
         }
 
@@ -90,6 +88,6 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     }
 
     private DtoOrderByClause<DTO> orderByImpl(final String[] columns) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), (DtoSelector<DTO>) delegate);
     }
 }

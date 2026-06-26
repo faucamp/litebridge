@@ -2,7 +2,6 @@ package org.litebridgedb.orm.api.dto;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
-import org.litebridgedb.orm.api.select.GroupByClauseTerminal;
 import org.litebridgedb.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractWhereClauseTerminal;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
@@ -49,20 +48,18 @@ public final class DtoWhereConditionClauseTerminal<DTO>
         Column column = table.getColumnForFieldName(field).toColumn();
 
         // Use the aliased lhs if it is part of the SELECT clause, else use the unaliased lhs
-        if (selectSpec.getExpressions() != null) {
-            for (final ExpressionSpec expressionSpec : selectSpec.getExpressions()) {
-                Column selectedColumn;
+        for (final ExpressionSpec expressionSpec : selectSpec.getExpressions()) {
+            Column selectedColumn;
 
-                if (expressionSpec instanceof SelectFieldSpec selectFieldSpec) {
-                    selectedColumn = selectFieldSpec.column();
-                } else {
-                    continue;
-                }
+            if (expressionSpec instanceof SelectFieldSpec selectFieldSpec) {
+                selectedColumn = selectFieldSpec.column();
+            } else {
+                continue;
+            }
 
-                if (selectedColumn.equalsIgnoreAlias(column)) {
-                    column = selectedColumn;
-                    break;
-                }
+            if (selectedColumn.equalsIgnoreAlias(column)) {
+                column = selectedColumn;
+                break;
             }
         }
 
@@ -102,6 +99,6 @@ public final class DtoWhereConditionClauseTerminal<DTO>
     }
 
     private DtoOrderByClause<DTO> orderByImpl(final String[] columns) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), (DtoSelector<DTO>) delegate);
     }
 }

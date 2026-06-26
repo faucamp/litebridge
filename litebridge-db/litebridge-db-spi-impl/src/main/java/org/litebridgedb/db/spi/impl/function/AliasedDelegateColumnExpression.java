@@ -56,6 +56,7 @@ public class AliasedDelegateColumnExpression extends DelegateColumnExpression {
         return columnIdentifierGenerator.createSelectColumnIdentifier(column, true, operation);
     }
 
+    @SuppressWarnings("ConstantConditions")
     protected String localId(final Operation operation) {
         if (column.alias() != null
                 && operation instanceof Select select

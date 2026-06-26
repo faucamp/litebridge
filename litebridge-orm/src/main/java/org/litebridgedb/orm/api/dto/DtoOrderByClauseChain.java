@@ -24,6 +24,6 @@ public final class DtoOrderByClauseChain<DTO>
                 .map(table::getColumnForFieldName)
                 .map(ColumnMetaData::name)
                 .toArray(String[]::new);
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), (DtoSelector<DTO>) delegate);
     }
 }

@@ -1,5 +1,8 @@
 package org.litebridgedb.db.spi.tx;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -34,6 +37,7 @@ import java.util.concurrent.Executor;
  */
 public final class ManagedConnection implements Connection {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManagedConnection.class);
     private final Connection connection;
 
     public ManagedConnection(final Connection connection) {
@@ -82,7 +86,7 @@ public final class ManagedConnection implements Connection {
 
     @Override
     public void close() {
-        throw managedMethodUnsupported("close()");
+        LOGGER.trace("Ignoring close(); managed by transaction manager");
     }
 
     @Override

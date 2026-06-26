@@ -144,7 +144,7 @@ class ManagedConnectionTest {
         assertThrows(UnsupportedOperationException.class, () -> managedConnection.setAutoCommit(true));
         assertThrows(UnsupportedOperationException.class, () -> managedConnection.commit());
         assertThrows(UnsupportedOperationException.class, () -> managedConnection.rollback());
-        assertThrows(UnsupportedOperationException.class, () -> managedConnection.close());
+        managedConnection.close();
         assertThrows(UnsupportedOperationException.class, () -> managedConnection.setReadOnly(true));
         assertThrows(UnsupportedOperationException.class, () -> managedConnection.setCatalog("cat"));
         assertThrows(UnsupportedOperationException.class, () -> managedConnection.setTransactionIsolation(1));

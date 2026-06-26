@@ -84,7 +84,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
                 .map(ormTable::getColumnForFieldName)
                 .map(ColumnMetaData::name)
                 .toArray(String[]::new);
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), (DtoSelector<DTO>) delegate);
     }
 
     @Override
@@ -92,6 +92,6 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         final String[] columns = Arrays.stream(fields)
                 .map(fieldColumnSpec -> fieldColumnSpec.columnSpec().name())
                 .toArray(String[]::new);
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), delegate);
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), (DtoSelector<DTO>) delegate);
     }
 }

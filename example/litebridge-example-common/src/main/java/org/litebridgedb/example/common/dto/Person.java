@@ -1,8 +1,10 @@
 package org.litebridgedb.example.common.dto;
 
+import org.jspecify.annotations.NullUnmarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@NullUnmarked
 public class Person {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Person.class.getName());

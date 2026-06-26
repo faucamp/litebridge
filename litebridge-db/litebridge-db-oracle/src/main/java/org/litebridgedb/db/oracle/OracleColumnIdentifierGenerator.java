@@ -13,6 +13,7 @@ import org.litebridgedb.db.spi.query.Select;
 public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGenerator {
 
     @Override
+    @SuppressWarnings("ConstantConditions")
     public String createSelectColumnIdentifier(final Column column, final boolean includeColumnAlias, final Operation operation) {
         if (!(operation instanceof final Select select)) {
             return super.createSelectColumnIdentifier(column, includeColumnAlias, operation);

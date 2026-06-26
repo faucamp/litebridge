@@ -55,6 +55,7 @@ public class AliasedColumnExpression extends ColumnExpressionImpl {
         return columnIdentifierGenerator.createSelectColumnIdentifier(column, true, operation);
     }
 
+    @SuppressWarnings("ConstantConditions")
     protected String localId(final Operation operation) {
         if (column.alias() != null
                 && operation instanceof Select select

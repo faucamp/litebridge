@@ -24,11 +24,11 @@ public final class TableMetaData {
     /**
      * Database catalog name
      */
-    private final String catalog;
+    private final @Nullable String catalog;
     /**
      * Database schema name
      */
-    private final String schema;
+    private final @Nullable String schema;
     /**
      * Database table name
      */
@@ -59,7 +59,7 @@ public final class TableMetaData {
      * @param columns    a list of {@link ColumnMetaData} objects representing the expressions of the table; must not be {@code null}
      * @throws IllegalArgumentException if any primary key lhs metadata is not found in the provided lhs metadata
      */
-    public TableMetaData(final String catalog, final String schema, final String table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
+    public TableMetaData(final @Nullable String catalog, final @Nullable String schema, final String table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
         this.catalog = catalog;
         this.schema = schema;
         this.name = table;
@@ -76,11 +76,11 @@ public final class TableMetaData {
         }
     }
 
-    public String catalog() {
+    public @Nullable String catalog() {
         return catalog;
     }
 
-    public String schema() {
+    public @Nullable String schema() {
         return schema;
     }
 

@@ -49,6 +49,7 @@ public abstract class FunctionExpression extends AliasedDelegateColumnExpression
      * @param alias     Whether to alias the SQL function result
      * @return SQL representation of the function
      */
+    @SuppressWarnings("ConstantConditions")
     protected String prepareSql(final Operation operation, final boolean alias) {
         final String nestedSql = target.toSql(operation);
         final String sql = template().formatted(nestedSql);
