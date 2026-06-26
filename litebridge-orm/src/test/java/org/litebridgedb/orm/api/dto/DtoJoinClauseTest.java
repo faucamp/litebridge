@@ -7,8 +7,7 @@ import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
-import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -26,9 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class DtoJoinClauseTest {
 

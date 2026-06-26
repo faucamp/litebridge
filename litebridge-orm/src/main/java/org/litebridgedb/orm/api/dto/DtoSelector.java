@@ -8,7 +8,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.impl.ProtoExpressionResolver;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;

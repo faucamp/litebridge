@@ -8,7 +8,7 @@ import org.junit.platform.commons.support.ReflectionSupport;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Operator;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.persistence.TableRegistry;

@@ -7,6 +7,7 @@ import org.litebridgedb.orm.api.select.ConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.SelectTerminal;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 
 import java.util.function.Function;
 

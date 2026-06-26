@@ -4,7 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.CollectionUtils;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;

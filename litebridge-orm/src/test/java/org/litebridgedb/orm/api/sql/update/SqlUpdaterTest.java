@@ -3,7 +3,7 @@ package org.litebridgedb.orm.api.sql.update;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.update.UpdateResult;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
 import java.sql.SQLException;

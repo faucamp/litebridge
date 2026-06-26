@@ -20,7 +20,7 @@ import org.litebridgedb.orm.api.register.TypeSafeDtoTableMapping;
 import org.litebridgedb.orm.api.select.FromClauseStart;
 import org.litebridgedb.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridgedb.orm.api.select.SelectApi;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
 import org.litebridgedb.orm.api.sql.delete.SqlDeleteWhereClause;

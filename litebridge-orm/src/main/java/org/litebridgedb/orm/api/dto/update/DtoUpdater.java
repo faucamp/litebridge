@@ -1,14 +1,12 @@
 package org.litebridgedb.orm.api.dto.update;
 
 import org.litebridgedb.db.spi.Column;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.api.update.UpdateSetStep;
 import org.litebridgedb.orm.api.update.impl.AbstractUpdater;
 import org.litebridgedb.orm.persistence.OrmTable;
-import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
-import org.litebridgedb.tracking.ClassFieldAccessorCache;
 
 public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implements DtoUpdateStep<DTO> {
 

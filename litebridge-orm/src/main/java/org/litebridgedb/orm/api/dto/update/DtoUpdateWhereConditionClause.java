@@ -1,7 +1,7 @@
 package org.litebridgedb.orm.api.dto.update;
 
 import org.litebridgedb.orm.api.select.impl.ConditionClauseImpl;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.update.UpdateWhereConditionClause;
 

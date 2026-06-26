@@ -2,7 +2,7 @@ package org.litebridgedb.orm.api.dto;
 
 import org.litebridgedb.orm.api.select.WhereConditionClause;
 import org.litebridgedb.orm.api.select.impl.ConditionClauseImpl;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 
 public final class DtoWhereConditionClause<DTO>

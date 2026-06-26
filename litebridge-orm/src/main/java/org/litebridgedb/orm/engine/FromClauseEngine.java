@@ -4,7 +4,6 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Aliased;
 import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridgedb.orm.api.dto.DtoSelector;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.api.sql.SqlFromClauseTerminal;
 import org.litebridgedb.orm.api.sql.SqlSelector;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;

@@ -1,7 +1,7 @@
 package org.litebridgedb.orm.api.sql;
 
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 
 import java.util.ArrayList;

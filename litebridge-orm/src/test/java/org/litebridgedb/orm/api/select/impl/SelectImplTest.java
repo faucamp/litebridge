@@ -5,7 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.orm.api.sql.SqlSelectSpec;
-import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
 import java.util.List;

@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.query.Operator;
-import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
@@ -21,10 +20,10 @@ class SqlJoinClauseTest {
     void constructorCreatesClause() {
         // Given
         final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("joined_table", null), mock(SelectExpressionMapper.class));
-        final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
+        final SqlSelector delegate = mock(SqlSelector.class);
 
         // When
-        final SqlJoinClause result = new SqlJoinClause(joinSpec, castDelegate(delegate));
+        final SqlJoinClause result = new SqlJoinClause(joinSpec, delegate);
 
         // Then
         assertNotNull(result);
@@ -36,8 +35,8 @@ class SqlJoinClauseTest {
         // Given
         final Table joinTable = new Table("joined_table", null);
         final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable, mock(SelectExpressionMapper.class));
-        final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
-        final SqlJoinClause clause = new SqlJoinClause(joinSpec, castDelegate(delegate));
+        final SqlSelector delegate = mock(SqlSelector.class);
+        final SqlJoinClause clause = new SqlJoinClause(joinSpec, delegate);
 
         // When
         final SqlJoinConditionClause result = clause.on("joined_id");
@@ -59,8 +58,8 @@ class SqlJoinClauseTest {
         // Given
         final Table joinTable = new Table("joined_table", null);
         final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable, mock(SelectExpressionMapper.class));
-        final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
-        final SqlJoinClause clause = new SqlJoinClause(joinSpec, castDelegate(delegate));
+        final SqlSelector delegate = mock(SqlSelector.class);
+        final SqlJoinClause clause = new SqlJoinClause(joinSpec, delegate);
 
         // When
         final SqlJoinConditionClauseTerminal terminal = clause.on("joined_id").eq("root_id");
@@ -82,8 +81,8 @@ class SqlJoinClauseTest {
         // Given
         final Table joinTable = new Table("joined_table", null);
         final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable, mock(SelectExpressionMapper.class));
-        final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
-        final SqlJoinClause clause = new SqlJoinClause(joinSpec, castDelegate(delegate));
+        final SqlSelector delegate = mock(SqlSelector.class);
+        final SqlJoinClause clause = new SqlJoinClause(joinSpec, delegate);
 
         // When
         final SqlJoinConditionClauseTerminal terminal = clause.on("optional_id").eq((Object) null);
@@ -105,8 +104,8 @@ class SqlJoinClauseTest {
         // Given
         final Table joinTable = new Table("joined_table", null);
         final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable, mock(SelectExpressionMapper.class));
-        final AbstractSelector<?, ?> delegate = mock(AbstractSelector.class);
-        final SqlJoinClause clause = new SqlJoinClause(joinSpec, castDelegate(delegate));
+        final SqlSelector delegate = mock(SqlSelector.class);
+        final SqlJoinClause clause = new SqlJoinClause(joinSpec, delegate);
 
         // When
         final SqlJoinConditionClauseTerminal result = clause.using("shared_id");
@@ -121,11 +120,5 @@ class SqlJoinClauseTest {
         assertEquals("shared_id", column.name());
         assertEquals(Operator.USING, condition.getOperator());
         assertNull(condition.getValue());
-    }
-
-    @SuppressWarnings("unchecked")
-    private static AbstractSelector<org.litebridgedb.db.spi.Row, SqlSelectSpec> castDelegate(
-            final AbstractSelector<?, ?> delegate) {
-        return (AbstractSelector<org.litebridgedb.db.spi.Row, SqlSelectSpec>) delegate;
     }
 }

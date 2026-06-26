@@ -1,6 +1,8 @@
 package org.litebridgedb.convert.converter;
 
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Reader;
 import java.io.StringWriter;
@@ -16,6 +18,7 @@ import java.sql.Types;
  */
 public class StringConverter implements SqlConverter<String> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(StringConverter.class);
     private static final int[] SQL_TYPES = new int[]{Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.CLOB};
 
     /**
@@ -58,7 +61,7 @@ public class StringConverter implements SqlConverter<String> {
                     try {
                         clob.free();
                     } catch (final SQLException ex) {
-                        throw new IllegalStateException("Failed to free CLOB resources", ex);
+                        LOGGER.error("Failed to free CLOB resources", ex);
                     }
                 }
             }

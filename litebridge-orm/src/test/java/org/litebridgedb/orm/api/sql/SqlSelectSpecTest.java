@@ -7,7 +7,7 @@ import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.JoinSpec;
 import org.litebridgedb.orm.api.select.model.LimitSpec;

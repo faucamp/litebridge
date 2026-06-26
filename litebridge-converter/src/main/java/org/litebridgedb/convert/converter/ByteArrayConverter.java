@@ -1,6 +1,8 @@
 package org.litebridgedb.convert.converter;
 
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -16,6 +18,7 @@ import java.sql.Types;
  */
 public class ByteArrayConverter implements SqlConverter<byte[]> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ByteArrayConverter.class);
     private static final int[] SQL_TYPES = new int[]{Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY, Types.BLOB};
 
     /**
@@ -57,7 +60,7 @@ public class ByteArrayConverter implements SqlConverter<byte[]> {
                 try {
                     blob.free();
                 } catch (final SQLException ex) {
-                    throw new IllegalStateException("Failed to free BLOB resources", ex);
+                    LOGGER.error("Failed to free BLOB resources", ex);
                 }
             }
 

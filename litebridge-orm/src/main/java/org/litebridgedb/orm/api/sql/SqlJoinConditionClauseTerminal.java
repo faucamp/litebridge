@@ -3,7 +3,6 @@ package org.litebridgedb.orm.api.sql;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
-import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 
 import java.util.Arrays;
@@ -21,7 +20,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
         implements SqlJoinClauseTerminal {
 
-    public SqlJoinConditionClauseTerminal(final SqlJoinSpec joinSpec, final AbstractSelector<Row, SqlSelectSpec> delegate) {
+    public SqlJoinConditionClauseTerminal(final SqlJoinSpec joinSpec, final SqlSelector delegate) {
         super(joinSpec, delegate);
     }
 
@@ -38,7 +37,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     @Override
     public SqlJoinClause join(final String table) {
-        return new SqlJoinClause(selectSpec.newJoinSpec(table), delegate);
+        return new SqlJoinClause(selectSpec.newJoinSpec(table), (SqlSelector) delegate);
     }
 
     @Override

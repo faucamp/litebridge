@@ -29,7 +29,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
 
     @Override
     public SqlJoinClause join(final String table) {
-        return new SqlJoinClause(selectSpec.newJoinSpec(table), delegate);
+        return new SqlJoinClause(selectSpec.newJoinSpec(table), (SqlSelector) delegate);
     }
 
     @Override

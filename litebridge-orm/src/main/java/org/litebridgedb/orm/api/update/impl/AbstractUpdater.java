@@ -2,7 +2,7 @@ package org.litebridgedb.orm.api.update.impl;
 
 import org.litebridgedb.db.spi.update.UpdateResult;
 import org.litebridgedb.orm.api.dto.update.DtoUpdater;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.sql.update.SqlUpdater;
 import org.litebridgedb.orm.api.update.UpdateTerminal;
 import org.litebridgedb.orm.api.update.model.UpdateSpec;

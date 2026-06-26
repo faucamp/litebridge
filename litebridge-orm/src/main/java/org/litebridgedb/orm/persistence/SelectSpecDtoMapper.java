@@ -11,7 +11,7 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.dto.DtoJoinSpec;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.tracking.FieldAccessor;

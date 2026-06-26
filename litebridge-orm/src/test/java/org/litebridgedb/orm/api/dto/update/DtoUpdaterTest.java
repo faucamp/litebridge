@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.api.update.UpdateSetStep;

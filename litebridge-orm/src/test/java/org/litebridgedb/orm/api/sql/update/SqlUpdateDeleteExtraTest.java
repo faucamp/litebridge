@@ -2,7 +2,7 @@ package org.litebridgedb.orm.api.sql.update;
 
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.sql.delete.SqlDeletor;
 import org.litebridgedb.orm.api.sql.delete.SqlDeleteFromClause;
 import org.litebridgedb.orm.api.sql.delete.SqlDeleteWhereConditionClauseTerminalImpl;

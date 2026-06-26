@@ -5,6 +5,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.orm.api.select.SelectTerminal;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

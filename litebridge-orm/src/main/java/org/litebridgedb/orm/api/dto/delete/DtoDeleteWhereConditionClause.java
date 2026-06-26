@@ -2,7 +2,7 @@ package org.litebridgedb.orm.api.dto.delete;
 
 import org.litebridgedb.orm.api.delete.DeleteWhereConditionClause;
 import org.litebridgedb.orm.api.select.impl.ConditionClauseImpl;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 
 public class DtoDeleteWhereConditionClause<DTO>

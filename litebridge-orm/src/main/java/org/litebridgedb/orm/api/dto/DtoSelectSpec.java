@@ -3,17 +3,13 @@ package org.litebridgedb.orm.api.dto;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.db.spi.expression.SelectExpression;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.tracking.FieldAccessor;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
 

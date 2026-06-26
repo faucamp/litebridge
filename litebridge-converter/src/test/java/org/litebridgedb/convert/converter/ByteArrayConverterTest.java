@@ -95,13 +95,9 @@ class ByteArrayConverterTest {
         final Blob blob = new ThrowingBlob(false, true);
 
         // When
-        final IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
-                () -> converter.convert(blob)
-        );
+        final byte[] result = converter.convert(blob);
 
-        // Then
-        assertEquals("Failed to free BLOB resources", exception.getMessage());
+        // Then no exception is thrown
     }
 
     @Test

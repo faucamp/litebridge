@@ -31,12 +31,15 @@ module litebridge.orm {
     exports org.litebridgedb.orm.api.update.model;
     exports org.litebridgedb.orm.config;
     exports org.litebridgedb.orm.engine;
+    exports org.litebridgedb.orm.exception;
     exports org.litebridgedb.orm.expression;
     exports org.litebridgedb.orm.expression.function.aggregate;
     exports org.litebridgedb.orm.expression.function.date;
     exports org.litebridgedb.orm.expression.function.scalar;
+    exports org.litebridgedb.orm.expression.intent;
     exports org.litebridgedb.orm.expression.select;
     exports org.litebridgedb.orm.persistence;
+    exports org.litebridgedb.orm.persistence.alias;
     exports org.litebridgedb.orm.tx;
 
     opens org.litebridgedb.orm to litebridge.tracking;

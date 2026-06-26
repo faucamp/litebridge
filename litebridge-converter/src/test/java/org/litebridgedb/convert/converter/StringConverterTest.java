@@ -151,14 +151,9 @@ class StringConverterTest {
         final Clob input = clobThrowingOnFree(cause);
 
         // When
-        final IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
-                () -> converter.convert(input)
-        );
+        final String result = converter.convert(input);
 
-        // Then
-        assertEquals("Failed to free CLOB resources", exception.getMessage());
-        assertSame(cause, exception.getCause());
+        // Then no exception is thrown
     }
 
     private static Clob clobThrowingOnGetCharacterStream(final SQLException exception) {

@@ -11,7 +11,7 @@ import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.query.GroupBy;
 import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
-import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.intent.ExpressionSpecArray;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;

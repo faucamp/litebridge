@@ -3,7 +3,6 @@ package org.litebridgedb.orm.api.sql;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinClause;
-import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 
 public final class SqlJoinClause extends AbstractJoinClause<Row,
         SqlJoinConditionClause,
@@ -11,7 +10,7 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
         SqlSelectSpec,
         SqlJoinSpec> {
 
-    public SqlJoinClause(final SqlJoinSpec joinSpec, final AbstractSelector<Row, SqlSelectSpec> delegate) {
+    public SqlJoinClause(final SqlJoinSpec joinSpec, final SqlSelector delegate) {
         super(joinSpec, delegate);
     }
 
@@ -24,7 +23,7 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
      */
     public SqlJoinConditionClause on(final String column) {
         final Column spiColumn = new Column(joinSpec.table(), column);
-        final SqlJoinConditionClauseTerminal joinConditionClauseTerminal = new SqlJoinConditionClauseTerminal(joinSpec, delegate);
+        final SqlJoinConditionClauseTerminal joinConditionClauseTerminal = new SqlJoinConditionClauseTerminal(joinSpec, (SqlSelector) delegate);
         return new SqlJoinConditionClause(joinSpec.newCondition(spiColumn), joinConditionClauseTerminal, delegate.litebridgeContext());
     }
 
@@ -38,6 +37,6 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
      */
     public SqlJoinConditionClauseTerminal using(final String column) {
         joinSpec.using(column);
-        return new SqlJoinConditionClauseTerminal(joinSpec, delegate);
+        return new SqlJoinConditionClauseTerminal(joinSpec, (SqlSelector) delegate);
     }
 }

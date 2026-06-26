@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.select.ConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
