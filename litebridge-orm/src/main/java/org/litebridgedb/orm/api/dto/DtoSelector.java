@@ -147,6 +147,7 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
         return result.getFirst();
     }
 
+    @SuppressWarnings("unchecked")
     private <T> List<T> unwrap(final Class<T> type, final List<Row> rows) {
         if (type == Row.class) {
             return (List<T>) rows;

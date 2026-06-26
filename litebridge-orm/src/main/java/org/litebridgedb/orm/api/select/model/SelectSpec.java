@@ -51,7 +51,6 @@ public abstract class SelectSpec {
     protected @Nullable List<OrderBySpec> orderBys;
     protected @Nullable LimitSpec limit;
     protected @Nullable Map<Class<?>, String> dtoAliases;
-    private Map<List<SelectExpression>, Class<?>> expressionTypeOverrides;
 
     public SelectSpec(final LitebridgeContext litebridgeContext) {
         this.selectExpressionMapper = new SelectExpressionMapper(litebridgeContext.sqlFunctionRegistry());
@@ -240,14 +239,6 @@ public abstract class SelectSpec {
         return select;
     }
 
-    public Optional<Map<List<SelectExpression>, Class<?>>> expressionTypeOverrides() {
-        return Optional.ofNullable(expressionTypeOverrides);
-    }
-
-    private List<SelectExpression> convertToSelectExpressions(final ExpressionSpec[] expressionSpecs) {
-        return convertToSelectExpressions(Arrays.stream(expressionSpecs));
-    }
-
     private List<SelectExpression> convertToSelectExpressions(final List<ExpressionSpec> expressionSpecs) {
         return convertToSelectExpressions(expressionSpecs.stream());
     }
@@ -271,13 +262,5 @@ public abstract class SelectSpec {
                     convertToSelectExpressionStream(expressionSpecArray.expressions());
             default -> Stream.of(selectExpressionMapper.toSelectExpression(expressionSpec));
         };
-    }
-
-    private void addTypeOverride(final List<SelectExpression> expressions, Class<?> typeOverride) {
-        if (expressionTypeOverrides == null) {
-            expressionTypeOverrides = new HashMap<>();
-        }
-
-        expressionTypeOverrides.put(expressions, typeOverride);
     }
 }

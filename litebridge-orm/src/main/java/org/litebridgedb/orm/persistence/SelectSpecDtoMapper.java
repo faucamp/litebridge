@@ -271,8 +271,8 @@ public class SelectSpecDtoMapper {
     }
 
     static <DTO> DTO constructDto(final Class<DTO> dtoClass, final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues, final DtoConstructor dtoConstructor) {
-        final DtoConstructor.ConstructionResult<?> constructionResult = dtoConstructor.newInstance(dtoClass, fieldAccessorValues);
-        final DTO dto = (DTO) constructionResult.dto();
+        final DtoConstructor.ConstructionResult<DTO> constructionResult = dtoConstructor.newInstance(dtoClass, fieldAccessorValues);
+        final DTO dto = constructionResult.dto();
 
         if (constructionResult.defaultConstructorUsed()) {
             // Set the fields via field accessors since the default constructor was used

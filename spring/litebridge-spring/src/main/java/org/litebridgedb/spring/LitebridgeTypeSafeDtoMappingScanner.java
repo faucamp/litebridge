@@ -15,6 +15,7 @@ public final class LitebridgeTypeSafeDtoMappingScanner extends AbstractScanner {
         LOGGER.debug("Scanning base package(s) '{}' for Litebridge type-safe DTO mappings", (Object) packageNames);
         return findClasses(packageNames)
                 .map(BeanUtils::instantiateClass)
+                .filter(TypeSafeDtoTableMapping.class::isInstance)
                 .toArray(TypeSafeDtoTableMapping[]::new);
     }
 
