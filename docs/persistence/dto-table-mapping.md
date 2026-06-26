@@ -311,6 +311,11 @@ TypesafeRegistrationSupport scanner = new TypesafeRegistrationSupport(litebridge
 scanner.scanBasePackage("com.example.app.mappings");
 ```
 
+#### Spring support
+
+If using Spring, refer to the [Spring-specific scanner implementations](../spring/manual-configuration.md#entity-scanning)
+provided by `litebridge-spring`.
+
 ## Low-level API
 
 Whilst the fluent API is the recommended approach, the low-level API provides more freedom over the structure

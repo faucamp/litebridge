@@ -65,7 +65,7 @@ public class LitebridgeConfig {
 }
 ```
 
-## Entity and Mapping Scanning
+## Entity Scanning
 
 If you use [entity annotations](../persistence/entity-annotations.md), you can use the `LitebridgeEntityScanner` to automatically discover and register your entities during configuration. Similarly, `LitebridgeTypeSafeDtoMappingScanner` can be used to discover implementations of `TypeSafeDtoTableMapping`.
 
