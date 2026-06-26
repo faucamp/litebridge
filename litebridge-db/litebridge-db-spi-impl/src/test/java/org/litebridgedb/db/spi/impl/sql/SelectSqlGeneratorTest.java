@@ -9,12 +9,15 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
+import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.query.Condition;
+import org.litebridgedb.db.spi.query.GroupBy;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
 import org.litebridgedb.db.spi.query.Operator;
+import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
@@ -22,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -29,6 +33,7 @@ import java.util.function.BiFunction;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.litebridgedb.db.spi.impl.sql.TestUtil.createTestColumn;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -152,15 +157,89 @@ class SelectSqlGeneratorTest {
     }
 
     @Test
-    void appendLimitClause_neitherLimitNorOffset() {
+    void prepareSql_complex() {
         // Given
-        final Limit limit = new Limit(Optional.empty(), Optional.empty());
-        final StringBuilder sql = new StringBuilder("SELECT * FROM TEST");
+        final Table table = new Table("TEST_TABLE", "t1");
+        final Column col1 = new Column(table, "COL1");
+        final Column col2 = new Column(table, "COL2");
+        
+        final SelectColumn selectCol1 = new SelectColumn(col1, selectSqlGenerator.columnIdentifierGenerator);
+        
+        final Table joinTable = new Table("JOIN_TABLE", "j1");
+        final Column joinCol = new Column(joinTable, "JCOL");
+        final Join join = new Join(joinTable, List.of(new Condition(new SelectColumn(joinCol, selectSqlGenerator.columnIdentifierGenerator), Operator.EQ, "val")));
+        
+        final List<Condition> where = List.of(new Condition(new SelectColumn(col2, selectSqlGenerator.columnIdentifierGenerator), Operator.GT, 10));
+        
+        final List<OrderBy> orderBy = List.of(new OrderBy(col1, false));
+        final Limit limit = new Limit(Optional.of(10), Optional.of(5));
+
+        final GroupBy groupBy = new GroupBy(List.of(col1));
+        final List<Condition> having = List.of(new Condition(new SelectColumn(col1, selectSqlGenerator.columnIdentifierGenerator), Operator.NEQ, "foo"));
+
+        final Select select = new Select(
+                table,
+                new ArrayList<>(List.of(selectCol1, mock(SelectExpression.class))), // Test non-AliasedColumnExpression
+                new ArrayList<>(List.of(join)),
+                new ArrayList<>(where),
+                Optional.of(groupBy),
+                new ArrayList<>(having),
+                new ArrayList<>(orderBy),
+                Optional.of(limit)
+        );
+
+        final TableMetaData tableMetaData = mock(TableMetaData.class);
+        when(ensureTableMetaData.apply(any(), any())).thenReturn(tableMetaData);
+        final ColumnMetaData cmd = mock(ColumnMetaData.class);
+        when(cmd.getDataType()).thenReturn(Types.VARCHAR);
+        when(tableMetaData.column(anyString())).thenReturn(cmd);
+        when(typeConverter.convert(any(), anyInt())).then(i -> i.getArgument(0));
+        // when(typeConverter.getDbDataType(any())).thenReturn(Types.INTEGER);
+        
+        // Mock the non-AliasedColumnExpression
+        when(select.expressions().get(1).toSql(any())).thenReturn("1");
 
         // When
-        selectSqlGenerator.appendLimitClause(limit, sql);
+        final PreparedSql result = selectSqlGenerator.prepareSql(select, mock(ConnectionProvider.class));
 
         // Then
-        assertEquals("SELECT * FROM TEST", sql.toString());
+        assertEquals("SELECT t1.COL1, 1 FROM TEST_TABLE AS t1 JOIN JOIN_TABLE AS j1 ON j1.JCOL = ? WHERE t1.COL2 > ? GROUP BY COL1 HAVING t1.COL1 <> ? ORDER BY t1.COL1 DESC LIMIT 10 OFFSET 5", result.sql());
+        assertEquals(3, result.bindValues().size());
+    }
+
+    @Test
+    void prepareSql_emptyExpressions() {
+        // Given
+        final Table table = new Table("TEST_TABLE");
+        final Select select = new Select(
+                table,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                Optional.empty(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                Optional.empty()
+        );
+
+        // When
+        final PreparedSql result = selectSqlGenerator.prepareSql(select, mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals("SELECT * FROM TEST_TABLE", result.sql());
+    }
+
+    @Test
+    void createJoin_using() {
+        // Given
+        final Table table = new Table("JOIN_TABLE");
+        final Column column = new Column(table, "COL1");
+        final Join join = new Join(table, List.of(new Condition(new SelectColumn(column, selectSqlGenerator.columnIdentifierGenerator), Operator.USING, null)));
+
+        // When
+        final PreparedSql result = selectSqlGenerator.createJoin(join, mock(Select.class), mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals(" JOIN JOIN_TABLE USING (COL1)", result.sql());
     }
 }

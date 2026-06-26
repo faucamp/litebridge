@@ -123,10 +123,6 @@ public abstract class AbstractSqlGenerator {
         return appendTable(sql, table.schema(), table.name());
     }
 
-    protected StringBuilder appendTable(final StringBuilder sql, final TableMetaData table) {
-        return appendTable(sql, table.schema(), table.name());
-    }
-
     protected StringBuilder appendTable(final StringBuilder sql, final String schema, final String table) {
         final ColumnIdentifierGenerator cig = columnIdentifierGenerator;
 

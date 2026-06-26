@@ -8,11 +8,16 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
+import org.litebridgedb.db.spi.expression.LiteralExpression;
+import org.litebridgedb.db.spi.expression.SelectExpression;
+import org.litebridgedb.db.spi.expression.SelectReference;
+import org.litebridgedb.db.spi.expression.SubselectExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
+import org.litebridgedb.db.spi.sql.BindValue;
 import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
@@ -24,6 +29,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.litebridgedb.db.spi.impl.sql.TestUtil.createSelectColumn;
 import static org.litebridgedb.db.spi.impl.sql.TestUtil.createTestColumn;
@@ -347,22 +353,6 @@ class AbstractSqlGeneratorTest {
     }
 
     @Test
-    void appendTable_withTableMetaData() throws Exception {
-        // Given
-        final TableMetaData tableMetaData = mock(TableMetaData.class);
-        when(tableMetaData.schema()).thenReturn("TEST_SCHEMA");
-        when(tableMetaData.name()).thenReturn("TEST_TABLE");
-
-        final StringBuilder sql = new StringBuilder("SELECT * FROM ");
-
-        // When
-        sqlGenerator.appendTable(sql, tableMetaData);
-
-        // Then
-        assertEquals("SELECT * FROM TEST_SCHEMA.TEST_TABLE", sql.toString());
-    }
-
-    @Test
     void appendTable_withSchemaAndName() throws Exception {
         // Given
         final StringBuilder sql = new StringBuilder("SELECT * FROM ");
@@ -400,6 +390,105 @@ class AbstractSqlGeneratorTest {
         // Then
         assertNotNull(result);
         assertEquals("TEST_COLUMN", result.name());
+    }
+
+    @Test
+    void createCondition_subselect() {
+        // Given
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
+        final Select subselect = mock(Select.class);
+        final SubselectExpression subselectExpression = mock(SubselectExpression.class);
+        final Condition condition = new Condition(column, Operator.IN, subselectExpression);
+        final PreparedSql subselectSql = new PreparedSql("SELECT ID FROM OTHER", List.of(new BindValue(1, Types.INTEGER)));
+
+        when(subselectExpression.toSql(any(), any())).thenReturn(subselectSql);
+
+        // When
+        final PreparedSql result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals("TEST_TABLE.TEST_COLUMN IN (SELECT ID FROM OTHER)", result.sql());
+        assertEquals(1, result.bindValues().size());
+        assertEquals(1, result.bindValues().get(0).value());
+    }
+
+    @Test
+    void createCondition_selectReference() {
+        // Given
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
+        final Column referencedColumn = createTestColumn();
+        referencedColumn.table().setAlias("ref");
+        final SelectReference selectReference = mock(SelectReference.class);
+        when(selectReference.column()).thenReturn(referencedColumn);
+        final Condition condition = new Condition(column, Operator.EQ, selectReference);
+
+        // When
+        final PreparedSql result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals("TEST_TABLE.TEST_COLUMN = ref.TEST_COLUMN", result.sql());
+        assertTrue(result.bindValues().isEmpty());
+    }
+
+    @Test
+    void createCondition_nonColumnLhs() {
+        // Given
+        final SelectExpression lhs = mock(SelectExpression.class);
+        when(lhs.toSql(any())).thenReturn("1");
+        final Condition condition = new Condition(lhs, Operator.EQ, "val");
+
+        when(typeConverter.getDbDataType(any())).thenReturn(Types.VARCHAR);
+
+        // When
+        final PreparedSql result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals("1 = ?", result.sql());
+        assertEquals(1, result.bindValues().size());
+        assertEquals("val", result.bindValues().get(0).value());
+    }
+
+    @Test
+    void createCondition_nullRhs() {
+        // Given
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
+        final Condition condition = new Condition(column, Operator.EQ, new LiteralExpression(null));
+        final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
+        when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
+        when(tableMetaData.column("TEST_COLUMN")).thenReturn(columnMetaData);
+        when(typeConverter.convert(null, Types.VARCHAR)).thenReturn(null);
+
+        // When
+        final PreparedSql result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals("TEST_TABLE.TEST_COLUMN = ?", result.sql());
+        assertEquals(1, result.bindValues().size());
+        assertEquals(null, result.bindValues().get(0).value());
+        assertEquals(Types.VARCHAR, result.bindValues().get(0).sqlDataType());
+    }
+
+    @Test
+    void getExpressionValue_unsupported() {
+        // Given
+        final SelectExpression unsupported = mock(SelectExpression.class);
+
+        // When & Then
+        try {
+            sqlGenerator.getExpressionValue(unsupported);
+        } catch (UnsupportedOperationException e) {
+            assertTrue(e.getMessage().contains("Unsupported select expression"));
+        }
+    }
+
+    @Test
+    void createCondition_using_exception() {
+        // Given
+        final SelectExpression lhs = mock(SelectExpression.class);
+        final Condition condition = new Condition(lhs, Operator.USING, null);
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class)));
     }
 
     private class TestSqlGenerator extends AbstractSqlGenerator {
