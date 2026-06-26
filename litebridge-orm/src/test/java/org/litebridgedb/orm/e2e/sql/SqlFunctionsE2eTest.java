@@ -188,13 +188,13 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
     void row_groupingByHaving(final DbEnvDtoTableMapper tableMapper) {
         // Setup data: 1 record with age 20, 2 records with age 25
         litebridge.update(tableMapper.qualifyName("PERSON"), update -> update
-                .set("AGE").to(25)
-                .where("PERSON_ID").eq(2L));
+                .set(tableMapper.transformColumnName("AGE")).to(25)
+                .where(tableMapper.transformColumnName("PERSON_ID")).eq(2L));
 
         // Aggregates record counts grouped by age field; returns the underlying row data
-        final List<Row> results = litebridge.select(Fn.convert(Fn.c("AGE"), Integer.class), Fn.convert(Fn.count(), Long.class))
+        final List<Row> results = litebridge.select(Fn.convert(Fn.c(tableMapper.transformColumnName("AGE")), Integer.class), Fn.convert(Fn.count(), Long.class))
                 .from(tableMapper.qualifyName("PERSON"))
-                .groupBy("AGE")
+                .groupBy(tableMapper.transformColumnName("AGE"))
                 .having(Fn.count()).gt(1)
                 .list();
 
