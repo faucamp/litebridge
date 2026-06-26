@@ -10,7 +10,8 @@
     <version>0.3.0-SNAPSHOT</version>
 
     <name>Litebridge</name>
-    <description>Parent POM for Litebridge: a fast, lightweight Object-Relational Mapper (ORM) for Java 21+</description>
+    <description>Parent POM for Litebridge: a fast, lightweight Object-Relational Mapper (ORM) for Java 21+
+    </description>
     <url>https://litebridgedb.org</url>
 
     <licenses>
@@ -60,7 +61,6 @@
         <!-- Library versions -->
         <classgraph.version>4.8.184</classgraph.version>
         <flyway.version>12.9.0</flyway.version>
-        <flyway-postgresql.version>12.9.0</flyway-postgresql.version>
         <h2.version>2.4.240</h2.version>
         <jackson-annotations.version>2.22</jackson-annotations.version>
         <jspecify.version>1.0.0</jspecify.version>
@@ -356,7 +356,7 @@
             <dependency>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-database-postgresql</artifactId>
-                <version>${flyway-postgresql.version}</version>
+                <version>${flyway.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.h2database</groupId>
