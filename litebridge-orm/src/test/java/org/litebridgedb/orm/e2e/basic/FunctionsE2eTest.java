@@ -180,6 +180,7 @@ public class FunctionsE2eTest extends AbstractE2eTest {
                         Fn.convert(Fn.count(), Long.class)))
                 .from(Person.class)
                 .groupBy("age")
+                .orderBy("age").asc()
                 .list();
 
         assertEquals(2, results.size());
