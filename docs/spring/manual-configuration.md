@@ -26,6 +26,12 @@ Add the `litebridge-spring` and your chosen database provider to your `pom.xml`:
 Define the `LitebridgeTransactionManager` and `Litebridge` beans in a `@Configuration` class.
 
 ```java
+import org.litebridgedb.orm.Litebridge;
+import org.litebridgedb.orm.api.register.TypeSafeDtoTableMapping;
+import org.litebridgedb.spring.LitebridgeEntityScanner;
+import org.litebridgedb.spring.LitebridgeTypeSafeDtoMappingScanner;
+import org.litebridgedb.spring.LitebridgeTransactionManager;
+
 @Configuration
 @EnableTransactionManagement
 public class LitebridgeConfig {
@@ -42,15 +48,38 @@ public class LitebridgeConfig {
         
         Litebridge litebridge = new Litebridge(databaseProvider, transactionManager);
 
-        // Register your DTOs
+        // Register your DTOs manually
         litebridge.register(User.class, rc -> rc.mapToTable("LB.USERS")
                 .mapField("id").toColumn("ID")
                 .mapField("username").toColumn("USERNAME"));
+
+        // Or use Litebridge scanners for automatic registration
+        Class<?>[] entities = new LitebridgeEntityScanner().scanBasePackage("com.example.app.entity");
+        litebridge.register(entities);
+        
+        TypeSafeDtoTableMapping[] mappings = new LitebridgeTypeSafeDtoMappingScanner().scanBasePackage("com.example.app.mappings");
+        litebridge.register(mappings);
 
         return litebridge;
     }
 }
 ```
+
+## Entity and Mapping Scanning
+
+If you use [entity annotations](../persistence/entity-annotations.md), you can use the `LitebridgeEntityScanner` to automatically discover and register your entities during configuration. Similarly, `LitebridgeTypeSafeDtoMappingScanner` can be used to discover implementations of `TypeSafeDtoTableMapping`.
+
+```java
+// Scan for @Table-annotated classes
+Class<?>[] entities = new LitebridgeEntityScanner().scanBasePackage("com.example.app.entities");
+litebridge.register(entities);
+
+// Scan for TypeSafeDtoTableMapping implementations
+TypeSafeDtoTableMapping[] mappings = new LitebridgeTypeSafeDtoMappingScanner().scanBasePackage("com.example.app.mappings");
+litebridge.register(mappings);
+```
+
+These classes leverage Spring's `ClassPathScanningCandidateComponentProvider` to find relevant components in the specified packages.
 
 ## Key Considerations
 

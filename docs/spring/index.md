@@ -10,7 +10,7 @@ Since the ORM itself is compiled against Java 21, the earliest supported Spring 
 | Spring Boot | Spring Framework |
 |:------------|:-----------------|
 | 3.2.0       | 6.1.1            |
-| 4.0.6       | 7.0.7            |
+| 4.1.0       | 7.0.8            |
 
 ## Integration Options
 

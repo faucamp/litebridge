@@ -32,16 +32,32 @@ You can customise the autoconfiguration using the following properties in `appli
 | :--- | :--- | :--- |
 | `litebridge.database-provider.class` | Fully qualified class name of the `DatabaseProvider` to use. | (Auto-detected) |
 | `litebridge.database-provider.scan-base-package` | Base package to scan for `DatabaseProvider` implementations if `class` is not set. | `org.litebridgedb.db` |
+| `litebridge.scan-base-package` | One or more base packages to scan for Litebridge entities (annotated with `@Table`) and `TypeSafeDtoTableMapping` implementations. | (None) |
 
 ### Example
 
 ```properties
 litebridge.database-provider.class=org.litebridgedb.db.h2.H2DatabaseProvider
+litebridge.scan-base-package=com.example.app.entities,com.example.app.mappings
 ```
 
-## DTO Registration
+## Entity and Mapping Registration
 
-While Litebridge is autoconfigured, you still need to register your DTO-to-table mappings. You can do this in a `@Configuration` class or during application startup.
+While you can manually register your DTO-to-table mappings, the starter supports automatic discovery via the `litebridge.scan-base-package` property
+if you are using [entity annotations](../persistence/entity-annotations.md) or type-safe mappings.
+
+### Automatic Scanning
+
+When `litebridge.scan-base-package` is configured, Litebridge will automatically:
+
+1.  **Scan for Entities**: Find classes annotated with `@Table` using `LitebridgeEntityScanner`.
+2.  **Scan for Type-Safe Mappings**: Find implementations of `TypeSafeDtoTableMapping` using `LitebridgeTypeSafeDtoMappingScanner`.
+
+These will be registered automatically during the initialisation of the `Litebridge` bean.
+
+### Manual Registration
+
+You can still register mappings manually in a `@Configuration` class or during application startup.
 
 ```java
 @Configuration

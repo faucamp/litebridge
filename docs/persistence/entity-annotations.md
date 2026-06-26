@@ -2,7 +2,9 @@
 
 ← [Home](../index.md) | [DTO-table mapping](dto-table-mapping.md)
 
-Litebridge provides an annotation-based approach for mapping DTOs to database tables. This "entity-style" registration allows you to define mappings directly on your classes using annotations, making the configuration more concise and co-located with the data structure.
+Litebridge provides an annotation-based approach for mapping DTOs to database tables. This "entity-style" registration 
+allows you to define mappings directly on your classes using annotations, making the configuration 
+more concise and co-located with the data structure.
 
 ## Dependencies
 
@@ -78,6 +80,10 @@ You can also register multiple entities at once, which is particularly useful if
 ```java
 litebridge.register(Person.class, Account.class);
 ```
+
+### Spring Integration
+
+In Spring applications, you can use the `LitebridgeEntityScanner` to automatically discover and register your annotated entities. See [Spring Manual Configuration](../spring/manual-configuration.md#entity-and-mapping-scanning) and [Spring Boot Starter](../spring/spring-boot-starter.md#entity-and-mapping-registration) for more details.
 
 ## Relationships
 
