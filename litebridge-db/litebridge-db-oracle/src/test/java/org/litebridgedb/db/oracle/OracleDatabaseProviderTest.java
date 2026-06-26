@@ -9,6 +9,8 @@ import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.SqlFunctionRegistryFactory;
 
+import org.litebridgedb.db.spi.impl.sql.SelectSqlGenerator;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -110,6 +112,18 @@ class OracleDatabaseProviderTest {
 
         // Then
         assertInstanceOf(OracleSqlFunctionRegistryFactory.class, result);
+    }
+
+    @Test
+    void createSelectSqlGenerator() {
+        // Given
+        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
+
+        // When
+        final SelectSqlGenerator result = provider.createSelectSqlGenerator();
+
+        // Then
+        assertInstanceOf(org.litebridgedb.db.oracle.sql.OracleSelectSqlGenerator.class, result);
     }
 
     @Test
