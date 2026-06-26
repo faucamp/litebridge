@@ -115,6 +115,23 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
 
                 sql.append(columnIdentifierGenerator.createColumnReference(column));
             }
+
+            if (!select.having().isEmpty()) {
+                sql.append(" HAVING ");
+
+                first = true;
+                for (Condition condition : select.having()) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        sql.append(" AND ");
+                    }
+
+                    final PreparedSql conditionSql = createCondition(condition, select, connectionProvider);
+                    sql.append(conditionSql.sql());
+                    bindValues.addAll(conditionSql.bindValues());
+                }
+            }
         }
 
         // Order by

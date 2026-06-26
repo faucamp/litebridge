@@ -159,7 +159,7 @@ class SqlSelectSpecTest {
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setColumn(column);
+        conditionSpec.setLhs(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
 
@@ -182,7 +182,7 @@ class SqlSelectSpecTest {
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setColumn(column);
+        conditionSpec.setLhs(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
 
@@ -205,7 +205,7 @@ class SqlSelectSpecTest {
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setColumn(column);
+        conditionSpec.setLhs(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
         sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
@@ -230,7 +230,7 @@ class SqlSelectSpecTest {
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setColumn(column);
+        conditionSpec.setLhs(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
         sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
@@ -254,7 +254,7 @@ class SqlSelectSpecTest {
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setColumn(column);
+        conditionSpec.setLhs(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
         sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
@@ -281,7 +281,7 @@ class SqlSelectSpecTest {
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setColumn(column);
+        conditionSpec.setLhs(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
         sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
@@ -337,7 +337,7 @@ class SqlSelectSpecTest {
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setColumn(column);
+        conditionSpec.setLhs(column);
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
         sqlSelectSpec.setWhereConditions(List.of(conditionSpec));

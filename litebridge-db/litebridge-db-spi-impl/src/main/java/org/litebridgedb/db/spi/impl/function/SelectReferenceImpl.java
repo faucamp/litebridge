@@ -9,7 +9,7 @@ public class SelectReferenceImpl extends SelectReference {
     /**
      * Constructor.
      *
-     * @param column The target selected column to reference.
+     * @param column The target selected lhs to reference.
      */
     protected SelectReferenceImpl(final Column column) {
         super(column);

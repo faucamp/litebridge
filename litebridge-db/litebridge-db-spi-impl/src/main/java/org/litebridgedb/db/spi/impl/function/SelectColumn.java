@@ -5,7 +5,7 @@ import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 
 /**
- * Expression to select a database column.
+ * Expression to select a database lhs.
  */
 public class SelectColumn extends AliasedColumnExpression {
 

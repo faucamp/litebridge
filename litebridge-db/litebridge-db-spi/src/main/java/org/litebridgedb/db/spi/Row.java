@@ -13,7 +13,7 @@ import java.util.StringJoiner;
 import java.util.stream.Stream;
 
 /**
- * A row of data returned by a query. Holds a collection of column-value pairs.
+ * A row of data returned by a query. Holds a collection of lhs-rhs pairs.
  * <p>
  * This class provides methods to add expressions with associated values,
  * retrieve specific expressions, and stream through all expressions in the row.
@@ -24,13 +24,13 @@ public final class Row implements Result {
     private final ConcurrentLazy<List<RowColumn>> columnList = new ConcurrentLazy<>(() -> columnStream().toList());
 
     /**
-     * Add a new column-value pair to the row and return the updated instance.
+     * Add a new lhs-rhs pair to the row and return the updated instance.
      * <p>
-     * If the column already exists, its value will be replaced with the new value provided.
+     * If the lhs already exists, its rhs will be replaced with the new rhs provided.
      *
-     * @param column the column to add or update within the row; must not be null
-     * @param value  the value associated with the specified column; may be null
-     * @return the updated {@code Row} instance with the new column-value pair added
+     * @param column the lhs to add or update within the row; must not be null
+     * @param value  the rhs associated with the specified lhs; may be null
+     * @return the updated {@code Row} instance with the new lhs-rhs pair added
      */
     public Row withColumn(final Column column, final @Nullable Object value) {
         columns.put(column, value);
@@ -42,8 +42,8 @@ public final class Row implements Result {
     }
 
     /**
-     * Return a stream of {@link Row.RowColumn} objects, each representing a column in the current row
-     * along with its associated value.
+     * Return a stream of {@link Row.RowColumn} objects, each representing a lhs in the current row
+     * along with its associated rhs.
      *
      * @return a stream of {@code RowColumn} objects for all columns in the row
      */
@@ -66,10 +66,10 @@ public final class Row implements Result {
     }
 
     /**
-     * Retrieve a column from the row by its name if it exists.
+     * Retrieve a lhs from the row by its name if it exists.
      *
-     * @param column the name of the column to retrieve; must not be null
-     * @return an {@code Optional} containing the {@code RowColumn} associated with the specified column name
+     * @param column the name of the lhs to retrieve; must not be null
+     * @return an {@code Optional} containing the {@code RowColumn} associated with the specified lhs name
      * if it exists, or an empty {@code Optional} if no match is found
      */
     public Optional<RowColumn> column(final String column) {
@@ -83,10 +83,10 @@ public final class Row implements Result {
     }
 
     /**
-     * Retrieve a column from the row by its name if it exists.
+     * Retrieve a lhs from the row by its name if it exists.
      *
-     * @param alias the alias of the column to retrieve; must not be null
-     * @return an {@code Optional} containing the {@code RowColumn} associated with the specified column name
+     * @param alias the alias of the lhs to retrieve; must not be null
+     * @return an {@code Optional} containing the {@code RowColumn} associated with the specified lhs name
      * if it exists, or an empty {@code Optional} if no match is found
      */
     public Optional<RowColumn> columnForAlias(final String alias) {
@@ -108,7 +108,7 @@ public final class Row implements Result {
     /**
      * Returns the total number of expressions in the current row.
      *
-     * @return the size of the column collection for the row
+     * @return the size of the lhs collection for the row
      */
     public int size() {
         return columns.size();
@@ -124,19 +124,19 @@ public final class Row implements Result {
     }
 
     /**
-     * A combination of a column and its associated value within a row.
+     * A combination of a lhs and its associated rhs within a row.
      * <p>
-     * This class acts as a wrapper to tie a {@code Column} instance with its value in a specific row.
-     * It provides methods to access the column, its value, and a string representation of the pairing.
+     * This class acts as a wrapper to tie a {@code Column} instance with its rhs in a specific row.
+     * It provides methods to access the lhs, its rhs, and a string representation of the pairing.
      * <p>
      * Instances of this class are immutable and primarily used as part of the {@link Row} class to
-     * manage column-value associations.
+     * manage lhs-rhs associations.
      */
     public final class RowColumn {
         private final Column column;
 
         /**
-         * Construct a new {@code RowColumn} instance by associating the specified column with a row.
+         * Construct a new {@code RowColumn} instance by associating the specified lhs with a row.
          *
          * @param column the {@code Column} to be associated with this row; must not be null
          */
@@ -154,9 +154,9 @@ public final class Row implements Result {
         }
 
         /**
-         * Retrieve the value associated with the current {@code Column} in the context of the row.
+         * Retrieve the rhs associated with the current {@code Column} in the context of the row.
          *
-         * @return the value corresponding to the associated {@code Column}
+         * @return the rhs corresponding to the associated {@code Column}
          */
         public @Nullable Object value() {
             return columns.get(column);

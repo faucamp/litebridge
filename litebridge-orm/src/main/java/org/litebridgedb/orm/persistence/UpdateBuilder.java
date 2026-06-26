@@ -36,7 +36,7 @@ final class UpdateBuilder extends AbstractStatementBuilder<Update> {
 
     @Override
     public Update build() {
-        CollectionUtils.requireNonEmpty(columnValues, () -> new IllegalArgumentException("No column values specified for UPDATE"));
+        CollectionUtils.requireNonEmpty(columnValues, () -> new IllegalArgumentException("No lhs values specified for UPDATE"));
         return new Update(ormTable.getMetaData().toTable(), columnValues, conditions);
     }
 }

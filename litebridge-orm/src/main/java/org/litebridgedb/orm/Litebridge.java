@@ -486,7 +486,7 @@ public final class Litebridge implements SelectApi {
      * Convert a given result row into a Data Transfer Object (DTO) of the specified type.
      *
      * @param <DTO>    The type of the Data Transfer Object to be created.
-     * @param row      The data row to map, containing column-value pairs. Must not be null.
+     * @param row      The data row to map, containing lhs-rhs pairs. Must not be null.
      * @param dtoClass The class type of the DTO to which the row is to be mapped. Must not be null.
      * @return An instance of the specified DTO type, populated with values from the given row.
      * @throws IllegalArgumentException if the row or dtoClass is null, or if mapping fails due to type mismatches or invalid configurations.

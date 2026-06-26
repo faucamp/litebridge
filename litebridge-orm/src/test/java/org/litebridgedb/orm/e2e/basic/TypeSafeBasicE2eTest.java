@@ -34,7 +34,7 @@ public class TypeSafeBasicE2eTest extends AbstractE2eTest {
     @DisplayName("Type safe: Select DTO and join fetch related DTOs")
     void nestedDtos_fetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
 
-        // Test mappings specify uppercase schema/table/column names, so skip Postgres
+        // Test mappings specify uppercase schema/table/lhs names, so skip Postgres
         assumeTrue(!dbEnv.getName().equals("PostgreSQL"));
 
         // Register DTO-table mappings
@@ -72,7 +72,7 @@ public class TypeSafeBasicE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("Type safe: Select DTO without related DTOs")
     void nestedDtos_dontfetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        // Test mappings specify uppercase schema/table/column names, so skip Postgres
+        // Test mappings specify uppercase schema/table/lhs names, so skip Postgres
         assumeTrue(!dbEnv.getName().equals("PostgreSQL"));
 
         // Register DTO-table mappings
@@ -104,7 +104,7 @@ public class TypeSafeBasicE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("Type safe: Nested DTOs mapped to separate tables, cascading save, no transactions (autocommit)")
     void nestedDtos_oneTablePerDto_cascadeSave_autoCommit(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        // Test mappings specify uppercase schema/table/column names, so skip Postgres
+        // Test mappings specify uppercase schema/table/lhs names, so skip Postgres
         assumeTrue(!dbEnv.getName().equals("PostgreSQL"));
 
         // Register DTO-table mappings
@@ -166,7 +166,7 @@ public class TypeSafeBasicE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("Type safe: Nested DTOs mapped to separate tables, cascading save in transaction")
     void nestedDtos_oneTablePerDto_cascadeSave_transaction(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        // Test mappings specify uppercase schema/table/column names, so skip Postgres
+        // Test mappings specify uppercase schema/table/lhs names, so skip Postgres
         assumeTrue(!dbEnv.getName().equals("PostgreSQL"));
 
         // Register DTO-table mappings
@@ -228,7 +228,7 @@ public class TypeSafeBasicE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("Type safe: Single DTO mapped to multiple tables")
     void singleDto_multipleTables(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        // Test mappings specify uppercase schema/table/column names, so skip Postgres
+        // Test mappings specify uppercase schema/table/lhs names, so skip Postgres
         assumeTrue(!dbEnv.getName().equals("PostgreSQL"));
 
         // Create our "original"/unmapped DTO (unmapped since Litebridge expects one table per DTO)
@@ -278,7 +278,7 @@ public class TypeSafeBasicE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("Type safe: Delete DTOs, no transactions (autocommit)")
     void delete_autoCommit(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        // Test mappings specify uppercase schema/table/column names, so skip Postgres
+        // Test mappings specify uppercase schema/table/lhs names, so skip Postgres
         assumeTrue(!dbEnv.getName().equals("PostgreSQL"));
 
         // Register DTO-table mappings
@@ -330,7 +330,7 @@ public class TypeSafeBasicE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("Update DTOs, no transactions (autocommit)")
     void update(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        // Test mappings specify uppercase schema/table/column names, so skip Postgres
+        // Test mappings specify uppercase schema/table/lhs names, so skip Postgres
         assumeTrue(!dbEnv.getName().equals("PostgreSQL"));
 
         // Given

@@ -12,7 +12,7 @@ public interface SubselectExpressionFactory {
      * Creates a sub-select expression.
      *
      * @param subselect Target sub-select.
-     * @return A new column expression.
+     * @return A new lhs expression.
      */
     SubselectExpression create(Select subselect);
 }

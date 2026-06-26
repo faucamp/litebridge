@@ -1,12 +1,12 @@
 package org.litebridgedb.db.spi.math;
 
 /**
- * Represents a mathematical operation to be performed on a column in a SQL context.
- * This class encapsulates an operator and a value that defines the operation.
+ * Represents a mathematical operation to be performed on a lhs in a SQL context.
+ * This class encapsulates an operator and a rhs that defines the operation.
  * <p>
  * The operation is defined using an {@link Operator}, which specifies the type of
  * mathematical operation (e.g., addition, subtraction, multiplication, etc.), and
- * a value that serves as the operand for the operation.
+ * a rhs that serves as the operand for the operation.
  * <p>
  * Instances of this class are immutable.
  *

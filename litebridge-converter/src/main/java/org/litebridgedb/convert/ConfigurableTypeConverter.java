@@ -1,8 +1,10 @@
 package org.litebridgedb.convert;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.convert.converter.Converter;
 import org.litebridgedb.convert.converter.ConverterFunction;
+import org.litebridgedb.convert.converter.SqlConverter;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 
 /**
@@ -15,11 +17,11 @@ public class ConfigurableTypeConverter implements TypeConverter {
     private final ConverterRegistry converterRegistry = new ConverterRegistry();
 
     /**
-     * Converts a value to a database-specific representation (or vice-versa) based on the {@link java.sql.Types} code.
+     * Converts a rhs to a database-specific representation (or vice-versa) based on the {@link java.sql.Types} code.
      *
-     * @param value      the value to convert, may be {@code null}
+     * @param value      the rhs to convert, may be {@code null}
      * @param dbDataType the {@link java.sql.Types} code for the database data type
-     * @return the converted value, or {@code null} if the input was {@code null}
+     * @return the converted rhs, or {@code null} if the input was {@code null}
      * @throws IllegalArgumentException if no converter is found for the specified SQL type
      */
     @Override
@@ -34,12 +36,12 @@ public class ConfigurableTypeConverter implements TypeConverter {
     }
 
     /**
-     * Converts a value to a specific Java type.
+     * Converts a rhs to a specific Java type.
      *
-     * @param value the value to convert, may be {@code null}
+     * @param value the rhs to convert, may be {@code null}
      * @param type  the target Java type
      * @param <T>   the target Java type
-     * @return the converted value, or {@code null} if the input was {@code null}
+     * @return the converted rhs, or {@code null} if the input was {@code null}
      * @throws IllegalArgumentException if no converter is found for the specified Java type
      */
     @Override
@@ -56,6 +58,18 @@ public class ConfigurableTypeConverter implements TypeConverter {
         }
 
         return converter.convert(value);
+    }
+
+    @Override
+    public int getDbDataType(final Class<?> fieldType) {
+        final Converter<?> converter = ObjectUtils.requireNonNull(converterRegistry.getConverter(fieldType),
+                () -> new IllegalArgumentException("No converter found for class: " + fieldType.getName()));
+
+        if (converter instanceof SqlConverter<?> sqlConverter) {
+            return sqlConverter.sqlTypes()[0];
+        } else {
+            throw new IllegalArgumentException("No SQL type converter found for class: " + fieldType.getName());
+        }
     }
 
     /**

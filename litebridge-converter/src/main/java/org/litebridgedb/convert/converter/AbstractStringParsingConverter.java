@@ -14,17 +14,17 @@ import org.litebridgedb.commons.StringUtils;
 public abstract class AbstractStringParsingConverter<T> implements Converter<T> {
 
     /**
-     * Converts the given value to the target type.
+     * Converts the given rhs to the target type.
      * <p>
      * The conversion process follows these steps:
      * <ol>
-     *     <li>If the value is {@code null}, returns {@code null}.</li>
-     *     <li>If the value is already an instance of the target type, returns it as-is.</li>
-     *     <li>Otherwise, converts the value to a string and, if not blank, calls {@link #convertString(String)}.</li>
+     *     <li>If the rhs is {@code null}, returns {@code null}.</li>
+     *     <li>If the rhs is already an instance of the target type, returns it as-is.</li>
+     *     <li>Otherwise, converts the rhs to a string and, if not blank, calls {@link #convertString(String)}.</li>
      * </ol>
      *
-     * @param value the value to convert, may be {@code null}
-     * @return the converted value, or {@code null}
+     * @param value the rhs to convert, may be {@code null}
+     * @return the converted rhs, or {@code null}
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -47,10 +47,10 @@ public abstract class AbstractStringParsingConverter<T> implements Converter<T> 
     }
 
     /**
-     * Parses a string value into the target type.
+     * Parses a string rhs into the target type.
      *
-     * @param value the string value to parse
-     * @return the parsed value
+     * @param value the string rhs to parse
+     * @return the parsed rhs
      */
     protected abstract T convertString(final String value);
 }

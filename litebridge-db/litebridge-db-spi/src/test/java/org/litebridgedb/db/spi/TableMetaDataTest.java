@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TableMetaDataTest {
 
     /**
-     * Test to verify the primaryKey method returns the correct list of primary key column metadata.
+     * Test to verify the primaryKey method returns the correct list of primary key lhs metadata.
      */
     @Test
     void primaryKey() {
@@ -59,7 +59,7 @@ class TableMetaDataTest {
     }
 
     /**
-     * Test to verify primaryKey throws an exception when primary key column metadata is missing.
+     * Test to verify primaryKey throws an exception when primary key lhs metadata is missing.
      */
     @Test
     void primaryKey_missingMetadata() {
@@ -75,7 +75,7 @@ class TableMetaDataTest {
                 new TableMetaData(table, primaryKeyNames, columns));
 
         // Then
-        assertTrue(result.getMessage().contains("All column metadata for PKs not found"));
+        assertTrue(result.getMessage().contains("All lhs metadata for PKs not found"));
     }
 
     /**

@@ -2,6 +2,8 @@ package org.litebridgedb.db.spi.impl.sql;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridgedb.db.spi.impl.function.SelectColumn;
 
 final class TestUtil {
 
@@ -10,6 +12,10 @@ final class TestUtil {
 
     public static Column createTestColumn() {
         return createTestColumn("TEST_COLUMN");
+    }
+
+    public static SelectColumn createSelectColumn(final ColumnIdentifierGenerator columnIdentifierGenerator) {
+        return new SelectColumn(createTestColumn("TEST_COLUMN"), columnIdentifierGenerator);
     }
 
     public static Column createTestColumn(final String name) {

@@ -1,11 +1,13 @@
 package org.litebridgedb.orm.api.sql;
 
 import org.junit.jupiter.api.Test;
+import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -45,8 +47,9 @@ class SqlJoinClauseTest {
         assertEquals(1, joinSpec.conditions().size());
 
         final ConditionSpec condition = joinSpec.conditions().getFirst();
-        assertEquals(joinTable, condition.getColumn().table());
-        assertEquals("joined_id", condition.getColumn().name());
+        final Column column = ((ColumnExpressionSpec) condition.getLhs()).column();
+        assertEquals(joinTable, column.table());
+        assertEquals("joined_id", column.name());
         assertNull(condition.getOperator());
         assertNull(condition.getValue());
     }
@@ -67,8 +70,9 @@ class SqlJoinClauseTest {
         assertEquals(1, joinSpec.conditions().size());
 
         final ConditionSpec condition = joinSpec.conditions().getFirst();
-        assertEquals(joinTable, condition.getColumn().table());
-        assertEquals("joined_id", condition.getColumn().name());
+        final Column column = ((ColumnExpressionSpec) condition.getLhs()).column();
+        assertEquals(joinTable, column.table());
+        assertEquals("joined_id", column.name());
         assertEquals(Operator.EQ, condition.getOperator());
         assertEquals("root_id", condition.getValue());
     }
@@ -89,8 +93,9 @@ class SqlJoinClauseTest {
         assertEquals(1, joinSpec.conditions().size());
 
         final ConditionSpec condition = joinSpec.conditions().getFirst();
-        assertEquals(joinTable, condition.getColumn().table());
-        assertEquals("optional_id", condition.getColumn().name());
+        final Column column = ((ColumnExpressionSpec) condition.getLhs()).column();
+        assertEquals(joinTable, column.table());
+        assertEquals("optional_id", column.name());
         assertEquals(Operator.IS_NULL, condition.getOperator());
         assertNull(condition.getValue());
     }
@@ -111,8 +116,9 @@ class SqlJoinClauseTest {
         assertEquals(1, joinSpec.conditions().size());
 
         final ConditionSpec condition = joinSpec.conditions().getFirst();
-        assertEquals(joinTable, condition.getColumn().table());
-        assertEquals("shared_id", condition.getColumn().name());
+        final Column column = ((ColumnExpressionSpec) condition.getLhs()).column();
+        assertEquals(joinTable, column.table());
+        assertEquals("shared_id", column.name());
         assertEquals(Operator.USING, condition.getOperator());
         assertNull(condition.getValue());
     }

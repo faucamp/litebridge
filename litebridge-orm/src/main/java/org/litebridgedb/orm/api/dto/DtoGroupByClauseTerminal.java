@@ -24,7 +24,9 @@ public class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal
 
     @Override
     public DtoHavingConditionClause<DTO> having(final ExpressionSpec expression) {
-        return null;
+        return new DtoHavingConditionClause<>(selectSpec.newHavingCondition(expression),
+                new DtoHavingConditionClauseTerminal<>((DtoSelector<DTO>) delegate),
+                delegate.litebridgeContext());
     }
 
     @Override

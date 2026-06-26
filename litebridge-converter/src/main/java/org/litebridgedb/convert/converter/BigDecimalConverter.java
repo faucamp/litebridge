@@ -15,11 +15,11 @@ public class BigDecimalConverter implements SqlConverter<BigDecimal> {
     private static final int[] SQL_TYPES = new int[]{Types.NUMERIC, Types.DECIMAL};
 
     /**
-     * Converts the given value to a {@link BigDecimal}.
+     * Converts the given rhs to a {@link BigDecimal}.
      * <p>
      * Supports various numeric types and string representation as fall-back.
      *
-     * @param value the value to convert, may be {@code null}
+     * @param value the rhs to convert, may be {@code null}
      * @return the converted {@link BigDecimal}, or {@code null}
      */
     @Override

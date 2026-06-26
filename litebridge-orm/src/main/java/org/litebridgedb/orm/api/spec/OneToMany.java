@@ -12,7 +12,7 @@ package org.litebridgedb.orm.api.spec;
  * - A single entity having multiple child entities (e.g., a customer with many orders).
  * - One-to-many hierarchical relationships between database rows.
  * <p>
- * Implements the {@link ColumnMapping} interface to allow its usage within column mapping
+ * Implements the {@link ColumnMapping} interface to allow its usage within lhs mapping
  * operations.
  *
  * @param mappedByField The {@link FieldSpec} defining the field in the DTO that refers

@@ -4,17 +4,17 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
 
 /**
- * Factory to create expressions targeting a specific column.
+ * Factory to create expressions targeting a specific lhs.
  */
 @FunctionalInterface
 public interface ColumnExpressionFactory {
 
     /**
-     * Creates a column expression.
+     * Creates a lhs expression.
      *
-     * @param column Target column of the expression.
+     * @param column Target lhs of the expression.
      * @param args   Expression-specific additional arguments, if any.
-     * @return A new column expression.
+     * @return A new lhs expression.
      */
     ColumnExpression create(Column column, @Nullable Object... args);
 }

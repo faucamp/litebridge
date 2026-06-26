@@ -61,7 +61,7 @@ public class ConditionClauseImpl<DTO,
     }
 
     /**
-     * Creates a condition terminal for less-than comparison with the specified value.
+     * Creates a condition terminal for less-than comparison with the specified rhs.
      *
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
@@ -123,7 +123,7 @@ public class ConditionClauseImpl<DTO,
     }
 
     /**
-     * Creates a condition terminal for the specified operator and value.
+     * Creates a condition terminal for the specified operator and rhs.
      *
      * @param operator The operator for the condition.
      * @param value    The operand for the condition.
@@ -139,7 +139,7 @@ public class ConditionClauseImpl<DTO,
                 case NEQ -> Operator.IS_NOT_NULL;
                 case IS_NULL, IS_NOT_NULL -> operator;
                 default ->
-                        throw new IllegalArgumentException("Operator %s does not support null value".formatted(operator));
+                        throw new IllegalArgumentException("Operator %s does not support null rhs".formatted(operator));
             };
         } else {
             translatedOperator = operator;

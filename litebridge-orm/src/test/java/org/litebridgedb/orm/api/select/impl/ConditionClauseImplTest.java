@@ -25,9 +25,9 @@ class ConditionClauseImplTest {
 
     @Test
     void eq() {
-        clause.eq("value");
+        clause.eq("rhs");
         assertEquals(Operator.EQ, conditionSpec.getOperator());
-        assertEquals("value", conditionSpec.getValue());
+        assertEquals("rhs", conditionSpec.getValue());
     }
 
     @Test
@@ -39,9 +39,9 @@ class ConditionClauseImplTest {
 
     @Test
     void neq() {
-        clause.neq("value");
+        clause.neq("rhs");
         assertEquals(Operator.NEQ, conditionSpec.getOperator());
-        assertEquals("value", conditionSpec.getValue());
+        assertEquals("rhs", conditionSpec.getValue());
     }
 
     @Test

@@ -36,11 +36,11 @@ public interface JoinClauseTerminal<DTO,
     /**
      * Starts a WHERE clause for the SQL query.
      * <p>
-     * Adds a filtering condition to the SQL query based on the specified column.
+     * Adds a filtering condition to the SQL query based on the specified lhs.
      * This method is part of a fluent API for building SQL queries and transitions
      * to the next stage where additional filtering conditions can be specified.
      *
-     * @param column the name of the column to apply the filtering condition on
+     * @param column the name of the lhs to apply the filtering condition on
      * @return an instance of {@code WCC} representing the next stage of the where condition clause
      */
     WCC where(final String column);

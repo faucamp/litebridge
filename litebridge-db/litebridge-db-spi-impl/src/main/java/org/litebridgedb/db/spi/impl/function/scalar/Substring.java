@@ -6,7 +6,7 @@ import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.FunctionExpression;
 
 /**
- * {@code SUBSTRING(column, start, length)} scalar function.
+ * {@code SUBSTRING(lhs, start, length)} scalar function.
  */
 public class Substring extends FunctionExpression {
 
@@ -22,7 +22,7 @@ public class Substring extends FunctionExpression {
      * @param target                    Target expression to extract characters from.
      * @param start                     The starting position. The first character of a database string is always 1.
      * @param length                    The number of characters to return. If {@code null}, the function extracts everything from the start position to the end of the text.
-     * @param columnIdentifierGenerator Database provider-specific column identifier generator.
+     * @param columnIdentifierGenerator Database provider-specific lhs identifier generator.
      */
     public Substring(final ColumnExpression target, final int start, final @Nullable Integer length, final ColumnIdentifierGenerator columnIdentifierGenerator) {
         super(target, columnIdentifierGenerator);

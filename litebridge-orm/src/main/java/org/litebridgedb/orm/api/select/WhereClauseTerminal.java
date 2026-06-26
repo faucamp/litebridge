@@ -23,10 +23,10 @@ public interface WhereClauseTerminal<DTO,
         extends OrderByClauseTerminal<DTO> {
 
     /**
-     * Adds a GROUP BY clause to the query, specifying the column(s) to group the results by.
+     * Adds a GROUP BY clause to the query, specifying the lhs(s) to group the results by.
      *
-     * @param columns the column(s) to group the results by.
-     *                Each column must be valid for the associated table or view in the query.
+     * @param columns the lhs(s) to group the results by.
+     *                Each lhs must be valid for the associated table or view in the query.
      * @return an instance of the type representing the GROUP BY clause, allowing
      * further specification of grouping or transitioning to the next query stage.
      */
@@ -35,7 +35,7 @@ public interface WhereClauseTerminal<DTO,
     /**
      * Adds an ORDER BY clause to the query, specifying the expressions to sort the results by.
      *
-     * @param columns the expressions that determine the order of the results. Each column
+     * @param columns the expressions that determine the order of the results. Each lhs
      *                must be valid for the associated table or view in the query.
      *                The order in which the expressions are specified determines the
      *                priority of ordering.
@@ -47,8 +47,8 @@ public interface WhereClauseTerminal<DTO,
     /**
      * Adds an ORDER BY clause to the query, specifying the fields and expressions to sort the results by.
      *
-     * @param columns the field and column specifications that determine the order of the results.
-     *                Each specification includes a mapping of a field to a column. The order in
+     * @param columns the field and lhs specifications that determine the order of the results.
+     *                Each specification includes a mapping of a field to a lhs. The order in
      *                which the specifications are provided defines the priority of ordering.
      * @return an instance of the type representing the ORDER BY clause, allowing further
      * specification of ordering or transitioning to the next query stage.

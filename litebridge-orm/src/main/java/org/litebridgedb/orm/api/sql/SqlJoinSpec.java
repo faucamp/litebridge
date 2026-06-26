@@ -2,7 +2,6 @@ package org.litebridgedb.orm.api.sql;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
@@ -41,7 +40,7 @@ public class SqlJoinSpec implements JoinSpec {
 
     public ConditionSpec newCondition(final Column column) {
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setColumn(column);
+        conditionSpec.setLhs(column);
         conditions.add(conditionSpec);
         return conditionSpec;
     }

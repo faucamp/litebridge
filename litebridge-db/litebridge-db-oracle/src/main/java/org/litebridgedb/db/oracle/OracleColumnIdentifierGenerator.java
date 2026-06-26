@@ -3,6 +3,7 @@ package org.litebridgedb.db.oracle;
 import org.litebridgedb.commons.StringUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
+import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
@@ -19,14 +20,16 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
 
         boolean applyTableQualifier = true;
 
-        // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the column
+        // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the lhs
         for (Join join : select.joins()) {
             for (Condition condition : join.conditions()) {
                 if (condition.operator() == Operator.USING
+                        // JOIN USING <column>
+                        && condition.lhs() instanceof ColumnExpression columnExpression
                         // Same column
-                        && (condition.column().equalsIgnoreAlias(column)
+                        && (columnExpression.column().equalsIgnoreAlias(column)
                         // Same column but from other side of join
-                        || (condition.column().equalsColumnOnlyIgnoreAlias(column)
+                        || (columnExpression.column().equalsColumnOnlyIgnoreAlias(column)
                         && (select.table().equalsIgnoreAlias(column.table()) || join.table().equalsIgnoreAlias(column.table()))))) {
                     // Don't include table qualifiers
                     applyTableQualifier = false;

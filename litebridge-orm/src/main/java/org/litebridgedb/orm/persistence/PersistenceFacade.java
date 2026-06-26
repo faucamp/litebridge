@@ -7,6 +7,7 @@ import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.MappedFieldTarget;
+import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.tx.TransactionManager;
@@ -277,7 +278,7 @@ public class PersistenceFacade {
 
                                 statementChain.addDependency(value, dependencyPipe);
                             } else {
-                                // PK already set - set the PK value on the current DTO and ensure the embedded DTO is persisted
+                                // PK already set - set the PK rhs on the current DTO and ensure the embedded DTO is persisted
                                 nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
                                     final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                                     final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
@@ -307,7 +308,7 @@ public class PersistenceFacade {
 
                                 statementChain.addDependency(value, dependencyPipe);
                             } else {
-                                // PK already set - set the PK value on the current DTO and ensure the embedded DTO is persisted
+                                // PK already set - set the PK rhs on the current DTO and ensure the embedded DTO is persisted
                                 nestedDtoTable.getMetaData().primaryKey().stream().forEach(pkColumn -> {
                                     final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                                     final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
@@ -502,7 +503,7 @@ public class PersistenceFacade {
                                 newCollection.add(dto);
                                 transactionManager.addRollbackCallback(() -> collectionField.set(trackedDto.dto(), null));
                             } else if (!collection.contains(dto)) {
-                                // Add the updated value to the collection
+                                // Add the updated rhs to the collection
                                 LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", collectionField.name(), dto);
                                 collection.add(dto);
                                 transactionManager.addRollbackCallback(() -> collection.remove(dto));
@@ -530,7 +531,7 @@ public class PersistenceFacade {
     /**
      * Executes an update statement provided by the given {@code AbstractStatementBuilder}.
      * This method first resolves and executes all dependent piped statements, propagating
-     * their results through the corresponding value pipes. It then builds and executes
+     * their results through the corresponding rhs pipes. It then builds and executes
      * the main update statement, which could be either an {@code Insert} or {@code Update},
      * using the configured {@code DatabaseProvider}.
      *
@@ -660,12 +661,13 @@ public class PersistenceFacade {
             final Column pkColumn = columnMetaData.toColumn();
             final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
             final Object pkValue = field.get(dto);
+            final ColumnExpression pkColumnExpression = databaseProvider.getSqlFunctionRegistry().select().column().create(pkColumn);
             final Condition condition;
 
             if (pkValue != null) {
-                condition = new Condition(pkColumn, Operator.EQ, this.databaseProvider.getSqlFunctionRegistry().select().literal().create(pkValue));
+                condition = new Condition(pkColumnExpression, Operator.EQ, this.databaseProvider.getSqlFunctionRegistry().select().literal().create(pkValue));
             } else {
-                condition = new Condition(pkColumn, Operator.IS_NULL);
+                condition = new Condition(pkColumnExpression, Operator.IS_NULL);
             }
 
             if (statementBuilder instanceof UpdateBuilder updateBuilder) {

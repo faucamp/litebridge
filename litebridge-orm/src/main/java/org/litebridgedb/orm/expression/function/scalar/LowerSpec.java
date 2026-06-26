@@ -4,9 +4,9 @@ import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.StringTONestableExpressionSpec;
 
 /**
- * {@code LOWER()}: Returns the lowercase value of a column.
+ * {@code LOWER()}: Returns the lowercase rhs of a lhs.
  *
- * @param target The target column/nested expression.
+ * @param target The target lhs/nested expression.
  */
 public record LowerSpec(ColumnExpressionSpec target) implements StringTONestableExpressionSpec {
 }

@@ -87,7 +87,7 @@ public final class SelectExpressionMapper {
 
     private ColumnExpression toSelectColumn(final SelectFieldSpec selectFieldSpec) {
         return sqlFunctionRegistry.select().column().create(ObjectUtils.requireNonNull(selectFieldSpec.column(),
-                () -> new IllegalStateException("SelectField.column not set")));
+                () -> new IllegalStateException("SelectField.lhs not set")));
     }
 
     private ColumnExpression toSelectColumn(final SelectColumnSpec selectColumnSpec) {

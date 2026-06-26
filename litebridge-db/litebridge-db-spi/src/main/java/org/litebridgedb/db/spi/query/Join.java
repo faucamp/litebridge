@@ -14,7 +14,7 @@ import java.util.List;
  * The target table is represented by the {@code Table} object, which may
  * include metadata such as catalog, schema, and name. The conditions are
  * represented as a list of {@code Condition} objects, each specifying a
- * column, operator, and optional value.
+ * lhs, operator, and optional rhs.
  * <p>
  * This record is used in query-building to specify join operations
  * within SQL select statements.

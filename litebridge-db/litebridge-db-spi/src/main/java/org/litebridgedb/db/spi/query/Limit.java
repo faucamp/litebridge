@@ -11,8 +11,8 @@ import java.util.Optional;
  * restrictions on the result set size, which is useful for implementing
  * pagination or controlling resource usage during query execution.
  *
- * @param limit  An optional value specifying the maximum number of rows to return.
- * @param offset An optional value specifying the starting position for the result set.
+ * @param limit  An optional rhs specifying the maximum number of rows to return.
+ * @param offset An optional rhs specifying the starting position for the result set.
  * @see Select
  */
 public record Limit(Optional<Integer> limit, Optional<Integer> offset) {

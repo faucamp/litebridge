@@ -6,7 +6,7 @@ package org.litebridgedb.db.spi;
  * This interface is a marker for any structure that defines metadata or mappings
  * associated with a database field or relationship within an ORM framework.
  * Implementations of this interface may represent various types of mappings,
- * such as one-to-many, many-to-many, or column-to-table relationships.
+ * such as one-to-many, many-to-many, or lhs-to-table relationships.
  * <p>
  * Common use cases include defining the structure or mappings for:
  * - One-to-many relationships between entities.

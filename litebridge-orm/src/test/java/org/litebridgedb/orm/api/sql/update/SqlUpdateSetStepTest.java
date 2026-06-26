@@ -23,11 +23,11 @@ class SqlUpdateSetStepTest {
         SqlUpdateSetStep step = new SqlUpdateSetStep(column, mockUpdater);
 
         // When
-        SqlUpdateStep result = step.to("value");
+        SqlUpdateStep result = step.to("rhs");
 
         // Then
         assertEquals(mockUpdater, result);
-        verify(mockSpec).addColumnValue(argThat(cv -> cv.column().equals(column) && cv.value().equals("value")));
+        verify(mockSpec).addColumnValue(argThat(cv -> cv.column().equals(column) && cv.value().equals("rhs")));
     }
 
     @Test

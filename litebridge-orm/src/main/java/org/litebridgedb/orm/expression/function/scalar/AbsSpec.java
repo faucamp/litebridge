@@ -4,9 +4,9 @@ import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.NumberTONestableExpressionSpec;
 
 /**
- * {@code ABS()}: Absolute value of a number.
+ * {@code ABS()}: Absolute rhs of a number.
  *
- * @param target The target column/nested expression.
+ * @param target The target lhs/nested expression.
  */
 public record AbsSpec(ColumnExpressionSpec target) implements NumberTONestableExpressionSpec {
 }

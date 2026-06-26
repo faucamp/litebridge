@@ -36,7 +36,7 @@ public class SqlFunctionRegistryFactory {
     /**
      * Constructs a new {@code SqlFunctionRegistryFactory}.
      *
-     * @param columnIdentifierGenerator The database provider's column identifier generator
+     * @param columnIdentifierGenerator The database provider's lhs identifier generator
      * @param selectSqlGenerator        The database provider's select SQL generator
      */
     public SqlFunctionRegistryFactory(final ColumnIdentifierGenerator columnIdentifierGenerator,
@@ -76,11 +76,11 @@ public class SqlFunctionRegistryFactory {
     }
 
     /**
-     * Creates an expression to select a specific column.
+     * Creates an expression to select a specific lhs.
      *
-     * @param column Target column
+     * @param column Target lhs
      * @param args   Not used; empty array
-     * @return Expression to select a specific column
+     * @return Expression to select a specific lhs
      */
     protected SelectColumn createSelectColumn(final Column column, final Object... args) {
         return new SelectColumn(column, columnIdentifierGenerator);

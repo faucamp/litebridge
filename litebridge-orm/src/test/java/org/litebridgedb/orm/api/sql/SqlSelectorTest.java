@@ -5,9 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.platform.commons.support.HierarchyTraversalMode;
 import org.junit.platform.commons.support.ReflectionSupport;
+import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
@@ -17,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.litebridgedb.orm.expression.Fn.c;
@@ -68,8 +71,10 @@ class SqlSelectorTest {
 
         assertNotNull(selectSpec.getWhereConditions());
         assertEquals(1, selectSpec.getWhereConditions().size());
-        assertEquals("COL1", selectSpec.getWhereConditions().get(0).getColumn().name());
-        assertEquals(selectSpec.getTable(), selectSpec.getWhereConditions().get(0).getColumn().table());
+        assertInstanceOf(ColumnExpressionSpec.class, selectSpec.getWhereConditions().get(0).getLhs());
+        final Column column = ((ColumnExpressionSpec) selectSpec.getWhereConditions().get(0).getLhs()).column();
+        assertEquals("COL1", column.name());
+        assertEquals(selectSpec.getTable(), column.table());
         assertEquals(Operator.EQ, selectSpec.getWhereConditions().get(0).getOperator());
         assertEquals(123, selectSpec.getWhereConditions().get(0).getValue());
     }
@@ -102,8 +107,9 @@ class SqlSelectorTest {
 
         assertNotNull(selectSpec.getWhereConditions());
         assertEquals(1, selectSpec.getWhereConditions().size());
-        assertEquals("col1Alias", selectSpec.getWhereConditions().get(0).getColumn().name());
-        assertEquals(selectSpec.getTable(), selectSpec.getWhereConditions().get(0).getColumn().table());
+        final Column column = ((ColumnExpressionSpec) selectSpec.getWhereConditions().get(0).getLhs()).column();
+        assertEquals("col1Alias", column.name());
+        assertEquals(selectSpec.getTable(), column.table());
         assertEquals(Operator.EQ, selectSpec.getWhereConditions().get(0).getOperator());
         assertEquals(123, selectSpec.getWhereConditions().get(0).getValue());
     }

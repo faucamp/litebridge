@@ -3,15 +3,15 @@ package org.litebridgedb.orm.expression;
 /**
  * Represents an entity that can be resolved into an {@link ExpressionSpec}.
  * <p>
- * The resolution can be based on a database table or a specific column.
+ * The resolution can be based on a database table or a specific lhs.
  * Implementations may provide concrete logic for resolution depending on the type.
  */
 public interface Resolvable {
 
     /**
-     * Returns the target column name for this expression.
+     * Returns the target lhs name for this expression.
      *
-     * @return the target column name.
+     * @return the target lhs name.
      */
     String column();
 

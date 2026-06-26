@@ -20,14 +20,14 @@ import org.jspecify.annotations.Nullable;
 public interface TypeConverter {
 
     /**
-     * Convert the given value into a different object type based on the specified database data type.
+     * Convert the given rhs into a different object type based on the specified database data type.
      * <p>
      * This method is used for mapping application-level objects to database-specific representations
      * or vice versa.
      *
      * @param value      the input object to be converted, which can be {@code null}
      * @param dbDataType the database-specific data type as an integer code
-     * @return the converted object, or {@code null} if the input value is {@code null}
+     * @return the converted object, or {@code null} if the input rhs is {@code null}
      */
     @Nullable
     Object convert(@Nullable Object value, int dbDataType);
@@ -36,7 +36,7 @@ public interface TypeConverter {
      * Convert the given input object to an instance of the specified type.
      * <p>
      * The conversion process depends on the provided target class and may return
-     * a {@code null} value if the input is {@code null} or conversion is not possible.
+     * a {@code null} rhs if the input is {@code null} or conversion is not possible.
      *
      * @param value     the input object to be converted, which can be {@code null}
      * @param fieldType the target class representing the desired type of the conversion result
@@ -45,4 +45,6 @@ public interface TypeConverter {
      */
     @Nullable
     <T> T convert(@Nullable Object value, Class<T> fieldType);
+
+    int getDbDataType(Class<?> fieldType);
 }

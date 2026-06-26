@@ -36,17 +36,17 @@ public enum Isolation {
     SERIALIZABLE(Connection.TRANSACTION_SERIALIZABLE);
 
     /**
-     * Represents the numeric value corresponding to a specific transaction isolation level.
-     * Each isolation level is mapped to an integer value that aligns with the constants
+     * Represents the numeric rhs corresponding to a specific transaction isolation level.
+     * Each isolation level is mapped to an integer rhs that aligns with the constants
      * defined in {@link Connection}.
      */
     private final int level;
 
     /**
-     * Constructs an isolation level instance with the specified numeric value.
+     * Constructs an isolation level instance with the specified numeric rhs.
      *
-     * @param level the integer value representing a specific transaction isolation level.
-     *              This value corresponds to isolation levels defined in {@link Connection}.
+     * @param level the integer rhs representing a specific transaction isolation level.
+     *              This rhs corresponds to isolation levels defined in {@link Connection}.
      */
     Isolation(int level) {
         this.level = level;

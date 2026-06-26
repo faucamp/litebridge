@@ -14,6 +14,7 @@ import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.orm.api.select.impl.LitebridgeContext;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.intent.ExpressionSpecArray;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +31,7 @@ import java.util.stream.Stream;
 /**
  * Base specification for constructing a SQL SELECT statement.
  * <p>
- * This class encapsulates table, column, join, condition, order by,
+ * This class encapsulates table, lhs, join, condition, order by,
  * and limit specifications for building a query.
  * <p>
  * Its subclasses {@link org.litebridgedb.orm.api.dto.DtoSelectSpec} and {@link org.litebridgedb.orm.api.sql.SqlSelectSpec}
@@ -46,6 +47,7 @@ public abstract class SelectSpec {
     protected @Nullable List<JoinSpec> joins;
     protected @Nullable List<ConditionSpec> whereConditions;
     protected @Nullable GroupBySpec groupBy;
+    protected @Nullable List<ConditionSpec> havingConditions;
     protected @Nullable List<OrderBySpec> orderBys;
     protected @Nullable LimitSpec limit;
     protected @Nullable Map<Class<?>, String> dtoAliases;
@@ -102,8 +104,19 @@ public abstract class SelectSpec {
         }
 
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setColumn(column);
+        conditionSpec.setLhs(new SelectColumnSpec(column));
         whereConditions.add(conditionSpec);
+        return conditionSpec;
+    }
+
+    public ConditionSpec newHavingCondition(final ExpressionSpec expressionSpec) {
+        if (this.havingConditions == null) {
+            havingConditions = new ArrayList<>();
+        }
+
+        final ConditionSpec conditionSpec = new ConditionSpec();
+        conditionSpec.setLhs(expressionSpec);
+        havingConditions.add(conditionSpec);
         return conditionSpec;
     }
 
@@ -124,7 +137,7 @@ public abstract class SelectSpec {
     }
 
     public OrderBySpec newOrderBy(final String... columns) {
-        Objects.requireNonNull(columns, "No column(s) specified for ORDER BY");
+        Objects.requireNonNull(columns, "No lhs(s) specified for ORDER BY");
 
         if (this.orderBys == null) {
             orderBys = new ArrayList<>();
@@ -192,6 +205,9 @@ public abstract class SelectSpec {
                                 // Column not specified in select list
                                 .orElseGet(() -> new Column(table, columnName)))
                         .toList())) : Optional.empty(),
+                havingConditions != null ? havingConditions.stream()
+                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper))
+                        .toList() : Collections.emptyList(),
                 orderBys != null ? orderBys.stream()
                         // Resolves order-by expressions from select list or synthesizes new ones
                         .flatMap(orderBySpec -> Arrays.stream(orderBySpec.columns())
@@ -206,7 +222,7 @@ public abstract class SelectSpec {
                         .toList() : Collections.emptyList(),
                 limit != null ? limit.toLimit() : Optional.empty());
 
-        // Validate that the column exists in the select statement if a GROUP BY is present
+        // Validate that the lhs exists in the select statement if a GROUP BY is present
         select.groupBy().ifPresent(groupBy -> {
             final Set<Column> selectedColumns = selectExpressions.stream()
                     .map(expression -> expression instanceof ConvertExpression convertExpression ? convertExpression.target() : expression)
@@ -216,7 +232,7 @@ public abstract class SelectSpec {
 
             for (Column column : groupBy.columns()) {
                 if (selectedColumns.stream().noneMatch(column::equalsIgnoreAlias)) {
-                    throw new IllegalArgumentException("Invalid grouped query: ORDER BY column %s must be grouped or aggregated".formatted(column.name()));
+                    throw new IllegalArgumentException("Invalid grouped query: ORDER BY lhs %s must be grouped or aggregated".formatted(column.name()));
                 }
             }
         });

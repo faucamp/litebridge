@@ -21,7 +21,7 @@ public class SqlTimestampConverter implements SqlConverter<Timestamp> {
     private static final int[] SQL_TYPES = new int[]{Types.TIMESTAMP};
 
     /**
-     * Converts the given value to a {@link java.sql.Timestamp}.
+     * Converts the given rhs to a {@link java.sql.Timestamp}.
      * <p>
      * Supports various date/time types:
      * <ul>
@@ -33,9 +33,9 @@ public class SqlTimestampConverter implements SqlConverter<Timestamp> {
      *     <li>{@link java.lang.String} (parsed as date/time)</li>
      * </ul>
      *
-     * @param value the value to convert, may be {@code null}
+     * @param value the rhs to convert, may be {@code null}
      * @return the converted {@link java.sql.Timestamp}, or {@code null}
-     * @throws IllegalArgumentException if the value type is not supported
+     * @throws IllegalArgumentException if the rhs type is not supported
      */
     @Override
     public @Nullable Timestamp convert(final @Nullable Object value) {

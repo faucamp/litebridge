@@ -54,7 +54,7 @@ public class MultiDbTestExtension implements TestTemplateInvocationContextProvid
                     tests[i] = invocationContext(new SQLiteDbEnvironment());
                     break;
                 default:
-                    throw new IllegalArgumentException("Invalid lb.e2e.env value: " + env);
+                    throw new IllegalArgumentException("Invalid lb.e2e.env rhs: " + env);
             }
         }
 

@@ -5,7 +5,7 @@ import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.FunctionExpression;
 
 /**
- * {@code ABS(column)} scalar function.
+ * {@code ABS(lhs)} scalar function.
  */
 public class Abs extends FunctionExpression {
 

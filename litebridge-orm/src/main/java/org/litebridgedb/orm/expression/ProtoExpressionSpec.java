@@ -8,9 +8,9 @@ import org.jspecify.annotations.Nullable;
 public sealed interface ProtoExpressionSpec extends ExpressionSpec, Resolvable permits ProtoColumnExpressionSpec, ProtoNestableExpressionSpec {
 
     /**
-     * Gets the column alias to use, or {@code null} if not specified.
+     * Gets the lhs alias to use, or {@code null} if not specified.
      *
-     * @return the column alias to use, or {@code null} if not specified.
+     * @return the lhs alias to use, or {@code null} if not specified.
      */
     @Nullable String alias();
 

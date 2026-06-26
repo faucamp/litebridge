@@ -95,7 +95,7 @@ public class EntityDtoMapper<DTO> {
                                         () -> new IllegalStateException("Intermediate entity not constructed for field '%s'".formatted(intermediateFieldAccessor.name())));
 
                                 if (constructedIntermediateEntity == null) {
-                                    // Intermediate entity not constructed yet, so add the intermediate one as the current value base
+                                    // Intermediate entity not constructed yet, so add the intermediate one as the current rhs base
                                     constructedEntities.put(intermediateFieldAccessor.type(), intermediateEntity);
                                 } else {
                                     // Merge the intermediate entity with the constructed entity

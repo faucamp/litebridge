@@ -20,7 +20,7 @@ import java.lang.invoke.MethodHandles;
  *
  * @param lookup    The {@link MethodHandles.Lookup} instance for performing reflective operations on the DTO class.
  * @param dtoClass  The DTO class that represents the mapping target.
- * @param tableSpec The {@link TableSpec} defining the corresponding database table and its field-column mappings.
+ * @param tableSpec The {@link TableSpec} defining the corresponding database table and its field-lhs mappings.
  */
 public record TableMapping(MethodHandles.Lookup lookup, Class<?> dtoClass, TableSpec tableSpec) {
 

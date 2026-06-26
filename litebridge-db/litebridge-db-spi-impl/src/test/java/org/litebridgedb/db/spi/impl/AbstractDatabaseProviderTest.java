@@ -8,6 +8,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.query.Condition;
@@ -346,9 +347,10 @@ class AbstractDatabaseProviderTest {
         final ColumnMetaData column = table.column("TEST_COLUMN");
         final ColumnValue columnValue1 = new ColumnValue(column.toColumn(), "testValue");
         final ColumnValue columnValue2 = new ColumnValue(column.toColumn(), "testValue");
-        final Condition condition1 = new Condition(column.toColumn(), Operator.EQ, "conditionValue");
-        final Condition condition2 = new Condition(column.toColumn(), Operator.IS_NOT_NULL);
-        final Condition condition3 = new Condition(column.toColumn(), Operator.IS_NULL);
+        final ColumnExpression columnExpression = new SelectColumn(column.toColumn(), mock(ColumnIdentifierGenerator.class));
+        final Condition condition1 = new Condition(columnExpression, Operator.EQ, "conditionValue");
+        final Condition condition2 = new Condition(columnExpression, Operator.IS_NOT_NULL);
+        final Condition condition3 = new Condition(columnExpression, Operator.IS_NULL);
 
         final Update update = new Update(table.toTable(), List.of(columnValue1, columnValue2), List.of(condition1, condition2, condition3));
 
@@ -391,17 +393,20 @@ class AbstractDatabaseProviderTest {
     @Test
     void select() throws Exception {
         // Given
+        final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), "t1");
         final Column column = tableMetaData.column("TEST_COLUMN").toColumn();
+        final ColumnExpression selectColumn = new SelectColumn(column, columnIdentifierGenerator);
 
         final Select select = new Select(
                 table,
-                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
-                List.of(new Join(table, List.of(new Condition(column, Operator.USING, null),
-                        new Condition(column, Operator.EQ, "TEST_VALUE")))),
-                List.of(new Condition(column, Operator.EQ, "TEST_VALUE")),
+                List.of(selectColumn),
+                List.of(new Join(table, List.of(new Condition(selectColumn, Operator.USING, null),
+                        new Condition(selectColumn, Operator.EQ, "TEST_VALUE")))),
+                List.of(new Condition(selectColumn, Operator.EQ, "TEST_VALUE")),
                 Optional.empty(),
+                Collections.emptyList(),
                 List.of(new OrderBy(column, true)),
                 Optional.of(new Limit(Optional.of(10), Optional.of(20))));
 
@@ -444,6 +449,7 @@ class AbstractDatabaseProviderTest {
                 Collections.emptyList(),
                 Optional.empty(),
                 Collections.emptyList(),
+                Collections.emptyList(),
                 Optional.empty());
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
@@ -468,21 +474,24 @@ class AbstractDatabaseProviderTest {
     @Test
     void prepareSql_select() throws Exception {
         // Given
+        final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), "t1");
         final Column column1 = tableMetaData.column("TEST_PK").toColumn().as("col1");
         column1.table().setAlias("t1");
+        final ColumnExpression selectColumn1 = new SelectColumn(column1, columnIdentifierGenerator);
         final Column column2 = tableMetaData.column("TEST_COLUMN").toColumn().as("col2");
         column2.table().setAlias("t1");
-        final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
+        final ColumnExpression selectColumn2 = new SelectColumn(column2, columnIdentifierGenerator);
 
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column1, columnIdentifierGenerator), new SelectColumn(column2, columnIdentifierGenerator)),
-                List.of(new Join(table, List.of(new Condition(column2, Operator.EQ, "TEST_VALUE")))),
-                List.of(new Condition(column2, Operator.EQ, "TEST_VALUE"),
-                        new Condition(column2, Operator.NEQ, "OTHER_VALUE")),
+                List.of(new Join(table, List.of(new Condition(selectColumn2, Operator.EQ, "TEST_VALUE")))),
+                List.of(new Condition(selectColumn2, Operator.EQ, "TEST_VALUE"),
+                        new Condition(selectColumn2, Operator.NEQ, "OTHER_VALUE")),
                 Optional.empty(),
+                Collections.emptyList(),
                 List.of(new OrderBy(column1, true)),
                 Optional.of(new Limit(Optional.of(10), Optional.of(20))));
 
@@ -506,6 +515,7 @@ class AbstractDatabaseProviderTest {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
 
@@ -615,7 +625,7 @@ class AbstractDatabaseProviderTest {
         mockTransactionManager();
         final PreparedSql preparedSql = new PreparedSql(
                 "INSERT INTO TEST_TABLE(TEST_COLUMN) VALUES (?)",
-                List.of(new BindValue("value", Types.VARCHAR)));
+                List.of(new BindValue("rhs", Types.VARCHAR)));
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(connection.prepareStatement(eq(preparedSql.sql()), eq(new String[]{"TEST_PK"}))).thenReturn(preparedStatement);
@@ -627,7 +637,7 @@ class AbstractDatabaseProviderTest {
 
         // Then
         assertSame(preparedStatement, result);
-        verify(result).setString(1, "value");
+        verify(result).setString(1, "rhs");
     }
 
     @Test
@@ -748,8 +758,9 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final ColumnMetaData column = tableMetaData.column("TEST_COLUMN");
-        final Condition condition1 = new Condition(column.toColumn(), Operator.EQ, "conditionValue");
-        final Condition condition2 = new Condition(column.toColumn(), Operator.IS_NULL);
+        final ColumnExpression columnExpression = new SelectColumn(column.toColumn(), databaseProvider.columnIdentifierGenerator.orThrow());
+        final Condition condition1 = new Condition(columnExpression, Operator.EQ, "conditionValue");
+        final Condition condition2 = new Condition(columnExpression, Operator.IS_NULL);
 
         final org.litebridgedb.db.spi.update.Delete delete = new org.litebridgedb.db.spi.update.Delete(tableMetaData.toTable(), List.of(condition1, condition2));
 
@@ -824,6 +835,7 @@ class AbstractDatabaseProviderTest {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty(),
+                Collections.emptyList(),
                 List.of(new OrderBy(column, false)),
                 Optional.empty());
 
@@ -848,6 +860,7 @@ class AbstractDatabaseProviderTest {
                 Collections.emptyList(),
                 Optional.empty(),
                 Collections.emptyList(),
+                Collections.emptyList(),
                 Optional.of(new Limit(Optional.of(10), Optional.empty())));
 
         // When
@@ -870,6 +883,7 @@ class AbstractDatabaseProviderTest {
                 Collections.emptyList(),
                 Optional.empty(),
                 Collections.emptyList(),
+                Collections.emptyList(),
                 Optional.of(new Limit(Optional.empty(), Optional.of(20))));
 
         // When
@@ -885,7 +899,7 @@ class AbstractDatabaseProviderTest {
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final PreparedSql preparedSql = new PreparedSql(
                 "INSERT INTO TEST_TABLE(TEST_COLUMN) VALUES (?)",
-                List.of(new BindValue("value", Types.VARCHAR)));
+                List.of(new BindValue("rhs", Types.VARCHAR)));
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(preparedStatement.executeUpdate()).thenReturn(1);
@@ -932,7 +946,7 @@ class AbstractDatabaseProviderTest {
     void extractGeneratedKeys_multiplePrimaryKeys() throws Exception {
         // Given
         mockTransactionManager();
-        // Add a second primary key column
+        // Add a second primary key lhs
         final TableMetaData tableMetaData = createTableMetaMultiPkData();
         tableMetaData.column("TEST_PK").setAutoIncrement(true);
         tableMetaData.column("TEST_PK2").setAutoIncrement(true);
@@ -968,6 +982,7 @@ class AbstractDatabaseProviderTest {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
 
@@ -1118,7 +1133,7 @@ class AbstractDatabaseProviderTest {
         tableMetaData.column("TEST_PK").setAutoIncrement(true);
         final PreparedSql preparedSql = new PreparedSql(
                 "INSERT INTO TEST_TABLE(TEST_COLUMN) VALUES (?)",
-                List.of(new BindValue("value", Types.VARCHAR)));
+                List.of(new BindValue("rhs", Types.VARCHAR)));
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(connection.prepareStatement(eq(preparedSql.sql()), eq(new String[]{"TEST_PK"}))).thenReturn(preparedStatement);

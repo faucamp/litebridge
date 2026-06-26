@@ -31,7 +31,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     }
 
     /**
-     * Adds an "AND" condition to the current condition clause using the specified column.
+     * Adds an "AND" condition to the current condition clause using the specified lhs.
      * This method is used to chain additional conditions in a SQL query in a type-safe and fluent manner.
      *
      * @param field the name of the DTO field to be used in the "AND" condition
@@ -41,7 +41,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     public DtoHavingConditionClause<DTO> and(final String field) {
         Column column = table.getColumnForFieldName(field).toColumn();
 
-        // Use the aliased column if it is part of the SELECT clause, else use the unaliased column
+        // Use the aliased lhs if it is part of the SELECT clause, else use the unaliased lhs
         if (selectSpec.getExpressions() != null) {
             for (final ExpressionSpec expressionSpec : selectSpec.getExpressions()) {
                 Column selectedColumn;
@@ -63,7 +63,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     }
 
     /**
-     * Adds an "AND" condition to the current condition clause using the specified column.
+     * Adds an "AND" condition to the current condition clause using the specified lhs.
      * This method is used to chain additional conditions in a SQL query in a type-safe and fluent manner.
      *
      * @param field the field to be used in the "AND" condition

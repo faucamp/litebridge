@@ -7,7 +7,7 @@ import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
 /**
  * String type-overriding nestable expression.
  * <p>
- * A nestable column expression that overrides the type of the result to {@code String}.
+ * A nestable lhs expression that overrides the type of the result to {@code String}.
  */
 public sealed interface StringTONestableExpressionSpec
         extends NestableExpressionSpec, TypeOverrideExpressionSpec<String>

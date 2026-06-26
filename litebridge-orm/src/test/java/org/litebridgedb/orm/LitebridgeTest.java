@@ -8,6 +8,7 @@ import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
+import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.impl.DefaultSequenceColumnValueGenerator;
@@ -38,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -279,8 +281,9 @@ class LitebridgeTest {
         assertEquals("MY_VAR", update.columnValues().getFirst().column().name());
         assertEquals("updatedValue", update.columnValues().getFirst().value());
         assertEquals(1, update.where().size());
-        assertEquals("MY_ID", update.where().getFirst().column().name());
-        assertEquals(123L, ((LiteralExpression) update.where().getFirst().value()).value());
+        assertInstanceOf(ColumnExpression.class, update.where().getFirst().lhs());
+        assertEquals("MY_ID", ((ColumnExpression) update.where().getFirst().lhs()).column().name());
+        assertEquals(123L, ((LiteralExpression) update.where().getFirst().rhs()).value());
     }
 
     @Test

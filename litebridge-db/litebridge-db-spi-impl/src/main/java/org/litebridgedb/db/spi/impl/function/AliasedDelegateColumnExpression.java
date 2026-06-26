@@ -8,7 +8,7 @@ import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.query.Select;
 
 /**
- * A nestable column expression with support for SQL aliasing.
+ * A nestable lhs expression with support for SQL aliasing.
  * <p>
  * This class extends {@code NestableExpression} and integrates the functionality
  * of aliasing of results through a {@code ColumnIdentifierGenerator}.
@@ -62,7 +62,7 @@ public class AliasedDelegateColumnExpression extends DelegateColumnExpression {
                 && select.expressions().stream()
                 .filter(SelectColumn.class::isInstance)
                 .anyMatch(selectColumn -> ((SelectColumn) selectColumn).column().equals(column))) {
-            // If the column is selected, use the alias
+            // If the lhs is selected, use the alias
             return column.alias();
         } else {
             return column.name();

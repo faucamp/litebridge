@@ -19,12 +19,12 @@ public class StringConverter implements SqlConverter<String> {
     private static final int[] SQL_TYPES = new int[]{Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.CLOB};
 
     /**
-     * Converts the given value to a {@link String}.
+     * Converts the given rhs to a {@link String}.
      * <p>
-     * If the value is a {@code byte[]} or {@code char[]}, it is converted to a string using the appropriate constructor.
+     * If the rhs is a {@code byte[]} or {@code char[]}, it is converted to a string using the appropriate constructor.
      * Otherwise, {@link Object#toString()} is used.
      *
-     * @param value the value to convert, may be {@code null}
+     * @param value the rhs to convert, may be {@code null}
      * @return the converted string, or {@code null}
      */
     @Override

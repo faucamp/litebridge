@@ -5,15 +5,15 @@ import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 
 /**
- * Base class for function expressions operating on a column.
+ * Base class for function expressions operating on a lhs.
  */
 public abstract class FunctionExpression extends AliasedDelegateColumnExpression {
 
     /**
      * Constructor.
      *
-     * @param target                    Target column expression to encapsulate.
-     * @param columnIdentifierGenerator Database provider-specific column identifier generator.
+     * @param target                    Target lhs expression to encapsulate.
+     * @param columnIdentifierGenerator Database provider-specific lhs identifier generator.
      */
     public FunctionExpression(final ColumnExpression target, final ColumnIdentifierGenerator columnIdentifierGenerator) {
         super(target, columnIdentifierGenerator);
@@ -63,7 +63,7 @@ public abstract class FunctionExpression extends AliasedDelegateColumnExpression
     /**
      * Gets the template for the SQL representation of the function.
      * <p>
-     * The template should contain a single "%s" placeholder for the column identifier.
+     * The template should contain a single "%s" placeholder for the lhs identifier.
      *
      * @return SQL representation template
      */

@@ -28,11 +28,11 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
      * Prepare a SQL UPDATE statement along with its bind values for execution.
      * <p>
      * This method constructs the SQL query string based on the provided {@link Update} object,
-     * which contains the table's metadata, column-value pairs, and conditions for the WHERE clause.
+     * which contains the table's metadata, lhs-rhs pairs, and conditions for the WHERE clause.
      * It ensures proper formatting of the SQL query and converts values as needed using a type converter.
      * The resulting SQL query and its associated bind values are encapsulated in a {@link PreparedSql} object.
      *
-     * @param update the {@link Update} object containing table metadata, column-value pairs for the SET clause,
+     * @param update the {@link Update} object containing table metadata, lhs-rhs pairs for the SET clause,
      *               and conditions for the WHERE clause to specify target rows.
      * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values.
      */

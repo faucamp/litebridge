@@ -16,7 +16,7 @@ import java.util.Collections;
  * {@link DtoTableSpec} that encapsulates the following:
  * <ul>
  *  <li>The DTO class being registered.</li>
- *  <li>The database table specification ({@link TableSpec}), including the table name and field-to-column mappings.</li>
+ *  <li>The database table specification ({@link TableSpec}), including the table name and field-to-lhs mappings.</li>
  *  <li>A list of optional superinterfaces for the DTO class.</li>
  * </ul>
  * Instances of this class are not reusable once the {@link #build()} method has been invoked.
@@ -29,7 +29,7 @@ public class DtoTableSpecBuilder {
      * Constructs a new instance of {@code DtoTableSpecBuilder} using the specified registration context.
      * This constructor initialises the builder with the provided {@link RegistrationContextTerminal},
      * which contains the necessary mapping details such as the target DTO class, database table name,
-     * field-to-column mappings, and optional superinterfaces.
+     * field-to-lhs mappings, and optional superinterfaces.
      *
      * @param context The {@link RegistrationContextTerminal} containing the configuration details
      *                for registering a data transfer object (DTO) with its corresponding

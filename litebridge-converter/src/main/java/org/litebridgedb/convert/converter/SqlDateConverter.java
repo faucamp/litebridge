@@ -6,7 +6,7 @@ import java.sql.Types;
 /**
  * A converter for {@link java.sql.Date} values.
  * <p>
- * Handles {@link java.sql.Types#DATE} by parsing the value's string representation.
+ * Handles {@link java.sql.Types#DATE} by parsing the rhs's string representation.
  */
 public class SqlDateConverter extends AbstractStringParsingConverter<Date> implements SqlConverter<Date> {
 

@@ -7,14 +7,14 @@ import org.litebridgedb.orm.api.spec.FieldSpec;
 /**
  * Final implementation of the {@code FieldColumnSpecBuilderTerminal} interface, used to build
  * a {@link FieldColumnSpec} instance representing the mapping between a DTO field and its
- * corresponding database column or relationship specification.
+ * corresponding database lhs or relationship specification.
  *
- * <p>This class serves as the terminal step in a fluent API for defining field-to-column
+ * <p>This class serves as the terminal step in a fluent API for defining field-to-lhs
  * mappings within the ORM framework. It combines a {@link FieldSpec}, representing the DTO field,
- * with a {@link ColumnMapping}, detailing the mapping relationship or column specification.
+ * with a {@link ColumnMapping}, detailing the mapping relationship or lhs specification.
  *
  * <p>The {@code build} method finalizes the configuration and returns a {@link FieldColumnSpec}
- * instance, which encapsulates the field and its corresponding column mapping. Instances of this
+ * instance, which encapsulates the field and its corresponding lhs mapping. Instances of this
  * class are immutable once created.
  * <p>
  * Constructor:
@@ -22,7 +22,7 @@ import org.litebridgedb.orm.api.spec.FieldSpec;
  * - Requires a {@link ColumnMapping} specifying how the field maps to the database.
  * <p>
  * Implements:
- * - {@link FieldColumnSpecBuilderTerminal}, as the final step in the builder pattern for field-to-column mappings.
+ * - {@link FieldColumnSpecBuilderTerminal}, as the final step in the builder pattern for field-to-lhs mappings.
  * <p>
  * Thread Safety:
  * - Immutable and thread-safe, as all fields are final and this class performs no mutable operations.

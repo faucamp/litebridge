@@ -44,11 +44,11 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     public DtoWhereConditionClause<DTO> where(final String field) {
         Column column = ormTable.getColumnForFieldName(field).toColumn();
 
-        // Use the aliased column if it is part of the SELECT clause, else use the unaliased column
+        // Use the aliased lhs if it is part of the SELECT clause, else use the unaliased lhs
         if (!selectSpec.getExpressions().isEmpty()) {
             Column replacementColumn = null;
 
-            // Look for an exact column match
+            // Look for an exact lhs match
             for (ExpressionSpec expressionSpec : selectSpec.getExpressions()) {
                 Column selectedColumn;
 
@@ -73,7 +73,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
                 column = replacementColumn;
             }
         } else {
-            // Select all - override the column's table with the selected one
+            // Select all - override the lhs's table with the selected one
             if (column.table() != selectSpec.getTable() && column.table().equalsIgnoreAlias(selectSpec.getTable())) {
                 column = new Column(selectSpec.getTable(), column.name(), column.alias());
             }
@@ -90,7 +90,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     /**
      * Convenience method to select a DTO by its primary key.
      *
-     * @param id the primary key value
+     * @param id the primary key rhs
      * @return the selected DTO, if found
      */
     public Optional<DTO> withId(final Object id) {
@@ -100,7 +100,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     /**
      * Convenience method to select a DTO by its primary key.
      *
-     * @param id the primary key value
+     * @param id the primary key rhs
      * @return the selected DTO, or {@code null} if not found
      */
     public @Nullable DTO withIdOrNull(final Object id) {
@@ -110,7 +110,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     /**
      * Retrieves a DTO by its primary key and throws an exception if no matching entry is found.
      *
-     * @param id the primary key value used to identify the DTO
+     * @param id the primary key rhs used to identify the DTO
      * @return the DTO associated with the given primary key
      * @throws NoSuchElementException if no DTO is found with the specified primary key
      */
@@ -121,7 +121,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     /**
      * Retrieves a DTO by its primary key and throws the specified exception if no matching entry is found.
      *
-     * @param id                the primary key value used to identify the DTO
+     * @param id                the primary key rhs used to identify the DTO
      * @param exceptionSupplier a supplier that provides the exception to be thrown if the DTO is not found
      * @param <X>               the type of exception to be thrown
      * @return the DTO associated with the given primary key

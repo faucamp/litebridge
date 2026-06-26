@@ -19,7 +19,7 @@ import java.util.Map;
 public final class TableSpec extends Table {
 
     /**
-     * Field name to ColumnSpec map; key is field name, value is the column definition
+     * Field name to ColumnSpec map; key is field name, rhs is the lhs definition
      */
     private final Map<FieldMapping, ColumnMapping> fieldColumnMap;
 
@@ -30,7 +30,7 @@ public final class TableSpec extends Table {
         super(StringUtils.blankIfNull(catalog),
                 StringUtils.blankIfNull(schema),
                 StringUtils.requireNonBlank(table, "Table name cannot be blank"));
-        this.fieldColumnMap = Collections.unmodifiableMap(CollectionUtils.requireNonEmpty(fieldColumnMap, "Field-column map cannot be null or empty"));
+        this.fieldColumnMap = Collections.unmodifiableMap(CollectionUtils.requireNonEmpty(fieldColumnMap, "Field-lhs map cannot be null or empty"));
     }
 
     public TableSpec(final String name, final Map<FieldMapping, ColumnMapping> fieldColumnMap) {
@@ -42,9 +42,9 @@ public final class TableSpec extends Table {
     }
 
     /**
-     * Field name to {@link ColumnSpec} map; key is field name, value is the column definition
+     * Field name to {@link ColumnSpec} map; key is field name, rhs is the lhs definition
      *
-     * @return field name-database column mapping
+     * @return field name-database lhs mapping
      */
     public Map<FieldMapping, ColumnMapping> fieldColumnMap() {
         return fieldColumnMap;

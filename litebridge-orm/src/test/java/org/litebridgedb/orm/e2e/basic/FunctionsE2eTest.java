@@ -65,7 +65,7 @@ public class FunctionsE2eTest extends AbstractE2eTest {
         final Number averageAge = litebridge.select(Fn.avg("age")).from(Person.class).oneOrThrow();
         assertEquals(25, averageAge.intValue());
 
-        // Nested column selector
+        // Nested lhs selector
         final Number averageAgeExpr = litebridge.select(Fn.avg(Fn.f("age"))).from(Person.class).oneOrThrow();
         assertEquals(25, averageAgeExpr.intValue());
 
@@ -187,6 +187,28 @@ public class FunctionsE2eTest extends AbstractE2eTest {
         assertEquals(1L, results.get(0).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
         assertEquals(25, results.get(1).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
         assertEquals(2L, results.get(1).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
+    }
+
+    @TestTemplate
+    @DisplayName("Group by with HAVING, and explicit type conversion")
+    void row_groupingByHaving(final DbEnvDtoTableMapper tableMapper) {
+        // Setup data: 1 record with age 20, 2 records with age 25
+        litebridge.update(Person.class, update -> update
+                .set("age").to(25)
+                .where("id").eq(3L));
+
+        // Aggregates record counts grouped by age field; returns the underlying row data
+        final List<Row> results = litebridge.select(Fn.row(
+                        Fn.convert(Fn.f("age"), Integer.class),
+                        Fn.convert(Fn.count(), Long.class)))
+                .from(Person.class)
+                .groupBy("age")
+                .having(Fn.count()).gt(1)
+                .list();
+
+        assertEquals(1, results.size());
+        assertEquals(25, results.get(0).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+        assertEquals(2L, results.get(0).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
     }
 
     @TestTemplate

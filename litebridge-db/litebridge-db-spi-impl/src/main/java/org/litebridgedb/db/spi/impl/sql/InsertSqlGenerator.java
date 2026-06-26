@@ -62,14 +62,14 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
     }
 
     /**
-     * Prepare a row for insertion based on the provided row value. This includes
-     * processing column values, converting them to a suitable format, and generating
-     * value specifiers and bind values for the prepared row. Handles nullable expressions,
-     * auto-increment expressions, and sequence-based value generation as necessary.
+     * Prepare a row for insertion based on the provided row rhs. This includes
+     * processing lhs values, converting them to a suitable format, and generating
+     * rhs specifiers and bind values for the prepared row. Handles nullable expressions,
+     * auto-increment expressions, and sequence-based rhs generation as necessary.
      *
-     * @param rowValue the row value object containing the column definitions and their values
-     * @return a PreparedRow instance containing processed value specifiers and bind values
-     * @throws IllegalArgumentException if a non-nullable column without an auto-increment or sequence value is attempted to be set to NULL
+     * @param rowValue the row rhs object containing the lhs definitions and their values
+     * @return a PreparedRow instance containing processed rhs specifiers and bind values
+     * @throws IllegalArgumentException if a non-nullable lhs without an auto-increment or sequence rhs is attempted to be set to NULL
      */
     protected PreparedRow prepareRow(final RowValue rowValue, final ConnectionProvider connectionProvider) {
         final List<String> valueSpecifiers = new ArrayList<>(rowValue.columns().size());
@@ -81,9 +81,9 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
 
             if (convertedValue == null) {
                 if (!column.isNullable() && !column.isAutoIncrement() && column.getGenerator() == null) {
-                    throw new IllegalArgumentException("Attempting to insert NULL into non-nullable column: '%s'. Possible cause: column spec missing generator such as autoincrement/sequence".formatted(column.name()));
+                    throw new IllegalArgumentException("Attempting to insert NULL into non-nullable lhs: '%s'. Possible cause: lhs spec missing generator such as autoincrement/sequence".formatted(column.name()));
                 } else if (column.getGenerator() != null) {
-                    // Use the column value generator to add a value
+                    // Use the lhs rhs generator to add a rhs
                     valueSpecifiers.add(column.getGenerator().generate(column).toString());
                 }
             } else {

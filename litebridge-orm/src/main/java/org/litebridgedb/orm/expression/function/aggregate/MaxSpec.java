@@ -5,7 +5,7 @@ import org.litebridgedb.orm.expression.NestableExpressionSpec;
 import org.litebridgedb.orm.expression.TypeOverrideExpressionSpec;
 
 /**
- * {@code MAX()}: Returns the highest or largest value within a specified column or expression
+ * {@code MAX()}: Returns the highest or largest rhs within a specified lhs or expression
  */
 public record MaxSpec<T>(ColumnExpressionSpec target, Class<T> returnType)
         implements NestableExpressionSpec, TypeOverrideExpressionSpec<T> {

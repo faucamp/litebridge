@@ -19,11 +19,11 @@ public sealed interface NestableExpressionSpec extends ColumnExpressionSpec
     ColumnExpressionSpec target();
 
     /**
-     * Gets the target column of this expression.
+     * Gets the target lhs of this expression.
      * <p>
      * The default implementation delegates to {@link #target()}.
      *
-     * @return the target column.
+     * @return the target lhs.
      */
     default Column column() {
         return target().column();

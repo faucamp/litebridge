@@ -6,7 +6,7 @@ import java.util.List;
  * A row of values corresponding to a SQL database operation.
  * <p>
  * Each row is composed of a list of {@link ColumnValue} objects, where
- * each {@link ColumnValue} encapsulates a column's metadata and its associated value.
+ * each {@link ColumnValue} encapsulates a lhs's metadata and its associated rhs.
  * <p>
  * This class is designed for use in SQL operations such as INSERT and UPDATE
  * that involve working with rows within a database table.

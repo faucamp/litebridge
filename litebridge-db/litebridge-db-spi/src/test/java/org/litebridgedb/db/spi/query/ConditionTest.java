@@ -3,6 +3,7 @@ package org.litebridgedb.db.spi.query;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.ColumnExpressionTest;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,12 +22,12 @@ class ConditionTest {
         final Object value = "testValue";
 
         // When
-        final Condition result = new Condition(column, operator, new LiteralExpression(value));
+        final Condition result = new Condition(ColumnExpressionTest.select(column), operator, new LiteralExpression(value));
 
         // Then
-        assertEquals(column, result.column());
+        assertEquals(column, (((ColumnExpressionTest.SelectColumnExpression) result.lhs()).column()));
         assertEquals(operator, result.operator());
-        assertEquals(value, ((LiteralExpression) result.value()).value());
+        assertEquals(value, ((LiteralExpression) result.rhs()).value());
     }
 
     @Test
@@ -37,13 +38,13 @@ class ConditionTest {
         final Operator operator = Operator.IS_NULL;
 
         // When
-        final Condition result = new Condition(column, operator);
+        final Condition result = new Condition(ColumnExpressionTest.select(column), operator);
 
         // Then
         assertNotNull(result);
-        assertEquals(column, result.column());
+        assertEquals(column, (((ColumnExpressionTest.SelectColumnExpression) result.lhs()).column()));
         assertEquals(operator, result.operator());
-        assertNull(result.value());
+        assertNull(result.rhs());
     }
 
     @Test
@@ -54,13 +55,13 @@ class ConditionTest {
         final Operator operator = Operator.IS_NOT_NULL;
 
         // When
-        final Condition result = new Condition(column, operator);
+        final Condition result = new Condition(ColumnExpressionTest.select(column), operator);
 
         // Then
         assertNotNull(result);
-        assertEquals(column, result.column());
+        assertEquals(column, (((ColumnExpressionTest.SelectColumnExpression) result.lhs()).column()));
         assertEquals(operator, result.operator());
-        assertNull(result.value());
+        assertNull(result.rhs());
     }
 
     @Test
@@ -71,6 +72,6 @@ class ConditionTest {
         final Operator operator = Operator.NEQ;
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> new Condition(column, operator));
+        assertThrows(IllegalArgumentException.class, () -> new Condition(ColumnExpressionTest.select(column), operator));
     }
 }

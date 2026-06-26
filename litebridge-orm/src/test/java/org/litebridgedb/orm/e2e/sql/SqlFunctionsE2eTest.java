@@ -62,7 +62,7 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
         final Row averageAge = litebridge.select(Fn.avg(tableMapper.transformColumnName("AGE"))).from(personTableName).oneOrThrow();
         assertEquals(25, ((Number) averageAge.column(0).value()).intValue());
 
-        // Nested column selector
+        // Nested lhs selector
         final Row averageAgeExpr = litebridge.select(Fn.avg(Fn.f(tableMapper.transformColumnName("AGE")))).from(personTableName).oneOrThrow();
         assertEquals(25, ((Number) averageAgeExpr.column(0).value()).intValue());
 

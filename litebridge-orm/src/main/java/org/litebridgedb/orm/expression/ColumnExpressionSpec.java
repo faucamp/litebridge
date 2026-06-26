@@ -5,14 +5,14 @@ import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 
 /**
- * Query expression encapsulating a target column.
+ * Query expression encapsulating a target lhs.
  */
 public sealed interface ColumnExpressionSpec extends ExpressionSpec permits NestableExpressionSpec, SelectColumnSpec, SelectFieldSpec {
 
     /**
-     * Gets the target column of this expression.
+     * Gets the target lhs of this expression.
      *
-     * @return the target column.
+     * @return the target lhs.
      */
     Column column();
 }

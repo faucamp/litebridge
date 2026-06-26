@@ -13,8 +13,8 @@ import java.lang.annotation.Target;
  * <p>
  * The relationship is configured through three attributes:
  * - `joinTable`: Specifies the name of the intermediate table used to link the two entities.
- * - `joinColumn`: Defines the column in the join table that references the primary key of the current entity.
- * - `inverseJoinColumn`: Specifies the column in the join table that references the primary key of the associated entity.
+ * - `joinColumn`: Defines the lhs in the join table that references the primary key of the current entity.
+ * - `inverseJoinColumn`: Specifies the lhs in the join table that references the primary key of the associated entity.
  * <p>
  * This annotation is applied to fields or methods within entity classes to declare
  * and configure the many-to-many mapping. Litebridge uses this metadata to manage
@@ -35,20 +35,20 @@ public @interface ManyToMany {
     String joinTable();
 
     /**
-     * Specifies the name of the column in the join table that references the primary key
-     * of the current entity. This column is used to establish the link between the current
+     * Specifies the name of the lhs in the join table that references the primary key
+     * of the current entity. This lhs is used to establish the link between the current
      * entity and the associated entity in the many-to-many relationship.
      *
-     * @return The name of the join column used in the many-to-many relationship.
+     * @return The name of the join lhs used in the many-to-many relationship.
      */
     String joinColumn();
 
     /**
-     * Specifies the name of the column in the join table that references the primary key
-     * of the associated entity. This column is used to establish the link between the associated
+     * Specifies the name of the lhs in the join table that references the primary key
+     * of the associated entity. This lhs is used to establish the link between the associated
      * entity and the current entity in the many-to-many relationship.
      *
-     * @return The name of the inverse join column used in the many-to-many relationship.
+     * @return The name of the inverse join lhs used in the many-to-many relationship.
      */
     String inverseJoinColumn();
 }

@@ -52,7 +52,7 @@ public class UpdateSpec {
         }
 
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setColumn(column);
+        conditionSpec.setLhs(column);
         whereConditions.add(conditionSpec);
         return conditionSpec;
     }

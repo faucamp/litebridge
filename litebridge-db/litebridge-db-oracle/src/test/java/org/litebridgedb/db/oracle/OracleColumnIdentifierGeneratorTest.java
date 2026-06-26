@@ -45,6 +45,7 @@ class OracleColumnIdentifierGeneratorTest {
                 Collections.emptyList(),
                 Optional.empty(),
                 Collections.emptyList(),
+                Collections.emptyList(),
                 Optional.empty());
 
         // When
@@ -59,13 +60,14 @@ class OracleColumnIdentifierGeneratorTest {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
-        final Join join = new Join(table, List.of(new Condition(column, Operator.EQ, "TEST_VALUE")));
+        final Join join = new Join(table, List.of(new Condition(new SelectColumn(column, generator), Operator.EQ, "TEST_VALUE")));
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
 
@@ -82,13 +84,14 @@ class OracleColumnIdentifierGeneratorTest {
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
         final Column otherColumn = new Column(table, "OTHER_COLUMN");
-        final Join join = new Join(table, List.of(new Condition(otherColumn, Operator.USING, null)));
+        final Join join = new Join(table, List.of(new Condition(new SelectColumn(otherColumn, generator), Operator.USING, null)));
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
 
@@ -107,13 +110,14 @@ class OracleColumnIdentifierGeneratorTest {
         final Table unrelatedTable = new Table("UNRELATED_TABLE", null);
         final Column column = new Column(unrelatedTable, "TEST_COLUMN");
         final Column selectColumn = new Column(table, "TEST_COLUMN");
-        final Join join = new Join(joinedTable, List.of(new Condition(selectColumn, Operator.USING, null)));
+        final Join join = new Join(joinedTable, List.of(new Condition(new SelectColumn(selectColumn, generator), Operator.USING, null)));
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
 

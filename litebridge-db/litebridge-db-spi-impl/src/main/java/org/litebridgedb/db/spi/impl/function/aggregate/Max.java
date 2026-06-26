@@ -5,7 +5,7 @@ import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.FunctionExpression;
 
 /**
- * {@code MAX(column)} aggregate function.
+ * {@code MAX(lhs)} aggregate function.
  */
 public class Max extends FunctionExpression {
 

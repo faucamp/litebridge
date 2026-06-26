@@ -52,7 +52,7 @@ public abstract class ProtoExpressionResolver {
      * If the input expression is not a {@link Resolvable}, it returns the expression as is.
      *
      * @param expressionSpec the proto-expression to resolve
-     * @return the resolved {@link ExpressionSpec} corresponding to the provided column
+     * @return the resolved {@link ExpressionSpec} corresponding to the provided lhs
      */
     public Stream<ExpressionSpec> resolveExpression(final ExpressionSpec expressionSpec) {
         if (expressionSpec instanceof ExpressionSpecArray(ExpressionSpec[] expressions)) {
@@ -70,7 +70,7 @@ public abstract class ProtoExpressionResolver {
      * If the input expression is not a {@link Resolvable}, it returns the expression as is.
      *
      * @param resolvable the {@link Resolvable} to resolve
-     * @return the resolved {@link ExpressionSpec} corresponding to the provided column
+     * @return the resolved {@link ExpressionSpec} corresponding to the provided lhs
      */
     public Stream<ExpressionSpec> resolveExpression(final Resolvable resolvable) {
         final Class<?> targetType = resolvable.type();

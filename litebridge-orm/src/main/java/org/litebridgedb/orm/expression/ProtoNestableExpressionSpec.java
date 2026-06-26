@@ -14,7 +14,7 @@ public sealed interface ProtoNestableExpressionSpec extends ProtoExpressionSpec 
     /**
      * The nested target expression.
      * <p>
-     * Target expressions are typically a column name to select via {@link SelectColumnSpec}
+     * Target expressions are typically a lhs name to select via {@link SelectColumnSpec}
      * or {@link SelectFieldSpec}, but are not limited to these.
      *
      * @return the nested target expression.
@@ -22,11 +22,11 @@ public sealed interface ProtoNestableExpressionSpec extends ProtoExpressionSpec 
     ExpressionSpec target();
 
     /**
-     * Retrieves the column name associated with the target expression.
+     * Retrieves the lhs name associated with the target expression.
      * <p>
-     * The default implementation handles various types of target expressions and returns the appropriate column name.
+     * The default implementation handles various types of target expressions and returns the appropriate lhs name.
      *
-     * @return the column name retrieved from the target expression.
+     * @return the lhs name retrieved from the target expression.
      * @throws IllegalArgumentException if the target expression is of an invalid type.
      */
     default String column() {

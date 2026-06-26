@@ -4,7 +4,6 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.JoinSpec;
@@ -62,7 +61,7 @@ public final class DtoJoinSpec implements JoinSpec, DtoDataSpec {
     public ConditionSpec newCondition(final Column column) {
         ObjectUtils.requireNonNull(column.alias(), () -> new IllegalArgumentException("Column alias not specified"));
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setColumn(column);
+        conditionSpec.setLhs(column);
         conditions.add(conditionSpec);
         return conditionSpec;
     }

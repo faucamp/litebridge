@@ -34,10 +34,10 @@ public class GenericConverter<T> implements Converter<T> {
     }
 
     /**
-     * Converts the given value to the target type using the provided conversion function.
+     * Converts the given rhs to the target type using the provided conversion function.
      *
-     * @param value the value to convert, may be {@code null}
-     * @return the converted value, or {@code null}
+     * @param value the rhs to convert, may be {@code null}
+     * @return the converted rhs, or {@code null}
      */
     @Override
     public @Nullable T convert(final @Nullable Object value) {

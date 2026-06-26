@@ -8,7 +8,9 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
@@ -58,8 +60,9 @@ class SelectSqlGeneratorTest {
         when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
         when(tableMetaData.column("TEST_COLUMN")).thenReturn(columnMetaData);
         when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
+        final ColumnExpression columnExpression = new SelectColumn(column, selectSqlGenerator.columnIdentifierGenerator);
 
-        final Condition condition = new Condition(column, Operator.EQ, "testValue");
+        final Condition condition = new Condition(columnExpression, Operator.EQ, "testValue");
 
         final Join join = new Join(table, List.of(condition));
 
@@ -78,9 +81,11 @@ class SelectSqlGeneratorTest {
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", "t2");
         final Column column1 = createTestColumn("TEST_PK", table);
         final Column column2 = createTestColumn("TEST_COLUMN", table);
+        final ColumnExpression columnExression1 = new SelectColumn(column1, selectSqlGenerator.columnIdentifierGenerator);
+        final ColumnExpression columnExression2 = new SelectColumn(column2, selectSqlGenerator.columnIdentifierGenerator);
 
-        final Condition condition1 = new Condition(column1, Operator.EQ, "value1");
-        final Condition condition2 = new Condition(column2, Operator.NEQ, "value2");
+        final Condition condition1 = new Condition(columnExression1, Operator.EQ, "value1");
+        final Condition condition2 = new Condition(columnExression2, Operator.NEQ, "value2");
 
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         when(ensureTableMetaData.apply(eq(table), any(ConnectionProvider.class))).thenReturn(tableMetaData);

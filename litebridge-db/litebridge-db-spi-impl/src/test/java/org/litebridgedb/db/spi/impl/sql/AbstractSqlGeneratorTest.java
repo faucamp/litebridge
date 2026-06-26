@@ -7,7 +7,9 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
@@ -23,6 +25,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.litebridgedb.db.spi.impl.sql.TestUtil.createSelectColumn;
 import static org.litebridgedb.db.spi.impl.sql.TestUtil.createTestColumn;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -164,9 +167,9 @@ class AbstractSqlGeneratorTest {
     }
 
     @Test
-    void createCondition() throws Exception {
+    void createCondition() {
         // Given
-        final Column column = createTestColumn();
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
         final Condition condition = new Condition(column, Operator.EQ, "testValue");
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
@@ -184,9 +187,9 @@ class AbstractSqlGeneratorTest {
     }
 
     @Test
-    void createCondition_isNull() throws Exception {
+    void createCondition_isNull() {
         // Given
-        final Column column = createTestColumn();
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
         final Condition condition = new Condition(column, Operator.IS_NULL);
 
         // When
@@ -199,9 +202,9 @@ class AbstractSqlGeneratorTest {
     }
 
     @Test
-    void createCondition_isNotNull() throws Exception {
+    void createCondition_isNotNull() {
         // Given
-        final Column column = createTestColumn();
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
         final Condition condition = new Condition(column, Operator.IS_NOT_NULL);
 
         // When
@@ -216,7 +219,7 @@ class AbstractSqlGeneratorTest {
     @Test
     void createCondition_using() throws Exception {
         // Given
-        final Column column = createTestColumn();
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
         final Condition condition = new Condition(column, Operator.USING, null);
 
         // When
@@ -232,7 +235,8 @@ class AbstractSqlGeneratorTest {
         // Given
         final Column column = createTestColumn();
         column.table().setAlias("t1");
-        final Condition condition = new Condition(column, Operator.EQ, "testValue");
+        final ColumnExpression columnExpression = new SelectColumn(column, sqlGenerator.columnIdentifierGenerator);
+        final Condition condition = new Condition(columnExpression, Operator.EQ, "testValue");
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
         when(tableMetaData.column("TEST_COLUMN")).thenReturn(columnMetaData);
@@ -250,7 +254,7 @@ class AbstractSqlGeneratorTest {
     @Test
     void createCondition_withOperatorGT() throws Exception {
         // Given
-        final Column column = createTestColumn();
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
         final Condition condition = new Condition(column, Operator.GT, "testValue");
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
@@ -269,7 +273,7 @@ class AbstractSqlGeneratorTest {
     @Test
     void createCondition_withOperatorGTE() throws Exception {
         // Given
-        final Column column = createTestColumn();
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
         final Condition condition = new Condition(column, Operator.GTE, "testValue");
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
@@ -288,7 +292,7 @@ class AbstractSqlGeneratorTest {
     @Test
     void createCondition_withOperatorLT() throws Exception {
         // Given
-        final Column column = createTestColumn();
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
         final Condition condition = new Condition(column, Operator.LT, "testValue");
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
@@ -307,7 +311,7 @@ class AbstractSqlGeneratorTest {
     @Test
     void createCondition_withOperatorLTE() throws Exception {
         // Given
-        final Column column = createTestColumn();
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
         final Condition condition = new Condition(column, Operator.LTE, "testValue");
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
@@ -326,7 +330,7 @@ class AbstractSqlGeneratorTest {
     @Test
     void createCondition_withOperatorIN() throws Exception {
         // Given
-        final Column column = createTestColumn();
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
         final Condition condition = new Condition(column, Operator.IN, List.of("value1", "value2"));
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);

@@ -10,11 +10,11 @@ import java.math.BigInteger;
 public class BigIntegerConverter implements Converter<BigInteger> {
 
     /**
-     * Converts the given value to a {@link BigInteger}.
+     * Converts the given rhs to a {@link BigInteger}.
      * <p>
      * Supports various numeric types and string representation as fall-back.
      *
-     * @param value the value to convert, may be {@code null}
+     * @param value the rhs to convert, may be {@code null}
      * @return the converted {@link BigInteger}, or {@code null}
      */
     @Override

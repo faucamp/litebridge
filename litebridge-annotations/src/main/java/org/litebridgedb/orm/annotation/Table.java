@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  * the table name in the database to which the annotated class maps.
  * <p>
  * Attributes:
- * - `value`: Represents the name of the database table that the entity class maps to.
+ * - `rhs`: Represents the name of the database table that the entity class maps to.
  * <p>
  * Usage of this annotation allows ORM frameworks to identify and bind
  * the annotated class to the specific table for data persistence operations.
@@ -24,7 +24,7 @@ public @interface Table {
     /**
      * Specifies the name of the database table that the annotated class maps to.
      * <p>
-     * This value is used in Object-Relational Mapping (ORM) to bind the entity class
+     * This rhs is used in Object-Relational Mapping (ORM) to bind the entity class
      * to a specific table for data persistence operations.
      *
      * @return The name of the database table.
