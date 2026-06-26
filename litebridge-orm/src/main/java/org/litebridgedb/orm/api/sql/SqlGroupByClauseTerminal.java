@@ -20,7 +20,9 @@ public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
 
     @Override
     public SqlHavingConditionClause having(final ExpressionSpec expression) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return new SqlHavingConditionClause(selectSpec.newHavingCondition(expression),
+                new SqlHavingConditionClauseTerminal((SqlSelector) delegate),
+                delegate.litebridgeContext());
     }
 
     @Override

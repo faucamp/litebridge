@@ -184,6 +184,26 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
+    @DisplayName("Select row, group by with HAVING")
+    void row_groupingByHaving(final DbEnvDtoTableMapper tableMapper) {
+        // Setup data: 1 record with age 20, 2 records with age 25
+        litebridge.update(tableMapper.qualifyName("PERSON"), update -> update
+                .set("AGE").to(25)
+                .where("PERSON_ID").eq(2L));
+
+        // Aggregates record counts grouped by age field; returns the underlying row data
+        final List<Row> results = litebridge.select(Fn.convert(Fn.c("AGE"), Integer.class), Fn.convert(Fn.count(), Long.class))
+                .from(tableMapper.qualifyName("PERSON"))
+                .groupBy("AGE")
+                .having(Fn.count()).gt(1)
+                .list();
+
+        assertEquals(1, results.size());
+        assertEquals(25, results.get(0).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+        assertEquals(2L, results.get(0).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
+    }
+
+    @TestTemplate
     @DisplayName("CURRENT_TIMESTAMP")
     void currentTimestamp(final DbEnvDtoTableMapper tableMapper) throws Exception {
         final Row sysdate = litebridge.select(Fn.currentTimestamp()).from(personTableName).firstOrThrow();

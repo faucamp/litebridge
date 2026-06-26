@@ -190,7 +190,7 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Group by with HAVING, and explicit type conversion")
+    @DisplayName("Select row, group by with HAVING")
     void row_groupingByHaving(final DbEnvDtoTableMapper tableMapper) {
         // Setup data: 1 record with age 20, 2 records with age 25
         litebridge.update(Person.class, update -> update
