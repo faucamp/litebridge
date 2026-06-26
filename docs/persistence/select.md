@@ -326,7 +326,7 @@ litebridge.select(abs("balance")).from(Account.class).list();
 
 ### ORM-side Type Conversion
 
-Litebridge allows the Java type returned by an expression tob overridden using `Fn.convert()`. 
+Litebridge allows the Java type returned by an expression to be overridden using `Fn.convert()`. 
 This uses Litebridge's registered type converters to transform the database result before it is returned to the client application.
 
 This is particularly useful for aggregate functions where the database driver might return a different numeric type than what your application expects (e.g., getting a `Double` from an `AVG()` function when you want a `BigDecimal` or `Long`).
@@ -341,6 +341,37 @@ String countStr = litebridge.select(Fn.convert(Fn.count(), String.class))
 Double avgAge = litebridge.select(Fn.convert(Fn.avg("age"), Double.class))
         .from(Person.class)
         .oneOrThrow();
+```
+
+#### Generic Row results
+
+`Fn.convert()` can also be used to return generic `Row` objects for more complex queries that do not map back to a single DTO or a simple type. 
+This is typically done via the shorthand method `Fn.row()` to select multiple expressions.
+
+```java
+import org.litebridgedb.db.spi.Row;
+import static org.litebridgedb.orm.expression.Fn.*;
+
+List<Row> results = litebridge.select(row(
+                convert(f("age"), Integer.class),
+                convert(count(), Long.class)))
+        .from(Person.class)
+        .groupBy("age")
+        .list();
+```
+
+### Grouping and Having
+
+The select API supports `groupBy()` and `having()` clauses for aggregate queries.
+
+```java
+import static org.litebridgedb.orm.expression.Fn.*;
+
+List<Row> results = litebridge.select(row(f("eyeColour"), count()))
+        .from(Person.class)
+        .groupBy("eyeColour")
+        .having(count()).gt(5)
+        .list();
 ```
 
 ### Column Aliasing
