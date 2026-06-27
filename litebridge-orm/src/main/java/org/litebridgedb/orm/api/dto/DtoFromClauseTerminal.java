@@ -12,6 +12,8 @@ import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -179,12 +181,51 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
                 .map(columnMetaData -> ormTable.getFieldForColumnName(columnMetaData.name()).name())
                 .toArray(String[]::new);
 
-        DtoWhereConditionClauseTerminal<DTO> clause = where(primaryKeyFieldNames[0]).eq(id);
+        if (primaryKeyFieldNames.length == 0) {
+            throw new IllegalArgumentException("No primary key fields found for table " + ormTable.getMetaData().name());
+        } else if (primaryKeyFieldNames.length == 1) {
+            return where(primaryKeyFieldNames[0]).eq(id);
+        } else {
+            // Composite PK
+            if (id instanceof List<?> idList) {
+                if (idList.size() != primaryKeyFieldNames.length) {
+                    throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idList.size()));
+                }
 
-        for (int i = 1; i < primaryKeyFieldNames.length; i++) {
-            clause = clause.and(primaryKeyFieldNames[i]).eq(id);
+                DtoWhereConditionClauseTerminal<DTO> clause = where(primaryKeyFieldNames[0]).eq(idList.getFirst());
+
+                for (int i = 1; i < primaryKeyFieldNames.length; i++) {
+                    clause = clause.and(primaryKeyFieldNames[i]).eq(idList.get(i));
+                }
+
+                return clause;
+            } else if (id instanceof Object[] idArray) {
+                if (idArray.length != primaryKeyFieldNames.length) {
+                    throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idArray.length));
+                }
+
+                DtoWhereConditionClauseTerminal<DTO> clause = where(primaryKeyFieldNames[0]).eq(idArray[0]);
+
+                for (int i = 1; i < primaryKeyFieldNames.length; i++) {
+                    clause = clause.and(primaryKeyFieldNames[i]).eq(idArray[i]);
+                }
+
+                return clause;
+            } else if (id instanceof Map<?, ?> idMap) {
+                if (idMap.size() != primaryKeyFieldNames.length) {
+                    throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idMap.size()));
+                }
+
+                DtoWhereConditionClauseTerminal<DTO> clause = where(primaryKeyFieldNames[0]).eq(idMap.get(primaryKeyFieldNames[0]));
+
+                for (int i = 1; i < primaryKeyFieldNames.length; i++) {
+                    clause = clause.and(primaryKeyFieldNames[i]).eq(idMap.get(primaryKeyFieldNames[i]));
+                }
+
+                return clause;
+            } else {
+                throw new IllegalArgumentException("Invalid composite primary key value type provided; expected: List<?>, Object[], or Map<String, ?>");
+            }
         }
-
-        return clause;
     }
 }

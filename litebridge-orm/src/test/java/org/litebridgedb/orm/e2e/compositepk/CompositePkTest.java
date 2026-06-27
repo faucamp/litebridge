@@ -12,6 +12,8 @@ import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -98,5 +100,44 @@ class CompositePkTest extends AbstractE2eTest {
         assertEquals(1L, result.pk1());
         assertEquals(2L, result.pk2());
         assertEquals(dto.description(), result.description());
+    }
+
+    @TestTemplate
+    @DisplayName("Select withId() composite PK")
+    void select_withId_compositePk(final DbEnvDtoTableMapper tableMapper) {
+        // Given
+        litebridge.register(CompositePkLookup.class, rc -> rc.mapToTable(tableMapper.qualifyName("COMP_PK_LOOKUP"))
+                .with(spec -> spec.mapField("id").toColumn(tableMapper.transformColumnName("LOOKUP_ID")))
+                .with(spec -> spec.mapField("name").toColumn(tableMapper.transformColumnName("LOOKUP_NAME"))));
+
+        litebridge.register(CompositePkFkTest.class, rc -> rc.mapToTable(tableMapper.qualifyName("COMP_PK_FK_TEST"))
+                .with(spec -> spec.mapField("lookup").toColumn(tableMapper.transformColumnName("LOOKUP_ID")).joinUsing())
+                .with(spec -> spec.mapField("testId").toColumn(tableMapper.transformColumnName("TEST_ID")))
+                .with(spec -> spec.mapField("description").toColumn(tableMapper.transformColumnName("TEST_DESC"))));
+
+        final CompositePkLookup lookup = new CompositePkLookup(123L, "Category 1");
+        final CompositePkFkTest test1 = new CompositePkFkTest(lookup, 1L, "Test 1");
+        final CompositePkFkTest test2 = new CompositePkFkTest(lookup, 2L, "Test 1");
+
+        // When
+        litebridge.save(lookup);
+        litebridge.save(test1);
+        litebridge.save(test2);
+
+//        // Then
+        final CompositePkFkTest test1Result = litebridge.select(CompositePkFkTest.class)
+                .join(CompositePkLookup.class).on("lookup")
+                .where("lookup.id").eq(123L)
+                .and("testId").eq(1L)
+                .oneOrThrow();
+        assertEquals(test1, test1Result);
+
+        // Retrieve without join - NULL non-joined fields (default behaviour)
+        final CompositePkFkTest result2 = litebridge.select(CompositePkFkTest.class)
+                        .withIdOrThrow(List.of(123, 1L));
+
+        assertNull(result2.lookup());
+        assertEquals(test1.testId(), result2.testId());
+        assertEquals(test1.description(), result2.description());
     }
 }

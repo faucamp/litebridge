@@ -7,10 +7,18 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.NavigableSet;
+import java.util.Queue;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -204,7 +212,7 @@ public final class ClassUtils {
      */
     public static <DTO> DTO newInstance(final Class<DTO> dtoClass) {
         try {
-            final Constructor<DTO> constructor = getConcreteClass(dtoClass).getDeclaredConstructor();
+            final Constructor<? extends DTO> constructor = getConcreteClass(dtoClass).getDeclaredConstructor();
             constructor.setAccessible(true);
             return constructor.newInstance();
         } catch (Exception ex) {
@@ -226,9 +234,16 @@ public final class ClassUtils {
         return (Constructor<DTO>[]) getConcreteClass(dtoClass).getDeclaredConstructors();
     }
 
-    private static <T> Class<T> getConcreteClass(final Class<T> type) {
-        if (Collection.class.isAssignableFrom(type)) {
-            return (Class<T>) ArrayList.class;
+    @SuppressWarnings("unchecked")
+    private static <T> Class<? extends T> getConcreteClass(final Class<T> type) {
+        if (type.equals(Collection.class) || type.equals(List.class)) {
+            return (Class<? extends T>) ArrayList.class;
+        } else if (type.equals(Set.class)) {
+            return (Class<? extends T>) HashSet.class;
+        } else if (type.equals(SortedSet.class) || type.equals(NavigableSet.class)) {
+            return (Class<? extends T>) TreeSet.class;
+        } else if (type.equals(Queue.class) || type.equals(Deque.class)) {
+            return (Class<? extends T>) ArrayDeque.class;
         } else {
             return type;
         }

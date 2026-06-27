@@ -238,7 +238,7 @@ class DtoFromClauseTerminalTest {
         final DtoFromClauseTerminal<CompositeKeyDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "id1"), new ProtoColumnExpressionSpec(SelectFieldSpec.class, "id2"));
 
         // When
-        final Optional<CompositeKeyDto> result = dtoFromClauseTerminal.withId("testValue");
+        final Optional<CompositeKeyDto> result = dtoFromClauseTerminal.withId(List.of("testValue1", "testvalue2"));
 
         // Then
         assertTrue(result.isEmpty());

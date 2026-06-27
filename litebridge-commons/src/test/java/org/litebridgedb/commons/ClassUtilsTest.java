@@ -6,11 +6,22 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
+import java.util.Queue;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -75,15 +86,6 @@ class ClassUtilsTest {
     }
 
     @Test
-    void getAllMethods_illegalAccess() {
-        // Given
-        final MethodHandles.Lookup lookup = MethodHandles.publicLookup();
-
-        // When/Then
-        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getAllMethods(TestDto.class, false, lookup));
-    }
-
-    @Test
     void getAllMethods() {
         // When
         final List<Method> result = ClassUtils.getAllMethods(TestDto.class, false, MethodHandles.lookup());
@@ -137,6 +139,25 @@ class ClassUtilsTest {
         assertTrue(result.stream().anyMatch(method -> method.getName().equals("setName")));
         assertTrue(result.stream().anyMatch(method -> method.getName().equals("staticMethod")));
         assertFalse(result.stream().anyMatch(method -> method.getDeclaringClass().equals(Object.class)));
+    }
+
+    @Test
+    void getAllMethods_excludesSyntheticBridgeMethods() {
+        // When
+        final List<Method> result = ClassUtils.getAllMethods(StringChild.class, false, MethodHandles.lookup());
+
+        // Then
+        assertTrue(result.stream().noneMatch(Method::isSynthetic));
+        assertTrue(result.stream().anyMatch(method -> method.getName().equals("value") && method.getReturnType().equals(String.class)));
+    }
+
+    @Test
+    void getAllMethods_illegalAccess() {
+        // Given
+        final MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> ClassUtils.getAllMethods(TestDto.class, false, lookup));
     }
 
     @Test
@@ -475,16 +496,6 @@ class ClassUtilsTest {
     }
 
     @Test
-    void newInstance_withCollection() {
-        // When
-        final List<?> result = ClassUtils.newInstance(List.class);
-
-        // Then
-        assertNotNull(result);
-        assertTrue(result instanceof java.util.ArrayList);
-    }
-
-    @Test
     void newInstance_withConstructor() throws NoSuchMethodException {
         // Given
         final java.lang.reflect.Constructor<TestDto> constructor = TestDto.class.getDeclaredConstructor();
@@ -520,6 +531,92 @@ class ClassUtilsTest {
     }
 
     @Test
+    void newInstance_withCollectionInterface() {
+        // When
+        final Collection<?> result = ClassUtils.newInstance(Collection.class);
+
+        // Then
+        assertNotNull(result);
+        assertInstanceOf(ArrayList.class, result);
+    }
+
+    @Test
+    void newInstance_withListInterface() {
+        // When
+        final List<?> result = ClassUtils.newInstance(List.class);
+
+        // Then
+        assertNotNull(result);
+        assertInstanceOf(ArrayList.class, result);
+    }
+
+    @Test
+    void newInstance_withSetInterface() {
+        // When
+        final Set<?> result = ClassUtils.newInstance(Set.class);
+
+        // Then
+        assertNotNull(result);
+        assertInstanceOf(HashSet.class, result);
+    }
+
+    @Test
+    void newInstance_withSortedSetInterface() {
+        // When
+        final SortedSet<?> result = ClassUtils.newInstance(SortedSet.class);
+
+        // Then
+        assertNotNull(result);
+        assertInstanceOf(TreeSet.class, result);
+    }
+
+    @Test
+    void newInstance_withNavigableSetInterface() {
+        // When
+        final NavigableSet<?> result = ClassUtils.newInstance(NavigableSet.class);
+
+        // Then
+        assertNotNull(result);
+        assertInstanceOf(TreeSet.class, result);
+    }
+
+    @Test
+    void newInstance_withQueueInterface() {
+        // When
+        final Queue<?> result = ClassUtils.newInstance(Queue.class);
+
+        // Then
+        assertNotNull(result);
+        assertInstanceOf(ArrayDeque.class, result);
+    }
+
+    @Test
+    void newInstance_withDequeInterface() {
+        // When
+        final Deque<?> result = ClassUtils.newInstance(Deque.class);
+
+        // Then
+        assertNotNull(result);
+        assertInstanceOf(ArrayDeque.class, result);
+    }
+
+    @Test
+    void newInstance_withConcreteCollectionClass() {
+        // When
+        final CustomList<?> result = ClassUtils.newInstance(CustomList.class);
+
+        // Then
+        assertNotNull(result);
+        assertInstanceOf(CustomList.class, result);
+    }
+
+    @Test
+    void newInstance_withConcreteCollectionClassWithoutNoArgsConstructor_failure() {
+        // When/Then
+        assertThrows(IllegalStateException.class, () -> ClassUtils.newInstance(CustomListWithoutNoArgsConstructor.class));
+    }
+
+    @Test
     void getConstructors() {
         // When
         final java.lang.reflect.Constructor<TestDto>[] result = ClassUtils.getConstructors(TestDto.class);
@@ -535,6 +632,70 @@ class ClassUtilsTest {
 
         // Then
         assertTrue(result.length > 0);
+    }
+
+    @Test
+    void getConstructors_withCollectionInterface() {
+        // When
+        final java.lang.reflect.Constructor<Collection>[] result = ClassUtils.getConstructors(Collection.class);
+
+        // Then
+        assertTrue(result.length > 0);
+    }
+
+    @Test
+    void getConstructors_withSetInterface() {
+        // When
+        final java.lang.reflect.Constructor<Set>[] result = ClassUtils.getConstructors(Set.class);
+
+        // Then
+        assertTrue(result.length > 0);
+    }
+
+    @Test
+    void getConstructors_withSortedSetInterface() {
+        // When
+        final java.lang.reflect.Constructor<SortedSet>[] result = ClassUtils.getConstructors(SortedSet.class);
+
+        // Then
+        assertTrue(result.length > 0);
+    }
+
+    @Test
+    void getConstructors_withNavigableSetInterface() {
+        // When
+        final java.lang.reflect.Constructor<NavigableSet>[] result = ClassUtils.getConstructors(NavigableSet.class);
+
+        // Then
+        assertTrue(result.length > 0);
+    }
+
+    @Test
+    void getConstructors_withQueueInterface() {
+        // When
+        final java.lang.reflect.Constructor<Queue>[] result = ClassUtils.getConstructors(Queue.class);
+
+        // Then
+        assertTrue(result.length > 0);
+    }
+
+    @Test
+    void getConstructors_withDequeInterface() {
+        // When
+        final java.lang.reflect.Constructor<Deque>[] result = ClassUtils.getConstructors(Deque.class);
+
+        // Then
+        assertTrue(result.length > 0);
+    }
+
+    @Test
+    void getConstructors_withConcreteCollectionClass() {
+        // When
+        final java.lang.reflect.Constructor<CustomList>[] result = ClassUtils.getConstructors(CustomList.class);
+
+        // Then
+        assertEquals(1, result.length);
+        assertEquals(CustomList.class, result[0].getDeclaringClass());
     }
 
     @Test
@@ -602,6 +763,27 @@ class ClassUtilsTest {
 
         private ConstructorArgumentClass(final String value) {
             this.value = value;
+        }
+    }
+
+    private static class CustomList<T> extends ArrayList<T> {
+    }
+
+    private static class CustomListWithoutNoArgsConstructor<T> extends ArrayList<T> {
+        private CustomListWithoutNoArgsConstructor(final String value) {
+        }
+    }
+
+    private static class GenericParent<T> {
+        T value() {
+            return null;
+        }
+    }
+
+    private static class StringChild extends GenericParent<String> {
+        @Override
+        String value() {
+            return "test-value";
         }
     }
 }
