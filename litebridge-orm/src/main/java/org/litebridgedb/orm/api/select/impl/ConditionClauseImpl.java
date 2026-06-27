@@ -9,6 +9,7 @@ import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 public class ConditionClauseImpl<DTO,
@@ -37,18 +38,14 @@ public class ConditionClauseImpl<DTO,
         return condition(Operator.EQ, value);
     }
 
-    public CCT eq(final Function<Subselect, SelectTerminal<?>> sub) {
-        final SelectTerminal<?> selectTerminal = sub.apply(new Subselect(litebridgeContext.fromClauseEngine()));
-        final SelectSpec selectSpec = getSelectSpec(selectTerminal);
-        return condition(Operator.EQ, selectSpec);
-    }
-
-    protected SelectSpec getSelectSpec(final SelectTerminal<?> selectTerminal) {
-        if (selectTerminal instanceof AbstractWhereClauseTerminal<?, ?, ?, ?, ?, ?, ?> terminal) {
-            return terminal.delegate.selectSpec();
-        } else {
-            throw new IllegalArgumentException("Unsupported terminal: " + selectTerminal);
-        }
+    /**
+     * Equals
+     *
+     * @param subselect Function that builds a sub-select query
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    public CCT eq(final Function<Subselect, SelectTerminal<?>> subselect) {
+        return subselectImpl(Operator.EQ, subselect, true);
     }
 
     /**
@@ -62,13 +59,33 @@ public class ConditionClauseImpl<DTO,
     }
 
     /**
-     * Creates a condition terminal for less-than comparison with the specified rhs.
+     * Not equals
+     *
+     * @param subselect Function that builds a sub-select query
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    public CCT neq(final Function<Subselect, SelectTerminal<?>> subselect) {
+        return subselectImpl(Operator.NEQ, subselect, true);
+    }
+
+    /**
+     * Less than
      *
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
     public CCT lt(final Object value) {
-        return condition(Operator.LT, value);
+        return condition(Operator.LT, Objects.requireNonNull(value, "Operator LT requires a non-NULL RHS value"));
+    }
+
+    /**
+     * Less than
+     *
+     * @param subselect Function that builds a sub-select query
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    public CCT lt(final Function<Subselect, SelectTerminal<?>> subselect) {
+        return subselectImpl(Operator.LT, subselect, false);
     }
 
     /**
@@ -82,6 +99,16 @@ public class ConditionClauseImpl<DTO,
     }
 
     /**
+     * Less than or equals
+     *
+     * @param subselect Function that builds a sub-select query
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    public CCT lte(final Function<Subselect, SelectTerminal<?>> subselect) {
+        return subselectImpl(Operator.LTE, subselect, false);
+    }
+
+    /**
      * Greater than
      *
      * @param value The operand for the condition.
@@ -92,6 +119,16 @@ public class ConditionClauseImpl<DTO,
     }
 
     /**
+     * Greater than
+     *
+     * @param subselect Function that builds a sub-select query
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    public CCT gt(final Function<Subselect, SelectTerminal<?>> subselect) {
+        return subselectImpl(Operator.GT, subselect, false);
+    }
+
+    /**
      * Greater than or equals
      *
      * @param value The operand for the condition.
@@ -99,6 +136,16 @@ public class ConditionClauseImpl<DTO,
      */
     public CCT gte(final Object value) {
         return condition(Operator.GTE, value);
+    }
+
+    /**
+     * Greater than or equals
+     *
+     * @param subselect Function that builds a sub-select query
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    public CCT gte(final Function<Subselect, SelectTerminal<?>> subselect) {
+        return subselectImpl(Operator.GTE, subselect, false);
     }
 
     /**
@@ -121,6 +168,21 @@ public class ConditionClauseImpl<DTO,
      */
     public CCT isNotNull() {
         return condition(Operator.IS_NOT_NULL, null);
+    }
+
+    private CCT subselectImpl(final Operator operator,
+                              final @Nullable Function<Subselect, SelectTerminal<?>> subselect,
+                              final boolean allowNull) {
+        // To support the current overloading and null parameters
+        if (subselect == null) {
+            if (allowNull) {
+                return condition(operator, null);
+            }
+
+            throw new NullPointerException("Operator " + operator + " requires a non-NULL RHS value");
+        }
+
+        return condition(operator, createSelectSpec(subselect));
     }
 
     /**
@@ -148,5 +210,19 @@ public class ConditionClauseImpl<DTO,
 
         conditionSpec.setOperator(translatedOperator);
         return conditionTerminal;
+    }
+
+    private SelectSpec createSelectSpec(final Function<Subselect, SelectTerminal<?>> subselect) {
+        final SelectTerminal<?> selectTerminal = Objects.requireNonNull(subselect, "Subselect cannot be null")
+                .apply(new Subselect(litebridgeContext.fromClauseEngine()));
+        return getSelectSpec(selectTerminal);
+    }
+
+    private SelectSpec getSelectSpec(final SelectTerminal<?> selectTerminal) {
+        if (selectTerminal instanceof AbstractWhereClauseTerminal<?, ?, ?, ?, ?, ?, ?> terminal) {
+            return terminal.delegate.selectSpec();
+        } else {
+            throw new IllegalArgumentException("Unsupported terminal: " + selectTerminal);
+        }
     }
 }
