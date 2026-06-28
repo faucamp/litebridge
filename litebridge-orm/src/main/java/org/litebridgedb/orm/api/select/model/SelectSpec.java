@@ -248,8 +248,14 @@ public abstract class SelectSpec {
                 .toList();
     }
 
-    private Stream<SelectExpression> convertToSelectExpressionStream(final ExpressionSpec[] expressionSpecs) {
+    public Stream<SelectExpression> convertToSelectExpressionStream(final ExpressionSpec[] expressionSpecs) {
         return convertToSelectExpressionStream(Arrays.stream(expressionSpecs));
+    }
+
+    public String[] mapExpressionsToColumns(final ExpressionSpec... expressionSpecs) {
+        return convertToSelectExpressionStream(expressionSpecs)
+                .map(expression -> expression instanceof ColumnExpression columnExpression ? columnExpression.column().name() : expression.toString())
+                .toArray(String[]::new);
     }
 
     private Stream<SelectExpression> convertToSelectExpressionStream(final Stream<ExpressionSpec> expressionSpecs) {

@@ -8,11 +8,8 @@ import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
-import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
-import org.litebridgedb.orm.api.spec.ColumnSpec;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-import org.litebridgedb.orm.api.spec.FieldSpec;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
@@ -63,35 +60,6 @@ class DtoWhereConditionClauseTerminalTest {
     }
 
     @Test
-    void and_fieldColumnSpec() {
-        // Given
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
-        final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", List.of("MY_VAR"), List.of(columnMetaData));
-        final FieldAccessor fieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup());
-        final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
-        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
-        final TableRegistry tableRegistry = new TableRegistry();
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        tableRegistry.addTable(TestDto.class, ormTable);
-        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class));
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
-
-        final DtoWhereConditionClauseTerminal<TestDto> dtoWhereConditionClauseTerminal = new DtoWhereConditionClauseTerminal<>(dtoSelector);
-        final FieldColumnSpec fieldColumnSpec = new FieldColumnSpec(new FieldSpec("myVar", false), new ColumnSpec("MY_VAR"));
-
-        // When
-        final DtoWhereConditionClause<TestDto> result = dtoWhereConditionClauseTerminal.and(fieldColumnSpec);
-
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
     void orderBy() {
         // Given
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
@@ -112,35 +80,6 @@ class DtoWhereConditionClauseTerminalTest {
 
         // When
         final DtoOrderByClause<TestDto> result = dtoWhereConditionClauseTerminal.orderBy("myVar");
-
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
-    void orderBy_fieldColumnSpec() {
-        // Given
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
-        final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", List.of("MY_VAR"), List.of(columnMetaData));
-        final FieldAccessor fieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup());
-        final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
-        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
-        final TableRegistry tableRegistry = new TableRegistry();
-        tableRegistry.addTable(TestDto.class, ormTable);
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class));
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
-
-        final DtoWhereConditionClauseTerminal<TestDto> dtoWhereConditionClauseTerminal = new DtoWhereConditionClauseTerminal<>(dtoSelector);
-        final FieldColumnSpec fieldColumnSpec = new FieldColumnSpec(new FieldSpec("myVar", false), new ColumnSpec("MY_VAR"));
-
-        // When
-        final DtoOrderByClause<TestDto> result = dtoWhereConditionClauseTerminal.orderBy(fieldColumnSpec);
 
         // Then
         assertNotNull(result);

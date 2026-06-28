@@ -15,14 +15,11 @@ import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
-import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
-import org.litebridgedb.orm.api.spec.ColumnSpec;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.engine.FromClauseEngine;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
@@ -124,23 +121,6 @@ class DtoFromClauseTerminalTest {
 
         // When
         final DtoWhereConditionClause<CompositeKeyDto> result = dtoFromClauseTerminal.where("id1");
-
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
-    void where_fieldColumnSpec() {
-        // Given
-        final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(context.dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(context.aliasGenerator.aliasTable(context.ormTable));
-
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = new DtoFromClauseTerminal<>(context.dtoSelector);
-        final FieldColumnSpec fieldColumnSpec = new FieldColumnSpec(new FieldSpec("myVar", false), new ColumnSpec("MY_VAR"));
-
-        // When
-        final DtoWhereConditionClause<TestDto> result = dtoFromClauseTerminal.where(fieldColumnSpec);
 
         // Then
         assertNotNull(result);
@@ -253,23 +233,6 @@ class DtoFromClauseTerminalTest {
 
         // When
         final DtoOrderByClause<TestDto> result = dtoFromClauseTerminal.orderBy("myVar");
-
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
-    void orderBy_fieldColumnSpec() {
-        // Given
-        final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(context.dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(context.aliasGenerator.aliasTable(context.ormTable));
-
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = new DtoFromClauseTerminal<>(context.dtoSelector);
-        final FieldColumnSpec fieldColumnSpec = new FieldColumnSpec(new FieldSpec("myVar", false), new ColumnSpec("MY_VAR"));
-
-        // When
-        final DtoOrderByClause<TestDto> result = dtoFromClauseTerminal.orderBy(fieldColumnSpec);
 
         // Then
         assertNotNull(result);

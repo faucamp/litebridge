@@ -4,7 +4,6 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractWhereClauseTerminal;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -74,13 +73,19 @@ public final class DtoWhereConditionClauseTerminal<DTO>
      * @return the parent condition clause interface, allowing further chaining of conditions
      */
     @Override
-    public DtoWhereConditionClause<DTO> and(final FieldColumnSpec field) {
-        return and(field.field().name());
+    public DtoWhereConditionClause<DTO> and(final org.litebridgedb.orm.expression.ColumnExpressionSpec field) {
+        return and(field.column().name());
     }
 
     @Override
     public DtoGroupByClauseTerminal<DTO> groupBy(final String... columns) {
         throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    @Override
+    public DtoGroupByClauseTerminal<DTO> groupBy(final ExpressionSpec... fields) {
+        selectSpec.setGroupBy(new org.litebridgedb.orm.api.select.model.GroupBySpec(selectSpec.mapExpressionsToColumns(fields)));
+        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate);
     }
 
     @Override
@@ -92,10 +97,8 @@ public final class DtoWhereConditionClauseTerminal<DTO>
     }
 
     @Override
-    public DtoOrderByClause<DTO> orderBy(final FieldColumnSpec... fields) {
-        return orderByImpl(Arrays.stream(fields)
-                .map(field -> field.columnSpec().name())
-                .toArray(String[]::new));
+    public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
+        return orderByImpl(selectSpec.mapExpressionsToColumns(fields));
     }
 
     private DtoOrderByClause<DTO> orderByImpl(final String[] columns) {

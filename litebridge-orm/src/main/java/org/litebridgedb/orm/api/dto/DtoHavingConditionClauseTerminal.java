@@ -68,8 +68,8 @@ public final class DtoHavingConditionClauseTerminal<DTO>
      * @return the parent condition clause interface, allowing further chaining of conditions
      */
     @Override
-    public DtoHavingConditionClause<DTO> and(final FieldColumnSpec field) {
-        return and(field.field().name());
+    public DtoHavingConditionClause<DTO> and(final org.litebridgedb.orm.expression.ColumnExpressionSpec field) {
+        return and(field.column().name());
     }
 
     @Override
@@ -81,10 +81,8 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     }
 
     @Override
-    public DtoOrderByClause<DTO> orderBy(final FieldColumnSpec... fields) {
-        return orderByImpl(Arrays.stream(fields)
-                .map(field -> field.columnSpec().name())
-                .toArray(String[]::new));
+    public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
+        return orderByImpl(selectSpec.mapExpressionsToColumns(fields));
     }
 
     private DtoOrderByClause<DTO> orderByImpl(final String[] columns) {

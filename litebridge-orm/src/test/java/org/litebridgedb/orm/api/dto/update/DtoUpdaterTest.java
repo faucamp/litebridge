@@ -40,27 +40,6 @@ class DtoUpdaterTest {
     }
 
     @Test
-    void where_fieldSpec() {
-        // Given
-        OrmTable ormTable = ormTable();
-        TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        TableRegistry tableRegistry = mock(TableRegistry.class);
-        ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
-        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, databaseProvider, mock(LitebridgeContext.class));
-
-        FieldColumnSpec fieldColumnSpec = mock(FieldColumnSpec.class);
-        FieldSpec fieldSpec = mock(FieldSpec.class);
-        when(fieldColumnSpec.field()).thenReturn(fieldSpec);
-        when(fieldSpec.name()).thenReturn("id");
-
-        // When
-        DtoUpdateWhereConditionClause<TestDto> result = updater.where(fieldColumnSpec);
-
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
     void set_string() {
         // Given
         OrmTable ormTable = ormTable();
@@ -75,28 +54,7 @@ class DtoUpdaterTest {
         // Then
         assertNotNull(result);
     }
-
-    @Test
-    void set_fieldSpec() {
-        // Given
-        OrmTable ormTable = ormTable();
-        TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        TableRegistry tableRegistry = mock(TableRegistry.class);
-        ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
-        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, databaseProvider, mock(LitebridgeContext.class));
-
-        FieldColumnSpec fieldColumnSpec = mock(FieldColumnSpec.class);
-        FieldSpec fieldSpec = mock(FieldSpec.class);
-        when(fieldColumnSpec.field()).thenReturn(fieldSpec);
-        when(fieldSpec.name()).thenReturn("id");
-
-        // When
-        UpdateSetStep<DtoUpdateStep<TestDto>> result = updater.set(fieldColumnSpec);
-
-        // Then
-        assertNotNull(result);
-    }
-
+    
     private static OrmTable ormTable() {
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final Table table = new Table("", "public", "test_table");

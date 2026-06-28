@@ -3,9 +3,8 @@ package org.litebridgedb.orm.api.sql;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-
-import java.util.Arrays;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 
 public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionClauseTerminal<Row,
         SqlJoinConditionClause,
@@ -31,8 +30,8 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     }
 
     @Override
-    public SqlJoinConditionClause and(final FieldColumnSpec column) {
-        return and(column.columnSpec().name());
+    public SqlJoinConditionClause and(final ColumnExpressionSpec column) {
+        return and(column.column().name());
     }
 
     @Override
@@ -47,8 +46,8 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     }
 
     @Override
-    public SqlWhereConditionClause where(final FieldColumnSpec column) {
-        return where(column.columnSpec().name());
+    public SqlWhereConditionClause where(final ColumnExpressionSpec column) {
+        return where(column.column().name());
     }
 
     @Override
@@ -57,14 +56,18 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     }
 
     @Override
+    public SqlGroupByClauseTerminal groupBy(final ExpressionSpec... columns) {
+        selectSpec.setGroupBy(new org.litebridgedb.orm.api.select.model.GroupBySpec(selectSpec.mapExpressionsToColumns(columns)));
+        return new SqlGroupByClauseTerminal((SqlSelector) delegate);
+    }
+
+    @Override
     public SqlOrderByClause orderBy(final String... columns) {
         return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
     }
 
-    public SqlOrderByClause orderBy(final FieldColumnSpec... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(Arrays.stream(columns)
-                .map(fieldColumnSpec -> fieldColumnSpec.columnSpec().name())
-                .toArray(String[]::new)),
-                (SqlSelector) delegate);
+    @Override
+    public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
+        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.mapExpressionsToColumns(columns)), (SqlSelector) delegate);
     }
 }

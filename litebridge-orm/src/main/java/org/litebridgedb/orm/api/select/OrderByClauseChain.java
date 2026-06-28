@@ -25,4 +25,13 @@ public interface OrderByClauseChain<DTO,
      * @return a selector chain with ordering applied
      */
     OBC then(final String... columns);
+
+    /**
+     * Adds another ordering expression which again requires an explicit direction.
+     * Each call to this method appends another ordering expression.
+     *
+     * @param columns expressions to order by
+     * @return a selector chain with ordering applied
+     */
+    OBC then(final org.litebridgedb.orm.expression.ExpressionSpec... columns);
 }

@@ -5,7 +5,6 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridgedb.orm.api.select.model.GroupBySpec;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -85,8 +84,8 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     }
 
     @Override
-    public DtoWhereConditionClause<DTO> where(final FieldColumnSpec field) {
-        return where(field.field().name());
+    public DtoWhereConditionClause<DTO> where(final ColumnExpressionSpec field) {
+        return where(field.column().name());
     }
 
     /**
@@ -160,6 +159,12 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     }
 
     @Override
+    public DtoGroupByClauseTerminal<DTO> groupBy(final ExpressionSpec... fields) {
+        selectSpec.setGroupBy(new GroupBySpec(selectSpec.mapExpressionsToColumns(fields)));
+        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate);
+    }
+
+    @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
         final String[] columns = Arrays.stream(fields)
                 .map(ormTable::getColumnForFieldName)
@@ -169,11 +174,8 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     }
 
     @Override
-    public DtoOrderByClause<DTO> orderBy(final FieldColumnSpec... fields) {
-        final String[] columns = Arrays.stream(fields)
-                .map(fieldColumnSpec -> fieldColumnSpec.columnSpec().name())
-                .toArray(String[]::new);
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), (DtoSelector<DTO>) delegate);
+    public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(selectSpec.mapExpressionsToColumns(fields)), (DtoSelector<DTO>) delegate);
     }
 
     private DtoWhereConditionClauseTerminal<DTO> createWithIdClause(final Object id) {

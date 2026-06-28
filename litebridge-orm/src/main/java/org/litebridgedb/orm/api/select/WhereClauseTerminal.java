@@ -28,9 +28,18 @@ public interface WhereClauseTerminal<DTO,
      * @param columns the lhs(s) to group the results by.
      *                Each lhs must be valid for the associated table or view in the query.
      * @return an instance of the type representing the GROUP BY clause, allowing
-     * further specification of grouping or transitioning to the next query stage.
+     * further specification of ordering or transitioning to the next query stage.
      */
     GBCT groupBy(String... columns);
+
+    /**
+     * Adds a GROUP BY clause to the query, specifying the expressions to group the results by.
+     *
+     * @param columns the expressions to group the results by.
+     * @return an instance of the type representing the GROUP BY clause, allowing
+     * further specification of ordering or transitioning to the next query stage.
+     */
+    GBCT groupBy(org.litebridgedb.orm.expression.ExpressionSpec... columns);
 
     /**
      * Adds an ORDER BY clause to the query, specifying the expressions to sort the results by.
@@ -53,5 +62,5 @@ public interface WhereClauseTerminal<DTO,
      * @return an instance of the type representing the ORDER BY clause, allowing further
      * specification of ordering or transitioning to the next query stage.
      */
-    OBC orderBy(FieldColumnSpec... columns);
+    OBC orderBy(org.litebridgedb.orm.expression.ExpressionSpec... columns);
 }

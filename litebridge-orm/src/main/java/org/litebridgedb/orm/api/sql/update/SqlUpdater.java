@@ -3,7 +3,7 @@ package org.litebridgedb.orm.api.sql.update;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.orm.engine.LitebridgeContext;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.api.update.impl.AbstractUpdater;
 import org.litebridgedb.orm.api.update.model.UpdateSpec;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
@@ -23,8 +23,8 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
     }
 
     @Override
-    public SqlUpdateWhereConditionClause where(final FieldColumnSpec column) {
-        return where(column.columnSpec().name());
+    public SqlUpdateWhereConditionClause where(final ColumnExpressionSpec column) {
+        return where(column.column().name());
     }
 
     @Override
@@ -34,7 +34,7 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
     }
 
     @Override
-    public SqlUpdateSetStep set(final FieldColumnSpec column) {
-        return set(column.columnSpec().name());
+    public SqlUpdateSetStep set(final ColumnExpressionSpec column) {
+        return new SqlUpdateSetStep(column.column(), this);
     }
 }

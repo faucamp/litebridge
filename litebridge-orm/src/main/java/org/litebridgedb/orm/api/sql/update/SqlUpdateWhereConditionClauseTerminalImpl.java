@@ -1,9 +1,9 @@
 package org.litebridgedb.orm.api.sql.update;
 
 import org.litebridgedb.db.spi.update.UpdateResult;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.api.update.UpdateTerminal;
 import org.litebridgedb.orm.api.update.model.UpdateSpec;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 
 public final class SqlUpdateWhereConditionClauseTerminalImpl
 
@@ -33,7 +33,7 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl
     }
 
     @Override
-    public SqlUpdateWhereConditionClause and(final FieldColumnSpec column) {
-        return and(column.columnSpec().name());
+    public SqlUpdateWhereConditionClause and(final ColumnExpressionSpec column) {
+        return and(column.column().name());
     }
 }

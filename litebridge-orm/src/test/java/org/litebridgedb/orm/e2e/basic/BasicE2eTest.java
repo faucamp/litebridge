@@ -473,7 +473,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         litebridge.save((Object[]) persons);
 
         // Read and populate specific fields only
-        final List<Person> result = litebridge.select(Fn.f("id"), Fn.f("surname")).from(Person.class).orderBy("id").asc().list();
+        final List<Person> result = litebridge.select("id", "surname").from(Person.class).orderBy("id").asc().list();
 
         assertEquals(3, result.size());
         for (int i = 0; i < 3; i++) {
