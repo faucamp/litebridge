@@ -2,14 +2,19 @@ package org.litebridgedb.orm.api.dto;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
+import org.litebridgedb.orm.engine.LitebridgeContext;
+import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.tracking.FieldAccessor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
 
@@ -33,7 +38,7 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
                          final OrmTable dtoTable,
                          final AliasGenerator aliasGenerator,
                          final LitebridgeContext litebridgeContext) {
-        this (dtoClass, dtoTable, aliasGenerator, litebridgeContext, null);
+        this(dtoClass, dtoTable, aliasGenerator, litebridgeContext, null);
     }
 
     public Class<?> dtoClass() {
@@ -71,6 +76,18 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
         }
 
         return joinSpec;
+    }
+
+    public List<ExpressionSpec> createSelectFieldSpecs(final String[] fields) {
+        return Arrays.stream(fields)
+                .map(this::createSelectFieldSpec)
+                .toList();
+    }
+
+    private ExpressionSpec createSelectFieldSpec(final String field) {
+        final ColumnMetaData columnMetaData = dtoTable.getColumnForFieldName(field);
+        final FieldAccessor fieldAccessor = dtoTable.getFieldForColumnName(columnMetaData.name());
+        return new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn());
     }
 
     public record FieldColumn(FieldAccessor fieldAccessor, Column column) {

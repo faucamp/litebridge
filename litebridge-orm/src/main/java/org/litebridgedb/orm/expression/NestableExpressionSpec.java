@@ -25,7 +25,13 @@ public sealed interface NestableExpressionSpec extends ColumnExpressionSpec
      *
      * @return the target lhs.
      */
-    default Column column() {
-        return target().column();
+    @Override
+    default Column getColumn() {
+        return target().getColumn();
+    }
+
+    @Override
+    default void setColumn(Column column) {
+        target().setColumn(column);
     }
 }

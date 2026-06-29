@@ -9,7 +9,6 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.orm.api.select.impl.AbstractSelector;
 import org.litebridgedb.orm.engine.LitebridgeContext;
-import org.litebridgedb.orm.api.select.impl.ProtoExpressionResolver;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.DtoConstructor;
@@ -51,10 +50,7 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
     }
 
     public DtoFromClauseTerminal<TypeOverride> select(final ExpressionSpec... expressionSpecs) {
-        final ProtoExpressionResolver protoExpressionResolver = new DtoProtoExpressionResolver(selectSpec, aliasGenerator, classFieldAccessorCache);
-        return selectImpl(selectSpec.getTable(), Arrays.stream(expressionSpecs)
-                .flatMap(protoExpressionResolver::resolveExpression)
-                .toList());
+        return selectImpl(selectSpec.getTable(), Arrays.stream(expressionSpecs).toList());
     }
 
     public DtoFromClauseTerminal<TypeOverride> select() {
@@ -76,6 +72,7 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
     private DtoFromClauseTerminal<TypeOverride> selectImpl(final Table table, final List<ExpressionSpec> expressionSpecs) {
         assert table.alias() != null;
         selectSpec.setTable(table);
+        selectSpec.setProtoExpressionResolver(() -> new DtoProtoExpressionResolver(selectSpec, aliasGenerator, classFieldAccessorCache));
         selectSpec.setDtoAlias(selectSpec.dtoClass(), Objects.requireNonNull(table.alias()));
         selectSpec.setExpressions(expressionSpecs);
         return new DtoFromClauseTerminal<>(this);

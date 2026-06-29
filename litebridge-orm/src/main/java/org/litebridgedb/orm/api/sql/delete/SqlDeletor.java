@@ -4,6 +4,7 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.orm.api.delete.impl.AbstractDeletor;
 import org.litebridgedb.orm.api.delete.model.DeleteSpec;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
@@ -22,5 +23,10 @@ public final class SqlDeletor extends AbstractDeletor<DeleteSpec> implements Sql
     @Override
     public SqlDeleteWhereConditionClause where(final String column) {
         return new SqlDeleteWhereConditionClause(deleteSpec.newWhereCondition(new Column(deleteSpec.getTable(), column)), new SqlDeleteWhereConditionClauseTerminalImpl(this), litebridgeContext);
+    }
+
+    @Override
+    public SqlDeleteWhereConditionClause where(final ColumnExpressionSpec column) {
+        return where(column.getColumn().name());
     }
 }

@@ -3,7 +3,7 @@ package org.litebridgedb.orm.api.dto.delete;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.orm.api.delete.impl.AbstractDeletor;
 import org.litebridgedb.orm.engine.LitebridgeContext;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
@@ -26,7 +26,7 @@ public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implem
     }
 
     @Override
-    public DtoDeleteWhereConditionClause<DTO> where(final FieldColumnSpec field) {
-        return where(field.field().name());
+    public DtoDeleteWhereConditionClause<DTO> where(final ColumnExpressionSpec field) {
+        return where(field.getColumn().name());
     }
 }

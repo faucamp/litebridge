@@ -5,8 +5,6 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.orm.engine.LitebridgeContext;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridgedb.tracking.ChangeTracker;
@@ -19,7 +17,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class DtoDeletorTest {
 
@@ -32,25 +29,6 @@ class DtoDeletorTest {
 
         // When
         final DtoDeleteWhereConditionClause<TestDto> result = deletor.where("id");
-
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
-    void where_fieldSpec() {
-        // Given
-        final OrmTable ormTable = ormTable();
-        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final DtoDeletor<TestDto> deletor = new DtoDeletor<>(TestDto.class, ormTable, databaseProvider, mock(LitebridgeContext.class));
-
-        final FieldColumnSpec fieldColumnSpec = mock(FieldColumnSpec.class);
-        final FieldSpec fieldSpec = mock(FieldSpec.class);
-        when(fieldColumnSpec.field()).thenReturn(fieldSpec);
-        when(fieldSpec.name()).thenReturn("id");
-
-        // When
-        final DtoDeleteWhereConditionClause<TestDto> result = deletor.where(fieldColumnSpec);
 
         // Then
         assertNotNull(result);

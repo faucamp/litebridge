@@ -7,14 +7,16 @@ import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
-import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.JoinSpec;
 import org.litebridgedb.orm.api.select.model.LimitSpec;
 import org.litebridgedb.orm.api.select.model.OrderBySpec;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.TestColumnExpression;
 import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
+import org.litebridgedb.orm.expression.TestSelectReferenceExpressionFactory;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 import java.util.List;
@@ -70,7 +72,7 @@ class SqlSelectSpecTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertInstanceOf(SelectColumnSpec.class, result.getFirst());
-        assertSame(column, ((SelectColumnSpec) result.getFirst()).column());
+        assertSame(column, ((SelectColumnSpec) result.getFirst()).getColumn());
     }
 
     @Test
@@ -89,7 +91,7 @@ class SqlSelectSpecTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertInstanceOf(SelectColumnSpec.class, result.getFirst());
-        assertSame(column, ((SelectColumnSpec) result.getFirst()).column());
+        assertSame(column, ((SelectColumnSpec) result.getFirst()).getColumn());
     }
 
     @Test
@@ -209,7 +211,8 @@ class SqlSelectSpecTest {
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
         sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
-        final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"TEST_COLUMN"});
+        final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
+        final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectColumnSpec));
 
         // When
         sqlSelectSpec.setOrderBys(List.of(orderBySpec));
@@ -234,9 +237,10 @@ class SqlSelectSpecTest {
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
         sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
+        final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
 
         // When
-        final OrderBySpec result = sqlSelectSpec.newOrderBy("TEST_COLUMN");
+        final OrderBySpec result = sqlSelectSpec.newOrderBy(selectColumnSpec);
 
         // Then
         assertNotNull(result);
@@ -258,7 +262,8 @@ class SqlSelectSpecTest {
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
         sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
-        final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"TEST_COLUMN"});
+        final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
+        final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectColumnSpec));
         sqlSelectSpec.setOrderBys(List.of(orderBySpec));
         final LimitSpec limitSpec = new LimitSpec();
         limitSpec.setOffset(100);
@@ -285,7 +290,8 @@ class SqlSelectSpecTest {
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
         sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
-        final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"TEST_COLUMN"});
+        final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
+        final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectColumnSpec));
         sqlSelectSpec.setOrderBys(List.of(orderBySpec));
 
         // When
@@ -327,11 +333,14 @@ class SqlSelectSpecTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         when(litebridgeContext.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(litebridgeContext.selectExpressionMapper()).thenReturn(new SelectExpressionMapper(sqlFunctionRegistry));
         final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(litebridgeContext);
+        sqlSelectSpec.setProtoExpressionResolver(() -> new SqlProtoExpressionResolver(sqlSelectSpec));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -341,7 +350,8 @@ class SqlSelectSpecTest {
         conditionSpec.setOperator(Operator.LTE);
         conditionSpec.setValue(123);
         sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
-        final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"TEST_COLUMN"});
+        final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
+        final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectColumnSpec));
         sqlSelectSpec.setOrderBys(List.of(orderBySpec));
         final LimitSpec limitSpec = new LimitSpec();
         limitSpec.setOffset(100);
@@ -364,6 +374,7 @@ class SqlSelectSpecTest {
     void toSelect_expressionsNotSet() {
         // Given
         final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
+        sqlSelectSpec.setProtoExpressionResolver(() -> new SqlProtoExpressionResolver(sqlSelectSpec));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
 

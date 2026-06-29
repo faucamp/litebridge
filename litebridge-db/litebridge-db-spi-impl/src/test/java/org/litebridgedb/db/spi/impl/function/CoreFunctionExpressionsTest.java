@@ -2,26 +2,18 @@ package org.litebridgedb.db.spi.impl.function;
 
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
-import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
-import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridgedb.db.spi.impl.function.aggregate.Avg;
-import org.litebridgedb.db.spi.impl.function.aggregate.Count;
-import org.litebridgedb.db.spi.impl.function.date.CurrentTimestamp;
-import org.litebridgedb.db.spi.impl.function.scalar.Abs;
-import org.litebridgedb.db.spi.impl.function.scalar.Lower;
-import org.litebridgedb.db.spi.impl.function.scalar.Substring;
-import org.litebridgedb.db.spi.impl.function.scalar.Upper;
 import org.litebridgedb.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridgedb.db.spi.query.Select;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -37,17 +29,17 @@ class CoreFunctionExpressionsTest {
         final AliasedColumnExpression expression = new AliasedColumnExpression(column, generator);
         final Select selectMock = mock(Select.class);
         final SelectColumn selectColumn = new SelectColumn(column, generator);
-        
+
         // Case 1: Column is selected
         when(selectMock.expressions()).thenReturn(List.of(selectColumn));
         assertEquals("v", expression.localId(selectMock));
-        
-        // Case 2: Column is not selected (different column in list)
+
+        // Case 2: Column is not selected (different expression in list)
         final Column otherColumn = new Column(new Table("TEST"), "OTHER");
         final SelectColumn otherSelectColumn = new SelectColumn(otherColumn, generator);
         when(selectMock.expressions()).thenReturn(List.of(otherSelectColumn));
         assertEquals("VAL", expression.localId(selectMock));
-        
+
         // Case 3: List contains non-SelectColumn expressions
         final SelectExpression literal = mock(SelectExpression.class);
         when(selectMock.expressions()).thenReturn(List.of(literal));
@@ -55,8 +47,8 @@ class CoreFunctionExpressionsTest {
 
         // Case 4: Not a Select operation
         assertEquals("VAL", expression.localId(select));
-        
-        // Case 5: No alias on column
+
+        // Case 5: No alias on expression
         final AliasedColumnExpression noAliasExpr = new AliasedColumnExpression(new Column(new Table("TEST"), "VAL"), generator);
         assertEquals("VAL", noAliasExpr.localId(selectMock));
     }
@@ -98,13 +90,13 @@ class CoreFunctionExpressionsTest {
     void selectReferenceImpl_toSql() {
         // Given
         final Column column = new Column(new Table("TEST"), "VAL");
-        final SelectReferenceImpl reference = new SelectReferenceImpl(column);
+        final SelectReferenceImpl reference = new SelectReferenceImpl(column, new ColumnIdentifierGenerator());
 
         // When
         final String sql = reference.toSql(select);
 
         // Then
-        assertEquals("", sql);
+        assertEquals("VAL", sql);
     }
 
     @Test
@@ -119,7 +111,7 @@ class CoreFunctionExpressionsTest {
 
         // Then
         assertEquals("TEST.VAL", sql);
-        assertEquals("TEST.VAL", sqlWithAlias); // No alias set on column
+        assertEquals("TEST.VAL", sqlWithAlias); // No alias set on expression
     }
 
     @Test

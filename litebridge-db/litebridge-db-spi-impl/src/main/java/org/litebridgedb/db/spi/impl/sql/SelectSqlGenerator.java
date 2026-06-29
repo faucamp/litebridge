@@ -2,14 +2,15 @@ package org.litebridgedb.db.spi.impl.sql;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.CollectionUtils;
-import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.expression.ConvertExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.AliasedColumnExpression;
+import org.litebridgedb.db.spi.impl.function.AliasedDelegateColumnExpression;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
@@ -51,13 +52,14 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
                     sql.append(", ");
                 }
 
-                final String identifier;
-
-                if (expression instanceof AliasedColumnExpression aliasedColumnExpression) {
-                    identifier = aliasedColumnExpression.toSqlWithAlias(select);
-                } else {
-                    identifier = expression.toSql(select);
-                }
+                final SelectExpression targetExpression = expression instanceof ConvertExpression convertExpression ? convertExpression.target() : expression;
+                final String identifier = switch (targetExpression) {
+                    case AliasedDelegateColumnExpression aliasedDelegateColumnExpression ->
+                            aliasedDelegateColumnExpression.toSqlWithAlias(select);
+                    case AliasedColumnExpression aliasedColumnExpression ->
+                            aliasedColumnExpression.toSqlWithAlias(select);
+                    default -> expression.toSql(select);
+                };
 
                 sql.append(identifier);
             }
@@ -102,18 +104,18 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         }
 
         // Group by
-        if (select.groupBy().isPresent()) {
+        if (!select.groupBy().isEmpty()) {
             sql.append(" GROUP BY ");
 
             first = true;
-            for (Column column : select.groupBy().get().columns()) {
+            for (SelectExpression expression : select.groupBy()) {
                 if (first) {
                     first = false;
                 } else {
                     sql.append(", ");
                 }
 
-                sql.append(columnIdentifierGenerator.createColumnReference(column));
+                sql.append(expression.toSql(select));
             }
 
             if (!select.having().isEmpty()) {
@@ -146,8 +148,15 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
                     sql.append(", ");
                 }
 
-                sql.append(columnIdentifierGenerator.createSelectColumnIdentifier(orderBy.column(), false, select))
-                        .append(orderBy.asc() ? " ASC" : " DESC");
+                final String identifier;
+
+                if (orderBy.expression() instanceof AliasedColumnExpression aliasedColumnExpression) {
+                    identifier = aliasedColumnExpression.toSqlWithAlias(select);
+                } else {
+                    identifier = orderBy.expression().toSql(select);
+                }
+
+                sql.append(identifier).append(orderBy.asc() ? " ASC" : " DESC");
             }
         }
 

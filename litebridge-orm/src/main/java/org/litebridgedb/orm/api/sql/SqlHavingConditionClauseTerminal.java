@@ -4,9 +4,8 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.HavingConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractHavingClauseTerminal;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-
-import java.util.Arrays;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 
 public final class SqlHavingConditionClauseTerminal
         extends AbstractHavingClauseTerminal<Row,
@@ -31,20 +30,17 @@ public final class SqlHavingConditionClauseTerminal
     }
 
     @Override
-    public SqlHavingConditionClause and(final FieldColumnSpec column) {
-        return and(column.columnSpec().name());
+    public SqlHavingConditionClause and(final ColumnExpressionSpec column) {
+        return and(column.getColumn().name());
     }
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.createSelectColumnSpecs(columns)), (SqlSelector) delegate);
     }
 
     @Override
-    public SqlOrderByClause orderBy(final FieldColumnSpec... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(Arrays.stream(columns)
-                .map(fieldColumnSpec -> fieldColumnSpec.columnSpec().name())
-                .toArray(String[]::new)),
-                (SqlSelector) delegate);
+    public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
+        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
     }
 }

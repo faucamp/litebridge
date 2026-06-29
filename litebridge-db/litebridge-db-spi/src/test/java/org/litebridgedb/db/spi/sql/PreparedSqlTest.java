@@ -27,7 +27,7 @@ class PreparedSqlTest {
     void preparedSql_bindValues() {
         // Given
         final List<BindValue> bindValues = List.of(new BindValue("test", Types.VARCHAR));
-        final String sql = "SELECT * FROM table WHERE column = ?";
+        final String sql = "SELECT * FROM table WHERE expression = ?";
 
         // When
         final PreparedSql result = new PreparedSql(sql, bindValues);

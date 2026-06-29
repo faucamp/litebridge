@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 public final class FromClauseEngine {
 
     /**
-     * Used to indicate that all fields or columns should be selected.
+     * Used to indicate that all fields or expressions should be selected.
      */
     public static final Aliased[] ALL_COLUMNS = new Aliased[0];
 

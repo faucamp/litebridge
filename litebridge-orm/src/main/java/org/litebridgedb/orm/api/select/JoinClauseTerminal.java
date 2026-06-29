@@ -1,6 +1,6 @@
 package org.litebridgedb.orm.api.select;
 
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 
 /**
  * Terminal clause in a fluent API for constructing SQL JOIN statements.
@@ -45,6 +45,5 @@ public interface JoinClauseTerminal<DTO,
      */
     WCC where(final String column);
 
-    WCC where(final FieldColumnSpec column);
-
+    WCC where(final ColumnExpressionSpec column);
 }

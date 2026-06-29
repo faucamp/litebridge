@@ -43,7 +43,7 @@ class OracleColumnIdentifierGeneratorTest {
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
@@ -66,7 +66,7 @@ class OracleColumnIdentifierGeneratorTest {
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
@@ -90,7 +90,7 @@ class OracleColumnIdentifierGeneratorTest {
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
@@ -116,7 +116,7 @@ class OracleColumnIdentifierGeneratorTest {
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
@@ -139,7 +139,7 @@ class OracleColumnIdentifierGeneratorTest {
                 List.of(new SelectColumn(column, generator)),
                 List.of(join),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
@@ -164,7 +164,7 @@ class OracleColumnIdentifierGeneratorTest {
                 List.of(new SelectColumn(column, generator)),
                 List.of(join),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
@@ -193,7 +193,7 @@ class OracleColumnIdentifierGeneratorTest {
                 List.of(new SelectColumn(column, generator)),
                 List.of(join1, join2),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
@@ -217,7 +217,7 @@ class OracleColumnIdentifierGeneratorTest {
                 List.of(new SelectColumn(column, generator)),
                 List.of(join),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
@@ -242,7 +242,7 @@ class OracleColumnIdentifierGeneratorTest {
                 List.of(new SelectColumn(column, generator)),
                 List.of(join),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
@@ -266,7 +266,7 @@ class OracleColumnIdentifierGeneratorTest {
                 List.of(new SelectColumn(column, generator)),
                 List.of(join),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());

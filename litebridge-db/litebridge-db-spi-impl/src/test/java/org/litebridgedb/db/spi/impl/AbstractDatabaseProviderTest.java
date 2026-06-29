@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
-import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
@@ -12,6 +11,7 @@ import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.function.SelectColumn;
+import org.litebridgedb.db.spi.impl.function.SelectReferenceImpl;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
@@ -406,9 +406,9 @@ class AbstractDatabaseProviderTest {
                 List.of(new Join(table, List.of(new Condition(selectColumn, Operator.USING, null),
                         new Condition(selectColumn, Operator.EQ, "TEST_VALUE")))),
                 List.of(new Condition(selectColumn, Operator.EQ, "TEST_VALUE")),
-                Optional.empty(),
                 Collections.emptyList(),
-                List.of(new OrderBy(column, true)),
+                Collections.emptyList(),
+                List.of(new OrderBy(selectColumn, true)),
                 Optional.of(new Limit(Optional.of(10), Optional.of(20))));
 
         when(typeConverter.convert("TEST_VALUE", Types.VARCHAR)).thenReturn("TEST_VALUE");
@@ -448,7 +448,7 @@ class AbstractDatabaseProviderTest {
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
@@ -491,9 +491,9 @@ class AbstractDatabaseProviderTest {
                 List.of(new Join(table, List.of(new Condition(selectColumn2, Operator.EQ, "TEST_VALUE")))),
                 List.of(new Condition(selectColumn2, Operator.EQ, "TEST_VALUE"),
                         new Condition(selectColumn2, Operator.NEQ, "OTHER_VALUE")),
-                Optional.empty(),
                 Collections.emptyList(),
-                List.of(new OrderBy(column1, true)),
+                Collections.emptyList(),
+                List.of(new OrderBy(new SelectReferenceImpl(column1, new ColumnIdentifierGenerator()), true)),
                 Optional.of(new Limit(Optional.of(10), Optional.of(20))));
 
         // When
@@ -501,7 +501,7 @@ class AbstractDatabaseProviderTest {
 
         // Then
         assertNotNull(result);
-        assertEquals("SELECT t1.TEST_PK AS col1, t1.TEST_COLUMN AS col2 FROM TEST_SCHEMA.TEST_TABLE AS t1 JOIN TEST_SCHEMA.TEST_TABLE AS t1 ON t1.TEST_COLUMN = ? WHERE t1.TEST_COLUMN = ? AND t1.TEST_COLUMN <> ? ORDER BY t1.TEST_PK ASC LIMIT 10 OFFSET 20", result);
+        assertEquals("SELECT t1.TEST_PK AS col1, t1.TEST_COLUMN AS col2 FROM TEST_SCHEMA.TEST_TABLE AS t1 JOIN TEST_SCHEMA.TEST_TABLE AS t1 ON t1.TEST_COLUMN = ? WHERE t1.TEST_COLUMN = ? AND t1.TEST_COLUMN <> ? ORDER BY col1 ASC LIMIT 10 OFFSET 20", result);
     }
 
     @Test
@@ -515,7 +515,7 @@ class AbstractDatabaseProviderTest {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
@@ -829,15 +829,16 @@ class AbstractDatabaseProviderTest {
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final Table table = new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name());
         final Column column = tableMetaData.column("TEST_COLUMN").toColumn();
+        final SelectColumn selectColumn = new SelectColumn(column, new ColumnIdentifierGenerator());
 
         final Select select = new Select(
                 table,
-                List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
+                List.of(selectColumn),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty(),
                 Collections.emptyList(),
-                List.of(new OrderBy(column, false)),
+                Collections.emptyList(),
+                List.of(new OrderBy(selectColumn, false)),
                 Optional.empty());
 
         // When
@@ -859,7 +860,7 @@ class AbstractDatabaseProviderTest {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.of(new Limit(Optional.of(10), Optional.empty())));
@@ -882,7 +883,7 @@ class AbstractDatabaseProviderTest {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.of(new Limit(Optional.empty(), Optional.of(20))));
@@ -982,7 +983,7 @@ class AbstractDatabaseProviderTest {
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty());
@@ -1196,7 +1197,7 @@ class AbstractDatabaseProviderTest {
                 List.of(new SelectColumn(new Column(table, "COL"), new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Optional.empty()
@@ -1240,7 +1241,7 @@ class AbstractDatabaseProviderTest {
         // Given
         mockTransactionManager();
         final TableMetaData tableMetaData = tableMetaDataImpl();
-        final PreparedSql preparedSql = new PreparedSql("SELECT * FROM TEST WHERE COL = ?", 
+        final PreparedSql preparedSql = new PreparedSql("SELECT * FROM TEST WHERE COL = ?",
                 Collections.singletonList(null));
         final PreparedStatement ps = mock(PreparedStatement.class);
         when(connection.prepareStatement(anyString())).thenReturn(ps);

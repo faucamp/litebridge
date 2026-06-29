@@ -9,6 +9,7 @@ import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.OrderBySpec;
+import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
@@ -46,7 +47,8 @@ class DtoOrderByClauseTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class));
-        final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"myVar"});
+        final SelectFieldSpec selectFieldSpec = new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn());
+        final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectFieldSpec));
 
         final DtoOrderByClause<TestDto> dtoDtoOrderByClause = new DtoOrderByClause<>(orderBySpec, dtoSelector);
 
@@ -73,7 +75,8 @@ class DtoOrderByClauseTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
         final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class));
-        final OrderBySpec orderBySpec = new OrderBySpec(new String[]{"myVar"});
+        final SelectFieldSpec selectFieldSpec = new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn());
+        final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectFieldSpec));
 
         final DtoOrderByClause<TestDto> dtoDtoOrderByClause = new DtoOrderByClause<>(orderBySpec, dtoSelector);
 

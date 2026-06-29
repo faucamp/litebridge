@@ -95,7 +95,7 @@ public class SqlFunctionRegistryFactory {
     }
 
     protected SelectReference createSelectReference(Column column) {
-        return new SelectReferenceImpl(column);
+        return new SelectReferenceImpl(column, columnIdentifierGenerator);
     }
 
     /**

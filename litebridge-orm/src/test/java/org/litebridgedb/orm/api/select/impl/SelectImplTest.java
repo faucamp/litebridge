@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.orm.api.sql.SqlProtoExpressionResolver;
 import org.litebridgedb.orm.api.sql.SqlSelectSpec;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
@@ -26,6 +27,7 @@ class SelectImplTest {
     @BeforeEach
     void setUp() {
         selectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
+        selectSpec.setProtoExpressionResolver(() -> new SqlProtoExpressionResolver(selectSpec));
         selectSpec.setTable(new Table("CATALOG", "SCHEMA", "TABLE"));
         databaseProvider = mock(TransactionalDatabaseProvider.class);
         selector = new TestSelector(selectSpec, databaseProvider);

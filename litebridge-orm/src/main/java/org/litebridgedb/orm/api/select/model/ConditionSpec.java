@@ -55,14 +55,14 @@ public class ConditionSpec {
     }
 
     public Condition toCondition(final SelectExpressionMapper selectExpressionMapper) {
-        final SelectExpression lhsSelectExpression = selectExpressionMapper.toSelectExpression(lhs);
+        final SelectExpression lhsSelectExpression = selectExpressionMapper.toSelectExpression(lhs, true);
 
         if (value instanceof SelectSpec selectSpec) {
             final Select select = selectSpec.toSelect();
             final SubselectExpression subselectExpression = selectExpressionMapper.sqlFunctionRegistry().select().subselect().create(select);
             return new Condition(lhsSelectExpression, operator, subselectExpression);
         } else if (value instanceof ExpressionSpec expressionSpec) {
-            return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(expressionSpec));
+            return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(expressionSpec, true));
         } else if (value instanceof Column referencedColumn) {
             // Reference to a selected lhs
             final SelectReference selectReference = selectExpressionMapper.sqlFunctionRegistry().select().reference().create(referencedColumn);

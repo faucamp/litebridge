@@ -32,7 +32,7 @@ public sealed interface ProtoNestableExpressionSpec extends ProtoExpressionSpec 
     default String column() {
         return switch (target()) {
             case ProtoExpressionSpec protoExpression -> protoExpression.column();
-            case ColumnExpressionSpec columnExpression -> columnExpression.column().name();
+            case ColumnExpressionSpec columnExpression -> columnExpression.getColumn().name();
             default -> throw new IllegalArgumentException("Invalid target expression: " + target());
         };
     }

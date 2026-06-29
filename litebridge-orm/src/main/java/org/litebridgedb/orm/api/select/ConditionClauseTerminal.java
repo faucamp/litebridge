@@ -1,6 +1,6 @@
 package org.litebridgedb.orm.api.select;
 
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 
 /**
  * Terminal interface for building SQL condition clauses in a fluent and type-safe manner.
@@ -29,11 +29,11 @@ public interface ConditionClauseTerminal<DTO,
     CC and(String column);
 
     /**
-     * Adds an "AND" condition to the current condition clause using the specified lhs.
+     * Adds an "AND" condition to the current condition clause using the specified expression.
      * This method is used to chain additional conditions in a SQL query in a type-safe and fluent manner.
      *
-     * @param column the lhs to be used in the "AND" condition
+     * @param column the expression to be used in the "AND" condition
      * @return the parent condition clause interface, allowing further chaining of conditions
      */
-    CC and(FieldColumnSpec column);
+    CC and(ColumnExpressionSpec column);
 }

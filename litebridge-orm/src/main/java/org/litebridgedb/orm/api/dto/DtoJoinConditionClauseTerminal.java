@@ -1,15 +1,12 @@
 package org.litebridgedb.orm.api.dto;
 
 import org.litebridgedb.db.spi.Column;
-import org.litebridgedb.db.spi.ColumnMetaData;
-import org.litebridgedb.orm.api.select.GroupByClauseTerminal;
 import org.litebridgedb.orm.api.select.JoinClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.api.select.model.GroupBySpec;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
-
-import java.util.Arrays;
 
 public final class DtoJoinConditionClauseTerminal<DTO>
         extends AbstractJoinConditionClauseTerminal<DTO,
@@ -53,8 +50,8 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     }
 
     @Override
-    public DtoJoinConditionClause<DTO> and(final FieldColumnSpec field) {
-        return and(field.field().name());
+    public DtoJoinConditionClause<DTO> and(final org.litebridgedb.orm.expression.ColumnExpressionSpec field) {
+        return and(field.getColumn().name());
     }
 
     @Override
@@ -64,8 +61,8 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     }
 
     @Override
-    public DtoWhereConditionClause<DTO> where(final FieldColumnSpec field) {
-        return where(field.field().name());
+    public DtoWhereConditionClause<DTO> where(final org.litebridgedb.orm.expression.ColumnExpressionSpec field) {
+        return where(field.getColumn().name());
     }
 
     @Override
@@ -79,19 +76,18 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     }
 
     @Override
-    public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        final String[] columns = Arrays.stream(fields)
-                .map(ormTable::getColumnForFieldName)
-                .map(ColumnMetaData::name)
-                .toArray(String[]::new);
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), (DtoSelector<DTO>) delegate);
+    public DtoGroupByClauseTerminal<DTO> groupBy(final ExpressionSpec... fields) {
+        selectSpec.setGroupBy(new GroupBySpec(fields));
+        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate);
     }
 
     @Override
-    public DtoOrderByClause<DTO> orderBy(final FieldColumnSpec... fields) {
-        final String[] columns = Arrays.stream(fields)
-                .map(fieldColumnSpec -> fieldColumnSpec.columnSpec().name())
-                .toArray(String[]::new);
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), (DtoSelector<DTO>) delegate);
+    public DtoOrderByClause<DTO> orderBy(final String... fields) {
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(selectSpec.createSelectFieldSpecs(fields)), (DtoSelector<DTO>) delegate);
+    }
+
+    @Override
+    public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(fields), (DtoSelector<DTO>) delegate);
     }
 }

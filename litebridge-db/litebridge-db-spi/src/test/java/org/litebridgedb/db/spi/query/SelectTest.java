@@ -7,6 +7,7 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.expression.ColumnExpressionImpl;
 import org.litebridgedb.db.spi.expression.ColumnExpressionTest;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
+import org.litebridgedb.db.spi.expression.SelectExpression;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,8 +27,8 @@ class SelectTest {
         final Object value = "testValue";
         final Condition condition = new Condition(ColumnExpressionTest.select(column), operator, new LiteralExpression(value));
         final Join join = new Join(table, List.of(condition));
-        final GroupBy groupBy = new GroupBy(List.of(column));
-        final OrderBy orderBy = new OrderBy(column, true);
+        final List<SelectExpression> groupBy = List.of(new ColumnExpressionTest.SelectColumnExpression(column));
+        final OrderBy orderBy = new OrderBy(new ColumnExpressionTest.SelectColumnExpression(column), true);
         final Limit limit = new Limit(Optional.of(10), Optional.of(20));
 
         // When
@@ -36,7 +37,7 @@ class SelectTest {
                 List.of(new TestColumnExpression(column)),
                 List.of(join),
                 List.of(condition),
-                Optional.of(groupBy),
+                groupBy,
                 Collections.emptyList(),
                 List.of(orderBy),
                 Optional.of(limit)

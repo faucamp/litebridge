@@ -82,12 +82,12 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         selectSpec.addExpressions(joinFieldColumns);
 
         // Create JOIN clause
-        joinSpec.setFieldColumns(joinFieldColumns.stream().map(selectField -> new DtoSelectSpec.FieldColumn(selectField.field(), selectField.column())).toList());
+        joinSpec.setFieldColumns(joinFieldColumns.stream().map(selectField -> new DtoSelectSpec.FieldColumn(selectField.field(), selectField.getColumn())).toList());
         final Column rightColumn = rightColumnMetaData.toColumn();
 
         final Column leftColumn = selectSpec.getExpressions().stream()
                 .filter(expression -> expression instanceof SelectFieldSpec)
-                .map(expression -> ((SelectFieldSpec) expression).column())
+                .map(expression -> ((SelectFieldSpec) expression).getColumn())
                 .filter(column -> column.table().equalsIgnoreAlias(rightColumnMetaData.table())
                         && column.equalsIgnoreAlias(rightColumn))
                 .findFirst().orElseThrow(() -> new IllegalArgumentException("Left JOIN lhs not found"));
@@ -99,7 +99,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
             conditionSpec.setOperator(Operator.USING);
         } else {
             final Column targetColumn = joinFieldColumns.stream()
-                    .map(SelectFieldSpec::column)
+                    .map(SelectFieldSpec::getColumn)
                     .filter(c -> c.name().equals(targetColumnMetaData.name()))
                     .findFirst().orElseThrow(() -> new IllegalArgumentException("Target JOIN lhs not found"));
             conditionSpec.setOperator(Operator.EQ);
@@ -134,7 +134,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         selectSpec.addExpressions(joinFieldColumns);
 
         // Create JOIN clause
-        joinSpec.setFieldColumns(joinFieldColumns.stream().map(selectField ->  new DtoSelectSpec.FieldColumn(selectField.field(), selectField.column())).toList());
+        joinSpec.setFieldColumns(joinFieldColumns.stream().map(selectField ->  new DtoSelectSpec.FieldColumn(selectField.field(), selectField.getColumn())).toList());
 
         final Column rightColumn = aliasGenerator.aliasColumn(rightTable, rightOrmTable.getColumnMetaData(mappedManyToMany.inverseJoinColumn()));
 

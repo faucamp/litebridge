@@ -50,7 +50,7 @@ public interface SelectApi {
     /**
      * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
      * <p>
-     * Creates a SQL SELECT statement with the specified fields/columns; the source table is specified
+     * Creates a SQL SELECT statement with the specified fields/expressions; the source table is specified
      * via a chained {@code from()} call.
      * <p>
      * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
@@ -66,7 +66,7 @@ public interface SelectApi {
     /**
      * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
      * <p>
-     * Creates a SQL SELECT statement with the specified fields/columns; the source table is specified
+     * Creates a SQL SELECT statement with the specified fields/expressions; the source table is specified
      * via a chained {@code from()} call.
      * <p>
      * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
@@ -81,7 +81,7 @@ public interface SelectApi {
     /**
      * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
      * <p>
-     * Creates a SQL SELECT statement with the specified fields/columns; the source table is specified
+     * Creates a SQL SELECT statement with the specified fields/expressions; the source table is specified
      * via a chained {@code from()} call.
      * <p>
      * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
@@ -96,7 +96,7 @@ public interface SelectApi {
     /**
      * Query data from the database, without mapping results to Data Transfer Object (DTOs).
      * <p>
-     * Creates a SQL SELECT statement with all fields/columns. The source table is specified
+     * Creates a SQL SELECT statement with all fields/expressions. The source table is specified
      * via a chained {@code from()} call.
      * <p>
      * This method constructs a {@link FromClauseStartTypeOverride} for further query composition

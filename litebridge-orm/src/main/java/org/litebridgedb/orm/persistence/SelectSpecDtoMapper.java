@@ -392,9 +392,9 @@ public class SelectSpecDtoMapper {
             expressionSpecs.stream()
                     .filter(expression -> expression instanceof SelectFieldSpec)
                     .map(expression -> (SelectFieldSpec) expression)
-                    .filter(selectField -> selectField.column().table().equals(table))
-                    .filter(selectField -> selectField.column().name().equals(pkColumnn.name()))
-                    .map(selectField -> new DtoSelectSpec.FieldColumn(selectField.field(), selectField.column()))
+                    .filter(selectField -> selectField.getColumn().table().equals(table))
+                    .filter(selectField -> selectField.getColumn().name().equals(pkColumnn.name()))
+                    .map(selectField -> new DtoSelectSpec.FieldColumn(selectField.field(), selectField.getColumn()))
                     .findFirst()
                     .ifPresent(pkFieldColumns::add);
         }

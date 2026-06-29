@@ -8,12 +8,9 @@ import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
-import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
-import org.litebridgedb.orm.api.spec.ColumnSpec;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-import org.litebridgedb.orm.api.spec.FieldSpec;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
@@ -74,19 +71,6 @@ class DtoJoinConditionClauseTerminalTest {
 
         // When
         final DtoOrderByClause<TestDto> result = context.terminal().orderBy("myVar");
-
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
-    void orderBy_fieldColumnSpec() {
-        // Given
-        final TestContext<TestDto> context = testContext();
-        final FieldColumnSpec fieldColumnSpec = new FieldColumnSpec(new FieldSpec("myVar", false), new ColumnSpec("MY_VAR"));
-
-        // When
-        final DtoOrderByClause<TestDto> result = context.terminal().orderBy(fieldColumnSpec);
 
         // Then
         assertNotNull(result);

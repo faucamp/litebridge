@@ -2,7 +2,7 @@ package org.litebridgedb.orm.api.dto.update;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.orm.engine.LitebridgeContext;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.api.update.UpdateSetStep;
 import org.litebridgedb.orm.api.update.impl.AbstractUpdater;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -24,8 +24,8 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
     }
 
     @Override
-    public DtoUpdateWhereConditionClause<DTO> where(final FieldColumnSpec field) {
-        return where(field.field().name());
+    public DtoUpdateWhereConditionClause<DTO> where(final ColumnExpressionSpec field) {
+        return where(field.getColumn().name());
     }
 
     @Override
@@ -35,8 +35,8 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
     }
 
     @Override
-    public UpdateSetStep<DtoUpdateStep<DTO>> set(final FieldColumnSpec field) {
-        final Column column = updateSpec.dtoTable().getColumnForFieldName(field.field().name()).toColumn();
+    public UpdateSetStep<DtoUpdateStep<DTO>> set(final ColumnExpressionSpec field) {
+        final Column column = field.getColumn();
         return new UpdateSetStep<>(column, this);
     }
 }

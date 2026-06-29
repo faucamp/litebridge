@@ -25,11 +25,11 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
         for (Join join : select.joins()) {
             for (Condition condition : join.conditions()) {
                 if (condition.operator() == Operator.USING
-                        // JOIN USING <column>
+                        // JOIN USING <expression>
                         && condition.lhs() instanceof ColumnExpression columnExpression
-                        // Same column
+                        // Same expression
                         && (columnExpression.column().equalsIgnoreAlias(column)
-                        // Same column but from other side of join
+                        // Same expression but from other side of join
                         || (columnExpression.column().equalsColumnOnlyIgnoreAlias(column)
                         && (select.table().equalsIgnoreAlias(column.table()) || join.table().equalsIgnoreAlias(column.table()))))) {
                     // Don't include table qualifiers
