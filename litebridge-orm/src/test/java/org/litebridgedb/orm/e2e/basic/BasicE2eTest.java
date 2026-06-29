@@ -667,7 +667,7 @@ public class BasicE2eTest extends AbstractE2eTest {
             litebridge.register(Address.class, rc -> rc
                     .mapToTable("lb.address")
                     .with(spec -> spec.mapField("id").toColumn("address_id"))
-                    .with(spec -> spec.mapField("person").toColumn("person_id"))
+                    .with(spec -> spec.mapField("person").toColumn("person_id").joinUsing())
                     .with(spec -> spec.mapField("address").toColumn("address")));
         } else {
             litebridge.register(Address.class, rc -> rc

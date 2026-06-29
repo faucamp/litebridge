@@ -36,7 +36,8 @@ public class PostgresDbEnvDtoTableMapper implements DbEnvDtoTableMapper {
                     .with(spec -> spec.mapField("surname").toColumn("surname"))
                     .with(spec -> spec.mapField("age").toColumn("age"))
                     .with(spec -> spec.mapProperty("eyeColour").toColumn("eye_colour"))
-                    .with(spec -> spec.mapField("accounts").oneToMany(c -> c.mappedByField("owner"))));
+                    .with(spec -> spec.mapField("accounts").oneToMany(c -> c.mappedByField("owner")))
+                    .with(spec -> spec.mapField("addresses").oneToMany(c -> c.mappedByField("person"))));
         }
     }
 
