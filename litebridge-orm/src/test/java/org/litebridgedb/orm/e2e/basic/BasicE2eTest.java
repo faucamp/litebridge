@@ -139,19 +139,26 @@ public class BasicE2eTest extends AbstractE2eTest {
         address.setId(123L);
         address.setPerson(person);
         address.setAddress("123 Main St");
+        person.setAddresses(List.of(address));
 
-        // Cascade save everything via the address.person link
-        litebridge.save(address);
+        // Cascade save everything
+        litebridge.save(person);
 
         // Retrieve the person record and associated address and account
         final Person result = litebridge.select(Person.class)
-//                .join(Account.class).on("accounts")
+                .join(Account.class).on("accounts")
                 .join(Address.class).on("addresses")
                 .where("id").eq(person.getId())
                 .oneOrThrow();
 
         // Then
         assertEquals(person, result);
+        assertNotNull(person.getAccounts());
+        assertEquals(1, person.getAccounts().size());
+        assertEquals(account, person.getAccounts().getFirst());
+        assertNotNull(person.getAddresses());
+        assertEquals(1, person.getAddresses().size());
+        assertEquals(address, result.getAddresses().getFirst());
     }
 
     @TestTemplate

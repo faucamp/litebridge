@@ -27,7 +27,8 @@ public class DefaultDtoTableMapper implements DbEnvDtoTableMapper {
                     .with(spec -> spec.mapField("surname").toColumn("SURNAME"))
                     .with(spec -> spec.mapField("age").toColumn("AGE"))
                     .with(spec -> spec.mapProperty("eyeColour").toColumn("EYE_COLOUR"))
-                    .with(spec -> spec.mapField("accounts").oneToMany(c -> c.mappedByField("owner"))));
+                    .with(spec -> spec.mapField("accounts").oneToMany(c -> c.mappedByField("owner")))
+                    .with(spec -> spec.mapField("addresses").oneToMany(c -> c.mappedByField("person"))));
         }
     }
 
