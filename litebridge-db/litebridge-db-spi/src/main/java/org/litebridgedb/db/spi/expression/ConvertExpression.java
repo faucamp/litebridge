@@ -10,7 +10,7 @@ public class ConvertExpression implements DelegateExpression {
     /**
      * Constructor.
      *
-     * @param target The encapsulated target lhs expression for this expression.
+     * @param target The encapsulated target column expression for this expression.
      */
     public ConvertExpression(final SelectExpression target, final Class<?> typeOverride) {
         this.target = target;

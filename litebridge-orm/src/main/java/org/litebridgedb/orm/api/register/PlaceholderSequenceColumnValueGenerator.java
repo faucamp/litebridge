@@ -6,7 +6,7 @@ import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 /**
  * A placeholder implementation of {@link SequenceColumnValueGenerator}.
  * <p>
- * This class throws an exception when attempting to generate a SQL fragment for a sequence rhs.
+ * This class throws an exception when attempting to generate a SQL fragment for a sequence value.
  * It is overridden by Litebridge with the actual database provider's sequence generator during registration.
  */
 final class PlaceholderSequenceColumnValueGenerator extends SequenceColumnValueGenerator {

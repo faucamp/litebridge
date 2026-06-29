@@ -65,7 +65,7 @@ public final class TableMapper {
         if (ClassUtils.isBasicType(dtoClass)) {
             throw new IllegalArgumentException("Not a DTO: " + dtoClass.getName());
         } else if (CollectionUtils.isEmpty(tableSpec.fieldColumnMap())) {
-            throw new IllegalArgumentException("No field-lhs map provided");
+            throw new IllegalArgumentException("No field-column map provided");
         }
 
         // Read the table metadata
@@ -143,11 +143,11 @@ public final class TableMapper {
                     .map(Map.Entry::getKey)
                     .map(FieldAccessor::name)
                     .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("Conflicting field for lhs '%s' not found; current field mapping: '%s'".formatted(columnSpec, fieldMapping)));
+                    .orElseThrow(() -> new IllegalStateException("Conflicting field for column '%s' not found; current field mapping: '%s'".formatted(columnSpec, fieldMapping)));
             throw new IllegalArgumentException(String.format("Column '%s' is already mapped by field '%s'", columnSpec, conflictingFieldName));
         }
 
-        // Add field-lhs mapping
+        // Add field-column mapping
         final FieldAccessor fieldAccessor;
 
         if (fieldMapping instanceof FieldSpec fieldSpec) {

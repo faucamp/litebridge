@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 /**
  * Base specification for constructing a SQL SELECT statement.
  * <p>
- * This class encapsulates table, lhs, join, condition, order by,
+ * This class encapsulates table, column, join, condition, order by,
  * and limit specifications for building a query.
  * <p>
  * Its subclasses {@link org.litebridgedb.orm.api.dto.DtoSelectSpec} and {@link org.litebridgedb.orm.api.sql.SqlSelectSpec}
@@ -225,11 +225,11 @@ public abstract class SelectSpec {
         if (groupBy != null) {
             groupByClause = convertToSelectExpressions(resolveProtoExpressions(groupBy.expressions(), selectedColumns), false);
 
-            // Validate that the lhs exists in the select statement if a GROUP BY is present
+            // Validate that the column exists in the select statement if a GROUP BY is present
 //            groupByClause.forEach(groupBy -> {
 //                for (Column column : groupBy.columns()) {
 //                    if (selectedColumns.stream().noneMatch(column::equalsIgnoreAlias)) {
-//                        throw new IllegalArgumentException("Invalid grouped query: ORDER BY lhs %s must be grouped or aggregated".formatted(column.name()));
+//                        throw new IllegalArgumentException("Invalid grouped query: ORDER BY column %s must be grouped or aggregated".formatted(column.name()));
 //                    }
 //                }
 //            });

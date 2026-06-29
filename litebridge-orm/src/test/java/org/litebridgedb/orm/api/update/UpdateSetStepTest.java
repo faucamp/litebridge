@@ -24,11 +24,11 @@ class UpdateSetStepTest {
         UpdateSetStep<DtoUpdater<?>> step = new UpdateSetStep<>(column, mockUpdater);
 
         // When
-        DtoUpdater<?> result = step.to("rhs");
+        DtoUpdater<?> result = step.to("column");
 
         // Then
         assertEquals(mockUpdater, result);
-        verify(mockSpec).addColumnValue(argThat(cv -> cv.column().equals(column) && cv.value().equals("rhs")));
+        verify(mockSpec).addColumnValue(argThat(cv -> cv.column().equals(column) && cv.value().equals("column")));
     }
 
     @Test

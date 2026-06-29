@@ -3,17 +3,17 @@ package org.litebridgedb.db.spi.expression;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Factory to create nestable lhs expressions.
+ * Factory to create nestable column expressions.
  */
 @FunctionalInterface
 public interface DelegateExpressionFactory {
 
     /**
-     * Creates a nestable lhs expression.
+     * Creates a nestable column expression.
      *
-     * @param target Target/nested lhs expression, e.g. target "select lhs" expression
+     * @param target Target/nested column expression, e.g. target "select column" expression
      * @param args   Expression-specific additional arguments, if any.
-     * @return A new lhs expression.
+     * @return A new column expression.
      */
     DelegateColumnExpression create(ColumnExpression target, @Nullable Object... args);
 }

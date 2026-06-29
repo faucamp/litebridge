@@ -3,15 +3,15 @@ package org.litebridgedb.db.spi.expression;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Factory to create literal rhs expressions.
+ * Factory to create literal value expressions.
  */
 @FunctionalInterface
 public interface LiteralExpressionFactory {
 
     /**
-     * Creates a literal rhs expression.
+     * Creates a literal value expression.
      *
-     * @param value The literal rhs to be represented.
+     * @param value The literal value to be represented.
      * @return A new literal expression.
      */
     LiteralExpression create(@Nullable Object value);

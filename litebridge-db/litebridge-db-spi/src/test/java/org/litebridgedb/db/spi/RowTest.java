@@ -208,7 +208,7 @@ class RowTest {
         // Given
         final Column column = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "TEST_COLUMN");
         column.setAlias("testAlias");
-        final Row row = new Row().withColumn(column, "rhs");
+        final Row row = new Row().withColumn(column, "value");
 
         // When
         final Row.RowColumn result = row.columnForAlias("testAlias").orElseThrow();
@@ -222,7 +222,7 @@ class RowTest {
         // Given
         final Column column = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "TEST_COLUMN");
         column.setAlias("testAlias");
-        final Row row = new Row().withColumn(column, "rhs");
+        final Row row = new Row().withColumn(column, "value");
 
         // When
         final Optional<Row.RowColumn> result = row.columnForAlias("nonExistentAlias");
@@ -235,7 +235,7 @@ class RowTest {
     void columnForAlias_nullAlias() {
         // Given
         final Column column = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "TEST_COLUMN");
-        final Row row = new Row().withColumn(column, "rhs");
+        final Row row = new Row().withColumn(column, "value");
 
         // When/Then
         assertThrows(NullPointerException.class, () -> row.columnForAlias(null));

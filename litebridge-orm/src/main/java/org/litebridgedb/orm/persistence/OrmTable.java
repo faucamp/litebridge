@@ -54,12 +54,12 @@ public class OrmTable {
     private Set<Class<?>> relatedDtoClasses = new HashSet<>();
 
     /**
-     * Constructs a new {@code OrmTable} instance, initializing table metadata, field-to-lhs mappings,
+     * Constructs a new {@code OrmTable} instance, initializing table metadata, field-to-column mappings,
      * and a change tracker for managing object state.
      *
      * @param dtoClass       the DTO class associated with the table
      * @param metaData       the metadata describing the table structure
-     * @param fieldTargetMap a map associating field accessors with their corresponding lhs metadata
+     * @param fieldTargetMap a map associating field accessors with their corresponding column metadata
      * @param changeTracker  the change tracker to monitor and track modifications made to the table's data
      */
     public OrmTable(final Class<?> dtoClass,
@@ -155,18 +155,18 @@ public class OrmTable {
     }
 
     /**
-     * Get the lhs metadata for the specified field name.
+     * Get the column metadata for the specified field name.
      *
-     * @param fieldName the field name to retrieve the lhs metadata for
-     * @return the lhs metadata for the specified field name, or null if not found
+     * @param fieldName the field name to retrieve the column metadata for
+     * @return the column metadata for the specified field name, or null if not found
      */
     public ColumnMetaData getColumnForFieldName(final String fieldName) {
         final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, fieldName);
 
         if (fieldAccessor instanceof FieldAccessorChain fieldAccessorChain) {
-            return Objects.requireNonNull(fieldNameColumnMap.get(fieldAccessorChain.fieldAccessors().getFirst().name()), "No parent lhs for field path '" + fieldAccessorChain.fieldPath() + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
+            return Objects.requireNonNull(fieldNameColumnMap.get(fieldAccessorChain.fieldAccessors().getFirst().name()), "No parent column for field path '" + fieldAccessorChain.fieldPath() + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
         } else {
-            return Objects.requireNonNull(fieldNameColumnMap.get(fieldName), "No lhs for field '" + fieldName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
+            return Objects.requireNonNull(fieldNameColumnMap.get(fieldName), "No column for field '" + fieldName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
         }
     }
 
@@ -175,13 +175,13 @@ public class OrmTable {
     }
 
     /**
-     * Get the lhs metadata for the specified lhs name.
+     * Get the column metadata for the specified column name.
      *
-     * @param columnName the lhs name to retrieve the metadata for
-     * @return the lhs metadata for the specified lhs name, or null if not found
+     * @param columnName the column name to retrieve the metadata for
+     * @return the column metadata for the specified column name, or null if not found
      */
     public ColumnMetaData getColumnMetaData(final String columnName) {
-        return ObjectUtils.requireNonNull(columnMap.get(columnName), () -> new IllegalArgumentException("No lhs '" + columnName + "' in table '" + metaData.name() + "'"));
+        return ObjectUtils.requireNonNull(columnMap.get(columnName), () -> new IllegalArgumentException("No column '" + columnName + "' in table '" + metaData.name() + "'"));
     }
 
     /**
@@ -223,14 +223,14 @@ public class OrmTable {
     }
 
     /**
-     * Get the field accessor for the specified lhs name.
+     * Get the field accessor for the specified column name.
      *
-     * @param columnName the lhs name to retrieve the field accessor for
-     * @return the field accessor for the specified lhs name, or null if not found
-     * @throws IllegalArgumentException if the specified lhs name is null or empty
+     * @param columnName the column name to retrieve the field accessor for
+     * @return the field accessor for the specified column name, or null if not found
+     * @throws IllegalArgumentException if the specified column name is null or empty
      */
     public FieldAccessor getFieldForColumnName(final String columnName) {
-        return ObjectUtils.requireNonNull(fieldForColumnNameOrNull(columnName), () -> new IllegalArgumentException("No field for lhs '" + columnName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'"));
+        return ObjectUtils.requireNonNull(fieldForColumnNameOrNull(columnName), () -> new IllegalArgumentException("No field for column '" + columnName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'"));
     }
 
     public @Nullable FieldAccessor fieldForColumnNameOrNull(final String columnName) {

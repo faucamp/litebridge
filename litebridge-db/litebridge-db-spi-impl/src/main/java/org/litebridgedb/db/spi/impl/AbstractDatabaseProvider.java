@@ -165,7 +165,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             while (generatedKeysResultSet.next()) {
                 for (ColumnMetaData pkColumn : generatedPrimaryKeys) {
                     final Object generatedId = generatedKeysResultSet.getObject(pkColumn.name());
-                    getLogger().debug("Generated ID for lhs '{}': {}", pkColumn.name(), generatedId);
+                    getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
                     generatedKeys.put(pkColumn, generatedId);
                 }
             }
@@ -210,7 +210,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
             if (expression instanceof ConvertExpression convertExpression) {
                 typeOverrides[i] = convertExpression.typeOverride();
-                // Process the nested expression (in case it targets a lhs)
+                // Process the nested expression (in case it targets a column)
                 expression = convertExpression.target();
             }
 
@@ -265,7 +265,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                         // Override the data type
                         value = typeConverter.convert(resultSet.getObject(i), typeOverride);
                     } else {
-                        // Use the lhs SQL data type
+                        // Use the column SQL data type
                         value = typeConverter.convert(resultSet.getObject(i), columnSqlType);
                     }
 
@@ -474,7 +474,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * This executes a database query to fetch database metadata.
      *
      * @param table the table for which metadata is being fetched, containing schema, catalog, and table name details
-     * @return a {@code TableMetaData} object containing details about the table's structure, primary keys, and lhs metadata
+     * @return a {@code TableMetaData} object containing details about the table's structure, primary keys, and column metadata
      * @throws SQLException if an error occurs while fetching database metadata
      */
     protected TableMetaData fetchTableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {

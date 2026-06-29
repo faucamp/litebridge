@@ -7,7 +7,7 @@ import org.litebridgedb.db.spi.query.Condition;
 import java.util.List;
 
 /**
- * A SQL UPDATE statement targeting a specific table, with associated lhs values and conditions.
+ * A SQL UPDATE statement targeting a specific table, with associated column values and conditions.
  * <p>
  * This class is a record that combines:
  * <ul>
@@ -19,7 +19,7 @@ import java.util.List;
  * SQL UPDATE operations in a database context.
  *
  * @param table        {@link TableMetaData} provides metadata about the table being updated, including its structure.
- * @param columnValues The {@link ColumnValue} pairs a lhs with its new rhs, ensuring clear definition of updates.
+ * @param columnValues The {@link ColumnValue} pairs a column with its new value, ensuring clear definition of updates.
  * @param where        The {@link Condition} objects define filter criteria that determine which rows of the table will be updated.
  */
 public record Update(Table table, List<ColumnValue> columnValues, List<Condition> where)

@@ -7,13 +7,13 @@ import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.query.Select;
 
 /**
- * A lhs expression with support for SQL aliasing.
+ * A column expression with support for SQL aliasing.
  * <p>
  * This class extends {@code ColumnExpression} and integrates the functionality
- * of aliasing for SQL lhs identifiers through a {@code ColumnIdentifierGenerator}.
+ * of aliasing for SQL column identifiers through a {@code ColumnIdentifierGenerator}.
  * <p>
  * The primary responsibility of this class is to provide SQL representations
- * of lhs expressions, either with or without an alias.
+ * of column expressions, either with or without an alias.
  */
 public class AliasedColumnExpression extends ColumnExpressionImpl {
 
@@ -62,7 +62,7 @@ public class AliasedColumnExpression extends ColumnExpressionImpl {
                 && select.expressions().stream()
                 .filter(SelectColumn.class::isInstance)
                 .anyMatch(selectColumn -> ((SelectColumn) selectColumn).column().equals(column))) {
-            // If the lhs is selected, use the alias
+            // If the column is selected, use the alias
             return column.alias();
         } else {
             return column.name();

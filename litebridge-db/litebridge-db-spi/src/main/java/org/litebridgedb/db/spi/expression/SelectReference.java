@@ -12,7 +12,7 @@ public abstract class SelectReference extends ColumnExpressionImpl {
     /**
      * Constructor.
      *
-     * @param column The target selected lhs to reference.
+     * @param column The target selected column to reference.
      */
     protected SelectReference(final Column column) {
         super(column);

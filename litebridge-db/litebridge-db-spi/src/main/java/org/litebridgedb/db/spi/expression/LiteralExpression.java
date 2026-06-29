@@ -8,25 +8,25 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
- * An encapsulated literal rhs in a query expression.
+ * An encapsulated literal value in a query expression.
  */
 public class LiteralExpression implements SelectExpression {
 
     private final @Nullable Object value;
 
     /**
-     * Constructs a new {@code LiteralExpression} with the given rhs.
+     * Constructs a new {@code LiteralExpression} with the given value.
      *
-     * @param value the literal rhs to be represented
+     * @param value the literal value to be represented
      */
     public LiteralExpression(final @Nullable Object value) {
         this.value = value;
     }
 
     /**
-     * Retrieves the rhs of this literal expression.
+     * Retrieves the value of this literal expression.
      *
-     * @return the literal rhs encapsulated by this expression
+     * @return the literal value encapsulated by this expression
      */
     public @Nullable Object value() {
         return value;
@@ -100,7 +100,7 @@ public class LiteralExpression implements SelectExpression {
     @Override
     public String toString() {
         return new StringJoiner(", ", LiteralExpression.class.getSimpleName() + "[", "]")
-                .add("rhs=" + value)
+                .add("value=" + value)
                 .toString();
     }
 }

@@ -5,7 +5,7 @@ import org.litebridgedb.orm.expression.NestableExpressionSpec;
 import org.litebridgedb.orm.expression.TypeOverrideExpressionSpec;
 
 /**
- * {@code AVG()}: Returns the average rhs of a lhs.
+ * {@code AVG()}: Returns the average value of a column.
  */
 public record AvgSpec<T>(ColumnExpressionSpec target, Class<T> returnType)
         implements NestableExpressionSpec, TypeOverrideExpressionSpec<T> {

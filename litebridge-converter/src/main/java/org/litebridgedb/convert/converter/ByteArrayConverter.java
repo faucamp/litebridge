@@ -22,13 +22,13 @@ public class ByteArrayConverter implements SqlConverter<byte[]> {
     private static final int[] SQL_TYPES = new int[]{Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY, Types.BLOB};
 
     /**
-     * Converts the given rhs to a {@code byte[]}.
+     * Converts the given value to a {@code byte[]}.
      * <p>
      * Supports {@code byte[]} and arrays of {@link Number} instances.
      *
-     * @param value the rhs to convert, may be {@code null}
+     * @param value the value to convert, may be {@code null}
      * @return the converted {@code byte[]}, or {@code null}
-     * @throws IllegalArgumentException if the rhs cannot be converted to {@code byte[]}
+     * @throws IllegalArgumentException if the value cannot be converted to {@code byte[]}
      */
     @Override
     public @Nullable byte[] convert(final @Nullable Object value) {
@@ -66,7 +66,7 @@ public class ByteArrayConverter implements SqlConverter<byte[]> {
 
             return baos.toByteArray();
         } else {
-            throw new IllegalArgumentException("Cannot convert rhs of type " + value.getClass() + " to byte[]");
+            throw new IllegalArgumentException("Cannot convert value of type " + value.getClass() + " to byte[]");
         }
     }
 

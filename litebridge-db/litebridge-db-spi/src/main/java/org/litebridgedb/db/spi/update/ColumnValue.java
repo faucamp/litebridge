@@ -5,18 +5,18 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 
 /**
- * A rhs associated with a specific lhs in a database operation.
+ * A value associated with a specific column in a database operation.
  * <p>
  * This record combines:
- * - The {@link ColumnMetaData} which defines the metadata of the lhs.
- * - The rhs associated with the lhs, which may be null.
+ * - The {@link ColumnMetaData} which defines the metadata of the column.
+ * - The value associated with the column, which may be null.
  * <p>
- * Used in database operations such as INSERT and UPDATE to pair lhs metadata
- * with its corresponding rhs. Instances of this record are immutable, ensuring
+ * Used in database operations such as INSERT and UPDATE to pair column metadata
+ * with its corresponding value. Instances of this record are immutable, ensuring
  * thread safety and reliability in database operations.
  *
- * @param column The metadata defining the lhs.
- * @param value  The rhs associated with the lhs, which may be null.
+ * @param column The metadata defining the column.
+ * @param value  The value associated with the column, which may be null.
  */
 public record ColumnValue(Column column, @Nullable Object value) {
 }

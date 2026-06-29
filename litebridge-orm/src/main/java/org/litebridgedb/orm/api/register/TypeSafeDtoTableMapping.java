@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * and their corresponding database tables.
  * <p>
  * Subclasses are expected to provide concrete implementations for the table name and associated DTO class, along
- * with {@code public static final} constants containing {@link FieldColumnSpec} instances representing the field-to-lhs mappings.
+ * with {@code public static final} constants containing {@link FieldColumnSpec} instances representing the field-to-column mappings.
  * <p>
  * The {@code TypeSafeDtoTableMapping} class facilitates the creation of mappings between fields in the DTOs
  * and expressions in the database. It provides utility methods to define {@code FieldColumnSpec} and creates
@@ -39,13 +39,13 @@ public abstract class TypeSafeDtoTableMapping {
     /**
      * Convenience method that configures and creates a {@link FieldColumnSpec} by applying a mapping function that specifies
      * the steps for defining the association between a field in a Data Transfer Object (DTO) and a
-     * corresponding database lhs.
+     * corresponding database column.
      *
      * @param rc A function that receives a {@link FieldColumnSpecBuilder} as input and returns a
      *           {@link FieldColumnSpecBuilderTerminal}, representing the terminal step in the
-     *           configuration process for the field-lhs mapping.
+     *           configuration process for the field-column mapping.
      * @return A {@link FieldColumnSpec} representing the finalized mapping between the specified DTO
-     * field and its corresponding database lhs, ready for use in ORM and persistence operations.
+     * field and its corresponding database column, ready for use in ORM and persistence operations.
      */
     public static FieldColumnSpec field(Function<FieldColumnSpecBuilder, FieldColumnSpecBuilderTerminal> rc) {
         return FieldColumnSpecBuilder.spec(rc);
@@ -53,13 +53,13 @@ public abstract class TypeSafeDtoTableMapping {
 
     /**
      * Creates a {@link DtoTableSpec} that defines the mapping between a Data Transfer Object (DTO) class and its
-     * corresponding database table. This mapping includes field-to-lhs specifications and applies any necessary
-     * transformations on lhs rhs generators.
+     * corresponding database table. This mapping includes field-to-column specifications and applies any necessary
+     * transformations on lhs value generators.
      *
      * @param databaseProvider the {@link DatabaseProvider} used to resolve database-specific configurations, such as
      *                         sequence generators for placeholder expressions; must not be null.
      * @return a {@link DtoTableSpec} instance containing the DTO-to-table mapping details, including resolved field
-     * to lhs mappings ready for use in database operations.
+     * to column mappings ready for use in database operations.
      */
     public DtoTableSpec createDtoTableSpec(final DatabaseProvider databaseProvider) {
         final List<FieldColumnSpec> fieldColumnSpecs = getAllStaticFinalFieldsRecursive(this.getClass()).stream()

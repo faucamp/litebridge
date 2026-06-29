@@ -56,7 +56,7 @@ public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
                 int generatedKeyIndex = 1;
                 for (ColumnMetaData pkColumn : getGeneratedPrimaryKeyColumns(tableMetaData)) {
                     final Object generatedId = generatedKeysResultSet.getObject(generatedKeyIndex++);
-                    getLogger().debug("Generated ID for lhs '{}': {}", pkColumn.name(), generatedId);
+                    getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
                     generatedKeys.put(pkColumn, generatedId);
                 }
             }

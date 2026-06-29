@@ -21,7 +21,7 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
 
         boolean applyTableQualifier = true;
 
-        // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the lhs
+        // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the column
         for (Join join : select.joins()) {
             for (Condition condition : join.conditions()) {
                 if (condition.operator() == Operator.USING

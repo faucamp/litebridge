@@ -100,13 +100,13 @@ public interface DatabaseProvider {
 
     /**
      * Retrieves a {@link SequenceColumnValueGenerator} instance for generating SQL fragments that
-     * fetch the next rhs from a specified database sequence. This is typically used in SQL statements
+     * fetch the next value from a specified database sequence. This is typically used in SQL statements
      * such as INSERT or UPDATE to generate unique values from a sequence.
      *
      * @param sequence the name of the database sequence from which the values will be generated.
-     *                 It is used to create the SQL fragment to retrieve the next rhs in the sequence.
+     *                 It is used to create the SQL fragment to retrieve the next value in the sequence.
      * @return a {@link SequenceColumnValueGenerator} instance that generates SQL fragments for retrieving sequence values.
-     * @throws UnsupportedOperationException if the database provider does not support sequence-based rhs generation.
+     * @throws UnsupportedOperationException if the database provider does not support sequence-based value generation.
      */
     SequenceColumnValueGenerator getSequenceColumnValueGenerator(String sequence) throws UnsupportedOperationException;
 

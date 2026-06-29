@@ -17,11 +17,11 @@ public class SqlTimeConverter implements SqlConverter<Time> {
     private static final int[] SQL_TYPES = new int[]{Types.TIME};
 
     /**
-     * Converts the given rhs to a {@link java.sql.Time}.
+     * Converts the given value to a {@link java.sql.Time}.
      * <p>
      * Supports {@link java.sql.Time}, {@link java.time.LocalTime}, and string representations.
      *
-     * @param value the rhs to convert, may be {@code null}
+     * @param value the value to convert, may be {@code null}
      * @return the converted {@link java.sql.Time}, or {@code null}
      */
     @Override

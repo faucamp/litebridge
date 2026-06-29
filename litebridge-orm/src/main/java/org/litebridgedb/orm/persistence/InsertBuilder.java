@@ -40,7 +40,7 @@ final class InsertBuilder extends AbstractStatementBuilder<Insert> {
 
         return rows.stream()
                 .flatMap(dtoRowValue -> dtoRowValue.rowValue().columns().stream())
-                // Check if a rhs for the auto-incrementing PK was specified
+                // Check if a value for the auto-incrementing PK was specified
                 .noneMatch(columnValue -> autoIncrementingPks.contains(columnValue.column().name())
                         && columnValue.value() != null);
     }

@@ -11,11 +11,11 @@ package org.litebridgedb.orm.api.spec;
  * - Students enrolled in multiple courses, and courses attended by multiple students.
  * - Products associated with multiple categories, and categories assigned to multiple products.
  * <p>
- * Implements the {@link ColumnMapping} interface, allowing its usage in lhs-level mappings.
+ * Implements the {@link ColumnMapping} interface, allowing its usage in column-level mappings.
  *
  * @param joinTable         The name of the join table facilitating the many-to-many relationship.
- * @param joinColumn        The lhs in the join table that references the primary key of the originating table.
- * @param inverseJoinColumn The lhs in the join table that references the primary key of the targeted table.
+ * @param joinColumn        The column in the join table that references the primary key of the originating table.
+ * @param inverseJoinColumn The column in the join table that references the primary key of the targeted table.
  */
 public record ManyToMany(String joinTable, String joinColumn, String inverseJoinColumn) implements ColumnMapping {
 }

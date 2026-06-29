@@ -34,7 +34,7 @@ public interface ConditionClause<DTO,
     CCT neq(final @Nullable Object value);
 
     /**
-     * Creates a condition terminal for less-than comparison with the specified rhs.
+     * Creates a condition terminal for less-than comparison with the specified value.
      *
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.

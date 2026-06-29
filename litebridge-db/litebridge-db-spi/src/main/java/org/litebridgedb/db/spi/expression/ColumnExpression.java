@@ -4,9 +4,9 @@ import org.litebridgedb.db.spi.Column;
 
 public interface ColumnExpression extends SelectExpression {
     /**
-     * Retrieves the target lhs of this expression.
+     * Retrieves the target column of this expression.
      *
-     * @return The target lhs.
+     * @return The target column.
      */
     Column column();
 }

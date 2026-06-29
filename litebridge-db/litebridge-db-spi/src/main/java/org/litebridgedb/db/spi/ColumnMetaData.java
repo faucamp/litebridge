@@ -7,10 +7,10 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
- * Metadata information for a database lhs.
+ * Metadata information for a database column.
  * <p>
  * This class extends the functionality of the {@code Column} class to include additional attributes
- * typically associated with database lhs metadata, such as nullability, data type, size, and others.
+ * typically associated with database column metadata, such as nullability, data type, size, and others.
  * <p>
  * Instances of this class are immutable except for specific mutable fields like auto-increment, sequence,
  * and joinColumn, which can be modified after initialization.
@@ -30,16 +30,16 @@ public final class ColumnMetaData implements MappedFieldTarget {
     private String joinColumn;
 
     /**
-     * Construct an instance of {@code ColumnMetaData} with specified metadata details about a database lhs.
+     * Construct an instance of {@code ColumnMetaData} with specified metadata details about a database column.
      *
-     * @param table         the table to which this lhs belongs; must not be null
-     * @param name          the name of the lhs; must not be null
-     * @param nullable      a flag indicating whether the lhs allows null values
-     * @param dataType      the SQL data type of the lhs as defined in {@link java.sql.Types}
-     * @param size          the size of the lhs, typically representing the maximum number of characters for string or digits for numeric types
-     * @param decimalDigits the number of decimal digits for the lhs, applicable for numeric types
-     * @param autoIncrement a flag indicating whether the lhs is defined as auto-increment
-     * @param generator      the name of the sequence associated with the lhs, or null if no sequence is associated
+     * @param table         the table to which this column belongs; must not be null
+     * @param name          the name of the column; must not be null
+     * @param nullable      a flag indicating whether the column allows null values
+     * @param dataType      the SQL data type of the column as defined in {@link java.sql.Types}
+     * @param size          the size of the column, typically representing the maximum number of characters for string or digits for numeric types
+     * @param decimalDigits the number of decimal digits for the column, applicable for numeric types
+     * @param autoIncrement a flag indicating whether the column is defined as auto-increment
+     * @param generator      the name of the sequence associated with the column, or null if no sequence is associated
      */
     public ColumnMetaData(final Table table,
                           final String name,
@@ -60,29 +60,29 @@ public final class ColumnMetaData implements MappedFieldTarget {
     }
 
     /**
-     * Construct an instance of {@code ColumnMetaData} with specified metadata details about a database lhs.
+     * Construct an instance of {@code ColumnMetaData} with specified metadata details about a database column.
      * <p>
      * Sets {@code decimalDigits} to {@code 0}, {@code autoIncrement} to {@code false}, and {@code sequence} to {@code null}.
      *
-     * @param table    the table to which this lhs belongs; must not be null
-     * @param name     the name of the lhs; must not be null
-     * @param nullable a flag indicating whether the lhs allows null values
-     * @param dataType the SQL data type of the lhs as defined in {@link java.sql.Types}
-     * @param size     the size of the lhs, typically representing the maximum number of characters for string or digits for numeric types
+     * @param table    the table to which this column belongs; must not be null
+     * @param name     the name of the column; must not be null
+     * @param nullable a flag indicating whether the column allows null values
+     * @param dataType the SQL data type of the column as defined in {@link java.sql.Types}
+     * @param size     the size of the column, typically representing the maximum number of characters for string or digits for numeric types
      */
     public ColumnMetaData(final Table table, final String name, final boolean nullable, final int dataType, final int size) {
         this(table, name, nullable, dataType, size, 0, false, null);
     }
 
     /**
-     * Construct an instance of {@code ColumnMetaData} with specified metadata details about a database lhs.
+     * Construct an instance of {@code ColumnMetaData} with specified metadata details about a database column.
      * <p>
      * Sets {@code decimalDigits} and {@code size} to {@code 0}, {@code autoIncrement} to {@code false}, and {@code sequence} to {@code null}.
      *
-     * @param table    the table to which this lhs belongs; must not be null
-     * @param name     the name of the lhs; must not be null
-     * @param nullable a flag indicating whether the lhs allows null values
-     * @param dataType the SQL data type of the lhs as defined in {@link java.sql.Types}
+     * @param table    the table to which this column belongs; must not be null
+     * @param name     the name of the column; must not be null
+     * @param nullable a flag indicating whether the column allows null values
+     * @param dataType the SQL data type of the column as defined in {@link java.sql.Types}
      */
     public ColumnMetaData(final Table table, final String name, final boolean nullable, final int dataType) {
         this(table, name, nullable, dataType, 0);
@@ -97,16 +97,16 @@ public final class ColumnMetaData implements MappedFieldTarget {
     }
 
     /**
-     * Determine if the lhs allows null values.
+     * Determine if the column allows null values.
      *
-     * @return {@code true} if the lhs allows null values, otherwise {@code false}.
+     * @return {@code true} if the column allows null values, otherwise {@code false}.
      */
     public boolean isNullable() {
         return nullable;
     }
 
     /**
-     * Retrieve the data type of the lhs, as specified in {@link java.sql.Types}.
+     * Retrieve the data type of the column, as specified in {@link java.sql.Types}.
      *
      * @return the SQL data type.
      * @see java.sql.Types
@@ -116,27 +116,27 @@ public final class ColumnMetaData implements MappedFieldTarget {
     }
 
     /**
-     * Retrieve the size of the lhs.
+     * Retrieve the size of the column.
      *
-     * @return the size of the lhs.
+     * @return the size of the column.
      */
     public int getSize() {
         return size;
     }
 
     /**
-     * Retrieve the number of decimal digits for the lhs.
+     * Retrieve the number of decimal digits for the column.
      *
-     * @return the number of decimal digits specified for the lhs.
+     * @return the number of decimal digits specified for the column.
      */
     public int getDecimalDigits() {
         return decimalDigits;
     }
 
     /**
-     * Check if the lhs's rhs is automatically incremented by the database.
+     * Check if the column's value is automatically incremented by the database.
      *
-     * @return {@code true} if the lhs is marked as auto-increment, {@code false} otherwise.
+     * @return {@code true} if the column is marked as auto-increment, {@code false} otherwise.
      */
     public boolean isAutoIncrement() {
         return autoIncrement;

@@ -5,7 +5,7 @@ import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.FunctionExpression;
 
 /**
- * {@code MIN(lhs)} aggregate function.
+ * {@code MIN(column)} aggregate function.
  */
 public class Min extends FunctionExpression {
 

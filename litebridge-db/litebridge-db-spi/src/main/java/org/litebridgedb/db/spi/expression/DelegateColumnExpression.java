@@ -16,14 +16,14 @@ import org.litebridgedb.db.spi.Column;
 public abstract class DelegateColumnExpression extends ColumnExpressionImpl implements DelegateExpression {
 
     /**
-     * The encapsulated target lhs expression of this expression.
+     * The encapsulated target column expression of this expression.
      */
     protected final ColumnExpression target;
 
     /**
      * Constructor.
      *
-     * @param target The encapsulated target lhs expression for this expression.
+     * @param target The encapsulated target column expression for this expression.
      */
     protected DelegateColumnExpression(final ColumnExpression target) {
         super(target.column());
@@ -36,9 +36,9 @@ public abstract class DelegateColumnExpression extends ColumnExpressionImpl impl
     }
 
     /**
-     * Retrieves the target lhs of this expression.
+     * Retrieves the target column of this expression.
      *
-     * @return The target lhs.
+     * @return The target column.
      */
     @Override
     public final Column column() {

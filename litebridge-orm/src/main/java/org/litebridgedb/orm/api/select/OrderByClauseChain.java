@@ -21,7 +21,7 @@ public interface OrderByClauseChain<DTO,
      * Adds another ordering expression which again requires an explicit direction.
      * Each call to this method appends another ordering expression.
      *
-     * @param columns Table lhs(s) or DTO field(s) to order by
+     * @param columns Table column(s) or DTO field(s) to order by
      * @return a selector chain with ordering applied
      */
     OBC then(final String... columns);

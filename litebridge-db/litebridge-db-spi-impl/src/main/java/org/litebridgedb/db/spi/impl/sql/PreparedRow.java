@@ -5,10 +5,10 @@ import org.litebridgedb.db.spi.sql.BindValue;
 import java.util.List;
 
 /**
- * A prepared row with associated rhs specifiers and bound values.
+ * A prepared row with associated value specifiers and bound values.
  * <p>
  * This record is a data structure that holds information about a row in which
- * each element is defined by a list of rhs specifiers and a corresponding
+ * each element is defined by a list of value specifiers and a corresponding
  * list of bind values. Commonly used in scenarios involving prepared statements
  * or database row mappings.
  * <p>
@@ -19,8 +19,8 @@ import java.util.List;
  * with the associated specifiers.
  * <p>
  * It is the caller's responsibility to ensure that the {@code valueSpecifiers} and
- * {@code bindValues} lists are properly aligned, with each rhs specifier corresponding
- * to its respective bind rhs.
+ * {@code bindValues} lists are properly aligned, with each value specifier corresponding
+ * to its respective bind value.
  * <p>
  * This class is immutable and thread-safe by design.
  *

@@ -44,11 +44,11 @@ public abstract class AbstractSqlGenerator {
 
     /**
      * Generate a SQL condition string based on the given {@link Condition}.
-     * This method constructs the SQL fragment by combining the lhs, operator,
-     * and rhs (if applicable) for the provided condition.
+     * This method constructs the SQL fragment by combining the column, operator,
+     * and value (if applicable) for the provided condition.
      *
-     * @param condition the {@link Condition} object specifying the lhs, operator,
-     *                  and rhs for the SQL condition
+     * @param condition the {@link Condition} object specifying the column, operator,
+     *                  and value for the SQL condition
      * @return a {@code String} representing the constructed SQL condition fragment
      */
     protected PreparedSql createCondition(final Condition condition, final Operation operation, final ConnectionProvider connectionProvider) {
@@ -163,7 +163,7 @@ public abstract class AbstractSqlGenerator {
         if (selectExpression instanceof LiteralExpression literalExpression) {
             return literalExpression.value();
         } else {
-            throw new UnsupportedOperationException("Unsupported select expression for rhs: " + selectExpression);
+            throw new UnsupportedOperationException("Unsupported select expression for RHS: " + selectExpression);
         }
     }
 

@@ -21,7 +21,7 @@ import java.util.function.Function;
  * <p>
  * This class serves as a final step in constructing the mapping information for a DTO to
  * interact with a specific database table. It encapsulates details such as the target DTO class,
- * the associated database table name, field-to-lhs mappings, and the database provider responsible
+ * the associated database table name, field-to-column mappings, and the database provider responsible
  * for performing specific database-related operations.
  * <p>
  * Instances of this class are immutable after their internal state has been configured through the
@@ -44,15 +44,15 @@ public final class RegistrationContextTerminal {
     }
 
     /**
-     * Configures a field-to-lhs mapping for a Data Transfer Object (DTO) within the current registration
+     * Configures a field-to-column mapping for a Data Transfer Object (DTO) within the current registration
      * context by applying a specification function. This method is used to define how a specific field in the DTO
-     * maps to its corresponding database lhs, allowing for the configuration of lhs specifications,
+     * maps to its corresponding database column, allowing for the configuration of column specifications,
      * sequence generators, and other mapping details.
      *
-     * @param spec A {@link Function} taking a {@link FieldColumnSpecBuilder} to define the field-to-lhs mapping.
+     * @param spec A {@link Function} taking a {@link FieldColumnSpecBuilder} to define the field-to-column mapping.
      *             The function returns a {@link FieldColumnSpecBuilderTerminal}, which represents the finalized mapping
      *             configuration.
-     * @return An updated {@link RegistrationContextTerminal} instance with the specified field-to-lhs mapping
+     * @return An updated {@link RegistrationContextTerminal} instance with the specified field-to-column mapping
      * added to the context.
      */
     public RegistrationContextTerminal with(final Function<FieldColumnSpecBuilder, FieldColumnSpecBuilderTerminal> spec) {

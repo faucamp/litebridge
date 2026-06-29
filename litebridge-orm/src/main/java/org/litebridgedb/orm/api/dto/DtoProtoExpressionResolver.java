@@ -29,7 +29,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
 
     @Override
     protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable) {
-        // Map the input DTO field names to database lhs names
+        // Map the input DTO field names to database column names
         final Column column = getColumn(resolvable);
         final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(((DtoSelectSpec) selectSpec).dtoClass(), resolvable.column());
         return new SelectFieldSpec(fieldAccessor, column);
@@ -37,7 +37,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
 
     @Override
     protected Column getColumn(final Resolvable resolvable) {
-        // Map the input DTO field names to database lhs names
+        // Map the input DTO field names to database column names
         final String fieldName = resolvable.column();
         final ColumnMetaData columnMetaData = ((DtoSelectSpec) selectSpec).dtoTable().getColumnForFieldName(fieldName);
         return aliasGenerator.aliasColumn(selectSpec.getTable(), columnMetaData);

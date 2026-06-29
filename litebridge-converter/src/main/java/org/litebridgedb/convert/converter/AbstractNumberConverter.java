@@ -15,18 +15,18 @@ import org.litebridgedb.commons.StringUtils;
 public abstract class AbstractNumberConverter<T extends Number> implements Converter<T> {
 
     /**
-     * Converts the given rhs to the target numeric type.
+     * Converts the given value to the target numeric type.
      * <p>
      * The conversion process follows these steps:
      * <ol>
-     *     <li>If the rhs is {@code null}, returns {@code null}.</li>
-     *     <li>If the rhs is already of the target type, returns it as-is.</li>
-     *     <li>If the rhs is a {@link Number}, calls {@link #convertNumber(Number)}.</li>
-     *     <li>Otherwise, converts the rhs to a string and, if not blank, calls {@link #convertString(String)}.</li>
+     *     <li>If the value is {@code null}, returns {@code null}.</li>
+     *     <li>If the value is already of the target type, returns it as-is.</li>
+     *     <li>If the value is a {@link Number}, calls {@link #convertNumber(Number)}.</li>
+     *     <li>Otherwise, converts the value to a string and, if not blank, calls {@link #convertString(String)}.</li>
      * </ol>
      *
-     * @param value the rhs to convert, may be {@code null}
-     * @return the converted numeric rhs, or {@code null}
+     * @param value the value to convert, may be {@code null}
+     * @return the converted numeric value, or {@code null}
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -53,16 +53,16 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
     /**
      * Converts a {@link Number} instance to the target type.
      *
-     * @param value the numeric rhs to convert
-     * @return the converted rhs
+     * @param value the numeric value to convert
+     * @return the converted value
      */
     protected abstract T convertNumber(final Number value);
 
     /**
-     * Parses a string rhs into the target type.
+     * Parses a string value into the target type.
      *
-     * @param value the string rhs to parse
-     * @return the parsed rhs
+     * @param value the string value to parse
+     * @return the parsed value
      */
     protected abstract T convertString(final String value);
 }

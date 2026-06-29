@@ -17,7 +17,7 @@ import java.util.List;
  * @param sql        The SQL query string that may contain placeholders for
  *                   parameterized values.
  * @param bindValues The list of bind values corresponding to the placeholders
- *                   in the SQL query. Each rhs can be nullable, represented
+ *                   in the SQL query. Each value can be nullable, represented
  *                   by the {@link BindValue} type.
  */
 public record PreparedSql(String sql, List<@Nullable BindValue> bindValues) {

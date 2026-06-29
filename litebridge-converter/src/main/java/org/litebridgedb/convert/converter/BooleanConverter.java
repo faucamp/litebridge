@@ -6,7 +6,7 @@ import java.sql.Types;
 /**
  * A converter for {@link Boolean} values.
  * <p>
- * Handles {@link java.sql.Types#BIT} and {@link java.sql.Types#BOOLEAN} by parsing the rhs's string representation.
+ * Handles {@link java.sql.Types#BIT} and {@link java.sql.Types#BOOLEAN} by parsing the value's string representation.
  */
 public class BooleanConverter extends AbstractStringParsingConverter<Boolean> implements SqlConverter<Boolean> {
 

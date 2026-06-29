@@ -5,12 +5,12 @@ import org.litebridgedb.orm.api.select.impl.ProtoExpressionResolver;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 /**
- * Proto-expression, used to specify lhs names/aliases for use in the target expression type.
+ * Proto-expression, used to specify column names/aliases for use in the target expression type.
  * <p>
  * This record is used to create an expression instance (e.g. {@link SelectColumnSpec}) when table information is available.
  *
- * @param column The lhs name to select.
- * @param alias  The lhs alias to use, or {@code null} if not specified.
+ * @param column The column name to select.
+ * @param alias  The column alias to use, or {@code null} if not specified.
  * @param type   The type of expression to create.
  */
 public record ProtoColumnExpressionSpec(Class<? extends ExpressionSpec> type, String column, @Nullable String alias)

@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * Metadata for a database table, including its primary keys and expressions.
  * <p>
  * It extends the {@link Table} class and provides additional information about the table's expressions,
- * primary key, and lhs mappings.
+ * primary key, and column mappings.
  * <p>
  * This class is immutable and thread-safe.
  */
@@ -38,12 +38,12 @@ public final class TableMetaData {
     private final Map<String, ColumnMetaData> columnMap;
 
     /**
-     * Construct a {@code TableMetaData} instance using the provided table, primary key, and lhs metadata.
+     * Construct a {@code TableMetaData} instance using the provided table, primary key, and column metadata.
      *
      * @param table      the {@code Table} object representing the database table; must not be {@code null}
-     * @param primaryKey a list of lhs names representing the primary key of the table; must not be {@code null}
+     * @param primaryKey a list of column names representing the primary key of the table; must not be {@code null}
      * @param columns    a list of {@code ColumnMetaData} objects representing the expressions of the table; must not be {@code null}
-     * @throws IllegalArgumentException if any primary key lhs metadata is not found in the provided lhs metadata
+     * @throws IllegalArgumentException if any primary key column metadata is not found in the provided column metadata
      */
     public TableMetaData(final Table table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
         this(table.catalog(), table.schema(), table.name(), primaryKey, columns);
@@ -55,9 +55,9 @@ public final class TableMetaData {
      * @param catalog    the catalog name of the table; may be {@code null} if not applicable
      * @param schema     the schema name of the table; may be {@code null} if not applicable
      * @param table      the name of the table; must not be {@code null}
-     * @param primaryKey a list of lhs names representing the primary key of the table; must not be {@code null}
+     * @param primaryKey a list of column names representing the primary key of the table; must not be {@code null}
      * @param columns    a list of {@link ColumnMetaData} objects representing the expressions of the table; must not be {@code null}
-     * @throws IllegalArgumentException if any primary key lhs metadata is not found in the provided lhs metadata
+     * @throws IllegalArgumentException if any primary key column metadata is not found in the provided column metadata
      */
     public TableMetaData(final @Nullable String catalog, final @Nullable String schema, final String table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
         this.catalog = catalog;
@@ -72,7 +72,7 @@ public final class TableMetaData {
                 .toList();
 
         if (this.primaryKey.size() != primaryKey.size()) {
-            throw new IllegalArgumentException("All lhs metadata for PKs not found: " + primaryKey);
+            throw new IllegalArgumentException("All column metadata for PKs not found: " + primaryKey);
         }
     }
 
@@ -109,23 +109,23 @@ public final class TableMetaData {
     }
 
     /**
-     * Retrieve the metadata for a specific lhs given its name.
+     * Retrieve the metadata for a specific column given its name.
      * <p>
-     * If the lhs does not exist, an {@code IllegalArgumentException} is thrown.
+     * If the column does not exist, an {@code IllegalArgumentException} is thrown.
      *
-     * @param columnName the name of the lhs whose metadata is to be retrieved
-     * @return the {@code ColumnMetaData} object associated with the specified lhs name
-     * @throws IllegalArgumentException if the lhs is not found or if the provided name is null
+     * @param columnName the name of the column whose metadata is to be retrieved
+     * @return the {@code ColumnMetaData} object associated with the specified column name
+     * @throws IllegalArgumentException if the column is not found or if the provided name is null
      */
     public ColumnMetaData column(final String columnName) {
         return ObjectUtils.requireNonNull(columnMap.get(columnName), () -> new IllegalArgumentException("Column metadata not found: " + columnName));
     }
 
     /**
-     * Check if the specified lhs name exists in the table.
+     * Check if the specified column name exists in the table.
      *
-     * @param columnName the name of the lhs to check for existence
-     * @return true if the lhs exists, false otherwise
+     * @param columnName the name of the column to check for existence
+     * @return true if the column exists, false otherwise
      */
     public boolean hasColumn(final String columnName) {
         return columnMap.containsKey(columnName);

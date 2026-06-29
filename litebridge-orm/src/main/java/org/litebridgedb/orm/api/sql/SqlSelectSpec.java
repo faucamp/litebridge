@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Specification for constructing a SQL SELECT statement.
  * <p>
- * This class encapsulates table, lhs, join, condition, order by,
+ * This class encapsulates table, column, join, condition, order by,
  * and limit specifications for building a query.
  */
 public class SqlSelectSpec extends SelectSpec {

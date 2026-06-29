@@ -278,7 +278,7 @@ public class PersistenceFacade {
 
                                 statementChain.addDependency(value, dependencyPipe);
                             } else {
-                                // PK already set - set the PK rhs on the current DTO and ensure the embedded DTO is persisted
+                                // PK already set - set the PK value on the current DTO and ensure the embedded DTO is persisted
                                 nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
                                     final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                                     final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
@@ -308,7 +308,7 @@ public class PersistenceFacade {
 
                                 statementChain.addDependency(value, dependencyPipe);
                             } else {
-                                // PK already set - set the PK rhs on the current DTO and ensure the embedded DTO is persisted
+                                // PK already set - set the PK value on the current DTO and ensure the embedded DTO is persisted
                                 nestedDtoTable.getMetaData().primaryKey().stream().forEach(pkColumn -> {
                                     final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                                     final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
@@ -503,7 +503,7 @@ public class PersistenceFacade {
                                 newCollection.add(dto);
                                 transactionManager.addRollbackCallback(() -> collectionField.set(trackedDto.dto(), null));
                             } else if (!collection.contains(dto)) {
-                                // Add the updated rhs to the collection
+                                // Add the updated value to the collection
                                 LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", collectionField.name(), dto);
                                 collection.add(dto);
                                 transactionManager.addRollbackCallback(() -> collection.remove(dto));
@@ -531,7 +531,7 @@ public class PersistenceFacade {
     /**
      * Executes an update statement provided by the given {@code AbstractStatementBuilder}.
      * This method first resolves and executes all dependent piped statements, propagating
-     * their results through the corresponding rhs pipes. It then builds and executes
+     * their results through the corresponding value pipes. It then builds and executes
      * the main update statement, which could be either an {@code Insert} or {@code Update},
      * using the configured {@code DatabaseProvider}.
      *

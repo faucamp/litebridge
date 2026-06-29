@@ -11,7 +11,7 @@ import org.litebridgedb.db.spi.Operation;
  * Implementing classes include:
  * <ul>
  *     <li>{@link Insert}: Represents an insert operation with a target table, columns, and rows.</li>
- *     <li>{@link Update}: Represents an update operation with target table, lhs values, and conditions.</li>
+ *     <li>{@link Update}: Represents an update operation with target table, column values, and conditions.</li>
  * </ul>
  * <p>
  * This interface is part of the update-related models for database operations.

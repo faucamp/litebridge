@@ -5,7 +5,7 @@ import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 
 /**
- * A condition in a database query, specifying a lhs, operator, and rhs/operand.
+ * A condition in a database query, specifying a column, operator, and value/operand.
  *
  * @param lhs      Left-hand side of the condition; usually a expression expression.
  * @param operator Operator for this condition, which is used to define the comparison type in a query (e.g., equality, greater than, less than).
@@ -16,9 +16,9 @@ import org.litebridgedb.db.spi.expression.SelectExpression;
 public record Condition(SelectExpression lhs, Operator operator, SelectExpression rhs) {
 
     /**
-     * Convenience constructor that wraps the given rhs into a {@link LiteralExpression}.
+     * Convenience constructor that wraps the given value into a {@link LiteralExpression}.
      * <p>
-     * Equivalent to {@code Condition(lhs, operator, new LiteralExpression(rhs))}.
+     * Equivalent to {@code Condition(lhs, operator, new LiteralExpression(value))}.
      *
      * @param lhs      Left-hand side of the condition; usually a expression expression.
      * @param operator {@code IS_NULL} or {@code IS_NOT_NULL} operator

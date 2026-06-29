@@ -9,9 +9,9 @@ import org.litebridgedb.db.spi.Column;
 public interface SelectReferenceExpressionFactory {
 
     /**
-     * Creates a reference to a selected lhs.
+     * Creates a reference to a selected column.
      *
-     * @param column The selected lhs to reference.
+     * @param column The selected column to reference.
      * @return A new reference expression.
      */
     SelectReference create(Column column);

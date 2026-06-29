@@ -12,7 +12,7 @@ public class SelectReferenceImpl extends SelectReference {
     /**
      * Constructor.
      *
-     * @param column                    The target selected lhs to reference.
+     * @param column                    The target selected column to reference.
      * @param columnIdentifierGenerator The column identifier generator to use.
      */
     public SelectReferenceImpl(final Column column, final ColumnIdentifierGenerator columnIdentifierGenerator) {

@@ -53,7 +53,7 @@ public final class AnnotationMapper {
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = new LinkedHashMap<>();
         final Set<String> mappedFieldNames = new HashSet<>();;
 
-        // Maps annotated fields to lhs specifications
+        // Maps annotated fields to column specifications
         ClassUtils.getAllFields(entityClass, false, lookup)
                 .forEach(field -> {
                     final ColumnMapping columnMapping;
@@ -79,7 +79,7 @@ public final class AnnotationMapper {
                     mappedFieldNames.add(field.getName());
                 });
 
-        // Maps annotated methods to lhs specifications for table binding
+        // Maps annotated methods to column specifications for table binding
         ClassUtils.getAllMethods(entityClass, false, lookup)
                 .forEach(method -> {
                     final ColumnMapping columnMapping;
@@ -145,7 +145,7 @@ public final class AnnotationMapper {
                 final ColumnValueGenerator generatorInstance = columnAnnotation.generator().getDeclaredConstructor().newInstance();
                 columnMapping = new ColumnSpec(columnAnnotation.value(), generatorInstance);
             } catch (final Exception ex) {
-                throw new IllegalArgumentException("Failed to instantiate lhs rhs generator class: " + columnAnnotation.generator(), ex);
+                throw new IllegalArgumentException("Failed to instantiate lhs value generator class: " + columnAnnotation.generator(), ex);
             }
         } else {
             columnMapping = new ColumnSpec(columnAnnotation.value());

@@ -56,9 +56,9 @@ public interface SelectApi {
      * This method constructs a {@link FromClauseStartTypeOverride} for further query composition
      * by specifying the target DTO or table for the query.
      *
-     * @param fieldsOrColumns An array of field/lhs names to be included in the SELECT statement, dependent on
+     * @param fieldsOrColumns An array of field/column names to be included in the SELECT statement, dependent on
      *                        whether a DTO or raw SQL is selected in the chained {@code from()} call.
-     *                        Each field/lhs name must be a valid, non-null string.
+     *                        Each field/column name must be a valid, non-null string.
      * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
     FromClauseStart select(String... fieldsOrColumns);

@@ -1,7 +1,7 @@
 package org.litebridgedb.orm.api.spec;
 
 /**
- * Represents a specification for mapping a field in a class to a database lhs or property.
+ * Represents a specification for mapping a field in a class to a database column or property.
  * <p>
  * This class is part of the ORM specification for defining how fields or properties in a DTO
  * (Data Transfer Object) are mapped to their corresponding database representations.

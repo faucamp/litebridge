@@ -15,8 +15,8 @@ package org.litebridgedb.db.spi.query;
  *  <li>{@link Operator#LT}: "Less than" comparison.</li>
  *  <li>{@link Operator#LTE}: "Less than or equal to" comparison.</li>
  *  <li>{@link Operator#IN}: Inclusion in a set.</li>
- *  <li>{@link Operator#IS_NULL}: Checks if a rhs is {@code null}.</li>
- *  <li>{@link Operator#IS_NOT_NULL}: Checks if a rhs is not {@code null}.</li>
+ *  <li>{@link Operator#IS_NULL}: Checks if a value is {@code null}.</li>
+ *  <li>{@link Operator#IS_NOT_NULL}: Checks if a value is not {@code null}.</li>
  *  <li>{@link Operator#USING}: Used to specify expressions for joining tables.</li>
  * </ul>
  *
@@ -52,11 +52,11 @@ public enum Operator {
      */
     IN,
     /**
-     * Checks if a rhs is {@code null}
+     * Checks if a value is {@code null}
      */
     IS_NULL,
     /**
-     * Checks if a rhs is not {@code null}
+     * Checks if a value is not {@code null}
      */
     IS_NOT_NULL,
     /**

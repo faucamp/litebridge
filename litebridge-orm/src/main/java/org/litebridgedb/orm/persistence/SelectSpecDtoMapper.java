@@ -199,9 +199,9 @@ public class SelectSpecDtoMapper {
                 final Object nestedDto = toDto(field.type(), table, dtoData, fieldColumns).dto();
                 fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, nestedDto));
             } else if (ClassUtils.isBasicType(field.type())) {
-                // Standard lhs: find the rhs, convert it to target DTO's field type, and set the field
+                // Standard column: find the value, convert it to target DTO's field type, and set the field
                 final Row.RowColumn rowColumn = row.column(fieldColumn.column())
-                        .orElseThrow(() -> new IllegalStateException("No lhs found for alias '%s' in row: %s".formatted(fieldColumn.column().alias(), row)));
+                        .orElseThrow(() -> new IllegalStateException("No column found for alias '%s' in row: %s".formatted(fieldColumn.column().alias(), row)));
                 final Object convertedValue = typeConverter.convert(rowColumn.value(), field.type());
                 fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, convertedValue));
             } else {
@@ -223,13 +223,13 @@ public class SelectSpecDtoMapper {
     private DtoConstructor.@NonNull DtoDependency createDtoDependency(final OrmTable ormTable, final DtoSelectSpec.FieldColumn fieldColumn, final Row row, final Class<?> parentDtoClass) {
         final FieldAccessor field = fieldColumn.fieldAccessor();
         final Row.RowColumn rowColumn = row.column(fieldColumn.column())
-                .orElseThrow(() -> new IllegalStateException("No lhs found for alias '%s' in row: %s".formatted(fieldColumn.column().alias(), row)));
+                .orElseThrow(() -> new IllegalStateException("No column found for alias '%s' in row: %s".formatted(fieldColumn.column().alias(), row)));
         final Object targetPkValue = rowColumn.value();
-        // Get the table and lhs for the related DTO
+        // Get the table and column for the related DTO
         final ColumnMetaData columnMetaData = ormTable.getColumnForFieldName(field.name());
 
         if (columnMetaData.getJoinColumn() == null) {
-            throw new IllegalStateException("No join lhs found for lhs '%s' in table '%s'".formatted(columnMetaData.name(), ormTable.getMetaData().name()));
+            throw new IllegalStateException("No join column found for column '%s' in table '%s'".formatted(columnMetaData.name(), ormTable.getMetaData().name()));
         }
 
         final OrmTable relatedOrmTable = tableRegistry.getTableInContext(field.type(), parentDtoClass)
@@ -304,7 +304,7 @@ public class SelectSpecDtoMapper {
         // Match that to aliased expressions (if any) in the select spec
         final List<DtoSelectSpec.FieldColumn> pkFieldColumns = extractPrimaryKeyFieldColumns(pkColumns, selectSpec.getTable(), selectSpec.getExpressions());
 
-        // Group rows by the DTO table's primary key rhs for DTO assembly
+        // Group rows by the DTO table's primary key value for DTO assembly
         final Map<List<Object>, List<Row>> dtoPkGroupedRows = new LinkedHashMap<>();
 
         for (final Row row : rows) {
@@ -316,7 +316,7 @@ public class SelectSpecDtoMapper {
 
                                 if (columnMetaData.getJoinColumn() != null
                                         && !ClassUtils.isBasicType(pkFieldType)) {
-                                    // Primary foreign key mapped to a DTO field; get the related DTO's primary key/join lhs field
+                                    // Primary foreign key mapped to a DTO field; get the related DTO's primary key/join column field
                                     final OrmTable relatedOrmTable = tableRegistry.getTableInContext(pkFieldType, ormTable.dtoClass())
                                             .orElseGet(() -> tableRegistry.getTableOrThrow(pkFieldType));
                                     final FieldAccessor relatedPkFieldAccessor = relatedOrmTable.getFieldForColumnName(columnMetaData.getJoinColumn());
@@ -357,7 +357,7 @@ public class SelectSpecDtoMapper {
                                                     final FieldAccessor relatedFieldAccessor = dtoJoinSpec.dtoTable().getFieldForColumnName(rowColumn.column().name());
                                                     return (Object) typeConverter.convert(rowColumn.value(), relatedFieldAccessor.type());
                                                 })
-                                                .orElseThrow(() -> new IllegalStateException("No primary key lhs found for join table '%s' in row: %s".formatted(ormTable.getMetaData().name(), row))))
+                                                .orElseThrow(() -> new IllegalStateException("No primary key column found for join table '%s' in row: %s".formatted(ormTable.getMetaData().name(), row))))
                                         .toList();
 
                                 relatedDtoRows.computeIfAbsent(joinPkValues, k -> row);
@@ -420,7 +420,7 @@ public class SelectSpecDtoMapper {
 
         mappedOneToManyList.forEach(mappedOneToMany -> {
             LOGGER.trace("Updating one-to-many mapping for field '{}' of DTO: {}", mappedOneToMany.collection().name(), dto);
-            // Get the current rhs of the mapping
+            // Get the current value of the mapping
             final FieldAccessor collection = mappedOneToMany.collection();
             final Collection<Object> currentCollection;
             final Collection<Object> dtoCollection = (Collection<Object>) collection.get(dto);
@@ -451,7 +451,7 @@ public class SelectSpecDtoMapper {
 
         mappedManyToManyList.forEach(mappedOneToMany -> {
             LOGGER.trace("Updating many-to-many mapping for field '{}' of DTO: {}", mappedOneToMany.collection().name(), dto);
-            // Get the current rhs of the mapping
+            // Get the current value of the mapping
             final FieldAccessor collection = mappedOneToMany.collection();
             final Collection<Object> currentCollection;
             final Collection<Object> dtoCollection = (Collection<Object>) collection.get(dto);

@@ -3,8 +3,8 @@ package org.litebridgedb.db.spi.expression;
 /**
  * SQL function registry.
  *
- * @param aggregate Aggregate functions perform calculations on a set of values and return a single rhs.
- * @param scalar    Scalar functions perform calculations on one or more input values and return a single rhs.
+ * @param aggregate Aggregate functions perform calculations on a set of values and return a single value.
+ * @param scalar    Scalar functions perform calculations on one or more input values and return a single value.
  * @param date      Date/time functions.
  */
 public record SqlFunctionRegistry(
@@ -17,10 +17,10 @@ public record SqlFunctionRegistry(
     /**
      * Expressions dealing with selecting columns, sub-selects, literals, and references to selected columns.
      *
-     * @param column          Factory to create lhs expression to specify a lhs to be selected.
+     * @param column          Factory to create column expression to specify a column to be selected.
      * @param subselect       Factory to create sub-select expressions.
      * @param literal         Factory to create literal expressions.
-     * @param reference Factory to create selected lhs reference expressions.
+     * @param reference Factory to create selected column reference expressions.
      */
     public record Select(
             ColumnExpressionFactory column,
@@ -30,11 +30,11 @@ public record SqlFunctionRegistry(
     }
 
     /**
-     * Aggregate functions perform calculations on a set of values and return a single rhs.
+     * Aggregate functions perform calculations on a set of values and return a single value.
      *
-     * @param avg   AVG(): Average rhs of the specified lhs.
-     * @param min   MIN(): Minimum rhs of the specified lhs.
-     * @param max   MAX(): Maximum rhs of the specified lhs.
+     * @param avg   AVG(): Average value of the specified column.
+     * @param min   MIN(): Minimum value of the specified column.
+     * @param max   MAX(): Maximum value of the specified column.
      * @param count COUNT(): Total number of rows in the query result.
      */
     public record Aggregate(
@@ -45,12 +45,12 @@ public record SqlFunctionRegistry(
     }
 
     /**
-     * Scalar functions perform calculations on one or more input values and return a single rhs.
+     * Scalar functions perform calculations on one or more input values and return a single value.
      *
      * @param lower     LOWER(): Convert a string to lowercase.
      * @param upper     UPPER(): Convert a string to uppercase.
      * @param substring SUBSTRING(): Extract a substring from a string.
-     * @param abs       ABS(): Absolute rhs of a number.
+     * @param abs       ABS(): Absolute value of a number.
      */
     public record Scalar(
             DelegateExpressionFactory upper,

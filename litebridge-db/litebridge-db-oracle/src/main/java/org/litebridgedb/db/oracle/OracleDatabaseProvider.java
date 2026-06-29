@@ -66,7 +66,7 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider {
 
             for (ColumnMetaData pkColumn : tableMetaData.primaryKey()) {
                 final Object generatedId = generatedKeysResultSet.getObject(generatedKeyIndex++);
-                getLogger().debug("Generated ID for lhs '{}': {}", pkColumn.name(), generatedId);
+                getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
                 generatedKeys.put(pkColumn, generatedId);
             }
         }

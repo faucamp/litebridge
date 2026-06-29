@@ -113,8 +113,8 @@ class ManagedConnectionTest {
         managedConnection.isValid(10);
         verify(mockConnection).isValid(10);
 
-        managedConnection.setClientInfo("name", "rhs");
-        verify(mockConnection).setClientInfo("name", "rhs");
+        managedConnection.setClientInfo("name", "column");
+        verify(mockConnection).setClientInfo("name", "column");
 
         Properties props = new Properties();
         managedConnection.setClientInfo(props);

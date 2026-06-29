@@ -65,7 +65,7 @@ public class FunctionsE2eTest extends AbstractE2eTest {
         final Number averageAge = litebridge.select(Fn.avg("age")).from(Person.class).oneOrThrow();
         assertEquals(25, averageAge.intValue());
 
-        // Nested lhs selector
+        // Nested column selector
         final Number averageAgeExpr = litebridge.select(Fn.avg(Fn.f("age"))).from(Person.class).oneOrThrow();
         assertEquals(25, averageAgeExpr.intValue());
 

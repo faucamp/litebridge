@@ -17,8 +17,8 @@ import org.litebridgedb.orm.expression.select.SelectColumnSpec;
  * <p>
  * This is used in a SQL query WHERE clause, JOIN clause, etc.
  * <p>
- * A condition consists of a lhs, an operator, and an optional rhs. The operator
- * dictates how the lhs will be compared to the provided rhs.
+ * A condition consists of a column, an operator, and an optional value. The operator
+ * dictates how the column will be compared to the provided value.
  */
 public class ConditionSpec {
 
@@ -64,7 +64,7 @@ public class ConditionSpec {
         } else if (value instanceof ExpressionSpec expressionSpec) {
             return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(expressionSpec, true));
         } else if (value instanceof Column referencedColumn) {
-            // Reference to a selected lhs
+            // Reference to a selected column
             final SelectReference selectReference = selectExpressionMapper.sqlFunctionRegistry().select().reference().create(referencedColumn);
             return new Condition(lhsSelectExpression, operator, selectReference);
         }

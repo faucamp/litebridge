@@ -6,7 +6,7 @@ import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.FunctionExpression;
 
 /**
- * {@code LOWER(lhs)} scalar function.
+ * {@code LOWER(column)} scalar function.
  */
 public class Lower extends FunctionExpression {
 

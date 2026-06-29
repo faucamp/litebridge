@@ -5,7 +5,7 @@ import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.FunctionExpression;
 
 /**
- * {@code AVG(lhs)} aggregate function.
+ * {@code AVG(column)} aggregate function.
  */
 public class Avg extends FunctionExpression {
 

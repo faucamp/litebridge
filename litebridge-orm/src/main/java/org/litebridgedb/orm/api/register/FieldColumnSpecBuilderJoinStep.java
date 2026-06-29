@@ -9,8 +9,8 @@ import org.litebridgedb.orm.api.spec.TableMapping;
 import java.util.function.Function;
 
 /**
- * A builder step for defining the join lhs mapping in a field-to-database-lhs specification.
- * This class allows specifying a join lhs as part of the mapping configuration while building
+ * A builder step for defining the join column mapping in a field-to-database-column specification.
+ * This class allows specifying a join column as part of the mapping configuration while building
  * field specifications for an Object-Relational Mapping (ORM) system.
  * <p>
  * This class is immutable and part of a step-by-step fluent API to configure ORM mappings, ensuring
@@ -31,14 +31,14 @@ public final class FieldColumnSpecBuilderJoinStep implements FieldColumnSpecBuil
     }
 
     /**
-     * Maps the current lhs configuration to a database table associated with the specified Data Transfer Object (DTO) class.
+     * Maps the current column configuration to a database table associated with the specified Data Transfer Object (DTO) class.
      * This method resolves the table mapping for the provided DTO class and applies the necessary context transformations
-     * via the given function to finalise the table specification for the lhs mapping.
+     * via the given function to finalise the table specification for the column mapping.
      *
      * @param dtoClass The class of the Data Transfer Object (DTO) that will be mapped to the database table.
      * @param rc       A function that processes the registration context, allowing additional mapping configurations
      *                 or custom transformations, and returns a terminal registration context.
-     * @return An instance of {@code FieldColumnSpecBuilderTerminal} representing the final step in the field-to-database-lhs
+     * @return An instance of {@code FieldColumnSpecBuilderTerminal} representing the final step in the field-to-database-column
      * mapping configuration.
      */
     public FieldColumnSpecBuilderTerminal withMappedTable(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationContextTerminal> rc) {

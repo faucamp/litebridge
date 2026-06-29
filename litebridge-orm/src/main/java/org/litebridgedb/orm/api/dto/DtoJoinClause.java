@@ -67,7 +67,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
 
     private DtoJoinConditionClauseTerminal<DTO> joinOn(final OrmTable rightOrmTable, final Table rightTable, final ColumnMetaData rightColumnMetaData, final @Nullable String field) {
         if (rightColumnMetaData.getJoinColumn() == null) {
-            throw new IllegalStateException("No join lhs specified for lhs '%s' %s".formatted(rightColumnMetaData.name(), field != null ? "mapped to field '%s'".formatted(field) : "(no field)"));
+            throw new IllegalStateException("No join column specified for column '%s' %s".formatted(rightColumnMetaData.name(), field != null ? "mapped to field '%s'".formatted(field) : "(no field)"));
         }
 
         final List<SelectFieldSpec> joinFieldColumns = rightOrmTable.getMetaData().columns().stream()
@@ -90,7 +90,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
                 .map(expression -> ((SelectFieldSpec) expression).getColumn())
                 .filter(column -> column.table().equalsIgnoreAlias(rightColumnMetaData.table())
                         && column.equalsIgnoreAlias(rightColumn))
-                .findFirst().orElseThrow(() -> new IllegalArgumentException("Left JOIN lhs not found"));
+                .findFirst().orElseThrow(() -> new IllegalArgumentException("Left JOIN column not found"));
 
         final ConditionSpec conditionSpec = joinSpec.newCondition(leftColumn);
         final ColumnMetaData targetColumnMetaData = rightOrmTable.getColumnMetaData(rightColumnMetaData.getJoinColumn());
@@ -101,7 +101,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
             final Column targetColumn = joinFieldColumns.stream()
                     .map(SelectFieldSpec::getColumn)
                     .filter(c -> c.name().equals(targetColumnMetaData.name()))
-                    .findFirst().orElseThrow(() -> new IllegalArgumentException("Target JOIN lhs not found"));
+                    .findFirst().orElseThrow(() -> new IllegalArgumentException("Target JOIN column not found"));
             conditionSpec.setOperator(Operator.EQ);
             conditionSpec.setValue(targetColumn);
         }

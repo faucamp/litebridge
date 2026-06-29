@@ -626,7 +626,7 @@ class AbstractDatabaseProviderTest {
         mockTransactionManager();
         final PreparedSql preparedSql = new PreparedSql(
                 "INSERT INTO TEST_TABLE(TEST_COLUMN) VALUES (?)",
-                List.of(new BindValue("rhs", Types.VARCHAR)));
+                List.of(new BindValue("column", Types.VARCHAR)));
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(connection.prepareStatement(eq(preparedSql.sql()), eq(new String[]{"TEST_PK"}))).thenReturn(preparedStatement);
@@ -638,7 +638,7 @@ class AbstractDatabaseProviderTest {
 
         // Then
         assertSame(preparedStatement, result);
-        verify(result).setString(1, "rhs");
+        verify(result).setString(1, "column");
     }
 
     @Test
@@ -901,7 +901,7 @@ class AbstractDatabaseProviderTest {
         final TableMetaData tableMetaData = tableMetaDataImpl();
         final PreparedSql preparedSql = new PreparedSql(
                 "INSERT INTO TEST_TABLE(TEST_COLUMN) VALUES (?)",
-                List.of(new BindValue("rhs", Types.VARCHAR)));
+                List.of(new BindValue("column", Types.VARCHAR)));
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(preparedStatement.executeUpdate()).thenReturn(1);
@@ -948,7 +948,7 @@ class AbstractDatabaseProviderTest {
     void extractGeneratedKeys_multiplePrimaryKeys() throws Exception {
         // Given
         mockTransactionManager();
-        // Add a second primary key lhs
+        // Add a second primary key column
         final TableMetaData tableMetaData = createTableMetaMultiPkData();
         tableMetaData.column("TEST_PK").setAutoIncrement(true);
         tableMetaData.column("TEST_PK2").setAutoIncrement(true);
@@ -1135,7 +1135,7 @@ class AbstractDatabaseProviderTest {
         tableMetaData.column("TEST_PK").setAutoIncrement(true);
         final PreparedSql preparedSql = new PreparedSql(
                 "INSERT INTO TEST_TABLE(TEST_COLUMN) VALUES (?)",
-                List.of(new BindValue("rhs", Types.VARCHAR)));
+                List.of(new BindValue("column", Types.VARCHAR)));
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(connection.prepareStatement(eq(preparedSql.sql()), eq(new String[]{"TEST_PK"}))).thenReturn(preparedStatement);

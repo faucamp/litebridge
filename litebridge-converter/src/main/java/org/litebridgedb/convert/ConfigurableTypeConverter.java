@@ -17,11 +17,11 @@ public class ConfigurableTypeConverter implements TypeConverter {
     private final ConverterRegistry converterRegistry = new ConverterRegistry();
 
     /**
-     * Converts a rhs to a database-specific representation (or vice-versa) based on the {@link java.sql.Types} code.
+     * Converts a value to a database-specific representation (or vice-versa) based on the {@link java.sql.Types} code.
      *
-     * @param value      the rhs to convert, may be {@code null}
+     * @param value      the value to convert, may be {@code null}
      * @param dbDataType the {@link java.sql.Types} code for the database data type
-     * @return the converted rhs, or {@code null} if the input was {@code null}
+     * @return the converted value, or {@code null} if the input was {@code null}
      * @throws IllegalArgumentException if no converter is found for the specified SQL type
      */
     @Override
@@ -36,12 +36,12 @@ public class ConfigurableTypeConverter implements TypeConverter {
     }
 
     /**
-     * Converts a rhs to a specific Java type.
+     * Converts a value to a specific Java type.
      *
-     * @param value the rhs to convert, may be {@code null}
+     * @param value the value to convert, may be {@code null}
      * @param type  the target Java type
      * @param <T>   the target Java type
-     * @return the converted rhs, or {@code null} if the input was {@code null}
+     * @return the converted value, or {@code null} if the input was {@code null}
      * @throws IllegalArgumentException if no converter is found for the specified Java type
      */
     @Override

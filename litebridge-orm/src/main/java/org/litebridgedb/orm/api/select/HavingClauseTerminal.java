@@ -9,7 +9,7 @@ public interface HavingClauseTerminal<DTO,
     /**
      * Adds an ORDER BY clause to the query, specifying the expressions to sort the results by.
      *
-     * @param columns the expressions that determine the order of the results. Each lhs
+     * @param columns the expressions that determine the order of the results. Each column
      *                must be valid for the associated table or view in the query.
      *                The order in which the expressions are specified determines the
      *                priority of ordering.

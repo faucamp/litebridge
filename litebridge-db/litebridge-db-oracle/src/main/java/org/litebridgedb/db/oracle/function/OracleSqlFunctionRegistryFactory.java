@@ -18,7 +18,7 @@ public final class OracleSqlFunctionRegistryFactory extends SqlFunctionRegistryF
     /**
      * Constructs a new {@code OracleSqlFunctionRegistryFactory}.
      *
-     * @param columnIdentifierGenerator The database provider's lhs identifier generator
+     * @param columnIdentifierGenerator The database provider's column identifier generator
      * @param selectSqlGenerator        The database provider's select SQL generator
      */
     public OracleSqlFunctionRegistryFactory(final ColumnIdentifierGenerator columnIdentifierGenerator,

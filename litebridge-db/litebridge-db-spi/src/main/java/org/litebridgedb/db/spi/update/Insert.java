@@ -19,7 +19,7 @@ import java.util.List;
  * </ul>
  * <p>
  * This class also provides constructors for creating instances with either a single row
- * or multiple rows of data, automatically populating lhs information based on the rows provided.
+ * or multiple rows of data, automatically populating column information based on the rows provided.
  * <p>
  * Instances of this class are immutable and serve as part of the structure for building SQL
  * update operations targeting a database.

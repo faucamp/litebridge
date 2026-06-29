@@ -51,7 +51,7 @@ public final class RegistrationContext {
      * This method initiates the final stage of the registration process by associating
      * the DTO class with the given table name and any provided DTO interfaces.
      * <p>
-     * Following this, the table mapping is complete and the builder proceeds to field/lhs mappings.
+     * Following this, the table mapping is complete and the builder proceeds to field/column mappings.
      *
      * @param tableName The name of the table in the database to which the DTO class should be mapped.
      * @return A {@code RegistrationContextTerminal} instance to finalize the mapping configuration.
