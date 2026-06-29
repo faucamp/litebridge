@@ -39,28 +39,28 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
 
     @Override
     public SqlWhereConditionClause where(final ColumnExpressionSpec column) {
-        return where(column.column().name());
+        return where(column.getColumn().name());
     }
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final String... columns) {
-        selectSpec.setGroupBy(new GroupBySpec(columns));
+        selectSpec.setGroupBy(new GroupBySpec(selectSpec.createSelectColumnSpecs(columns)));
         return new SqlGroupByClauseTerminal((SqlSelector) delegate);
     }
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final ExpressionSpec... columns) {
-        selectSpec.setGroupBy(new GroupBySpec(selectSpec.mapExpressionsToColumns(columns)));
+        selectSpec.setGroupBy(new GroupBySpec(columns));
         return new SqlGroupByClauseTerminal((SqlSelector) delegate);
     }
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.createSelectColumnSpecs(columns)), (SqlSelector) delegate);
     }
 
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.mapExpressionsToColumns(columns)), (SqlSelector) delegate);
+        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
     }
 }

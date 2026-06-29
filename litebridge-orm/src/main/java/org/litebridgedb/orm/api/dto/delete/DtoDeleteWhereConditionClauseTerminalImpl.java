@@ -21,7 +21,7 @@ public final class DtoDeleteWhereConditionClauseTerminalImpl<DTO>
 
     @Override
     public DtoDeleteWhereConditionClause<DTO> and(final ColumnExpressionSpec field) {
-        return and(field.column().name());
+        return and(field.getColumn().name());
     }
 
     @Override

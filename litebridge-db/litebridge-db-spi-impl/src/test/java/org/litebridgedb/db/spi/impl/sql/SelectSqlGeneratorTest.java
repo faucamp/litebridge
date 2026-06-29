@@ -13,7 +13,6 @@ import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.query.Condition;
-import org.litebridgedb.db.spi.query.GroupBy;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
 import org.litebridgedb.db.spi.query.Operator;
@@ -26,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -162,19 +162,19 @@ class SelectSqlGeneratorTest {
         final Table table = new Table("TEST_TABLE", "t1");
         final Column col1 = new Column(table, "COL1");
         final Column col2 = new Column(table, "COL2");
-        
+
         final SelectColumn selectCol1 = new SelectColumn(col1, selectSqlGenerator.columnIdentifierGenerator);
-        
+
         final Table joinTable = new Table("JOIN_TABLE", "j1");
         final Column joinCol = new Column(joinTable, "JCOL");
         final Join join = new Join(joinTable, List.of(new Condition(new SelectColumn(joinCol, selectSqlGenerator.columnIdentifierGenerator), Operator.EQ, "val")));
-        
+
         final List<Condition> where = List.of(new Condition(new SelectColumn(col2, selectSqlGenerator.columnIdentifierGenerator), Operator.GT, 10));
-        
-        final List<OrderBy> orderBy = List.of(new OrderBy(col1, false));
+
+        final List<OrderBy> orderBy = List.of(new OrderBy(selectCol1, false));
         final Limit limit = new Limit(Optional.of(10), Optional.of(5));
 
-        final GroupBy groupBy = new GroupBy(List.of(col1));
+        final List<SelectExpression> groupBy = List.of(selectCol1);
         final List<Condition> having = List.of(new Condition(new SelectColumn(col1, selectSqlGenerator.columnIdentifierGenerator), Operator.NEQ, "foo"));
 
         final Select select = new Select(
@@ -182,7 +182,7 @@ class SelectSqlGeneratorTest {
                 new ArrayList<>(List.of(selectCol1, mock(SelectExpression.class))), // Test non-AliasedColumnExpression
                 new ArrayList<>(List.of(join)),
                 new ArrayList<>(where),
-                Optional.of(groupBy),
+                groupBy,
                 new ArrayList<>(having),
                 new ArrayList<>(orderBy),
                 Optional.of(limit)
@@ -195,7 +195,7 @@ class SelectSqlGeneratorTest {
         when(tableMetaData.column(anyString())).thenReturn(cmd);
         when(typeConverter.convert(any(), anyInt())).then(i -> i.getArgument(0));
         // when(typeConverter.getDbDataType(any())).thenReturn(Types.INTEGER);
-        
+
         // Mock the non-AliasedColumnExpression
         when(select.expressions().get(1).toSql(any())).thenReturn("1");
 
@@ -213,12 +213,12 @@ class SelectSqlGeneratorTest {
         final Table table = new Table("TEST_TABLE");
         final Select select = new Select(
                 table,
-                new ArrayList<>(),
-                new ArrayList<>(),
-                new ArrayList<>(),
-                Optional.empty(),
-                new ArrayList<>(),
-                new ArrayList<>(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList(),
                 Optional.empty()
         );
 

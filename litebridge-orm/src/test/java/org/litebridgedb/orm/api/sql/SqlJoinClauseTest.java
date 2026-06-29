@@ -46,7 +46,7 @@ class SqlJoinClauseTest {
         assertEquals(1, joinSpec.conditions().size());
 
         final ConditionSpec condition = joinSpec.conditions().getFirst();
-        final Column column = ((ColumnExpressionSpec) condition.getLhs()).column();
+        final Column column = ((ColumnExpressionSpec) condition.getLhs()).getColumn();
         assertEquals(joinTable, column.table());
         assertEquals("joined_id", column.name());
         assertNull(condition.getOperator());
@@ -69,7 +69,7 @@ class SqlJoinClauseTest {
         assertEquals(1, joinSpec.conditions().size());
 
         final ConditionSpec condition = joinSpec.conditions().getFirst();
-        final Column column = ((ColumnExpressionSpec) condition.getLhs()).column();
+        final Column column = ((ColumnExpressionSpec) condition.getLhs()).getColumn();
         assertEquals(joinTable, column.table());
         assertEquals("joined_id", column.name());
         assertEquals(Operator.EQ, condition.getOperator());
@@ -92,7 +92,7 @@ class SqlJoinClauseTest {
         assertEquals(1, joinSpec.conditions().size());
 
         final ConditionSpec condition = joinSpec.conditions().getFirst();
-        final Column column = ((ColumnExpressionSpec) condition.getLhs()).column();
+        final Column column = ((ColumnExpressionSpec) condition.getLhs()).getColumn();
         assertEquals(joinTable, column.table());
         assertEquals("optional_id", column.name());
         assertEquals(Operator.IS_NULL, condition.getOperator());
@@ -115,7 +115,7 @@ class SqlJoinClauseTest {
         assertEquals(1, joinSpec.conditions().size());
 
         final ConditionSpec condition = joinSpec.conditions().getFirst();
-        final Column column = ((ColumnExpressionSpec) condition.getLhs()).column();
+        final Column column = ((ColumnExpressionSpec) condition.getLhs()).getColumn();
         assertEquals(joinTable, column.table());
         assertEquals("shared_id", column.name());
         assertEquals(Operator.USING, condition.getOperator());

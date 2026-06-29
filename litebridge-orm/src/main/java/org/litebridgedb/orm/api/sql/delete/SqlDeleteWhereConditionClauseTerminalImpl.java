@@ -28,6 +28,6 @@ public final class SqlDeleteWhereConditionClauseTerminalImpl
 
     @Override
     public SqlDeleteWhereConditionClause and(final ColumnExpressionSpec column) {
-        return and(column.column().name());
+        return and(column.getColumn().name());
     }
 }

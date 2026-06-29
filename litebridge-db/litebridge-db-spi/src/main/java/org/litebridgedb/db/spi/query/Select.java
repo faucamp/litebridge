@@ -25,7 +25,7 @@ public record Select(Table table,
                      List<SelectExpression> expressions,
                      List<Join> joins,
                      List<Condition> where,
-                     Optional<GroupBy> groupBy,
+                     List<SelectExpression> groupBy,
                      List<Condition> having,
                      List<OrderBy> orderBy,
                      Optional<Limit> limit) implements Operation {

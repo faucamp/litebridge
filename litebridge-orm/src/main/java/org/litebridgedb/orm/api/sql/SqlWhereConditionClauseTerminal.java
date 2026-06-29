@@ -4,6 +4,7 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractWhereClauseTerminal;
+import org.litebridgedb.orm.api.select.model.GroupBySpec;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 
@@ -37,27 +38,28 @@ public final class SqlWhereConditionClauseTerminal
 
     @Override
     public SqlWhereConditionClause and(final ColumnExpressionSpec column) {
-        return and(column.column().name());
+        return and(column.getColumn().name());
     }
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final String... columns) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        selectSpec.setGroupBy(new GroupBySpec(selectSpec.createSelectColumnSpecs(columns)));
+        return new SqlGroupByClauseTerminal((SqlSelector) delegate);
     }
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final ExpressionSpec... columns) {
-        selectSpec.setGroupBy(new org.litebridgedb.orm.api.select.model.GroupBySpec(selectSpec.mapExpressionsToColumns(columns)));
+        selectSpec.setGroupBy(new GroupBySpec(columns));
         return new SqlGroupByClauseTerminal((SqlSelector) delegate);
     }
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.createSelectColumnSpecs(columns)), (SqlSelector) delegate);
     }
 
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.mapExpressionsToColumns(columns)), (SqlSelector) delegate);
+        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
     }
 }

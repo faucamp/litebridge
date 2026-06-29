@@ -22,7 +22,7 @@ public final class DtoUpdateWhereConditionClauseTerminalImpl<DTO>
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> and(final ColumnExpressionSpec field) {
-        return and(field.column().name());
+        return and(field.getColumn().name());
     }
 
     @Override

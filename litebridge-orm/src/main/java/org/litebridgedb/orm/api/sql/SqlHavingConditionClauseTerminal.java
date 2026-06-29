@@ -7,8 +7,6 @@ import org.litebridgedb.orm.api.select.impl.AbstractHavingClauseTerminal;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 
-import java.util.Arrays;
-
 public final class SqlHavingConditionClauseTerminal
         extends AbstractHavingClauseTerminal<Row,
         SqlOrderByClause,
@@ -33,16 +31,16 @@ public final class SqlHavingConditionClauseTerminal
 
     @Override
     public SqlHavingConditionClause and(final ColumnExpressionSpec column) {
-        return and(column.column().name());
+        return and(column.getColumn().name());
     }
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.createSelectColumnSpecs(columns)), (SqlSelector) delegate);
     }
 
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.mapExpressionsToColumns(columns)), (SqlSelector) delegate);
+        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
     }
 }

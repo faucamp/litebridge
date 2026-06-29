@@ -1,6 +1,6 @@
 package org.litebridgedb.db.spi.query;
 
-import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.expression.SelectExpression;
 
 /**
  * Ordering clause in an SQL query.
@@ -11,10 +11,10 @@ import org.litebridgedb.db.spi.Column;
  * It is typically used in query-building processes to define the order of rows
  * in the result set.
  *
- * @param column The lhs to order by.
- * @param asc    A boolean indicating whether the order is ascending ({@code true})
- *               or descending ({@code false}).
+ * @param expression The lhs to order by.
+ * @param asc        A boolean indicating whether the order is ascending ({@code true})
+ *                   or descending ({@code false}).
  * @see Select
  */
-public record OrderBy(Column column, boolean asc) {
+public record OrderBy(SelectExpression expression, boolean asc) {
 }

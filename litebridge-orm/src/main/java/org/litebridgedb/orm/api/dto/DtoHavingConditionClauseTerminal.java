@@ -1,15 +1,11 @@
 package org.litebridgedb.orm.api.dto;
 
 import org.litebridgedb.db.spi.Column;
-import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.orm.api.select.HavingConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractHavingClauseTerminal;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
-
-import java.util.Arrays;
 
 public final class DtoHavingConditionClauseTerminal<DTO>
         extends AbstractHavingClauseTerminal<DTO,
@@ -46,7 +42,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
             Column selectedColumn;
 
             if (expressionSpec instanceof SelectFieldSpec selectFieldSpec) {
-                selectedColumn = selectFieldSpec.column();
+                selectedColumn = selectFieldSpec.getColumn();
             } else {
                 continue;
             }
@@ -69,23 +65,16 @@ public final class DtoHavingConditionClauseTerminal<DTO>
      */
     @Override
     public DtoHavingConditionClause<DTO> and(final org.litebridgedb.orm.expression.ColumnExpressionSpec field) {
-        return and(field.column().name());
+        return and(field.getColumn().name());
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return orderByImpl(Arrays.stream(fields)
-                .map(table::getColumnForFieldName)
-                .map(ColumnMetaData::name)
-                .toArray(String[]::new));
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(selectSpec.createSelectFieldSpecs(fields)), (DtoSelector<DTO>) delegate);
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
-        return orderByImpl(selectSpec.mapExpressionsToColumns(fields));
-    }
-
-    private DtoOrderByClause<DTO> orderByImpl(final String[] columns) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), (DtoSelector<DTO>) delegate);
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(fields), (DtoSelector<DTO>) delegate);
     }
 }

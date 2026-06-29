@@ -1,14 +1,27 @@
 package org.litebridgedb.orm.expression.select;
 
 import org.litebridgedb.db.spi.Column;
-import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.tracking.FieldAccessor;
 
 /**
- * Expression that selects a DTO field.
- *
- * @param field  The field accessor for the field.
- * @param column The database lhs associated with the field.
+ * Expression spec that selects a DTO field.
  */
-public record SelectFieldSpec(FieldAccessor field, Column column) implements ColumnExpressionSpec {
+public final class SelectFieldSpec extends SelectColumnSpec {
+
+    private final FieldAccessor field;
+
+    /**
+     * Creates a new expression spec that selects a DTO field.
+     *
+     * @param field  The field accessor for the field.
+     * @param column The database column associated with the field.
+     */
+    public SelectFieldSpec(FieldAccessor field, Column column) {
+        super(column);
+        this.field = field;
+    }
+
+    public FieldAccessor field() {
+        return field;
+    }
 }

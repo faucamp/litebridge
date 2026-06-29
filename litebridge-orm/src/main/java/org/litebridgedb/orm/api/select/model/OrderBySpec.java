@@ -1,5 +1,9 @@
 package org.litebridgedb.orm.api.select.model;
 
+import org.litebridgedb.orm.expression.ExpressionSpec;
+
+import java.util.List;
+
 /**
  * Specification for an "ORDER BY" clause in a database query.
  * <p>
@@ -8,20 +12,21 @@ package org.litebridgedb.orm.api.select.model;
  */
 public class OrderBySpec {
 
-    private final String[] columns;
+    private final List<? extends ExpressionSpec> expressions;
     private boolean asc;
 
-    public OrderBySpec(final String[] columns) {
-        this(columns, true);
+    public OrderBySpec(final List<? extends ExpressionSpec> expressions) {
+        this(expressions, true);
     }
 
-    public OrderBySpec(final String[] columns, final boolean asc) {
-        this.columns = columns;
+    public OrderBySpec(final List<? extends ExpressionSpec> expressions, final boolean asc) {
+        this.expressions = expressions;
         this.asc = asc;
     }
 
-    public String[] columns() {
-        return columns;
+    @SuppressWarnings("unchecked")
+    public List<ExpressionSpec> expressions() {
+        return (List<ExpressionSpec>) expressions;
     }
 
     public boolean isAsc() {

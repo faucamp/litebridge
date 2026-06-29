@@ -34,6 +34,6 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl
 
     @Override
     public SqlUpdateWhereConditionClause and(final ColumnExpressionSpec column) {
-        return and(column.column().name());
+        return and(column.getColumn().name());
     }
 }

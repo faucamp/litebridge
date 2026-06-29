@@ -13,7 +13,6 @@ import org.litebridgedb.orm.expression.function.scalar.AbsSpec;
 import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
 import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
-import org.litebridgedb.orm.expression.intent.ConvertIntent;
 import org.litebridgedb.orm.expression.intent.ConvertSpec;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
@@ -43,14 +42,14 @@ class FnTest {
 
         final ExpressionSpec cTableName = Fn.c("TABLE", "COL");
         assertInstanceOf(SelectColumnSpec.class, cTableName);
-        assertEquals("TABLE", ((SelectColumnSpec) cTableName).column().table().name());
-        assertEquals("COL", ((SelectColumnSpec) cTableName).column().name());
+        assertEquals("TABLE", ((SelectColumnSpec) cTableName).getColumn().table().name());
+        assertEquals("COL", ((SelectColumnSpec) cTableName).getColumn().name());
 
         Table table = new Table("TABLE");
         final ExpressionSpec cTable = Fn.c(table, "COL");
         assertInstanceOf(SelectColumnSpec.class, cTable);
-        assertEquals(table, ((SelectColumnSpec) cTableName).column().table());
-        assertEquals("COL", ((SelectColumnSpec) cTableName).column().name());
+        assertEquals(table, ((SelectColumnSpec) cTableName).getColumn().table());
+        assertEquals("COL", ((SelectColumnSpec) cTableName).getColumn().name());
 
         assertInstanceOf(SelectColumnSpec.class, Fn.column("TABLE", "COL"));
         assertInstanceOf(SelectColumnSpec.class, Fn.column(table, "COL"));
@@ -61,9 +60,9 @@ class FnTest {
         final Table table = new Table("TABLE");
         final ExpressionSpec caTable = Fn.ca(table, "COL", "alias");
         assertInstanceOf(SelectColumnSpec.class, caTable);
-        assertEquals(table, ((SelectColumnSpec) caTable).column().table());
-        assertEquals("COL", ((SelectColumnSpec) caTable).column().name());
-        assertEquals("alias", ((SelectColumnSpec) caTable).column().alias());
+        assertEquals(table, ((SelectColumnSpec) caTable).getColumn().table());
+        assertEquals("COL", ((SelectColumnSpec) caTable).getColumn().name());
+        assertEquals("alias", ((SelectColumnSpec) caTable).getColumn().alias());
 
         final ExpressionSpec ca = Fn.ca("COL", "alias");
         assertInstanceOf(ProtoColumnExpressionSpec.class, ca);
@@ -71,9 +70,9 @@ class FnTest {
 
         final ExpressionSpec caTableName = Fn.ca("TABLE", "COL", "alias");
         assertInstanceOf(SelectColumnSpec.class, caTableName);
-        assertEquals("TABLE", ((SelectColumnSpec) caTableName).column().table().name());
-        assertEquals("COL", ((SelectColumnSpec) caTableName).column().name());
-        assertEquals("alias", ((SelectColumnSpec) caTableName).column().alias());
+        assertEquals("TABLE", ((SelectColumnSpec) caTableName).getColumn().table().name());
+        assertEquals("COL", ((SelectColumnSpec) caTableName).getColumn().name());
+        assertEquals("alias", ((SelectColumnSpec) caTableName).getColumn().alias());
 
         assertInstanceOf(SelectColumnSpec.class, Fn.columnAlias(table, "COL", "alias"));
         assertInstanceOf(ProtoColumnExpressionSpec.class, Fn.columnAlias("COL", "alias"));

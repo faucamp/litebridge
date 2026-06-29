@@ -19,7 +19,7 @@ class SelectExpressionTest {
         final SelectColumnSpec spec = new SelectColumnSpec(column);
 
         // Then
-        assertEquals(column, spec.column());
+        assertEquals(column, spec.getColumn());
     }
 
     @Test
@@ -33,7 +33,7 @@ class SelectExpressionTest {
 
         // Then
         assertEquals(field, spec.field());
-        assertEquals(column, spec.column());
+        assertEquals(column, spec.getColumn());
     }
 
     @Test

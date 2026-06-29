@@ -1,11 +1,8 @@
 package org.litebridgedb.orm.api.dto;
 
-import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.orm.api.select.impl.AbstractGroupByClauseTerminal;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
-
-import java.util.Arrays;
 
 public class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal<DTO,
         DtoHavingConditionClause<DTO>,
@@ -30,18 +27,11 @@ public class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return orderByImpl(Arrays.stream(fields)
-                .map(ormTable::getColumnForFieldName)
-                .map(ColumnMetaData::name)
-                .toArray(String[]::new));
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(selectSpec.createSelectFieldSpecs(fields)), (DtoSelector<DTO>) delegate);
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
-        return orderByImpl(selectSpec.mapExpressionsToColumns(fields));
-    }
-
-    private DtoOrderByClause<DTO> orderByImpl(final String[] columns) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(columns), (DtoSelector<DTO>) delegate);
+        return new DtoOrderByClause<>(selectSpec.newOrderBy(fields), (DtoSelector<DTO>) delegate);
     }
 }

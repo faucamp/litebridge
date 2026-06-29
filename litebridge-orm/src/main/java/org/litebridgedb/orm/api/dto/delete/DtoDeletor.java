@@ -27,6 +27,6 @@ public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implem
 
     @Override
     public DtoDeleteWhereConditionClause<DTO> where(final ColumnExpressionSpec field) {
-        return where(field.column().name());
+        return where(field.getColumn().name());
     }
 }

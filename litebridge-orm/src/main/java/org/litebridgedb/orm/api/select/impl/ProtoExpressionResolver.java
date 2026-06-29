@@ -22,6 +22,7 @@ import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -89,6 +90,10 @@ public abstract class ProtoExpressionResolver {
         }
 
         return Stream.of(resolvedExpressionSpec);
+    }
+
+    public List<ExpressionSpec> resolveExpressions(final List<ExpressionSpec> expressionSpecs) {
+        return expressionSpecs.stream().flatMap(this::resolveExpression).toList();
     }
 
     protected Stream<ExpressionSpec> resolveConvertSpec(final ConvertSpec<?> convertSpec) {

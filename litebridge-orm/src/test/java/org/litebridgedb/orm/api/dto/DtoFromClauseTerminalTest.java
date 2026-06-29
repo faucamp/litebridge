@@ -22,6 +22,7 @@ import org.litebridgedb.orm.engine.FromClauseEngine;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
+import org.litebridgedb.orm.expression.TestSelectReferenceExpressionFactory;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -135,6 +136,7 @@ class DtoFromClauseTerminalTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
         final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
@@ -156,6 +158,7 @@ class DtoFromClauseTerminalTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
         final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
@@ -177,6 +180,7 @@ class DtoFromClauseTerminalTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
         final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
@@ -195,6 +199,7 @@ class DtoFromClauseTerminalTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
         final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
@@ -213,6 +218,7 @@ class DtoFromClauseTerminalTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
         final DtoFromClauseTerminal<CompositeKeyDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "id1"), new ProtoColumnExpressionSpec(SelectFieldSpec.class, "id2"));

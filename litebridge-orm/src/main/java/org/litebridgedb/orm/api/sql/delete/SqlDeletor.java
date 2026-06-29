@@ -27,6 +27,6 @@ public final class SqlDeletor extends AbstractDeletor<DeleteSpec> implements Sql
 
     @Override
     public SqlDeleteWhereConditionClause where(final ColumnExpressionSpec column) {
-        return where(column.column().name());
+        return where(column.getColumn().name());
     }
 }

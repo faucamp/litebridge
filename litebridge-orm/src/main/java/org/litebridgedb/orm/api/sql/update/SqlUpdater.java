@@ -24,7 +24,7 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
 
     @Override
     public SqlUpdateWhereConditionClause where(final ColumnExpressionSpec column) {
-        return where(column.column().name());
+        return where(column.getColumn().name());
     }
 
     @Override
@@ -35,6 +35,6 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
 
     @Override
     public SqlUpdateSetStep set(final ColumnExpressionSpec column) {
-        return new SqlUpdateSetStep(column.column(), this);
+        return new SqlUpdateSetStep(column.getColumn(), this);
     }
 }

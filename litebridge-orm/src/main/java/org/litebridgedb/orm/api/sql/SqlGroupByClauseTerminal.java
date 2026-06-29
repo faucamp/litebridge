@@ -4,8 +4,6 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.impl.AbstractGroupByClauseTerminal;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 
-import java.util.Arrays;
-
 public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
@@ -26,11 +24,11 @@ public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.createSelectColumnSpecs(columns)), (SqlSelector) delegate);
     }
 
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.mapExpressionsToColumns(columns)), (SqlSelector) delegate);
+        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
     }
 }

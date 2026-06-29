@@ -10,6 +10,7 @@ import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.sql.SqlJoinSpec;
 import org.litebridgedb.orm.engine.FromClauseEngine;
 import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
+import org.litebridgedb.orm.expression.TestSelectReferenceExpressionFactory;
 
 import java.util.List;
 
@@ -75,6 +76,7 @@ class JoinSpecTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("TEST_SCHEMA", "TEST_TABLE"), new SelectExpressionMapper(sqlFunctionRegistry));
         final Table table = joinSpec.table();

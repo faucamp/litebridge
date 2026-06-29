@@ -23,7 +23,7 @@ import org.litebridgedb.orm.expression.select.SelectFieldSpec;
  * <p>
  * This class is a collection of static functions to create different types
  * of select expressions within a database query. This includes selecting DTO
- * fields, database columns, or counting rows in a query.
+ * fields, database expressions, or counting rows in a query.
  * <p>
  * This class cannot be instantiated.
  */

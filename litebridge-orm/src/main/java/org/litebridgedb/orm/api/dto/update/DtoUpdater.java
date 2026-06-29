@@ -25,7 +25,7 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> where(final ColumnExpressionSpec field) {
-        return where(field.column().name());
+        return where(field.getColumn().name());
     }
 
     @Override
@@ -36,7 +36,7 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
 
     @Override
     public UpdateSetStep<DtoUpdateStep<DTO>> set(final ColumnExpressionSpec field) {
-        final Column column = field.column();
+        final Column column = field.getColumn();
         return new UpdateSetStep<>(column, this);
     }
 }

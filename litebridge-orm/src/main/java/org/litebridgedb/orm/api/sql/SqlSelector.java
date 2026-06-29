@@ -9,6 +9,7 @@ import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
+import java.util.Arrays;
 import java.util.List;
 
 public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
@@ -23,7 +24,8 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
     }
 
     public SqlFromClause select(final ExpressionSpec... expressionSpecs) {
-        return new SqlFromClause(expressionSpecs, selectSpec, tableRegistry, this);
+        selectSpec.addExpressions(Arrays.asList(expressionSpecs));
+        return new SqlFromClause(selectSpec, tableRegistry, this);
     }
 
     @Override
