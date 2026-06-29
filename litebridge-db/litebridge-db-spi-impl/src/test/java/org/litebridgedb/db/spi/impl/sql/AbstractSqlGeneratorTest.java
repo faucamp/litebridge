@@ -347,9 +347,10 @@ class AbstractSqlGeneratorTest {
         final PreparedSql result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
-        assertEquals("TEST_TABLE.TEST_COLUMN IN ?", result.sql());
-        assertEquals(1, result.bindValues().size());
-        assertEquals(List.of("value1", "value2"), result.bindValues().getFirst().value());
+        assertEquals("TEST_TABLE.TEST_COLUMN IN (?, ?)", result.sql());
+        assertEquals(2, result.bindValues().size());
+        assertEquals("value1", result.bindValues().getFirst().value());
+        assertEquals("value2", result.bindValues().get(1).value());
     }
 
     @Test

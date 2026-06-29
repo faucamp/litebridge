@@ -10,6 +10,7 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
+import org.litebridgedb.db.spi.expression.ConnectionProviderExpression;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.expression.SelectReference;
@@ -22,6 +23,8 @@ import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 
 import java.sql.Types;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -64,6 +67,39 @@ public abstract class AbstractSqlGenerator {
 
         if (condition.operator() == Operator.IS_NULL || condition.operator() == Operator.IS_NOT_NULL) {
             sql = "%s %s".formatted(lhs, mapOperator(condition.operator()));
+        } else if (condition.operator() == Operator.IN) {
+            if (condition.rhs() instanceof LiteralExpression literalExpression) {
+                sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), literalExpression.toBindValueSql(operation));
+                final Object rawValue = literalExpression.value();
+                final List<BindValue> bindValues;
+
+                if (rawValue == null) {
+                    bindValues = List.of(createBindValue(column, null, connectionProvider));
+                } else if (rawValue instanceof Collection<?> collection) {
+                    bindValues = collection.stream()
+                            .map(item -> createBindValue(column, item, connectionProvider))
+                            .toList();
+                } else {
+                    bindValues = List.of(createBindValue(column, rawValue, connectionProvider));
+                }
+
+                return new PreparedSql(sql, bindValues);
+            } else {
+                final String sqlFragment;
+                final List<@Nullable BindValue> bindValues;
+
+                if (condition.rhs() instanceof ConnectionProviderExpression connectionProviderExpression) {
+                    PreparedSql fragmentPreparedSql = connectionProviderExpression.toSql(operation, connectionProvider);
+                    sqlFragment = fragmentPreparedSql.sql();
+                    bindValues = fragmentPreparedSql.bindValues();
+                } else {
+                    sqlFragment = condition.rhs().toSql(operation);
+                    bindValues = Collections.emptyList();
+                }
+
+                sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), sqlFragment);
+                return new PreparedSql(sql, bindValues);
+            }
         } else if (condition.operator() == Operator.USING) {
             sql = "%s (%s)".formatted(mapOperator(condition.operator()),
                     ObjectUtils.requireNonNull(column, () -> new IllegalArgumentException("JOIN USING clause without column target"))
@@ -78,19 +114,8 @@ public abstract class AbstractSqlGenerator {
                 sql = "%s %s %s.%s".formatted(lhs, mapOperator(condition.operator()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.table().aliasOrName()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.name()));
             } else {
                 final Object rawValue = getExpressionValue(condition.rhs());
+                final BindValue bindValue = createBindValue(column, rawValue, connectionProvider);
                 sql = "%s %s ?".formatted(lhs, mapOperator(condition.operator()));
-                final BindValue bindValue;
-
-                if (column != null) {
-                    final ColumnMetaData columnMetaData = ensureTableMetaData(column.table(), connectionProvider).column(column.name());
-                    final Object convertedValue = typeConverter.convert(rawValue, columnMetaData.getDataType());
-                    bindValue = new BindValue(convertedValue, columnMetaData.getDataType());
-                } else if (rawValue != null) {
-                    bindValue = new BindValue(rawValue, typeConverter.getDbDataType(rawValue.getClass()));
-                } else {
-                    bindValue = new BindValue(null, Types.NULL);
-                }
-
                 return new PreparedSql(sql, List.of(bindValue));
             }
         }
@@ -148,5 +173,21 @@ public abstract class AbstractSqlGenerator {
 
     protected ColumnMetaData ensureColumnMetaData(final Column column, final ConnectionProvider connectionProvider) {
         return ensureTableMetaData.apply(column.table(), connectionProvider).column(column.name());
+    }
+
+    protected BindValue createBindValue(final @Nullable Column column, final @Nullable Object rawValue, final ConnectionProvider connectionProvider) {
+        final BindValue bindValue;
+
+        if (column != null) {
+            final ColumnMetaData columnMetaData = ensureTableMetaData(column.table(), connectionProvider).column(column.name());
+            final Object convertedValue = typeConverter.convert(rawValue, columnMetaData.getDataType());
+            bindValue = new BindValue(convertedValue, columnMetaData.getDataType());
+        } else if (rawValue != null) {
+            bindValue = new BindValue(rawValue, typeConverter.getDbDataType(rawValue.getClass()));
+        } else {
+            bindValue = new BindValue(null, Types.NULL);
+        }
+
+        return bindValue;
     }
 }

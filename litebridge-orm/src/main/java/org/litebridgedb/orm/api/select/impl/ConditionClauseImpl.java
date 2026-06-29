@@ -9,8 +9,11 @@ import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public class ConditionClauseImpl<DTO,
         SELF extends ConditionClause<DTO, SELF, CCT>,
@@ -146,6 +149,41 @@ public class ConditionClauseImpl<DTO,
      */
     public CCT gte(final Function<Subselect, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.GTE, subselect, false);
+    }
+
+    /**
+     * Inclusion in a set.
+     *
+     * @param value       First value that is part of the set
+     * @param otherValues Other values that are part of the set
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    public CCT in(final Object value, final Object... otherValues) {
+        if (value instanceof Collection<?> collection && otherValues.length == 0) {
+            return in(collection);
+        }
+
+        return in(Stream.concat(Stream.of(value), Arrays.stream(otherValues)).toList());
+    }
+
+    /**
+     * Inclusion in a set.
+     *
+     * @param values Collection of values that are part of the set
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    public CCT in(final Collection<?> values) {
+        return condition(Operator.IN, values);
+    }
+
+    /**
+     * Inclusion in the result set from the specified sub-select.
+     *
+     * @param subselect Function that builds a sub-select query
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    public CCT in(final Function<Subselect, SelectTerminal<?>> subselect) {
+        return subselectImpl(Operator.IN, subselect, false);
     }
 
     /**

@@ -561,6 +561,60 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertEquals(2L, results2.get(1).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
     }
 
+    @TestTemplate
+    @DisplayName("Select IN")
+    void select_in(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+
+        // Setup data
+        final Person[] persons = new Person[3];
+        for (int i = 0; i < 3; i++) {
+            persons[i] = new Person();
+            persons[i].setId(1L + i);
+            persons[i].setName("Name" + i);
+            persons[i].setSurname("Surname" + i);
+        }
+
+        litebridge.save((Object[]) persons);
+
+        // Using variable paratemeters/array
+        final List<Person> results = litebridge.select()
+                .from(Person.class)
+                .where("id").in(1L, 2L)
+                .list();
+
+        assertEquals(2, results.size());
+
+        // Using single value
+        final List<Person> results2 = litebridge.select()
+                .from(Person.class)
+                .where("id").in(1L)
+                .list();
+
+        assertEquals(1, results2.size());
+
+        // Using a list
+        final List<Long> ids = List.of(1L, 2L);
+        final List<Person> results3 = litebridge.select()
+                .from(Person.class)
+                .where("id").in(ids)
+                .list();
+
+        assertEquals(2, results3.size());
+
+        // Using a subselect
+        final List<Person> results4 = litebridge.select()
+                .from(Person.class)
+                .where("id").in(sub ->
+                        sub.select("id")
+                                .from(Person.class)
+                                .where("name").eq("Name1"))
+                .list();
+
+        assertEquals(1, results4.size());
+    }
+
     private static class TestException extends RuntimeException {
     }
 }

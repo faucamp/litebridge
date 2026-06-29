@@ -3,6 +3,7 @@ package org.litebridgedb.db.spi.expression;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Operation;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.StringJoiner;
 
@@ -33,7 +34,56 @@ public class LiteralExpression implements SelectExpression {
 
     @Override
     public String toSql(final Operation operation) {
-        return value != null ? value.toString() : "NULL";
+        if (value == null) {
+            return "NULL";
+//        } else if (value.getClass().isArray()) {
+//            final Object[] array = (Object[]) value;
+//
+//            final StringJoiner joiner = new StringJoiner(", ");
+//
+//            for (final Object element : array) {
+//                joiner.add(element.toString());
+//            }
+//
+//            return joiner.toString();
+        } else if (value instanceof Collection collection) {
+            final StringJoiner joiner = new StringJoiner(", ");
+
+            for (final Object element : collection) {
+                joiner.add(element.toString());
+            }
+
+            return joiner.toString();
+        } else {
+            return value.toString();
+        }
+    }
+
+    public String toBindValueSql(final Operation operation) {
+        if (value == null) {
+            return "?";
+//        } else if (value.getClass().isArray()) {
+//            final Object[] array = (Object[]) value;
+//
+//            final StringJoiner joiner = new StringJoiner(", ");
+//
+//            for (final Object element : array) {
+//                joiner.add("?");
+//            }
+//
+//
+//            return joiner.toString();
+        } else if (value instanceof Collection collection) {
+            final StringJoiner joiner = new StringJoiner(", ");
+
+            for (final Object element : collection) {
+                joiner.add("?");
+            }
+
+            return joiner.toString();
+        } else {
+            return "?";
+        }
     }
 
     @Override
