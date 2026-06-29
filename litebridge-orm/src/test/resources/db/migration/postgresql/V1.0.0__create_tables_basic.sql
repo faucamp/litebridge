@@ -17,3 +17,10 @@ CREATE TABLE lb.account
     balance      NUMERIC(10) NOT NULL,
     person_id    NUMERIC(10) NOT NULL REFERENCES lb.person (person_id)
 );
+
+CREATE TABLE lb.address
+(
+    address_id NUMERIC(10) NOT NULL PRIMARY KEY,
+    person_id  NUMERIC(10) NOT NULL REFERENCES lb.person (person_id),
+    address    VARCHAR(255) NOT NULL
+);

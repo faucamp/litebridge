@@ -12,6 +12,7 @@ public class Person {
     private int age;
     private String eyeColour;
     private List<Account> accounts;
+    private List<Address> addresses;
 
     public Long getId() {
         return id;
@@ -61,6 +62,14 @@ public class Person {
         this.accounts = accounts;
     }
 
+    public List<Address> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(final List<Address> addresses) {
+        this.addresses = addresses;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof final Person person)) return false;
@@ -81,6 +90,7 @@ public class Person {
                 .add("age=" + age)
                 .add("eyeColour='" + eyeColour + "'")
                 .add("accounts=" + (accounts != null ? accounts.stream().map(Account::getId).toList().toString() : null))
+                .add("addresses=" + (addresses != null ? addresses.stream().map(Address::getId).toList().toString() : null))
                 .toString();
     }
 }
