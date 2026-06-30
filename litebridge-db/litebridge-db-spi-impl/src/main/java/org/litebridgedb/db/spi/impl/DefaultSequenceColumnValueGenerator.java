@@ -15,6 +15,11 @@ import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
  */
 public class DefaultSequenceColumnValueGenerator extends SequenceColumnValueGenerator {
 
+    /**
+     * Constructs a new instance of {@code DefaultSequenceColumnValueGenerator}.
+     *
+     * @param sequence the name of the database sequence from which values will be generated.
+     */
     public DefaultSequenceColumnValueGenerator(final String sequence) {
         super(sequence);
     }

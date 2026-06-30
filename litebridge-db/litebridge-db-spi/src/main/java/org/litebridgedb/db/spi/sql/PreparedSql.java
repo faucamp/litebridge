@@ -22,6 +22,12 @@ import java.util.List;
  */
 public record PreparedSql(String sql, List<@Nullable BindValue> bindValues) {
 
+    /**
+     * Constructs a new instance of {@code PreparedSql} with the provided SQL
+     * query string and an empty list of bind values.
+     *
+     * @param sql The SQL query string.
+     */
     public PreparedSql(final String sql) {
         this(sql, Collections.emptyList());
     }

@@ -58,6 +58,17 @@ public final class ChangeTracker {
         this.classFieldAccessorCache = new ClassFieldAccessorCache(lookup);
     }
 
+    /**
+     * Tracks the given Data Transfer Object (DTO) for detecting changes.
+     * <p>
+     * This method initializes tracking for the DTO and ensures that its state can be monitored
+     * for modifications during its lifecycle.
+     *
+     * @param <DTO> the type of the Data Transfer Object (DTO) to be tracked
+     * @param dto   the Data Transfer Object (DTO) to be tracked; must not be null
+     * @return the tracked instance of the provided DTO
+     * @throws NullPointerException if the provided {@code dto} is null
+     */
     public <DTO> DTO trackDto(final DTO dto) {
         Objects.requireNonNull(dto, "DTO cannot be null");
         return trackImpl(dto, classFieldAccessorCache.fieldAccessors(dto.getClass()), false);
@@ -87,6 +98,7 @@ public final class ChangeTracker {
 
     /**
      * Tracks the specified fields of a given Data Transfer Object (DTO) for detecting changes.
+     * <p>
      * This method allows monitoring of specific fields within the DTO by capturing their initial state.
      *
      * @param <DTO>         the type of the DTO being tracked
@@ -99,6 +111,19 @@ public final class ChangeTracker {
         return trackDtoFields(dto, trackedFields, false);
     }
 
+    /**
+     * Tracks the fields of the given Data Transfer Object (DTO) for detecting changes.
+     * <p>
+     * This method allows monitoring specific fields within the DTO by capturing their initial state
+     * and optionally creating an empty snapshot.
+     *
+     * @param <DTO>         the type of the DTO being tracked
+     * @param dto           the Data Transfer Object (DTO) to be tracked; must not be null
+     * @param trackedFields the set of fields in the DTO to be tracked; each field must belong to the DTO
+     * @param snapshotEmpty if true, an empty snapshot will be created; otherwise, normal snapshot behavior is applied
+     * @return the tracked instance of the provided DTO
+     * @throws NullPointerException if the provided {@code dto} is null
+     */
     public <DTO> DTO trackDtoFields(final DTO dto, final Set<FieldAccessor> trackedFields, final boolean snapshotEmpty) {
         Objects.requireNonNull(dto, "DTO cannot be null");
         return trackImpl(dto, trackedFields, snapshotEmpty);
@@ -106,6 +131,7 @@ public final class ChangeTracker {
 
     /**
      * Retrieves the tracked version of the specified Data Transfer Object (DTO), if it exists.
+     * <p>
      * The method looks up the internal storage for the tracked version of the given DTO and returns it.
      *
      * @param dto the Data Transfer Object (DTO) whose tracked version is to be retrieved; can be null
@@ -116,6 +142,15 @@ public final class ChangeTracker {
         return Objects.requireNonNull(getTrackedDtoOrNull(dto), "DTO is not tracked: " + dto);
     }
 
+    /**
+     * Retrieves a set of tracked Data Transfer Objects (DTOs) of the specified type.
+     *
+     * @param <DTO>    the type of the Data Transfer Object (DTO) to be retrieved
+     * @param dtoClass the {@code Class} object representing the type of DTO to retrieve; must not be null
+     * @return a set of {@code TrackedDto<DTO>} objects that correspond to the specified DTO type;
+     * returns an empty set if no tracked DTOs of the specified type exist
+     * @throws NullPointerException if {@code dtoClass} is null
+     */
     @SuppressWarnings("unchecked")
     public <DTO> Set<TrackedDto<DTO>> getTrackedDtos(final Class<DTO> dtoClass) {
         return trackedDtos.values().stream()
@@ -124,11 +159,27 @@ public final class ChangeTracker {
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * Retrieves the tracked version of the specified Data Transfer Object (DTO), if it exists.
+     * <p>
+     * The method attempts to fetch the associated tracked DTO from the internal storage
+     * and returns it. If no tracked version exists for the provided DTO, the method
+     * returns {@code null}.
+     *
+     * @param <DTO> the type of the Data Transfer Object (DTO)
+     * @param dto   the Data Transfer Object (DTO) whose tracked version is to be retrieved; can be null
+     * @return the tracked version of the specified DTO, or {@code null} if no tracked version exists
+     */
     @SuppressWarnings("unchecked")
     public <DTO> @Nullable TrackedDto<DTO> getTrackedDtoOrNull(final DTO dto) {
         return (TrackedDto<DTO>) trackedDtos.get(dto);
     }
 
+    /**
+     * Retrieves the instance of {@code ClassFieldAccessorCache} associated with the {@code ChangeTracker}.
+     *
+     * @return the {@code ClassFieldAccessorCache} instance used by this {@code ChangeTracker}
+     */
     public ClassFieldAccessorCache classFieldAccessorCache() {
         return classFieldAccessorCache;
     }

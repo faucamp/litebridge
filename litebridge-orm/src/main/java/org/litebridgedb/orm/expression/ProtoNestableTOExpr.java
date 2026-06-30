@@ -15,6 +15,7 @@ import org.litebridgedb.orm.expression.select.SelectFieldSpec;
  * @param alias        The column alias to use, or {@code null} if not specified.
  * @param type         The type of expression to create.
  * @param args         Extra expression-specific arguments.
+ * @param <T>          The type override of the expression result.
  */
 public record ProtoNestableTOExpr<T>(Class<T> typeOverride,
                                      Class<? extends ExpressionSpec> type,

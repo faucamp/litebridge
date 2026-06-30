@@ -2,6 +2,14 @@ package org.litebridgedb.db.spi.expression;
 
 import org.litebridgedb.db.spi.Operation;
 
+/**
+ * Represents a conversion expression that wraps another {@code SelectExpression},
+ * potentially overriding its type.
+ * <p>
+ * This class serves as a decorator around a target {@code SelectExpression}, allowing
+ * for an optional type override. It delegates SQL generation to the encapsulated target
+ * expression.
+ */
 public class ConvertExpression implements DelegateExpression {
 
     private final SelectExpression target;
@@ -27,6 +35,11 @@ public class ConvertExpression implements DelegateExpression {
         return target;
     }
 
+    /**
+     * Retrieves the class type that overrides the default type of the wrapped {@code SelectExpression}.
+     *
+     * @return The type override, or {@code null} if no override is specified.
+     */
     public Class<?> typeOverride() {
         return typeOverride;
     }

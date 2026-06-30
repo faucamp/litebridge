@@ -1,6 +1,5 @@
 package org.litebridgedb.orm.api.select;
 
-import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 
 /**
@@ -17,6 +16,9 @@ import org.litebridgedb.orm.expression.ExpressionSpec;
  * @param <JCCT> the terminal type of the JOIN condition clause
  * @param <WCC>  the type of the WHERE condition clause used for query filtering
  * @param <WCCT> the terminal type of the WHERE condition clause
+ * @param <GBCT> the terminal type of the GROUP BY clause
+ * @param <HCC>  the type of the HAVING condition clause used for filtering grouped data
+ * @param <HCCT> the terminal type of the HAVING condition clause
  * @param <OBC>  the type of the ORDER BY clause defining result sorting
  * @param <OBCC> the type of the ORDER BY clause chain for chaining multiple sorting expressions
  */

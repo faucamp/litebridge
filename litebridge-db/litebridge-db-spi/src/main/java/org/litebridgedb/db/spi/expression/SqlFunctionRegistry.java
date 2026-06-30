@@ -3,6 +3,7 @@ package org.litebridgedb.db.spi.expression;
 /**
  * SQL function registry.
  *
+ * @param select    Expressions dealing with selecting columns, sub-selects, literals, and references to selected columns.
  * @param aggregate Aggregate functions perform calculations on a set of values and return a single value.
  * @param scalar    Scalar functions perform calculations on one or more input values and return a single value.
  * @param date      Date/time functions.
@@ -17,9 +18,9 @@ public record SqlFunctionRegistry(
     /**
      * Expressions dealing with selecting columns, sub-selects, literals, and references to selected columns.
      *
-     * @param column          Factory to create column expression to specify a column to be selected.
-     * @param subselect       Factory to create sub-select expressions.
-     * @param literal         Factory to create literal expressions.
+     * @param column    Factory to create column expression to specify a column to be selected.
+     * @param subselect Factory to create sub-select expressions.
+     * @param literal   Factory to create literal expressions.
      * @param reference Factory to create selected column reference expressions.
      */
     public record Select(

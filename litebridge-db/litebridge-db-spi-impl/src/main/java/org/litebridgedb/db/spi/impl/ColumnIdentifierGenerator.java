@@ -5,6 +5,11 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.util.SqlReservedWords;
 
+/**
+ * The ColumnIdentifierGenerator class provides utilities for generating SQL column identifiers
+ * with optional table qualifiers, handling reserved keywords, and creating aliases for columns.
+ * This class can be extended to implement database-specific customizations of column identifier generation.
+ */
 public class ColumnIdentifierGenerator {
 
     @SuppressWarnings("ConstantConditions")

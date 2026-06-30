@@ -1,7 +1,7 @@
 package org.litebridgedb.db.spi.expression;
 
 /**
- * Abstract base class for nesting query expressions such as SQL functions.
+ * Interface for nesting query expressions such as SQL functions.
  * <p>
  * This class provides a foundation for creating SQL function expressions
  * by encapsulating a {@code Column} and offering a method to access it.
@@ -13,6 +13,11 @@ package org.litebridgedb.db.spi.expression;
  */
 public interface DelegateExpression extends SelectExpression {
 
+    /**
+     * Retrieves the target expression of this delegate.
+     *
+     * @return The target expression.
+     */
     SelectExpression target();
 
 }
