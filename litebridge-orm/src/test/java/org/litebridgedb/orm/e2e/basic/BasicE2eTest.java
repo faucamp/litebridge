@@ -587,6 +587,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         final List<Row> results = litebridge.select(Fn.row(Fn.convert(Fn.f("age"), Integer.class), Fn.convert(Fn.count(), Long.class)))
                 .from(Person.class)
                 .groupBy("age")
+                .orderBy("age").asc()
                 .list();
 
         assertEquals(2, results.size());
@@ -599,6 +600,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         final List<Row> results2 = litebridge.select(Fn.row(Fn.convert(Fn.f("age"), Integer.class), Fn.convert(Fn.count(), Long.class)))
                 .from(Person.class)
                 .groupBy(Fn.f("age"))
+                .orderBy(Fn.f("age")).asc()
                 .list();
 
         assertEquals(2, results2.size());
