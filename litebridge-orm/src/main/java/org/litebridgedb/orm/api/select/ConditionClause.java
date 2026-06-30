@@ -1,6 +1,10 @@
 package org.litebridgedb.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridgedb.orm.api.select.impl.Subselect;
+
+import java.util.Collection;
+import java.util.function.Function;
 
 /**
  * Generic condition clause for building conditional expressions in a fluent and type-safe manner.
@@ -82,5 +86,30 @@ public interface ConditionClause<DTO,
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
     CCT isNotNull();
+
+    /**
+     * Inclusion in a set.
+     *
+     * @param value       First value that is part of the set
+     * @param otherValues Other values that are part of the set
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    CCT in(final Object value, final Object... otherValues);
+
+    /**
+     * Inclusion in a set.
+     *
+     * @param values Collection of values that are part of the set
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    CCT in(final Collection<?> values);
+
+    /**
+     * Inclusion in the result set from the specified sub-select.
+     *
+     * @param subselect Function that builds a sub-select query
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    CCT in(final Function<Subselect, SelectTerminal<?>> subselect);
 
 }

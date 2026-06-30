@@ -158,6 +158,7 @@ public class ConditionClauseImpl<DTO,
      * @param otherValues Other values that are part of the set
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
+    @Override
     public CCT in(final Object value, final Object... otherValues) {
         if (value instanceof Collection<?> collection && otherValues.length == 0) {
             return in(collection);
@@ -166,22 +167,12 @@ public class ConditionClauseImpl<DTO,
         return in(Stream.concat(Stream.of(value), Arrays.stream(otherValues)).toList());
     }
 
-    /**
-     * Inclusion in a set.
-     *
-     * @param values Collection of values that are part of the set
-     * @return A {@link ConditionClauseTerminal} instance for further chaining.
-     */
+    @Override
     public CCT in(final Collection<?> values) {
         return condition(Operator.IN, values);
     }
 
-    /**
-     * Inclusion in the result set from the specified sub-select.
-     *
-     * @param subselect Function that builds a sub-select query
-     * @return A {@link ConditionClauseTerminal} instance for further chaining.
-     */
+    @Override
     public CCT in(final Function<Subselect, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.IN, subselect, false);
     }
