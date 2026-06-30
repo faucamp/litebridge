@@ -59,6 +59,16 @@ List<Person> persons = litebridge.select(Person.class).list();
 Person person = litebridge.select(Person.class).where("id").eq(123L).oneOrThrow();
 ```
 
+To fetch multiple related DTOs in a single query, `join()` calls can be chained:
+
+```java
+Person person = litebridge.select(Person.class)
+        .join(Account.class).on("accounts")
+        .join(Address.class).on("addresses")
+        .where("id").eq(123L)
+        .oneOrThrow();
+```
+
 The `litebridge.select(String)` method is a convenient equivalent to 
 the general-form Litebridge "select from" call with no arguments:
 
@@ -251,7 +261,21 @@ Person person = litebridge.select(Person.class)
 // person.accounts contains the related Account objects
 ```
 
-### Many-to-Many JOINs
+#### Joining multiple DTOs
+
+Multiple related DTOs can be fetched in a single query by chaining `join()` calls:
+
+```java
+Person person = litebridge.select(Person.class)
+        .join(Account.class).on("accounts")
+        .join(Address.class).on("addresses")
+        .where("id").eq(123L)
+        .oneOrThrow();
+
+// person.accounts and person.addresses are both populated
+```
+
+#### Many-to-Many JOINs
 
 Many-to-many relationships can also be fetched using the same `join()` API:
 
@@ -263,6 +287,13 @@ Group group = litebridge.select(Group.class)
 
 // group.members contains the Person objects in this group
 ```
+
+## Where Clauses
+
+Query filters are defined using `where()`, `and()` and `or()` clauses.
+
+A complete list of available operators (such as `.eq()`, `.gt()`, `.in()`, etc.) and examples of how to build complex 
+conditions can be found on the [Where Clauses](where.md) page.
 
 ## SQL-level examples
 

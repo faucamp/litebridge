@@ -6,6 +6,7 @@ import org.litebridgedb.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.model.GroupBySpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
+import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 
 public final class DtoJoinConditionClauseTerminal<DTO>
@@ -36,11 +37,13 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     private final OrmTable ormTable;
     private final AliasGenerator aliasGenerator;
+    private final TableRegistry tableRegistry;
 
     public DtoJoinConditionClauseTerminal(final DtoJoinSpec joinSpec, final DtoSelector<DTO> delegate, final AliasGenerator aliasGenerator) {
         super(joinSpec, delegate);
         this.ormTable = delegate.table();
         this.aliasGenerator = aliasGenerator;
+        this.tableRegistry = delegate.tableRegistry();
     }
 
     @Override
@@ -67,12 +70,24 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoJoinClause<DTO> join(final Class<?> dtoClass) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        final OrmTable joinTable;
+
+        // First check for inline/contextually-registered tables
+        final OrmTable contextScopedTable = ormTable.getContextTableRegistry().getTable(dtoClass);
+
+        if (contextScopedTable != null) {
+            joinTable = contextScopedTable;
+        } else {
+            joinTable = tableRegistry.getTableOrThrow(dtoClass);
+        }
+
+        return new DtoJoinClause<>(dtoClass, joinTable, (DtoSelector<DTO>) delegate);
     }
 
     @Override
-    public DtoGroupByClauseTerminal<DTO> groupBy(final String... columns) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public DtoGroupByClauseTerminal<DTO> groupBy(final String... fields) {
+        selectSpec.setGroupBy(new GroupBySpec(selectSpec.createSelectFieldSpecs(fields)));
+        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate);
     }
 
     @Override

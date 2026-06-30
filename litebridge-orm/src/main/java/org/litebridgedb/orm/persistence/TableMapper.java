@@ -129,7 +129,7 @@ public final class TableMapper {
                                final Set<Class<?>> allDtoClasses) {
         if (!tableMetaData.hasColumn(columnSpec.name())) {
             if (fieldMapping instanceof FieldSpec fieldSpec) {
-                throw new IllegalArgumentException(String.format("Column '%s', mapped by %s '%s' of DTO '%s', does not exist in table: '%s'", columnSpec.name(), (fieldSpec.property() ? "property" : "field"), fieldSpec.name(), dtoClass, tableMetaData.name()));
+                throw new IllegalArgumentException(String.format("Column '%s', mapped by %s '%s' of DTO '%s', does not exist in table: '%s'", columnSpec.name(), (fieldSpec.property() ? "property" : "field"), fieldSpec.name(), dtoClass, tableMetaData.qualifiedName()));
             } else {
                 throw new IllegalArgumentException(String.format("Column '%s', mapped by '%s' of DTO '%s', does not exist in table: '%s'", columnSpec.name(), fieldMapping, dtoClass, tableMetaData.name()));
             }

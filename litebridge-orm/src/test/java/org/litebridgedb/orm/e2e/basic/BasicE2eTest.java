@@ -6,6 +6,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Account;
+import org.litebridgedb.orm.e2e.basic.dto.Address;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.basic.dto.PersonAccount;
 import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
@@ -72,7 +73,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select DTO without related DTOs")
-    void nestedDtos_dontfetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    void nestedDtos_donNotFetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
 
@@ -112,6 +113,52 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertNull(result2.getOwner().getAccounts());
         assertNull(result2.getOwner().getEyeColour());
         assertEquals(0, result2.getOwner().getAge());
+    }
+
+    @TestTemplate
+    @DisplayName("Select, join multiple tables")
+    void nestedDtos_multiJoin(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        registerAddressTableMapping(tableMapper);
+
+        // Setup DTOs
+        final Person person = new Person();
+        person.setName("Alice");
+        person.setSurname("Smith");
+        person.setAge(20);
+        person.setEyeColour("blue");
+
+        final Account account = new Account();
+        account.setName("Account 1");
+        account.setBalance(BigInteger.valueOf(1000));
+        account.setOwner(person);
+        person.setAccounts(List.of(account));
+
+        final Address address = new Address();
+        address.setId(123L);
+        address.setPerson(person);
+        address.setAddress("123 Main St");
+        person.setAddresses(List.of(address));
+
+        // Cascade save everything
+        litebridge.save(person);
+
+        // Retrieve the person record and associated address and account
+        final Person result = litebridge.select(Person.class)
+                .join(Account.class).on("accounts")
+                .join(Address.class).on("addresses")
+                .where("id").eq(person.getId())
+                .oneOrThrow();
+
+        // Then
+        assertEquals(person, result);
+        assertNotNull(person.getAccounts());
+        assertEquals(1, person.getAccounts().size());
+        assertEquals(account, person.getAccounts().getFirst());
+        assertNotNull(person.getAddresses());
+        assertEquals(1, person.getAddresses().size());
+        assertEquals(address, result.getAddresses().getFirst());
     }
 
     @TestTemplate
@@ -613,6 +660,22 @@ public class BasicE2eTest extends AbstractE2eTest {
                 .list();
 
         assertEquals(1, results4.size());
+    }
+
+    private void registerAddressTableMapping(final DbEnvDtoTableMapper tableMapper) {
+        if (dbEnv.getName().equals("PostgreSQL")) {
+            litebridge.register(Address.class, rc -> rc
+                    .mapToTable("lb.address")
+                    .with(spec -> spec.mapField("id").toColumn("address_id"))
+                    .with(spec -> spec.mapField("person").toColumn("person_id").joinUsing())
+                    .with(spec -> spec.mapField("address").toColumn("address")));
+        } else {
+            litebridge.register(Address.class, rc -> rc
+                    .mapToTable(tableMapper.qualifyName("ADDRESS"))
+                    .with(spec -> spec.mapField("id").toColumn("ADDRESS_ID"))
+                    .with(spec -> spec.mapField("person").toColumn("PERSON_ID").joinUsing())
+                    .with(spec -> spec.mapField("address").toColumn("ADDRESS")));
+        }
     }
 
     private static class TestException extends RuntimeException {

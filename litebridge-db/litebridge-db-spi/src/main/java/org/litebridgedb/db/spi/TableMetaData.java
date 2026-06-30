@@ -89,6 +89,18 @@ public final class TableMetaData {
     }
 
     /**
+     * Constructs the fully qualified name of the table by combining the catalog, schema, and table name.
+     * The format used is "catalog.schema.name" if a catalog is provided; otherwise, "schema.name".
+     *
+     * @return a string representing the fully qualified name of the table.
+     * If the catalog is null, it returns "schema.name";
+     * otherwise, it returns "catalog.schema.name".
+     */
+    public String qualifiedName() {
+        return catalog() != null ? catalog() + "." + schema() + "." + name() : schema() + "." + name();
+    }
+
+    /**
      * Retrieve the primary key expressions' metadata for the table.
      *
      * @return a list of {@code ColumnMetaData} objects representing the metadata
