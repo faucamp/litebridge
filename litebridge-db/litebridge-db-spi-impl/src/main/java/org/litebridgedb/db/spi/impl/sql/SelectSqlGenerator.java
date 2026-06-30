@@ -184,7 +184,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         final List<@Nullable BindValue> bindValues = new ArrayList<>();
 
         if (join.table().alias() != null) {
-            sb.append(' ').append(columnIdentifierGenerator.createAlias(join.table().alias()));
+            sb.append(' ').append(columnIdentifierGenerator.createAlias(Objects.requireNonNull(join.table().alias())));
         }
 
         if (join.conditions().getFirst().operator() != Operator.USING) {

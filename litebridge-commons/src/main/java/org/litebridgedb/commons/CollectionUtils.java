@@ -20,7 +20,7 @@ public final class CollectionUtils {
      * @param array the array to check; may be null
      * @return true if the array is null or empty; false otherwise
      */
-    public static boolean isEmpty(final Object @Nullable [] array) {
+    public static boolean isEmpty(final @Nullable Object @Nullable [] array) {
         return array == null || array.length == 0;
     }
 

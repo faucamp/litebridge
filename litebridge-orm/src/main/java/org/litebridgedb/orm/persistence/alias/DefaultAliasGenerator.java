@@ -10,6 +10,7 @@ import org.litebridgedb.orm.persistence.OrmTable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public final class DefaultAliasGenerator implements AliasGenerator {
 
@@ -42,7 +43,7 @@ public final class DefaultAliasGenerator implements AliasGenerator {
     }
 
     private String newAlias(final String name) {
-        final String alias = aliasMap.computeIfAbsent(name, v -> aliasTransformer.transformAlias(StringUtils.abbreviate(v)));
+        final String alias = Objects.requireNonNull(aliasMap.computeIfAbsent(name, v -> aliasTransformer.transformAlias(StringUtils.abbreviate(v))));
         final int count = aliasCount.compute(alias, (k, v) -> v == null ? 0 : v + 1);
 
         if (count >= 1) {

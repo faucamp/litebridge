@@ -64,6 +64,7 @@ public class LitebridgeAutoConfiguration {
      */
     @Bean(name = "litebridge")
     @ConditionalOnMissingBean
+    @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "ConstantValue"})
     public SelectApi litebridge(final LitebridgeProperties properties,
                                 final LitebridgeTransactionManager transactionManager,
                                 final Optional<LitebridgeConfigurer> configurer) {

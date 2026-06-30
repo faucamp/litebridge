@@ -66,7 +66,7 @@ public class Person {
         this.eyeColour = eyeColour;
     }
 
-    public List<Account> getAccounts() {
+    public @Nullable List<Account> getAccounts() {
         return accounts;
     }
 
