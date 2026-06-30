@@ -112,4 +112,29 @@ public interface ConditionClause<DTO,
      */
     CCT in(final Function<SelectEngine, SelectTerminal<?>> subselect);
 
+    /**
+     * Exclusion from a set.
+     *
+     * @param value       First value that is part of the set
+     * @param otherValues Other values that are part of the set
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    CCT notIn(final Object value, final Object... otherValues);
+
+    /**
+     * Exclusion from a set.
+     *
+     * @param values Collection of values that are part of the set
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    CCT notIn(final Collection<?> values);
+
+    /**
+     * Exclusion from the result set from the specified sub-select.
+     *
+     * @param subselect Function that builds a sub-select query
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    CCT notIn(final Function<SelectEngine, SelectTerminal<?>> subselect);
+
 }

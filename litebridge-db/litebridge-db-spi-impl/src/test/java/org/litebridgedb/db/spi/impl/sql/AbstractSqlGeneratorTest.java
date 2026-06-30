@@ -137,6 +137,18 @@ class AbstractSqlGeneratorTest {
     }
 
     @Test
+    void mapOperator_notIn() {
+        // Given
+        final Operator operator = Operator.NOT_IN;
+
+        // When
+        final String result = sqlGenerator.mapOperator(operator);
+
+        // Then
+        assertEquals("NOT IN", result);
+    }
+
+    @Test
     void mapOperator_isNull() {
         // Given
         final Operator operator = Operator.IS_NULL;
@@ -334,7 +346,7 @@ class AbstractSqlGeneratorTest {
     }
 
     @Test
-    void createCondition_withOperatorIN() throws Exception {
+    void createCondition_withOperatorIn() {
         // Given
         final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
         final Condition condition = new Condition(column, Operator.IN, List.of("value1", "value2"));
@@ -348,6 +360,26 @@ class AbstractSqlGeneratorTest {
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN IN (?, ?)", result.sql());
+        assertEquals(2, result.bindValues().size());
+        assertEquals("value1", result.bindValues().getFirst().value());
+        assertEquals("value2", result.bindValues().get(1).value());
+    }
+
+    @Test
+    void createCondition_withOperatorNotIn() {
+        // Given
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
+        final Condition condition = new Condition(column, Operator.NOT_IN, List.of("value1", "value2"));
+        final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
+        when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
+        when(tableMetaData.column("TEST_COLUMN")).thenReturn(columnMetaData);
+        when(typeConverter.convert(any(), anyInt())).then(i -> i.getArgument(0));
+
+        // When
+        final PreparedSql result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals("TEST_TABLE.TEST_COLUMN NOT IN (?, ?)", result.sql());
         assertEquals(2, result.bindValues().size());
         assertEquals("value1", result.bindValues().getFirst().value());
         assertEquals("value2", result.bindValues().get(1).value());

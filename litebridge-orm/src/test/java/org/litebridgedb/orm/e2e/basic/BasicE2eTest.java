@@ -611,7 +611,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Select IN")
+    @DisplayName("Select IN and NOT IN")
     void select_in(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
@@ -635,25 +635,46 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         assertEquals(2, results.size());
 
-        // Using single value
         final List<Person> results2 = litebridge.select()
                 .from(Person.class)
-                .where("id").in(1L)
+                .where("id").notIn(1L, 2L)
                 .list();
 
         assertEquals(1, results2.size());
 
+        // Using single value
+        final List<Person> results3 = litebridge.select()
+                .from(Person.class)
+                .where("id").in(1L)
+                .list();
+
+        assertEquals(1, results3.size());
+
+        final List<Person> results4 = litebridge.select()
+                .from(Person.class)
+                .where("id").notIn(1L)
+                .list();
+
+        assertEquals(2, results4.size());
+
         // Using a list
         final List<Long> ids = List.of(1L, 2L);
-        final List<Person> results3 = litebridge.select()
+        final List<Person> results5 = litebridge.select()
                 .from(Person.class)
                 .where("id").in(ids)
                 .list();
 
-        assertEquals(2, results3.size());
+        assertEquals(2, results5.size());
+
+        final List<Person> results6 = litebridge.select()
+                .from(Person.class)
+                .where("id").notIn(ids)
+                .list();
+
+        assertEquals(1, results6.size());
 
         // Using a subselect
-        final List<Person> results4 = litebridge.select()
+        final List<Person> results7 = litebridge.select()
                 .from(Person.class)
                 .where("id").in(sub ->
                         sub.select("id")
@@ -661,7 +682,17 @@ public class BasicE2eTest extends AbstractE2eTest {
                                 .where("name").eq("Name1"))
                 .list();
 
-        assertEquals(1, results4.size());
+        assertEquals(1, results7.size());
+
+        final List<Person> results8 = litebridge.select()
+                .from(Person.class)
+                .where("id").notIn(sub ->
+                        sub.select("id")
+                                .from(Person.class)
+                                .where("name").eq("Name1"))
+                .list();
+
+        assertEquals(2, results8.size());
     }
 
     private void registerAddressTableMapping(final DbEnvDtoTableMapper tableMapper) {

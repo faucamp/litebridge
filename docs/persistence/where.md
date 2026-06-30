@@ -9,17 +9,18 @@ by calling `.where("fieldName")` or `.where("columnName")` on a select query, fo
 
 The following operators are available on condition clauses. Most operators support both direct values and sub-queries.
 
-| Operator | Method | Description |
-|:---|:---|:---|
-| `=` | `.eq(value)` | Equals |
-| `<>` | `.neq(value)` | Not equals |
-| `<` | `.lt(value)` | Less than |
-| `<=` | `.lte(value)` | Less than or equals |
-| `>` | `.gt(value)` | Greater than |
-| `>=` | `.gte(value)` | Greater than or equals |
-| `IS NULL` | `.isNull()` | Checks if a value is null |
-| `IS NOT NULL` | `.isNotNull()` | Checks if a value is not null |
-| `IN` | `.in(values...)` | Inclusion in a set of values or a sub-query |
+| Operator      | Method                | Description                                   |
+|:--------------|:----------------------|:----------------------------------------------|
+| `=`           | `.eq(value)`          | Equals                                        |
+| `<>`          | `.neq(value)`         | Not equals                                    |
+| `<`           | `.lt(value)`          | Less than                                     |
+| `<=`          | `.lte(value)`         | Less than or equals                           |
+| `>`           | `.gt(value)`          | Greater than                                  |
+| `>=`          | `.gte(value)`         | Greater than or equals                        |
+| `IS NULL`     | `.isNull()`           | Checks if a value is null                     |
+| `IS NOT NULL` | `.isNotNull()`        | Checks if a value is not null                 |
+| `IN`          | `.in(values...)`      | Inclusion in a set of values or a sub-query   |
+| `NOT IN`      | `.notIn(values...)`   | Exclusion from a set of values or a sub-query |
 
 ### Basic Examples
 
@@ -34,30 +35,51 @@ litebridge.select(Person.class).where("age").gt(18).list();
 litebridge.select(Person.class).where("eyeColour").isNull().list();
 ```
 
-### The IN Operator
+### The IN and NOT IN operators
 
 The `.in()` operator is overloaded to support various ways of specifying the set of values:
 
 #### Varargs and Arrays
 ```java
+// Inclusion
 litebridge.select(Person.class)
     .where("id").in(1L, 2L, 3L)
+    .list();
+
+// Exclusion
+litebridge.select(Person.class)
+    .where("id").notIn(1L, 2L, 3L)
     .list();
 ```
 
 #### Collections
 ```java
 List<Long> ids = List.of(1L, 2L, 3L);
+
+// Inclusion
 litebridge.select(Person.class)
     .where("id").in(ids)
+    .list();
+
+// Exclusion
+litebridge.select(Person.class)
+    .where("id").notIn(ids)
     .list();
 ```
 
 #### Sub-queries
 You can use a lambda to define a sub-select query:
 ```java
+// Inclusion
 litebridge.select(Person.class)
     .where("id").in(sub -> sub.select("id")
+        .from(Person.class)
+        .where("name").eq("Alice"))
+    .list();
+
+// Exclusion
+litebridge.select(Person.class)
+    .where("id").notIn(sub -> sub.select("id")
         .from(Person.class)
         .where("name").eq("Alice"))
     .list();

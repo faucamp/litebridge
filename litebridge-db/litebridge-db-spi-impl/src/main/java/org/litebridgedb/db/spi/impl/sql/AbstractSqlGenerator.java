@@ -67,7 +67,7 @@ public abstract class AbstractSqlGenerator {
 
         if (condition.operator() == Operator.IS_NULL || condition.operator() == Operator.IS_NOT_NULL) {
             sql = "%s %s".formatted(lhs, mapOperator(condition.operator()));
-        } else if (condition.operator() == Operator.IN) {
+        } else if (condition.operator() == Operator.IN || condition.operator() == Operator.NOT_IN) {
             if (condition.rhs() instanceof LiteralExpression literalExpression) {
                 sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), literalExpression.toBindValueSql(operation));
                 final Object rawValue = literalExpression.value();
@@ -138,6 +138,7 @@ public abstract class AbstractSqlGenerator {
             case LTE -> "<=";
             case NEQ -> "<>";
             case IN -> "IN";
+            case NOT_IN -> "NOT IN";
             case IS_NULL -> "IS NULL";
             case IS_NOT_NULL -> "IS NOT NULL";
             case USING -> "USING";

@@ -152,13 +152,6 @@ public class ConditionClauseImpl<DTO,
         return subselectImpl(Operator.GTE, subselect, false);
     }
 
-    /**
-     * Inclusion in a set.
-     *
-     * @param value       First value that is part of the set
-     * @param otherValues Other values that are part of the set
-     * @return A {@link ConditionClauseTerminal} instance for further chaining.
-     */
     @Override
     public CCT in(final Object value, final Object... otherValues) {
         if (value instanceof Collection<?> collection && otherValues.length == 0) {
@@ -176,6 +169,25 @@ public class ConditionClauseImpl<DTO,
     @Override
     public CCT in(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.IN, subselect, false);
+    }
+
+    @Override
+    public CCT notIn(final Object value, final Object... otherValues) {
+        if (value instanceof Collection<?> collection && otherValues.length == 0) {
+            return notIn(collection);
+        }
+
+        return notIn(Stream.concat(Stream.of(value), Arrays.stream(otherValues)).toList());
+    }
+
+    @Override
+    public CCT notIn(final Collection<?> values) {
+        return condition(Operator.NOT_IN, values);
+    }
+
+    @Override
+    public CCT notIn(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+        return subselectImpl(Operator.NOT_IN, subselect, false);
     }
 
     /**
