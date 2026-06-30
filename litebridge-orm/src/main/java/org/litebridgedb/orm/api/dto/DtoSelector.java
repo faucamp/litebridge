@@ -104,7 +104,6 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
     public List<TypeOverride> list() {
         final List<Row> rows = executeQuery();
 
-        //TODO: revisit
         if (dtoClass == selectSpec.dtoTable().dtoClass()
                 || selectSpec.dtoTable().getDtoClassInterfaces().contains(dtoClass)) {
             // Selecting the actual DTO

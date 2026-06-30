@@ -3,12 +3,11 @@ package org.litebridgedb.example.common;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.example.common.dto.Person;
 import org.litebridgedb.orm.Litebridge;
+import org.litebridgedb.orm.expression.Fn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-
-import static org.litebridgedb.db.spi.Column.c;
 
 public class SqlExample extends AbstractExample {
 
@@ -47,17 +46,16 @@ public class SqlExample extends AbstractExample {
                 .forEach(p -> LOGGER.info("SQL result: Mapped Person object: {}", p));
 
         LOGGER.info("[EXAMPLE] Using joins");
-        //TODO: re-add
-//        litebridge.select(
-//                        c("LB.PERSON", "FIRST_NAME"),
-//                        c("LB.PERSON", "SURNAME"),
-//                        c("LB.PERSON", "AGE"),
-//                        c("LB.ACCOUNT", "ACCOUNT_ID"),
-//                        c("LB.ACCOUNT", "ACCOUNT_NAME"))
-//                .from("LB.PERSON")
-//                .join("LB.ACCOUNT").using("PERSON_ID")
-//                .stream()
-//                .forEach(p -> LOGGER.info("Joined result: {}", p));
-    }
 
+        litebridge.select(
+                        Fn.c("LB.PERSON", "FIRST_NAME"),
+                        Fn.c("LB.PERSON", "SURNAME"),
+                        Fn.c("LB.PERSON", "AGE"),
+                        Fn.c("LB.ACCOUNT", "ACCOUNT_ID"),
+                        Fn.c("LB.ACCOUNT", "ACCOUNT_NAME"))
+                .from("LB.PERSON")
+                .join("LB.ACCOUNT").using("PERSON_ID")
+                .stream()
+                .forEach(p -> LOGGER.info("Joined result: {}", p));
+    }
 }
