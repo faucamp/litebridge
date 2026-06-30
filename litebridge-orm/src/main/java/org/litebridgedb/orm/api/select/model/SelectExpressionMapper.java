@@ -25,16 +25,28 @@ import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.expression.select.SubselectSpec;
 
+import java.util.List;
+
 public final class SelectExpressionMapper {
 
     private final SqlFunctionRegistry sqlFunctionRegistry;
+    private final ProtoExpressionResolver protoExpressionResolver;
 
-    public SelectExpressionMapper(final SqlFunctionRegistry sqlFunctionRegistry) {
+    public SelectExpressionMapper(final SqlFunctionRegistry sqlFunctionRegistry, final ProtoExpressionResolver protoExpressionResolver) {
         this.sqlFunctionRegistry = sqlFunctionRegistry;
+        this.protoExpressionResolver = protoExpressionResolver;
     }
 
     SqlFunctionRegistry sqlFunctionRegistry() {
         return sqlFunctionRegistry;
+    }
+
+    List<ExpressionSpec> resolveProtoExpression(final ExpressionSpec expressionSpec) {
+        return protoExpressionResolver.resolveExpression(expressionSpec).toList();
+    }
+
+    List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs) {
+        return protoExpressionResolver.resolveExpressions(expressionSpecs);
     }
 
     SelectExpression toSelectExpression(final ExpressionSpec expressionSpec, final boolean useSelectReferences) {
@@ -44,7 +56,8 @@ public final class SelectExpressionMapper {
             case SelectColumnSpec selectColumnSpec -> toSelectColumn(selectColumnSpec, useSelectReferences);
             case SubselectSpec subselectSpec ->
                     sqlFunctionRegistry.select().subselect().create(subselectSpec.selectSpec().toSelect());
-            case ConvertSpec<?> convertSpec -> new ConvertExpression(toSelectExpression(convertSpec.target(), useSelectReferences), convertSpec.returnType());
+            case ConvertSpec<?> convertSpec ->
+                    new ConvertExpression(toSelectExpression(convertSpec.target(), useSelectReferences), convertSpec.returnType());
             case ExpressionSpecArray expressionSpecArray ->
                     throw new IllegalStateException("ExpressionSpecArray not resolved: " + expressionSpecArray);
 
@@ -52,7 +65,8 @@ public final class SelectExpressionMapper {
             case CountSpec countSpec -> sqlFunctionRegistry.aggregate().count();
 
             // Nestable expressions
-            case NestableExpressionSpec nestableExpression -> resolveNestedExpression(nestableExpression, useSelectReferences);
+            case NestableExpressionSpec nestableExpression ->
+                    resolveNestedExpression(nestableExpression, useSelectReferences);
 
             // Date/time
             case CurrentTimestampSpec currentTimestampSpec -> sqlFunctionRegistry.date().currentTimestamp();

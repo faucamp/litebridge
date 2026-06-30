@@ -8,15 +8,18 @@ import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.sql.SqlJoinSpec;
-import org.litebridgedb.orm.engine.FromClauseEngine;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
 import org.litebridgedb.orm.expression.TestSelectReferenceExpressionFactory;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -78,7 +81,9 @@ class JoinSpecTest {
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-        final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("TEST_SCHEMA", "TEST_TABLE"), new SelectExpressionMapper(sqlFunctionRegistry));
+        final ProtoExpressionResolver protoExpressionResolver = mock(ProtoExpressionResolver.class);
+        when(protoExpressionResolver.resolveExpression(any(ExpressionSpec.class))).thenAnswer(i -> Stream.of((ExpressionSpec) i.getArgument(0)));
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("TEST_SCHEMA", "TEST_TABLE"), new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver));
         final Table table = joinSpec.table();
         final ConditionSpec conditionSpec = joinSpec.newCondition(new Column(table, "TEST_COLUMN"));
         conditionSpec.setOperator(Operator.LT);
@@ -92,6 +97,7 @@ class JoinSpecTest {
         assertSame(table, result.table());
         assertNotNull(result.conditions());
         assertEquals(1, result.conditions().size());
-        assertEquals(conditionSpec.toCondition(new SelectExpressionMapper(sqlFunctionRegistry)), result.conditions().getFirst());
+        assertEquals(conditionSpec.toCondition(new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver), Collections.singletonList(table)),
+                result.conditions().getFirst());
     }
 }

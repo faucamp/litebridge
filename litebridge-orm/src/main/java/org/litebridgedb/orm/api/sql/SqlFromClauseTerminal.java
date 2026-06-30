@@ -4,7 +4,6 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridgedb.orm.api.select.model.GroupBySpec;
-import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 
 public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
@@ -38,8 +37,8 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     }
 
     @Override
-    public SqlWhereConditionClause where(final ColumnExpressionSpec column) {
-        return where(column.getColumn().name());
+    public SqlWhereConditionClause where(final ExpressionSpec expression) {
+        return new SqlWhereConditionClause(selectSpec.newWhereCondition(expression), new SqlWhereConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
     }
 
     @Override

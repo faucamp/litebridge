@@ -6,6 +6,5 @@ import org.litebridgedb.orm.config.LitebridgeConfig;
 
 public record LitebridgeContext(LitebridgeConfig config,
                                 FromClauseEngine fromClauseEngine,
-                                SqlFunctionRegistry sqlFunctionRegistry,
-                                SelectExpressionMapper selectExpressionMapper) {
+                                SqlFunctionRegistry sqlFunctionRegistry) {
 }

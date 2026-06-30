@@ -67,7 +67,7 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
             joins = new ArrayList<>();
         }
 
-        final DtoJoinSpec joinSpec = new DtoJoinSpec(dtoClass, ormTable, table, litebridgeContext.selectExpressionMapper());
+        final DtoJoinSpec joinSpec = new DtoJoinSpec(dtoClass, ormTable, table, selectExpressionMapper());
 
         if (other != null) {
             joins.add(joins.indexOf(other), joinSpec);

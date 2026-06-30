@@ -31,8 +31,8 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     }
 
     @Override
-    public SqlJoinConditionClause and(final ColumnExpressionSpec column) {
-        return and(column.getColumn().name());
+    public SqlJoinConditionClause and(final ExpressionSpec expression) {
+        return new SqlJoinConditionClause(joinSpec.newCondition(expression), this, delegate.litebridgeContext());
     }
 
     @Override
@@ -47,8 +47,8 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     }
 
     @Override
-    public SqlWhereConditionClause where(final ColumnExpressionSpec column) {
-        return where(column.getColumn().name());
+    public SqlWhereConditionClause where(final ExpressionSpec expression) {
+        return new SqlWhereConditionClause(selectSpec.newWhereCondition(expression), new SqlWhereConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
     }
 
     @Override

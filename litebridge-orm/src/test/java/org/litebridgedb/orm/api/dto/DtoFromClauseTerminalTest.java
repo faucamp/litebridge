@@ -15,7 +15,6 @@ import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
-import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.engine.FromClauseEngine;
@@ -269,10 +268,10 @@ class DtoFromClauseTerminalTest {
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final FromClauseEngine fromClauseEngine = new FromClauseEngine(databaseProvider, tableRegistry, changeTracker, dtoConstructor, () -> mock(LitebridgeContext.class));
-        final SelectExpressionMapper selectExpressionMapper = new SelectExpressionMapper(sqlFunctionRegistry);
-        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), fromClauseEngine, sqlFunctionRegistry, selectExpressionMapper);
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), fromClauseEngine, sqlFunctionRegistry);
 
         final DtoSelector<DTO> dtoSelector = new DtoSelector<>(dtoClass, ormTable, tableRegistry, classFieldAccessorCache, dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
+        dtoSelector.selectSpec().setProtoExpressionResolver(new DtoProtoExpressionResolver(dtoSelector.selectSpec(), aliasGenerator, classFieldAccessorCache, tableRegistry));
 
         return new TestContext<>(ormTable, tableRegistry, databaseProvider, sqlFunctionRegistry, aliasGenerator, dtoSelector);
     }

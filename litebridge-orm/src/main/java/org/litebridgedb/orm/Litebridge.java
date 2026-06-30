@@ -9,6 +9,7 @@ import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.orm.api.delete.DeleteQuery;
 import org.litebridgedb.orm.api.delete.DeleteTerminal;
 import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
+import org.litebridgedb.orm.api.dto.DtoProtoExpressionResolver;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
 import org.litebridgedb.orm.api.dto.delete.DtoDeleteWhereClause;
 import org.litebridgedb.orm.api.dto.delete.DtoDeletor;
@@ -19,8 +20,10 @@ import org.litebridgedb.orm.api.register.RegistrationContextTerminal;
 import org.litebridgedb.orm.api.select.FromClauseStart;
 import org.litebridgedb.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridgedb.orm.api.select.SelectApi;
+import org.litebridgedb.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
+import org.litebridgedb.orm.api.sql.SqlProtoExpressionResolver;
 import org.litebridgedb.orm.api.sql.delete.SqlDeleteWhereClause;
 import org.litebridgedb.orm.api.sql.delete.SqlDeletor;
 import org.litebridgedb.orm.api.sql.update.SqlUpdateStart;
@@ -48,6 +51,7 @@ import org.litebridgedb.orm.persistence.SelectSpecDtoMapper;
 import org.litebridgedb.orm.persistence.TableMapper;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridgedb.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridgedb.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridgedb.orm.tx.DefaultTransactionManager;
 import org.litebridgedb.tracking.ChangeTracker;
@@ -350,7 +354,11 @@ public final class Litebridge implements SelectApi {
      */
     public <DTO> void update(final Class<DTO> dtoClass, final Function<DtoUpdateStart<DTO>, UpdateQuery> update) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoUpdater<DTO> dtoUpdater = new DtoUpdater<>(dtoClass, ormTable, databaseProvider, createLitebridgeContext());
+        final DtoUpdater<DTO> dtoUpdater = new DtoUpdater<>(dtoClass,
+                ormTable,
+                databaseProvider,
+                createSelectExpressionMapper(true),
+                createLitebridgeContext());
         final UpdateTerminal updateTerminal = (UpdateTerminal) update.apply(dtoUpdater);
         updateTerminal.execute();
     }
@@ -364,7 +372,10 @@ public final class Litebridge implements SelectApi {
      */
     public void update(final String tableName, final Function<SqlUpdateStart, UpdateQuery> query) {
         final Table table = tableRegistry.getOrCreateSpiTable(tableName);
-        final SqlUpdater sqlUpdater = new SqlUpdater(table, databaseProvider, createLitebridgeContext());
+        final SqlUpdater sqlUpdater = new SqlUpdater(table,
+                databaseProvider,
+                createSelectExpressionMapper(false),
+                createLitebridgeContext());
         final UpdateTerminal updateTerminal = (UpdateTerminal) query.apply(sqlUpdater);
         updateTerminal.execute();
     }
@@ -435,7 +446,11 @@ public final class Litebridge implements SelectApi {
      */
     public <DTO> void delete(final Class<DTO> dtoClass, final Function<DtoDeleteWhereClause<DTO>, DeleteQuery> query) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoDeletor<DTO> dtoDtoDeletor = new DtoDeletor<>(dtoClass, ormTable, databaseProvider, createLitebridgeContext());
+        final DtoDeletor<DTO> dtoDtoDeletor = new DtoDeletor<>(dtoClass,
+                ormTable,
+                databaseProvider,
+                createSelectExpressionMapper(true),
+                createLitebridgeContext());
         final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(dtoDtoDeletor);
         deleteTerminal.execute();
     }
@@ -458,7 +473,10 @@ public final class Litebridge implements SelectApi {
      *                  specifying the conditions for deleting the records
      */
     public void delete(final String tableName, final Function<SqlDeleteWhereClause, DeleteQuery> query) {
-        final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName, null), databaseProvider, createLitebridgeContext());
+        final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName, null),
+                databaseProvider,
+                createSelectExpressionMapper(false),
+                createLitebridgeContext());
         final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(sqlDeletor);
         deleteTerminal.execute();
     }
@@ -528,6 +546,20 @@ public final class Litebridge implements SelectApi {
 
     private LitebridgeContext createLitebridgeContext() {
         final SqlFunctionRegistry sqlFunctionRegistry = databaseProvider.getSqlFunctionRegistry();
-        return new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, new SelectExpressionMapper(sqlFunctionRegistry));
+        return new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry);
+    }
+
+    private SelectExpressionMapper createSelectExpressionMapper(final boolean dto) {
+        final ProtoExpressionResolver protoExpressionResolver;
+
+        if (dto) {
+            protoExpressionResolver = new DtoProtoExpressionResolver(new DefaultAliasGenerator(databaseProvider.getAliasTransformer()),
+                    changeTracker.classFieldAccessorCache(),
+                    tableRegistry);
+        } else {
+            protoExpressionResolver = new SqlProtoExpressionResolver();
+        }
+
+        return new SelectExpressionMapper(databaseProvider.getSqlFunctionRegistry(), protoExpressionResolver);
     }
 }

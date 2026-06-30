@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
@@ -25,7 +26,7 @@ class DtoDeletorTest {
         // Given
         final OrmTable ormTable = ormTable();
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final DtoDeletor<TestDto> deletor = new DtoDeletor<>(TestDto.class, ormTable, databaseProvider, mock(LitebridgeContext.class));
+        final DtoDeletor<TestDto> deletor = new DtoDeletor<>(TestDto.class, ormTable, databaseProvider, mock(SelectExpressionMapper.class), mock(LitebridgeContext.class));
 
         // When
         final DtoDeleteWhereConditionClause<TestDto> result = deletor.where("id");

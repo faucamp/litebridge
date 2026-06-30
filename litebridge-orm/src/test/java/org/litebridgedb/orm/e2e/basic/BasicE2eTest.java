@@ -153,12 +153,29 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Then
         assertEquals(person, result);
-        assertNotNull(person.getAccounts());
-        assertEquals(1, person.getAccounts().size());
-        assertEquals(account, person.getAccounts().getFirst());
-        assertNotNull(person.getAddresses());
-        assertEquals(1, person.getAddresses().size());
+        assertNotNull(result.getAccounts());
+        assertEquals(1, result.getAccounts().size());
+        assertEquals(account, result.getAccounts().getFirst());
+        assertNotNull(result.getAddresses());
+        assertEquals(1, result.getAddresses().size());
         assertEquals(address, result.getAddresses().getFirst());
+
+        // Retrieve the person record and associated address and account, with conditions on the join table
+        final Person result2 = litebridge.select(Person.class)
+                .join(Account.class).on("accounts")
+                .join(Address.class).on("addresses")
+                .where(Fn.f(Person.class, "id")).eq(person.getId())
+                .and(Fn.f(Address.class, "id")).eq(address.getId())
+                .oneOrThrow();
+
+        // Then
+        assertEquals(person, result2);
+        assertNotNull(result2.getAccounts());
+        assertEquals(1, result2.getAccounts().size());
+        assertEquals(account, result2.getAccounts().getFirst());
+        assertNotNull(result2.getAddresses());
+        assertEquals(1, result2.getAddresses().size());
+        assertEquals(address, result2.getAddresses().getFirst());
     }
 
     @TestTemplate

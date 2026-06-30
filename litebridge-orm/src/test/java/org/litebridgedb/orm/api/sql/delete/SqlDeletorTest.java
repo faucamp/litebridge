@@ -3,6 +3,7 @@ package org.litebridgedb.orm.api.sql.delete;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.update.UpdateResult;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
@@ -26,7 +27,7 @@ class SqlDeletorTest {
         UpdateResult expectedResult = mock(UpdateResult.class);
         when(databaseProvider.delete(any(), any())).thenReturn(expectedResult);
         Table table = new Table("cat", "sch", "tab");
-        SqlDeletor deletor = new SqlDeletor(table, databaseProvider, mock(LitebridgeContext.class));
+        SqlDeletor deletor = new SqlDeletor(table, databaseProvider, mock(SelectExpressionMapper.class), mock(LitebridgeContext.class));
 
         // When
         UpdateResult result = deletor.execute();
@@ -42,7 +43,7 @@ class SqlDeletorTest {
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         when(databaseProvider.delete(any(), any())).thenThrow(new SQLException("DB error"));
         Table table = new Table("cat", "sch", "tab");
-        SqlDeletor deletor = new SqlDeletor(table, databaseProvider, mock(LitebridgeContext.class));
+        SqlDeletor deletor = new SqlDeletor(table, databaseProvider, mock(SelectExpressionMapper.class), mock(LitebridgeContext.class));
 
         // When / Then
         assertThrows(IllegalStateException.class, deletor::execute);
@@ -53,7 +54,7 @@ class SqlDeletorTest {
         // Given
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         Table table = new Table("cat", "sch", "tab");
-        SqlDeletor deletor = new SqlDeletor(table, databaseProvider, mock(LitebridgeContext.class));
+        SqlDeletor deletor = new SqlDeletor(table, databaseProvider, mock(SelectExpressionMapper.class), mock(LitebridgeContext.class));
 
         // When
         SqlDeleteWhereConditionClause result = deletor.where("col1");

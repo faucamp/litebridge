@@ -1,5 +1,7 @@
 package org.litebridgedb.orm.api.spec;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Represents a specification for mapping a field in a class to a database column or property.
  * <p>
@@ -10,9 +12,14 @@ package org.litebridgedb.orm.api.spec;
  * {@code property} flag. Field-level access considers the field name directly for mapping,
  * whereas property-level access assumes usage of getter/setter conventions.
  *
+ * @param dtoClass The class of the DTO to which the field belongs.
  * @param name     The name of the field or property to be mapped.
  * @param property Indicates whether property-level access is enabled. {@code true} signifies
  *                 property-based access (via getter/setter), and {@code false} signifies direct field access.
  */
-public record FieldSpec(String name, boolean property) implements FieldMapping {
+public record FieldSpec(@Nullable Class<?> dtoClass, String name, boolean property) implements FieldMapping {
+
+    public FieldSpec(final String name, final boolean property) {
+        this(null, name, property);
+    }
 }

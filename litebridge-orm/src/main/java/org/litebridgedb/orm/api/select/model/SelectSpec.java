@@ -7,6 +7,8 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.expression.DelegateExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
+import org.litebridgedb.db.spi.query.Condition;
+import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.orm.engine.LitebridgeContext;
@@ -24,7 +26,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,11 +40,10 @@ import java.util.stream.Stream;
  */
 public abstract class SelectSpec {
 
-    protected final SelectExpressionMapper selectExpressionMapper;
+    protected @Nullable SelectExpressionMapper selectExpressionMapper;
     protected final LitebridgeContext litebridgeContext;
 
     protected @Nullable Table table;
-    protected @Nullable Supplier<ProtoExpressionResolver> protoExpressionResolver;
     protected List<ExpressionSpec> expressionSpecs = new ArrayList<>();
     protected @Nullable List<JoinSpec> joins;
     protected @Nullable List<ConditionSpec> whereConditions;
@@ -54,7 +54,6 @@ public abstract class SelectSpec {
     protected @Nullable Map<Class<?>, String> dtoAliases;
 
     public SelectSpec(final LitebridgeContext litebridgeContext) {
-        this.selectExpressionMapper = litebridgeContext.selectExpressionMapper();
         this.litebridgeContext = litebridgeContext;
     }
 
@@ -66,12 +65,12 @@ public abstract class SelectSpec {
         this.table = table;
     }
 
-    public @Nullable Supplier<ProtoExpressionResolver> getProtoExpressionResolver() {
-        return protoExpressionResolver;
+    public void setProtoExpressionResolver(final ProtoExpressionResolver protoExpressionResolver) {
+        this.selectExpressionMapper = new SelectExpressionMapper(litebridgeContext.sqlFunctionRegistry(), protoExpressionResolver);
     }
 
-    public void setProtoExpressionResolver(@Nullable final Supplier<ProtoExpressionResolver> protoExpressionResolver) {
-        this.protoExpressionResolver = protoExpressionResolver;
+    public SelectExpressionMapper selectExpressionMapper() {
+        return Objects.requireNonNull(selectExpressionMapper, "SelectExpressionMapper not set");
     }
 
     public List<ExpressionSpec> getExpressions() {
@@ -107,12 +106,16 @@ public abstract class SelectSpec {
     }
 
     public ConditionSpec newWhereCondition(final Column column) {
+        return newWhereCondition(new SelectColumnSpec(column));
+    }
+
+    public ConditionSpec newWhereCondition(final ExpressionSpec expressionSpec) {
         if (this.whereConditions == null) {
             whereConditions = new ArrayList<>();
         }
 
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(new SelectColumnSpec(column));
+        conditionSpec.setLhs(expressionSpec);
         whereConditions.add(conditionSpec);
         return conditionSpec;
     }
@@ -196,7 +199,7 @@ public abstract class SelectSpec {
             throw new IllegalStateException("Table not specified");
         }
 
-        this.expressionSpecs = resolveProtoExpressions(expressionSpecs);
+        this.expressionSpecs = selectExpressionMapper.resolveProtoExpressions(expressionSpecs);
         final List<SelectExpression> selectExpressions = convertToSelectExpressions(expressionSpecs, false);
         final Set<Column> selectedColumns = selectExpressions.stream()
                 .map(selectExpression -> {
@@ -216,6 +219,20 @@ public abstract class SelectSpec {
                 .map(ColumnExpression.class::cast)
                 .map(ColumnExpression::column)
                 .collect(Collectors.toSet());
+
+        // JOIN
+        final List<Join> joinClause = joins != null ? joins.stream()
+                .map(JoinSpec::toJoin)
+                .toList() : Collections.emptyList();
+
+        // WHERE
+        final Set<Table> selectedTables = Stream.concat(selectedColumns.stream().map(Column::table),
+                        joinClause.stream().map(join -> join.table()))
+                .collect(Collectors.toSet());
+
+        final List<Condition> whereClause = whereConditions != null ? whereConditions.stream()
+                .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper, selectedTables))
+                .toList() : Collections.emptyList();
 
         // GROUP BY
         final List<SelectExpression> groupByClause;
@@ -250,15 +267,11 @@ public abstract class SelectSpec {
 
         return new Select(table,
                 selectExpressions,
-                joins != null ? joins.stream()
-                        .map(JoinSpec::toJoin)
-                        .toList() : Collections.emptyList(),
-                whereConditions != null ? whereConditions.stream()
-                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper))
-                        .toList() : Collections.emptyList(),
+                joinClause,
+                whereClause,
                 groupByClause,
                 havingConditions != null ? havingConditions.stream()
-                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper))
+                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper, selectedTables))
                         .toList() : Collections.emptyList(),
                 orderByClause,
                 limit != null ? limit.toLimit() : Optional.empty());
@@ -289,16 +302,8 @@ public abstract class SelectSpec {
         };
     }
 
-    private List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs) {
-        if (protoExpressionResolver == null) {
-            throw new IllegalStateException("Cannot resolve proto expressions; no proto-expression resolver set");
-        }
-
-        return protoExpressionResolver.get().resolveExpressions(expressionSpecs);
-    }
-
     private List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs, final Set<Column> selectedColumns) {
-        return resolveProtoExpressions(expressionSpecs).stream()
+        return selectExpressionMapper.resolveProtoExpressions(expressionSpecs).stream()
                 // Resolve references to selected columns (to correctly associate aliases)
                 .peek(expressionSpec -> {
                     if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {

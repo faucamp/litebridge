@@ -4,7 +4,6 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.select.HavingConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractHavingClauseTerminal;
-import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 
 public final class SqlHavingConditionClauseTerminal
@@ -30,8 +29,8 @@ public final class SqlHavingConditionClauseTerminal
     }
 
     @Override
-    public SqlHavingConditionClause and(final ColumnExpressionSpec column) {
-        return and(column.getColumn().name());
+    public SqlHavingConditionClause and(final ExpressionSpec expression) {
+        return new SqlHavingConditionClause(selectSpec.newWhereCondition(expression), this, delegate.litebridgeContext());
     }
 
     @Override

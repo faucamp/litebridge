@@ -3,6 +3,7 @@ package org.litebridgedb.orm.api.sql.update;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.update.UpdateResult;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
@@ -26,7 +27,7 @@ class SqlUpdaterTest {
         UpdateResult expectedResult = mock(UpdateResult.class);
         when(databaseProvider.update(any(), any())).thenReturn(expectedResult);
         Table table = new Table("cat", "sch", "tab");
-        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(LitebridgeContext.class));
+        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(SelectExpressionMapper.class), mock(LitebridgeContext.class));
 
         // When
         UpdateResult result = updater.execute();
@@ -42,7 +43,7 @@ class SqlUpdaterTest {
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         when(databaseProvider.update(any(), any())).thenThrow(new SQLException("DB error"));
         Table table = new Table("cat", "sch", "tab");
-        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(LitebridgeContext.class));
+        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(SelectExpressionMapper.class), mock(LitebridgeContext.class));
 
         // When / Then
         assertThrows(IllegalStateException.class, updater::execute);
@@ -53,7 +54,7 @@ class SqlUpdaterTest {
         // Given
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         Table table = new Table("cat", "sch", "tab");
-        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(LitebridgeContext.class));
+        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(SelectExpressionMapper.class), mock(LitebridgeContext.class));
 
         // When
         SqlUpdateWhereConditionClause result = updater.where("col1");
@@ -67,7 +68,7 @@ class SqlUpdaterTest {
         // Given
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         Table table = new Table("cat", "sch", "tab");
-        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(LitebridgeContext.class));
+        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(SelectExpressionMapper.class), mock(LitebridgeContext.class));
 
         // When
         SqlUpdateSetStep result = updater.set("col1");

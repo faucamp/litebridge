@@ -1,10 +1,12 @@
 package org.litebridgedb.orm.api.dto.update;
 
 import org.litebridgedb.db.spi.Column;
-import org.litebridgedb.orm.engine.LitebridgeContext;
-import org.litebridgedb.orm.expression.ColumnExpressionSpec;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.update.UpdateSetStep;
 import org.litebridgedb.orm.api.update.impl.AbstractUpdater;
+import org.litebridgedb.orm.engine.LitebridgeContext;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
@@ -13,8 +15,9 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
     public DtoUpdater(final Class<DTO> dtoClass,
                       final OrmTable dtoTable,
                       final TransactionalDatabaseProvider databaseProvider,
+                      final SelectExpressionMapper selectExpressionMapper,
                       final LitebridgeContext litebridgeContext) {
-        super(new DtoUpdateSpec(dtoClass, dtoTable, litebridgeContext.selectExpressionMapper()), databaseProvider, litebridgeContext);
+        super(new DtoUpdateSpec(dtoClass, dtoTable, selectExpressionMapper), databaseProvider, litebridgeContext);
     }
 
     @Override
@@ -24,8 +27,8 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
     }
 
     @Override
-    public DtoUpdateWhereConditionClause<DTO> where(final ColumnExpressionSpec field) {
-        return where(field.getColumn().name());
+    public DtoUpdateWhereConditionClause<DTO> where(final ExpressionSpec expression) {
+        return new DtoUpdateWhereConditionClause<>(updateSpec.newWhereCondition(expression), new DtoUpdateWhereConditionClauseTerminalImpl<>(this), litebridgeContext);
     }
 
     @Override

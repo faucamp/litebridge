@@ -35,7 +35,7 @@ public final class Fn {
     // Field/column selectors
 
     /**
-     * Selects a DTO field by name.
+     * Selects a DTO field by name for the DTO class selected in the query.
      * <p>
      * Shorthand for {@link #field(String)}.
      *
@@ -47,13 +47,35 @@ public final class Fn {
     }
 
     /**
-     * Selects a DTO field by name.
+     * Selects a DTO field by name for the specified DTO type that is selected/joined in the query.
+     * <p>
+     * Shorthand for {@link #field(Class, String)}.
+     *
+     * @param field The name of the DTO field to select.
+     * @return a {@link SelectFieldSpec} expression instance to select the specified field.
+     */
+    public static ExpressionSpec f(final Class<?> dtoClass, final String field) {
+        return new ProtoColumnExpressionSpec(SelectFieldSpec.class, field, null, new Object[]{dtoClass});
+    }
+
+    /**
+     * Selects a DTO field by name for the DTO class selected in the query.
      *
      * @param field The name of the DTO field to select.
      * @return a {@link SelectFieldSpec} expression instance to select the specified field.
      */
     public static ExpressionSpec field(final String field) {
         return f(field);
+    }
+
+    /**
+     * Selects a DTO field by name for the specified DTO type that is selected/joined in the query.
+     *
+     * @param field The name of the DTO field to select.
+     * @return a {@link SelectFieldSpec} expression instance to select the specified field.
+     */
+    public static ExpressionSpec field(final Class<?> dtoClass, final String field) {
+        return f(dtoClass, field);
     }
 
     /**

@@ -4,10 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
-import org.litebridgedb.orm.engine.LitebridgeContext;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-import org.litebridgedb.orm.api.spec.FieldSpec;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.update.UpdateSetStep;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
@@ -21,7 +20,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class DtoUpdaterTest {
 
@@ -30,7 +28,7 @@ class DtoUpdaterTest {
         // Given
         OrmTable ormTable = ormTable();
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, databaseProvider, mock(LitebridgeContext.class));
+        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, databaseProvider, mock(SelectExpressionMapper.class), mock(LitebridgeContext.class));
 
         // When
         DtoUpdateWhereConditionClause<TestDto> result = updater.where("id");
@@ -46,7 +44,7 @@ class DtoUpdaterTest {
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         TableRegistry tableRegistry = mock(TableRegistry.class);
         ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
-        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, databaseProvider, mock(LitebridgeContext.class));
+        DtoUpdater<TestDto> updater = new DtoUpdater<>(TestDto.class, ormTable, databaseProvider, mock(SelectExpressionMapper.class), mock(LitebridgeContext.class));
 
         // When
         UpdateSetStep<DtoUpdateStep<TestDto>> result = updater.set("id");
@@ -54,7 +52,7 @@ class DtoUpdaterTest {
         // Then
         assertNotNull(result);
     }
-    
+
     private static OrmTable ormTable() {
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final Table table = new Table("", "public", "test_table");

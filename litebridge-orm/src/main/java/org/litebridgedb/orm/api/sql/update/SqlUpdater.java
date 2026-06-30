@@ -2,18 +2,21 @@ package org.litebridgedb.orm.api.sql.update;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.orm.engine.LitebridgeContext;
-import org.litebridgedb.orm.expression.ColumnExpressionSpec;
+import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.update.impl.AbstractUpdater;
 import org.litebridgedb.orm.api.update.model.UpdateSpec;
+import org.litebridgedb.orm.engine.LitebridgeContext;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
 public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements SqlUpdateStep {
 
     public SqlUpdater(final Table table,
                       final TransactionalDatabaseProvider databaseProvider,
+                      final SelectExpressionMapper selectExpressionMapper,
                       final LitebridgeContext litebridgeContext) {
-        super(new UpdateSpec(litebridgeContext.selectExpressionMapper()), databaseProvider, litebridgeContext);
+        super(new UpdateSpec(selectExpressionMapper), databaseProvider, litebridgeContext);
         updateSpec.setTable(table);
     }
 
@@ -23,8 +26,8 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
     }
 
     @Override
-    public SqlUpdateWhereConditionClause where(final ColumnExpressionSpec column) {
-        return where(column.getColumn().name());
+    public SqlUpdateWhereConditionClause where(final ExpressionSpec expression) {
+        return new SqlUpdateWhereConditionClause(updateSpec.newWhereCondition(expression), new SqlUpdateWhereConditionClauseTerminalImpl(this), litebridgeContext);
     }
 
     @Override

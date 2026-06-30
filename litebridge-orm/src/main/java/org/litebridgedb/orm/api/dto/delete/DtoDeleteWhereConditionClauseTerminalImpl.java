@@ -3,6 +3,7 @@ package org.litebridgedb.orm.api.dto.delete;
 import org.litebridgedb.db.spi.update.UpdateResult;
 import org.litebridgedb.orm.api.delete.DeleteTerminal;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 
 public final class DtoDeleteWhereConditionClauseTerminalImpl<DTO>
         implements DtoDeleteWhereConditionClauseTerminal<DTO>,
@@ -20,8 +21,8 @@ public final class DtoDeleteWhereConditionClauseTerminalImpl<DTO>
     }
 
     @Override
-    public DtoDeleteWhereConditionClause<DTO> and(final ColumnExpressionSpec field) {
-        return and(field.getColumn().name());
+    public DtoDeleteWhereConditionClause<DTO> and(final ExpressionSpec expression) {
+        return delegate.where(expression);
     }
 
     @Override

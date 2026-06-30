@@ -8,6 +8,8 @@ import org.litebridgedb.db.spi.update.ColumnValue;
 import org.litebridgedb.db.spi.update.Update;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
+import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,12 +49,16 @@ public class UpdateSpec {
     }
 
     public ConditionSpec newWhereCondition(final Column column) {
+        return newWhereCondition(new SelectColumnSpec(column));
+    }
+
+    public ConditionSpec newWhereCondition(final ExpressionSpec expression) {
         if (this.whereConditions == null) {
             whereConditions = new ArrayList<>();
         }
 
         final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(column);
+        conditionSpec.setLhs(expression);
         whereConditions.add(conditionSpec);
         return conditionSpec;
     }
@@ -67,7 +73,7 @@ public class UpdateSpec {
         return new Update(table,
                 columnValues,
                 whereConditions != null ? whereConditions.stream()
-                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper))
+                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper, Collections.singletonList(table)))
                         .toList() : Collections.emptyList());
     }
 }

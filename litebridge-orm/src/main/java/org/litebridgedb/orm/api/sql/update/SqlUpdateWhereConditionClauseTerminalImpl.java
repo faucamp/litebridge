@@ -4,6 +4,7 @@ import org.litebridgedb.db.spi.update.UpdateResult;
 import org.litebridgedb.orm.api.update.UpdateTerminal;
 import org.litebridgedb.orm.api.update.model.UpdateSpec;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 
 public final class SqlUpdateWhereConditionClauseTerminalImpl
 
@@ -33,7 +34,7 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl
     }
 
     @Override
-    public SqlUpdateWhereConditionClause and(final ColumnExpressionSpec column) {
-        return and(column.getColumn().name());
+    public SqlUpdateWhereConditionClause and(final ExpressionSpec expression) {
+        return delegate.where(expression);
     }
 }

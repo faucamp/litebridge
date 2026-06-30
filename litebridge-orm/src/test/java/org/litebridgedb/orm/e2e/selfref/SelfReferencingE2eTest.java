@@ -137,7 +137,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
         litebridge.save(dto3);
 
         // Then
-        //litebridgedb.select().from("LB.SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
+//        litebridge.select().from("LB.SELF_REFERENCING").stream().forEach(row -> LOGGER.info("{}", row));
         final List<SelfReferencingDto> result = litebridge.select(SelfReferencingDto.class)
                 .join(SelfReferencingDto.class).on("parent")
                 .orderBy("id").asc()

@@ -4,6 +4,7 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.orm.api.select.JoinClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.model.GroupBySpec;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
@@ -53,8 +54,8 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     }
 
     @Override
-    public DtoJoinConditionClause<DTO> and(final org.litebridgedb.orm.expression.ColumnExpressionSpec field) {
-        return and(field.getColumn().name());
+    public DtoJoinConditionClause<DTO> and(final ExpressionSpec expression) {
+        return new DtoJoinConditionClause<>(joinSpec.newCondition(expression), this, delegate.litebridgeContext());
     }
 
     @Override
@@ -64,8 +65,8 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     }
 
     @Override
-    public DtoWhereConditionClause<DTO> where(final org.litebridgedb.orm.expression.ColumnExpressionSpec field) {
-        return where(field.getColumn().name());
+    public DtoWhereConditionClause<DTO> where(final ExpressionSpec expression) {
+        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(expression), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate), delegate.litebridgeContext());
     }
 
     @Override

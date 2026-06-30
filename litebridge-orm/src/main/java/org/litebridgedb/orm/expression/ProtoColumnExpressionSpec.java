@@ -13,26 +13,22 @@ import org.litebridgedb.orm.expression.select.SelectColumnSpec;
  * @param alias  The column alias to use, or {@code null} if not specified.
  * @param type   The type of expression to create.
  */
-public record ProtoColumnExpressionSpec(Class<? extends ExpressionSpec> type, String column, @Nullable String alias)
+public record ProtoColumnExpressionSpec(Class<? extends ExpressionSpec> type,
+                                        String column,
+                                        @Nullable String alias,
+                                        @Nullable Object @Nullable [] args)
         implements ProtoExpressionSpec {
 
     public ProtoColumnExpressionSpec(final Class<? extends ExpressionSpec> type, final String column, final @Nullable String alias) {
+        this(type, column, alias, null);
+
         // Validate that a supported expression type is specified
         if (!ProtoExpressionResolver.isSupported(type)) {
             throw new IllegalArgumentException("Unsupported expression type: " + type);
         }
-
-        this.type = type;
-        this.column = column;
-        this.alias = alias;
     }
 
     public ProtoColumnExpressionSpec(final Class<? extends ExpressionSpec> type, final String column) {
         this(type, column, null);
-    }
-
-    @Override
-    public @Nullable Object @Nullable [] args() {
-        return null;
     }
 }

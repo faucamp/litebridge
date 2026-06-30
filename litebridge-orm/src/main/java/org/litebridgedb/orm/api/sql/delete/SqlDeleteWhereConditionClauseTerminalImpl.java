@@ -3,6 +3,7 @@ package org.litebridgedb.orm.api.sql.delete;
 import org.litebridgedb.db.spi.update.UpdateResult;
 import org.litebridgedb.orm.api.delete.DeleteTerminal;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 
 public final class SqlDeleteWhereConditionClauseTerminalImpl
 
@@ -27,7 +28,7 @@ public final class SqlDeleteWhereConditionClauseTerminalImpl
     }
 
     @Override
-    public SqlDeleteWhereConditionClause and(final ColumnExpressionSpec column) {
-        return and(column.getColumn().name());
+    public SqlDeleteWhereConditionClause and(final ExpressionSpec expression) {
+        return delegate.where(expression);
     }
 }

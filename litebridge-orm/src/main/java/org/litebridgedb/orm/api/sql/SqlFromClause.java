@@ -34,7 +34,7 @@ public final class SqlFromClause implements FromClause<Row,
     public SqlFromClauseTerminal from(final String table) {
         final Table spiTable = tableRegistry.getOrCreateSpiTable(table);
         selectSpec.setTable(spiTable);
-        selectSpec.setProtoExpressionResolver(() -> new SqlProtoExpressionResolver(selectSpec));
+        selectSpec.setProtoExpressionResolver(new SqlProtoExpressionResolver(selectSpec));
         return new SqlFromClauseTerminal(delegate);
     }
 }

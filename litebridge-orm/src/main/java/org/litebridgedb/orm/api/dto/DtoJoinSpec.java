@@ -8,6 +8,7 @@ import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.JoinSpec;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 
 import java.util.ArrayList;
@@ -66,10 +67,17 @@ public final class DtoJoinSpec implements JoinSpec, DtoDataSpec {
         return conditionSpec;
     }
 
+    public ConditionSpec newCondition(final ExpressionSpec expression) {
+        final ConditionSpec conditionSpec = new ConditionSpec();
+        conditionSpec.setLhs(expression);
+        conditions.add(conditionSpec);
+        return conditionSpec;
+    }
+
     @Override
     public Join toJoin() {
         return new Join(table, conditions.stream()
-                .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper))
+                .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper, Collections.singletonList(table)))
                 .toList());
     }
 }

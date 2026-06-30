@@ -9,11 +9,18 @@ import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.update.ColumnValue;
 import org.litebridgedb.db.spi.update.Update;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
+import org.litebridgedb.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
 import org.litebridgedb.orm.expression.TestSelectReferenceExpressionFactory;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -28,7 +35,9 @@ class UpdateSpecTest {
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
-        final UpdateSpec spec = new UpdateSpec(new SelectExpressionMapper(sqlFunctionRegistry));
+        final ProtoExpressionResolver protoExpressionResolver = mock(ProtoExpressionResolver.class);
+        when(protoExpressionResolver.resolveExpression(any(ExpressionSpec.class))).thenAnswer(i -> Stream.of((ExpressionSpec) i.getArgument(0)));
+        final UpdateSpec spec = new UpdateSpec(new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver));
         final Table table = new Table("cat", "sch", "tab");
         spec.setTable(table);
         assertEquals(table, spec.getTable());

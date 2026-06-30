@@ -67,12 +67,12 @@ public final class DtoWhereConditionClauseTerminal<DTO>
      * Adds an "AND" condition to the current condition clause using the specified column.
      * This method is used to chain additional conditions in a SQL query in a type-safe and fluent manner.
      *
-     * @param field the field to be used in the "AND" condition
+     * @param expression the exoression to be used in the "AND" condition
      * @return the parent condition clause interface, allowing further chaining of conditions
      */
     @Override
-    public DtoWhereConditionClause<DTO> and(final org.litebridgedb.orm.expression.ColumnExpressionSpec field) {
-        return and(field.getColumn().name());
+    public DtoWhereConditionClause<DTO> and(final ExpressionSpec expression) {
+        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(expression), this, delegate.litebridgeContext());
     }
 
     @Override
