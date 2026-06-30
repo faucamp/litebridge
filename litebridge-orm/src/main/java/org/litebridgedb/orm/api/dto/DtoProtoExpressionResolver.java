@@ -10,6 +10,8 @@ import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ProtoExpressionSpec;
 import org.litebridgedb.orm.expression.Resolvable;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
+import org.litebridgedb.orm.meta.QFInspector;
+import org.litebridgedb.orm.meta.QueryField;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
@@ -61,6 +63,16 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
         return new SelectFieldSpec(fieldAccessor, column);
     }
 
+    @Override
+    protected ColumnExpressionSpec resolveSelectField(final QueryField queryField) {
+        // Map the input DTO field names to database column names
+        Objects.requireNonNull(selectSpec, "SelectSpec not set");
+        final String fieldName = QFInspector.getFieldName(queryField);
+        final Column column = getColumn(selectSpec.dtoClass(), fieldName);
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(selectSpec.dtoClass(), fieldName);
+        return new SelectFieldSpec(fieldAccessor, column);
+    }
+
     private Class<?> getDtoClass(final Resolvable resolvable) {
         if (resolvable instanceof ProtoExpressionSpec protoExpressionSpec
                 && protoExpressionSpec.type() == SelectFieldSpec.class) {
@@ -80,8 +92,11 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     }
 
     private Column getColumn(final Class<?> dtoClass, final Resolvable resolvable) {
+        return getColumn(dtoClass, resolvable.column());
+    }
+
+    private Column getColumn(final Class<?> dtoClass, final String fieldName) {
         // Map the input DTO field names to database column names
-        final String fieldName = resolvable.column();
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
         final Table table;
 
@@ -91,7 +106,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
             table = ormTable.getMetaData().toTable();
         }
 
-        final ColumnMetaData columnMetaData = tableRegistry.getTableOrThrow(dtoClass).getColumnForFieldName(resolvable.column());
+        final ColumnMetaData columnMetaData = tableRegistry.getTableOrThrow(dtoClass).getColumnForFieldName(fieldName);
         return aliasGenerator.aliasColumn(table, columnMetaData);
     }
 }

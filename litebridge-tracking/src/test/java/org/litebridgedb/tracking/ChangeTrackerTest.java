@@ -401,7 +401,7 @@ public class ChangeTrackerTest {
         final TestDto dto = new TestDto();
 
         // When
-        final NullPointerException result = assertThrows(NullPointerException.class, () -> changeTracker.getTrackedDto(dto));
+        final IllegalArgumentException result = assertThrows(IllegalArgumentException.class, () -> changeTracker.getTrackedDto(dto));
 
         // Then
         assertEquals("DTO is not tracked: " + dto, result.getMessage());

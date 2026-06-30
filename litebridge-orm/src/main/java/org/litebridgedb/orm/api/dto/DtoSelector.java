@@ -103,12 +103,15 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
     @Override
     public List<TypeOverride> list() {
         final List<Row> rows = executeQuery();
+        final OrmTable ormTable = selectSpec.dtoTable();
 
-        if (dtoClass == selectSpec.dtoTable().dtoClass()
-                || selectSpec.dtoTable().getDtoClassInterfaces().contains(dtoClass)) {
+        if (dtoClass == ormTable.dtoClass()
+                || ormTable.getDtoClassInterfaces().contains(dtoClass)) {
             // Selecting the actual DTO
             final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, litebridgeContext);
-            return selectSpecDtoMapper.toDtos(dtoClass, rows);
+            final List<TypeOverride> dtos = selectSpecDtoMapper.toDtos(dtoClass, rows);
+            dtos.forEach(ormTable::syncPersistedDto);
+            return dtos;
         } else {
             // Type overridden-select (e.g. by a SQL function); <DTO> generic is not set to the actual DTO class
             return unwrap(dtoClass, rows);

@@ -1,7 +1,7 @@
 package org.litebridgedb.orm.expression.function.aggregate;
 
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
-import org.litebridgedb.orm.expression.NestableExpressionSpec;
+import org.litebridgedb.orm.expression.DelegateExpressionSpec;
 import org.litebridgedb.orm.expression.TypeOverrideExpressionSpec;
 
 /**
@@ -12,5 +12,5 @@ import org.litebridgedb.orm.expression.TypeOverrideExpressionSpec;
  * @param <T>        The return type of the expression result.
  */
 public record MinSpec<T>(ColumnExpressionSpec target, Class<T> returnType)
-        implements NestableExpressionSpec, TypeOverrideExpressionSpec<T> {
+        implements DelegateExpressionSpec, TypeOverrideExpressionSpec<T> {
 }

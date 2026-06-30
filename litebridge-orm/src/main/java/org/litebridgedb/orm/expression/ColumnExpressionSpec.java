@@ -6,7 +6,7 @@ import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 /**
  * Query expression encapsulating a target column.
  */
-public sealed interface ColumnExpressionSpec extends ExpressionSpec permits NestableExpressionSpec, SelectColumnSpec {
+public sealed interface ColumnExpressionSpec extends ExpressionSpec permits DelegateExpressionSpec, SelectColumnSpec {
 
     /**
      * Gets the target column of this expression.

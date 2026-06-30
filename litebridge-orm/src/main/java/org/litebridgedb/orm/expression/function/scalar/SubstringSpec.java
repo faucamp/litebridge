@@ -2,7 +2,7 @@ package org.litebridgedb.orm.expression.function.scalar;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
-import org.litebridgedb.orm.expression.StringTONestableExpressionSpec;
+import org.litebridgedb.orm.expression.StringTODelegateExpressionSpec;
 
 /**
  * {@code SUBSTRING()}: Returns a substring of a column's text.
@@ -12,5 +12,5 @@ import org.litebridgedb.orm.expression.StringTONestableExpressionSpec;
  * @param length The number of characters to return. If {@code null}, the function extracts everything from the start position to the end of the text.
  */
 public record SubstringSpec(ColumnExpressionSpec target, int start, @Nullable Integer length)
-        implements StringTONestableExpressionSpec {
+        implements StringTODelegateExpressionSpec {
 }

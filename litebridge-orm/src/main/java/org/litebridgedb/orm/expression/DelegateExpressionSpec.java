@@ -8,8 +8,8 @@ import org.litebridgedb.orm.expression.function.aggregate.MinSpec;
 /**
  * A query expression that can nest another query expression.
  */
-public sealed interface NestableExpressionSpec extends ColumnExpressionSpec
-        permits NumberTONestableExpressionSpec, StringTONestableExpressionSpec, AvgSpec, MaxSpec, MinSpec {
+public sealed interface DelegateExpressionSpec extends ColumnExpressionSpec
+        permits NumberTODelegateExpressionSpec, StringTODelegateExpressionSpec, AvgSpec, MaxSpec, MinSpec {
 
     /**
      * Gets the target nested expression.

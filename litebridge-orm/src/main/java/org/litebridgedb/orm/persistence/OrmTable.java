@@ -253,9 +253,15 @@ public class OrmTable {
             persistedDtos.add(dto);
         }
 
-        final TrackedDto<?> trackedDto = changeTracker.getTrackedDto(dto);
-        LOGGER.trace("Creating new snapshot for DTO: {}", dto);
-        trackedDto.snapshot(true);
+        final TrackedDto<?> trackedDto = changeTracker.getTrackedDtoOrNull(dto);
+
+        if (trackedDto != null) {
+            LOGGER.trace("Creating new snapshot for DTO: {}", dto);
+            trackedDto.snapshot(true);
+        } else {
+            LOGGER.trace("Tracking DTO: {}", dto);
+            changeTracker.trackDto(dto);
+        }
     }
 
     /**

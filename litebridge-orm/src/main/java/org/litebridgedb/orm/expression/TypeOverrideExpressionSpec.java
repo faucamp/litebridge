@@ -12,6 +12,6 @@ import org.litebridgedb.orm.expression.intent.ConvertSpec;
  *
  * @param <T> The type override of the expression result.
  */
-public sealed interface TypeOverrideExpressionSpec<T> extends ExpressionSpec, TypeOverride<T> permits NumberTONestableExpressionSpec, ProtoNestableTOExpr, StringTONestableExpressionSpec, AvgSpec, CountSpec, MaxSpec, MinSpec, CurrentTimestampSpec, ConvertSpec {
+public sealed interface TypeOverrideExpressionSpec<T> extends ExpressionSpec, TypeOverride<T> permits NumberTODelegateExpressionSpec, ProtoNestableTOExpr, StringTODelegateExpressionSpec, AvgSpec, CountSpec, MaxSpec, MinSpec, CurrentTimestampSpec, ConvertSpec {
 
 }

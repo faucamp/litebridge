@@ -5,13 +5,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
+import org.litebridgedb.orm.e2e.basic.dto.Account;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
+import org.litebridgedb.orm.e2e.basic.meta.PersonMeta;
 import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridgedb.orm.e2e.setup.DbEnvironment;
 import org.litebridgedb.orm.expression.Fn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -217,5 +220,51 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     void currentTimestamp(final DbEnvDtoTableMapper tableMapper) throws Exception {
         final ZonedDateTime sysdate = litebridge.select(Fn.currentTimestamp()).from(Person.class).firstOrThrow();
         assertNotNull(sysdate);
+    }
+
+    @TestTemplate
+    @DisplayName("Metamodel tests")
+    void metamodel(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Select ID, lowercase name and uppercase surname using metamodel
+        final Person result = litebridge.select(PersonMeta.id, PersonMeta.name.lower(), PersonMeta.surname.upper())
+                .from(Person.class)
+                .where(PersonMeta.age).gte(30)
+                .oneOrThrow();
+
+        assertEquals(3L, result.getId());
+        assertEquals("name2", result.getName());
+        assertEquals("SURNAME2", result.getSurname());
+
+        // Prepare data
+        final Account account = new Account();
+        account.setName("Test Account");
+        account.setBalance(BigInteger.valueOf(1000L));
+        account.setOwner(result);
+        litebridge.save(account);
+
+        // Join
+        final Person result2 = litebridge.select(Person.class)
+                .join(Account.class).on(PersonMeta.accounts)
+                .where(PersonMeta.age).gte(30)
+                .oneOrThrow();
+
+        assertEquals(3L, result2.getId());
+        assertEquals("Name2", result2.getName());
+        assertEquals("Surname2", result2.getSurname());
+        assertNotNull(result2.getAccounts());
+        assertEquals(1, result2.getAccounts().size());
+        assertEquals(account.getId(), result2.getAccounts().getFirst().getId());
+        assertEquals(account.getName(), result2.getAccounts().getFirst().getName());
+        assertEquals(account.getBalance(), result2.getAccounts().getFirst().getBalance());
+
+        // Order by
+        final List<Person> result3 = litebridge.select(Person.class)
+                .orderBy(PersonMeta.name).desc()
+                .list();
+
+        assertEquals(3, result3.size());
+        assertEquals(3L, result3.get(0).getId());
+        assertEquals(2L, result3.get(1).getId());
+        assertEquals(1L, result3.get(2).getId());
     }
 }

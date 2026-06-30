@@ -9,6 +9,7 @@ import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ProtoExpressionSpec;
 import org.litebridgedb.orm.expression.Resolvable;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
+import org.litebridgedb.orm.meta.QueryField;
 
 import java.util.Objects;
 
@@ -34,6 +35,11 @@ public final class SqlProtoExpressionResolver extends ProtoExpressionResolver {
     @Override
     protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable) {
         return new SelectColumnSpec(getColumn(resolvable));
+    }
+
+    @Override
+    protected ColumnExpressionSpec resolveSelectField(final QueryField queryField) {
+        throw new UnsupportedOperationException("QueryField not yet supported in SQL mode: " + queryField);
     }
 
     @Override

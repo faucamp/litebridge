@@ -8,7 +8,12 @@ import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinClause;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.spec.FieldColumnSpec;
+import org.litebridgedb.orm.expression.ColumnExpressionSpec;
+import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.ProtoExpressionSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
+import org.litebridgedb.orm.meta.QFInspector;
+import org.litebridgedb.orm.meta.QueryField;
 import org.litebridgedb.orm.persistence.MappedManyToMany;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.alias.AliasGenerator;
@@ -57,8 +62,13 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
                         .orElseGet(() -> joinOn(table, fieldAccessor.name())));
     }
 
-    public DtoJoinConditionClauseTerminal<DTO> on(final FieldColumnSpec field) {
-        return on(field.field().name());
+    public DtoJoinConditionClauseTerminal<DTO> on(final ExpressionSpec expression) {
+        return switch (expression) {
+            case QueryField queryField -> on(QFInspector.getFieldName(queryField));
+            case ProtoExpressionSpec protoExpressionSpec -> on(protoExpressionSpec.column());
+            case SelectFieldSpec selectFieldSpec -> on(selectFieldSpec.field().name());
+            default -> throw new IllegalArgumentException("Unsupported JOIN ON expression: " + expression);
+        };
     }
 
     private DtoJoinConditionClauseTerminal<DTO> joinOn(final OrmTable ormTable, final String field) {

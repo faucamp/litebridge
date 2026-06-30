@@ -8,7 +8,7 @@ import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
-import org.litebridgedb.orm.expression.NestableExpressionSpec;
+import org.litebridgedb.orm.expression.DelegateExpressionSpec;
 import org.litebridgedb.orm.expression.ProtoExpressionSpec;
 import org.litebridgedb.orm.expression.function.aggregate.AvgSpec;
 import org.litebridgedb.orm.expression.function.aggregate.CountSpec;
@@ -24,6 +24,7 @@ import org.litebridgedb.orm.expression.intent.ExpressionSpecArray;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.expression.select.SubselectSpec;
+import org.litebridgedb.orm.meta.QueryField;
 
 import java.util.List;
 
@@ -65,7 +66,7 @@ public final class SelectExpressionMapper {
             case CountSpec countSpec -> sqlFunctionRegistry.aggregate().count();
 
             // Nestable expressions
-            case NestableExpressionSpec nestableExpression ->
+            case DelegateExpressionSpec nestableExpression ->
                     resolveNestedExpression(nestableExpression, useSelectReferences);
 
             // Date/time
@@ -74,13 +75,15 @@ public final class SelectExpressionMapper {
             // Unsupported
             case ProtoExpressionSpec protoExpression ->
                     throw new IllegalStateException("ProtoExpression not resolved: " + protoExpression);
+            case QueryField queryField ->
+                    throw new IllegalStateException("QueryField not resolved: " + queryField);
         };
     }
 
-    private ColumnExpression resolveNestedExpression(final NestableExpressionSpec expression, final boolean useSelectReferences) {
+    private ColumnExpression resolveNestedExpression(final DelegateExpressionSpec expression, final boolean useSelectReferences) {
         final ColumnExpression nestedExpression;
 
-        if (expression.target() instanceof NestableExpressionSpec targetNestableExpression) {
+        if (expression.target() instanceof DelegateExpressionSpec targetNestableExpression) {
             nestedExpression = resolveNestedExpression(targetNestableExpression, useSelectReferences);
         } else {
             nestedExpression = (ColumnExpression) toSelectExpression(expression.target(), useSelectReferences);

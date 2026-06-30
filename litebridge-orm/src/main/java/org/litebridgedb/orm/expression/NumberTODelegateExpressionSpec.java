@@ -7,8 +7,8 @@ import org.litebridgedb.orm.expression.function.scalar.AbsSpec;
  * <p>
  * A nestable column expression that overrides the type of the result to {@code Number}.
  */
-public sealed interface NumberTONestableExpressionSpec
-        extends NestableExpressionSpec, TypeOverrideExpressionSpec<Number>
+public sealed interface NumberTODelegateExpressionSpec
+        extends DelegateExpressionSpec, TypeOverrideExpressionSpec<Number>
         permits AbsSpec {
 
     /**

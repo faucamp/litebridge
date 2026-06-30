@@ -139,7 +139,7 @@ public final class ChangeTracker {
      * @throws IllegalArgumentException if the specified DTO is not tracked
      */
     public <DTO> TrackedDto<DTO> getTrackedDto(final DTO dto) {
-        return Objects.requireNonNull(getTrackedDtoOrNull(dto), "DTO is not tracked: " + dto);
+        return ObjectUtils.requireNonNull(getTrackedDtoOrNull(dto), () -> new IllegalArgumentException("DTO is not tracked: " + dto));
     }
 
     /**

@@ -9,8 +9,8 @@ import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
  * <p>
  * A nestable column expression that overrides the type of the result to {@code String}.
  */
-public sealed interface StringTONestableExpressionSpec
-        extends NestableExpressionSpec, TypeOverrideExpressionSpec<String>
+public sealed interface StringTODelegateExpressionSpec
+        extends DelegateExpressionSpec, TypeOverrideExpressionSpec<String>
         permits LowerSpec, SubstringSpec, UpperSpec {
 
     /**

@@ -9,6 +9,7 @@ import org.litebridgedb.orm.e2e.basic.dto.Account;
 import org.litebridgedb.orm.e2e.basic.dto.Address;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.basic.dto.PersonAccount;
+import org.litebridgedb.orm.e2e.basic.meta.PersonMeta;
 import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridgedb.orm.expression.Fn;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
@@ -69,6 +70,12 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Then
         assertEquals(person, result.getOwner());
+
+        // Retrieve the person record using a type-safe metamodel
+        final Person resultPerson = litebridge.select(Person.class)
+                .where(PersonMeta.name).eq("Alice")
+                .oneOrThrow();
+
     }
 
     @TestTemplate
@@ -98,6 +105,9 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Then
         assertNull(result.getOwner());
+
+        // Since the data was loaded from the database, saving it again should do nothing
+        litebridge.save(result);
 
         // Execute the same query, but this time create a partially-constructed related DTO
         final Account result2 = litebridge.select(Account.class, RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN)

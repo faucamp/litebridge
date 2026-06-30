@@ -4,6 +4,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.orm.api.dto.DtoDataSpec;
 import org.litebridgedb.orm.api.dto.DtoJoinSpec;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
+import org.litebridgedb.orm.expression.DelegateExpressionSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 
 import java.util.ArrayList;
@@ -67,6 +68,13 @@ public class DtoBlueprint {
         public SelectDtoData(final DtoSelectSpec dtoSelectSpec, final List<Object> primaryKey, final Row dtoRows) {
             super(dtoSelectSpec,
                     dtoSelectSpec.getExpressions().stream()
+                            .map(expressionSpec -> {
+                                if (expressionSpec instanceof DelegateExpressionSpec delegateExpressionSpec) {
+                                    return delegateExpressionSpec.target();
+                                } else {
+                                    return expressionSpec;
+                                }
+                            })
                             .filter(expression -> expression instanceof SelectFieldSpec)
                             .map(expression -> (SelectFieldSpec) expression)
                             .filter(selectField -> selectField.getColumn().table().equals(dtoSelectSpec.getTable()))
