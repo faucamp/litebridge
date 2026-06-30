@@ -8,6 +8,7 @@ import org.litebridgedb.orm.api.select.SelectTerminal;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.engine.LitebridgeContext;
+import org.litebridgedb.orm.engine.SelectEngine;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,7 +48,7 @@ public class ConditionClauseImpl<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public CCT eq(final Function<Subselect, SelectTerminal<?>> subselect) {
+    public CCT eq(final Function<SelectEngine, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.EQ, subselect, true);
     }
 
@@ -67,7 +68,7 @@ public class ConditionClauseImpl<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public CCT neq(final Function<Subselect, SelectTerminal<?>> subselect) {
+    public CCT neq(final Function<SelectEngine, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.NEQ, subselect, true);
     }
 
@@ -87,7 +88,7 @@ public class ConditionClauseImpl<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public CCT lt(final Function<Subselect, SelectTerminal<?>> subselect) {
+    public CCT lt(final Function<SelectEngine, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.LT, subselect, false);
     }
 
@@ -107,7 +108,7 @@ public class ConditionClauseImpl<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public CCT lte(final Function<Subselect, SelectTerminal<?>> subselect) {
+    public CCT lte(final Function<SelectEngine, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.LTE, subselect, false);
     }
 
@@ -127,7 +128,7 @@ public class ConditionClauseImpl<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public CCT gt(final Function<Subselect, SelectTerminal<?>> subselect) {
+    public CCT gt(final Function<SelectEngine, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.GT, subselect, false);
     }
 
@@ -147,7 +148,7 @@ public class ConditionClauseImpl<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public CCT gte(final Function<Subselect, SelectTerminal<?>> subselect) {
+    public CCT gte(final Function<SelectEngine, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.GTE, subselect, false);
     }
 
@@ -173,7 +174,7 @@ public class ConditionClauseImpl<DTO,
     }
 
     @Override
-    public CCT in(final Function<Subselect, SelectTerminal<?>> subselect) {
+    public CCT in(final Function<SelectEngine, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.IN, subselect, false);
     }
 
@@ -200,7 +201,7 @@ public class ConditionClauseImpl<DTO,
     }
 
     private CCT subselectImpl(final Operator operator,
-                              final @Nullable Function<Subselect, SelectTerminal<?>> subselect,
+                              final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect,
                               final boolean allowNull) {
         // To support the current overloading and null parameters
         if (subselect == null) {
@@ -241,9 +242,9 @@ public class ConditionClauseImpl<DTO,
         return conditionTerminal;
     }
 
-    private SelectSpec createSelectSpec(final Function<Subselect, SelectTerminal<?>> subselect) {
+    private SelectSpec createSelectSpec(final Function<SelectEngine, SelectTerminal<?>> subselect) {
         final SelectTerminal<?> selectTerminal = Objects.requireNonNull(subselect, "Subselect cannot be null")
-                .apply(new Subselect(litebridgeContext.fromClauseEngine()));
+                .apply(new SelectEngine(litebridgeContext.fromClauseEngine()));
         return getSelectSpec(selectTerminal);
     }
 

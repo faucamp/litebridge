@@ -1,7 +1,7 @@
 package org.litebridgedb.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridgedb.orm.api.select.impl.Subselect;
+import org.litebridgedb.orm.engine.SelectEngine;
 
 import java.util.Collection;
 import java.util.function.Function;
@@ -110,6 +110,6 @@ public interface ConditionClause<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    CCT in(final Function<Subselect, SelectTerminal<?>> subselect);
+    CCT in(final Function<SelectEngine, SelectTerminal<?>> subselect);
 
 }

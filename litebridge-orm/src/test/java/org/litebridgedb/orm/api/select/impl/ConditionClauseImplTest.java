@@ -10,8 +10,9 @@ import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.api.sql.SqlSelector;
 import org.litebridgedb.orm.api.sql.SqlWhereConditionClauseTerminal;
 import org.litebridgedb.orm.engine.LitebridgeContext;
-import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridgedb.orm.engine.SelectEngine;
 import org.litebridgedb.orm.persistence.TableRegistry;
+import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
 import java.util.function.Function;
 
@@ -157,7 +158,7 @@ class ConditionClauseImplTest {
 
     @FunctionalInterface
     private interface SubselectConditionInvoker {
-        void apply(Function<Subselect, SelectTerminal<?>> subselect);
+        void apply(Function<SelectEngine, SelectTerminal<?>> subselect);
     }
 
     private interface TestConditionClause extends org.litebridgedb.orm.api.select.ConditionClause<Object, TestConditionClause, TestConditionClauseTerminal> {
