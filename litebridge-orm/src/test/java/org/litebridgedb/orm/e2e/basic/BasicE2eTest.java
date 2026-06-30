@@ -40,7 +40,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Select DTO and join fetch related DTOs")
     void nestedDtos_fetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Setup DTOs
         final Person person = new Person();
@@ -75,7 +75,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Select DTO without related DTOs")
     void nestedDtos_donNotFetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         final Person person = new Person();
         person.setName("Alice");
@@ -119,7 +119,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Select, join multiple tables")
     void nestedDtos_multiJoin(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
         registerAddressTableMapping(tableMapper);
 
         // Setup DTOs
@@ -165,7 +165,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Nested DTOs mapped to separate tables, cascading save, no transactions (autocommit)")
     void nestedDtos_oneTablePerDto_cascadeSave_autoCommit(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Create DTOs and enable change tracking
         final Person person = litebridge.track(new Person());
@@ -224,7 +224,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Nested DTOs mapped to separate tables, cascading save in transaction")
     void nestedDtos_oneTablePerDto_cascadeSave_transaction(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Create DTOs and enable change tracking
         final Person person = litebridge.track(new Person());
@@ -294,7 +294,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Register DTO-table mappings (a client using the above "PersonMapping" DTO would need
         // to create these "entities", as the query API would not make sense for multi-table DTOs)
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Create entity-DTO mapper
         final EntityDtoMapper<PersonAccount> entityDtoMapper = litebridge.entityDtoMapper(PersonAccount.class,
@@ -329,7 +329,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Select DTO by ID")
     void selectDtoById(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Setup DTOs
         final Person person = new Person();
@@ -370,7 +370,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Delete DTOs, no transactions (autocommit)")
     void delete_autoCommit(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Create DTOs and enable change tracking
         final Person person1 = new Person();
@@ -419,7 +419,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Update DTOs, no transactions (autocommit)")
     void update(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         final Person person1 = new Person();
         person1.setName("Alice");
@@ -476,7 +476,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Select specific fields, names only")
     void select_specificFields_strings(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Setup data
         final Person[] persons = new Person[3];
@@ -506,7 +506,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Select specific fields using expressions")
     void select_specificFields_expressions(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Setup data
         final Person[] persons = new Person[3];
@@ -539,7 +539,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Select with subselect")
     void select_subselect(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Setup data
         final Person[] persons = new Person[3];
@@ -567,7 +567,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Select grouping by")
     void select_groupBy(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Setup data
         final Person[] persons = new Person[3];
@@ -614,7 +614,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     @DisplayName("Select IN")
     void select_in(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
-        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge, false);
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Setup data
         final Person[] persons = new Person[3];

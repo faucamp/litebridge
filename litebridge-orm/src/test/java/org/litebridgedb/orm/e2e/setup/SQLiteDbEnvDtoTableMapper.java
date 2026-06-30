@@ -15,7 +15,7 @@ public class SQLiteDbEnvDtoTableMapper implements DbEnvDtoTableMapper {
     }
 
     @Override
-    public void registerPersonDtoTableMapping(final Litebridge litebridge, final boolean typeSafe) {
+    public void registerPersonDtoTableMapping(final Litebridge litebridge) {
         litebridge.register(Person.class, rc -> rc.mapToTable("PERSON")
                 .with(spec -> spec.mapField("id").toColumn("PERSON_ID"))
                 .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
@@ -27,7 +27,7 @@ public class SQLiteDbEnvDtoTableMapper implements DbEnvDtoTableMapper {
     }
 
     @Override
-    public void registerAccountDtoTableMapping(final Litebridge litebridge, final boolean typeSafe) {
+    public void registerAccountDtoTableMapping(final Litebridge litebridge) {
         litebridge.register(Account.class, rc -> rc.mapToTable("ACCOUNT")
                 .with(spec -> spec.mapField("id").toColumn("ACCOUNT_ID"))
                 .with(spec -> spec.mapField("name").toColumn("ACCOUNT_NAME"))

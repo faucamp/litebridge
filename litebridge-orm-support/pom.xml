@@ -36,7 +36,6 @@
                     <argLine>
                         @{argLine}
                         -javaagent:${org.mockito:mockito-core:jar}
-                        --add-opens litebridge.orm.support/org.litebridgedb.orm.support.mapping=litebridge.commons
                     </argLine>
                 </configuration>
             </plugin>

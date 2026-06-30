@@ -9,9 +9,9 @@ public interface DbEnvDtoTableMapper {
     /**
      * Registers DTO-table mappings for Person and Account
      */
-    default void registerPersonAndAccountDtoTableMappings(final Litebridge litebridge, final boolean typeSafe) throws SQLException {
-        registerPersonDtoTableMapping(litebridge, typeSafe);
-        registerAccountDtoTableMapping(litebridge, typeSafe);
+    default void registerPersonAndAccountDtoTableMappings(final Litebridge litebridge) throws SQLException {
+        registerPersonDtoTableMapping(litebridge);
+        registerAccountDtoTableMapping(litebridge);
     }
 
     String qualifyName(final String tableName);
@@ -20,7 +20,7 @@ public interface DbEnvDtoTableMapper {
         return columnName;
     }
 
-    void registerPersonDtoTableMapping(final Litebridge litebridge, final boolean typeSafe);
+    void registerPersonDtoTableMapping(final Litebridge litebridge);
 
-    void registerAccountDtoTableMapping(final Litebridge litebridge, final boolean typeSafe);
+    void registerAccountDtoTableMapping(final Litebridge litebridge);
 }

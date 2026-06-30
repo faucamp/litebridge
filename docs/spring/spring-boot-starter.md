@@ -23,6 +23,7 @@ When the starter is on the classpath, Litebridge will automatically:
 1.  **Detect a `DatabaseProvider`**: It scans the classpath for implementations of `DatabaseProvider`. If exactly one is found, it's used.
 2.  **Configure `LitebridgeTransactionManager`**: It creates a transaction manager that uses your application's `DataSource`.
 3.  **Create the `Litebridge` bean**: It instantiates the main `Litebridge` engine, ready for injection.
+4.  **Scan packages for entities**: It optionally scans a set of packages for entity classes and automatially registers them with Litebridge.
 
 ## Configuration Properties
 
@@ -44,7 +45,7 @@ litebridge.scan-base-package=com.example.app.entities,com.example.app.mappings
 ## Entity and Mapping Registration
 
 While you can manually register your DTO-to-table mappings, the starter supports automatic discovery via the `litebridge.scan-base-package` property
-if you are using [entity annotations](../persistence/entity-annotations.md) or type-safe mappings.
+if you are using [entity annotations](../persistence/entity-annotations.md).
 
 ### Automatic Scanning
 

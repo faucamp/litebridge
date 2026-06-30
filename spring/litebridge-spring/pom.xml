@@ -36,9 +36,6 @@
                     <argLine>
                         @{argLine}
                         -javaagent:${org.mockito:mockito-core:jar}
-                        --add-opens litebridge.spring/org.litebridgedb.spring.testmappings=spring.beans
-                        --add-opens litebridge.spring/org.litebridgedb.spring.testmappings.one=spring.beans
-                        --add-opens litebridge.spring/org.litebridgedb.spring.testmappings.two=spring.beans
                     </argLine>
                 </configuration>
             </plugin>

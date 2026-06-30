@@ -7,9 +7,8 @@ on using DTOs directly without modification or annotations, etc.
 
 There are four ways to register DTO-table mappings:
 1. **[Fluent API](#fluent-api)**: Programmatic registration using a callback-based API.
-2. **[Type-safe Mappings](#type-safe-mappings)**: Class-based registration using `TypeSafeDtoTableMapping`.
-3. **[Entity Annotations](entity-annotations.md)**: Annotation-based registration on entity classes.
-4. **[Low-level API](#low-level-api)**: Manual creation of mapping specifications.
+2. **[Entity Annotations](entity-annotations.md)**: Annotation-based registration on entity classes.
+3. **[Low-level API](#low-level-api)**: Manual creation of mapping specifications.
 
 This negates the need for intermediate layer of formal entity classes containing
 database-specific mapping information - though a Litebridge-based application can still use this model if desired (including annotations).
@@ -224,97 +223,10 @@ Status status = litebridge.select(Status.class, Server.class)
     .oneOrThrow();
 ```
 
-## Type-safe Mappings
+## Entities
 
-Type-safe mappings provide a way to define DTO-to-table mappings as dedicated Java classes. This approach offers better reusability and can be easier to manage in larger projects compared to inline fluent API calls.
-
-To create a type-safe mapping, extend the `TypeSafeDtoTableMapping` class:
-
-```java
-import org.litebridgedb.orm.api.register.TypeSafeDtoTableMapping;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-
-public final class PersonMapping extends TypeSafeDtoTableMapping {
-
-    public static final FieldColumnSpec id = field(rc -> rc.mapField("id")
-        .toColumn("PERSON_ID")
-        .generateUsingSequence("LB.PERSON_SEQ"));
-        
-    public static final FieldColumnSpec name = field(rc -> rc.mapField("name")
-        .toColumn("FIRST_NAME"));
-        
-    public static final FieldColumnSpec surname = field(rc -> rc.mapField("surname")
-        .toColumn("SURNAME"));
-
-    @Override
-    protected String table() {
-        return "LB.PERSON";
-    }
-
-    @Override
-    protected Class<?> dtoClass() {
-        return Person.class;
-    }
-}
-```
-
-### Registration
-
-Register the type-safe mapping with Litebridge:
-
-```java
-litebridge.register(new PersonMapping());
-```
-
-You can also register multiple mappings at once, which is particularly useful if the DTOs refer to each other:
-
-```java
-litebridge.register(new PersonMapping(), new AccountMapping());
-```
-
-### Package Scanning
-
-The `litebridge-orm-support` module allows you to scan packages for `TypeSafeDtoTableMapping` subclasses and register them automatically.
-
-#### Dependencies
-
-Include the `litebridge-orm-support` module:
-
-```xml
-<dependency>
-    <groupId>org.litebridgedb</groupId>
-    <artifactId>litebridge-orm-support</artifactId>
-    <version>${litebridge.version}</version>
-</dependency>
-```
-
-And update your `module-info.java` (if applicable):
-
-```java
-module my.module {
-    requires org.litebridgedb.orm;
-    requires org.litebridgedb.orm.support;
-}
-```
-
-#### Usage
-
-Use `TypesafeRegistrationSupport` to scan one or more packages:
-
-```java
-import org.litebridgedb.orm.support.TypeSafeDtoMappingScanner;
-
-// Create the scanner with your Litebridge instance
-TypesafeRegistrationSupport scanner = new TypesafeRegistrationSupport(litebridge);
-
-// Scan and register all TypeSafeDtoTableMapping subclasses in the specified packages
-scanner.scanBasePackage("com.example.app.mappings");
-```
-
-#### Spring support
-
-If using Spring, refer to the [Spring-specific scanner implementations](../spring/manual-configuration.md#entity-scanning)
-provided by `litebridge-spring`.
+Litebridge supports the use of annotated entity classes to define table mappings.
+See [Entity Annotations](entity-annotations.md) for more information.
 
 ## Low-level API
 

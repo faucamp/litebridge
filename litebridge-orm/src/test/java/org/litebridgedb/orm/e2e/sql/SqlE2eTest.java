@@ -89,7 +89,7 @@ class SqlE2eTest extends AbstractE2eTest {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
         insertTestPersonRecords(personTableName);
-        tableMapper.registerPersonDtoTableMapping(litebridge, false);
+        tableMapper.registerPersonDtoTableMapping(litebridge);
 
         // When
         LOGGER.info("Selecting specific expressions and filtering records using a query");

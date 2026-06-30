@@ -6,7 +6,6 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.orm.api.register.DtoTableSpecBuilder;
 import org.litebridgedb.orm.api.register.RegistrationContext;
 import org.litebridgedb.orm.api.register.RegistrationContextTerminal;
-import org.litebridgedb.orm.api.register.TypeSafeDtoTableMapping;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableMapper;
@@ -20,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -55,19 +53,6 @@ public class RegistrationEngine {
     public void register(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationContextTerminal> rc) {
         final RegistrationContextTerminal context = rc.apply(new RegistrationContext(dtoClass, databaseProvider));
         register(new DtoTableSpecBuilder(context).build());
-    }
-
-    /**
-     * Registers DTO table specification(s) using the provided type-safe DTO table mapping(s).
-     *
-     * @param typeSafeDtoTableMappings one or more type-safe DTO table mappings to create and register DTO table specifications for
-     */
-    public void register(final TypeSafeDtoTableMapping... typeSafeDtoTableMappings) {
-        final DtoTableSpec[] dtoTableSpecs = Arrays.stream(typeSafeDtoTableMappings)
-                .map(typeSafeDtoTableMapping -> typeSafeDtoTableMapping.createDtoTableSpec(databaseProvider))
-                .toArray(DtoTableSpec[]::new);
-
-        register(dtoTableSpecs);
     }
 
     /**

@@ -16,11 +16,9 @@ import org.litebridgedb.orm.api.dto.update.DtoUpdateStart;
 import org.litebridgedb.orm.api.dto.update.DtoUpdater;
 import org.litebridgedb.orm.api.register.RegistrationContext;
 import org.litebridgedb.orm.api.register.RegistrationContextTerminal;
-import org.litebridgedb.orm.api.register.TypeSafeDtoTableMapping;
 import org.litebridgedb.orm.api.select.FromClauseStart;
 import org.litebridgedb.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridgedb.orm.api.select.SelectApi;
-import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
 import org.litebridgedb.orm.api.sql.delete.SqlDeleteWhereClause;
@@ -33,6 +31,7 @@ import org.litebridgedb.orm.api.update.UpdateTerminal;
 import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.orm.engine.FromClauseEngine;
+import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.engine.RegistrationEngine;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.ProtoColumnExpressionSpec;
@@ -222,15 +221,6 @@ public final class Litebridge implements SelectApi {
      */
     public void register(final Class<?> dtoClass, final Function<RegistrationContext, RegistrationContextTerminal> rc) {
         registrationEngine.register(dtoClass, rc);
-    }
-
-    /**
-     * Registers DTO table specification(s) using the provided type-safe DTO table mapping(s).
-     *
-     * @param typeSafeDtoTableMappings one or more type-safe DTO table mappings to create and register DTO table specifications for
-     */
-    public void register(final TypeSafeDtoTableMapping... typeSafeDtoTableMappings) {
-        registrationEngine.register(typeSafeDtoTableMappings);
     }
 
     /**

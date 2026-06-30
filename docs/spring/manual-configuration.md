@@ -27,7 +27,6 @@ Define the `LitebridgeTransactionManager` and `Litebridge` beans in a `@Configur
 
 ```java
 import org.litebridgedb.orm.Litebridge;
-import org.litebridgedb.orm.api.register.TypeSafeDtoTableMapping;
 import org.litebridgedb.spring.LitebridgeEntityScanner;
 import org.litebridgedb.spring.LitebridgeTypeSafeDtoMappingScanner;
 import org.litebridgedb.spring.LitebridgeTransactionManager;
@@ -53,12 +52,9 @@ public class LitebridgeConfig {
                 .mapField("id").toColumn("ID")
                 .mapField("username").toColumn("USERNAME"));
 
-        // Or use Litebridge scanners for automatic registration
+        // Or use Litebridge scanners for automatic entity registration
         Class<?>[] entities = new LitebridgeEntityScanner().scanBasePackage("com.example.app.entity");
         litebridge.register(entities);
-        
-        TypeSafeDtoTableMapping[] mappings = new LitebridgeTypeSafeDtoMappingScanner().scanBasePackage("com.example.app.mappings");
-        litebridge.register(mappings);
 
         return litebridge;
     }

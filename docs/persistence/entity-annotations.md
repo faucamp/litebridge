@@ -81,6 +81,45 @@ You can also register multiple entities at once, which is particularly useful if
 litebridge.register(Person.class, Account.class);
 ```
 
+### Package Scanning
+
+The `litebridge-orm-support` module allows scanning packages for entity classes and register them automatically.
+
+#### Dependencies
+
+Include the `litebridge-orm-support` module:
+
+```xml
+<dependency>
+    <groupId>org.litebridgedb</groupId>
+    <artifactId>litebridge-orm-support</artifactId>
+    <version>${litebridge.version}</version>
+</dependency>
+```
+
+And update your `module-info.java` (if applicable):
+
+```java
+module my.module {
+    requires org.litebridgedb.orm;
+    requires org.litebridgedb.orm.support;
+}
+```
+
+#### Usage
+
+Use `TypesafeRegistrationSupport` to scan one or more packages:
+
+```java
+import org.litebridgedb.orm.support.EntityScanner;
+
+// Create the scanner with your Litebridge instance
+EntityScanner scanner = new EntityScanner(litebridge);
+
+// Scan and register all entity classes in the specified packages
+scanner.scanBasePackage("com.example.app.mappings");
+```
+
 ### Spring Integration
 
 In Spring applications, you can use the `LitebridgeEntityScanner` to automatically discover and register your annotated entities. See [Spring Manual Configuration](../spring/manual-configuration.md#entity-and-mapping-scanning) and [Spring Boot Starter](../spring/spring-boot-starter.md#entity-and-mapping-registration) for more details.

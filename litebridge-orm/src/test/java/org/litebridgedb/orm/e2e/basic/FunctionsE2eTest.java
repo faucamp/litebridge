@@ -29,7 +29,7 @@ public class FunctionsE2eTest extends AbstractE2eTest {
         super.beforeEach(env);
 
         // Register DTO-table mappings
-        env.getDtoTableMapper().registerPersonAndAccountDtoTableMappings(litebridge, false);
+        env.getDtoTableMapper().registerPersonAndAccountDtoTableMappings(litebridge);
 
         // Setup data
         final Person[] persons = new Person[3];

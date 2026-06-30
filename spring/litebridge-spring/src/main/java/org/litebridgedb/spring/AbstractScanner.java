@@ -5,7 +5,7 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-abstract sealed class AbstractScanner permits LitebridgeEntityScanner, LitebridgeTypeSafeDtoMappingScanner {
+abstract sealed class AbstractScanner permits LitebridgeEntityScanner {
 
     protected Stream<Class<?>> findClasses(final String... packageNames) {
         return Arrays.stream(packageNames)

@@ -3,10 +3,8 @@ package org.litebridgedb.spring.boot.autoconfigure;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.orm.Litebridge;
 import org.litebridgedb.orm.api.select.SelectApi;
-import org.litebridgedb.orm.api.register.TypeSafeDtoTableMapping;
 import org.litebridgedb.spring.LitebridgeEntityScanner;
 import org.litebridgedb.spring.LitebridgeTransactionManager;
-import org.litebridgedb.spring.LitebridgeTypeSafeDtoMappingScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -89,19 +87,6 @@ public class LitebridgeAutoConfiguration {
 
             if (entityClasses.length > 0) {
                 litebridge.register(entityClasses);
-            }
-
-            final TypeSafeDtoTableMapping[] typeSafeMappings = new LitebridgeTypeSafeDtoMappingScanner().scanBasePackage(properties.getScanBasePackage());
-            LOGGER.debug("Found {} typesafe DTO mappings after scanning base package: {}", typeSafeMappings.length, properties.getScanBasePackage());
-            LOGGER.trace("Found typesafe DTO mappings: {}", (Object) typeSafeMappings);
-
-            if (typeSafeMappings.length > 0) {
-                try {
-                    litebridge.register(typeSafeMappings);
-                } catch (Exception ex) {
-                    LOGGER.error("Failed to register typesafe DTO mappings:`` {}", typeSafeMappings, ex);
-                    throw new IllegalStateException("Litebridge failed to register typesafe DTO mappings", ex);
-                }
             }
         }
 
