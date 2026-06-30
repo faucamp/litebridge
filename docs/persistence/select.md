@@ -275,6 +275,19 @@ Person person = litebridge.select(Person.class)
 // person.accounts and person.addresses are both populated
 ```
 
+Queries can also filter results based on fields of joined DTOs by using the `f(Class, String)` expression:
+
+```java
+import static org.litebridgedb.orm.expression.Fn.f;
+
+Person person = litebridge.select(Person.class)
+        .join(Account.class).on("accounts")
+        .join(Address.class).on("addresses")
+        .where(f(Person.class, "id")).eq(1L)
+        .and(f(Address.class, "id")).eq(123L)
+        .oneOrThrow();
+```
+
 #### Many-to-Many JOINs
 
 Many-to-many relationships can also be fetched using the same `join()` API:

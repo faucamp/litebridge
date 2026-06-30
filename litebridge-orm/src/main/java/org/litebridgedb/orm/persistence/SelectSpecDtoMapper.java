@@ -469,7 +469,7 @@ public class SelectSpecDtoMapper {
         });
     }
 
-    public static Object getDefaultValue(final Class<?> clazz) {
+    public static @Nullable Object getDefaultValue(final Class<?> clazz) {
         if (!clazz.isPrimitive()) {
             return null;
         }

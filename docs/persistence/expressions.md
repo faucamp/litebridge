@@ -13,8 +13,9 @@ Selectors are the basic building blocks for choosing which fields or columns to 
 
 | Method                                        | Description                                                         |
 |:----------------------------------------------|:--------------------------------------------------------------------|
-| `f(String)`, `field(String)`                  | Selects a DTO field by name. Used in DTO-level queries.             |
-| `c(String)`, `column(String)`                 | Selects a database column by name.                                  |
+| `f(String)`, `field(String)`                  | Selects a field from the primary DTO being queried. Used in DTO-level queries. |
+| `f(Class, String)`, `field(Class, String)`    | Selects a field from a specific DTO type. Useful in multi-table joins.         |
+| `c(String)`, `column(String)`                 | Selects a database column by name.                                             |
 | `c(String, String)`, `column(String, String)` | Selects a database column with a table name (e.g., `Table.Column`). |
 | `ca(...)`, `columnAlias(...)`                 | Selects a database column and assigns it an alias.                  |
 

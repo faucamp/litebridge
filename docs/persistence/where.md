@@ -85,6 +85,22 @@ litebridge.select(Person.class)
     .list();
 ```
 
+### Expression-based Conditions
+
+For more advanced scenarios, such as when joining multiple tables and needing to disambiguate fields, you can use
+the `f()` or `field()` selectors from the `Fn` class to target a specific DTO type present in the query:
+
+```java
+import static org.litebridgedb.orm.expression.Fn.f;
+
+litebridge.select(Person.class)
+    .join(Account.class).on("accounts")
+    .join(Address.class).on("addresses")
+    .where(f(Person.class, "id")).eq(1L)
+    .and(f(Address.class, "id")).eq(123L)
+    .oneOrThrow();
+```
+
 ## Logical Operators
 
 Conditions can be combined using `.and()` and `.or()`:
