@@ -11,6 +11,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
+import java.util.Objects;
 
 /**
  * Spring-compatible {@link org.springframework.transaction.PlatformTransactionManager} for Litebridge.
@@ -96,6 +97,6 @@ public class LitebridgeTransactionManager extends DataSourceTransactionManager i
 
     @Override
     public ManagedConnection connection() throws SQLException {
-        return new ManagedConnection(DataSourceUtils.getConnection(getDataSource()));
+        return new ManagedConnection(DataSourceUtils.getConnection(Objects.requireNonNull(getDataSource(), "No datasource provided")));
     }
 }

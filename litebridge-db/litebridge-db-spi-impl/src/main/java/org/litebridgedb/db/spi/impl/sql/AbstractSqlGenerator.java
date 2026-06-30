@@ -148,7 +148,7 @@ public abstract class AbstractSqlGenerator {
         return appendTable(sql, table.schema(), table.name());
     }
 
-    protected StringBuilder appendTable(final StringBuilder sql, final String schema, final String table) {
+    protected StringBuilder appendTable(final StringBuilder sql, @Nullable final String schema, final String table) {
         final ColumnIdentifierGenerator cig = columnIdentifierGenerator;
 
         if (!StringUtils.isBlank(schema)) {

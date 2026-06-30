@@ -1,7 +1,7 @@
 package org.litebridgedb.orm.api.sql;
 
 import org.litebridgedb.db.spi.Column;
-import org.litebridgedb.orm.api.select.impl.ProtoExpressionResolver;
+import org.litebridgedb.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ProtoExpressionSpec;
 import org.litebridgedb.orm.expression.Resolvable;

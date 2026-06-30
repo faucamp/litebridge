@@ -344,10 +344,9 @@ public class PersistenceFacade {
         return statementChain;
     }
 
-    private <DTO> @Nullable StatementChain prepareDeleteStatement(final DTO dto, final OrmTable table, final DeleteBuilder deleteBuilder, final Set<Object> inProgressDtos) {
+    private <DTO> StatementChain prepareDeleteStatement(final DTO dto, final OrmTable table, final DeleteBuilder deleteBuilder, final Set<Object> inProgressDtos) {
         inProgressDtos.add(dto);
         addPrimaryKeyConditions(dto, table, deleteBuilder);
-
         return deleteBuilder.statementChain();
     }
 

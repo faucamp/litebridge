@@ -23,6 +23,7 @@ import org.litebridgedb.db.spi.tx.ConnectionProvider;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 public class SelectSqlGenerator extends AbstractSqlGenerator {
@@ -73,7 +74,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         appendTable(sql, select.table());
 
         if (select.table().alias() != null) {
-            sql.append(' ').append(columnIdentifierGenerator.createAlias(select.table().alias()));
+            sql.append(' ').append(columnIdentifierGenerator.createAlias(Objects.requireNonNull(select.table().alias())));
         }
 
         // Joins

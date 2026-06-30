@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.ClassUtils;
 import org.litebridgedb.commons.CollectionUtils;
 import org.litebridgedb.commons.MapUtils;
+import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
@@ -196,7 +197,7 @@ public class SelectSpecDtoMapper {
                 fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, valueOverrides.get(field)));
             } else if (sameTableNestedDto) {
                 // Nested DTO built up from the same table
-                final Object nestedDto = toDto(field.type(), table, dtoData, fieldColumns).dto();
+                final Object nestedDto = ObjectUtils.requireNonNull(toDto(field.type(), table, dtoData, fieldColumns), () -> new IllegalStateException("Failed to construct nested DTO")).dto();
                 fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(field, nestedDto));
             } else if (ClassUtils.isBasicType(field.type())) {
                 // Standard column: find the value, convert it to target DTO's field type, and set the field

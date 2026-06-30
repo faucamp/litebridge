@@ -1,4 +1,4 @@
-package org.litebridgedb.orm.api.select.impl;
+package org.litebridgedb.orm.api.select.model;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.type.TriFunction;

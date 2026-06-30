@@ -382,7 +382,7 @@ public final class Fn {
      * @see #substring(String, int, int)
      */
     public static ProtoNestableTOExpr<String> substring(final String column, final int start) {
-        return new ProtoNestableTOExpr<>(String.class, SubstringSpec.class, column, null, new Object[]{start, null});
+        return new ProtoNestableTOExpr<>(String.class, SubstringSpec.class, column, null, new @Nullable Object[]{start, null});
     }
 
     /**
@@ -397,7 +397,7 @@ public final class Fn {
      * @see #substring(String, int, int)
      */
     public static ProtoNestableTOExpr<String> substring(final ExpressionSpec expressionSpec, final int start) {
-        return new ProtoNestableTOExpr<>(String.class, SubstringSpec.class, expressionSpec, null, new Object[]{start, null});
+        return new ProtoNestableTOExpr<>(String.class, SubstringSpec.class, expressionSpec, null, new @Nullable Object[]{start, null});
     }
 
     /**

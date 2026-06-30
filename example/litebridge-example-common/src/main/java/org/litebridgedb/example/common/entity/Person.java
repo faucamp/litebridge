@@ -1,5 +1,6 @@
 package org.litebridgedb.example.common.entity;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridgedb.orm.annotation.Column;
 import org.litebridgedb.orm.annotation.OneToMany;
 import org.litebridgedb.orm.annotation.Table;
@@ -22,7 +23,7 @@ public class Person {
     // Annotation on getter
     private String eyeColour;
     @OneToMany(mappedByField = "owner")
-    private List<Account> accounts;
+    private @Nullable List<Account> accounts;
 
     public Long getId() {
         return id;

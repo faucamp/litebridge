@@ -216,7 +216,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
             if (expression instanceof ColumnExpression columnExpression) {
                 final Column column = columnExpression.column();
-                final String key = aliasTransformer.orThrow().transformAlias(column.alias() != null ? column.alias() : column.name());
+                final String key = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(column.alias() != null ? column.alias() : column.name()));
                 final TableMetaData table = ensureTableMetaData(column.table(), connectionProvider);
                 final ColumnMetaData columnMetaData = table.column(column.name());
                 columnLabelsToColumnMetaData.put(key, columnMetaData);
@@ -237,7 +237,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 final int columnCount = resultSet.getMetaData().getColumnCount();
 
                 for (int i = 1; i <= columnCount; i++) {
-                    final String alias = aliasTransformer.orThrow().transformAlias(resultSet.getMetaData().getColumnLabel(i));
+                    final String alias = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(resultSet.getMetaData().getColumnLabel(i)));
                     final ColumnMetaData columnMetaData = columnLabelsToColumnMetaData.get(alias);
                     final int columnSqlType;
                     final Column column;

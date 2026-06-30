@@ -1,7 +1,7 @@
 package org.litebridgedb.orm.expression;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridgedb.orm.api.select.impl.ProtoExpressionResolver;
+import org.litebridgedb.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 /**
