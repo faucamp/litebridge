@@ -19,6 +19,7 @@ The following operators are available on condition clauses. Most operators suppo
 | `>=`          | `.gte(value)`         | Greater than or equals                        |
 | `IS NULL`     | `.isNull()`           | Checks if a value is null                     |
 | `IS NOT NULL` | `.isNotNull()`        | Checks if a value is not null                 |
+| `LIKE`        | `.like(pattern)`      | Pattern matching using wildcards (`%`, `_`)   |
 | `IN`          | `.in(values...)`      | Inclusion in a set of values or a sub-query   |
 | `NOT IN`      | `.notIn(values...)`   | Exclusion from a set of values or a sub-query |
 
@@ -82,6 +83,27 @@ litebridge.select(Person.class)
     .where("id").notIn(sub -> sub.select("id")
         .from(Person.class)
         .where("name").eq("Alice"))
+    .list();
+```
+
+### The LIKE operator
+
+The `.like()` operator allows for pattern matching using SQL wildcards (`%` for any sequence of characters, `_` for a single character).
+
+#### DTO-level Example
+When using DTOs, use the field name:
+```java
+litebridge.select(Person.class)
+    .where("name").like("Al%")
+    .list();
+```
+
+#### SQL-level Example
+When using raw SQL, use the column name:
+```java
+litebridge.select()
+    .from("LB.PERSON")
+    .where("SURNAME").like("%ohnso%")
     .list();
 ```
 
