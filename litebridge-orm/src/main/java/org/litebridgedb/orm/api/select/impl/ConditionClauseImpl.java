@@ -152,6 +152,17 @@ public class ConditionClauseImpl<DTO,
         return subselectImpl(Operator.GTE, subselect, false);
     }
 
+    /**
+     * Like
+     *
+     * @param value The operand for the like expression.
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    @Override
+    public CCT like(final String value) {
+        return condition(Operator.LIKE, value);
+    }
+
     @Override
     public CCT in(final Object value, final Object... otherValues) {
         if (value instanceof Collection<?> collection && otherValues.length == 0) {

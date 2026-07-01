@@ -69,6 +69,8 @@ public interface ConditionClause<DTO,
      */
     CCT gte(final Object value);
 
+    CCT like(final String value);
+
     /**
      * Null comparison.
      * <p>

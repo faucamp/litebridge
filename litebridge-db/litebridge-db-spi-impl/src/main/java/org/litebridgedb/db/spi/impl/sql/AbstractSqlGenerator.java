@@ -137,6 +137,7 @@ public abstract class AbstractSqlGenerator {
             case LT -> "<";
             case LTE -> "<=";
             case NEQ -> "<>";
+            case LIKE -> "LIKE";
             case IN -> "IN";
             case NOT_IN -> "NOT IN";
             case IS_NULL -> "IS NULL";

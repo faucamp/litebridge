@@ -722,6 +722,32 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertEquals(2, results8.size());
     }
 
+    @TestTemplate
+    @DisplayName("Select LIKE")
+    void select_like(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+
+        // Setup data
+        final Person[] persons = new Person[3];
+        for (int i = 0; i < 3; i++) {
+            persons[i] = new Person();
+            persons[i].setId(1L + i);
+            persons[i].setName("Name" + i);
+            persons[i].setSurname("Surname" + i);
+        }
+
+        litebridge.save((Object[]) persons);
+
+        // Using variable paratemeters/array
+        final Optional<Person> results = litebridge.select()
+                .from(Person.class)
+                .where(Fn.f("name")).like("%me1")
+                .one();
+
+        assertTrue(results.isPresent());
+    }
+
     private void registerAddressTableMapping(final DbEnvDtoTableMapper tableMapper) {
         if (dbEnv.getName().equals("PostgreSQL")) {
             litebridge.register(Address.class, rc -> rc

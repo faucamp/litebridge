@@ -49,6 +49,10 @@ public enum Operator {
      */
     LTE,
     /**
+     * Like
+     */
+    LIKE,
+    /**
      * Inclusion in a set
      */
     IN,

@@ -15,10 +15,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.litebridgedb.orm.expression.Fn.c;
 
@@ -228,6 +230,97 @@ class SqlE2eTest extends AbstractE2eTest {
         final Row row2 = result.get(1);
         assertEquals(30, ((Number) row2.column(tableMapper.transformColumnName("AGE")).orElseThrow().value()).intValue());
         assertEquals(1, ((Number) row2.column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value()).intValue());
+    }
+
+    @TestTemplate
+    @DisplayName("Select IN and NOT IN")
+    void select_in(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Setup data
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        insertTestPersonRecords(personTableName);
+
+        // Using variable paratemeters/array
+        final List<Row> results = litebridge.select()
+                .from(personTableName)
+                .where(Fn.c("PERSON_ID")).in(1L, 2L)
+                .list();
+
+        assertEquals(2, results.size());
+
+        final List<Row> results2 = litebridge.select()
+                .from(personTableName)
+                .where(Fn.c("PERSON_ID")).notIn(1L, 2L)
+                .list();
+
+        assertTrue(results2.isEmpty());
+
+        // Using single value
+        final List<Row> results3 = litebridge.select()
+                .from(personTableName)
+                .where("PERSON_ID").in(1L)
+                .list();
+
+        assertEquals(1, results3.size());
+
+        final List<Row> results4 = litebridge.select()
+                .from(personTableName)
+                .where("PERSON_ID").notIn(1L)
+                .list();
+
+        assertEquals(1, results4.size());
+
+        // Using a list
+        final List<Long> ids = List.of(1L, 2L);
+        final List<Row> results5 = litebridge.select()
+                .from(personTableName)
+                .where("PERSON_ID").in(ids)
+                .list();
+
+        assertEquals(2, results5.size());
+
+        final List<Row> results6 = litebridge.select()
+                .from(personTableName)
+                .where("PERSON_ID").notIn(ids)
+                .list();
+
+        assertTrue(results6.isEmpty());
+
+        // Using a subselect
+        final List<Row> results7 = litebridge.select()
+                .from(personTableName)
+                .where("PERSON_ID").in(sub ->
+                        sub.select("PERSON_ID")
+                                .from(personTableName)
+                                .where("FIRST_NAME").eq("Bob"))
+                .list();
+
+        assertEquals(1, results7.size());
+
+        final List<Row> results8 = litebridge.select()
+                .from(personTableName)
+                .where("PERSON_ID").notIn(sub ->
+                        sub.select("PERSON_ID")
+                                .from(personTableName)
+                                .where("FIRST_NAME").eq("Alice"))
+                .list();
+
+        assertEquals(1, results8.size());
+    }
+
+    @TestTemplate
+    @DisplayName("Select LIKE")
+    void select_like(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Setup data
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        insertTestPersonRecords(personTableName);
+
+        // Using variable paratemeters/array
+        final Optional<Row> results = litebridge.select()
+                .from(personTableName)
+                .where(Fn.c("SURNAME")).like("%ohnso%")
+                .one();
+
+        assertTrue(results.isPresent());
     }
 
     private void insertTestPersonRecords(final String personTableName) throws SQLException {
