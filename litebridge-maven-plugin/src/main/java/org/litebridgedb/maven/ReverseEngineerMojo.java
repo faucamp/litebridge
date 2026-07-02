@@ -210,7 +210,35 @@ public final class ReverseEngineerMojo extends AbstractMojo {
             if (fieldClass == null) {
                 fieldClass = sqlTypeMappings.stream()
                         .filter(m -> m.getSqlType().getVendorTypeNumber().equals(columnMetaData.getDataType()))
-                        .findFirst()
+                        .filter(m -> m.getPrecision() == null || m.getPrecision().equals(columnMetaData.getSize()))
+                        .filter(m -> m.getNotNull() == null || m.getNotNull().equals(!columnMetaData.isNullable()))
+                        .reduce((a, b) -> {
+                            if (a.getPrecision() != null) {
+                                if (b.getPrecision() != null) {
+                                    if (a.getNotNull() != null) {
+                                        return a;
+                                    }
+
+                                    return b;
+                                }
+
+                                return a;
+                            }
+
+                            if (b.getPrecision() != null) {
+                                return b;
+                            }
+
+                            if (b.getNotNull() != null) {
+                                if (a.getNotNull() != null) {
+                                    return a;
+                                }
+
+                                return b;
+                            }
+
+                            return a;
+                        })
                         .map(sqlTypeMappingConfig -> {
                             try {
                                 return PrimitiveLookup.getPrimitiveClass(sqlTypeMappingConfig.getFieldType());

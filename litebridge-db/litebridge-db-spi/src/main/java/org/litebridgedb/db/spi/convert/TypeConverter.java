@@ -46,5 +46,21 @@ public interface TypeConverter {
     @Nullable
     <T> T convert(@Nullable Object value, Class<T> fieldType);
 
-    int getDbDataType(Class<?> fieldType);
+    /**
+     * Determines the SQL data type corresponding to the provided Java class.
+     *
+     * @param fieldType the Java {@code Class} object representing the field type to be mapped to a SQL data type
+     * @return an integer representing the SQL data type, typically a constant defined in {@link java.sql.Types}
+     * @throws IllegalArgumentException if no SQL data type mapping is found for the given Java class
+     */
+    int getSqlDataType(Class<?> fieldType) throws IllegalArgumentException;
+
+    /**
+     * Retrieves the Java {@code Class} corresponding to the specified SQL data type.
+     *
+     * @param sqlDataType the database-specific SQL data type as an integer code, typically a constant defined in {@link java.sql.Types}
+     * @return the Java {@code Class} that represents the SQL data type, or {@code null} if no mapping is found
+     * @throws IllegalArgumentException if no class mapping is found for the given SQL data type
+     */
+    Class<?> getClassForSqlType(int sqlDataType) throws IllegalArgumentException;
 }

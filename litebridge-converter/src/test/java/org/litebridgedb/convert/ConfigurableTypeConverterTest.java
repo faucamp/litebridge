@@ -138,35 +138,35 @@ class ConfigurableTypeConverterTest {
     }
 
     @Test
-    void getDbDataType_withSqlConverter() {
+    void getSqlDataType_withSqlConverter() {
         // Given
         final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(new TestSqlConverter<>(String.class, new int[]{1, 2}));
 
         // When
-        final int result = typeConverter.getDbDataType(String.class);
+        final int result = typeConverter.getSqlDataType(String.class);
 
         // Then
         assertEquals(1, result);
     }
 
     @Test
-    void getDbDataType_converterNotFound() {
+    void getSqlDataType_converterNotFound() {
         // Given
         final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> typeConverter.getDbDataType(String.class));
+        assertThrows(IllegalArgumentException.class, () -> typeConverter.getSqlDataType(String.class));
     }
 
     @Test
-    void getDbDataType_converterIsNotSqlConverter() {
+    void getSqlDataType_converterIsNotSqlConverter() {
         // Given
         final ConfigurableTypeConverter typeConverter = new ConfigurableTypeConverter();
         typeConverter.register(new TestConverter<>(String.class));
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> typeConverter.getDbDataType(String.class));
+        assertThrows(IllegalArgumentException.class, () -> typeConverter.getSqlDataType(String.class));
     }
 
     @Test

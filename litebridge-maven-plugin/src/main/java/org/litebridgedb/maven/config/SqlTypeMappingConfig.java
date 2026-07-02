@@ -15,6 +15,18 @@ public class SqlTypeMappingConfig {
     private JDBCType sqlType;
 
     /**
+     * Precision of the SQL type.
+     * <p>
+     * Example: {@code 1}
+     */
+    private Integer precision;
+
+    /**
+     * Whether the SQL type is not null.
+     */
+    private Boolean notNull;
+
+    /**
      * Java class to use for this SQL type.
      * <p>
      * Example: {@code java.lang.Long}
@@ -28,6 +40,22 @@ public class SqlTypeMappingConfig {
 
     public void setSqlType(final JDBCType sqlType) {
         this.sqlType = sqlType;
+    }
+
+    public Integer getPrecision() {
+        return precision;
+    }
+
+    public void setPrecision(final Integer precision) {
+        this.precision = precision;
+    }
+
+    public Boolean getNotNull() {
+        return notNull;
+    }
+
+    public void setNotNull(final Boolean notNull) {
+        this.notNull = notNull;
     }
 
     public String getFieldType() {
