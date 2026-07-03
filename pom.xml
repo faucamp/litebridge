@@ -291,6 +291,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.litebridgedb</groupId>
+                <artifactId>litebridge-orm-support</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.litebridgedb.db</groupId>
                 <artifactId>litebridge-db-spi</artifactId>
                 <version>${project.version}</version>

@@ -22,11 +22,18 @@ public class EntityWriter {
     private final MavenProject project;
     private final OutputConfig output;
     private final Log log;
+    private final String outputDir;
 
     public EntityWriter(final MavenProject project, final OutputConfig output, final Log log) {
         this.project = project;
         this.output = output;
         this.log = log;
+
+        if (output.getOutputDir() == null) {
+            this.outputDir = "%s/generated-sources/java".formatted(project.getBuild().getDirectory());
+        } else {
+            this.outputDir = output.getOutputDir();
+        }
     }
 
     public void writeEntityJavaFile(final GeneratedEntity generatedEntity) throws MojoExecutionException {
@@ -35,11 +42,8 @@ public class EntityWriter {
         final ClassOrInterfaceDeclaration entityClass = entity.getLocalDeclarationFromClassname(entityClassName).getFirst();
 
         // Write generated entity class to file
-        final String[] targetPackageArray = Stream.concat(
-                        Stream.of("generated-sources", "java"),
-                        Arrays.stream(StringUtils.splitArray(output.getOutputPackage(), '.', -1, false)))
-                .toArray(String[]::new);
-        final Path packagePath = Paths.get(project.getBuild().getDirectory(), targetPackageArray);
+        final String[] targetPackageArray = StringUtils.splitArray(output.getOutputPackage(), '.', -1, false);
+        final Path packagePath = Paths.get(outputDir, targetPackageArray);
         final File targetFile = new File(packagePath.toFile(), "%s.java".formatted(entityClassName));
 
         try {

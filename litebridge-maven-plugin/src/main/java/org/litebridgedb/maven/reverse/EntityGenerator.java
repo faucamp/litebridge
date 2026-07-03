@@ -29,13 +29,17 @@ import org.litebridgedb.maven.config.ColumnMappingConfig;
 import org.litebridgedb.maven.config.OutputConfig;
 import org.litebridgedb.maven.config.SqlTypeMappingConfig;
 import org.litebridgedb.maven.config.TableMappingConfig;
+import org.litebridgedb.maven.util.MojoStringUtils;
+import org.litebridgedb.orm.annotation.OneToMany;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class EntityGenerator {
@@ -44,6 +48,7 @@ public final class EntityGenerator {
     private final List<TableMappingConfig> tableMappings;
     private final OutputConfig output;
     private final Log log;
+    private final TypeConverter typeConverter = new DefaultTypeConverter();
 
     public EntityGenerator(final List<SqlTypeMappingConfig> sqlTypeMappings,
                            final List<TableMappingConfig> tableMappings,
@@ -58,7 +63,6 @@ public final class EntityGenerator {
     public GeneratedEntity createEntityClassForTable(final TableMetaData tableMetaData,
                                                      final Map<String, TableMetaData> tableMetaDataMap,
                                                      final Map<String, GeneratedEntity> entities) throws MojoExecutionException {
-        final TypeConverter typeConverter = new DefaultTypeConverter();
         final TableMappingConfig tableMappingConfig;
 
         if (!CollectionUtils.isEmpty(tableMappings)) {
@@ -74,7 +78,7 @@ public final class EntityGenerator {
         if (tableMappingConfig != null && tableMappingConfig.getEntityName() != null) {
             entityClassName = tableMappingConfig.getEntityName();
         } else {
-            entityClassName = camelCase(tableMetaData.name(), false);
+            entityClassName = MojoStringUtils.camelCase(tableMetaData.name(), false);
         }
 
         final CompilationUnit entity = new CompilationUnit();
@@ -97,6 +101,7 @@ public final class EntityGenerator {
         final List<ForeignKeyConstraint> unresolvedEntityRefs = new ArrayList<>();
         final List<FieldDeclaration> declaredFields = new ArrayList<>(tableMetaData.columns().size());
         final List<FieldDeclaration> appendFields = new ArrayList<>();
+        final Set<Class<?>> additionalImports = new HashSet<>();
 
         // Cache the entity class under construction
         entities.put(tableMetaData.qualifiedName(), new GeneratedEntity(entity, unresolvedEntityRefs, tableMetaData.qualifiedName(), entityClassName, columnfieldMap));
@@ -124,14 +129,14 @@ public final class EntityGenerator {
                     if (columnMappingConfig.getFieldName() != null) {
                         fieldName = columnMappingConfig.getFieldName();
                     } else {
-                        fieldName = camelCase(columnMetaData.name(), true);
+                        fieldName = MojoStringUtils.camelCase(columnMetaData.name(), true);
                     }
                 } else {
-                    fieldName = camelCase(columnMetaData.name(), true);
+                    fieldName = MojoStringUtils.camelCase(columnMetaData.name(), true);
                 }
             } else {
                 columnMappingConfig = null;
-                fieldName = camelCase(columnMetaData.name(), true);
+                fieldName = MojoStringUtils.camelCase(columnMetaData.name(), true);
             }
 
             columnfieldMap.put(columnMetaData.toColumn(), fieldName);
@@ -277,7 +282,9 @@ public final class EntityGenerator {
             // Create reverse mapping collection field
             if (reverseMappingCollectionType != null) {
                 final Type listType = StaticJavaParser.parseType("List<%s>".formatted(reverseMappingCollectionType));
-                final String reverseMappingCollectionName = "%ss".formatted(camelCase(reverseMappingCollectionType, true));
+                additionalImports.add(List.class);
+                additionalImports.add(OneToMany.class);
+                final String reverseMappingCollectionName = "%ss".formatted(MojoStringUtils.camelCase(reverseMappingCollectionType, true));
 
                 final FieldDeclaration reverseMappingCollectionField = new FieldDeclaration()
                         .setModifiers(Modifier.Keyword.PRIVATE)
@@ -285,7 +292,7 @@ public final class EntityGenerator {
                         .addAnnotation(createOneToManyAnnotation(oneToManyMappedByField));
 
                 if (output.isJavadoc()) {
-                    reverseMappingCollectionField.setJavadocComment("Reverse mapping for {@link %s.%s}".formatted(reverseMappingCollectionType, oneToManyMappedByField));
+                    reverseMappingCollectionField.setJavadocComment("Reverse mapping for {@code %s.%s}".formatted(reverseMappingCollectionType, oneToManyMappedByField));
                 }
 
                 appendFields.add(reverseMappingCollectionField);
@@ -318,39 +325,10 @@ public final class EntityGenerator {
         entityClass.addMember(createHashCode(fieldNames));
         entityClass.addMember(createToString(entityClassName, fieldNames));
 
+        // Finalise imports
+        additionalImports.forEach(entity::addImport);
+
         return new GeneratedEntity(entity, unresolvedEntityRefs, tableMetaData.name(), entityClassName, columnfieldMap);
-    }
-
-    /**
-     * Converts the given string into camelCase format by removing non-word characters,
-     * Lowercasing the first word if {@code lowercaseFirst} is {@code true},
-     * and capitalizing the first letter of subsequent words.
-     *
-     * @param str the input string to be converted; must not be null
-     * @return the camelCase formatted string, or an empty string if the input is empty or contains only non-word characters
-     * @throws NullPointerException if the input string is null
-     */
-    private static String camelCase(final String str, final boolean lowercaseFirst) {
-        Objects.requireNonNull(str, "Input cannot be null");
-
-        // Split the string by any non-word characters (including spaces and underscores)
-        final String[] words = str.split("[\\W_]+");
-        final StringBuilder builder = new StringBuilder();
-
-        for (int i = 0; i < words.length; i++) {
-            final String word = words[i];
-
-            if (lowercaseFirst && i == 0) {
-                // For the first word, convert to lowercase
-                builder.append(word.toLowerCase());
-            } else {
-                // For subsequent words, capitalize the first letter and lowercase the rest
-                builder.append(Character.toUpperCase(word.charAt(0)));
-                builder.append(word.substring(1).toLowerCase());
-            }
-        }
-
-        return builder.toString();
     }
 
     private static MethodDeclaration createToString(final String className, final List<String> fields) {

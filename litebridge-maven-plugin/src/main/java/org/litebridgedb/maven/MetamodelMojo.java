@@ -32,10 +32,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 
+/**
+ * A Maven Mojo for generating Litebridge metamodel classes.
+ * <p>
+ * This Mojo generates Java source files based on the provided input packages and output directory.
+ * It scans the specified input packages for (optionally {@link org.litebridgedb.db.spi.Table}-annotated classes)
+ * and generates metamodel classes for each annotated class found.
+ * <p>
+ * This Mojo is executed during the <i>generate-sources</i> phase of the Maven build lifecycle by default.
+ */
 @Mojo(name = "metamodel", defaultPhase = LifecyclePhase.GENERATE_SOURCES, requiresDependencyResolution = ResolutionScope.COMPILE)
 public final class MetamodelMojo extends AbstractMojo {
 
@@ -48,14 +56,33 @@ public final class MetamodelMojo extends AbstractMojo {
     /**
      * Skips plugin execution if {@code true}
      */
-    @Parameter(property = "skip", defaultValue = "false")
+    @Parameter(defaultValue = "false")
     private boolean skip;
+
+    /**
+     * Input source directory. This is where root directory {@code <inputPackages>} will be searched for.
+     * <p>
+     * Defaults to the project's source directory.
+     * <p>
+     * This is useful when generating metamodels from reverse-engineered entities if the entities
+     * are not generated in a location that is already part of the project's source directory.
+     */
+    @Parameter
+    private String srcDir;
 
     /**
      * Packages to scan for entities/DTOs
      */
     @Parameter(property = "inputPackages", required = true)
     private List<String> inputPackages;
+
+    /**
+     * Output directory. This is where the {@code <outputPackage>} and generated metamodel classes will be created.
+     * <p>
+     * Defaults to {@code ${project.build.directory}/generated-sources/java}
+     */
+    @Parameter(defaultValue = "${project.build.directory}/generated-sources/java")
+    private String outputDir;
 
     /**
      * Output package for generated metamodel classes
@@ -87,7 +114,18 @@ public final class MetamodelMojo extends AbstractMojo {
             throw new MojoExecutionException("No input package(s) specified");
         }
 
-        final List<String> projectSrcDirs = project.getCompileSourceRoots();
+        final List<String> projectSrcDirs;
+
+        if (srcDir == null) {
+            projectSrcDirs = project.getCompileSourceRoots();
+        } else {
+            projectSrcDirs = Collections.singletonList(srcDir);
+        }
+
+        if (getLog().isDebugEnabled()) {
+            getLog().debug("Searching for input packages in source directories: %s".formatted(projectSrcDirs));
+        }
+
         final List<String> packageDirs = new ArrayList<>(inputPackages.size());
 
         for (String srcPackage : inputPackages) {
@@ -113,7 +151,7 @@ public final class MetamodelMojo extends AbstractMojo {
             }
 
             if (!packageFound) {
-                throw new MojoExecutionException("Package not found: " + srcPackage);
+                throw new MojoExecutionException("Package not found: %s; searched dirs: %s".formatted(srcPackage, projectSrcDirs));
             }
         }
 
@@ -134,6 +172,10 @@ public final class MetamodelMojo extends AbstractMojo {
 
         if (files == null) {
             return;
+        }
+
+        if (outputDir == null) {
+            outputDir = "%s/generated-sources/java".formatted(project.getBuild().getDirectory());
         }
 
         for (File file : files) {
@@ -227,7 +269,7 @@ public final class MetamodelMojo extends AbstractMojo {
                                                 Modifier.Keyword.PUBLIC,
                                                 Modifier.Keyword.STATIC,
                                                 Modifier.Keyword.FINAL)
-                                        .setJavadocComment("Query field for {@link %s.%s}".formatted(sourceClassName, fieldName));
+                                        .setJavadocComment("Query field for {@code %s.%s}".formatted(sourceClassName, fieldName));
 
                                 queryField.getVariable(0)
                                         .setInitializer("new %s(%s.class, \"%s\")".formatted(
@@ -237,11 +279,8 @@ public final class MetamodelMojo extends AbstractMojo {
                             });
 
                     // Target output compilation structures safely
-                    final String[] targetPackageArray = Stream.concat(
-                                    Stream.of("generated-sources", "java"),
-                                    Arrays.stream(StringUtils.splitArray(outputPackage, '.', -1, false)))
-                            .toArray(String[]::new);
-                    final Path packagePath = Paths.get(project.getBuild().getDirectory(), targetPackageArray);
+                    final String[] targetPackageArray = StringUtils.splitArray(outputPackage, '.', -1, false);
+                    final Path packagePath = Paths.get(outputDir, targetPackageArray);
                     final File targetFile = new File(packagePath.toFile(), "%s.java".formatted(targetClassName));
 
                     try {

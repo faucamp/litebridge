@@ -1,6 +1,5 @@
 package org.litebridgedb.maven;
 
-import com.github.javaparser.ast.CompilationUnit;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -31,6 +30,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A Maven Mojo for reverse engineering database tables into Java entity classes.
+ * <p>
+ * This Mojo generates Java source files based on the provided database schema, input
+ * configuration, and output configuration settings. It performs table metadata extraction,
+ * applies custom mappings (if configured), and writes the resulting entity classes to the
+ * specified output directory.
+ * <p>
+ * This Mojo is executed during the <i>generate-sources</i> phase of the Maven build lifecycle by default.
+ */
 @Mojo(name = "reverse-engineer", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public final class ReverseEngineerMojo extends AbstractMojo {
 
@@ -140,10 +149,10 @@ public final class ReverseEngineerMojo extends AbstractMojo {
             if (DatabaseProvider.class.isAssignableFrom(candidateClass)) {
                 databaseProviderClass = (Class<? extends DatabaseProvider>) candidateClass;
             } else {
-                throw new IllegalArgumentException("Failed to setup Litebridge Reverse Engineering: Specified class does not implement DatabaseProvider: %s".formatted(database.getDatabaseProviderClass()));
+                throw new IllegalArgumentException("Failed to setup Litebridge reverse engineering: Specified class does not implement DatabaseProvider: %s".formatted(database.getDatabaseProviderClass()));
             }
         } catch (ClassNotFoundException ex) {
-            throw new IllegalArgumentException("Failed to setup Litebridge Reverse Engineering: DatabaseProvider class not found: %s".formatted(database.getDatabaseProviderClass()), ex);
+            throw new IllegalArgumentException("Failed to setup Litebridge reverse engineering: DatabaseProvider class not found: %s".formatted(database.getDatabaseProviderClass()), ex);
         }
 
         return new TransactionalDatabaseProvider(new DefaultTransactionManager(dataSource), ClassUtils.newInstance(databaseProviderClass));

@@ -22,6 +22,7 @@
         <module>litebridge-example-common</module>
         <module>litebridge-example-h2</module>
         <module>litebridge-example-h2-jpms</module>
+        <module>litebridge-example-maven-plugin</module>
         <module>litebridge-example-oracle</module>
         <module>litebridge-example-spring-boot</module>
         <module>litebridge-example-spring-boot-manual-config</module>

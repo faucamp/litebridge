@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.litebridgedb.example</groupId>
+        <artifactId>litebridge-example</artifactId>
+        <version>0.3.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>litebridge-example-maven-plugin</artifactId>
+
+    <name>Litebridge Maven Plugin Example</name>
+    <description>Example application using Litebridge Maven Plugin to reverse engineer entities and metamodels</description>
+
+    <build>
+        <!-- Exclude from mvn install/deploy -->
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+
+            <!-- H2 database Flyway migration -->
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>${flyway.version}</version>
+                <executions>
+                    <execution>
+                        <id>H2 database Flyway migration</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>migrate</goal>
+                        </goals>
+                        <configuration>
+                            <url>jdbc:h2:file:./target/h2/lb</url>
+                            <user>sa</user>
+                            <password></password>
+                            <driver>org.h2.Driver</driver>
+                            <locations>
+                                <location>filesystem:src/main/resources/db/migration</location>
+                            </locations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Generate Litebridge entities -->
+            <plugin>
+                <groupId>org.litebridgedb.maven</groupId>
+                <artifactId>litebridge-maven-plugin</artifactId>
+                <version>${project.version}</version>
+                <executions>
+                    <execution>
+                        <id>Reverse engineer Litebridge entities</id>
+                        <goals>
+                            <goal>reverse-engineer</goal>
+                        </goals>
+                        <configuration>
+                            <database>
+                                <url>jdbc:h2:file:./target/h2/lb</url>
+                                <user>sa</user>
+                                <password></password>
+                                <databaseProviderClass>org.litebridgedb.db.h2.H2DatabaseProvider</databaseProviderClass>
+                            </database>
+
+                            <input>
+                                <tables>
+                                    <table>LB.PERSON</table>
+                                    <table>LB.ACCOUNT</table>
+                                </tables>
+                            </input>
+
+                            <sqlTypeMappings>
+                                <sqlTypeMapping>
+                                    <sqlType>NUMERIC</sqlType>
+                                    <fieldType>java.lang.Long</fieldType>
+                                </sqlTypeMapping>
+                                <sqlTypeMapping>
+                                    <sqlType>NUMERIC</sqlType>
+                                    <precision>1</precision>
+                                    <notNull>true</notNull>
+                                    <fieldType>boolean</fieldType>
+                                </sqlTypeMapping>
+                                <sqlTypeMapping>
+                                    <sqlType>NUMERIC</sqlType>
+                                    <precision>1</precision>
+                                    <notNull>false</notNull>
+                                    <fieldType>java.lang.Boolean</fieldType>
+                                </sqlTypeMapping>
+                            </sqlTypeMappings>
+
+                            <tableMappings>
+                                <tableMapping>
+                                    <table>LB.PERSON</table>
+                                    <columnMappings>
+                                        <columnMapping>
+                                            <column>PERSON_ID</column>
+                                            <fieldName>id</fieldName>
+                                            <generateUsingSequence>LB.PERSON_SEQ</generateUsingSequence>
+                                        </columnMapping>
+                                        <columnMapping>
+                                            <column>AGE</column>
+                                            <fieldType>int</fieldType>
+                                        </columnMapping>
+                                    </columnMappings>
+                                </tableMapping>
+
+                                <tableMapping>
+                                    <table>LB.ACCOUNT</table>
+                                    <columnMappings>
+                                        <columnMapping>
+                                            <column>ACCOUNT_ID</column>
+                                            <fieldName>id</fieldName>
+                                            <generateUsingSequence>LB.ACCOUNT_SEQ</generateUsingSequence>
+                                        </columnMapping>
+                                        <columnMapping>
+                                            <column>PERSON_ID</column>
+                                            <fieldName>owner</fieldName>
+                                        </columnMapping>
+                                        <columnMapping>
+                                            <column>BALANCE</column>
+                                            <fieldType>java.math.BigDecimal</fieldType>
+                                        </columnMapping>
+                                    </columnMappings>
+                                </tableMapping>
+                            </tableMappings>
+
+                            <output>
+                                <outputDir>${project.build.directory}/generated-sources/java</outputDir>
+                                <outputPackage>org.litebridge.example.maven.entity</outputPackage>
+                            </output>
+                        </configuration>
+                    </execution>
+
+                    <!-- Create Litebridge entity metamodels -->
+                    <execution>
+                        <id>Create Litebridge entity metamodels</id>
+                        <goals>
+                            <goal>metamodel</goal>
+                        </goals>
+
+                        <configuration>
+                            <srcDir>${project.build.directory}/generated-sources/java</srcDir>
+                            <inputPackages>
+                                <inputPackage>org.litebridge.example.maven.entity</inputPackage>
+                            </inputPackages>
+                            <outputDir>${project.build.directory}/generated-sources/java</outputDir>
+                            <outputPackage>org.litebridge.example.maven.metamodel</outputPackage>
+                        </configuration>
+                    </execution>
+                </executions>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>com.h2database</groupId>
+                        <artifactId>h2</artifactId>
+                        <version>${h2.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.litebridgedb.db</groupId>
+                        <artifactId>litebridge-db-h2</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <!-- Add the generated entities and metamodels to the project sources -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <!-- Project dependencies -->
+        <dependency>
+            <groupId>org.litebridgedb</groupId>
+            <artifactId>litebridge-orm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.litebridgedb</groupId>
+            <artifactId>litebridge-orm-support</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.litebridgedb.db</groupId>
+            <artifactId>litebridge-db-h2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.litebridgedb.example</groupId>
+            <artifactId>litebridge-example-common</artifactId>
+        </dependency>
+
+        <!-- External dependencies -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

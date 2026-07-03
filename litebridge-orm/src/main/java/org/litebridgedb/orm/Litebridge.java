@@ -236,6 +236,10 @@ public final class Litebridge implements SelectApi {
      * @param entityClasses the class(es) of the entity/entities to be registered.
      */
     public void register(final Class<?>... entityClasses) {
+        if (entityClasses.length == 0) {
+            throw new IllegalArgumentException("No entity classes provided for registration");
+        }
+
         registrationEngine.register(entityClasses);
     }
 

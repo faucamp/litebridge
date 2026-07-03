@@ -7,6 +7,14 @@ import java.util.StringJoiner;
 public class OutputConfig {
 
     /**
+     * Output directory. This is where the {@code <outputPackage>} and generated metamodel classes will be created.
+     * <p>
+     * Defaults to {@code ${project.build.directory}/generated-sources/java}
+     */
+    @Parameter(defaultValue = "${project.build.directory}/generated-sources/java")
+    private String outputDir;
+
+    /**
      * Output package for generated entity classes
      */
     @Parameter(required = true)
@@ -14,15 +22,27 @@ public class OutputConfig {
 
     /**
      * Whether to add Javadoc comments in generated entity classes.
+     *
+     * Default: {@code true}
      */
     @Parameter(defaultValue = "true")
     private boolean javadoc = true;
 
     /**
      * If {@code true}, generated entity classes will be declared as final.
+     * <p>
+     * Default: {@code true}
      */
-    @Parameter(defaultValue = "false")
-    private boolean finalClasses;
+    @Parameter(defaultValue = "true")
+    private boolean finalClasses = true;
+
+    public String getOutputDir() {
+        return outputDir;
+    }
+
+    public void setOutputDir(final String outputDir) {
+        this.outputDir = outputDir;
+    }
 
     public String getOutputPackage() {
         return outputPackage;
@@ -51,7 +71,9 @@ public class OutputConfig {
     @Override
     public String toString() {
         return new StringJoiner(", ", OutputConfig.class.getSimpleName() + "[", "]")
+                .add("outputDir='" + outputDir + "'")
                 .add("outputPackage='" + outputPackage + "'")
+                .add("javadoc=" + javadoc)
                 .add("finalClasses=" + finalClasses)
                 .toString();
     }
