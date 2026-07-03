@@ -6,10 +6,14 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.MarkerAnnotationExpr;
 import com.github.javaparser.ast.expr.Name;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.type.Type;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.jspecify.annotations.Nullable;
@@ -75,8 +79,9 @@ public final class EntityGenerator {
 
         final CompilationUnit entity = new CompilationUnit();
         entity.setPackageDeclaration(output.getOutputPackage())
-                .addImport(org.litebridgedb.orm.annotation.Table.class)
-                .addImport(org.litebridgedb.orm.annotation.Column.class);
+                .addImport(Objects.class)
+                .addImport(org.litebridgedb.orm.annotation.Column.class)
+                .addImport(org.litebridgedb.orm.annotation.Table.class);
         final ClassOrInterfaceDeclaration entityClass = entity.addClass(entityClassName)
                 .setPublic(true)
                 .setFinal(output.isFinalClasses())
@@ -91,6 +96,7 @@ public final class EntityGenerator {
         final Map<Column, String> columnfieldMap = new HashMap<>(tableMetaData.columns().size());
         final List<ForeignKeyConstraint> unresolvedEntityRefs = new ArrayList<>();
         final List<FieldDeclaration> declaredFields = new ArrayList<>(tableMetaData.columns().size());
+        final List<FieldDeclaration> appendFields = new ArrayList<>();
 
         // Cache the entity class under construction
         entities.put(tableMetaData.qualifiedName(), new GeneratedEntity(entity, unresolvedEntityRefs, tableMetaData.qualifiedName(), entityClassName, columnfieldMap));
@@ -134,6 +140,7 @@ public final class EntityGenerator {
             String fieldClassType = null;
             String joinOn = null;
             String reverseMappingCollectionType = null;
+            String oneToManyMappedByField = null;
 
             if (fieldClass == null) {
                 final String[] fieldClassStr = new String[1];
@@ -206,15 +213,9 @@ public final class EntityGenerator {
                     final String remoteFieldName = remoteEntity.columnfieldMap().get(foreignRef.foreignKey());
 
                     if (remoteFieldName != null) {
-                        fieldClassType = null;
-                        fieldClassType = remoteEntity.className();
-
-                        // Instantiate collection
-
-
-                        if (log.isDebugEnabled()) {
-                            log.debug("Overriding field type for column %s to: %s".formatted(columnMetaData.name(), fieldClassType));
-                        }
+                        // Configure reverse-mapping collection
+                        reverseMappingCollectionType = remoteEntity.className();
+                        oneToManyMappedByField = remoteFieldName;
                     } else {
                         throw new MojoExecutionException("Could not find 'joinOn' field for column: " + columnMetaData.toColumn());
                     }
@@ -264,27 +265,52 @@ public final class EntityGenerator {
                         Modifier.Keyword.PRIVATE);
             }
 
-            // Set @Column, @OneToMany or @ManyToMany annotations
-            if (reverseMappingCollectionType != null) {
-
-            } else {
-                field.addAnnotation(createColumnAnnotation(columnMetaData, joinOn, columnMappingConfig, entities));
-            }
+            // Set @Column  annotation
+            field.addAnnotation(createColumnAnnotation(columnMetaData, joinOn, columnMappingConfig, entities));
 
             if (output.isJavadoc()) {
                 field.setJavadocComment("Column: {@code %s}".formatted(columnMetaData.name()));
             }
 
             declaredFields.add(field);
+
+            // Create reverse mapping collection field
+            if (reverseMappingCollectionType != null) {
+                final Type listType = StaticJavaParser.parseType("List<%s>".formatted(reverseMappingCollectionType));
+                final String reverseMappingCollectionName = "%ss".formatted(camelCase(reverseMappingCollectionType, true));
+
+                final FieldDeclaration reverseMappingCollectionField = new FieldDeclaration()
+                        .setModifiers(Modifier.Keyword.PRIVATE)
+                        .addVariable(new VariableDeclarator(listType, reverseMappingCollectionName))
+                        .addAnnotation(createOneToManyAnnotation(oneToManyMappedByField));
+
+                if (output.isJavadoc()) {
+                    reverseMappingCollectionField.setJavadocComment("Reverse mapping for {@link %s.%s}".formatted(reverseMappingCollectionType, oneToManyMappedByField));
+                }
+
+                appendFields.add(reverseMappingCollectionField);
+            }
         }
 
         // Add getters/setters
         final List<String> fieldNames = new ArrayList<>(declaredFields.size());
 
+        // Add reverse collection fields
+        appendFields.forEach(appendField -> {
+            ;
+            entityClass.addMember(appendField);
+        });
+
+        // Add getters/setters
         declaredFields.forEach(field -> {
             fieldNames.add(field.getVariable(0).getNameAsString());
             field.createGetter();
-            field.createSetter();
+            field.createSetter().getParameter(0).setModifier(Modifier.Keyword.FINAL, true);
+        });
+
+        appendFields.forEach(appendField -> {
+            appendField.createGetter();
+            appendField.createSetter().getParameter(0).setModifier(Modifier.Keyword.FINAL, true);
         });
 
         // Add equals(), hashcodde() and toString()
@@ -339,7 +365,7 @@ public final class EntityGenerator {
                 .setModifiers(Modifier.Keyword.PUBLIC)
                 .setType(String.class)
                 .setName("toString")
-                .addAnnotation(Override.class); // Adds @Override annotation
+                .addAnnotation(new MarkerAnnotationExpr("Override"));
 
         // Define the method body with the generated return statement
         BlockStmt body = new BlockStmt();
@@ -355,19 +381,19 @@ public final class EntityGenerator {
                 .setModifiers(Modifier.Keyword.PUBLIC)
                 .setType("boolean")
                 .setName("equals")
-                .addParameter(new com.github.javaparser.ast.body.Parameter(StaticJavaParser.parseType("Object"), "obj"));
-
-        equalsMethod.addAnnotation("Override");
+                .addParameter(new Parameter(StaticJavaParser.parseType("Object"), "obj")
+                        .setModifier(Modifier.Keyword.FINAL, true))
+                .addAnnotation(new MarkerAnnotationExpr("Override"));
 
         // Build the inner logic block using template strings
         StringBuilder body = new StringBuilder("{\n");
         body.append("    if (this == obj) return true;\n");
         body.append("    if (obj == null || getClass() != obj.getClass()) return false;\n");
-        body.append(String.format("    %s other = (%s) obj;\n", className, className));
+        body.append(String.format("    final %s other = (%s) obj;\n", className, className));
 
         // Use Objects.equals for safe null/primitive checks
         String comparisons = fields.stream()
-                .map(field -> String.format("java.util.Objects.equals(%s, other.%s)", field, field))
+                .map(field -> String.format("Objects.equals(%s, other.%s)", field, field))
                 .collect(Collectors.joining("\n        && "));
 
         body.append("    return ").append(comparisons).append(";\n");
@@ -382,13 +408,12 @@ public final class EntityGenerator {
         MethodDeclaration hashCodeMethod = new MethodDeclaration()
                 .setModifiers(Modifier.Keyword.PUBLIC)
                 .setType("int")
-                .setName("hashCode");
-
-        hashCodeMethod.addAnnotation("Override");
+                .setName("hashCode")
+                .addAnnotation(new MarkerAnnotationExpr("Override"));
 
         // Use java.util.Objects.hash() for a clean builder approach
         String fieldsCsv = String.join(", ", fields);
-        String body = String.format("{\n    return java.util.Objects.hash(%s);\n}", fieldsCsv);
+        String body = String.format("{\n    return Objects.hash(%s);\n}", fieldsCsv);
 
         hashCodeMethod.setBody(StaticJavaParser.parseBlock(body));
         return hashCodeMethod;
@@ -415,6 +440,13 @@ public final class EntityGenerator {
             annotation.addPair("joinOn", "\"%s\"".formatted(joinOn));
         }
 
+        return annotation;
+    }
+
+    private AnnotationExpr createOneToManyAnnotation(final String mappedByField) {
+        final NormalAnnotationExpr annotation = new NormalAnnotationExpr();
+        annotation.setName(new Name(org.litebridgedb.orm.annotation.OneToMany.class.getSimpleName()));
+        annotation.addPair("mappedByField", "\"%s\"".formatted(mappedByField));
         return annotation;
     }
 }
