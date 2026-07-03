@@ -3,6 +3,9 @@ package org.litebridgedb.db.spi;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.generator.ColumnValueGenerator;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
 
@@ -24,10 +27,10 @@ public final class ColumnMetaData implements MappedFieldTarget {
     private final int size;
     private final int decimalDigits;
     private boolean autoIncrement;
-    @Nullable
-    private ColumnValueGenerator generator;
-    @Nullable
-    private String joinColumn;
+    private @Nullable ColumnValueGenerator generator;
+    private @Nullable String joinColumn;
+    private @Nullable List<ForeignKeyConstraint> foreignKeyConstraints;
+    private @Nullable List<ForeignKeyConstraint> foreignReferences;
 
     /**
      * Construct an instance of {@code ColumnMetaData} with specified metadata details about a database column.
@@ -39,7 +42,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
      * @param size          the size of the column, typically representing the maximum number of characters for string or digits for numeric types
      * @param decimalDigits the number of decimal digits for the column, applicable for numeric types
      * @param autoIncrement a flag indicating whether the column is defined as auto-increment
-     * @param generator      the name of the sequence associated with the column, or null if no sequence is associated
+     * @param generator     the name of the sequence associated with the column, or null if no sequence is associated
      */
     public ColumnMetaData(final Table table,
                           final String name,
@@ -160,6 +163,30 @@ public final class ColumnMetaData implements MappedFieldTarget {
 
     public void setJoinColumn(final @Nullable String joinColumn) {
         this.joinColumn = joinColumn;
+    }
+
+    public void addForeignKeyConstraint(final ForeignKeyConstraint foreignKeyConstraint) {
+        if (foreignKeyConstraints == null) {
+            foreignKeyConstraints = new ArrayList<>();
+        }
+
+        foreignKeyConstraints.add(foreignKeyConstraint);
+    }
+
+    public List<ForeignKeyConstraint> getForeignKeyConstraints() {
+        return foreignKeyConstraints != null ? foreignKeyConstraints : Collections.emptyList();
+    }
+
+    public void addForeignReference(final ForeignKeyConstraint foreignKeyConstraint) {
+        if (foreignReferences == null) {
+            foreignReferences = new ArrayList<>();
+        }
+
+        foreignReferences.add(foreignKeyConstraint);
+    }
+
+    public List<ForeignKeyConstraint> getForeignReferences() {
+        return foreignReferences != null ? foreignReferences : Collections.emptyList();
     }
 
     public Column toColumn() {

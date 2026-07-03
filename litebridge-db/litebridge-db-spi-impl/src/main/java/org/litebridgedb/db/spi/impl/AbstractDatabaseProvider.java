@@ -5,6 +5,7 @@ import org.litebridgedb.commons.type.ConcurrentLazy;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.DatabaseProvider;
+import org.litebridgedb.db.spi.ForeignKeyConstraint;
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
@@ -490,6 +491,52 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             // Load table metadata
             primaryKeys = getPrimaryKeyColumnNames(table, databaseMetaData);
             columns = getColumnMetaData(table, databaseMetaData);
+
+            try (ResultSet rs = databaseMetaData.getImportedKeys(table.catalog(), table.schema(), table.name())) {
+                while (rs.next()) {
+                    final String fkName = rs.getString("FK_NAME");
+
+                    // Remote table
+                    final String pkTable = rs.getString("PKTABLE_NAME");
+                    final String pkColumn = rs.getString("PKCOLUMN_NAME");
+
+                    // Local table
+                    final String fkTable = rs.getString("FKTABLE_NAME");
+                    final String fkColumn = rs.getString("FKCOLUMN_NAME");
+
+                    if (table.name().equals(fkTable)) {
+                        columns.stream()
+                                .filter(column -> column.name().equals(fkColumn))
+                                .forEach(column -> {
+                                    final ForeignKeyConstraint constraint = new ForeignKeyConstraint(fkName, new Column(new Table(table.catalog(), table.schema(), pkTable), pkColumn));
+                                    column.addForeignKeyConstraint(constraint);
+                                });
+                    }
+                }
+            }
+
+            try (ResultSet rs = databaseMetaData.getExportedKeys(table.catalog(), table.schema(), table.name())) {
+                while (rs.next()) {
+                    final String fkName = rs.getString("FK_NAME");
+
+                    // Local table
+                    final String pkTable = rs.getString("PKTABLE_NAME");
+                    final String pkColumn = rs.getString("PKCOLUMN_NAME");
+
+                    // Remote table
+                    final String fkTable = rs.getString("FKTABLE_NAME");
+                    final String fkColumn = rs.getString("FKCOLUMN_NAME");
+
+                    if (table.name().equals(pkTable)) {
+                        columns.stream()
+                                .filter(column -> column.name().equals(pkColumn))
+                                .forEach(column -> {
+                                    final ForeignKeyConstraint constraint = new ForeignKeyConstraint(fkName, new Column(new Table(table.catalog(), table.schema(), fkTable), fkColumn));
+                                    column.addForeignReference(constraint);
+                                });
+                    }
+                }
+            }
         }
 
         return new TableMetaData(table, primaryKeys, columns);

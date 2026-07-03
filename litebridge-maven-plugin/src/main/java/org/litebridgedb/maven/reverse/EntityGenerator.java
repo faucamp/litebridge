@@ -1,0 +1,420 @@
+package org.litebridgedb.maven.reverse;
+
+import com.github.javaparser.StaticJavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Modifier;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.Name;
+import com.github.javaparser.ast.expr.NormalAnnotationExpr;
+import com.github.javaparser.ast.stmt.BlockStmt;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
+import org.jspecify.annotations.Nullable;
+import org.litebridgedb.commons.CollectionUtils;
+import org.litebridgedb.commons.StringUtils;
+import org.litebridgedb.convert.DefaultTypeConverter;
+import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.ColumnMetaData;
+import org.litebridgedb.db.spi.ForeignKeyConstraint;
+import org.litebridgedb.db.spi.TableMetaData;
+import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.maven.config.ColumnMappingConfig;
+import org.litebridgedb.maven.config.OutputConfig;
+import org.litebridgedb.maven.config.SqlTypeMappingConfig;
+import org.litebridgedb.maven.config.TableMappingConfig;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+public final class EntityGenerator {
+
+    private final List<SqlTypeMappingConfig> sqlTypeMappings;
+    private final List<TableMappingConfig> tableMappings;
+    private final OutputConfig output;
+    private final Log log;
+
+    public EntityGenerator(final List<SqlTypeMappingConfig> sqlTypeMappings,
+                           final List<TableMappingConfig> tableMappings,
+                           final OutputConfig output,
+                           final Log log) {
+        this.sqlTypeMappings = sqlTypeMappings;
+        this.tableMappings = tableMappings;
+        this.output = output;
+        this.log = log;
+    }
+
+    public GeneratedEntity createEntityClassForTable(final TableMetaData tableMetaData,
+                                                     final Map<String, TableMetaData> tableMetaDataMap,
+                                                     final Map<String, GeneratedEntity> entities) throws MojoExecutionException {
+        final TypeConverter typeConverter = new DefaultTypeConverter();
+        final TableMappingConfig tableMappingConfig;
+
+        if (!CollectionUtils.isEmpty(tableMappings)) {
+            tableMappingConfig = tableMappings.stream()
+                    .filter(t -> t.getTable().equals(tableMetaData.qualifiedName()))
+                    .findFirst().orElse(null);
+        } else {
+            tableMappingConfig = null;
+        }
+
+        final String entityClassName;
+
+        if (tableMappingConfig != null && tableMappingConfig.getEntityName() != null) {
+            entityClassName = tableMappingConfig.getEntityName();
+        } else {
+            entityClassName = camelCase(tableMetaData.name(), false);
+        }
+
+        final CompilationUnit entity = new CompilationUnit();
+        entity.setPackageDeclaration(output.getOutputPackage())
+                .addImport(org.litebridgedb.orm.annotation.Table.class)
+                .addImport(org.litebridgedb.orm.annotation.Column.class);
+        final ClassOrInterfaceDeclaration entityClass = entity.addClass(entityClassName)
+                .setPublic(true)
+                .setFinal(output.isFinalClasses())
+                .addSingleMemberAnnotation(org.litebridgedb.orm.annotation.Table.class.getSimpleName(),
+                        "\"%s\"".formatted(tableMetaData.qualifiedName()));
+
+        if (output.isJavadoc()) {
+            entityClass.setJavadocComment("Entity class for table: {@code %s}".formatted(tableMetaData.qualifiedName()));
+        }
+
+        // Create fields for columns
+        final Map<Column, String> columnfieldMap = new HashMap<>(tableMetaData.columns().size());
+        final List<ForeignKeyConstraint> unresolvedEntityRefs = new ArrayList<>();
+        final List<FieldDeclaration> declaredFields = new ArrayList<>(tableMetaData.columns().size());
+
+        // Cache the entity class under construction
+        entities.put(tableMetaData.qualifiedName(), new GeneratedEntity(entity, unresolvedEntityRefs, tableMetaData.qualifiedName(), entityClassName, columnfieldMap));
+
+        for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
+            // Create the entity field
+            final ColumnMappingConfig columnMappingConfig;
+            final String fieldName;
+            Class<?> fieldClass = null;
+
+            if (tableMappingConfig != null && tableMappingConfig.getColumnMappings() != null) {
+                columnMappingConfig = tableMappingConfig.getColumnMappings().stream()
+                        .filter(c -> c.getColumn().equals(columnMetaData.name()))
+                        .findFirst().orElse(null);
+
+                if (columnMappingConfig != null) {
+                    if (columnMappingConfig.getFieldType() != null) {
+                        try {
+                            fieldClass = PrimitiveLookup.getPrimitiveClass(columnMappingConfig.getFieldType());
+                        } catch (ClassNotFoundException ex) {
+                            throw new MojoExecutionException("Failed to load field type class '%s' for column mapping: %s".formatted(columnMappingConfig.getFieldType(), columnMetaData.name()));
+                        }
+                    }
+
+                    if (columnMappingConfig.getFieldName() != null) {
+                        fieldName = columnMappingConfig.getFieldName();
+                    } else {
+                        fieldName = camelCase(columnMetaData.name(), true);
+                    }
+                } else {
+                    fieldName = camelCase(columnMetaData.name(), true);
+                }
+            } else {
+                columnMappingConfig = null;
+                fieldName = camelCase(columnMetaData.name(), true);
+            }
+
+            columnfieldMap.put(columnMetaData.toColumn(), fieldName);
+
+            // Determine field type
+            String fieldClassType = null;
+            String joinOn = null;
+            String reverseMappingCollectionType = null;
+
+            if (fieldClass == null) {
+                final String[] fieldClassStr = new String[1];
+
+                final Optional<SqlTypeMappingConfig> sqlTypeMappingConfig = sqlTypeMappings.stream()
+                        .filter(m -> m.getSqlType().getVendorTypeNumber().equals(columnMetaData.getDataType()))
+                        .filter(m -> m.getPrecision() == null || m.getPrecision().equals(columnMetaData.getSize()))
+                        .filter(m -> m.getNotNull() == null || m.getNotNull().equals(!columnMetaData.isNullable()))
+                        .reduce((a, b) -> {
+                            if (a.getPrecision() != null) {
+                                if (b.getPrecision() != null) {
+                                    if (a.getNotNull() != null) {
+                                        return a;
+                                    }
+
+                                    return b;
+                                }
+
+                                return a;
+                            }
+
+                            if (b.getPrecision() != null) {
+                                return b;
+                            }
+
+                            if (b.getNotNull() != null) {
+                                if (a.getNotNull() != null) {
+                                    return a;
+                                }
+
+                                return b;
+                            }
+
+                            return a;
+                        });
+
+                if (sqlTypeMappingConfig.isPresent()) {
+                    final SqlTypeMappingConfig sqlTypeMapping = sqlTypeMappingConfig.get();
+
+                    try {
+                        fieldClass = PrimitiveLookup.getPrimitiveClass(sqlTypeMapping.getFieldType());
+                    } catch (ClassNotFoundException ex) {
+                        fieldClassStr[0] = sqlTypeMapping.getFieldType();
+                        fieldClass = null;
+                    }
+
+                    if (fieldClass == null) {
+                        fieldClassType = fieldClassStr[0];
+                        log.warn("Could not find class for specified field type '%s' for column: %s".formatted(fieldClassType, columnMetaData.name()));
+                    }
+                } else {
+                    final Class<?> convertedType = typeConverter.getClassForSqlType(columnMetaData.getDataType());
+                    fieldClass = PrimitiveLookup.getPrimitiveClass(convertedType);
+                }
+            }
+
+            // Check if the field points to a related entity, and update the field type accordingly
+            for (ForeignKeyConstraint foreignRef : columnMetaData.getForeignReferences()) {
+                // Check if an entity for this reference exists
+                final Column remoteColumn = foreignRef.foreignKey();
+                final String remoteTableName = remoteColumn.table().qualifiedName();
+                GeneratedEntity remoteEntity = entities.get(remoteTableName);
+
+                if (remoteEntity == null && tableMetaDataMap.containsKey(remoteTableName)) {
+                    remoteEntity = createEntityClassForTable(tableMetaDataMap.get(remoteTableName), tableMetaDataMap, entities);
+                }
+
+                if (remoteEntity != null) {
+                    // Related entity; find the remote field for the joinOn attribute
+                    final String remoteFieldName = remoteEntity.columnfieldMap().get(foreignRef.foreignKey());
+
+                    if (remoteFieldName != null) {
+                        fieldClassType = null;
+                        fieldClassType = remoteEntity.className();
+
+                        // Instantiate collection
+
+
+                        if (log.isDebugEnabled()) {
+                            log.debug("Overriding field type for column %s to: %s".formatted(columnMetaData.name(), fieldClassType));
+                        }
+                    } else {
+                        throw new MojoExecutionException("Could not find 'joinOn' field for column: " + columnMetaData.toColumn());
+                    }
+                }
+            }
+
+            for (ForeignKeyConstraint foreignKeyConstraint : columnMetaData.getForeignKeyConstraints()) {
+                // Check if an entity for this reference exists
+                final Column remoteColumn = foreignKeyConstraint.foreignKey();
+                final String remoteTableName = remoteColumn.table().qualifiedName();
+                GeneratedEntity remoteEntity = entities.get(remoteTableName);
+
+                if (remoteEntity == null && tableMetaDataMap.containsKey(remoteTableName)) {
+                    remoteEntity = createEntityClassForTable(tableMetaDataMap.get(remoteTableName), tableMetaDataMap, entities);
+                }
+
+                if (remoteEntity != null) {
+                    // Related entity; find the remote field for the joinOn attribute
+                    final String remoteFieldName = remoteEntity.columnfieldMap().get(remoteColumn);
+
+                    if (remoteFieldName != null) {
+                        fieldClass = null;
+                        fieldClassType = remoteEntity.className();
+                        joinOn = remoteFieldName;
+
+                        if (log.isDebugEnabled()) {
+                            log.debug("Overriding field type for column %s to: %s".formatted(columnMetaData.name(), fieldClassType));
+                        }
+                    } else {
+                        throw new MojoExecutionException("Could not find 'joinOn' field for column: " + columnMetaData.toColumn());
+                    }
+                }
+            }
+
+            // Create field
+            final FieldDeclaration field;
+
+            if (fieldClass != null) {
+                field = entityClass.addField(
+                        fieldClass,
+                        fieldName,
+                        Modifier.Keyword.PRIVATE);
+            } else {
+                field = entityClass.addField(
+                        fieldClassType,
+                        fieldName,
+                        Modifier.Keyword.PRIVATE);
+            }
+
+            // Set @Column, @OneToMany or @ManyToMany annotations
+            if (reverseMappingCollectionType != null) {
+
+            } else {
+                field.addAnnotation(createColumnAnnotation(columnMetaData, joinOn, columnMappingConfig, entities));
+            }
+
+            if (output.isJavadoc()) {
+                field.setJavadocComment("Column: {@code %s}".formatted(columnMetaData.name()));
+            }
+
+            declaredFields.add(field);
+        }
+
+        // Add getters/setters
+        final List<String> fieldNames = new ArrayList<>(declaredFields.size());
+
+        declaredFields.forEach(field -> {
+            fieldNames.add(field.getVariable(0).getNameAsString());
+            field.createGetter();
+            field.createSetter();
+        });
+
+        // Add equals(), hashcodde() and toString()
+        entityClass.addMember(createEquals(entityClassName, fieldNames));
+        entityClass.addMember(createHashCode(fieldNames));
+        entityClass.addMember(createToString(entityClassName, fieldNames));
+
+        return new GeneratedEntity(entity, unresolvedEntityRefs, tableMetaData.name(), entityClassName, columnfieldMap);
+    }
+
+    /**
+     * Converts the given string into camelCase format by removing non-word characters,
+     * Lowercasing the first word if {@code lowercaseFirst} is {@code true},
+     * and capitalizing the first letter of subsequent words.
+     *
+     * @param str the input string to be converted; must not be null
+     * @return the camelCase formatted string, or an empty string if the input is empty or contains only non-word characters
+     * @throws NullPointerException if the input string is null
+     */
+    private static String camelCase(final String str, final boolean lowercaseFirst) {
+        Objects.requireNonNull(str, "Input cannot be null");
+
+        // Split the string by any non-word characters (including spaces and underscores)
+        final String[] words = str.split("[\\W_]+");
+        final StringBuilder builder = new StringBuilder();
+
+        for (int i = 0; i < words.length; i++) {
+            final String word = words[i];
+
+            if (lowercaseFirst && i == 0) {
+                // For the first word, convert to lowercase
+                builder.append(word.toLowerCase());
+            } else {
+                // For subsequent words, capitalize the first letter and lowercase the rest
+                builder.append(Character.toUpperCase(word.charAt(0)));
+                builder.append(word.substring(1).toLowerCase());
+            }
+        }
+
+        return builder.toString();
+    }
+
+    private static MethodDeclaration createToString(final String className, final List<String> fields) {
+        // Build the string concatenation expression for the return statement
+        // Example output format: "User{id=" + id + ", name='" + name + "', active=" + active + "}"
+        final String returnExpression = fields.stream()
+                .map(field -> "\"" + field + "=\" + " + field)
+                .collect(Collectors.joining(" + \", \" + ", "\"" + className + "{\" + ", " + \"}\""));
+
+        // Create the toString method declaration
+        final MethodDeclaration toStringMethod = new MethodDeclaration()
+                .setModifiers(Modifier.Keyword.PUBLIC)
+                .setType(String.class)
+                .setName("toString")
+                .addAnnotation(Override.class); // Adds @Override annotation
+
+        // Define the method body with the generated return statement
+        BlockStmt body = new BlockStmt();
+        body.addStatement("return " + returnExpression + ";");
+        toStringMethod.setBody(body);
+
+        return toStringMethod;
+    }
+
+    private static MethodDeclaration createEquals(final String className, final List<String> fields) {
+        // Build the basic method signature: public boolean equals(Object obj)
+        MethodDeclaration equalsMethod = new MethodDeclaration()
+                .setModifiers(Modifier.Keyword.PUBLIC)
+                .setType("boolean")
+                .setName("equals")
+                .addParameter(new com.github.javaparser.ast.body.Parameter(StaticJavaParser.parseType("Object"), "obj"));
+
+        equalsMethod.addAnnotation("Override");
+
+        // Build the inner logic block using template strings
+        StringBuilder body = new StringBuilder("{\n");
+        body.append("    if (this == obj) return true;\n");
+        body.append("    if (obj == null || getClass() != obj.getClass()) return false;\n");
+        body.append(String.format("    %s other = (%s) obj;\n", className, className));
+
+        // Use Objects.equals for safe null/primitive checks
+        String comparisons = fields.stream()
+                .map(field -> String.format("java.util.Objects.equals(%s, other.%s)", field, field))
+                .collect(Collectors.joining("\n        && "));
+
+        body.append("    return ").append(comparisons).append(";\n");
+        body.append("}");
+
+        equalsMethod.setBody(StaticJavaParser.parseBlock(body.toString()));
+        return equalsMethod;
+    }
+
+    private static MethodDeclaration createHashCode(List<String> fields) {
+        // Build basic method signature: public int hashCode()
+        MethodDeclaration hashCodeMethod = new MethodDeclaration()
+                .setModifiers(Modifier.Keyword.PUBLIC)
+                .setType("int")
+                .setName("hashCode");
+
+        hashCodeMethod.addAnnotation("Override");
+
+        // Use java.util.Objects.hash() for a clean builder approach
+        String fieldsCsv = String.join(", ", fields);
+        String body = String.format("{\n    return java.util.Objects.hash(%s);\n}", fieldsCsv);
+
+        hashCodeMethod.setBody(StaticJavaParser.parseBlock(body));
+        return hashCodeMethod;
+    }
+
+    private AnnotationExpr createColumnAnnotation(final ColumnMetaData columnMetaData, final String joinOn, final @Nullable ColumnMappingConfig columnMappingConfig, final Map<String, GeneratedEntity> entities) {
+        final NormalAnnotationExpr annotation = new NormalAnnotationExpr();
+        annotation.setName(new Name(org.litebridgedb.orm.annotation.Column.class.getSimpleName()));
+        annotation.addPair("value", "\"%s\"".formatted(columnMetaData.name()));
+
+        if (columnMappingConfig == null) {
+            return annotation;
+        }
+
+        if (!StringUtils.isBlank(columnMappingConfig.getGenerateUsingSequence())) {
+            annotation.addPair("generateUsingSequence", "\"%s\"".formatted(columnMappingConfig.getGenerateUsingSequence()));
+        }
+
+        if (!StringUtils.isBlank(columnMappingConfig.getGeneratorClass())) {
+            annotation.addPair("generator", columnMappingConfig.getGeneratorClass());
+        }
+
+        if (joinOn != null) {
+            annotation.addPair("joinOn", "\"%s\"".formatted(joinOn));
+        }
+
+        return annotation;
+    }
+}

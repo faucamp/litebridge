@@ -74,13 +74,14 @@ class ReverseEngineerMojoTest {
                 fieldDeclaration.isPrivate()
                         && !fieldDeclaration.isStatic()
                         && !fieldDeclaration.isFinal());
-        assertEquals(4, accountFields.size());
+        assertEquals(6, accountFields.size());
 
         for (FieldDeclaration fieldDeclaration : accountFields) {
             switch (fieldDeclaration.getVariable(0).getNameAsString()) {
                 case "id" -> assertEquals("Long", fieldDeclaration.getVariable(0).getType().toString());
-                case "balance" ->
-                        assertEquals("BigDecimal", fieldDeclaration.getVariable(0).getType().toString());
+                case "active" -> assertEquals("boolean", fieldDeclaration.getVariable(0).getType().toString());
+                case "flagged" -> assertEquals("Boolean", fieldDeclaration.getVariable(0).getType().toString());
+                case "balance" -> assertEquals("BigDecimal", fieldDeclaration.getVariable(0).getType().toString());
                 case "owner" -> assertEquals("Long", fieldDeclaration.getVariable(0).getType().toString());
                 case "accountName" -> assertEquals("String", fieldDeclaration.getVariable(0).getType().toString());
                 default -> fail("Unknown generated field: " + fieldDeclaration);
