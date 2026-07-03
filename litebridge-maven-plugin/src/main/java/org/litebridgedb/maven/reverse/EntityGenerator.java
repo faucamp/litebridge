@@ -238,20 +238,15 @@ public final class EntityGenerator {
                 }
 
                 if (remoteEntity != null) {
-                    // Related entity; find the remote field for the joinOn attribute
-                    final String remoteFieldName = remoteEntity.columnfieldMap().get(remoteColumn);
+                    fieldClass = null;
+                    fieldClassType = remoteEntity.className();
+                    joinOn = remoteColumn.name();
 
-                    if (remoteFieldName != null) {
-                        fieldClass = null;
-                        fieldClassType = remoteEntity.className();
-                        joinOn = remoteFieldName;
-
-                        if (log.isDebugEnabled()) {
-                            log.debug("Overriding field type for column %s to: %s".formatted(columnMetaData.name(), fieldClassType));
-                        }
-                    } else {
-                        throw new MojoExecutionException("Could not find 'joinOn' field for column: " + columnMetaData.toColumn());
+                    if (log.isDebugEnabled()) {
+                        log.debug("Overriding field type for column %s to: %s".formatted(columnMetaData.name(), fieldClassType));
                     }
+                } else {
+                    log.warn("Could not find related entity for column %s.%s for remote table: %s; skipping related field resolution".formatted(tableMetaData.name(), columnMetaData.name(), remoteTableName) remoteTableName);
                 }
             }
 

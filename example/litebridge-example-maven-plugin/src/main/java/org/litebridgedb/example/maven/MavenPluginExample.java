@@ -59,10 +59,11 @@ public class MavenPluginExample {
         final Person retrievedPerson = litebridge.select(Person.class)
                 .join(Account.class).on(PersonMeta.accounts)
                 .where(AccountMeta.accountName).like("%account")
-                .and(PersonMeta.surname.upper()).eq("DOE")
+                .and(PersonMeta.surname).neq("Smith")
                 .oneOrThrow();
 
         LOGGER.info("Retrieved person: {}", retrievedPerson);
+        LOGGER.info("Retrieved accounts: {}", retrievedPerson.getAccounts());
     }
 
     public static void configureDatabase(final String url, final String user, final String password) {
