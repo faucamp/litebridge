@@ -81,6 +81,11 @@
                     <output>
                         <outputPackage>com.example.generated</outputPackage>
                         <finalClasses>true</finalClasses>
+                        <jspecify>
+                            <annotate>true</annotate>
+                            <nullMarked>true</nullMarked>
+                            <databaseNullable>true</databaseNullable>
+                        </jspecify>
                     </output>
                 </configuration>
             </plugin>

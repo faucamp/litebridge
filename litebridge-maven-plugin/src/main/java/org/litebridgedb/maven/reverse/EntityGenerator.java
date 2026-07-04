@@ -16,6 +16,8 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.Type;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.CollectionUtils;
 import org.litebridgedb.commons.StringUtils;
@@ -32,6 +34,7 @@ import org.litebridgedb.maven.config.TableMappingConfig;
 import org.litebridgedb.maven.util.MojoStringUtils;
 import org.litebridgedb.orm.annotation.OneToMany;
 
+import java.sql.JDBCType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -97,6 +100,9 @@ public final class EntityGenerator {
             entityClassName = MojoStringUtils.camelCase(tableMetaData.name(), false);
         }
 
+        // Toggle nullability annotations
+        final boolean jspecify = output.getJspecify() != null && output.getJspecify().isAnnotate();
+
         final CompilationUnit entity = new CompilationUnit();
         entity.setPackageDeclaration(output.getOutputPackage())
                 .addImport(Objects.class)
@@ -104,9 +110,20 @@ public final class EntityGenerator {
                 .addImport(org.litebridgedb.orm.annotation.Table.class);
         final ClassOrInterfaceDeclaration entityClass = entity.addClass(entityClassName)
                 .setPublic(true)
-                .setFinal(output.isFinalClasses())
-                .addSingleMemberAnnotation(org.litebridgedb.orm.annotation.Table.class.getSimpleName(),
-                        "\"%s\"".formatted(tableMetaData.qualifiedName()));
+                .setFinal(output.isFinalClasses());
+
+        // Annotate class with JSpecify's @NullMarked/@NullUnmarked to allow nullability checks
+        if (jspecify) {
+            if (output.getJspecify().isNullMarked()) {
+                entityClass.addMarkerAnnotation(NullMarked.class);
+            } else {
+                entityClass.addMarkerAnnotation(NullUnmarked.class);
+            }
+        }
+
+        // Add @Table annotation
+        entityClass.addSingleMemberAnnotation(org.litebridgedb.orm.annotation.Table.class.getSimpleName(),
+                "\"%s\"".formatted(tableMetaData.qualifiedName()));
 
         if (output.isJavadoc()) {
             entityClass.setJavadocComment("Entity class for table: {@code %s}".formatted(tableMetaData.qualifiedName()));
@@ -114,15 +131,15 @@ public final class EntityGenerator {
 
         // Create fields for columns
         final Map<Column, String> columnfieldMap = new HashMap<>(tableMetaData.columns().size());
-        final List<FieldDeclaration> declaredFields = new ArrayList<>(tableMetaData.columns().size());
-        final List<FieldDeclaration> appendFields = new ArrayList<>();
+        final List<FieldInfo> declaredFields = new ArrayList<>(tableMetaData.columns().size());
+        final List<FieldInfo> appendFields = new ArrayList<>();
         final Set<Class<?>> additionalImports = new HashSet<>();
 
         // Cache the entity class under construction
         entities.put(tableMetaData.qualifiedName(), new GeneratedEntity(entity, tableMetaData.qualifiedName(), entityClassName, columnfieldMap));
 
         for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
-            // Create the entity field
+            // Determine data for the entity field
             final ColumnMappingConfig columnMappingConfig;
             final String fieldName;
             Class<?> fieldClass = null;
@@ -164,7 +181,7 @@ public final class EntityGenerator {
 
             if (fieldClass == null) {
                 final Optional<SqlTypeMappingConfig> sqlTypeMappingConfig = sqlTypeMappings == null ? Optional.empty() : sqlTypeMappings.stream()
-                        .filter(m -> m.getSqlType().getVendorTypeNumber().equals(columnMetaData.getDataType()))
+                        .filter(m -> m.getJdbcType().getVendorTypeNumber().equals(columnMetaData.getDataType()))
                         .filter(m -> m.getPrecision() == null || m.getPrecision().equals(columnMetaData.getSize()))
                         .filter(m -> m.getNotNull() == null || m.getNotNull().equals(!columnMetaData.isNullable()))
                         .reduce((a, b) -> {
@@ -258,7 +275,7 @@ public final class EntityGenerator {
                 }
             }
 
-            // Create field
+            // Create entity field
             final FieldDeclaration field;
 
             if (fieldClass != null) {
@@ -273,14 +290,36 @@ public final class EntityGenerator {
                         Modifier.Keyword.PRIVATE);
             }
 
+            // Annotate field for nullability with JSpecify if applicable
+            if (jspecify
+                    && output.getJspecify().isNullMarked()
+                    && (!output.getJspecify().isDatabaseNullable() || columnMetaData.isNullable())
+                    && (fieldClass == null || !fieldClass.isPrimitive())) {
+                field.addMarkerAnnotation(Nullable.class);
+            }
+
             // Set @Column annotation
             field.addAnnotation(createColumnAnnotation(columnMetaData, joinOn, columnMappingConfig));
 
             if (output.isJavadoc()) {
-                field.setJavadocComment("Column: {@code %s}".formatted(columnMetaData.name()));
+                StringBuilder comment = new StringBuilder("Column: {@code ").append(columnMetaData.name()).append('}');
+                final JDBCType jdbcType = JDBCType.valueOf(columnMetaData.getDataType());
+                comment.append("\n\nType: {@code ").append(jdbcType.getName()).append('}');
+
+                if (columnMetaData.getSize() > 0) {
+                    comment.append(", size: ").append(columnMetaData.getSize());
+                }
+
+                if (columnMetaData.isNullable()) {
+                    comment.append(", nullable");
+                } else {
+                    comment.append(", not nullable");
+                }
+
+                field.setJavadocComment(comment.toString());
             }
 
-            declaredFields.add(field);
+            declaredFields.add(new FieldInfo(field, columnMetaData.isNullable()));
 
             // Create reverse mapping collection field
             if (reverseMappingCollectionType != null) {
@@ -291,14 +330,19 @@ public final class EntityGenerator {
 
                 final FieldDeclaration reverseMappingCollectionField = new FieldDeclaration()
                         .setModifiers(Modifier.Keyword.PRIVATE)
-                        .addVariable(new VariableDeclarator(listType, reverseMappingCollectionName))
-                        .addAnnotation(createOneToManyAnnotation(oneToManyMappedByField));
+                        .addVariable(new VariableDeclarator(listType, reverseMappingCollectionName));
+
+                if (jspecify && output.getJspecify().isNullMarked()) {
+                    reverseMappingCollectionField.addMarkerAnnotation(Nullable.class);
+                }
+
+                reverseMappingCollectionField.addAnnotation(createOneToManyAnnotation(oneToManyMappedByField));
 
                 if (output.isJavadoc()) {
                     reverseMappingCollectionField.setJavadocComment("Reverse mapping for {@code %s.%s}".formatted(reverseMappingCollectionType, oneToManyMappedByField));
                 }
 
-                appendFields.add(reverseMappingCollectionField);
+                appendFields.add(new FieldInfo(reverseMappingCollectionField, true));
             }
         }
 
@@ -306,19 +350,15 @@ public final class EntityGenerator {
         final List<String> fieldNames = new ArrayList<>(declaredFields.size());
 
         // Add reverse collection fields
-        appendFields.forEach(entityClass::addMember);
+        appendFields.stream().map(FieldInfo::field).forEach(entityClass::addMember);
 
         // Add getters/setters
-        declaredFields.forEach(field -> {
-            fieldNames.add(field.getVariable(0).getNameAsString());
-            field.createGetter();
-            field.createSetter().getParameter(0).setModifier(Modifier.Keyword.FINAL, true);
+        declaredFields.forEach(fieldInfo -> {
+            fieldNames.add(fieldInfo.field().getVariable(0).getNameAsString());
+            createGettersAndSetters(fieldInfo);
         });
 
-        appendFields.forEach(appendField -> {
-            appendField.createGetter();
-            appendField.createSetter().getParameter(0).setModifier(Modifier.Keyword.FINAL, true);
-        });
+        appendFields.forEach(EntityGenerator::createGettersAndSetters);
 
         // Add equals(), hashcodde() and toString()
         entityClass.addMember(createEquals(entityClassName, fieldNames));
@@ -329,6 +369,21 @@ public final class EntityGenerator {
         additionalImports.forEach(entity::addImport);
 
         return new GeneratedEntity(entity, tableMetaData.name(), entityClassName, columnfieldMap);
+    }
+
+    private static void createGettersAndSetters(final FieldInfo fieldInfo) {
+        final MethodDeclaration getter = fieldInfo.field().createGetter();
+        final MethodDeclaration setter = fieldInfo.field().createSetter();
+        final Parameter setterParameter = setter.getParameter(0);
+        setterParameter.setModifier(Modifier.Keyword.FINAL, true);
+
+        if (fieldInfo.field().isAnnotationPresent(Nullable.class)) {
+            getter.addMarkerAnnotation(Nullable.class);
+
+            if (fieldInfo.columnNullable()) {
+                setterParameter.addMarkerAnnotation(Nullable.class);
+            }
+        }
     }
 
     /**
@@ -460,5 +515,8 @@ public final class EntityGenerator {
         annotation.setName(new Name(org.litebridgedb.orm.annotation.OneToMany.class.getSimpleName()));
         annotation.addPair("mappedByField", "\"%s\"".formatted(mappedByField));
         return annotation;
+    }
+
+    private record FieldInfo(FieldDeclaration field, boolean columnNullable) {
     }
 }

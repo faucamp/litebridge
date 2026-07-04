@@ -81,6 +81,10 @@
                     <output>
                         <outputPackage>com.example.generated</outputPackage>
                         <finalClasses>true</finalClasses>
+                        <jspecify>
+                            <annotate>true</annotate>
+                            <nullMarked>false</nullMarked>
+                        </jspecify>
                     </output>
                 </configuration>
             </plugin>

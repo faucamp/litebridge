@@ -39,6 +39,11 @@ public class OutputConfig {
     @Parameter(defaultValue = "true")
     private boolean finalClasses = true;
 
+    /**
+     * Configuration for annotating generated classes/packages for nullability using JSpecify.
+     */
+    private @Nullable JSpecifyConfig jspecify;
+
     public @Nullable String getOutputDir() {
         return outputDir;
     }
@@ -71,6 +76,14 @@ public class OutputConfig {
         this.finalClasses = finalClasses;
     }
 
+    public @Nullable JSpecifyConfig getJspecify() {
+        return jspecify;
+    }
+
+    public void setJspecify(final @Nullable JSpecifyConfig jspecify) {
+        this.jspecify = jspecify;
+    }
+
     @Override
     public String toString() {
         return new StringJoiner(", ", OutputConfig.class.getSimpleName() + "[", "]")
@@ -78,6 +91,7 @@ public class OutputConfig {
                 .add("outputPackage='" + outputPackage + "'")
                 .add("javadoc=" + javadoc)
                 .add("finalClasses=" + finalClasses)
+                .add("jspecify=" + jspecify)
                 .toString();
     }
 }

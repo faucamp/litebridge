@@ -11,12 +11,12 @@ import java.sql.JDBCType;
 public class SqlTypeMappingConfig {
 
     /**
-     * Name of the SQL type.
+     * Name of the JDBC SQL type.
      * <p>
      * Example: {@code NUMERIC}
      */
     @Parameter(required = true)
-    private JDBCType sqlType;
+    private JDBCType jdbcType;
 
     /**
      * Precision of the SQL type.
@@ -31,19 +31,19 @@ public class SqlTypeMappingConfig {
     private @Nullable Boolean notNull;
 
     /**
-     * Java class to use for this SQL type.
+     * Java class to use for this JDBC type.
      * <p>
      * Example: {@code java.lang.Long}
      */
     @Parameter(required = true)
     private String fieldType;
 
-    public JDBCType getSqlType() {
-        return sqlType;
+    public JDBCType getJdbcType() {
+        return jdbcType;
     }
 
-    public void setSqlType(final JDBCType sqlType) {
-        this.sqlType = sqlType;
+    public void setJdbcType(final JDBCType jdbcType) {
+        this.jdbcType = jdbcType;
     }
 
     public @Nullable Integer getPrecision() {
