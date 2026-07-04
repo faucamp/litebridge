@@ -5,6 +5,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.comments.TraditionalJavadocComment;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
 import org.litebridgedb.maven.config.OutputConfig;
 
 public final class PackageInfoGenerator {
@@ -20,8 +21,12 @@ public final class PackageInfoGenerator {
         final PackageDeclaration pkg = new PackageDeclaration(StaticJavaParser.parseName(packageName));
         cu.setPackageDeclaration(pkg);
 
-        if (outputConfig.getJspecify() != null && outputConfig.getJspecify().isNullMarked()) {
-            pkg.addMarkerAnnotation(NullMarked.class);
+        if (outputConfig.getJspecify() != null && outputConfig.getJspecify().isAnnotate()) {
+            if (outputConfig.getJspecify().isNullMarked()) {
+                pkg.addMarkerAnnotation(NullMarked.class);
+            } else {
+                pkg.addMarkerAnnotation(NullUnmarked.class);
+            }
         }
 
         if (outputConfig.isJavadoc()) {

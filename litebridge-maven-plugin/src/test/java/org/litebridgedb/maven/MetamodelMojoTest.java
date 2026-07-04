@@ -2,6 +2,7 @@ package org.litebridgedb.maven;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import org.apache.maven.api.di.Provides;
 import org.apache.maven.api.plugin.testing.InjectMojo;
@@ -49,6 +50,12 @@ class MetamodelMojoTest {
         metamodelMojo.execute();
 
         // Then
+        final Path packageInfoPath = Paths.get("target/generated-sources/java/org/litebridgedb/maven/test/meta/package-info.java");
+        assertTrue(packageInfoPath.toFile().exists());
+        final CompilationUnit packageInfoCu = StaticJavaParser.parse(packageInfoPath);
+        assertFalse(packageInfoCu.getPackageDeclaration().orElseThrow()
+                .isAnnotationPresent("NullMarked"));
+
         final Path expectedOutputFile1 = Paths.get("target/generated-sources/java/org/litebridgedb/maven/test/meta/TestEntityMeta.java");
         assertTrue(expectedOutputFile1.toFile().exists());
         final CompilationUnit compilationUnit1 = StaticJavaParser.parse(expectedOutputFile1);
@@ -99,6 +106,68 @@ class MetamodelMojoTest {
                 .toFile().exists());
         assertFalse(Paths.get("target/generated-sources/java/org/litebridgedb/maven/test/meta/TestRelatedDtoMeta.java")
                 .toFile().exists());
+    }
+
+    @Test
+    @DisplayName("JSpecify: defaults")
+    @InjectMojo(goal = "metamodel", pom = "classpath:/metamodel/pom-jspecify.xml")
+    void execute_jSpecify(final MetamodelMojo metamodelMojo) throws Exception {
+        // When
+        metamodelMojo.execute();
+
+        // Then
+        final Path packageInfoPath = Paths.get("target/generated-sources/java/org/litebridgedb/maven/test/meta/package-info.java");
+        assertTrue(packageInfoPath.toFile().exists());
+        final CompilationUnit packageInfoCu = StaticJavaParser.parse(packageInfoPath);
+        assertTrue(packageInfoCu.getPackageDeclaration().orElseThrow()
+                .isAnnotationPresent("NullMarked"));
+
+        final Path expectedOutputFile1 = Paths.get("target/generated-sources/java/org/litebridgedb/maven/test/meta/TestEntityMeta.java");
+        assertTrue(expectedOutputFile1.toFile().exists());
+        final CompilationUnit compilationUnit1 = StaticJavaParser.parse(expectedOutputFile1);
+        assertEquals("TestEntityMeta", compilationUnit1.getPrimaryTypeName().orElseThrow());
+        final ClassOrInterfaceDeclaration testEntityMeta = compilationUnit1.findAll(ClassOrInterfaceDeclaration.class).getFirst();
+        assertFalse(testEntityMeta.isAnnotationPresent("NullMarked"));
+        assertFalse(testEntityMeta.isAnnotationPresent("NullUnmarked"));
+
+        final Path expectedOutputFile2 = Paths.get("target/generated-sources/java/org/litebridgedb/maven/test/meta/TestRelatedEntityMeta.java");
+        assertTrue(expectedOutputFile2.toFile().exists());
+        final CompilationUnit compilationUnit2 = StaticJavaParser.parse(expectedOutputFile2);
+        assertEquals("TestRelatedEntityMeta", compilationUnit2.getPrimaryTypeName().orElseThrow());
+        final ClassOrInterfaceDeclaration TestRelatedEntityMeta = compilationUnit1.findAll(ClassOrInterfaceDeclaration.class).getFirst();
+        assertFalse(TestRelatedEntityMeta.isAnnotationPresent("NullMarked"));
+        assertFalse(TestRelatedEntityMeta.isAnnotationPresent("NullUnmarked"));
+    }
+
+    @Test
+    @DisplayName("JSpecify: NullUnmarked")
+    @InjectMojo(goal = "metamodel", pom = "classpath:/metamodel/pom-jspecify-nullUnmarked.xml")
+    void execute_jSpecify_nullUnMarked(final MetamodelMojo metamodelMojo) throws Exception {
+        // When
+        metamodelMojo.execute();
+
+        // Then
+        final Path packageInfoPath = Paths.get("target/generated-sources/java/org/litebridgedb/maven/test/meta/package-info.java");
+        assertTrue(packageInfoPath.toFile().exists());
+        final CompilationUnit packageInfoCu = StaticJavaParser.parse(packageInfoPath);
+        assertTrue(packageInfoCu.getPackageDeclaration().orElseThrow()
+                .isAnnotationPresent("NullUnmarked"));
+
+        final Path expectedOutputFile1 = Paths.get("target/generated-sources/java/org/litebridgedb/maven/test/meta/TestEntityMeta.java");
+        assertTrue(expectedOutputFile1.toFile().exists());
+        final CompilationUnit compilationUnit1 = StaticJavaParser.parse(expectedOutputFile1);
+        assertEquals("TestEntityMeta", compilationUnit1.getPrimaryTypeName().orElseThrow());
+        final ClassOrInterfaceDeclaration testEntityMeta = compilationUnit1.findAll(ClassOrInterfaceDeclaration.class).getFirst();
+        assertFalse(testEntityMeta.isAnnotationPresent("NullMarked"));
+        assertFalse(testEntityMeta.isAnnotationPresent("NullUnmarked"));
+
+        final Path expectedOutputFile2 = Paths.get("target/generated-sources/java/org/litebridgedb/maven/test/meta/TestRelatedEntityMeta.java");
+        assertTrue(expectedOutputFile2.toFile().exists());
+        final CompilationUnit compilationUnit2 = StaticJavaParser.parse(expectedOutputFile2);
+        assertEquals("TestRelatedEntityMeta", compilationUnit2.getPrimaryTypeName().orElseThrow());
+        final ClassOrInterfaceDeclaration TestRelatedEntityMeta = compilationUnit1.findAll(ClassOrInterfaceDeclaration.class).getFirst();
+        assertFalse(TestRelatedEntityMeta.isAnnotationPresent("NullMarked"));
+        assertFalse(TestRelatedEntityMeta.isAnnotationPresent("NullUnmarked"));
     }
 
     @Test
