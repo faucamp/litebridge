@@ -1,12 +1,6 @@
 package org.litebridgedb.maven;
 
 import com.github.javaparser.StaticJavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Modifier;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.FieldDeclaration;
-import com.github.javaparser.ast.type.Type;
-import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
@@ -18,24 +12,19 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.CollectionUtils;
-import org.litebridgedb.commons.StringUtils;
-import org.litebridgedb.maven.util.MojoDirUtils;
-import org.litebridgedb.orm.annotation.Table;
-import org.litebridgedb.orm.meta.NumericQueryField;
-import org.litebridgedb.orm.meta.QueryField;
-import org.litebridgedb.orm.meta.StringQueryField;
+import org.litebridgedb.maven.config.metamodel.MetamodelInputConfig;
+import org.litebridgedb.maven.config.metamodel.MetamodelOutputConfig;
+import org.litebridgedb.maven.metamodel.GeneratedMetamodel;
+import org.litebridgedb.maven.metamodel.MetamodelGenerator;
+import org.litebridgedb.maven.util.JavaFileWriter;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A Maven Mojo for generating Litebridge metamodel classes.
@@ -62,44 +51,16 @@ public final class MetamodelMojo extends AbstractMojo {
     private boolean skip;
 
     /**
-     * Input source directory. This is where root directory {@code <inputPackages>} will be searched for.
-     * <p>
-     * Defaults to the project's source directory.
-     * <p>
-     * This is useful when generating metamodels from reverse-engineered entities if the entities
-     * are not generated in a location that is already part of the project's source directory.
-     */
-    @Parameter
-    private @Nullable String srcDir;
-
-    /**
-     * Packages to scan for entities/DTOs
+     * Input configuration.
      */
     @Parameter(required = true)
-    private List<String> inputPackages;
+    private MetamodelInputConfig input;
 
     /**
-     * Output directory. This is where the {@code <outputPackage>} and generated metamodel classes will be created.
-     * <p>
-     * Defaults to {@code ${project.build.directory}/generated-sources/java}
-     */
-    @Parameter
-    private @Nullable String outputDir;
-
-    /**
-     * Output package for generated metamodel classes
+     * Generated output configuration.
      */
     @Parameter(required = true)
-    private String outputPackage;
-
-    /**
-     * Controls what types of input classes are processed during metamodel generation.
-     * <p>
-     * If {@code true}, only annotated entities will be included in metamodel generation.
-     * If {@code false}, all classes will be included, whether they are annotated or not.
-     */
-    @Parameter(defaultValue = "true")
-    private boolean entitiesOnly;
+    private MetamodelOutputConfig output;
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -109,17 +70,39 @@ public final class MetamodelMojo extends AbstractMojo {
         }
 
         getLog().info("Generating metamodel classes");
+        final InputData inputData = getTypeSolverAndPackageDirs();
+
+        // Apply symbol solver globally to JavaParser static engine
+        final JavaSymbolSolver symbolSolver = new JavaSymbolSolver(inputData.typeSolver());
+        StaticJavaParser.getParserConfiguration().setSymbolResolver(symbolSolver);
+        final MetamodelGenerator metamodelGenerator = new MetamodelGenerator(input.isEntitiesOnly(), output, getLog());
+        final JavaFileWriter javaFileWriter = new JavaFileWriter(project, output, getLog());
+
+        for (String dirName : inputData.packageDirs()) {
+            final File rootDir = new File(dirName);
+            if (rootDir.exists() && rootDir.isDirectory()) {
+                createMetamodelsForJavaSourceFiles(rootDir, metamodelGenerator, javaFileWriter);
+            }
+        }
+    }
+
+    private InputData getTypeSolverAndPackageDirs() throws MojoExecutionException {
+        if (input == null) {
+            throw new MojoExecutionException("No input configuration provided");
+        }
+
+        // Parse input packages and setup Java parser
         final CombinedTypeSolver typeSolver = new CombinedTypeSolver();
         typeSolver.add(new ReflectionTypeSolver());
 
-        if (CollectionUtils.isEmpty(inputPackages)) {
+        if (CollectionUtils.isEmpty(input.getInputPackages())) {
             throw new MojoExecutionException("No input package(s) specified");
         }
 
         final List<String> projectSrcDirs;
 
-        if (srcDir != null) {
-            final String nonNullSrcDir = srcDir;
+        if (input.getSrcDir() != null) {
+            final String nonNullSrcDir = input.getSrcDir();
             projectSrcDirs = Collections.singletonList(nonNullSrcDir);
         } else {
             projectSrcDirs = project.getCompileSourceRoots();
@@ -129,9 +112,9 @@ public final class MetamodelMojo extends AbstractMojo {
             getLog().debug("Searching for input packages in source directories: %s".formatted(projectSrcDirs));
         }
 
-        final List<String> packageDirs = new ArrayList<>(inputPackages.size());
+        final List<String> packageDirs = new ArrayList<>(input.getInputPackages().size());
 
-        for (String srcPackage : inputPackages) {
+        for (String srcPackage : input.getInputPackages()) {
             final String packageDir = srcPackage.replace('.', File.separatorChar);
             boolean packageFound = false;
 
@@ -158,147 +141,39 @@ public final class MetamodelMojo extends AbstractMojo {
             }
         }
 
-        // Apply symbol solver globally to JavaParser static engine
-        final JavaSymbolSolver symbolSolver = new JavaSymbolSolver(typeSolver);
-        StaticJavaParser.getParserConfiguration().setSymbolResolver(symbolSolver);
-
-        for (String dirName : packageDirs) {
-            final File rootDir = new File(dirName);
-            if (rootDir.exists() && rootDir.isDirectory()) {
-                createMetamodelsForJavaSourceFiles(rootDir);
-            }
-        }
+        return new InputData(typeSolver, packageDirs);
     }
 
-    private void createMetamodelsForJavaSourceFiles(File directory) throws MojoExecutionException {
+    private void createMetamodelsForJavaSourceFiles(final File directory,
+                                                    final MetamodelGenerator metamodelGenerator,
+                                                    final JavaFileWriter javaFileWriter) throws MojoExecutionException {
         final File[] files = directory.listFiles();
 
         if (files == null) {
             return;
         }
 
-        outputDir = MojoDirUtils.getOutputDir(outputDir, project);
-
         for (File file : files) {
             if (file.isDirectory()) {
                 // Recursively search folders
-                createMetamodelsForJavaSourceFiles(file);
+                createMetamodelsForJavaSourceFiles(file, metamodelGenerator, javaFileWriter);
             } else if (file.getName().endsWith(".java")) {
-                try {
-                    if (getLog().isDebugEnabled()) {
-                        getLog().debug("Parsing Java source: " + file.getAbsolutePath());
-                    }
+                // Create metamodel
+                final Optional<GeneratedMetamodel> generatedMetamodelOptional = metamodelGenerator.createMetaModel(file);
 
-                    final CompilationUnit source = StaticJavaParser.parse(file);
-
-                    final String sourceClassName = source.getPrimaryTypeName()
-                            .orElseThrow(() -> new MojoExecutionException("No primary type name found in file: " + file.getAbsolutePath()));
-
-                    final List<ClassOrInterfaceDeclaration> classDeclarations = source.getLocalDeclarationFromClassname(sourceClassName);
-
-                    if (classDeclarations.isEmpty()) {
-                        continue;
-                    }
-
-                    if (entitiesOnly && source.getLocalDeclarationFromClassname(sourceClassName).getFirst().getAnnotationByClass(Table.class).isEmpty()) {
-                        if (getLog().isDebugEnabled()) {
-                            getLog().debug("Skipping non-entity class: " + sourceClassName);
-                        }
-                        continue;
-                    }
-
-                    final String sourcePackageName = source.getPackageDeclaration()
-                            .map(packageDeclaration -> packageDeclaration.getName().asString())
-                            .orElse("");
-
-                    final String sourceQualifiedClassName = sourcePackageName.isBlank()
-                            ? sourceClassName
-                            : "%s.%s".formatted(sourcePackageName, sourceClassName);
-
-                    final String targetClassName = sourceClassName + "Meta";
-                    final CompilationUnit metamodel = new CompilationUnit();
-                    metamodel.setPackageDeclaration(outputPackage);
-                    metamodel.addImport(sourceQualifiedClassName);
-
-                    final ClassOrInterfaceDeclaration metamodelClass = metamodel
-                            .addClass(targetClassName)
-                            .setPublic(true)
-                            .setFinal(true)
-                            .setJavadocComment("Litebridge metamodel for {@link %s}".formatted(sourceClassName));
-                    metamodelClass.addConstructor(Modifier.Keyword.PRIVATE);
-
-                    // Target non-static fields from the source file
-                    source.findAll(FieldDeclaration.class, fieldDeclaration -> !fieldDeclaration.isStatic())
-                            .forEach(fieldDeclaration -> {
-                                final String fieldName = fieldDeclaration.getVariable(0).getNameAsString();
-                                final Type fieldType = fieldDeclaration.getVariable(0).getType();
-
-                                Class<? extends QueryField> queryFieldClass = QueryField.class;
-
-                                try {
-                                    // Use JavaParser symbol resolver to calculate runtime assignments
-                                    final ResolvedType resolvedType = fieldType.resolve();
-
-                                    if (resolvedType.isReferenceType()) {
-                                        String fqdn = resolvedType.asReferenceType().getQualifiedName();
-
-                                        if ("java.lang.String".equals(fqdn)) {
-                                            queryFieldClass = StringQueryField.class;
-                                        } else if (resolvedType.asReferenceType().getAllAncestors().stream()
-                                                .anyMatch(ancestor -> "java.lang.Number".equals(ancestor.getQualifiedName()))) {
-                                            queryFieldClass = NumericQueryField.class;
-                                        }
-                                    } else if (resolvedType.isPrimitive()) {
-                                        // Catch primitives like int, double, float, long
-                                        String name = resolvedType.asPrimitive().name().toLowerCase();
-
-                                        if (!"boolean".equals(name) && !"char".equals(name)) {
-                                            queryFieldClass = NumericQueryField.class;
-                                        }
-                                    }
-                                } catch (Exception ex) {
-                                    // Fallback if type resolution fails (e.g. unresolvable custom project types)
-                                    if (getLog().isDebugEnabled()) {
-                                        getLog().debug("Could not resolve type for field %s.%s; defaulting to QueryField".formatted(sourceClassName, fieldName));
-                                    }
-                                }
-
-                                // Create the query field
-                                final FieldDeclaration queryField = metamodelClass.addField(
-                                                queryFieldClass,
-                                                fieldName,
-                                                Modifier.Keyword.PUBLIC,
-                                                Modifier.Keyword.STATIC,
-                                                Modifier.Keyword.FINAL)
-                                        .setJavadocComment("Query field for {@code %s.%s}".formatted(sourceClassName, fieldName));
-
-                                queryField.getVariable(0)
-                                        .setInitializer("new %s(%s.class, \"%s\")".formatted(
-                                                queryFieldClass.getSimpleName(),
-                                                sourceClassName,
-                                                fieldName));
-                            });
-
-                    // Target output compilation structures safely
-                    final String[] targetPackageArray = StringUtils.splitArray(outputPackage, '.', -1, false);
-                    final Path packagePath = Paths.get(outputDir, targetPackageArray);
-                    final File targetFile = new File(packagePath.toFile(), "%s.java".formatted(targetClassName));
-
-                    try {
-                        Files.createDirectories(packagePath);
-
-                        try (FileWriter writer = new FileWriter(targetFile)) {
-                            writer.write(metamodel.toString());
-                        }
-
-                        getLog().info("Created Litebridge metamodel class %s for %s at: %s".formatted(targetClassName, sourceClassName, targetFile.getAbsolutePath()));
-                    } catch (IOException ex) {
-                        throw new MojoExecutionException("Error writing generated Java class to file", ex);
-                    }
-                } catch (IOException ex) {
-                    throw new MojoExecutionException("Error reading file: " + file.getAbsolutePath(), ex);
+                if (generatedMetamodelOptional.isEmpty()) {
+                    // Metamodel creation rejected
+                    continue;
                 }
+
+                // Write metamodel Java output file
+                final GeneratedMetamodel generatedMetamodel = generatedMetamodelOptional.get();
+                final String filename = "%s.java".formatted(generatedMetamodel.className());
+                javaFileWriter.writeJavaFile(output.getOutputPackage(), filename, generatedMetamodel.metamodel());
             }
         }
+    }
+
+    private record InputData(CombinedTypeSolver typeSolver, List<String> packageDirs) {
     }
 }

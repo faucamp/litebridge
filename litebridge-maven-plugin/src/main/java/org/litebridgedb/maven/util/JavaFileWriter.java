@@ -1,4 +1,4 @@
-package org.litebridgedb.maven.reverse;
+package org.litebridgedb.maven.util;
 
 import com.github.javaparser.ast.CompilationUnit;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -6,7 +6,7 @@ import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.litebridgedb.commons.StringUtils;
 import org.litebridgedb.maven.config.OutputConfig;
-import org.litebridgedb.maven.util.MojoDirUtils;
+import org.litebridgedb.maven.reverse.GeneratedEntity;
 
 import java.io.File;
 import java.io.FileWriter;

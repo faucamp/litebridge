@@ -1,4 +1,4 @@
-package org.litebridgedb.maven.config;
+package org.litebridgedb.maven.config.reverse;
 
 import org.apache.maven.plugins.annotations.Parameter;
 

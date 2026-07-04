@@ -27,10 +27,11 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.ForeignKeyConstraint;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
-import org.litebridgedb.maven.config.ColumnMappingConfig;
+import org.litebridgedb.maven.config.reverse.ColumnMappingConfig;
 import org.litebridgedb.maven.config.OutputConfig;
-import org.litebridgedb.maven.config.SqlTypeMappingConfig;
-import org.litebridgedb.maven.config.TableMappingConfig;
+import org.litebridgedb.maven.config.reverse.RevEngOutputConfig;
+import org.litebridgedb.maven.config.reverse.SqlTypeMappingConfig;
+import org.litebridgedb.maven.config.reverse.TableMappingConfig;
 import org.litebridgedb.maven.util.MojoStringUtils;
 import org.litebridgedb.orm.annotation.OneToMany;
 
@@ -56,13 +57,13 @@ public final class EntityGenerator {
 
     private final @Nullable List<SqlTypeMappingConfig> sqlTypeMappings;
     private final @Nullable List<TableMappingConfig> tableMappings;
-    private final OutputConfig output;
+    private final RevEngOutputConfig output;
     private final Log log;
     private final TypeConverter typeConverter = new DefaultTypeConverter();
 
     public EntityGenerator(@Nullable final List<SqlTypeMappingConfig> sqlTypeMappings,
                            @Nullable final List<TableMappingConfig> tableMappings,
-                           final OutputConfig output,
+                           final RevEngOutputConfig output,
                            final Log log) {
         this.sqlTypeMappings = sqlTypeMappings;
         this.tableMappings = tableMappings;

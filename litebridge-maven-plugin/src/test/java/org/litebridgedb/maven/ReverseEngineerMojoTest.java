@@ -43,7 +43,7 @@ class ReverseEngineerMojoTest {
 
     @Test
     @DisplayName("Reverse engineer")
-    @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse-engineer-pom.xml")
+    @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom.xml")
     void execute(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
         final ExecuteResult result = executeImpl(reverseEngineerMojo);
 
@@ -68,7 +68,7 @@ class ReverseEngineerMojoTest {
 
     @Test
     @DisplayName("JSpecify defaults: Strict Java nullability")
-    @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse-engineer-jspecify-pom.xml")
+    @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-jspecify.xml")
     void execute_jspecify(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
         final ExecuteResult result = executeImpl(reverseEngineerMojo);
 
@@ -153,7 +153,7 @@ class ReverseEngineerMojoTest {
 
     @Test
     @DisplayName("JSpecify: no package-info.java")
-    @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse-engineer-jspecify-noPackageInfo-pom.xml")
+    @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-jspecify-noPackageInfo.xml")
     void execute_jspecify_noPackageInfo(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
         final ExecuteResult result = executeImpl(reverseEngineerMojo);
 
@@ -234,7 +234,7 @@ class ReverseEngineerMojoTest {
 
     @Test
     @DisplayName("JSpecify: use database NULLABLE attribute")
-    @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse-engineer-jspecify-databaseNullable-pom.xml")
+    @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-jspecify-databaseNullable.xml")
     void execute_jspecify_databaseNullable(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
         final ExecuteResult result = executeImpl(reverseEngineerMojo);
 

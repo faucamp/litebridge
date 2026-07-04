@@ -14,7 +14,8 @@
     <artifactId>litebridge-example-maven-plugin</artifactId>
 
     <name>Litebridge Maven Plugin Example</name>
-    <description>Example application using Litebridge Maven Plugin to reverse engineer entities and metamodels</description>
+    <description>Example application using Litebridge Maven Plugin to reverse engineer entities and metamodels
+    </description>
 
     <build>
         <!-- Exclude from mvn install/deploy -->
@@ -155,12 +156,16 @@
                         </goals>
 
                         <configuration>
-                            <srcDir>${project.build.directory}/generated-sources/java</srcDir>
-                            <inputPackages>
-                                <inputPackage>org.litebridge.example.maven.entity</inputPackage>
-                            </inputPackages>
-                            <outputDir>${project.build.directory}/generated-sources/java</outputDir>
-                            <outputPackage>org.litebridge.example.maven.metamodel</outputPackage>
+                            <input>
+                                <srcDir>${project.build.directory}/generated-sources/java</srcDir>
+                                <inputPackages>
+                                    <inputPackage>org.litebridge.example.maven.entity</inputPackage>
+                                </inputPackages>
+                            </input>
+                            <output>
+                                <outputDir>${project.build.directory}/generated-sources/java</outputDir>
+                                <outputPackage>org.litebridge.example.maven.metamodel</outputPackage>
+                            </output>
                         </configuration>
                     </execution>
                 </executions>

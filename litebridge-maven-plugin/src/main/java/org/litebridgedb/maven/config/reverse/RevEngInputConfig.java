@@ -1,4 +1,4 @@
-package org.litebridgedb.maven.config;
+package org.litebridgedb.maven.config.reverse;
 
 import org.apache.maven.plugins.annotations.Parameter;
 
@@ -8,7 +8,7 @@ import java.util.StringJoiner;
 /**
  * Input configuration for reverse engineering.
  */
-public class InputConfig {
+public final class RevEngInputConfig {
 
     /**
      * List of tables names to generate entities for.
@@ -29,7 +29,7 @@ public class InputConfig {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", InputConfig.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", RevEngInputConfig.class.getSimpleName() + "[", "]")
                 .add("tables=" + tables)
                 .toString();
     }

@@ -13,15 +13,16 @@ import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
-import org.litebridgedb.maven.config.DatabaseConfig;
-import org.litebridgedb.maven.config.InputConfig;
+import org.litebridgedb.maven.config.reverse.DatabaseConfig;
+import org.litebridgedb.maven.config.reverse.RevEngInputConfig;
 import org.litebridgedb.maven.config.OutputConfig;
-import org.litebridgedb.maven.config.SqlTypeMappingConfig;
-import org.litebridgedb.maven.config.TableMappingConfig;
+import org.litebridgedb.maven.config.reverse.RevEngOutputConfig;
+import org.litebridgedb.maven.config.reverse.SqlTypeMappingConfig;
+import org.litebridgedb.maven.config.reverse.TableMappingConfig;
 import org.litebridgedb.maven.reverse.EntityGenerator;
 import org.litebridgedb.maven.reverse.GeneratedEntity;
-import org.litebridgedb.maven.reverse.JavaFileWriter;
 import org.litebridgedb.maven.reverse.PackageInfoGenerator;
+import org.litebridgedb.maven.util.JavaFileWriter;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridgedb.orm.tx.DefaultTransactionManager;
 import org.litebridgedb.orm.tx.LitebridgeDriverManagerDataSource;
@@ -55,6 +56,12 @@ public final class ReverseEngineerMojo extends AbstractMojo {
     private MavenProject project;
 
     /**
+     * Skips plugin execution if {@code true}
+     */
+    @Parameter(defaultValue = "false")
+    private boolean skip;
+
+    /**
      * Database configuration.
      */
     @Parameter(required = true)
@@ -66,7 +73,7 @@ public final class ReverseEngineerMojo extends AbstractMojo {
      * Used to specify the tables to reverse engineer.
      */
     @Parameter(required = true)
-    private InputConfig input;
+    private RevEngInputConfig input;
 
     /**
      * SQL data type override configuration.
@@ -88,10 +95,15 @@ public final class ReverseEngineerMojo extends AbstractMojo {
      * Generated output configuration.
      */
     @Parameter(required = true)
-    private OutputConfig output;
+    private RevEngOutputConfig output;
 
     @Override
     public void execute() throws MojoExecutionException {
+        if (skip) {
+            getLog().debug("Skipping Litebridge reverse engineering because skip == true");
+            return;
+        }
+
         getLog().info("Reverse engineering Litebridge entities");
         validateConfig();
 

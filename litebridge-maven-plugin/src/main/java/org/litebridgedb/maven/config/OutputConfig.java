@@ -2,23 +2,24 @@ package org.litebridgedb.maven.config;
 
 import org.apache.maven.plugins.annotations.Parameter;
 import org.jspecify.annotations.Nullable;
+import org.litebridgedb.maven.config.reverse.RevEngJSpecifyConfig;
 
 import java.util.StringJoiner;
 
 /**
- * Output configuration for reverse engineering.
+ * Output configuration for entity reverse engineering and metamodel generation.
  */
 public class OutputConfig {
 
     /**
-     * Output directory. This is where the {@code <outputPackage>} and generated metamodel classes will be created.
+     * Output directory. This is where the {@code <outputPackage>} and generated entity/metamodel classes will be created.
      * <p>
      * Defaults to {@code ${project.build.directory}/generated-sources/java}
      */
     private @Nullable String outputDir;
 
     /**
-     * Output package for generated entity classes
+     * Output package for generated entity classes/metamodels
      */
     @Parameter(required = true)
     private String outputPackage;
@@ -32,7 +33,7 @@ public class OutputConfig {
     private boolean packageInfo = true;
 
     /**
-     * Whether to add Javadoc comments in generated entity classes.
+     * Whether to add Javadoc comments in generated entity/metamodel classes.
      * <p>
      * Default: {@code true}
      */
@@ -40,7 +41,7 @@ public class OutputConfig {
     private boolean javadoc = true;
 
     /**
-     * If {@code true}, generated entity classes will be declared as final.
+     * If {@code true}, generated entity/metamodel classes will be declared as final.
      * <p>
      * Default: {@code true}
      */
@@ -50,7 +51,7 @@ public class OutputConfig {
     /**
      * Configuration for annotating generated classes/packages for nullability using JSpecify.
      */
-    private @Nullable JSpecifyConfig jspecify;
+    private @Nullable RevEngJSpecifyConfig jspecify;
 
     public @Nullable String getOutputDir() {
         return outputDir;
@@ -92,11 +93,11 @@ public class OutputConfig {
         this.finalClasses = finalClasses;
     }
 
-    public @Nullable JSpecifyConfig getJspecify() {
+    public @Nullable RevEngJSpecifyConfig getJspecify() {
         return jspecify;
     }
 
-    public void setJspecify(final @Nullable JSpecifyConfig jspecify) {
+    public void setJspecify(final @Nullable RevEngJSpecifyConfig jspecify) {
         this.jspecify = jspecify;
     }
 
