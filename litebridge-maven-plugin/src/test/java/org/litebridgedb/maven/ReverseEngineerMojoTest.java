@@ -72,6 +72,91 @@ class ReverseEngineerMojoTest {
     void execute_jspecify(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
         final ExecuteResult result = executeImpl(reverseEngineerMojo);
 
+        assertTrue(result.person.getImports().stream().noneMatch(importDeclaration ->
+                importDeclaration.getNameAsString().equals("org.jspecify.annotations.NullMarked")));
+        final ClassOrInterfaceDeclaration person = result.person.getClassByName("PersonEntity").orElseThrow();
+        assertFalse(person.isAnnotationPresent(NullMarked.class));
+
+        person.getFields().forEach(field -> {
+            final String fieldName = field.getVariable(0).getNameAsString();
+
+            if (fieldName.equals("age")) {
+                // Note that "age" is nullable on a database level, but the SQL type mapping for the entity specifies a primitive int=
+                assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
+            } else {
+                assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
+            }
+        });
+
+        person.getMethods().stream()
+                .filter(method -> method.getNameAsString().startsWith("get"))
+                .forEach(getter -> {
+                    switch (getter.getNameAsString()) {
+                        case "getAge" -> assertFalse(getter.isAnnotationPresent(Nullable.class),
+                                "Getter must not be @Nullable: " + getter.getNameAsString());
+                        default -> assertTrue(getter.isAnnotationPresent(Nullable.class),
+                                "Getter must be @Nullable: " + getter.getNameAsString());
+                    }
+                });
+
+        person.getMethods().stream()
+                .filter(method -> method.getNameAsString().startsWith("set"))
+                .forEach(setter -> {
+                    switch (setter.getNameAsString()) {
+                        case "setSurname", "setEyeColour", "setAccounts" ->
+                                assertTrue(setter.getParameter(0).isAnnotationPresent(Nullable.class),
+                                        "Setter parameter must be @Nullable: " + setter.getNameAsString());
+                        default -> assertFalse(setter.getParameter(0).isAnnotationPresent(Nullable.class),
+                                "Setter parameter must not be @Nullable: " + setter.getNameAsString());
+                    }
+                });
+
+        assertTrue(result.account.getImports().stream().noneMatch(importDeclaration ->
+                importDeclaration.getNameAsString().equals("org.jspecify.annotations.NullMarked")));
+        final ClassOrInterfaceDeclaration account = result.account.getClassByName("Account").orElseThrow();
+        assertFalse(account.isAnnotationPresent(NullMarked.class));
+
+        account.getFields().forEach(field -> {
+            final String fieldName = field.getVariable(0).getNameAsString();
+
+            if (fieldName.equals("active")) {
+                assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
+            } else {
+                assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
+            }
+        });
+
+        account.getMethods().stream()
+                .filter(method -> method.getNameAsString().startsWith("get"))
+                .forEach(getter -> {
+                    if (getter.getNameAsString().equals("getActive")) {
+                        assertFalse(getter.isAnnotationPresent(Nullable.class),
+                                "Getter must not be @Nullable: " + getter);
+                    } else {
+                        assertTrue(getter.isAnnotationPresent(Nullable.class),
+                                "Getter must be @Nullable: " + getter);
+                    }
+                });
+
+        account.getMethods().stream()
+                .filter(method -> method.getNameAsString().startsWith("set"))
+                .forEach(setter -> {
+                    if (setter.getNameAsString().equals("setFlagged")) {
+                        assertTrue(setter.getParameter(0).isAnnotationPresent(Nullable.class),
+                                "Setter parameter must be @Nullable: " + setter.getNameAsString());
+                    } else {
+                        assertFalse(setter.getParameter(0).isAnnotationPresent(Nullable.class),
+                                "Setter parameter must not be @Nullable: " + setter.getNameAsString());
+                    }
+                });
+    }
+
+    @Test
+    @DisplayName("JSpecify: no package-info.java")
+    @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse-engineer-jspecify-noPackageInfo-pom.xml")
+    void execute_jspecify_noPackageInfo(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
+        final ExecuteResult result = executeImpl(reverseEngineerMojo);
+
         final ClassOrInterfaceDeclaration person = result.person.getClassByName("PersonEntity").orElseThrow();
         assertTrue(person.isAnnotationPresent(NullMarked.class));
 
@@ -154,7 +239,7 @@ class ReverseEngineerMojoTest {
         final ExecuteResult result = executeImpl(reverseEngineerMojo);
 
         final ClassOrInterfaceDeclaration person = result.person.getClassByName("PersonEntity").orElseThrow();
-        assertTrue(person.isAnnotationPresent(NullMarked.class));
+        assertFalse(person.isAnnotationPresent(NullMarked.class));
 
         person.getFields().forEach(field -> {
             final String fieldName = field.getVariable(0).getNameAsString();
@@ -193,7 +278,7 @@ class ReverseEngineerMojoTest {
                 });
 
         final ClassOrInterfaceDeclaration account = result.account.getClassByName("Account").orElseThrow();
-        assertTrue(account.isAnnotationPresent(NullMarked.class));
+        assertFalse(account.isAnnotationPresent(NullMarked.class));
 
         account.getFields().forEach(field -> {
             final String fieldName = field.getVariable(0).getNameAsString();

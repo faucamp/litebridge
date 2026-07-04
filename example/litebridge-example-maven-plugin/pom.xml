@@ -87,17 +87,17 @@
 
                             <sqlTypeMappings>
                                 <sqlTypeMapping>
-                                    <sqlType>NUMERIC</sqlType>
+                                    <jdbcType>NUMERIC</jdbcType>
                                     <fieldType>java.lang.Long</fieldType>
                                 </sqlTypeMapping>
                                 <sqlTypeMapping>
-                                    <sqlType>NUMERIC</sqlType>
+                                    <jdbcType>NUMERIC</jdbcType>
                                     <precision>1</precision>
                                     <notNull>true</notNull>
                                     <fieldType>boolean</fieldType>
                                 </sqlTypeMapping>
                                 <sqlTypeMapping>
-                                    <sqlType>NUMERIC</sqlType>
+                                    <jdbcType>NUMERIC</jdbcType>
                                     <precision>1</precision>
                                     <notNull>false</notNull>
                                     <fieldType>java.lang.Boolean</fieldType>

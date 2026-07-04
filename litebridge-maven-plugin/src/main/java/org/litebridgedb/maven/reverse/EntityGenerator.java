@@ -112,8 +112,8 @@ public final class EntityGenerator {
                 .setPublic(true)
                 .setFinal(output.isFinalClasses());
 
-        // Annotate class with JSpecify's @NullMarked/@NullUnmarked to allow nullability checks
-        if (jspecify) {
+        // Annotate class with @NullMarked/@NullUnmarked to allow nullability checks if package-info does not exist
+        if (jspecify && !output.isPackageInfo()) {
             if (output.getJspecify().isNullMarked()) {
                 entityClass.addMarkerAnnotation(NullMarked.class);
             } else {

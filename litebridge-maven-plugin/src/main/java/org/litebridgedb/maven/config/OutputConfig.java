@@ -24,6 +24,14 @@ public class OutputConfig {
     private String outputPackage;
 
     /**
+     * Whether to generate a {@code package-info.java} file for the output package.
+     * <p>
+     * Default: {@code true}
+     */
+    @Parameter(defaultValue = "true")
+    private boolean packageInfo = true;
+
+    /**
      * Whether to add Javadoc comments in generated entity classes.
      * <p>
      * Default: {@code true}
@@ -54,6 +62,14 @@ public class OutputConfig {
 
     public String getOutputPackage() {
         return outputPackage;
+    }
+
+    public boolean isPackageInfo() {
+        return packageInfo;
+    }
+
+    public void setPackageInfo(final boolean packageInfo) {
+        this.packageInfo = packageInfo;
     }
 
     public void setOutputPackage(final String outputPackage) {
@@ -89,6 +105,7 @@ public class OutputConfig {
         return new StringJoiner(", ", OutputConfig.class.getSimpleName() + "[", "]")
                 .add("outputDir='" + outputDir + "'")
                 .add("outputPackage='" + outputPackage + "'")
+                .add("packageInfo=" + packageInfo)
                 .add("javadoc=" + javadoc)
                 .add("finalClasses=" + finalClasses)
                 .add("jspecify=" + jspecify)

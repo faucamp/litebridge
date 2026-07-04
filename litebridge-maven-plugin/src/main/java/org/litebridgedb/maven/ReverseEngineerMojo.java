@@ -1,5 +1,6 @@
 package org.litebridgedb.maven;
 
+import com.github.javaparser.ast.CompilationUnit;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -18,8 +19,9 @@ import org.litebridgedb.maven.config.OutputConfig;
 import org.litebridgedb.maven.config.SqlTypeMappingConfig;
 import org.litebridgedb.maven.config.TableMappingConfig;
 import org.litebridgedb.maven.reverse.EntityGenerator;
-import org.litebridgedb.maven.reverse.EntityWriter;
 import org.litebridgedb.maven.reverse.GeneratedEntity;
+import org.litebridgedb.maven.reverse.JavaFileWriter;
+import org.litebridgedb.maven.reverse.PackageInfoGenerator;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridgedb.orm.tx.DefaultTransactionManager;
 import org.litebridgedb.orm.tx.LitebridgeDriverManagerDataSource;
@@ -37,6 +39,9 @@ import java.util.Map;
  * configuration, and output configuration settings. It performs table metadata extraction,
  * applies custom mappings (if configured), and writes the resulting entity classes to the
  * specified output directory.
+ * <p>
+ * Output can be fine-tuned to control the generated entity classes, such as specifying
+ * the package name, class name, class modifiers, field types, nullability annotations, etc.
  * <p>
  * This Mojo is executed during the <i>generate-sources</i> phase of the Maven build lifecycle by default.
  */
@@ -97,7 +102,8 @@ public final class ReverseEngineerMojo extends AbstractMojo {
         final LitebridgeDriverManagerDataSource dataSource = new LitebridgeDriverManagerDataSource(database.getUrl(), database.getUser(), database.getPassword());
         final TransactionalDatabaseProvider databaseProvider = createDatabaseProvider(dataSource);
         final EntityGenerator entityGenerator = new EntityGenerator(sqlTypeMappings, tableMappings, output, getLog());
-        final EntityWriter entityWriter = new EntityWriter(project, output, getLog());
+        final PackageInfoGenerator packageInfoGenerator = new PackageInfoGenerator(output);
+        final JavaFileWriter javaFileWriter = new JavaFileWriter(project, output, getLog());
 
         // Get table metadata
         final Map<String, TableMetaData> tableMetaDataMap = new HashMap<>(input.getTables().size());
@@ -114,13 +120,19 @@ public final class ReverseEngineerMojo extends AbstractMojo {
             tableMetaDataMap.put(tableName, tableMetaData);
         }
 
-        // Map tables to entities
+        // Create package-info.java
+        if (output.isPackageInfo()) {
+            final CompilationUnit packageInfo = packageInfoGenerator.createPackageInfo(output.getOutputPackage());
+            javaFileWriter.writeJavaFile(output.getOutputPackage(), "package-info.java", packageInfo);
+        }
+
+        // Generate entities
         final Map<String, GeneratedEntity> entities = new HashMap<>(input.getTables().size());
 
         for (final String tableName : input.getTables()) {
             final TableMetaData tableMetaData = tableMetaDataMap.get(tableName);
             final GeneratedEntity generatedEntity = entityGenerator.createEntityClassForTable(tableMetaData, tableMetaDataMap, entities);
-            entityWriter.writeEntityJavaFile(generatedEntity);
+            javaFileWriter.writeEntityJavaFile(generatedEntity);
         }
     }
 
