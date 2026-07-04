@@ -46,10 +46,12 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 - **API Design**: Favour fluent builders and functional interfaces for configuration and queries.
 - **Variables and parameters**: Declare variables and parameters as `final` wherever possible, including when writing tests.
 
-### 2. DTO Mappings
+### 2. Entity/DTO Mappings
 
-- Mappings are defined via `TableSpec`.
-- Prefer programmatic registration (`litebridge.register(...)`) over annotations.
+- Litebridge supports unaltered DTOS as well as annotated entity classes as database enttieis.
+- Entity classes are annotated with `org.litebridgedb.orm.annotation.Table`
+- Unannotated DTOs can be used via the fluent programmatic registration API.
+- All entity/DTO mappings are registered via `Litebridge.register(...)` methods.
 
 ### 3. Database Support
 
@@ -85,9 +87,6 @@ They are bound to Maven's `integration-test` phase and thus executed using `mvn 
 
 - **Write Documentation**: Follow the same style as existing documentation. Documentation is found in the `docs`
   directory.
-- **Fixing a Bug**: Create a reproduction test case in the `e2e` package of `litebridge-orm`.
-- **Adding a Feature**: Start by defining the API in `Litebridge` or relevant spec classes, then implement the logic in
-  `litebridge-orm`. Add E2E tests and unit tests.
 - **Adding a DB Provider**: Implement the `DatabaseProvider` SPI in a new module and ensure it passes the SPI TCK/common
   tests. Update relevant documentation to reflect the new provider. Add unit tests and E2E tests for the new provider.
 - **Creating tests**: Implement unit tests for new features or bug fixes. Follow the style detailed under section 4, "Testing".
