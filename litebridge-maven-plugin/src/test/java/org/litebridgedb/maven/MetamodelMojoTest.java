@@ -8,10 +8,8 @@ import org.apache.maven.api.plugin.testing.InjectMojo;
 import org.apache.maven.api.plugin.testing.MojoParameter;
 import org.apache.maven.api.plugin.testing.MojoParameters;
 import org.apache.maven.api.plugin.testing.MojoTest;
-import org.apache.maven.model.Build;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.project.MavenProject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,12 +23,10 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 @MojoTest
 class MetamodelMojoTest {
@@ -98,6 +94,11 @@ class MetamodelMojoTest {
                 default -> fail("Unknown generated field: " + fieldDeclaration);
             }
         }
+
+        assertFalse(Paths.get("target/generated-sources/java/org/litebridgedb/maven/test/meta/TestDtoMeta.java")
+                .toFile().exists());
+        assertFalse(Paths.get("target/generated-sources/java/org/litebridgedb/maven/test/meta/TestRelatedDtoMeta.java")
+                .toFile().exists());
     }
 
     @Test

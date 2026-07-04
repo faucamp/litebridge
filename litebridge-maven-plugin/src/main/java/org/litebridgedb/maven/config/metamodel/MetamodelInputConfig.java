@@ -35,7 +35,7 @@ public final class MetamodelInputConfig {
      * If {@code false}, all classes will be included, whether they are annotated or not.
      */
     @Parameter(defaultValue = "true")
-    private boolean entitiesOnly;
+    private boolean entitiesOnly = true;
 
     public @Nullable String getSrcDir() {
         return srcDir;
