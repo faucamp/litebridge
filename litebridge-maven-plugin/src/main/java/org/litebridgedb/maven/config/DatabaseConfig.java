@@ -4,14 +4,17 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import java.util.StringJoiner;
 
-public class DatabaseConfig {
+/**
+ * Database configuration for reverse engineering.
+ */
+public final class DatabaseConfig {
 
     /**
      * Litebridge database provider class.
      * <p>
      * Example: {@code org.litebridgedb.db.h2.H2DatabaseProvider}
      */
-    @Parameter(property = "databaseProviderClass", required = true)
+    @Parameter(required = true)
     private String databaseProviderClass;
 
     /**
@@ -19,20 +22,22 @@ public class DatabaseConfig {
      * <p>
      * Example: {@code jdbc:h2:mem:lb}
      */
-    @Parameter(property = "url", required = true)
+    @Parameter(required = true)
     private String url;
 
     /**
      * Database username
      */
-    @Parameter(property = "user", required = true)
+    @Parameter(required = true)
     private String user;
 
     /**
      * Database password
+     * <p>
+     * Defaults to an empty string.
      */
-    @Parameter(property = "password", required = true)
-    private String password;
+    @Parameter(defaultValue = "")
+    private String password = "";
 
     public String getDatabaseProviderClass() {
         return databaseProviderClass;

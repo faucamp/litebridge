@@ -2,7 +2,10 @@ package org.litebridgedb.maven.config;
 
 import org.apache.maven.plugins.annotations.Parameter;
 
-public class ColumnMappingConfig {
+/**
+ * Column mapping customisation configuration for reverse engineering.
+ */
+public final class ColumnMappingConfig {
 
     /**
      * Column name.

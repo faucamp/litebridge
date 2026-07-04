@@ -118,6 +118,9 @@ class AbstractDatabaseProviderTest {
         when(columnResultSet.getInt("COLUMN_SIZE")).thenReturn(10).thenReturn(10);
         when(databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)).thenReturn(columnResultSet);
 
+        when(databaseMetaData.getImportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(mock(ResultSet.class));
+        when(databaseMetaData.getExportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(mock(ResultSet.class));
+
         // When
         final TableMetaData result = databaseProvider.tableMetaData(table, transactionManager);
 
@@ -172,6 +175,9 @@ class AbstractDatabaseProviderTest {
         when(columnResultSet.getInt("DATA_TYPE")).thenReturn(Types.VARCHAR).thenReturn(Types.VARCHAR).thenReturn(Types.VARCHAR);
         when(columnResultSet.getInt("COLUMN_SIZE")).thenReturn(10).thenReturn(10);
         when(databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)).thenReturn(columnResultSet);
+
+        when(databaseMetaData.getImportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(mock(ResultSet.class));
+        when(databaseMetaData.getExportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(mock(ResultSet.class));
 
         // When
         final TableMetaData result = databaseProvider.tableMetaData(table, transactionManager);
@@ -672,6 +678,9 @@ class AbstractDatabaseProviderTest {
         when(columnResultSet.getInt("COLUMN_SIZE")).thenReturn(10);
         when(databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)).thenReturn(columnResultSet);
 
+        when(databaseMetaData.getImportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(mock(ResultSet.class));
+        when(databaseMetaData.getExportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(mock(ResultSet.class));
+
         // When
         final TableMetaData first = databaseProvider.tableMetaData(table, transactionManager);
         final TableMetaData second = databaseProvider.tableMetaData(table, transactionManager);
@@ -1098,6 +1107,8 @@ class AbstractDatabaseProviderTest {
         when(columnResultSet.getInt("DATA_TYPE")).thenReturn(Types.INTEGER);
         when(columnResultSet.getInt("COLUMN_SIZE")).thenReturn(10);
         when(databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)).thenReturn(columnResultSet);
+        when(databaseMetaData.getImportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(mock(ResultSet.class));
+        when(databaseMetaData.getExportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(mock(ResultSet.class));
 
         // When
         final TableMetaData result = databaseProvider.fetchTableMetaData(table, transactionManager);
@@ -1219,6 +1230,8 @@ class AbstractDatabaseProviderTest {
         final ResultSet pkResultSet = mock(ResultSet.class);
         when(pkResultSet.next()).thenReturn(false);
         when(databaseMetaData.getPrimaryKeys(table.catalog(), table.schema(), table.name())).thenReturn(pkResultSet);
+        when(databaseMetaData.getImportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(mock(ResultSet.class));
+        when(databaseMetaData.getExportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(mock(ResultSet.class));
 
         final ResultSet columnResultSet = mock(ResultSet.class);
         when(columnResultSet.next()).thenReturn(true).thenReturn(false);

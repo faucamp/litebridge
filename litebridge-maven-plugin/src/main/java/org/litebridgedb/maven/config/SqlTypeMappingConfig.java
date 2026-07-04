@@ -4,6 +4,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import java.sql.JDBCType;
 
+/**
+ * SQL type mapping customisation configuration for reverse engineering.
+ */
 public class SqlTypeMappingConfig {
 
     /**

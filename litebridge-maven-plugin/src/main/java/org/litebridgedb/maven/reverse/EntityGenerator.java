@@ -42,6 +42,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Entity generator utility class.
+ * <p>
+ * A utility class responsible for generating Java entity classes based on database table metadata.
+ * The entities are created using the provided SQL type mappings and table mappings configurations.
+ * Additional configurations include the output settings for the generated source files and logging.
+ */
 public final class EntityGenerator {
 
     private final List<SqlTypeMappingConfig> sqlTypeMappings;
@@ -60,6 +67,15 @@ public final class EntityGenerator {
         this.log = log;
     }
 
+    /**
+     * Creates a generated entity class for a specified database table based on its metadata.
+     *
+     * @param tableMetaData    the metadata of the database table for which the entity class is being created
+     * @param tableMetaDataMap a map of table names to their corresponding metadata, used for resolving related tables
+     * @param entities         a map of table names to generated entity classes, used to cache entities under construction and for cross-referencing
+     * @return a {@code GeneratedEntity} representing the generated entity class, including its associated metadata, mappings, and structure
+     * @throws MojoExecutionException if any error occurs during the generation of the entity class, such as resolving class types, column mappings, or foreign key relationships
+     */
     public GeneratedEntity createEntityClassForTable(final TableMetaData tableMetaData,
                                                      final Map<String, TableMetaData> tableMetaDataMap,
                                                      final Map<String, GeneratedEntity> entities) throws MojoExecutionException {
@@ -98,13 +114,12 @@ public final class EntityGenerator {
 
         // Create fields for columns
         final Map<Column, String> columnfieldMap = new HashMap<>(tableMetaData.columns().size());
-        final List<ForeignKeyConstraint> unresolvedEntityRefs = new ArrayList<>();
         final List<FieldDeclaration> declaredFields = new ArrayList<>(tableMetaData.columns().size());
         final List<FieldDeclaration> appendFields = new ArrayList<>();
         final Set<Class<?>> additionalImports = new HashSet<>();
 
         // Cache the entity class under construction
-        entities.put(tableMetaData.qualifiedName(), new GeneratedEntity(entity, unresolvedEntityRefs, tableMetaData.qualifiedName(), entityClassName, columnfieldMap));
+        entities.put(tableMetaData.qualifiedName(), new GeneratedEntity(entity, tableMetaData.qualifiedName(), entityClassName, columnfieldMap));
 
         for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
             // Create the entity field
@@ -246,7 +261,7 @@ public final class EntityGenerator {
                         log.debug("Overriding field type for column %s to: %s".formatted(columnMetaData.name(), fieldClassType));
                     }
                 } else {
-                    log.warn("Could not find related entity for column %s.%s for remote table: %s; skipping related field resolution".formatted(tableMetaData.name(), columnMetaData.name(), remoteTableName) remoteTableName);
+                    log.warn("Could not find related entity for column %s.%s for remote table: %s; skipping related field resolution".formatted(tableMetaData.name(), columnMetaData.name(), remoteTableName));
                 }
             }
 
@@ -323,9 +338,16 @@ public final class EntityGenerator {
         // Finalise imports
         additionalImports.forEach(entity::addImport);
 
-        return new GeneratedEntity(entity, unresolvedEntityRefs, tableMetaData.name(), entityClassName, columnfieldMap);
+        return new GeneratedEntity(entity, tableMetaData.name(), entityClassName, columnfieldMap);
     }
 
+    /**
+     * Creates a toString method for the specified entity class.
+     *
+     * @param className the name of the entity class
+     * @param fields    the list of field names to include in the toString output
+     * @return the generated toString method declaration
+     */
     private static MethodDeclaration createToString(final String className, final List<String> fields) {
         // Build the string concatenation expression for the return statement
         // Example output format: "User{id=" + id + ", name='" + name + "', active=" + active + "}"
@@ -348,6 +370,13 @@ public final class EntityGenerator {
         return toStringMethod;
     }
 
+    /**
+     * Creates an equals method for the specified entity class.
+     *
+     * @param className the name of the entity class
+     * @param fields    the list of field names to include in the equals comparison
+     * @return the generated equals method declaration
+     */
     private static MethodDeclaration createEquals(final String className, final List<String> fields) {
         // Build the basic method signature: public boolean equals(Object obj)
         MethodDeclaration equalsMethod = new MethodDeclaration()
@@ -376,6 +405,12 @@ public final class EntityGenerator {
         return equalsMethod;
     }
 
+    /**
+     * Creates a hashCode method for the specified entity class.
+     *
+     * @param fields the list of field names to include in the hashCode calculation
+     * @return the generated hashCode method declaration
+     */
     private static MethodDeclaration createHashCode(List<String> fields) {
         // Build basic method signature: public int hashCode()
         MethodDeclaration hashCodeMethod = new MethodDeclaration()
@@ -392,6 +427,15 @@ public final class EntityGenerator {
         return hashCodeMethod;
     }
 
+    /**
+     * Creates a column annotation for the specified column metadata.
+     *
+     * @param columnMetaData      the metadata of the column for which the annotation is being created
+     * @param joinOn              remote join column for this column, if any
+     * @param columnMappingConfig the configuration for mapping the column, if any
+     * @param entities            a map of entity names to their corresponding generated entities, used for resolving related entities
+     * @return the generated column annotation expression
+     */
     private AnnotationExpr createColumnAnnotation(final ColumnMetaData columnMetaData, final String joinOn, final @Nullable ColumnMappingConfig columnMappingConfig, final Map<String, GeneratedEntity> entities) {
         final NormalAnnotationExpr annotation = new NormalAnnotationExpr();
         annotation.setName(new Name(org.litebridgedb.orm.annotation.Column.class.getSimpleName()));
@@ -416,6 +460,12 @@ public final class EntityGenerator {
         return annotation;
     }
 
+    /**
+     * Creates a one-to-sssssssmany annotation for the specified mapped-by field.
+     *
+     * @param mappedByField the name of the field in the related entity that maps to this entity
+     * @return the generated one-to-many annotation expression
+     */
     private AnnotationExpr createOneToManyAnnotation(final String mappedByField) {
         final NormalAnnotationExpr annotation = new NormalAnnotationExpr();
         annotation.setName(new Name(org.litebridgedb.orm.annotation.OneToMany.class.getSimpleName()));

@@ -1,8 +1,13 @@
 package org.litebridgedb.maven.config;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 import java.util.List;
 import java.util.StringJoiner;
 
+/**
+ * Input configuration for reverse engineering.
+ */
 public class InputConfig {
 
     /**
@@ -11,6 +16,7 @@ public class InputConfig {
      * The table names should be qualified with the schema name if applicable.
      * In addition to specifying tables to map, this allows customisation of the table mapping.
      */
+    @Parameter(required = true)
     private List<String> tables;
 
     public List<String> getTables() {

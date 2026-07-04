@@ -192,7 +192,7 @@ class MetamodelMojoTest {
         final MojoExecutionException result = assertThrows(MojoExecutionException.class, () -> metamodelMojo.execute());
 
         // Then
-        assertEquals("Package not found: org.nonexistent", result.getMessage());
+        assertEquals("Package not found: org.nonexistent; searched dirs: []", result.getMessage());
     }
 
     @Test

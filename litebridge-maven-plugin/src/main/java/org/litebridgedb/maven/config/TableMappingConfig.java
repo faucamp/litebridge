@@ -5,7 +5,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import java.util.List;
 
 /**
- * Table mapping configuration.
+ * Table mapping customisation configuration for reverse engineering.
  */
 public class TableMappingConfig {
 

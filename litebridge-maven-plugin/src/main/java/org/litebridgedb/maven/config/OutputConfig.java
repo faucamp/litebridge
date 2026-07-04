@@ -4,6 +4,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import java.util.StringJoiner;
 
+/**
+ * Output configuration for reverse engineering.
+ */
 public class OutputConfig {
 
     /**
@@ -11,7 +14,6 @@ public class OutputConfig {
      * <p>
      * Defaults to {@code ${project.build.directory}/generated-sources/java}
      */
-    @Parameter(defaultValue = "${project.build.directory}/generated-sources/java")
     private String outputDir;
 
     /**
@@ -22,7 +24,7 @@ public class OutputConfig {
 
     /**
      * Whether to add Javadoc comments in generated entity classes.
-     *
+     * <p>
      * Default: {@code true}
      */
     @Parameter(defaultValue = "true")

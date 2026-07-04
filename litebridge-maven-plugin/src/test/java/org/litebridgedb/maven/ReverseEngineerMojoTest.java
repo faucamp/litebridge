@@ -54,7 +54,7 @@ class ReverseEngineerMojoTest {
                 fieldDeclaration.isPrivate()
                         && !fieldDeclaration.isStatic()
                         && !fieldDeclaration.isFinal());
-        assertEquals(5, personFields.size());
+        assertEquals(6, personFields.size());
 
         for (FieldDeclaration fieldDeclaration : personFields) {
             switch (fieldDeclaration.getVariable(0).getNameAsString()) {
@@ -62,6 +62,7 @@ class ReverseEngineerMojoTest {
                 case "age" -> assertEquals("int", fieldDeclaration.getVariable(0).getType().toString());
                 case "firstName", "surname", "eyeColour" ->
                         assertEquals("String", fieldDeclaration.getVariable(0).getType().toString());
+                case "accounts" -> assertEquals("List<Account>", fieldDeclaration.getVariable(0).getType().toString());
                 default -> fail("Unknown generated field: " + fieldDeclaration);
             }
         }
@@ -82,7 +83,7 @@ class ReverseEngineerMojoTest {
                 case "active" -> assertEquals("boolean", fieldDeclaration.getVariable(0).getType().toString());
                 case "flagged" -> assertEquals("Boolean", fieldDeclaration.getVariable(0).getType().toString());
                 case "balance" -> assertEquals("BigDecimal", fieldDeclaration.getVariable(0).getType().toString());
-                case "owner" -> assertEquals("Long", fieldDeclaration.getVariable(0).getType().toString());
+                case "owner" -> assertEquals("PersonEntity", fieldDeclaration.getVariable(0).getType().toString());
                 case "accountName" -> assertEquals("String", fieldDeclaration.getVariable(0).getType().toString());
                 default -> fail("Unknown generated field: " + fieldDeclaration);
             }

@@ -81,7 +81,7 @@ public final class MetamodelMojo extends AbstractMojo {
      * <p>
      * Defaults to {@code ${project.build.directory}/generated-sources/java}
      */
-    @Parameter(defaultValue = "${project.build.directory}/generated-sources/java")
+    @Parameter
     private String outputDir;
 
     /**
