@@ -14,7 +14,7 @@ It supports annotated entity classes as well as unannotated, plain DTOs as datab
 
 Litebridge is modular and uses JPMS (`module-info.java`).
 
-- `docs`: Documentation and guides for users and contributors.
+- `docs`: Documentation and guides for users and contributors. It is contains subsections detailing various aspects, logically grouped.
 - `litebridge-orm`: The core engine and primary entry point. Contains the `Litebridge` class.
 - `litebridge-orm-support`: Supporting utilities for Litebridge ORM, allowing classpath scanning for entities/DTO-table mappings.
 - `litebridge-db`: Contains the `DatabaseProvider` SPI and its implementations (e.g. `litebridge-db-h2`, `litebridge-db-postgres`, etc.).
@@ -86,7 +86,7 @@ They are bound to Maven's `integration-test` phase and thus executed using `mvn 
 ## Common Agent Tasks
 
 - **Write Documentation**: Follow the same style as existing documentation. Documentation is found in the `docs`
-  directory.
+  directory. Ensure that all relevant pages are updated when adding/extending a specific topic.
 - **Adding a DB Provider**: Implement the `DatabaseProvider` SPI in a new module and ensure it passes the SPI TCK/common
   tests. Update relevant documentation to reflect the new provider. Add unit tests and E2E tests for the new provider.
 - **Creating tests**: Implement unit tests for new features or bug fixes. Follow the style detailed under section 4, "Testing".
