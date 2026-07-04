@@ -18,8 +18,10 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.CollectionUtils;
 import org.litebridgedb.commons.StringUtils;
+import org.litebridgedb.maven.util.MojoDirUtils;
 import org.litebridgedb.orm.annotation.Table;
 import org.litebridgedb.orm.meta.NumericQueryField;
 import org.litebridgedb.orm.meta.QueryField;
@@ -68,12 +70,12 @@ public final class MetamodelMojo extends AbstractMojo {
      * are not generated in a location that is already part of the project's source directory.
      */
     @Parameter
-    private String srcDir;
+    private @Nullable String srcDir;
 
     /**
      * Packages to scan for entities/DTOs
      */
-    @Parameter(property = "inputPackages", required = true)
+    @Parameter(required = true)
     private List<String> inputPackages;
 
     /**
@@ -82,12 +84,12 @@ public final class MetamodelMojo extends AbstractMojo {
      * Defaults to {@code ${project.build.directory}/generated-sources/java}
      */
     @Parameter
-    private String outputDir;
+    private @Nullable String outputDir;
 
     /**
      * Output package for generated metamodel classes
      */
-    @Parameter(property = "outputPackage", required = true)
+    @Parameter(required = true)
     private String outputPackage;
 
     /**
@@ -96,7 +98,7 @@ public final class MetamodelMojo extends AbstractMojo {
      * If {@code true}, only annotated entities will be included in metamodel generation.
      * If {@code false}, all classes will be included, whether they are annotated or not.
      */
-    @Parameter(property = "entitiesOnly", defaultValue = "true")
+    @Parameter(defaultValue = "true")
     private boolean entitiesOnly;
 
     @Override
@@ -116,10 +118,11 @@ public final class MetamodelMojo extends AbstractMojo {
 
         final List<String> projectSrcDirs;
 
-        if (srcDir == null) {
-            projectSrcDirs = project.getCompileSourceRoots();
+        if (srcDir != null) {
+            final String nonNullSrcDir = srcDir;
+            projectSrcDirs = Collections.singletonList(nonNullSrcDir);
         } else {
-            projectSrcDirs = Collections.singletonList(srcDir);
+            projectSrcDirs = project.getCompileSourceRoots();
         }
 
         if (getLog().isDebugEnabled()) {
@@ -157,7 +160,7 @@ public final class MetamodelMojo extends AbstractMojo {
 
         // Apply symbol solver globally to JavaParser static engine
         final JavaSymbolSolver symbolSolver = new JavaSymbolSolver(typeSolver);
-        StaticJavaParser.getConfiguration().setSymbolResolver(symbolSolver);
+        StaticJavaParser.getParserConfiguration().setSymbolResolver(symbolSolver);
 
         for (String dirName : packageDirs) {
             final File rootDir = new File(dirName);
@@ -174,9 +177,7 @@ public final class MetamodelMojo extends AbstractMojo {
             return;
         }
 
-        if (outputDir == null) {
-            outputDir = "%s/generated-sources/java".formatted(project.getBuild().getDirectory());
-        }
+        outputDir = MojoDirUtils.getOutputDir(outputDir, project);
 
         for (File file : files) {
             if (file.isDirectory()) {

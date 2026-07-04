@@ -2,11 +2,11 @@ package org.litebridgedb.maven;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.ClassUtils;
 import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.DatabaseProvider;
@@ -69,7 +69,7 @@ public final class ReverseEngineerMojo extends AbstractMojo {
      * This is an optional global setting that allows specifying exact Java classes to use for SQL data types.
      */
     @Parameter
-    private List<SqlTypeMappingConfig> sqlTypeMappings;
+    private @Nullable List<SqlTypeMappingConfig> sqlTypeMappings;
 
     /**
      * Additional table mapping configuration.
@@ -77,7 +77,7 @@ public final class ReverseEngineerMojo extends AbstractMojo {
      * This is optional, but allows setting up inter-table relationships, per-column data type overrides, etc.
      */
     @Parameter
-    private List<TableMappingConfig> tableMappings;
+    private @Nullable List<TableMappingConfig> tableMappings;
 
     /**
      * Generated output configuration.
@@ -86,7 +86,7 @@ public final class ReverseEngineerMojo extends AbstractMojo {
     private OutputConfig output;
 
     @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    public void execute() throws MojoExecutionException {
         getLog().info("Reverse engineering Litebridge entities");
         validateConfig();
 
@@ -136,6 +136,7 @@ public final class ReverseEngineerMojo extends AbstractMojo {
         ObjectUtils.requireNonNull(output, () -> new MojoExecutionException("Mandatory config parameter missing: <output>"));
     }
 
+    @SuppressWarnings("unchecked")
     private TransactionalDatabaseProvider createDatabaseProvider(final DataSource dataSource) {
         if (getLog().isDebugEnabled()) {
             getLog().debug("Creating database provider instance for class: " + database.getDatabaseProviderClass());

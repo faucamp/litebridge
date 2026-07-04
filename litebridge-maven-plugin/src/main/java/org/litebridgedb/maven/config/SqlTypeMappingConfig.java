@@ -1,6 +1,7 @@
 package org.litebridgedb.maven.config;
 
 import org.apache.maven.plugins.annotations.Parameter;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.JDBCType;
 
@@ -22,12 +23,12 @@ public class SqlTypeMappingConfig {
      * <p>
      * Example: {@code 1}
      */
-    private Integer precision;
+    private @Nullable Integer precision;
 
     /**
      * Whether the SQL type is not null.
      */
-    private Boolean notNull;
+    private @Nullable Boolean notNull;
 
     /**
      * Java class to use for this SQL type.
@@ -45,19 +46,19 @@ public class SqlTypeMappingConfig {
         this.sqlType = sqlType;
     }
 
-    public Integer getPrecision() {
+    public @Nullable Integer getPrecision() {
         return precision;
     }
 
-    public void setPrecision(final Integer precision) {
+    public void setPrecision(final @Nullable Integer precision) {
         this.precision = precision;
     }
 
-    public Boolean getNotNull() {
+    public @Nullable Boolean getNotNull() {
         return notNull;
     }
 
-    public void setNotNull(final Boolean notNull) {
+    public void setNotNull(final @Nullable Boolean notNull) {
         this.notNull = notNull;
     }
 

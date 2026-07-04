@@ -7,6 +7,7 @@ import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.litebridgedb.commons.StringUtils;
 import org.litebridgedb.maven.config.OutputConfig;
+import org.litebridgedb.maven.util.MojoDirUtils;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -14,26 +15,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.stream.Stream;
 
 public class EntityWriter {
 
-    private final MavenProject project;
     private final OutputConfig output;
     private final Log log;
     private final String outputDir;
 
     public EntityWriter(final MavenProject project, final OutputConfig output, final Log log) {
-        this.project = project;
         this.output = output;
         this.log = log;
-
-        if (output.getOutputDir() == null) {
-            this.outputDir = "%s/generated-sources/java".formatted(project.getBuild().getDirectory());
-        } else {
-            this.outputDir = output.getOutputDir();
-        }
+        this.outputDir = MojoDirUtils.getOutputDir(output.getOutputDir(), project);
     }
 
     public void writeEntityJavaFile(final GeneratedEntity generatedEntity) throws MojoExecutionException {

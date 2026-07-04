@@ -1,6 +1,7 @@
 package org.litebridgedb.maven.config;
 
 import org.apache.maven.plugins.annotations.Parameter;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -18,17 +19,17 @@ public class TableMappingConfig {
     private String table;
 
     /**
-     * Optional entity class name.
+     * Specify the generated entity class name explicitly.
      * <p>
      * If specified, this name will be used for the resulting class.
      * If not specified, the classname is generated from the table name.
      */
-    private String entityName;
+    private @Nullable String entityName;
 
     /**
      * Configuration for specific columns.
      */
-    private List<ColumnMappingConfig> columnMappings;
+    private @Nullable List<ColumnMappingConfig> columnMappings;
 
     public String getTable() {
         return table;
@@ -38,19 +39,19 @@ public class TableMappingConfig {
         this.table = table;
     }
 
-    public String getEntityName() {
+    public @Nullable String getEntityName() {
         return entityName;
     }
 
-    public void setEntityName(final String entityName) {
+    public void setEntityName(final @Nullable String entityName) {
         this.entityName = entityName;
     }
 
-    public List<ColumnMappingConfig> getColumnMappings() {
+    public @Nullable List<ColumnMappingConfig> getColumnMappings() {
         return columnMappings;
     }
 
-    public void setColumnMappings(final List<ColumnMappingConfig> columnMappings) {
+    public void setColumnMappings(final @Nullable List<ColumnMappingConfig> columnMappings) {
         this.columnMappings = columnMappings;
     }
 }

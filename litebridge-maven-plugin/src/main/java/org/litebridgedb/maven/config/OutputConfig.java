@@ -1,6 +1,7 @@
 package org.litebridgedb.maven.config;
 
 import org.apache.maven.plugins.annotations.Parameter;
+import org.jspecify.annotations.Nullable;
 
 import java.util.StringJoiner;
 
@@ -14,7 +15,7 @@ public class OutputConfig {
      * <p>
      * Defaults to {@code ${project.build.directory}/generated-sources/java}
      */
-    private String outputDir;
+    private @Nullable String outputDir;
 
     /**
      * Output package for generated entity classes
@@ -38,11 +39,11 @@ public class OutputConfig {
     @Parameter(defaultValue = "true")
     private boolean finalClasses = true;
 
-    public String getOutputDir() {
+    public @Nullable String getOutputDir() {
         return outputDir;
     }
 
-    public void setOutputDir(final String outputDir) {
+    public void setOutputDir(final @Nullable String outputDir) {
         this.outputDir = outputDir;
     }
 

@@ -51,14 +51,14 @@ import java.util.stream.Collectors;
  */
 public final class EntityGenerator {
 
-    private final List<SqlTypeMappingConfig> sqlTypeMappings;
-    private final List<TableMappingConfig> tableMappings;
+    private final @Nullable List<SqlTypeMappingConfig> sqlTypeMappings;
+    private final @Nullable List<TableMappingConfig> tableMappings;
     private final OutputConfig output;
     private final Log log;
     private final TypeConverter typeConverter = new DefaultTypeConverter();
 
-    public EntityGenerator(final List<SqlTypeMappingConfig> sqlTypeMappings,
-                           final List<TableMappingConfig> tableMappings,
+    public EntityGenerator(@Nullable final List<SqlTypeMappingConfig> sqlTypeMappings,
+                           @Nullable final List<TableMappingConfig> tableMappings,
                            final OutputConfig output,
                            final Log log) {
         this.sqlTypeMappings = sqlTypeMappings;
@@ -163,9 +163,7 @@ public final class EntityGenerator {
             String oneToManyMappedByField = null;
 
             if (fieldClass == null) {
-                final String[] fieldClassStr = new String[1];
-
-                final Optional<SqlTypeMappingConfig> sqlTypeMappingConfig = sqlTypeMappings.stream()
+                final Optional<SqlTypeMappingConfig> sqlTypeMappingConfig = sqlTypeMappings == null ? Optional.empty() : sqlTypeMappings.stream()
                         .filter(m -> m.getSqlType().getVendorTypeNumber().equals(columnMetaData.getDataType()))
                         .filter(m -> m.getPrecision() == null || m.getPrecision().equals(columnMetaData.getSize()))
                         .filter(m -> m.getNotNull() == null || m.getNotNull().equals(!columnMetaData.isNullable()))
@@ -203,12 +201,7 @@ public final class EntityGenerator {
                     try {
                         fieldClass = PrimitiveLookup.getPrimitiveClass(sqlTypeMapping.getFieldType());
                     } catch (ClassNotFoundException ex) {
-                        fieldClassStr[0] = sqlTypeMapping.getFieldType();
-                        fieldClass = null;
-                    }
-
-                    if (fieldClass == null) {
-                        fieldClassType = fieldClassStr[0];
+                        fieldClassType = sqlTypeMapping.getFieldType();
                         log.warn("Could not find class for specified field type '%s' for column: %s".formatted(fieldClassType, columnMetaData.name()));
                     }
                 } else {
@@ -280,8 +273,8 @@ public final class EntityGenerator {
                         Modifier.Keyword.PRIVATE);
             }
 
-            // Set @Column  annotation
-            field.addAnnotation(createColumnAnnotation(columnMetaData, joinOn, columnMappingConfig, entities));
+            // Set @Column annotation
+            field.addAnnotation(createColumnAnnotation(columnMetaData, joinOn, columnMappingConfig));
 
             if (output.isJavadoc()) {
                 field.setJavadocComment("Column: {@code %s}".formatted(columnMetaData.name()));
@@ -313,10 +306,7 @@ public final class EntityGenerator {
         final List<String> fieldNames = new ArrayList<>(declaredFields.size());
 
         // Add reverse collection fields
-        appendFields.forEach(appendField -> {
-            ;
-            entityClass.addMember(appendField);
-        });
+        appendFields.forEach(entityClass::addMember);
 
         // Add getters/setters
         declaredFields.forEach(field -> {
@@ -433,10 +423,9 @@ public final class EntityGenerator {
      * @param columnMetaData      the metadata of the column for which the annotation is being created
      * @param joinOn              remote join column for this column, if any
      * @param columnMappingConfig the configuration for mapping the column, if any
-     * @param entities            a map of entity names to their corresponding generated entities, used for resolving related entities
      * @return the generated column annotation expression
      */
-    private AnnotationExpr createColumnAnnotation(final ColumnMetaData columnMetaData, final String joinOn, final @Nullable ColumnMappingConfig columnMappingConfig, final Map<String, GeneratedEntity> entities) {
+    private AnnotationExpr createColumnAnnotation(final ColumnMetaData columnMetaData, final @Nullable String joinOn, final @Nullable ColumnMappingConfig columnMappingConfig) {
         final NormalAnnotationExpr annotation = new NormalAnnotationExpr();
         annotation.setName(new Name(org.litebridgedb.orm.annotation.Column.class.getSimpleName()));
         annotation.addPair("value", "\"%s\"".formatted(columnMetaData.name()));
