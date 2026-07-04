@@ -32,6 +32,14 @@ These metamodels are used to provide type safety when building Litebridge querie
 | `packageInfo` | `boolean` | No | `true` | Whether to generate a `package-info.java` file. |
 | `javadoc` | `boolean` | No | `true` | Whether to include Javadoc comments in generated classes. |
 | `finalClasses` | `boolean` | No | `true` | Whether to declare generated metamodel classes as `final`. |
+| `jspecify` | `RevEngJSpecifyConfig` | No | - | Configuration for JSpecify nullability annotations. |
+
+#### `jspecify` Settings
+
+| Parameter | Type | Required | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `annotate` | `boolean` | No | `false` | Enable JSpecify annotations in generated code. |
+| `nullMarked` | `boolean` | No | `true` | Use `@NullMarked` at the class or package level. If `false`, `@NullUnmarked` is used. This setting is only used if `annotate` is `true`. |
 
 \* If `classNamePrefix` is specified and `classNameSuffix` is not, `classNameSuffix` defaults to an empty string. If neither is specified, `classNameSuffix` defaults to `Meta`.
 
@@ -50,6 +58,10 @@ These metamodels are used to provide type safety when building Litebridge querie
         <outputPackage>org.example.meta</outputPackage>
         <!-- Optional: custom name for generated metamodels (e.g. UserModel) -->
         <classNameSuffix>Model</classNameSuffix>
+        <!-- Optional: enable JSpecify annotations -->
+        <jspecify>
+            <annotate>true</annotate>
+        </jspecify>
     </output>
 </configuration>
 ```

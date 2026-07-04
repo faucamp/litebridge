@@ -84,7 +84,7 @@ Allows fine-grained control over how specific tables and columns are mapped.
 
 ```xml
 <configuration>
-    <!-- Specify databae connection -->
+    <!-- Specify database connection -->
     <database>
         <url>jdbc:h2:mem:test</url>
         <user>sa</user>
