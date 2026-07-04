@@ -9,7 +9,8 @@ import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.resolution.types.ResolvedType;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.litebridgedb.maven.config.OutputConfig;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
 import org.litebridgedb.maven.config.metamodel.MetamodelOutputConfig;
 import org.litebridgedb.orm.annotation.Table;
 import org.litebridgedb.orm.meta.NumericQueryField;
@@ -66,6 +67,8 @@ public final class MetamodelGenerator {
                     ? sourceClassName
                     : "%s.%s".formatted(sourcePackageName, sourceClassName);
 
+
+            // Create metamodel
             final String metamodelClassName = output.getClassNamePrefix() + sourceClassName + output.getClassNameSuffix();
             final CompilationUnit metamodel = new CompilationUnit();
             metamodel.setPackageDeclaration(output.getOutputPackage());
@@ -77,6 +80,16 @@ public final class MetamodelGenerator {
                     .setFinal(true)
                     .setJavadocComment("Litebridge metamodel for {@link %s}".formatted(sourceClassName));
             metamodelClass.addConstructor(Modifier.Keyword.PRIVATE);
+
+            if (output.getJspecify() != null
+                    && output.getJspecify().isAnnotate()
+                    && !output.isPackageInfo()) {
+                if (output.getJspecify().isNullMarked()) {
+                    metamodelClass.addMarkerAnnotation(NullMarked.class);
+                } else {
+                    metamodelClass.addMarkerAnnotation(NullUnmarked.class);
+                }
+            }
 
             // Target non-static fields from the source file
             source.findAll(FieldDeclaration.class, fieldDeclaration -> !fieldDeclaration.isStatic())

@@ -15,13 +15,12 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.maven.config.reverse.DatabaseConfig;
 import org.litebridgedb.maven.config.reverse.RevEngInputConfig;
-import org.litebridgedb.maven.config.OutputConfig;
 import org.litebridgedb.maven.config.reverse.RevEngOutputConfig;
 import org.litebridgedb.maven.config.reverse.SqlTypeMappingConfig;
 import org.litebridgedb.maven.config.reverse.TableMappingConfig;
 import org.litebridgedb.maven.reverse.EntityGenerator;
 import org.litebridgedb.maven.reverse.GeneratedEntity;
-import org.litebridgedb.maven.reverse.PackageInfoGenerator;
+import org.litebridgedb.maven.util.PackageInfoGenerator;
 import org.litebridgedb.maven.util.JavaFileWriter;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridgedb.orm.tx.DefaultTransactionManager;
@@ -134,7 +133,7 @@ public final class ReverseEngineerMojo extends AbstractMojo {
 
         // Create package-info.java
         if (output.isPackageInfo()) {
-            final CompilationUnit packageInfo = packageInfoGenerator.createPackageInfo(output.getOutputPackage());
+            final CompilationUnit packageInfo = packageInfoGenerator.createPackageInfo(output.getOutputPackage(), "Litebridge entities.");
             javaFileWriter.writeJavaFile(output.getOutputPackage(), "package-info.java", packageInfo);
         }
 

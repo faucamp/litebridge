@@ -1,4 +1,4 @@
-package org.litebridgedb.maven.reverse;
+package org.litebridgedb.maven.util;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -15,7 +15,7 @@ public final class PackageInfoGenerator {
         this.outputConfig = outputConfig;
     }
 
-    public CompilationUnit createPackageInfo(final String packageName) {
+    public CompilationUnit createPackageInfo(final String packageName, final String comment) {
         final CompilationUnit cu = new CompilationUnit();
         final PackageDeclaration pkg = new PackageDeclaration(StaticJavaParser.parseName(packageName));
         cu.setPackageDeclaration(pkg);
@@ -25,7 +25,7 @@ public final class PackageInfoGenerator {
         }
 
         if (outputConfig.isJavadoc()) {
-            pkg.setComment(new TraditionalJavadocComment("Litebridge entities."));
+            pkg.setComment(new TraditionalJavadocComment(comment));
         }
 
         return cu;

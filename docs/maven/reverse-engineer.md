@@ -9,10 +9,11 @@ The `reverse-engineer` goal connects to a database and generates Litebridge enti
 | Parameter | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `database` | `DatabaseConfig` | Yes | - | Database connection settings. |
-| `input` | `InputConfig` | Yes | - | Specifies which tables to reverse engineer. |
-| `output` | `OutputConfig` | Yes | - | Settings for the generated source files. |
+| `input` | `RevEngInputConfig` | Yes | - | Specifies which tables to reverse engineer. |
+| `output` | `RevEngOutputConfig` | Yes | - | Settings for the generated source files. |
 | `sqlTypeMappings` | `List<SqlTypeMappingConfig>` | No | - | Custom mapping of SQL types to Java types. |
 | `tableMappings` | `List<TableMappingConfig>` | No | - | Custom mapping for specific tables and columns. |
+| `skip` | `boolean` | No | `false` | Skips goal execution if set to `true`. |
 
 ### `database` Settings
 
@@ -38,7 +39,7 @@ The `reverse-engineer` goal connects to a database and generates Litebridge enti
 | `packageInfo` | `boolean` | No | `true` | Whether to generate a `package-info.java` file. |
 | `javadoc` | `boolean` | No | `true` | Whether to include Javadoc comments in generated classes. |
 | `finalClasses` | `boolean` | No | `true` | Whether to declare generated entity classes as `final`. |
-| `jspecify` | `JSpecifyConfig` | No | - | Configuration for JSpecify nullability annotations. |
+| `jspecify` | `RevEngJSpecifyConfig` | No | - | Configuration for JSpecify nullability annotations. |
 
 #### `jspecify` Settings
 

@@ -1,6 +1,7 @@
 package org.litebridgedb.maven;
 
 import com.github.javaparser.StaticJavaParser;
+import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
@@ -18,6 +19,7 @@ import org.litebridgedb.maven.config.metamodel.MetamodelOutputConfig;
 import org.litebridgedb.maven.metamodel.GeneratedMetamodel;
 import org.litebridgedb.maven.metamodel.MetamodelGenerator;
 import org.litebridgedb.maven.util.JavaFileWriter;
+import org.litebridgedb.maven.util.PackageInfoGenerator;
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -76,7 +78,14 @@ public final class MetamodelMojo extends AbstractMojo {
         final JavaSymbolSolver symbolSolver = new JavaSymbolSolver(inputData.typeSolver());
         StaticJavaParser.getParserConfiguration().setSymbolResolver(symbolSolver);
         final MetamodelGenerator metamodelGenerator = new MetamodelGenerator(input.isEntitiesOnly(), output, getLog());
+        final PackageInfoGenerator packageInfoGenerator = new PackageInfoGenerator(output);
         final JavaFileWriter javaFileWriter = new JavaFileWriter(project, output, getLog());
+
+        // Create package-info.java
+        if (output.isPackageInfo()) {
+            final CompilationUnit packageInfo = packageInfoGenerator.createPackageInfo(output.getOutputPackage(), "Litebridge entities.");
+            javaFileWriter.writeJavaFile(output.getOutputPackage(), "package-info.java", packageInfo);
+        }
 
         for (String dirName : inputData.packageDirs()) {
             final File rootDir = new File(dirName);

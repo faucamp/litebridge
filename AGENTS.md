@@ -63,7 +63,7 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 ### 4. Testing
 
 - **E2E Tests**: Found in `litebridge-orm/src/test/java/.../e2e/`. Use these for verifying full feature integration. 
-They are bound to Maven's `integration-test` phase and thus executed using `mvn verify`.
+They are bound to Maven's `integration-test` phase and thus executed using `mvn verify` by default.
 - **Database Environments**: Use the `MultiDbTestExtension` to run tests against multiple database providers (H2,
   Oracle, etc.). These can be set via command line/Maven by using the `lb.e2e.env` property. Valid values are:
     - `all` - Run against all supported databases (this is the default no `lb.e2e.env` property is provided)
