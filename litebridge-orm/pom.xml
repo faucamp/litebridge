@@ -29,10 +29,14 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <excludes>
+                        <exclude>org/litebridgedb/orm/e2e/**</exclude>
+                    </excludes>
                     <argLine>
                         @{argLine}
                         -javaagent:${org.mockito:mockito-core:jar}
@@ -71,6 +75,61 @@
                         --add-opens litebridge.orm/org.litebridgedb.orm.e2e.singletable_multidto.dto=litebridge.tracking
                     </argLine>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>org/litebridgedb/orm/e2e/**/*Test.java</include>
+                    </includes>
+                    <argLine>
+                        @{argLine}
+                        --add-reads litebridge.orm=litebridge.db.spi.impl,litebridge.db.oracle
+                        --add-opens litebridge.orm/org.litebridgedb.orm=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.api.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.api.dto.delete=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.api.dto.update=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.api.select=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.api.select.impl=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.api.select.impl=ALL-UNNAMED
+                        --add-opens litebridge.orm/org.litebridgedb.orm.persistence=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e=ALL-UNNAMED
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.setup=ALL-UNNAMED
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.annotation.entity=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.annotation.entity=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.basic.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.basic.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.lob.entity=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.lob.entity=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.lob.entity=ALL-UNNAMED
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.compositepk.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.compositepk.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.manytomany.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.manytomany.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.manytomany.entity=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.manytomany.entity=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.selfref.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.selfref.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.registration.entities=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.registration.entities=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.shareddto.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.shareddto.dto=litebridge.tracking
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.singletable_multidto.dto=litebridge.commons
+                        --add-opens litebridge.orm/org.litebridgedb.orm.e2e.singletable_multidto.dto=litebridge.tracking
+                    </argLine>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>integration-tests</id>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

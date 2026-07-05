@@ -37,25 +37,28 @@ public @interface Column {
 
     /**
      * Specifies the name of the database column that the annotated field or method
-     * maps to. This value is used for static column mapping in the Litebridge ORM.
+     * maps to.
+     * <p>
+     * This value is used for static column mapping in the Litebridge ORM.
      *
      * @return The name of the column in the database table.
      */
     String value();
 
     /**
-     * Specifies the join condition used when performing a join operation on another table.
-     * This attribute allows for defining custom SQL conditions to establish the relationship
-     * between the current column and a column in another table.
+     * The remote column name to which this column is joined.
+     * <p>
+     * Only the column name should be specified; the table is inferred from the field type.
      *
-     * @return The join condition as a string. If left empty or not specified, no join condition is associated with this column.
+     * @return The join column name as a string. If left empty or not specified, no join condition is associated with this column.
      */
     String joinOn() default "";
 
     /**
-     * Indicates whether the mapping should use the field's value as part of a "using" clause
-     * when performing a SQL join operation. This is typically applied in cases where the field
-     * represents a foreign key that should be included in the "USING" syntax for join conditions.
+     * Join using the the current column's name.
+     * <p>
+     * Indicates that the mapping should use the current column's name as part of a "USING" clause
+     * when performing a SQL join operation.
      *
      * @return true if the "using" clause should be applied; false otherwise.
      */

@@ -61,7 +61,7 @@ public class ConfigurableTypeConverter implements TypeConverter {
     }
 
     @Override
-    public int getDbDataType(final Class<?> fieldType) {
+    public int getSqlDataType(final Class<?> fieldType) throws IllegalArgumentException {
         final Converter<?> converter = ObjectUtils.requireNonNull(converterRegistry.getConverter(fieldType),
                 () -> new IllegalArgumentException("No converter found for class: " + fieldType.getName()));
 
@@ -70,6 +70,14 @@ public class ConfigurableTypeConverter implements TypeConverter {
         } else {
             throw new IllegalArgumentException("No SQL type converter found for class: " + fieldType.getName());
         }
+    }
+
+    @Override
+    public Class<?> getClassForSqlType(final int sqlDataType) throws IllegalArgumentException {
+        final Converter<?> converter = ObjectUtils.requireNonNull(converterRegistry.getConverter(sqlDataType),
+                () -> new IllegalArgumentException("No converter found for SQL type: " + sqlDataType));
+
+        return converter.type();
     }
 
     /**

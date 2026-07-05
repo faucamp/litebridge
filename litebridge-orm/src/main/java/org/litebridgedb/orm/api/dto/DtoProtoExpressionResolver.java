@@ -68,8 +68,8 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
         // Map the input DTO field names to database column names
         Objects.requireNonNull(selectSpec, "SelectSpec not set");
         final String fieldName = QFInspector.getFieldName(queryField);
-        final Column column = getColumn(selectSpec.dtoClass(), fieldName);
-        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(selectSpec.dtoClass(), fieldName);
+        final Column column = getColumn(queryField.dtoClass(), fieldName);
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(queryField.dtoClass(), fieldName);
         return new SelectFieldSpec(fieldAccessor, column);
     }
 

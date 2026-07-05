@@ -1,0 +1,93 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>
+    <artifactId>test-project</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>litebridge-maven-plugin</artifactId>
+                <configuration>
+                    <database>
+                        <url>jdbc:h2:mem:lb;DB_CLOSE_DELAY=-1</url>
+                        <user>sa</user>
+                        <password></password>
+                        <databaseProviderClass>org.litebridgedb.db.h2.H2DatabaseProvider</databaseProviderClass>
+                    </database>
+
+                    <input>
+                        <tables>
+                            <table>LB.PERSON</table>
+                            <table>LB.ACCOUNT</table>
+                        </tables>
+                    </input>
+
+                    <sqlTypeMappings>
+                        <sqlTypeMapping>
+                            <jdbcType>NUMERIC</jdbcType>
+                            <fieldType>java.lang.Long</fieldType>
+                        </sqlTypeMapping>
+                        <sqlTypeMapping>
+                            <jdbcType>NUMERIC</jdbcType>
+                            <precision>1</precision>
+                            <notNull>true</notNull>
+                            <fieldType>boolean</fieldType>
+                        </sqlTypeMapping>
+                        <sqlTypeMapping>
+                            <jdbcType>NUMERIC</jdbcType>
+                            <precision>1</precision>
+                            <notNull>false</notNull>
+                            <fieldType>java.lang.Boolean</fieldType>
+                        </sqlTypeMapping>
+                    </sqlTypeMappings>
+
+                    <tableMappings>
+                        <tableMapping>
+                            <table>LB.PERSON</table>
+                            <entityName>PersonEntity</entityName>
+                            <columnMappings>
+                                <columnMapping>
+                                    <column>PERSON_ID</column>
+                                    <fieldName>id</fieldName>
+                                    <generateUsingSequence>LB.PERSON_SEQ</generateUsingSequence>
+                                </columnMapping>
+                                <columnMapping>
+                                    <column>AGE</column>
+                                    <fieldType>int</fieldType>
+                                </columnMapping>
+                            </columnMappings>
+                        </tableMapping>
+
+                        <tableMapping>
+                            <table>LB.ACCOUNT</table>
+                            <columnMappings>
+                                <columnMapping>
+                                    <column>ACCOUNT_ID</column>
+                                    <fieldName>id</fieldName>
+                                </columnMapping>
+                                <columnMapping>
+                                    <column>PERSON_ID</column>
+                                    <fieldName>owner</fieldName>
+                                </columnMapping>
+                                <columnMapping>
+                                    <column>BALANCE</column>
+                                    <fieldType>java.math.BigDecimal</fieldType>
+                                </columnMapping>
+                            </columnMappings>
+                        </tableMapping>
+                    </tableMappings>
+
+                    <output>
+                        <outputPackage>com.example.generated</outputPackage>
+                        <finalClasses>true</finalClasses>
+                        <jspecify>
+                            <annotate>true</annotate>
+                            <nullMarked>false</nullMarked>
+                        </jspecify>
+                    </output>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

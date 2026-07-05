@@ -16,8 +16,9 @@ with advanced query expressions including SQL functions and explicit ORM-side ty
 2. [Persistence](persistence/index.md)
 3. [Type Converter](type-converter.md)
 4. [Change Tracker](change-tracker.md) 
-5. [Spring Integration](spring/index.md)
-6. [Litebridge Development](dev/index.md)
+5. [Maven Plugin](maven/index.md)
+6. [Spring Integration](spring/index.md)
+7. [Litebridge Development](dev/index.md)
 
 ## API documentation
 

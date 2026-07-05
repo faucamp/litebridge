@@ -185,7 +185,7 @@ public abstract class AbstractSqlGenerator {
             final Object convertedValue = typeConverter.convert(rawValue, columnMetaData.getDataType());
             bindValue = new BindValue(convertedValue, columnMetaData.getDataType());
         } else if (rawValue != null) {
-            bindValue = new BindValue(rawValue, typeConverter.getDbDataType(rawValue.getClass()));
+            bindValue = new BindValue(rawValue, typeConverter.getSqlDataType(rawValue.getClass()));
         } else {
             bindValue = new BindValue(null, Types.NULL);
         }

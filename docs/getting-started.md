@@ -44,7 +44,21 @@ Example for H2:
 </dependency>
 ```
 
-## 3. Spring Integration (Optional)
+## 3. Litebridge Maven Plugin (Optional)
+
+The Litebridge Maven Plugin can automate the creation of entity classes from an existing database and generate metamodels for type-safe queries.
+
+```xml
+<plugin>
+    <groupId>org.litebridgedb.maven</groupId>
+    <artifactId>litebridge-maven-plugin</artifactId>
+    <version>0.3.0</version> <!-- Replace with latest version -->
+</plugin>
+```
+
+For more details, see the [Maven Plugin documentation](maven/index.md).
+
+## 4. Spring Integration (Optional)
 
 If you are using Spring or Spring Boot, Litebridge provides dedicated integration modules.
 

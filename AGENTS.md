@@ -4,33 +4,30 @@ This document provides essential context and guidelines for AI agents working on
 
 ## Project Overview
 
-Litebridge is a fast, lightweight Object-Relational Mapper (ORM) for Java 21+. It focuses on a "SQL-first" philosophy,
-minimizing magic and favoring programmatic configuration over heavy abstraction or annotations.
+Litebridge is a fast, lightweight Object-Relational Mapper (ORM) for Java 21+. 
 
-## Core Philosophy
+It focuses on a SQL-like fluent API and ease of use, which can be used in a entity/DTO mode (clasic ORM) or a "raw SQL"-mode.
 
-- **Modern Java**: Requires Java 21+. Leverage modern features like records, pattern matching, and the Java Platform
-  Module System (JPMS).
-- **Minimal Magic**: Avoid complex toolchains, code generation, or heavy annotation processing. It is designed to use
-  unmodified DTOs as entities.
-- **SQL-First**: SQL is treated as a first-class citizen. Queries and mappings are primarily defined using a fluent API.
-- **Performance**: High performance with minimal database round-trips via built-in change tracking.
+It supports annotated entity classes as well as unannotated, plain DTOs as database entities.
 
 ## Project Structure
 
 Litebridge is modular and uses JPMS (`module-info.java`).
 
+- `docs`: Documentation and guides for users and contributors. It is contains subsections detailing various aspects, logically grouped.
 - `litebridge-orm`: The core engine and primary entry point. Contains the `Litebridge` class.
 - `litebridge-orm-support`: Supporting utilities for Litebridge ORM, allowing classpath scanning for entities/DTO-table mappings.
 - `litebridge-db`: Contains the `DatabaseProvider` SPI and its implementations (e.g. `litebridge-db-h2`, `litebridge-db-postgres`, etc.).
+- `litebridge-annotations`: Entity annotation definitions.
 - `litebridge-tracking`: An independent change tracking API for arbitrary Java objects.
 - `litebridge-converter`: Type conversion utilities for translating between Java and SQL types.
 - `litebridge-commons`: Internal utility classes used across the project to minimize external dependencies.
 - `spring/litebridge-spring`: Integration library for Spring projects.
 - `spring/litebridge-spring-boot-autoconfigure`: Auto-configuration for Spring Boot applications.
 - `spring/litebridge-spring-boot-starter`: Starter for Spring Boot applications to simplify setup.
-- `docs`: Documentation and guides for users and contributors.
-
+- `litebridge-maven-plugin`: Maven plugin for reverse engineering database tables to Litebridge ORM entities, and entity metamodel creation. 
+- `example`: Contains example applications demonstrating Litebridge usage.
+- 
 ## Technical Stack
 
 - **Java**: 21+ (Modular)
@@ -49,10 +46,12 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 - **API Design**: Favour fluent builders and functional interfaces for configuration and queries.
 - **Variables and parameters**: Declare variables and parameters as `final` wherever possible, including when writing tests.
 
-### 2. DTO Mappings
+### 2. Entity/DTO Mappings
 
-- Mappings are defined via `TableSpec`.
-- Prefer programmatic registration (`litebridge.register(...)`) over annotations.
+- Litebridge supports unaltered DTOS as well as annotated entity classes as database enttieis.
+- Entity classes are annotated with `org.litebridgedb.orm.annotation.Table`
+- Unannotated DTOs can be used via the fluent programmatic registration API.
+- All entity/DTO mappings are registered via `Litebridge.register(...)` methods.
 
 ### 3. Database Support
 
@@ -63,14 +62,15 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 
 ### 4. Testing
 
-- **E2E Tests**: Found in `litebridge-orm/src/test/java/.../e2e/`. Use these for verifying full feature integration.
+- **E2E Tests**: Found in `litebridge-orm/src/test/java/.../e2e/`. Use these for verifying full feature integration. 
+They are bound to Maven's `integration-test` phase and thus executed using `mvn verify` by default.
 - **Database Environments**: Use the `MultiDbTestExtension` to run tests against multiple database providers (H2,
   Oracle, etc.). These can be set via command line/Maven by using the `lb.e2e.env` property. Valid values are:
     - `all` - Run against all supported databases (this is the default no `lb.e2e.env` property is provided)
     - `h2` - Run against an in-memory H2 database
+    - `oracle` - Run against Oracle XE via testcontainers
     - `postgres` - Run against a PostgreSQL database via testcontainers
     - `sqlite` - Run against an in-memory SQLite database
-    - `oracle` - Run against Oracle XE via testcontainers
     - `none` - Disable E2E integration tests. This is useful when making targeted changes that need quick testing.
 - **Mocking**: Use Mockito for unit tests that don't require a live database.
 - **Style**: Use JUnit 6 conventions for test classes and methods, and use the existing "Given-When-Then" pattern for
@@ -81,17 +81,12 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 ## Key Classes and APIs
 
 - `org.litebridgedb.orm.Litebridge`: The main entry point for `save`, `select`, `update`, `delete`.
-- `org.litebridgedb.orm.api.spec.TableSpec`: Core class for defining DTO-to-table mapping.
 - `org.litebridgedb.db.spi.DatabaseProvider`: The SPI that must be implemented for each supported database.
-- `org.litebridgedb.tracking.ChangeTracker`: Handles state tracking for DTOs to optimize updates.
 
 ## Common Agent Tasks
 
 - **Write Documentation**: Follow the same style as existing documentation. Documentation is found in the `docs`
-  directory.
-- **Fixing a Bug**: Create a reproduction test case in the `e2e` package of `litebridge-orm`.
-- **Adding a Feature**: Start by defining the API in `Litebridge` or relevant spec classes, then implement the logic in
-  `litebridge-orm`. Add E2E tests and unit tests.
+  directory. Ensure that all relevant pages are updated when adding/extending a specific topic.
 - **Adding a DB Provider**: Implement the `DatabaseProvider` SPI in a new module and ensure it passes the SPI TCK/common
   tests. Update relevant documentation to reflect the new provider. Add unit tests and E2E tests for the new provider.
 - **Creating tests**: Implement unit tests for new features or bug fixes. Follow the style detailed under section 4, "Testing".

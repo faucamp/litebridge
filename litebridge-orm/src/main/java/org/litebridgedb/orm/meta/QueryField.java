@@ -52,7 +52,7 @@ public sealed class QueryField implements ExpressionSpec permits NumericQueryFie
      *
      * @return DTO class.
      */
-    Class<?> dtoClass() {
+    public Class<?> dtoClass() {
         return dtoClass;
     }
 

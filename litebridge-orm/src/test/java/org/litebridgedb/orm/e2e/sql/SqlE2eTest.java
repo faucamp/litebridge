@@ -242,14 +242,14 @@ class SqlE2eTest extends AbstractE2eTest {
         // Using variable paratemeters/array
         final List<Row> results = litebridge.select()
                 .from(personTableName)
-                .where(Fn.c("PERSON_ID")).in(1L, 2L)
+                .where(Fn.c(tableMapper.transformColumnName("PERSON_ID"))).in(1L, 2L)
                 .list();
 
         assertEquals(2, results.size());
 
         final List<Row> results2 = litebridge.select()
                 .from(personTableName)
-                .where(Fn.c("PERSON_ID")).notIn(1L, 2L)
+                .where(Fn.c(tableMapper.transformColumnName("PERSON_ID"))).notIn(1L, 2L)
                 .list();
 
         assertTrue(results2.isEmpty());
@@ -257,14 +257,14 @@ class SqlE2eTest extends AbstractE2eTest {
         // Using single value
         final List<Row> results3 = litebridge.select()
                 .from(personTableName)
-                .where("PERSON_ID").in(1L)
+                .where(tableMapper.transformColumnName("PERSON_ID")).in(1L)
                 .list();
 
         assertEquals(1, results3.size());
 
         final List<Row> results4 = litebridge.select()
                 .from(personTableName)
-                .where("PERSON_ID").notIn(1L)
+                .where(tableMapper.transformColumnName("PERSON_ID")).notIn(1L)
                 .list();
 
         assertEquals(1, results4.size());
@@ -273,14 +273,14 @@ class SqlE2eTest extends AbstractE2eTest {
         final List<Long> ids = List.of(1L, 2L);
         final List<Row> results5 = litebridge.select()
                 .from(personTableName)
-                .where("PERSON_ID").in(ids)
+                .where(tableMapper.transformColumnName("PERSON_ID")).in(ids)
                 .list();
 
         assertEquals(2, results5.size());
 
         final List<Row> results6 = litebridge.select()
                 .from(personTableName)
-                .where("PERSON_ID").notIn(ids)
+                .where(tableMapper.transformColumnName("PERSON_ID")).notIn(ids)
                 .list();
 
         assertTrue(results6.isEmpty());
@@ -288,20 +288,20 @@ class SqlE2eTest extends AbstractE2eTest {
         // Using a subselect
         final List<Row> results7 = litebridge.select()
                 .from(personTableName)
-                .where("PERSON_ID").in(sub ->
-                        sub.select("PERSON_ID")
+                .where(tableMapper.transformColumnName("PERSON_ID")).in(sub ->
+                        sub.select(tableMapper.transformColumnName("PERSON_ID"))
                                 .from(personTableName)
-                                .where("FIRST_NAME").eq("Bob"))
+                                .where(tableMapper.transformColumnName("FIRST_NAME")).eq("Bob"))
                 .list();
 
         assertEquals(1, results7.size());
 
         final List<Row> results8 = litebridge.select()
                 .from(personTableName)
-                .where("PERSON_ID").notIn(sub ->
-                        sub.select("PERSON_ID")
+                .where(tableMapper.transformColumnName("PERSON_ID")).notIn(sub ->
+                        sub.select(tableMapper.transformColumnName(tableMapper.transformColumnName("PERSON_ID")))
                                 .from(personTableName)
-                                .where("FIRST_NAME").eq("Alice"))
+                                .where(tableMapper.transformColumnName("FIRST_NAME")).eq("Alice"))
                 .list();
 
         assertEquals(1, results8.size());
@@ -317,7 +317,7 @@ class SqlE2eTest extends AbstractE2eTest {
         // Using variable paratemeters/array
         final Optional<Row> results = litebridge.select()
                 .from(personTableName)
-                .where(Fn.c("SURNAME")).like("%ohnso%")
+                .where(Fn.c(tableMapper.transformColumnName("SURNAME"))).like("%ohnso%")
                 .one();
 
         assertTrue(results.isPresent());

@@ -45,8 +45,8 @@ public class H2Example {
     public static void configureDatabase(final String url, final String user, final String password) {
         // Configure Flyway
         final Flyway flyway = Flyway.configure()
-                .dataSource(url, user, password) // Replace with your database details
-                .locations("classpath:db/migration") // Specify the location of your migration scripts
+                .dataSource(url, user, password)
+                .locations("classpath:db/migration")
                 .load();
 
         // Run the migration

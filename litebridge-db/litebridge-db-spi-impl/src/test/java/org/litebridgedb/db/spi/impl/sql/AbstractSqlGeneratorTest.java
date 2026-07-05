@@ -470,7 +470,7 @@ class AbstractSqlGeneratorTest {
         when(lhs.toSql(any())).thenReturn("1");
         final Condition condition = new Condition(lhs, Operator.EQ, "val");
 
-        when(typeConverter.getDbDataType(any())).thenReturn(Types.VARCHAR);
+        when(typeConverter.getSqlDataType(any())).thenReturn(Types.VARCHAR);
 
         // When
         final PreparedSql result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));

@@ -3,6 +3,8 @@
 This directory contains end-to-end tests for Litebridge, which validate the functionality of the ORM 
 by interacting with specific or all supported databases.
 
+They are bound to Maven's integration test phase; to run them, use `mvn verify`.
+
 ## Database environment
 
 To specify a specific database environment, set the `lb.e2e.env` system property to the desired environment:
@@ -10,6 +12,8 @@ To specify a specific database environment, set the `lb.e2e.env` system property
 - `all` - Run against all supported databases (default)
 - `h2` - Run against H2
 - `oracle` - Run against Oracle
+- `postgres` - Run against PostgreSQL
+- `sqlite` - Run against SQLite
 - `none` - Disable E2E integration tests
 
 By default, the tests will run against all supported databases (`all`).
@@ -17,7 +21,7 @@ By default, the tests will run against all supported databases (`all`).
 Example:
 
 ```sql
--Dlb.e2e.env=h2
+mvn clean verify -Dlb.e2e.env=h2
 ```
 
 ## IntelliJ note

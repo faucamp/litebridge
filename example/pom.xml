@@ -18,10 +18,15 @@
     <name>Litebridge Examples</name>
     <description>Parent POM for example Litebridge applications</description>
 
+    <properties>
+        <jacoco.skip>true</jacoco.skip>
+    </properties>
+
     <modules>
         <module>litebridge-example-common</module>
         <module>litebridge-example-h2</module>
         <module>litebridge-example-h2-jpms</module>
+        <module>litebridge-example-maven-plugin</module>
         <module>litebridge-example-oracle</module>
         <module>litebridge-example-spring-boot</module>
         <module>litebridge-example-spring-boot-manual-config</module>
@@ -29,8 +34,15 @@
     </modules>
 
     <build>
-        <!-- Exclude from mvn deploy -->
+        <!-- Exclude from mvn install/deploy -->
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
