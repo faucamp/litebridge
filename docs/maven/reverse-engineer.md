@@ -83,69 +83,81 @@ Allows fine-grained control over how specific tables and columns are mapped.
 ## Usage Example
 
 ```xml
-<configuration>
-    <!-- Specify database connection -->
-    <database>
-        <url>jdbc:h2:mem:test</url>
-        <user>sa</user>
-        <databaseProviderClass>org.litebridgedb.db.h2.H2DatabaseProvider</databaseProviderClass>
-    </database>
+<plugin>
+    <groupId>org.litebridgedb.maven</groupId>
+    <artifactId>litebridge-maven-plugin</artifactId>
+    <version>0.3.0</version> <!-- Replace with latest version -->
+    <executions>
+        <execution>
+            <goals>
+                <goal>reverse-engineer</goal>
+            </goals>
+            <configuration>
+                <!-- Specify database connection -->
+                <database>
+                    <url>jdbc:h2:mem:test</url>
+                    <user>sa</user>
+                    <databaseProviderClass>org.litebridgedb.db.h2.H2DatabaseProvider</databaseProviderClass>
+                </database>
 
-    <!-- Specify input tables to reverse engineer -->
-    <input>
-        <tables>
-            <!-- Format: <schema>.<table> -->
-            <table>PUBLIC.USERS</table>
-            <table>PUBLIC.POSTS</table>
-        </tables>
-    </input>
+                <!-- Specify input tables to reverse engineer -->
+                <input>
+                    <tables>
+                        <!-- Format: <schema>.<table> -->
+                        <table>PUBLIC.USERS</table>
+                        <table>PUBLIC.POSTS</table>
+                    </tables>
+                </input>
 
-    <!-- Optional: set global default type mappings -->
-    <sqlTypeMappings>
-        <!-- Ensures Long is used for fields mapping to the JDBC type NUMERIC -->
-        <sqlTypeMapping>
-            <jdbcType>NUMERIC</jdbcType>
-            <fieldType>java.lang.Long</fieldType>
-        </sqlTypeMapping>
-        <!-- Map NOT NULL NUMERICs of size 1 to primitive booleans -->
-        <sqlTypeMapping>
-            <jdbcType>NUMERIC</jdbcType>
-            <precision>1</precision>
-            <notNull>true</notNull>
-            <fieldType>boolean</fieldType>
-        </sqlTypeMapping>
-        <!-- Map nullable NUMERICs of size 1 to Boolean objects -->
-        <sqlTypeMapping>
-            <jdbcType>NUMERIC</jdbcType>
-            <precision>1</precision>
-            <notNull>false</notNull>
-            <fieldType>java.lang.Boolean</fieldType>
-        </sqlTypeMapping>
-    </sqlTypeMappings>
+                <!-- Optional: set global default type mappings -->
+                <sqlTypeMappings>
+                    <!-- Ensures Long is used for fields mapping to the JDBC type NUMERIC -->
+                    <sqlTypeMapping>
+                        <jdbcType>NUMERIC</jdbcType>
+                        <fieldType>java.lang.Long</fieldType>
+                    </sqlTypeMapping>
+                    <!-- Map NOT NULL NUMERICs of size 1 to primitive booleans -->
+                    <sqlTypeMapping>
+                        <jdbcType>NUMERIC</jdbcType>
+                        <precision>1</precision>
+                        <notNull>true</notNull>
+                        <fieldType>boolean</fieldType>
+                    </sqlTypeMapping>
+                    <!-- Map nullable NUMERICs of size 1 to Boolean objects -->
+                    <sqlTypeMapping>
+                        <jdbcType>NUMERIC</jdbcType>
+                        <precision>1</precision>
+                        <notNull>false</notNull>
+                        <fieldType>java.lang.Boolean</fieldType>
+                    </sqlTypeMapping>
+                </sqlTypeMappings>
 
-    <!-- Optional: specify table-specific customisations -->
-    <tableMappings>
-        <tableMapping>
-            <table>PUBLIC.USERS</table>
-            <columnMappings>
-                <columnMapping>
-                    <column>USER_ID</column>
-                    <!-- Overrides the field name from "userId" to "id" -->
-                    <fieldName>id</fieldName>
-                    <!-- Specifies that the value of this column is generated using a sequence -->
-                    <generateUsingSequence>PUBLIC.USER_SEQ</generateUsingSequence>
-                </columnMapping>
-            </columnMappings>
-        </tableMapping>
-    </tableMappings>
+                <!-- Optional: specify table-specific customisations -->
+                <tableMappings>
+                    <tableMapping>
+                        <table>PUBLIC.USERS</table>
+                        <columnMappings>
+                            <columnMapping>
+                                <column>USER_ID</column>
+                                <!-- Overrides the field name from "userId" to "id" -->
+                                <fieldName>id</fieldName>
+                                <!-- Specifies that the value of this column is generated using a sequence -->
+                                <generateUsingSequence>PUBLIC.USER_SEQ</generateUsingSequence>
+                            </columnMapping>
+                        </columnMappings>
+                    </tableMapping>
+                </tableMappings>
 
-    <!-- Specify output location, package and entity generation customisation -->
-    <output>
-        <outputPackage>org.example.domain</outputPackage>
-        <jspecify>
-            <!-- Adds JSpecify nullability annotations to generated entities -->
-            <annotate>true</annotate>
-        </jspecify>
-    </output>
-</configuration>
+                <!-- Specify output location, package and entity generation customisation -->
+                <output>
+                    <outputPackage>org.example.domain</outputPackage>
+                    <jspecify>
+                        <!-- Adds JSpecify nullability annotations to generated entities -->
+                        <annotate>true</annotate>
+                    </jspecify>
+                </output>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
 ```

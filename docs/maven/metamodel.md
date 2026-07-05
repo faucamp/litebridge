@@ -46,24 +46,36 @@ These metamodels are used to provide type safety when building Litebridge querie
 ## Usage Example
 
 ```xml
-<configuration>
-    <input>
-        <inputPackages>
-            <inputPackage>org.example.domain</inputPackage>
-        </inputPackages>
-        <!-- Optional: process both annotated entities and plain DTOs -->
-        <entitiesOnly>false</entitiesOnly>
-    </input>
-    <output>
-        <outputPackage>org.example.meta</outputPackage>
-        <!-- Optional: custom name for generated metamodels (e.g. UserModel) -->
-        <classNameSuffix>Model</classNameSuffix>
-        <!-- Optional: enable JSpecify annotations -->
-        <jspecify>
-            <annotate>true</annotate>
-        </jspecify>
-    </output>
-</configuration>
+<plugin>
+    <groupId>org.litebridgedb.maven</groupId>
+    <artifactId>litebridge-maven-plugin</artifactId>
+    <version>0.3.0</version> <!-- Replace with latest version -->
+    <executions>
+        <execution>
+            <goals>
+                <goal>metamodel</goal>
+            </goals>
+            <configuration>
+                <input>
+                    <inputPackages>
+                        <inputPackage>org.example.domain</inputPackage>
+                    </inputPackages>
+                    <!-- Optional: process both annotated entities and plain DTOs -->
+                    <entitiesOnly>false</entitiesOnly>
+                </input>
+                <output>
+                    <outputPackage>org.example.meta</outputPackage>
+                    <!-- Optional: custom name for generated metamodels (e.g. UserModel) -->
+                    <classNameSuffix>Model</classNameSuffix>
+                    <!-- Optional: enable JSpecify annotations -->
+                    <jspecify>
+                        <annotate>true</annotate>
+                    </jspecify>
+                </output>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
 ```
 
 ## Generated Metamodels
