@@ -1,7 +1,10 @@
 package org.litebridgedb.db.spi.impl.function;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
+import org.litebridgedb.db.spi.expression.ClauseType;
+import org.litebridgedb.db.spi.expression.DelegateExpression;
 import org.litebridgedb.db.spi.expression.SelectReference;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 
@@ -21,7 +24,11 @@ public class SelectReferenceImpl extends SelectReference {
     }
 
     @Override
-    public String toSql(final Operation operation) {
-        return columnIdentifierGenerator.createColumnReference(column);
+    public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
+        if (clause == ClauseType.WHERE) {
+            return columnIdentifierGenerator.createColumnRef(column, operation, clause);
+        } else {
+            return columnIdentifierGenerator.createColumnRef(column, operation, clause);
+        }
     }
 }

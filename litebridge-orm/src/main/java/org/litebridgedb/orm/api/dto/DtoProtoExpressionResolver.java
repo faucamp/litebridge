@@ -5,6 +5,7 @@ import org.litebridgedb.commons.CollectionUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ProtoExpressionSpec;
@@ -54,21 +55,21 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     }
 
     @Override
-    protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable) {
+    protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable, final ClauseType clause) {
         // Map the input DTO field names to database column names
         Objects.requireNonNull(selectSpec, "SelectSpec not set");
         final Class<?> dtoClass = getDtoClass(resolvable);
-        final Column column = getColumn(dtoClass, resolvable);
+        final Column column = getColumn(dtoClass, resolvable, clause);
         final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, resolvable.column());
         return new SelectFieldSpec(fieldAccessor, column);
     }
 
     @Override
-    protected ColumnExpressionSpec resolveSelectField(final QueryField queryField) {
+    protected ColumnExpressionSpec resolveSelectField(final QueryField queryField, final ClauseType clause) {
         // Map the input DTO field names to database column names
         Objects.requireNonNull(selectSpec, "SelectSpec not set");
         final String fieldName = QFInspector.getFieldName(queryField);
-        final Column column = getColumn(queryField.dtoClass(), fieldName);
+        final Column column = getColumn(queryField.dtoClass(), fieldName, clause);
         final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(queryField.dtoClass(), fieldName);
         return new SelectFieldSpec(fieldAccessor, column);
     }
@@ -87,15 +88,15 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     }
 
     @Override
-    protected Column getColumn(final Resolvable resolvable) {
-        return getColumn(getDtoClass(resolvable), resolvable);
+    protected Column getColumn(final Resolvable resolvable, final ClauseType clause) {
+        return getColumn(getDtoClass(resolvable), resolvable, clause);
     }
 
-    private Column getColumn(final Class<?> dtoClass, final Resolvable resolvable) {
-        return getColumn(dtoClass, resolvable.column());
+    private Column getColumn(final Class<?> dtoClass, final Resolvable resolvable, final ClauseType clause) {
+        return getColumn(dtoClass, resolvable.column(), clause);
     }
 
-    private Column getColumn(final Class<?> dtoClass, final String fieldName) {
+    private Column getColumn(final Class<?> dtoClass, final String fieldName, final ClauseType clause) {
         // Map the input DTO field names to database column names
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
         final Table table;
@@ -107,6 +108,18 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
         }
 
         final ColumnMetaData columnMetaData = tableRegistry.getTableOrThrow(dtoClass).getColumnForFieldName(fieldName);
-        return aliasGenerator.aliasColumn(table, columnMetaData);
+
+        if (clause == ClauseType.SELECT) {
+            return aliasGenerator.aliasColumn(table, columnMetaData);
+        } else {
+            // Match the column to a selected one to inherit the alias if possible
+            return selectSpec.getExpressions().stream()
+                    .filter(expressionSpec -> expressionSpec instanceof ColumnExpressionSpec)
+                    .map(ColumnExpressionSpec.class::cast)
+                    .map(ColumnExpressionSpec::getColumn)
+                    .filter(selectedColumn -> selectedColumn.table().equalsIgnoreAlias(columnMetaData.table())
+                            && selectedColumn.name().equals(columnMetaData.name()))
+                    .findAny().orElseGet(columnMetaData::toColumn);
+        }
     }
 }

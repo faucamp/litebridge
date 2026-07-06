@@ -1,22 +1,28 @@
 package org.litebridgedb.db.spi.impl.function;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.expression.ClauseType;
-import org.litebridgedb.db.spi.expression.ColumnExpressionImpl;
+import org.litebridgedb.db.spi.expression.ColumnExpression;
+import org.litebridgedb.db.spi.expression.DelegateColumnExpression;
 import org.litebridgedb.db.spi.expression.DelegateExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 
 /**
- * Expression to select a database column.
+ * A nestable column expression with support for SQL aliasing.
+ * <p>
+ * This class extends {@code NestableExpression} and integrates the functionality
+ * of aliasing of results through a {@code ColumnIdentifierGenerator}.
+ * <p>
+ * The primary responsibility of this class is to provide SQL representations
+ * of nestable function expressions, either with or without an alias.
  */
-public class SelectColumn extends ColumnExpressionImpl {
+public class DelegateColumnExpressionImpl extends DelegateColumnExpression {
 
     protected final ColumnIdentifierGenerator columnIdentifierGenerator;
 
-    public SelectColumn(final Column column, final ColumnIdentifierGenerator columnIdentifierGenerator) {
-        super(column);
+    public DelegateColumnExpressionImpl(final ColumnExpression target, final ColumnIdentifierGenerator columnIdentifierGenerator) {
+        super(target);
         this.columnIdentifierGenerator = columnIdentifierGenerator;
     }
 

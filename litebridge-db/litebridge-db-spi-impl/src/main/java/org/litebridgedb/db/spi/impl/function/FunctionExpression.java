@@ -1,13 +1,16 @@
 package org.litebridgedb.db.spi.impl.function;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Operation;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
+import org.litebridgedb.db.spi.expression.DelegateExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 
 /**
  * Base class for function expressions operating on a column.
  */
-public abstract class FunctionExpression extends AliasedDelegateColumnExpression {
+public abstract class FunctionExpression extends DelegateColumnExpressionImpl {
 
     /**
      * Constructor.
@@ -28,34 +31,14 @@ public abstract class FunctionExpression extends AliasedDelegateColumnExpression
      * @return the SQL representation of the expression
      */
     @Override
-    public String toSql(final Operation operation) {
-        return prepareSql(operation, false);
-    }
-
-    /**
-     * Creates a SQL representation of the expression, specifically including any required aliases.
-     *
-     * @param operation the operation that is being executed
-     * @return the SQL representation of the expression
-     */
-    public String toSqlWithAlias(final Operation operation) {
-        return prepareSql(operation, column.alias() != null);
-    }
-
-    /**
-     * Prepare SQL representation of the function.
-     *
-     * @param operation The operation that is being executed
-     * @param alias     Whether to alias the SQL function result
-     * @return SQL representation of the function
-     */
-    @SuppressWarnings("ConstantConditions")
-    protected String prepareSql(final Operation operation, final boolean alias) {
-        final String nestedSql = target.toSql(operation);
+    public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
+        final String nestedSql = target.toSql(operation, clause, this);
         final String sql = template().formatted(nestedSql);
 
-        if (alias) {
-            return "%s %s".formatted(sql, columnIdentifierGenerator.createAlias(column.alias()));
+        if (clause == ClauseType.SELECT
+                && parent == null
+                && target.column().alias() != null) {
+            return "%s %s".formatted(sql, columnIdentifierGenerator.createAliasDeclaration(column.alias()));
         } else {
             return sql;
         }

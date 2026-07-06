@@ -5,9 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
+import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
@@ -197,13 +199,13 @@ class SelectSqlGeneratorTest {
         // when(typeConverter.getDbDataType(any())).thenReturn(Types.INTEGER);
 
         // Mock the non-AliasedColumnExpression
-        when(select.expressions().get(1).toSql(any())).thenReturn("1");
+        when(select.expressions().get(1).toSql(any(Operation.class), any(ClauseType.class))).thenReturn("1");
 
         // When
         final PreparedSql result = selectSqlGenerator.prepareSql(select, mock(ConnectionProvider.class));
 
         // Then
-        assertEquals("SELECT t1.COL1, 1 FROM TEST_TABLE AS t1 JOIN JOIN_TABLE AS j1 ON j1.JCOL = ? WHERE t1.COL2 > ? GROUP BY COL1 HAVING t1.COL1 <> ? ORDER BY t1.COL1 DESC LIMIT 10 OFFSET 5", result.sql());
+        assertEquals("SELECT t1.COL1, 1 FROM TEST_TABLE AS t1 JOIN JOIN_TABLE AS j1 ON j1.JCOL = ? WHERE t1.COL2 > ? GROUP BY t1.COL1 HAVING t1.COL1 <> ? ORDER BY t1.COL1 DESC LIMIT 10 OFFSET 5", result.sql());
         assertEquals(3, result.bindValues().size());
     }
 

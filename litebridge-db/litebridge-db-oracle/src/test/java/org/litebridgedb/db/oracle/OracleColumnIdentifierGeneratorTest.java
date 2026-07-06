@@ -3,6 +3,7 @@ package org.litebridgedb.db.oracle;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.query.Condition;
@@ -15,26 +16,27 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
 
 class OracleColumnIdentifierGeneratorTest {
 
     private final OracleColumnIdentifierGenerator generator = new OracleColumnIdentifierGenerator();
 
     @Test
-    void createSelectColumnIdentifier_withoutSelect_usesDefaultTableQualifier() {
+    void createSelectColumn_withoutSelect_usesDefaultTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
 
         // When
-        final String result = generator.createSelectColumnIdentifier(column, true, null);
+        final String result = generator.createSelectColumn(column, mock(Select.class), ClauseType.SELECT, false);
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN", result);
     }
 
     @Test
-    void createSelectColumnIdentifier_withEmptyJoins_usesDefaultTableQualifier() {
+    void createSelectColumn_withEmptyJoins_usesDefaultTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -49,14 +51,14 @@ class OracleColumnIdentifierGeneratorTest {
                 Optional.empty());
 
         // When
-        final String result = generator.createSelectColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumn(column, mock(Select.class), ClauseType.SELECT, false);
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN", result);
     }
 
     @Test
-    void createSelectColumnIdentifier_withJoinWithoutUsing_usesDefaultTableQualifier() {
+    void createSelectColumn_withJoinWithoutUsing_usesDefaultTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -72,14 +74,14 @@ class OracleColumnIdentifierGeneratorTest {
                 Optional.empty());
 
         // When
-        final String result = generator.createSelectColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumn(column, mock(Select.class), ClauseType.SELECT, false);
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN", result);
     }
 
     @Test
-    void createColumnIdentifier_withUsingForDifferentSelectColumn_usesDefaultTableQualifier() {
+    void createSelectColumn_withUsingForDifferentSelectColumn_usesDefaultTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -96,14 +98,14 @@ class OracleColumnIdentifierGeneratorTest {
                 Optional.empty());
 
         // When
-        final String result = generator.createSelectColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumn(column, mock(Select.class), ClauseType.SELECT, false);
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN", result);
     }
 
     @Test
-    void createColumnIdentifier_withUsingForSameSelectColumnButUnrelatedTable_usesDefaultTableQualifier() {
+    void createSelectColumn_withUsingForSameSelectColumnButUnrelatedTable_usesDefaultTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Table joinedTable = new Table("JOINED_TABLE", null);
@@ -122,14 +124,14 @@ class OracleColumnIdentifierGeneratorTest {
                 Optional.empty());
 
         // When
-        final String result = generator.createSelectColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumn(column, mock(Select.class), ClauseType.SELECT, false);
 
         // Then
         assertEquals("UNRELATED_TABLE.TEST_COLUMN", result);
     }
 
     @Test
-    void createSelectColumnIdentifier_withUsingForSameSelectColumnAndTable_doesNotUseTableQualifier() {
+    void createSelectColumn_withUsingForSameSelectColumnAndTable_doesNotUseTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -145,14 +147,14 @@ class OracleColumnIdentifierGeneratorTest {
                 Optional.empty());
 
         // When
-        final String result = generator.createSelectColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumn(column, select, ClauseType.SELECT, false);
 
         // Then
         assertEquals("TEST_COLUMN", result);
     }
 
     @Test
-    void createSelectColumnIdentifier_withUsingForSameSelectColumnButFromOtherSideOfJoin_doesNotUseTableQualifier() {
+    void createSelectColumn_withUsingForSameSelectColumnButFromOtherSideOfJoin_doesNotUseTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Table joinedTable = new Table("JOINED_TABLE", null);
@@ -170,14 +172,14 @@ class OracleColumnIdentifierGeneratorTest {
                 Optional.empty());
 
         // When
-        final String result = generator.createSelectColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumn(column, select, ClauseType.SELECT, false);
 
         // Then
         assertEquals("TEST_COLUMN", result);
     }
 
     @Test
-    void createSelectColumnIdentifier_withMultipleJoins_hitsSecondJoin() {
+    void createSelectColumn_withMultipleJoins_hitsSecondJoin() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Table joinedTable1 = new Table("JOINED_TABLE1", null);
@@ -199,14 +201,14 @@ class OracleColumnIdentifierGeneratorTest {
                 Optional.empty());
 
         // When
-        final String result = generator.createSelectColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumn(column, select, ClauseType.SELECT, false);
 
         // Then
         assertEquals("TEST_COLUMN", result);
     }
 
     @Test
-    void createSelectColumnIdentifier_withUsingForSameSelectColumnAndTableIgnoreAlias_doesNotUseTableQualifier() {
+    void createSelectColumn_joinUsing_omitTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", "T");
         final Column column = new Column(table, "TEST_COLUMN");
@@ -223,14 +225,14 @@ class OracleColumnIdentifierGeneratorTest {
                 Optional.empty());
 
         // When
-        final String result = generator.createSelectColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumn(column, select, ClauseType.SELECT, false);
 
         // Then
         assertEquals("TEST_COLUMN", result);
     }
 
     @Test
-    void createSelectColumnIdentifier_withUsingForSameSelectColumnButFromOtherSideOfJoinTable_doesNotUseTableQualifier() {
+    void createSelectColumn_withUsingForSameSelectColumnButFromOtherSideOfJoinTable_doesNotUseTableQualifier() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Table joinedTable = new Table("JOINED_TABLE", null);
@@ -248,14 +250,14 @@ class OracleColumnIdentifierGeneratorTest {
                 Optional.empty());
 
         // When
-        final String result = generator.createSelectColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumn(column, select, ClauseType.SELECT, false);
 
         // Then
         assertEquals("TEST_COLUMN", result);
     }
 
     @Test
-    void createSelectColumnIdentifier_withIncludeAlias_returnsColumnWithAlias() {
+    void createSelectColumn_withIncludeAlias_returnsColumnWithAlias() {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN", "MY_ALIAS");
@@ -272,19 +274,19 @@ class OracleColumnIdentifierGeneratorTest {
                 Optional.empty());
 
         // When
-        final String result = generator.createSelectColumnIdentifier(column, true, select);
+        final String result = generator.createSelectColumn(column, select, ClauseType.SELECT, false);
 
         // Then
         assertEquals("TEST_COLUMN MY_ALIAS", result);
     }
 
     @Test
-    void createAlias_validAlias() {
+    void createAlias_validAliasDeclaration() {
         // Given
         final String alias = "MY_ALIAS";
 
         // When
-        String result = generator.createAlias(alias);
+        String result = generator.createAliasDeclaration(alias);
 
         // Then
         assertEquals("MY_ALIAS", result);

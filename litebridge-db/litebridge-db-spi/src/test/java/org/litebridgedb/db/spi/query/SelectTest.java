@@ -1,11 +1,15 @@
 package org.litebridgedb.db.spi.query;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.ColumnExpressionImpl;
 import org.litebridgedb.db.spi.expression.ColumnExpressionTest;
+import org.litebridgedb.db.spi.expression.DelegateExpression;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 
@@ -54,14 +58,15 @@ class SelectTest {
         assertEquals(Optional.of(limit), result.limit());
     }
 
-    private final class TestColumnExpression extends ColumnExpressionImpl {
+    @NullMarked
+    private static final class TestColumnExpression extends ColumnExpressionImpl {
 
         public TestColumnExpression(final Column column) {
             super(column);
         }
 
         @Override
-        public String toSql(final Operation operation) {
+        public String toSql(final Operation operation, final ClauseType context, final @Nullable DelegateExpression parent) {
             return column.name();
         }
     }

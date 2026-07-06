@@ -3,6 +3,7 @@ package org.litebridgedb.db.oracle;
 import org.litebridgedb.commons.StringUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.query.Condition;
@@ -11,14 +12,44 @@ import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
 
 public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGenerator {
-
     @Override
-    @SuppressWarnings("ConstantConditions")
-    public String createSelectColumnIdentifier(final Column column, final boolean includeColumnAlias, final Operation operation) {
+    public String createSelectColumn(final Column column, final Operation operation, final ClauseType clause, final boolean nested) {
         if (!(operation instanceof final Select select)) {
-            return super.createSelectColumnIdentifier(column, includeColumnAlias, operation);
+            return super.createSelectColumn(column, operation, clause, nested);
         }
 
+        if (shouldApplyTableQualifier(column, select)) {
+            return super.createSelectColumn(column, operation, clause, nested);
+        }
+
+        final StringBuilder columnSql = new StringBuilder(quoteIdentifier(column.name()));
+
+        if (clause == ClauseType.SELECT && !StringUtils.isBlank(column.alias())) {
+            columnSql.append(' ').append(createAliasDeclaration(quoteIdentifier(column.alias())));
+        }
+
+        return columnSql.toString();
+    }
+
+    @Override
+    public String createColumnRef(final Column column, final Operation operation, final ClauseType clause) {
+        if (!(operation instanceof final Select select)) {
+            return super.createColumnRef(column, operation, clause);
+        }
+
+        if (shouldApplyTableQualifier(column, select)) {
+            return super.createColumnRef(column, operation, clause);
+        }
+
+        return quoteIdentifier(column.name());
+    }
+
+    @Override
+    public String createAliasDeclaration(final String alias) {
+        return quoteIdentifier(alias);
+    }
+
+    private static boolean shouldApplyTableQualifier(final Column column, final Select select) {
         boolean applyTableQualifier = true;
 
         // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the column
@@ -42,22 +73,6 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
                 break;
             }
         }
-
-        if (applyTableQualifier) {
-            return super.createSelectColumnIdentifier(column, includeColumnAlias, select);
-        }
-
-        final StringBuilder columnSql = new StringBuilder(quoteIdentifier(column.name()));
-
-        if (includeColumnAlias && !StringUtils.isBlank(column.alias())) {
-            columnSql.append(' ').append(createAlias(quoteIdentifier(column.alias())));
-        }
-
-        return columnSql.toString();
-    }
-
-    @Override
-    public String createAlias(final String alias) {
-        return quoteIdentifier(alias);
+        return applyTableQualifier;
     }
 }

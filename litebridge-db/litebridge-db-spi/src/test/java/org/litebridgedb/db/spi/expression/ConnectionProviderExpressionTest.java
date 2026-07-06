@@ -18,7 +18,7 @@ class ConnectionProviderExpressionTest {
         final ConnectionProviderExpression connectionProviderExpression = new TestConnectionProviderExpression();
 
         // When/Then
-        assertThrows(UnsupportedOperationException.class, () -> connectionProviderExpression.toSql(mock(Select.class)));
+        assertThrows(UnsupportedOperationException.class, () -> connectionProviderExpression.toSql(mock(Select.class), ClauseType.SELECT));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package org.litebridgedb.db.spi.expression;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Operation;
 
 /**
@@ -26,8 +27,8 @@ public class ConvertExpression implements DelegateExpression {
     }
 
     @Override
-    public String toSql(final Operation operation) {
-        return target.toSql(operation);
+    public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
+        return target.toSql(operation, clause, parent);
     }
 
     @Override

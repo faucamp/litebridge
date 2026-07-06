@@ -2,7 +2,7 @@ package org.litebridgedb.orm.api.sql;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
-import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
@@ -33,17 +33,17 @@ public final class SqlProtoExpressionResolver extends ProtoExpressionResolver {
     }
 
     @Override
-    protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable) {
-        return new SelectColumnSpec(getColumn(resolvable));
+    protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable, final ClauseType clause) {
+        return new SelectColumnSpec(getColumn(resolvable, clause));
     }
 
     @Override
-    protected ColumnExpressionSpec resolveSelectField(final QueryField queryField) {
+    protected ColumnExpressionSpec resolveSelectField(final QueryField queryField, final ClauseType clause) {
         throw new UnsupportedOperationException("QueryField not yet supported in SQL mode: " + queryField);
     }
 
     @Override
-    protected Column getColumn(final Resolvable resolvable) {
+    protected Column getColumn(final Resolvable resolvable, final ClauseType clause) {
         Objects.requireNonNull(selectSpec, "SelectSpec table not set");
 
         if (resolvable instanceof ProtoExpressionSpec protoExpressionSpec) {

@@ -6,11 +6,9 @@ import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
-import org.litebridgedb.db.spi.expression.ConvertExpression;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridgedb.db.spi.impl.function.AliasedColumnExpression;
-import org.litebridgedb.db.spi.impl.function.AliasedDelegateColumnExpression;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
@@ -53,15 +51,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
                     sql.append(", ");
                 }
 
-                final SelectExpression targetExpression = expression instanceof ConvertExpression convertExpression ? convertExpression.target() : expression;
-                final String identifier = switch (targetExpression) {
-                    case AliasedDelegateColumnExpression aliasedDelegateColumnExpression ->
-                            aliasedDelegateColumnExpression.toSqlWithAlias(select);
-                    case AliasedColumnExpression aliasedColumnExpression ->
-                            aliasedColumnExpression.toSqlWithAlias(select);
-                    default -> expression.toSql(select);
-                };
-
+                final String identifier = expression.toSql(select, ClauseType.SELECT);
                 sql.append(identifier);
             }
         } else {
@@ -74,7 +64,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         appendTable(sql, select.table());
 
         if (select.table().alias() != null) {
-            sql.append(' ').append(columnIdentifierGenerator.createAlias(Objects.requireNonNull(select.table().alias())));
+            sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(select.table().alias())));
         }
 
         // Joins
@@ -116,7 +106,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
                     sql.append(", ");
                 }
 
-                sql.append(expression.toSql(select));
+                sql.append(expression.toSql(select, ClauseType.GROUP_BY));
             }
 
             if (!select.having().isEmpty()) {
@@ -149,14 +139,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
                     sql.append(", ");
                 }
 
-                final String identifier;
-
-                if (orderBy.expression() instanceof AliasedColumnExpression aliasedColumnExpression) {
-                    identifier = aliasedColumnExpression.toSqlWithAlias(select);
-                } else {
-                    identifier = orderBy.expression().toSql(select);
-                }
-
+                final String identifier = orderBy.expression().toSql(select, ClauseType.ORDER_BY);
                 sql.append(identifier).append(orderBy.asc() ? " ASC" : " DESC");
             }
         }
@@ -184,7 +167,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         final List<@Nullable BindValue> bindValues = new ArrayList<>();
 
         if (join.table().alias() != null) {
-            sb.append(' ').append(columnIdentifierGenerator.createAlias(Objects.requireNonNull(join.table().alias())));
+            sb.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(join.table().alias())));
         }
 
         if (join.conditions().getFirst().operator() != Operator.USING) {

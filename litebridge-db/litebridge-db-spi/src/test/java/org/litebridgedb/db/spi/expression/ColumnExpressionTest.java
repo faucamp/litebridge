@@ -1,5 +1,6 @@
 package org.litebridgedb.db.spi.expression;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
@@ -25,7 +26,7 @@ public class ColumnExpressionTest {
     public record SelectColumnExpression(Column column) implements ColumnExpression {
 
         @Override
-        public String toSql(final Operation operation) {
+        public String toSql(final Operation operation, final ClauseType context, final @Nullable DelegateExpression parent) {
             return column.name();
         }
     }

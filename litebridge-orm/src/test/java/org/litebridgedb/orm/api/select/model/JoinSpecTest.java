@@ -3,6 +3,7 @@ package org.litebridgedb.orm.api.select.model;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Join;
@@ -82,7 +83,7 @@ class JoinSpecTest {
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         final ProtoExpressionResolver protoExpressionResolver = mock(ProtoExpressionResolver.class);
-        when(protoExpressionResolver.resolveExpression(any(ExpressionSpec.class))).thenAnswer(i -> Stream.of((ExpressionSpec) i.getArgument(0)));
+        when(protoExpressionResolver.resolveExpression(any(ExpressionSpec.class), any(ClauseType.class))).thenAnswer(i -> Stream.of((ExpressionSpec) i.getArgument(0)));
         final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("TEST_SCHEMA", "TEST_TABLE"), new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver));
         final Table table = joinSpec.table();
         final ConditionSpec conditionSpec = joinSpec.newCondition(new Column(table, "TEST_COLUMN"));

@@ -3,6 +3,7 @@ package org.litebridgedb.orm.api.select.model;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.type.TriFunction;
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.DelegateExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
@@ -56,12 +57,12 @@ public abstract class ProtoExpressionResolver {
      * @param expressionSpec the proto-expression to resolve
      * @return the resolved {@link ExpressionSpec} corresponding to the provided column
      */
-    public Stream<ExpressionSpec> resolveExpression(final ExpressionSpec expressionSpec) {
+    public Stream<ExpressionSpec> resolveExpression(final ExpressionSpec expressionSpec, final ClauseType clause) {
         return switch (expressionSpec) {
             case ExpressionSpecArray(ExpressionSpec[] expressions) ->
-                    Arrays.stream(expressions).flatMap(this::resolveExpression);
-            case Resolvable resolvable -> resolveExpression(resolvable);
-            case QueryField queryField -> resolveExpression(queryField);
+                    Arrays.stream(expressions).flatMap(expression -> resolveExpression(expression, clause));
+            case Resolvable resolvable -> resolveExpression(resolvable, clause);
+            case QueryField queryField -> resolveExpression(queryField, clause);
             default -> Stream.of(expressionSpec);
         };
     }
@@ -74,18 +75,18 @@ public abstract class ProtoExpressionResolver {
      * @param resolvable the {@link Resolvable} to resolve
      * @return the resolved {@link ExpressionSpec} corresponding to the provided column
      */
-    public Stream<ExpressionSpec> resolveExpression(final Resolvable resolvable) {
+    public Stream<ExpressionSpec> resolveExpression(final Resolvable resolvable, final ClauseType clause) {
         final Class<?> targetType = resolvable.type();
         final ExpressionSpec resolvedExpressionSpec;
 
         if (targetType == SelectFieldSpec.class) {
-            resolvedExpressionSpec = resolveSelectField(resolvable);
+            resolvedExpressionSpec = resolveSelectField(resolvable, clause);
         } else if (resolvable instanceof ProtoNestableExpressionSpec protoNestableExpressionSpec) {
-            resolvedExpressionSpec = resolveDelegateExpression(protoNestableExpressionSpec, getColumn(protoNestableExpressionSpec));
+            resolvedExpressionSpec = resolveDelegateExpression(protoNestableExpressionSpec, clause);
         } else if (resolvable instanceof ProtoColumnExpressionSpec protoColumnExpressionSpec) {
-            resolvedExpressionSpec = columnExpressions.get(targetType).apply(getColumn(protoColumnExpressionSpec));
+            resolvedExpressionSpec = columnExpressions.get(targetType).apply(getColumn(protoColumnExpressionSpec, clause));
         } else if (resolvable instanceof ConvertSpec<?> convertSpec) {
-            return resolveConvertSpec(convertSpec);
+            return resolveConvertSpec(convertSpec, clause);
         } else {
             throw new IllegalStateException("Unsupported expression: " + resolvable);
         }
@@ -93,12 +94,12 @@ public abstract class ProtoExpressionResolver {
         return Stream.of(resolvedExpressionSpec);
     }
 
-    public List<ExpressionSpec> resolveExpressions(final List<ExpressionSpec> expressionSpecs) {
-        return expressionSpecs.stream().flatMap(this::resolveExpression).toList();
+    public List<ExpressionSpec> resolveExpressions(final List<ExpressionSpec> expressionSpecs, final ClauseType clause) {
+        return expressionSpecs.stream().flatMap(expressionSpec -> resolveExpression(expressionSpec, clause)).toList();
     }
 
-    protected Stream<ExpressionSpec> resolveConvertSpec(final ConvertSpec<?> convertSpec) {
-        return Stream.of(convertSpec.replaceTarget(resolveExpression(convertSpec.target()).findFirst().orElseThrow()));
+    protected Stream<ExpressionSpec> resolveConvertSpec(final ConvertSpec<?> convertSpec, final ClauseType clause) {
+        return Stream.of(convertSpec.replaceTarget(resolveExpression(convertSpec.target(), clause).findFirst().orElseThrow()));
     }
 
     public static boolean isSupported(final Class<? extends ExpressionSpec> type) {
@@ -108,19 +109,18 @@ public abstract class ProtoExpressionResolver {
                 || argTypeOverrideExpressions.containsKey(type);
     }
 
-    private ColumnExpressionSpec resolveDelegateExpression(final ProtoNestableExpressionSpec expression,
-                                                           final Column column) {
+    private ColumnExpressionSpec resolveDelegateExpression(final ProtoNestableExpressionSpec expression, final ClauseType clause) {
         final ExpressionSpec nestedExpressionSpec = expression.target();
 
         final ColumnExpressionSpec resolvedNestedExpressionSpec = switch (nestedExpressionSpec) {
             case ColumnExpressionSpec columnExpression -> columnExpression;
             case ProtoNestableExpressionSpec protoNestableExpression ->
-                    resolveDelegateExpression(protoNestableExpression, column);
+                    resolveDelegateExpression(protoNestableExpression, clause);
             case ProtoColumnExpressionSpec protoColumnExpression -> {
                 if (protoColumnExpression.type() == SelectFieldSpec.class) {
-                    yield resolveSelectField(protoColumnExpression);
+                    yield resolveSelectField(protoColumnExpression, clause);
                 } else {
-                    yield new SelectColumnSpec(getColumn(protoColumnExpression));
+                    yield new SelectColumnSpec(getColumn(protoColumnExpression, clause));
                 }
             }
             default -> throw new IllegalStateException("Unsupported expression: " + expression);
@@ -142,13 +142,13 @@ public abstract class ProtoExpressionResolver {
         return argTypeOverrideExpressions.get(expression.type()).apply(resolvedNestedExpressionSpec, expression.type(), expression.args());
     }
 
-    private Stream<ExpressionSpec> resolveExpression(final QueryField queryField) {
-        return Stream.of(resolveSelectField(queryField));
+    private Stream<ExpressionSpec> resolveExpression(final QueryField queryField, final ClauseType clause) {
+        return Stream.of(resolveSelectField(queryField, clause));
     }
 
-    protected abstract ColumnExpressionSpec resolveSelectField(final Resolvable resolvable);
+    protected abstract ColumnExpressionSpec resolveSelectField(final Resolvable resolvable, final ClauseType clause);
 
-    protected abstract ColumnExpressionSpec resolveSelectField(final QueryField queryField);
+    protected abstract ColumnExpressionSpec resolveSelectField(final QueryField queryField, final ClauseType clause);
 
-    protected abstract Column getColumn(final Resolvable resolvable);
+    protected abstract Column getColumn(final Resolvable resolvable, final ClauseType clause);
 }

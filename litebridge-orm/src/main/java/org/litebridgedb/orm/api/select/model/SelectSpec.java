@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.expression.DelegateExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
@@ -199,7 +200,8 @@ public abstract class SelectSpec {
             throw new IllegalStateException("Table not specified");
         }
 
-        this.expressionSpecs = selectExpressionMapper.resolveProtoExpressions(expressionSpecs);
+        // SELECT
+        this.expressionSpecs = selectExpressionMapper.resolveProtoExpressions(expressionSpecs, ClauseType.SELECT);
         final List<SelectExpression> selectExpressions = convertToSelectExpressions(expressionSpecs, false);
         final Set<Column> selectedColumns = selectExpressions.stream()
                 .map(selectExpression -> {
@@ -225,11 +227,11 @@ public abstract class SelectSpec {
                 .map(JoinSpec::toJoin)
                 .toList() : Collections.emptyList();
 
-        // WHERE
         final Set<Table> selectedTables = Stream.concat(selectedColumns.stream().map(Column::table),
                         joinClause.stream().map(join -> join.table()))
                 .collect(Collectors.toSet());
 
+        // WHERE
         final List<Condition> whereClause = whereConditions != null ? whereConditions.stream()
                 .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper, selectedTables))
                 .toList() : Collections.emptyList();
@@ -238,7 +240,7 @@ public abstract class SelectSpec {
         final List<SelectExpression> groupByClause;
 
         if (groupBy != null) {
-            groupByClause = convertToSelectExpressions(resolveProtoExpressions(groupBy.expressions(), selectedColumns), false);
+            groupByClause = convertToSelectExpressions(resolveProtoExpressions(groupBy.expressions(), ClauseType.GROUP_BY, selectedColumns), false);
 
             // Validate that the column exists in the select statement if a GROUP BY is present
 //            groupByClause.forEach(groupBy -> {
@@ -258,7 +260,7 @@ public abstract class SelectSpec {
         if (orderBys != null) {
             orderByClause = orderBys.stream()
                     .flatMap(orderBySpec ->
-                            convertToSelectExpressions(resolveProtoExpressions(orderBySpec.expressions(), selectedColumns), true).stream()
+                            convertToSelectExpressions(resolveProtoExpressions(orderBySpec.expressions(), ClauseType.ORDER_BY, selectedColumns), true).stream()
                                     .map(selectExpression -> new OrderBy(selectExpression, orderBySpec.isAsc())))
                     .toList();
         } else {
@@ -302,15 +304,25 @@ public abstract class SelectSpec {
         };
     }
 
-    private List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs, final Set<Column> selectedColumns) {
-        return selectExpressionMapper.resolveProtoExpressions(expressionSpecs).stream()
+    private List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs, final ClauseType clause, final Set<Column> selectedColumns) {
+        return selectExpressionMapper.resolveProtoExpressions(expressionSpecs, clause).stream()
                 // Resolve references to selected columns (to correctly associate aliases)
                 .peek(expressionSpec -> {
                     if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
                         final Column column = columnExpressionSpec.getColumn();
-                        selectedColumns.stream()
-                                .filter(column::equalsIgnoreAlias)
-                                .findFirst().ifPresent(columnExpressionSpec::setColumn);
+
+                        for (Column selectedColumn : selectedColumns) {
+                            if (column.equalsIgnoreAlias(selectedColumn)) {
+                                // Overwrite with the selected column to copy the alias
+                                columnExpressionSpec.setColumn(selectedColumn);
+                            }
+                        }
+
+                        // No direct column match; Copy the table alias
+                        if (column.table().alias() == null && getTable().equalsIgnoreAlias(column.table())) {
+                            final Column replacementColumn = new Column(getTable(), column.name());
+                            columnExpressionSpec.setColumn(replacementColumn);
+                        }
                     }
                 })
                 .toList();

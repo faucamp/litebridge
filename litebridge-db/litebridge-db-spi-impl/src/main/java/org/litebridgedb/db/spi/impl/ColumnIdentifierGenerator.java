@@ -3,6 +3,8 @@ package org.litebridgedb.db.spi.impl;
 import org.litebridgedb.commons.StringUtils;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Operation;
+import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.util.SqlReservedWords;
 
 /**
@@ -12,28 +14,35 @@ import org.litebridgedb.db.spi.util.SqlReservedWords;
  */
 public class ColumnIdentifierGenerator {
 
-    @SuppressWarnings("ConstantConditions")
-    public String createSelectColumnIdentifier(final Column column, boolean includeColumnAlias, final Operation operation) {
-        final StringBuilder columnSql = new StringBuilder();
+    public String createSelectColumn(final Column column, final Operation operation, final ClauseType clause, final boolean nested) {
+        final StringBuilder sb = new StringBuilder();
+        final Table table = column.table();
 
-        if (!StringUtils.isEmpty(column.table().alias())) {
-            columnSql.append(quoteIdentifier(column.table().alias()));
+        if (!StringUtils.isBlank(table.alias())) {
+            sb.append(quoteIdentifier(table.alias()));
         } else {
-            columnSql.append(quoteIdentifier(column.table().name()));
+            sb.append(quoteIdentifier(table.name()));
         }
 
-        columnSql.append('.').append(quoteIdentifier(column.name()));
+        sb.append('.').append(quoteIdentifier(column.name()));
 
-        if (includeColumnAlias && !StringUtils.isBlank(column.alias())) {
-            columnSql.append(' ').append(createAlias(quoteIdentifier(column.alias())));
+        if (!nested && column.alias() != null) {
+            sb.append(' ').append(createAliasDeclaration(column.alias()));
         }
 
-        return columnSql.toString();
+        return sb.toString();
     }
 
-    @SuppressWarnings("ConstantConditions")
-    public String createColumnReference(final Column column) {
-        return column.alias() != null ? quoteIdentifier(column.alias()) : quoteIdentifier(column.name());
+    public String createColumnRef(final Column column, final Operation operation, final ClauseType clause) {
+        if (column.alias() != null && clause != ClauseType.WHERE) {
+            return column.alias();
+        }
+
+        if (column.table().alias() != null) {
+            return column.table().alias() + "." + column.name();
+        }
+
+        return column.table().name() + "." + column.name();
     }
 
     public String quoteIdentifier(final String identifier) {
@@ -44,7 +53,7 @@ public class ColumnIdentifierGenerator {
         }
     }
 
-    public String createAlias(final String alias) {
+    public String createAliasDeclaration(final String alias) {
         return "AS %s".formatted(quoteIdentifier(alias));
     }
 }

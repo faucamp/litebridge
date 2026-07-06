@@ -3,6 +3,7 @@ package org.litebridgedb.orm.api.update.model;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.query.Operator;
@@ -36,7 +37,7 @@ class UpdateSpecTest {
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
         final ProtoExpressionResolver protoExpressionResolver = mock(ProtoExpressionResolver.class);
-        when(protoExpressionResolver.resolveExpression(any(ExpressionSpec.class))).thenAnswer(i -> Stream.of((ExpressionSpec) i.getArgument(0)));
+        when(protoExpressionResolver.resolveExpression(any(ExpressionSpec.class), any(ClauseType.class))).thenAnswer(i -> Stream.of((ExpressionSpec) i.getArgument(0)));
         final UpdateSpec spec = new UpdateSpec(new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver));
         final Table table = new Table("cat", "sch", "tab");
         spec.setTable(table);

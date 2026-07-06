@@ -3,6 +3,7 @@ package org.litebridgedb.orm.api.select.model;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.expression.SelectReference;
@@ -60,7 +61,7 @@ public class ConditionSpec {
     }
 
     public Condition toCondition(final SelectExpressionMapper selectExpressionMapper, final Collection<Table> selectedTables) {
-        final List<ExpressionSpec> lhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(lhs).stream()
+        final List<ExpressionSpec> lhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(lhs, ClauseType.WHERE).stream()
                 .peek(expressionSpec -> {
                     if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
                         final Table expressionTable = columnExpressionSpec.getColumn().table();
@@ -89,7 +90,7 @@ public class ConditionSpec {
             final SubselectExpression subselectExpression = selectExpressionMapper.sqlFunctionRegistry().select().subselect().create(select);
             return new Condition(lhsSelectExpression, operator, subselectExpression);
         } else if (value instanceof ExpressionSpec expressionSpec) {
-            final List<ExpressionSpec> rhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(expressionSpec);
+            final List<ExpressionSpec> rhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(expressionSpec, ClauseType.WHERE);
 
             if (rhsResolvedExpressionSpecs.size() != 1) {
                 throw new IllegalArgumentException("Expected exactly one RHS expression spec, but got " + rhsResolvedExpressionSpecs.size());

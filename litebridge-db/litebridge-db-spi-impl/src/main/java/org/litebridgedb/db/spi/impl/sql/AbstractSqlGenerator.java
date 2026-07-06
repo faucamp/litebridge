@@ -9,6 +9,7 @@ import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.expression.ConnectionProviderExpression;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
@@ -52,15 +53,13 @@ public abstract class AbstractSqlGenerator {
      * @return a {@code String} representing the constructed SQL condition fragment
      */
     protected PreparedSql createCondition(final Condition condition, final Operation operation, final ConnectionProvider connectionProvider) {
+        final String lhs = condition.lhs().toSql(operation, ClauseType.WHERE);
         final Column column;
-        final String lhs;
 
         if (condition.lhs() instanceof ColumnExpression columnExpression) {
             column = columnExpression.column();
-            lhs = columnIdentifierGenerator.createSelectColumnIdentifier(column, false, operation);
         } else {
             column = null;
-            lhs = condition.lhs().toSql(operation);
         }
 
         final String sql;
@@ -93,7 +92,7 @@ public abstract class AbstractSqlGenerator {
                     sqlFragment = fragmentPreparedSql.sql();
                     bindValues = fragmentPreparedSql.bindValues();
                 } else {
-                    sqlFragment = condition.rhs().toSql(operation);
+                    sqlFragment = condition.rhs().toSql(operation, ClauseType.WHERE);
                     bindValues = Collections.emptyList();
                 }
 

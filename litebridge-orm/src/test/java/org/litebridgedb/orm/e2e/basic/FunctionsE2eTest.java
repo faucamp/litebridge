@@ -165,7 +165,10 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     @DisplayName("Nested functions")
     void nestedFunctions(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Nested SQL functions
-        final List<String> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring("surname", 4))).from(Person.class).orderBy("id").asc().list();
+        final List<String> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring("surname", 4)))
+                .from(Person.class)
+                .orderBy("id").asc()
+                .list();
         assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings);
     }
 
@@ -266,5 +269,14 @@ public class FunctionsE2eTest extends AbstractE2eTest {
         assertEquals(3L, result3.get(0).getId());
         assertEquals(2L, result3.get(1).getId());
         assertEquals(1L, result3.get(2).getId());
+
+        // Metamodel query field function in where clause LHS
+        final Person result4 = litebridge.select(Person.class)
+                .where(PersonMeta.name.upper()).eq("NAME2")
+                .oneOrThrow();
+
+        assertEquals(3L, result4.getId());
+        assertEquals("Name2", result4.getName());
+        assertEquals("Surname2", result4.getSurname());
     }
 }

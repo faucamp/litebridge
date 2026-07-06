@@ -1,5 +1,6 @@
 package org.litebridgedb.db.spi.expression;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
@@ -29,7 +30,7 @@ public interface ConnectionProviderExpression extends SelectExpression {
      * @throws UnsupportedOperationException since a {@link ConnectionProvider} is required
      */
     @Override
-    default String toSql(final Operation operation) {
+    default String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
         throw new UnsupportedOperationException("toSql() for " + getClass().getSimpleName() + " requires a connection provider");
     }
 }

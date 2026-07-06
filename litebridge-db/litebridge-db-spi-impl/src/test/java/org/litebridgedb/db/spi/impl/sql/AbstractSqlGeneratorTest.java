@@ -5,8 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
+import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
@@ -434,7 +436,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(column, Operator.IN, subselectExpression);
         final PreparedSql subselectSql = new PreparedSql("SELECT ID FROM OTHER", List.of(new BindValue(1, Types.INTEGER)));
 
-        when(subselectExpression.toSql(any(), any())).thenReturn(subselectSql);
+        when(subselectExpression.toSql(any(Operation.class), any(ConnectionProvider.class))).thenReturn(subselectSql);
 
         // When
         final PreparedSql result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
@@ -467,7 +469,7 @@ class AbstractSqlGeneratorTest {
     void createCondition_nonColumnLhs() {
         // Given
         final SelectExpression lhs = mock(SelectExpression.class);
-        when(lhs.toSql(any())).thenReturn("1");
+        when(lhs.toSql(any(Operation.class), any(ClauseType.class))).thenReturn("1");
         final Condition condition = new Condition(lhs, Operator.EQ, "val");
 
         when(typeConverter.getSqlDataType(any())).thenReturn(Types.VARCHAR);

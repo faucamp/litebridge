@@ -33,7 +33,7 @@ public class LiteralExpression implements SelectExpression {
     }
 
     @Override
-    public String toSql(final Operation operation) {
+    public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
         if (value == null) {
             return "NULL";
 //        } else if (value.getClass().isArray()) {

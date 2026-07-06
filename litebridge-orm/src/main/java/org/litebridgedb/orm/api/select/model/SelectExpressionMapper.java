@@ -2,13 +2,14 @@ package org.litebridgedb.orm.api.select.model;
 
 import org.litebridgedb.commons.ObjectUtils;
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.expression.ConvertExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
-import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.DelegateExpressionSpec;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.ProtoExpressionSpec;
 import org.litebridgedb.orm.expression.function.aggregate.AvgSpec;
 import org.litebridgedb.orm.expression.function.aggregate.CountSpec;
@@ -42,12 +43,12 @@ public final class SelectExpressionMapper {
         return sqlFunctionRegistry;
     }
 
-    List<ExpressionSpec> resolveProtoExpression(final ExpressionSpec expressionSpec) {
-        return protoExpressionResolver.resolveExpression(expressionSpec).toList();
+    List<ExpressionSpec> resolveProtoExpression(final ExpressionSpec expressionSpec, final ClauseType clause) {
+        return protoExpressionResolver.resolveExpression(expressionSpec, clause).toList();
     }
 
-    List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs) {
-        return protoExpressionResolver.resolveExpressions(expressionSpecs);
+    List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs, final ClauseType clause) {
+        return protoExpressionResolver.resolveExpressions(expressionSpecs, clause);
     }
 
     SelectExpression toSelectExpression(final ExpressionSpec expressionSpec, final boolean useSelectReferences) {
@@ -75,8 +76,7 @@ public final class SelectExpressionMapper {
             // Unsupported
             case ProtoExpressionSpec protoExpression ->
                     throw new IllegalStateException("ProtoExpression not resolved: " + protoExpression);
-            case QueryField queryField ->
-                    throw new IllegalStateException("QueryField not resolved: " + queryField);
+            case QueryField queryField -> throw new IllegalStateException("QueryField not resolved: " + queryField);
         };
     }
 
