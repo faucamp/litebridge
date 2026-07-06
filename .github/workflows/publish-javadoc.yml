@@ -19,4 +19,4 @@ jobs:
           java-version: 21
           target-folder: javadoc
           project: maven
-          custom-command: install -pl litebridge-maven-plugin -am -DskipTests=true javadoc:aggregate
+          custom-command: mvn install -pl litebridge-maven-plugin -am -DskipTests=true javadoc:aggregate
