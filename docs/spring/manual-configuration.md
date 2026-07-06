@@ -2,11 +2,11 @@
 
 ← [Spring Integration](index.md)
 
-For applications not using Spring Boot, or when you need complete control over bean lifecycle and configuration, you can manually define Litebridge beans.
+For applications not using Spring Boot, or when complete control over bean lifecycle and configuration is required, Litebridge beans can be manually defined.
 
 ## Dependencies
 
-Add the `litebridge-spring` and your chosen database provider to your `pom.xml`:
+Add the `litebridge-spring` and the chosen database provider to the `pom.xml`:
 
 ```xml
 <dependency>
@@ -42,12 +42,12 @@ public class LitebridgeConfig {
 
     @Bean
     public Litebridge litebridge(LitebridgeTransactionManager transactionManager) {
-        // Choose your database provider
+        // Select the database provider
         DatabaseProvider databaseProvider = new H2DatabaseProvider();
         
         Litebridge litebridge = new Litebridge(databaseProvider, transactionManager);
 
-        // Register your DTOs manually
+        // Register DTOs manually
         litebridge.register(User.class, rc -> rc.mapToTable("LB.USERS")
                 .mapField("id").toColumn("ID")
                 .mapField("username").toColumn("USERNAME"));
@@ -63,7 +63,7 @@ public class LitebridgeConfig {
 
 ## Entity Scanning
 
-If you use [entity annotations](../persistence/entity-annotations.md), you can use the `LitebridgeEntityScanner` to automatically discover and register your entities during configuration. Similarly, `LitebridgeTypeSafeDtoMappingScanner` can be used to discover implementations of `TypeSafeDtoTableMapping`.
+If [entity annotations](../persistence/entity-annotations.md) are used, the `LitebridgeEntityScanner` can be used to automatically discover and register entities during configuration. Similarly, `LitebridgeTypeSafeDtoMappingScanner` can be used to discover implementations of `TypeSafeDtoTableMapping`.
 
 ```java
 // Scan for @Table-annotated classes
@@ -81,11 +81,11 @@ These classes leverage Spring's `ClassPathScanningCandidateComponentProvider` to
 
 ### Transaction Management
 
-Litebridge uses its own `LitebridgeTransactionManager`, which implements Spring's `PlatformTransactionManager`. This allows it to participate in Spring-managed transactions. Ensure your configuration includes `@EnableTransactionManagement`.
+Litebridge uses its own `LitebridgeTransactionManager`, which implements Spring's `PlatformTransactionManager`. This allows it to participate in Spring-managed transactions. Ensure the configuration includes `@EnableTransactionManagement`.
 
 ### Bean Dependencies
 
-The `Litebridge` bean depends on the `LitebridgeTransactionManager`. When using Spring Boot's database initialization (e.g., `schema.sql`), you may need to use `@DependsOnDatabaseInitialization` to ensure the database is ready before Litebridge attempts to register mappings or interact with it.
+The `Litebridge` bean depends on the `LitebridgeTransactionManager`. When using Spring Boot's database initialization (e.g., `schema.sql`), `@DependsOnDatabaseInitialization` may be required to ensure the database is ready before Litebridge attempts to register mappings or interact with it.
 
 ```java
 @Bean

@@ -6,10 +6,10 @@ Litebridge includes a built-in change tracking mechanism that helps optimise dat
 
 Purpose:
 - **Performance**: Reduced database load by only updating changed columns.
-- **Efficiency**: No need to manually keep track of what changed in your application logic.
+- **Efficiency**: No need to manually keep track of what changed in application logic.
 - **Safety**: Minimises the risk of overwriting concurrent changes to unrelated columns (depending on the database's locking strategy).
 
-Change tracking works by wrapping a DTO in a proxy that intercepts calls to its setters (or by comparing the current state with a snapshot of the original state). When you save a tracked DTO, Litebridge only generates SQL for the modified fields.
+Change tracking works by wrapping a DTO in a proxy that intercepts calls to its setters (or by comparing the current state with a snapshot of the original state). When a tracked DTO is saved, Litebridge only generates SQL for the modified fields.
 
 ## Usage
 
@@ -34,7 +34,7 @@ litebridge.save(person);
 
 ### Cascading and tracking
 
-When you track a DTO that has relationships, Litebridge can also track the related DTOs if they are properly configured.
+When tracking a DTO that has relationships, Litebridge can also track the related DTOs if they are properly configured.
 
 ```java
 Person person = litebridge.track(new Person());
@@ -47,7 +47,7 @@ litebridge.save(account);
 
 ## Implicit tracking
 
-When you retrieve DTOs via a `select()` query, they are automatically tracked by Litebridge. This means any changes you make to them can be persisted simply by calling `save()`.
+When DTOs are retrieved via a `select()` query, they are automatically tracked by Litebridge. This means any changes made to them can be persisted simply by calling `save()`.
 
 ```java
 Person person = litebridge.select(Person.class)

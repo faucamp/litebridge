@@ -2,10 +2,10 @@
 
 ← [Maven Plugin](index.md)
 
-The `metamodel` goal scans your project for entities and DTOs and generates metamodel classes. 
+The `metamodel` goal scans the project for entities and DTOs and generates metamodel classes. 
 These metamodels are used to provide type safety when building Litebridge queries.
 
-For more information on how to use metamodels in your queries, see the [Metamodels](../persistence/metamodels.md) documentation.
+For more information on how to use metamodels in queries, see the [Metamodels](../persistence/metamodels.md) documentation.
 
 ## Configuration Parameters
 

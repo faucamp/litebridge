@@ -105,17 +105,17 @@ litebridge.select(upper(substring(PersonMeta.surname, 1, 3)))
 
 These expressions instruct the ORM to convert the result of an expression to a specific type.
 These are not a SQL-level conversion (like `CAST`), but rather an instruction to Litebridge to use its registered type
-converters to transform the result before returning it to your application.
+converters to transform the result before returning it to the application.
 
-This is useful when the database driver returns a type that doesn't perfectly match what the client application expects
-(e.g., a `BigDecimal` from `AVG()` when the client application wants a `Double`).
+This is useful when the database driver returns a type that does not perfectly match the requirements of the client application
+(e.g., a `BigDecimal` from `AVG()` when the client application requires a `Double`).
 
 ### Mechanisms
 
 `Fn.convert()` unlocks two main mechanisms for controlling the type of query results:
 
-1. **Nested Expression Conversion**: Converts the result of a particular nested query expression to a specified type. This is typically used when you are selecting multiple expressions (e.g., using `Fn.row()`) and want to ensure each specific column in the result `Row` has the desired Java type.
-2. **Result Type Override**: Overrides the final return type of the fluent query API. This is used when only a single expression is provided in `litebridge.select()`, allowing you to specify exactly what type the terminal methods (like `oneOrThrow()`, `list()`, etc.) should return.
+1. **Nested Expression Conversion**: Converts the result of a particular nested query expression to a specified type. This is typically used when selecting multiple expressions (e.g., using `Fn.row()`) to ensure each specific column in the result `Row` has the desired Java type.
+2. **Result Type Override**: Overrides the final return type of the fluent query API. This is used when only a single expression is provided in `litebridge.select()`, allowing the specification of the exact type that terminal methods (like `oneOrThrow()`, `list()`, etc.) should return.
 
 ### API Reference
 
@@ -129,8 +129,8 @@ This is useful when the database driver returns a type that doesn't perfectly ma
 
 #### Nested Expression Conversion
 
-`convert()` can be used to return generic `Row` objects. This is typically done via the shorthand `row()` method, which is equivalent to `convert(Row.cass, ExpressionSpec...)`.
-When selecting multiple values into a `Row`, you can use nested `convert()` calls to specify the type of individual expressions:
+`convert()` can be used to return generic `Row` objects. This is typically done via the shorthand `row()` method, which is equivalent to `convert(Row.class, ExpressionSpec...)`.
+When selecting multiple values into a `Row`, nested `convert()` calls can be used to specify the type of individual expressions:
 
 ```java
 import org.litebridgedb.db.spi.Row;

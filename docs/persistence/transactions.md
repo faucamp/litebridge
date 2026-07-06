@@ -2,20 +2,20 @@
 
 ← [Persistence](index.md)
 
-Litebridge provides a programmatic API for transaction management, giving you full control over when transactions start, 
+Litebridge provides a programmatic API for transaction management, giving full control over when transactions start, 
 commit, or rollback. It supports manual control, try-with-resources for automatic resource management, and lambda-based 
 execution for a more functional approach.
 
 ## Starting a transaction
 
 Transactions are accessed via the `litebridge.transaction()` method. This returns a `TransactionContext` which allows 
-you to configure and begin a transaction.
+the configuration and beginning of a transaction.
 
 ## Transaction management patterns
 
 ### Manual control
 
-You can manually control the lifecycle of a transaction using `begin()`, `commit()`, and `rollback()`. 
+The lifecycle of a transaction can be manually controlled using `begin()`, `commit()`, and `rollback()`. 
 
 ```java
 litebridge.transaction().begin();
@@ -46,7 +46,7 @@ that everything completed as intended.
 
 ### Lambda execution
 
-For a more concise approach, you can use the `execute()` method, which handles the transaction lifecycle for you. 
+For a more concise approach, the `execute()` method can be used, which handles the transaction lifecycle. 
 If the lambda completes successfully, the transaction is committed. If an exception is thrown, it is automatically rolled back.
 
 ```java
@@ -62,7 +62,7 @@ This is the recommended approach for most use cases as it handles commit/rollbac
 
 ## Transaction configuration
 
-Before calling `begin()` or `execute()`, you can configure the transaction with specific attributes.
+Before calling `begin()` or `execute()`, the transaction can be configured with specific attributes.
 
 ### Read-only transactions
 
@@ -79,7 +79,7 @@ litebridge.transaction()
 
 ### Isolation levels
 
-You can specify the isolation level for the transaction using the `isolation()` method.
+The isolation level for the transaction can be specified using the `isolation()` method.
 
 ```java
 import org.litebridgedb.db.spi.tx.Isolation;

@@ -26,7 +26,7 @@ mvn clean verify -Dlb.e2e.env=h2
 
 ## IntelliJ note
 
-To run a specific end-to-end test in IntelliJ, you may need to add the following VM option to the run configuration:
+To run a specific end-to-end test in IntelliJ, it may be necessary to add the following VM option to the run configuration:
 
 ```
 --add-opens litebridge.orm/org.litebridgedb.orm.e2e=ALL-UNNAMED --add-opens litebridge.orm/org.litebridgedb.orm.e2e.setup=ALL-UNNAMED

@@ -8,12 +8,12 @@ Instead of using strings to refer to fields (which are prone to typos and don't 
 ## Overview
 
 A metamodel is a utility class that describes the structure of a DTO or entity. 
-For every field in your DTO, the metamodel has a corresponding public static final field of type `QueryField` (or one of its specialised subclasses like `StringQueryField` or `NumericQueryField`).
+For every field in a DTO, the metamodel has a corresponding public static final field of type `QueryField` (or one of its specialised subclasses like `StringQueryField` or `NumericQueryField`).
 
 ### Benefits
 - **Type Safety**: Errors are caught at compile-time instead of runtime.
 - **IDE Support**: Autocomplete works for field names and available SQL functions.
-- **Refactoring**: Renaming a field in your DTO (and updating the metamodel) will automatically update all references in your queries.
+- **Refactoring**: Renaming a field in a DTO (and updating the metamodel) will automatically update all references in queries.
 
 ## Structure
 
@@ -40,7 +40,7 @@ Metamodels can be used in almost all parts of the Litebridge fluent API.
 
 ### Selecting Specific Fields
 
-You can use metamodel fields in the `select()` method to retrieve only specific data:
+Metamodel fields can be used in the `select()` method to retrieve only specific data:
 
 ```java
 import static org.example.meta.PersonMeta.*;
@@ -94,13 +94,13 @@ List<Person> users = litebridge.select(Person.class)
 
 ### Using the Maven Plugin (Recommended)
 
-The easiest way to create metamodels is by using the `litebridge-maven-plugin`. It can automatically generate metamodel classes for all your registered entities and DTOs.
+The easiest way to create metamodels is by using the `litebridge-maven-plugin`. It can automatically generate metamodel classes for all registered entities and DTOs.
 
 See the [Maven metamodel goal](../maven/metamodel.md) documentation for configuration details.
 
 ### Manual Creation
 
-If you prefer not to use the Maven plugin, you can create metamodel classes manually. Simply create a class with public static final `QueryField` instances:
+If manual creation is preferred over the Maven plugin, metamodel classes can be created manually. Simply create a class with public static final `QueryField` instances:
 
 ```java
 public class MyDtoMeta {
@@ -109,5 +109,5 @@ public class MyDtoMeta {
 }
 ```
 
-Ensure that the field name passed to the constructor matches the field name in your DTO class.
+Ensure that the field name passed to the constructor matches the field name in the DTO class.
 The first parameter of the `QueryField` constructor is the tareget entity/DTO class, follwed by the entity/DTO's field name.

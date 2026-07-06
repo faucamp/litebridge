@@ -15,7 +15,7 @@ The plugin provides the following goals:
 
 ## Configuration
 
-To use the Litebridge Maven Plugin, add it to the `<build>` section of your `pom.xml`:
+To use the Litebridge Maven Plugin, add it to the `<build>` section of the `pom.xml`:
 
 ```xml
 <plugin>

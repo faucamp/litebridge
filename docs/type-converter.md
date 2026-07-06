@@ -52,7 +52,7 @@ Litebridge leverages the Java Platform Module System (JPMS) to allow for dynamic
 The `DefaultTypeConverter` uses `ServiceLoader.load(Converter.class)` to discover and register all available converter implementations at runtime. This allows:
 - **Modular Extensibility**: Custom modules can provide their own `Converter` implementations by including a `provides` clause in their `module-info.java`.
 - **Automatic Registration**: Any converter service found on the module path or classpath is automatically picked up and registered by the `DefaultTypeConverter` without any manual configuration.
-- **Dynamic Overrides**: By providing a custom converter with higher precedence or by registering it manually in a `ConfigurableTypeConverter`, you can easily customize the conversion logic for any type.
+- **Dynamic Overrides**: By providing a custom converter with higher precedence or by registering it manually in a `ConfigurableTypeConverter`, the conversion logic for any type can be easily customized.
 
 For example, a module providing a custom converter for a specific library type would include:
 
@@ -65,7 +65,7 @@ module my.custom.module {
 
 ## Standalone Usage
 
-The `litebridge-converter` module is designed to be independent. You can use it in any project by adding the dependency and instantiating a `TypeConverter`:
+The `litebridge-converter` module is designed to be independent. The module can be used in any project by adding the dependency and instantiating a `TypeConverter`:
 
 ```java
 // Using the default converters

@@ -215,7 +215,7 @@ litebridge.register(Server.class, rc -> rc.mapToTable("LB.SERVER")
             .with(spec -> spec.mapField("message").toColumn("MESSAGE")))));
 ```
 
-When querying a shared DTO, you must specify the context (the parent DTO) to disambiguate which table to use:
+When querying a shared DTO, the context (the parent DTO) must be specified to disambiguate which table to use:
 
 ```java
 Status status = litebridge.select(Status.class, Server.class)

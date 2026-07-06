@@ -3,12 +3,12 @@
 ← [Home](../index.md) | [DTO-table mapping](dto-table-mapping.md)
 
 Litebridge provides an annotation-based approach for mapping DTOs to database tables. This "entity-style" registration 
-allows you to define mappings directly on your classes using annotations, making the configuration 
+allows the definition of mappings directly on classes using annotations, making the configuration 
 more concise and co-located with the data structure.
 
 ## Dependencies
 
-To use Litebridge annotations, you need to include the `litebridge-annotations` module in your project:
+To use Litebridge annotations, the `litebridge-annotations` module must be included in the project:
 
 ```xml
 <dependency>
@@ -18,10 +18,10 @@ To use Litebridge annotations, you need to include the `litebridge-annotations` 
 </dependency>
 ```
 
-Note: this dependency is not required if you are already including the `litebridge-orm` module the module containing 
-your entity classes.
+Note: this dependency is not required if the `litebridge-orm` module is already included in the module containing 
+the entity classes.
 
-And update your `module-info.java` if you are using JPMS:
+And update `module-info.java` if JPMS is used:
 
 ```java
 module my.module {
@@ -65,7 +65,7 @@ public class Person {
 
 ### Registration
 
-Once your entity is annotated, you can register it with Litebridge:
+Once an entity is annotated, it can be registered with Litebridge:
 
 ```java
 // Register using current lookup
@@ -75,7 +75,7 @@ litebridge.register(Person.class);
 litebridge.register(MethodHandles.lookup(), Person.class);
 ```
 
-You can also register multiple entities at once, which is particularly useful if they refer to each other:
+Multiple entities can also be registered at once, which is particularly useful if they refer to each other:
 
 ```java
 litebridge.register(Person.class, Account.class);
@@ -97,7 +97,7 @@ Include the `litebridge-orm-support` module:
 </dependency>
 ```
 
-And update your `module-info.java` (if applicable):
+And update `module-info.java` (if applicable):
 
 ```java
 module my.module {
@@ -113,7 +113,7 @@ Use `TypesafeRegistrationSupport` to scan one or more packages:
 ```java
 import org.litebridgedb.orm.support.EntityScanner;
 
-// Create the scanner with your Litebridge instance
+// Create the scanner with the Litebridge instance
 EntityScanner scanner = new EntityScanner(litebridge);
 
 // Scan and register all entity classes in the specified packages
@@ -122,7 +122,7 @@ scanner.scanBasePackage("com.example.app.mappings");
 
 ### Spring Integration
 
-In Spring applications, you can use the `LitebridgeEntityScanner` to automatically discover and register your annotated entities. See [Spring Manual Configuration](../spring/manual-configuration.md#entity-and-mapping-scanning) and [Spring Boot Starter](../spring/spring-boot-starter.md#entity-and-mapping-registration) for more details.
+In Spring applications, the `LitebridgeEntityScanner` can be used to automatically discover and register annotated entities. See [Spring Manual Configuration](../spring/manual-configuration.md#entity-and-mapping-scanning) and [Spring Boot Starter](../spring/spring-boot-starter.md#entity-and-mapping-registration) for more details.
 
 ## Relationships
 
@@ -200,7 +200,7 @@ public class Group {
 
 ## Package Scanning
 
-If you have many annotated entities, manually registering each one can be tedious. The `litebridge-orm-support` module provides the `EntityPackageRegistrationSupport` class to scan packages for classes annotated with `@Table` and register them automatically.
+If there are many annotated entities, manually registering each one can be tedious. The `litebridge-orm-support` module provides the `EntityPackageRegistrationSupport` class to scan packages for classes annotated with `@Table` and register them automatically.
 
 ### Dependencies
 
@@ -214,7 +214,7 @@ To use the registration support, include the `litebridge-orm-support` module:
 </dependency>
 ```
 
-And update your `module-info.java`:
+And update `module-info.java`:
 
 ```java
 module my.module {
@@ -230,7 +230,7 @@ Use `EntityPackageRegistrationSupport` to scan one or more packages:
 ```java
 import org.litebridgedb.orm.support.EntityScanner;
 
-// Create the scanner with your Litebridge instance
+// Create the scanner with the Litebridge instance
 EntityPackageRegistrationSupport scanner = new EntityPackageRegistrationSupport(litebridge);
 
 // Scan and register all @Table annotated classes in the specified packages

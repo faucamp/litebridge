@@ -25,7 +25,7 @@ The `pom.xml` should use `litebridge-db` as its parent:
 </parent>
 ```
 
-Add dependencies on `litebridge-converter` (if you want to use the default type converter) and (optionally) `litebridge-db-spi-impl`:
+Add dependencies on `litebridge-converter` (if the default type converter is desired) and (optionally) `litebridge-db-spi-impl`:
 
 ```xml
 <dependencies>
@@ -39,13 +39,13 @@ Add dependencies on `litebridge-converter` (if you want to use the default type 
         <groupId>org.litebridgedb.db</groupId>
         <artifactId>litebridge-db-spi-impl</artifactId>
     </dependency>
-    <!-- Your database JDBC driver -->
+    <!-- The database JDBC driver -->
 </dependencies>
 ```
 
 ### 2. Configure Modularity
 
-Litebridge uses the Java Platform Module System (JPMS). You must include a `module-info.java` file in `src/main/java`. 
+Litebridge uses the Java Platform Module System (JPMS). A `module-info.java` file must be included in `src/main/java`. 
 At should require `litebridge.db.spi` and (optionally) `litebridge.db.spi.impl` and `litebridge.converter`:
 
 ```java
@@ -74,17 +74,17 @@ Implement the `DatabaseProvider` interface from the `litebridge.db.spi` module. 
 - Type conversion using a `TypeConverter`.
 - Standard SQL generation for `SELECT`, `INSERT`, `UPDATE`, and `DELETE`.
 
-By extending `AbstractDatabaseProvider`, you only need to focus on the database-specific SQL dialect and JDBC behaviors.
+By extending `AbstractDatabaseProvider`, the focus can be placed on the database-specific SQL dialect and JDBC behaviors.
 
-Key methods to override in your implementation:
+Key methods to override in the implementation:
 
 - **Constructor**: Call `super(new DefaultTypeConverter())` or provide a custom converter.
 - **`quoteIdentifier(String)`**: Define how to quote identifiers (tables, columns) to handle reserved words or case sensitivity.
 - **`createAlias(String)`**: Define the syntax for aliases (e.g., whether to use `AS` for table aliases).
-- **`appendLimitClause(Limit, StringBuilder)`**: Implement the specific pagination syntax for your database (e.g., `LIMIT/OFFSET`, `FETCH FIRST`, etc.).
-- **`createSequenceNextValueForDirectInsert(String)`**: If your database supports sequences, provide the syntax for fetching the next value.
+- **`appendLimitClause(Limit, StringBuilder)`**: Implement the specific pagination syntax for the database (e.g., `LIMIT/OFFSET`, `FETCH FIRST`, etc.).
+- **`createSequenceNextValueForDirectInsert(String)`**: If the database supports sequences, provide the syntax for fetching the next value.
 - **`createColumnIdentifier(...)`**: Customize how columns are referenced, especially in complex `JOIN` scenarios.
-- **`getLogger()`**: Return a logger specific to your provider class.
+- **`getLogger()`**: Return a logger specific to the provider class.
 
 Example snippet:
 
@@ -119,15 +119,15 @@ public class YourDatabaseProvider extends AbstractDatabaseProvider {
 
 #### Unit Tests
 
-Create unit tests in your module to verify that the generated SQL matches the expected dialect.
+Create unit tests in the module to verify that the generated SQL matches the expected dialect.
 
 #### End-to-End Tests
 
-To fully validate the provider, add it to the E2E test suite in `litebridge-orm`:
-1. Add your new module as a test dependency in `litebridge-orm/pom.xml`.
-2. Update the E2E test configuration to include your database (usually involving Testcontainers):
-   1. Add a new `org.litebridgedb.orm.e2e.setup.DbEnvironment` implementation for your database.
-   1. Update `org.litebridgedb.orm.e2e.setup.MultiDbTestExtension` and add your new environment as an invocation context.
-4. Verify that all standard E2E tests pass against your new provider.
+To fully validate the provider, it can be added to the E2E test suite in `litebridge-orm`:
+1. Add the new module as a test dependency in `litebridge-orm/pom.xml`.
+2. Update the E2E test configuration to include the database (usually involving Testcontainers):
+   1. Add a new `org.litebridgedb.orm.e2e.setup.DbEnvironment` implementation for the database.
+   1. Update `org.litebridgedb.orm.e2e.setup.MultiDbTestExtension` and add the new environment as an invocation context.
+4. Verify that all standard E2E tests pass against the new provider.
 
 Refer to the [End-to-End Tests](tests.md) documentation for more details on running integration tests.

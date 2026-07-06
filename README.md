@@ -14,9 +14,9 @@ It simplifies persistence by treating SQL as a first-class citizen, balancing re
 * **Lightweight**: A pure Java library with minimal external dependencies.
 * **Modern**: Built for Java 21+, leveraging modern idioms and features extensively.
 * **Efficient**: Focuses on performance and minimising database round-trips via built-in DTO change tracking.
-* **Transparent Mapping**: Map DTOs to databases without modifying your domain classes. Use a fluent API, programmatic `Map`-based configuration or _optional_ annotations.
-* **Fluent API**: Compose queries using a natural, SQL-like fluent builder that stays out of your way.
-* **Spring Integration**: Use the Litebridge Spring Boot starter to easily integrate Litebridge with your Spring Boot application.
+* **Transparent Mapping**: Map DTOs to databases without modifying domain classes. Use a fluent API, programmatic `Map`-based configuration or _optional_ annotations.
+* **Fluent API**: Compose queries using a natural, SQL-like fluent builder.
+* **Spring Integration**: Use the Litebridge Spring Boot starter to easily integrate Litebridge with a Spring Boot application.
 
 ## Shortcuts
 
@@ -318,7 +318,7 @@ Litebridge currently supports the following databases via the following modules:
 
 ## Project Structure
 
-Litebridge is modular, allowing you to include only the components you need.
+Litebridge is modular, allowing the inclusion of only the necessary components.
 
 ### Core modules
 
@@ -338,7 +338,7 @@ Supporting utilities for Litebridge ORM, allowing classpath scanning for entitie
 
 #### `litebridge-db`
 
-A collection of database provider modules. You only need to include the specific implementation for your database (or multiple if needed).
+A collection of database provider modules. Only the specific implementation for the target database needs to be included (or multiple if needed).
 
 * **`litebridge-db-h2`**:
 
@@ -411,7 +411,7 @@ Simple type conversion support for translating between Java types and SQL-specif
 ![Coverage](.github/badges/litebridge-commons/jacoco.svg)
 ![Branches](.github/badges/litebridge-commons/branches.svg)
 
-Internal utilities. Litebridge implements internal versions of common patterns to avoid bloating your project with large 3rd-party utility suites.
+Internal utilities. Litebridge implements internal versions of common patterns to avoid bloating projects with large 3rd-party utility suites.
 
 #### `spring`
 

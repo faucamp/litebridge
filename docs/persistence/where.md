@@ -72,7 +72,7 @@ litebridge.select(Person.class)
 ```
 
 #### Sub-queries
-You can use a lambda to define a sub-select query:
+A lambda can be used to define a sub-select query:
 ```java
 // Inclusion
 litebridge.select(Person.class)
@@ -112,8 +112,8 @@ litebridge.select()
 
 ### Expression-based Conditions
 
-For more advanced scenarios, such as when joining multiple tables and needing to disambiguate fields, you can use
-the `f()` or `field()` selectors from the `Fn` class to target a specific DTO type present in the query:
+For more advanced scenarios, such as when joining multiple tables and needing to disambiguate fields,
+the `f()` or `field()` selectors from the `Fn` class can be used to target a specific DTO type present in the query:
 
 ```java
 import static org.litebridgedb.orm.expression.Fn.f;

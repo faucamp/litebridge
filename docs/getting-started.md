@@ -2,16 +2,16 @@
 
 ← [Home](index.md)
 
-This guide will help you set up Litebridge in your Java project.
+This guide provides instructions for setting up Litebridge in a Java project.
 
 ## Requirements
 
 - **Java 21+**: Litebridge leverages modern Java features like records and pattern matching.
 - **Maven**: For dependency management.
 
-## 1. Add Litebridge to your project
+## 1. Add Litebridge to the project
 
-To use Litebridge, add the `litebridge-orm` dependency to your `pom.xml`:
+To use Litebridge, add the `litebridge-orm` dependency to the `pom.xml`:
 
 ```xml
 <dependency>
@@ -23,7 +23,7 @@ To use Litebridge, add the `litebridge-orm` dependency to your `pom.xml`:
 
 ## 2. Choose a Database Provider
 
-Litebridge uses a modular architecture for database support. You must include a database provider artifact corresponding to your database.
+Litebridge uses a modular architecture for database support. A database provider artifact corresponding to the database must be included.
 
 ### Supported Database Providers
 
@@ -60,7 +60,7 @@ For more details, see the [Maven Plugin documentation](maven/index.md).
 
 ## 4. Spring Integration (Optional)
 
-If you are using Spring or Spring Boot, Litebridge provides dedicated integration modules.
+For applications using Spring or Spring Boot, Litebridge provides dedicated integration modules.
 
 ### Spring Boot Starter
 
@@ -74,7 +74,7 @@ The easiest way to integrate Litebridge into a Spring Boot application is using 
 </dependency>
 ```
 
-This dependency includes `litebridge-orm`, but you still need to include the desired database provider.
+This dependency includes `litebridge-orm`, but the desired database provider must still be included.
 
 For more details on Spring integration, see:
 - [Spring Integration Overview](spring/index.md)
@@ -83,4 +83,4 @@ For more details on Spring integration, see:
 
 ## Next Steps
 
-Now that you have added the dependencies, you can start exploring the [Litebridge API](persistence/index.md).
+After adding the dependencies, the [Litebridge API](persistence/index.md) can be explored.

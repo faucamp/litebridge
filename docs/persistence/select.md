@@ -429,7 +429,7 @@ See the [Query Expressions](expressions.md#type-conversion-expressions) page for
 
 #### Result Type Override
 
-When selecting a single expression, you can specify exactly what type the terminal methods should return:
+When selecting a single expression, the exact type that the terminal methods should return can be specified:
 
 ```java
 import static org.litebridgedb.orm.expression.Fn.*;

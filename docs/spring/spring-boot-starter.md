@@ -2,11 +2,11 @@
 
 ← [Spring Integration](index.md)
 
-The `litebridge-spring-boot-starter` provides a convenient way to integrate Litebridge into your Spring Boot application with minimal configuration.
+The `litebridge-spring-boot-starter` provides a convenient way to integrate Litebridge into a Spring Boot application with minimal configuration.
 
 ## Dependency
 
-Add the following dependency to your `pom.xml`:
+Add the following dependency to the `pom.xml`:
 
 ```xml
 <dependency>
@@ -21,13 +21,13 @@ Add the following dependency to your `pom.xml`:
 When the starter is on the classpath, Litebridge will automatically:
 
 1.  **Detect a `DatabaseProvider`**: It scans the classpath for implementations of `DatabaseProvider`. If exactly one is found, it's used.
-2.  **Configure `LitebridgeTransactionManager`**: It creates a transaction manager that uses your application's `DataSource`.
+2.  **Configure `LitebridgeTransactionManager`**: It creates a transaction manager that uses the application's `DataSource`.
 3.  **Create the `Litebridge` bean**: It instantiates the main `Litebridge` engine, ready for injection.
 4.  **Scan packages for entities**: It optionally scans a set of packages for entity classes and automatially registers them with Litebridge.
 
 ## Configuration Properties
 
-You can customise the autoconfiguration using the following properties in `application.properties` or `application.yml`:
+The autoconfiguration can be customised using the following properties in `application.properties` or `application.yml`:
 
 | Property | Description | Default |
 | :--- | :--- | :--- |
@@ -44,8 +44,8 @@ litebridge.scan-base-package=com.example.app.entities,com.example.app.mappings
 
 ## Entity and Mapping Registration
 
-While you can manually register your DTO-to-table mappings, the starter supports automatic discovery via the `litebridge.scan-base-package` property
-if you are using [entity annotations](../persistence/entity-annotations.md).
+While DTO-to-table mappings can be manually registered, the starter supports automatic discovery via the `litebridge.scan-base-package` property
+if [entity annotations](../persistence/entity-annotations.md) are used.
 
 ### Automatic Scanning
 
@@ -58,7 +58,7 @@ These will be registered automatically during the initialisation of the `Litebri
 
 ### Manual Registration
 
-You can still register mappings manually in a `@Configuration` class or during application startup.
+Mappings can still be registered manually in a `@Configuration` class or during application startup.
 
 ```java
 @Configuration
@@ -76,7 +76,7 @@ public class MyLitebridgeConfig {
 
 ## Usage
 
-Once configured, you can inject `Litebridge` into your services and use it alongside Spring's `@Transactional`.
+Once configured, `Litebridge` can be injected into services and used alongside Spring's `@Transactional`.
 
 ```java
 @Service

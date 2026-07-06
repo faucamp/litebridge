@@ -58,7 +58,7 @@ changedFields.forEach(field -> {
     System.out.println(field.name());
 });
 
-// Access a specific field; in this we are using getOrNull to short-circuit defaulting the Optional returned by get()
+// Access a specific field; in this case getOrNull is used to short-circuit defaulting the Optional returned by get()
 ChangedField field = changedFields.getOrNull("field1");
 String fieldName = field.name();
 Object currentValue = field.value();
