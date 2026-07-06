@@ -110,30 +110,58 @@ converters to transform the result before returning it to your application.
 This is useful when the database driver returns a type that doesn't perfectly match what the client application expects
 (e.g., a `BigDecimal` from `AVG()` when the client application wants a `Double`).
 
-There are two main variants: `convert()` on a single nested expression, and `convert()` on a collection of expressions;
-the latter of which is also exposed as `row()` for shorthand when a `Row` type is desired.
+### Mechanisms
+
+`Fn.convert()` unlocks two main mechanisms for controlling the type of query results:
+
+1. **Nested Expression Conversion**: Converts the result of a particular nested query expression to a specified type. This is typically used when you are selecting multiple expressions (e.g., using `Fn.row()`) and want to ensure each specific column in the result `Row` has the desired Java type.
+2. **Result Type Override**: Overrides the final return type of the fluent query API. This is used when only a single expression is provided in `litebridge.select()`, allowing you to specify exactly what type the terminal methods (like `oneOrThrow()`, `list()`, etc.) should return.
+
+### API Reference
 
 | Method                                 | Description                                                                                                               |
 |:---------------------------------------|:--------------------------------------------------------------------------------------------------------------------------|
-| `convert(ExpressionSpec, Class<T>)`    | Converts the result of the nested expression to the target class                                                          |
-| `convert(Class<T>, ExpressionSpec...)` | Converts/projects the final result of all expressions to a target type                                                    |
+| `convert(ExpressionSpec, Class<T>)`    | Converts the result of the nested expression to the target class.                                                         |
+| `convert(Class<T>, ExpressionSpec...)` | Converts/projects the final result of all expressions to a target type.                                                    |
 | `row(...)`                             | Returns a generic `Row` result set for multi-expression selections. Shorthand for `convert(Row.class, ExpressionSpec...)` |
 
-### Row results
+### Examples
 
-`convert()` can be used to return generic `Row` objects. This is typically used with `row()` when
-selecting multiple expressions:
+#### Nested Expression Conversion
+
+`convert()` can be used to return generic `Row` objects. This is typically done via the shorthand `row()` method, which is equivalent to `convert(Row.cass, ExpressionSpec...)`.
+When selecting multiple values into a `Row`, you can use nested `convert()` calls to specify the type of individual expressions:
 
 ```java
 import org.litebridgedb.db.spi.Row;
-
 import static org.litebridgedb.orm.expression.Fn.*;
 
-// Returns a list of Row objects with two columns with types Integer and Long
+// Returns a list of Row objects where the first column is an Integer and the second is a Long
 List<Row> results = litebridge.select(row(
                 convert(f("age"), Integer.class),
                 convert(count(), Long.class)))
         .from(Person.class)
         .groupBy("age")
         .list();
+
+Integer age = (Integer) results.get(0).column("AGE").get().value();
+Long count = (Long) results.get(0).column("COUNT(*)").get().value();
+```
+
+#### Result Type Override
+
+When selecting a single expression, `convert()` can be used to define the return type of the entire query:
+
+```java
+import static org.litebridgedb.orm.expression.Fn.*;
+
+// The terminal 'oneOrThrow()' returns a Double because of Fn.convert()
+Double avgAge = litebridge.select(convert(avg("age"), Double.class))
+        .from(Person.class)
+        .oneOrThrow();
+
+// The terminal 'oneOrThrow()' returns a String
+String countStr = litebridge.select(convert(count(), String.class))
+        .from(Person.class)
+        .oneOrThrow();
 ```

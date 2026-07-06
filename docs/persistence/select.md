@@ -420,24 +420,37 @@ litebridge.select(abs("balance")).from(Account.class).list();
 Litebridge allows the Java type returned by an expression to be overridden using `Fn.convert()`. 
 This uses Litebridge's registered type converters to transform the database result before it is returned to the client application.
 
-This is particularly useful for aggregate functions where the database driver might return a different numeric type than what your application expects (e.g., getting a `Double` from an `AVG()` function when you want a `BigDecimal` or `Long`).
+`Fn.convert()` supports two main use cases:
+
+1. **Result Type Override**: Overrides the return type of the fluent query API when a single expression is selected.
+2. **Nested Expression Conversion**: Converts specific expressions when multiple values are selected (e.g., into a `Row`).
+
+See the [Query Expressions](expressions.md#type-conversion-expressions) page for more details.
+
+#### Result Type Override
+
+When selecting a single expression, you can specify exactly what type the terminal methods should return:
 
 ```java
-// Convert the result of COUNT() to a String
-String countStr = litebridge.select(Fn.convert(Fn.count(), String.class))
+import static org.litebridgedb.orm.expression.Fn.*;
+
+// Convert AVG() result to a Double instead of the database default (e.g. BigDecimal)
+Double avgAge = litebridge.select(convert(avg("age"), Double.class))
         .from(Person.class)
         .oneOrThrow();
 
-// Convert AVG() result to a Double
-Double avgAge = litebridge.select(Fn.convert(Fn.avg("age"), Double.class))
+// Convert the result of COUNT() to a String
+String countStr = litebridge.select(convert(count(), String.class))
         .from(Person.class)
         .oneOrThrow();
 ```
 
 #### Generic Row results
 
-`Fn.convert()` can also be used to return generic `Row` objects for more complex queries that do not map back to a single DTO or a simple type. 
+`Fn.convert()` can also be used to return generic `Row` objects for more complex queries that do not map back to a single DTO or a simple type.
 This is typically done via the shorthand method `Fn.row()` to select multiple expressions.
+
+When selecting multiple expressions into a `Row`, `convert()` can ensure each column has the desired type:
 
 ```java
 import org.litebridgedb.db.spi.Row;
