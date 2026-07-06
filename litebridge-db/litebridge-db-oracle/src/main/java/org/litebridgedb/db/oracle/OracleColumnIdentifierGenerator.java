@@ -12,6 +12,7 @@ import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
 
 public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGenerator {
+
     @Override
     public String createSelectColumn(final Column column, final Operation operation, final ClauseType clause, final boolean nested) {
         if (!(operation instanceof final Select select)) {

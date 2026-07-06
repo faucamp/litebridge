@@ -64,7 +64,6 @@
             <plugin>
                 <groupId>org.litebridgedb.maven</groupId>
                 <artifactId>litebridge-maven-plugin</artifactId>
-                <version>${project.version}</version>
                 <executions>
                     <execution>
                         <id>Reverse engineer Litebridge entities</id>

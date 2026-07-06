@@ -95,6 +95,7 @@ public final class MetamodelMojo extends AbstractMojo {
         }
     }
 
+    @SuppressWarnings("ConstantConditions")
     private InputData getTypeSolverAndPackageDirs() throws MojoExecutionException {
         if (input == null) {
             throw new MojoExecutionException("No input configuration provided");

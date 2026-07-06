@@ -25,10 +25,6 @@ public class SelectReferenceImpl extends SelectReference {
 
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
-        if (clause == ClauseType.WHERE) {
-            return columnIdentifierGenerator.createColumnRef(column, operation, clause);
-        } else {
-            return columnIdentifierGenerator.createColumnRef(column, operation, clause);
-        }
+        return columnIdentifierGenerator.createColumnRef(column, operation, clause);
     }
 }
