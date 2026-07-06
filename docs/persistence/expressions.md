@@ -15,17 +15,23 @@ Selectors are the basic building blocks for choosing which fields or columns to 
 |:----------------------------------------------|:--------------------------------------------------------------------|
 | `f(String)`, `field(String)`                  | Selects a field from the primary DTO being queried. Used in DTO-level queries. |
 | `f(Class, String)`, `field(Class, String)`    | Selects a field from a specific DTO type. Useful in multi-table joins.         |
+| `Metamodel.field`                             | Selects a field via its [Metamodel](metamodels.md). This is the recommended type-safe way to select fields. |
 | `c(String)`, `column(String)`                 | Selects a database column by name.                                             |
-| `c(String, String)`, `column(String, String)` | Selects a database column with a table name (e.g., `Table.Column`). |
 | `ca(...)`, `columnAlias(...)`                 | Selects a database column and assigns it an alias.                  |
 
 ### DTO Field Examples
 
 ```java
 import static org.litebridgedb.orm.expression.Fn.*;
+import static org.example.meta.PersonMeta.id;
+import static org.example.meta.PersonMeta.firstName;
 
 // Select specific fields from a DTO using the shorthand field selector
-List<Person> persons = litebridge.select(f("id"), f("name")).from(Person.class).list();
+List<Person> persons1 = litebridge.select(f("id"), f("name")).from(Person.class).list();
+
+// Equivalent expression using metamodel fields (recommended)
+List<Person> persons2 = litebridge.select(id, firstName).from(Person.class).list();
+
 ```
 
 ### Column Aliasing Examples
@@ -87,13 +93,12 @@ Functions can be nested to perform complex operations:
 
 ```java
 import static org.litebridgedb.orm.expression.Fn.*;
+import org.example.meta.PersonMeta;
 
-// Get the uppercase of the first 3 characters of the surname
-litebridge.select(upper(substring("surname", 1,3))).
-
-from(Person .class).
-
-list();
+// Get the uppercase of the first 3 characters of the surname using metamodel
+litebridge.select(upper(substring(PersonMeta.surname, 1, 3)))
+        .from(Person.class)
+        .list();
 ```
 
 ## Type conversion expressions

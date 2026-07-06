@@ -3,7 +3,7 @@
 ← [Querying data](select.md)
 
 Litebridge provides a fluent API for building `WHERE` clauses in queries. These clauses are typically initiated 
-by calling `.where("fieldName")` or `.where("columnName")` on a select query, followed by an operator.
+by calling `.where("fieldName")` or `.where(PersonMeta.fieldName)` on a select query, followed by an operator.
 
 ## Operators
 
@@ -26,14 +26,17 @@ The following operators are available on condition clauses. Most operators suppo
 ### Basic Examples
 
 ```java
-// Equality
+// Equality (String-based)
 litebridge.select(Person.class).where("name").eq("Alice").list();
 
+// Equality (Type-safe Metamodel)
+litebridge.select(Person.class).where(PersonMeta.name).eq("Alice").list();
+
 // Comparison
-litebridge.select(Person.class).where("age").gt(18).list();
+litebridge.select(Person.class).where(PersonMeta.age).gt(18).list();
 
 // Null checks
-litebridge.select(Person.class).where("eyeColour").isNull().list();
+litebridge.select(Person.class).where(PersonMeta.eyeColour).isNull().list();
 ```
 
 ### The IN and NOT IN operators
@@ -121,6 +124,30 @@ litebridge.select(Person.class)
     .where(f(Person.class, "id")).eq(1L)
     .and(f(Address.class, "id")).eq(123L)
     .oneOrThrow();
+```
+
+Alternatively (and recommended), [metamodels](metamodels.md) can be used:
+
+```java
+import static org.litebridgedb.orm.expression.Fn.f;
+import static org.example.meta.PersonMeta.*;
+import static org.example.meta.AddressMeta.*;
+
+Person person = litebridge.select(Person.class)
+    .join(Account.class).on(accounts)
+    .join(Address.class).on(addresses)
+    .where(PersonMeta.id).eq(1L)
+    .and(AddressMeta.id).eq(123L)
+    .oneOrThrow();
+```
+
+The API allows using SQL function in where clauses via query expressions (though keep in mind that this should be used
+with caution, as is the case when writing standard SQL):
+
+```java
+Person person = litebridge.select(Person.class)
+                .where(PersonMeta.name.upper()).eq("ALICE")
+                .oneOrThrow();
 ```
 
 ## Logical Operators

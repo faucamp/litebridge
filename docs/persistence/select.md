@@ -12,18 +12,36 @@ covering use cases for both DTO-marshalling and raw SQL queries.
 Each query is built-up using a chained sequence of methods corresponding to the SQL clauses. The query is executed
 by invoking a terminal method, which defines how results must be returned.
 
-Litebridge supports three main types of select queries:
+Litebridge supports four main types of select queries:
 - **DTO-level queries**: Selecting full DTO objects from registered tables.
 - **SQL-level queries**: Selecting specific columns or `*` from any table.
 - **Expression-level queries**: Selecting specific SQL expressions, functions, or using ORM-side conversions.
+- **Metamodel-level queries**: Using type-safe metamodel fields to build queries.
 
 ### Usage
 
 ```java
+import org.litebridgedb.orm.expression.Fn;
+
+// Simple string-based API
 final Optional<Person> alice = litebridge.select(Person.class)
         .where("name").eq("Alice")
         .and("surname").eq("Smith")
         .orderBy("id").asc()
+        .first();
+
+// Equivalent query using query expressions
+final Optional<Person> mark = litebridge.select(Person.class)
+        .where(Fn.f("name")).eq("Mark")
+        .and(Fn.f("surname")).eq("Hoppus")
+        .orderBy(Fn.f("id")).asc()
+        .first();
+
+// Type-safe metamodel API
+final Optional<Person> bob = litebridge.select(Person.class)
+        .where(PersonMeta.name).eq("Bob")
+        .and(PersonMeta.surname).eq("Smith")
+        .orderBy(PersonMeta.id).asc()
         .first();
 ```
 
@@ -85,16 +103,23 @@ Partially-populated DTOs can be retrieved using the general-form Litebridge "sel
 Person personIdAgeOnly = litebridge.select("id", "age").from(Person.class).oneOrThrow();
 ```
 
-[Query expressions](#advanced-query-expressions) can be used with DTO-level queries:
+[Query expressions](#advanced-query-expressions) and [Metamodels](metamodels.md) can be used with DTO-level queries:
 
 ```java
 import static org.litebridgedb.orm.expression.Fn.*;
+import static org.example.meta.PersonMeta.*;
 
 // Count the number of Person entites matching the query
 Long personCount = litebridge.select(count()).from(Person.class).oneOrThrow();
 
 // Select the highest age from Person.age
 Long maxAge = litebridge.select(max("age")).from(Person.class).oneOrThrow();
+
+// Select the highest age from Person.age using PersonMeta metmodel
+Long maxAge = litebridge.select(max(age)).from(Person.class).oneOrThrow();
+
+// Select the highest age from Person.age using only the PersonMeta metamodel
+Long maxAge = litebridge.select(age.max()).from(Person.class).oneOrThrow();
 ```
 
 #### SQL-level queries
@@ -118,7 +143,7 @@ litebridge.select("FIRST_NAME", "ACCOUNT_NAME")
 
 ### Expression-level queries
 
-Advanced queries can be constructed using "query expressions". These allow selecting SQL functions, aliased columns, 
+Advanced queries can be constructed using "query expressions" or [Metamodels](metamodels.md). These allow selecting SQL functions, aliased columns, 
 or performing ORM-side type conversions. They work in both DTO-level and SQL-level contexts.
 
 Expressions are primarily created using the `Fn` utility class. 
@@ -266,16 +291,24 @@ Person person = litebridge.select(Person.class)
 Multiple related DTOs can be fetched in a single query by chaining `join()` calls:
 
 ```java
+// String-based example
 Person person = litebridge.select(Person.class)
         .join(Account.class).on("accounts")
         .join(Address.class).on("addresses")
         .where("id").eq(123L)
         .oneOrThrow();
 
+// Metamodel-based example
+Person person = litebridge.select(Person.class)
+        .join(Account.class).on(PersonMeta.accounts)
+        .join(Address.class).on(PersonMeta.addresses)
+        .where(PersonMeta.id).eq(123L)
+        .oneOrThrow();
+
 // person.accounts and person.addresses are both populated
 ```
 
-Queries can also filter results based on fields of joined DTOs by using the `f(Class, String)` expression:
+Queries can also filter results based on fields of joined DTOs by the `f(Class, String)` expression:
 
 ```java
 import static org.litebridgedb.orm.expression.Fn.f;
@@ -285,6 +318,20 @@ Person person = litebridge.select(Person.class)
         .join(Address.class).on("addresses")
         .where(f(Person.class, "id")).eq(1L)
         .and(f(Address.class, "id")).eq(123L)
+        .oneOrThrow();
+```
+
+Or by using [metamodels](metamodels.md):
+
+```java
+import static org.example.meta.PersonMeta.*;
+import static org.example.meta.AddressMeta.*;
+
+Person person = litebridge.select(Person.class)
+        .join(Account.class).on(accounts)
+        .join(Address.class).on(addresses)
+        .where(PersonMeta.id).eq(1L)
+        .and(AddressMeta.id).eq(123L)
         .oneOrThrow();
 ```
 
