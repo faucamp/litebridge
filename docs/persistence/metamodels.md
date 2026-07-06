@@ -90,6 +90,24 @@ List<Person> users = litebridge.select(Person.class)
     .list();
 ```
 
+### Update and Delete Operations
+
+Metamodels can also be used in the [update](update.md) and [delete](delete.md) APIs:
+
+```java
+import static org.example.meta.PersonMeta.*;
+
+// Type-safe update
+litebridge.update(Person.class, p -> p
+        .set(eyeColour).to("green")
+        .where(name).eq("Alice"));
+
+// Type-safe delete
+litebridge.delete(Person.class, p -> p
+        .where(name).eq("Henry")
+        .and(age).eq(45));
+```
+
 ## Creating Metamodels
 
 ### Using the Maven Plugin (Recommended)

@@ -9,7 +9,7 @@ Litebridge provides a fluent API for deleting data, which allows for:
   * deletion via queries
 * SQL-level deletes
 
-## Usage
+## Deleting DTOs
 
 ### Deleting DTOs directly
 
@@ -35,7 +35,29 @@ litebridge.delete(Person.class, p -> p.where("age").gt(20));
 
 The use of a lambda for the query avoids the need for an explicit terminal "execute" call.
 
-### SQL-level deletes
+#### Metamodel-based deletes
+
+[Metamodels](metamodels.md) can also be used for type-safe deletions:
+
+```java
+import static org.example.meta.PersonMeta.*;
+
+litebridge.delete(Person.class, p -> p
+        .where(name).eq("Henry")
+        .and(age).eq(45));
+```
+
+### Deleting all records
+
+To delete all records for a registered DTO type, simply call `delete()` with the DTO class:
+
+```java
+litebridge.delete(Person.class);
+```
+
+## SQL-level deletes
+
+### Deleting records via a query
 
 Litebridge's fluent API allows for arbitrary SQL-level deletes:
 
@@ -44,3 +66,11 @@ litebridge.delete("LB.PERSON", p -> p.where("AGE").gt(20));
 ```
 
 For SQL-level deletes, no DTO registration is required.
+
+### Deleting all rows from a table
+
+To delete all rows from a table without specifying a query:
+
+```java
+litebridge.delete("LB.PERSON");
+```

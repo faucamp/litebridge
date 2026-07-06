@@ -4,8 +4,6 @@
 
 Litebridge provides a fluent API for constructing queries using a familiar SQL-like syntax.
 
-## Usage
-
 Select statements are constructed via the `litebridge.select()` method. The API adapts to what is being queried,
 covering use cases for both DTO-marshalling and raw SQL queries.
 
@@ -18,37 +16,46 @@ Litebridge supports four main types of select queries:
 - **Expression-level queries**: Selecting specific SQL expressions, functions, or using ORM-side conversions.
 - **Metamodel-level queries**: Using type-safe metamodel fields to build queries.
 
-### Usage
+## Usage
+
+The following example demonstrates DTO-level, SQL
 
 ```java
 import org.litebridgedb.orm.expression.Fn;
 
 // Simple string-based API
-final Optional<Person> alice = litebridge.select(Person.class)
+Optional<Person> alice1 = litebridge.select(Person.class)
         .where("name").eq("Alice")
         .and("surname").eq("Smith")
         .orderBy("id").asc()
         .first();
 
+// Equivalent type-safe metamodel query
+Optional<Person> bob = litebridge.select(Person.class)
+        .where(PersonMeta.name).eq("Alice")
+        .and(PersonMeta.surname).eq("Smith")
+        .orderBy(PersonMeta.id).asc()
+        .first();
+
 // Equivalent query using query expressions
-final Optional<Person> mark = litebridge.select(Person.class)
-        .where(Fn.f("name")).eq("Mark")
-        .and(Fn.f("surname")).eq("Hoppus")
+Optional<Person> mark = litebridge.select(Person.class)
+        .where(Fn.f("name")).eq("Alice")
+        .and(Fn.f("surname")).eq("Smith")
         .orderBy(Fn.f("id")).asc()
         .first();
 
-// Type-safe metamodel API
-final Optional<Person> bob = litebridge.select(Person.class)
-        .where(PersonMeta.name).eq("Bob")
-        .and(PersonMeta.surname).eq("Smith")
-        .orderBy(PersonMeta.id).asc()
+// Equivalent SQL-level query
+Optional<Row> henry = litebridge.select().from("LB.PERSON")
+        .where("FIRST_NAME").eq("Alice")
+        .and("SURNAME").eq("Smith")
+        .orderBy("ID").asc()
         .first();
 ```
 
 This will result in a SQL query similar to:
 
 ```sql
-SELECT * FROM LB.PERSON WHERE FIRST_NAME = 'Alice' AND SURNAME = 'Smith' ORDER BY ID ASC LIMIT 1;
+SELECT * FROM LB.PERSON WHERE FIRST_NAME = 'Alice' AND SURNAME = 'Smith' ORDER BY PERSON_ID ASC LIMIT 1;
 ```
 
 Note that the example above made a DTO-level query by selecting the `Person` DTO class.
@@ -57,14 +64,46 @@ and not the database column names, unless a more formal mapping is specified at 
 
 The `first()` call is a terminal operation that executes the query and returns the result.
 
-#### DTO-level queries
+## Terminal operations
 
-##### Setup
+Terminal operations are the last step in a query and define how results must be returned.
+
+### Get first result
+
+The `first*` suite of terminals provides easy ways to get the first result from a query resulting in any number of records:
+
+- `first()` returns an `Optional` with the first result if any rows were found, or an empty `Optional` otherwise
+- `firstOrNull()` returns `null` if no rows were found, or the first result otherwise
+- `firstOrThrow()` throws a `NoSuchElementException` if no rows were found
+- `firstOrThrow(Supplier<Throwable>)` allows a custom exception to be thrown if no rows were found
+
+### Get exactly one result
+
+The `one*` suite of terminals provides easy ways to get the result of a query resulting in exactly one record.
+They throw an `IllegalStateException` if multiple rows are returned from the database.
+
+- `one()` returns an `Optional` with the single result if one matched, or an empty `Optional` otherwise
+- `oneOrNull()` returns `null` if no rows were found, or the single result otherwise
+- `oneOrThrow()` throws a `NoSuchElementException` if no rows were found
+- `oneOrThrow(Supplier<Throwable>)` allows a custom exception to be thrown if no rows were found
+
+### All results
+
+The remaining terminals provide various ways to iterate/retrieve all results from a query:
+
+- `stream()` returns a `Stream` of the results
+- `list()` returns a `List` containing all results
+- `forEach(Consumer<T>)` iterates over the results and applies the given consumer to each row
+
+
+## DTO-level queries
+
+### Setup
 
 DTOs must first be registered with Litebridge with via a database table mapping before they can be queried.
 Once a DTO class is registered, it can be queried using the Litebridge DTO select API.
 
-##### Basic querying
+### Basic querying
 
 The `litebridge.select(Class<?>)` method is the basic entry point for DTO-level queries, and returns fully-populated
 DTOs (dependent on join conditions/strategy if applicable):
@@ -87,14 +126,14 @@ Person person = litebridge.select(Person.class)
         .oneOrThrow();
 ```
 
-The `litebridge.select(String)` method is a convenient equivalent to 
+The `litebridge.select(Class<?>)` method is a shorthand equivalent to 
 the general-form Litebridge "select from" call with no arguments:
 
 ```java
 litebridge.select().from(Person.class).list();
 ```
 
-##### General form querying
+### General-form querying
 
 Partially-populated DTOs can be retrieved using the general-form Litebridge "select from" method:
 
@@ -103,7 +142,7 @@ Partially-populated DTOs can be retrieved using the general-form Litebridge "sel
 Person personIdAgeOnly = litebridge.select("id", "age").from(Person.class).oneOrThrow();
 ```
 
-[Query expressions](#advanced-query-expressions) and [Metamodels](metamodels.md) can be used with DTO-level queries:
+[Query expressions](#advanced-query-expressions) and [Metamodels](metamodels.md) can be used with general-form queries:
 
 ```java
 import static org.litebridgedb.orm.expression.Fn.*;
@@ -115,14 +154,14 @@ Long personCount = litebridge.select(count()).from(Person.class).oneOrThrow();
 // Select the highest age from Person.age
 Long maxAge = litebridge.select(max("age")).from(Person.class).oneOrThrow();
 
-// Select the highest age from Person.age using PersonMeta metmodel
+// Select the highest age from Person.age combining a query expression and metamodel
 Long maxAge = litebridge.select(max(age)).from(Person.class).oneOrThrow();
 
-// Select the highest age from Person.age using only the PersonMeta metamodel
+// Select the highest age from Person.age using only the metamodel
 Long maxAge = litebridge.select(age.max()).from(Person.class).oneOrThrow();
 ```
 
-#### SQL-level queries
+## SQL-level queries
 
 When making a SQL-level query, no prior registration steps are required. Specific columns can be selected
 using the `litebridge.select(String...)` method, or all columns can be selected using `litebridge.select()`:
@@ -141,10 +180,12 @@ litebridge.select("FIRST_NAME", "ACCOUNT_NAME")
         .list();
 ```
 
-### Expression-level queries
+## Query Expressions and metamodels
 
-Advanced queries can be constructed using "query expressions" or [Metamodels](metamodels.md). These allow selecting SQL functions, aliased columns, 
-or performing ORM-side type conversions. They work in both DTO-level and SQL-level contexts.
+Advanced queries can be constructed using query expressions.
+
+These allow selecting SQL functions, aliased columns, or performing ORM-side type conversions. 
+They work in both DTO-level and SQL-level contexts.
 
 Expressions are primarily created using the `Fn` utility class. 
 See the [Query Expressions](expressions.md) page for a full list of available expressions.
@@ -162,36 +203,23 @@ List<Row> names = litebridge.select(upper("FIRST_NAME")).from("LB.PERSON").list(
 Double avgAge = litebridge.select(convert(avg("age"), Double.class)).from(Person.class).oneOrThrow();
 ```
 
-#### Terminal operations
+### Metamodels
 
-Terminal operations are the last step in a query and define how results must be returned.
+Metamodels extend expressions and provide type safety for DTO-level queries: 
 
-#### Get first result
+```java
+// Import PersonMeta static fields, including "id", "name", "surname" and "age"
+import static org.example.meta.PersonMeta.*;
 
-The `first*` suite of terminals provides easy ways to get the first result from a query resulting in any number of records:
+// Retrieve and populate the "id", "name" and "surname" fields
+// The value of "surname" is converted to uppercase with an UPPER() SQL function
+Person person = litebridge.select(id, name, surname.upper())
+        .from(Person.class)
+        .where(age).gt(18)
+        .list();
+```
 
-- `first()` returns an `Optional` with the first result if any rows were found, or an empty `Optional` otherwise
-- `firstOrNull()` returns `null` if no rows were found, or the first result otherwise
-- `firstOrThrow()` throws a `NoSuchElementException` if no rows were found
-- `firstOrThrow(Supplier<Throwable>)` allows a custom exception to be thrown if no rows were found
-
-#### Get exactly one result
-
-The `one*` suite of terminals provides easy ways to get the result of a query resulting in exactly one record. 
-They throw an `IllegalStateException` if multiple rows are returned from the database.
-
-- `one()` returns an `Optional` with the single result if one matched, or an empty `Optional` otherwise
-- `oneOrNull()` returns `null` if no rows were found, or the single result otherwise
-- `oneOrThrow()` throws a `NoSuchElementException` if no rows were found
-- `oneOrThrow(Supplier<Throwable>)` allows a custom exception to be thrown if no rows were found
-
-#### All results
-
-The remaining terminals provide various ways to iterate/retrieve all results from a query:
-
-- `stream()` returns a `Stream` of the results
-- `list()` returns a `List` containing all results
-- `forEach(Consumer<T>)` iterates over the results and applies the given consumer to each row
+Refer to the [metamodel documentation](metamodels.md) for more information.
 
 ## DTO-level examples
 
