@@ -19,8 +19,6 @@ import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
 import org.litebridgedb.tracking.FieldAccessor;
 
-import java.util.Objects;
-
 public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
 
     private @Nullable DtoSelectSpec selectSpec;
@@ -57,7 +55,6 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     @Override
     protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable, final ClauseType clause) {
         // Map the input DTO field names to database column names
-        Objects.requireNonNull(selectSpec, "SelectSpec not set");
         final Class<?> dtoClass = getDtoClass(resolvable);
         final Column column = getColumn(dtoClass, resolvable, clause);
         final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, resolvable.column());
@@ -67,10 +64,9 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     @Override
     protected ColumnExpressionSpec resolveSelectField(final QueryField queryField, final ClauseType clause) {
         // Map the input DTO field names to database column names
-        Objects.requireNonNull(selectSpec, "SelectSpec not set");
         final String fieldName = QFInspector.getFieldName(queryField);
-        final Column column = getColumn(queryField.dtoClass(), fieldName, clause);
-        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(queryField.dtoClass(), fieldName);
+        final Column column = getColumn(QFInspector.getDtoClass(queryField), fieldName, clause);
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(QFInspector.getDtoClass(queryField), fieldName);
         return new SelectFieldSpec(fieldAccessor, column);
     }
 
@@ -101,7 +97,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
         final Table table;
 
-        if (ormTable.equals(selectSpec.dtoTable())) {
+        if (selectSpec != null && ormTable.equals(selectSpec.dtoTable())) {
             table = selectSpec.getTable();
         } else {
             table = ormTable.getMetaData().toTable();
@@ -111,7 +107,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
 
         if (clause == ClauseType.SELECT) {
             return aliasGenerator.aliasColumn(table, columnMetaData);
-        } else {
+        } else if (selectSpec != null) {
             // Match the column to a selected one to inherit the alias if possible
             return selectSpec.getExpressions().stream()
                     .filter(expressionSpec -> expressionSpec instanceof ColumnExpressionSpec)
@@ -120,6 +116,8 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
                     .filter(selectedColumn -> selectedColumn.table().equalsIgnoreAlias(columnMetaData.table())
                             && selectedColumn.name().equals(columnMetaData.name()))
                     .findAny().orElseGet(columnMetaData::toColumn);
+        } else {
+            return columnMetaData.toColumn();
         }
     }
 }

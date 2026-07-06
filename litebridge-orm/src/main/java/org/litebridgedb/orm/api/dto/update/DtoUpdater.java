@@ -7,6 +7,8 @@ import org.litebridgedb.orm.api.update.impl.AbstractUpdater;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.meta.QFInspector;
+import org.litebridgedb.orm.meta.QueryField;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
@@ -40,6 +42,12 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
     @Override
     public UpdateSetStep<DtoUpdateStep<DTO>> set(final ColumnExpressionSpec field) {
         final Column column = field.getColumn();
+        return new UpdateSetStep<>(column, this);
+    }
+
+    @Override
+    public UpdateSetStep<DtoUpdateStep<DTO>> set(final QueryField field) {
+        final Column column = updateSpec.dtoTable().getColumnForFieldName(QFInspector.getFieldName(field)).toColumn();
         return new UpdateSetStep<>(column, this);
     }
 }

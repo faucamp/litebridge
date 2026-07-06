@@ -25,6 +25,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -76,6 +77,7 @@ public class BasicE2eTest extends AbstractE2eTest {
                 .where(PersonMeta.name).eq("Alice")
                 .oneOrThrow();
 
+        assertEquals("Smith", resultPerson.getSurname());
     }
 
     @TestTemplate
@@ -424,17 +426,33 @@ public class BasicE2eTest extends AbstractE2eTest {
         person4.setAge(30);
         person4.setEyeColour("brown");
 
-        litebridge.save(person1, person2, person3, person4);
+        final Person person5 = new Person();
+        person5.setName("Henry");
+        person5.setSurname("Jones");
+        person5.setAge(45);
+        person5.setEyeColour("brown");
+
+        litebridge.save(person1, person2, person3, person4, person5);
+        assumeTrue(() -> litebridge.select(Person.class).list().size() == 5);
 
         // Delete DTO directly
-        assertNotNull(litebridge.select(Person.class).where("name").eq("Bob").oneOrNull());
+        assertTrue(litebridge.select(Person.class).where("name").eq("Bob").one().isPresent());
         litebridge.delete(person2);
-        assertNull(litebridge.select(Person.class).where("name").eq("Bob").oneOrNull());
+        assertFalse(litebridge.select(Person.class).where("name").eq("Bob").one().isPresent());
 
         // Delete DTO via query
-        assertNotNull(litebridge.select(Person.class).where("name").eq("Alice").oneOrNull());
-        litebridge.delete(Person.class, p -> p.where("name").eq("Alice").and("age").eq(20));
-        assertNull(litebridge.select(Person.class).where("name").eq("Alice").oneOrNull());
+        assertTrue(litebridge.select(Person.class).where("name").eq("Alice").one().isPresent());
+        litebridge.delete(Person.class, p -> p
+                .where("name").eq("Alice")
+                .and("age").eq(20));
+        assertFalse(litebridge.select(Person.class).where("name").eq("Alice").one().isPresent());
+
+        // Delete via metamodel
+        assertTrue(litebridge.select(Person.class).where("name").eq("Henry").one().isPresent());
+        litebridge.delete(Person.class, p -> p
+                .where(PersonMeta.name).eq("Henry")
+                .and(PersonMeta.age).eq(45));
+        assertFalse(litebridge.select(Person.class).where("name").eq("Henry").one().isPresent());
 
         // Delete all Person records
         assertEquals(2, litebridge.select(Person.class).list().size());
@@ -497,6 +515,13 @@ public class BasicE2eTest extends AbstractE2eTest {
                         .where(tableMapper.transformColumnName("EYE_COLOUR")).eq("blue"));
 
         assertEquals(1, litebridge.select(Person.class).stream().filter(p -> p.getEyeColour().equals("unknown")).count());
+
+        // Update a specific record using a metamodel
+        litebridge.update(Person.class, p ->
+                p.set(PersonMeta.eyeColour).to("green")
+                        .where(PersonMeta.name).eq("Alice"));
+
+        assertEquals(1, litebridge.select(Person.class).stream().filter(p -> p.getEyeColour().equals("green")).count());
     }
 
     @TestTemplate
