@@ -33,6 +33,7 @@
                         <configuration>
                             <dataFileIncludes>
                                 <dataFileInclude>**/jacoco.exec</dataFileInclude>
+                                <dataFileInclude>**/jacoco-it.exec</dataFileInclude>
                             </dataFileIncludes>
                         </configuration>
                     </execution>
