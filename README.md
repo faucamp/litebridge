@@ -14,14 +14,15 @@ It simplifies persistence by treating SQL as a first-class citizen, balancing re
 * **Lightweight**: A pure Java library with minimal external dependencies.
 * **Modern**: Built for Java 21+, leveraging modern idioms and features extensively.
 * **Efficient**: Focuses on performance and minimising database round-trips via built-in DTO change tracking.
-* **Transparent Mapping**: Map DTOs to databases without modifying domain classes. Use a fluent API, programmatic `Map`-based configuration or _optional_ annotations.
+* **Transparent Mapping**: Map DTOs to databases without modifying domain classes via a fluent registration API, or use more traditional annotated entities.
 * **Fluent API**: Compose queries using a natural, SQL-like fluent builder.
 * **Spring Integration**: Use the Litebridge Spring Boot starter to easily integrate Litebridge with a Spring Boot application.
+* **Maven Plugin**: Reverse engineer database schemas into Litebridge entities, and generate type-safe metamodels from existing entities/DTOs.
 
 ## Shortcuts
 
 * [Quick Introduction](#quick-introduction)
-* [Documentation](#documentation)
+* [Documentation](docs/index.md)
 * [Project Structure](#project-structure)
 * [Javadocs](https://faucamp.github.io/litebridge/javadoc)
 
@@ -37,6 +38,9 @@ It simplifies persistence by treating SQL as a first-class citizen, balancing re
   * [Retrieving related DTOs](#retrieving-related-dtos)
   * [Arbitrary SQL queries](#arbitrary-sql-queries)
 <!-- TOC -->
+
+Litebridge supports using both [annotated entities](docs/annotated-entities.md) and unmodified DTOs as database entities.
+This example uses plain DTOs and the fluent registration API.
 
 Given the following example `Person` and `Account` DTO classes:
 
@@ -223,6 +227,9 @@ final Person alice = litebridge.select(Person.class)
         .oneOrThrow(() -> new IllegalStateException("More than one groupedPerson with surname 'Smith'"));
         // or simply oneOrThrow()
 ```
+
+The above examples use plain strings as column identifiers. For more advanced and type-safe queries, 
+use [query expressions](docs/persistence/expressions.md) and/or [metamodels](docs/persistence/metamodels.md).
 
 #### Retrieving multiple DTOs
 
