@@ -7,11 +7,15 @@ import org.litebridgedb.orm.api.sql.update.SqlUpdater;
 import org.litebridgedb.orm.api.update.UpdateTerminal;
 import org.litebridgedb.orm.api.update.model.UpdateSpec;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 
 public abstract sealed class AbstractUpdater<US extends UpdateSpec> implements UpdateTerminal
         permits DtoUpdater, SqlUpdater {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractUpdater.class);
 
     protected final US updateSpec;
     protected final TransactionalDatabaseProvider databaseProvider;
@@ -40,6 +44,7 @@ public abstract sealed class AbstractUpdater<US extends UpdateSpec> implements U
             throw new IllegalStateException("Failed to execute update", ex);
         }
 
+        LOGGER.debug("Update result: {}", updateResult);
         return updateResult;
     }
 

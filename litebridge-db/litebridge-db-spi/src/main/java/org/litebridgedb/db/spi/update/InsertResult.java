@@ -4,6 +4,7 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * The result of an insert operation performed on the database.
@@ -31,5 +32,12 @@ public final class InsertResult extends UpdateResult {
 
     public Map<ColumnMetaData, Object> generatedKeys() {
         return generatedKeys;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", InsertResult.class.getSimpleName() + "[", "]")
+                .add("generatedKeys=" + generatedKeys)
+                .toString();
     }
 }

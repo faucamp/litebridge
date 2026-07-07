@@ -493,6 +493,13 @@ public class BasicE2eTest extends AbstractE2eTest {
         litebridge.update(person1);
         assertNotNull(litebridge.select(Person.class).where("name").eq("Jane").oneOrNull());
 
+        // Update a specific record using a metamodel
+        litebridge.update(Person.class, p ->
+                p.set(PersonMeta.eyeColour).to("green")
+                        .where(PersonMeta.name).eq("Jane"));
+
+        assertEquals(1, litebridge.select(Person.class).stream().filter(p -> p.getEyeColour().equals("green")).count());
+
         // Update multiple records for the Person DTO via a query
         litebridge.update(Person.class, p -> p
                 .set("name").to("John")
@@ -512,16 +519,9 @@ public class BasicE2eTest extends AbstractE2eTest {
         // Update a specific record using the SQL API
         litebridge.update(tableMapper.qualifyName("PERSON"), p ->
                 p.set(tableMapper.transformColumnName("EYE_COLOUR")).to("unknown")
-                        .where(tableMapper.transformColumnName("EYE_COLOUR")).eq("blue"));
+                        .where(tableMapper.transformColumnName("EYE_COLOUR")).eq("green"));
 
         assertEquals(1, litebridge.select(Person.class).stream().filter(p -> p.getEyeColour().equals("unknown")).count());
-
-        // Update a specific record using a metamodel
-        litebridge.update(Person.class, p ->
-                p.set(PersonMeta.eyeColour).to("green")
-                        .where(PersonMeta.name).eq("Alice"));
-
-        assertEquals(1, litebridge.select(Person.class).stream().filter(p -> p.getEyeColour().equals("green")).count());
     }
 
     @TestTemplate

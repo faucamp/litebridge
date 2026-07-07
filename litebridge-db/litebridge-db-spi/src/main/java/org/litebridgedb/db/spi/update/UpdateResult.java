@@ -1,5 +1,7 @@
 package org.litebridgedb.db.spi.update;
 
+import java.util.StringJoiner;
+
 /**
  * Result of an update operation performed on the database.
  * <p>
@@ -17,5 +19,12 @@ public sealed class UpdateResult permits InsertResult {
 
     public int rowsAffected() {
         return rowsAffected;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", UpdateResult.class.getSimpleName() + "[", "]")
+                .add("rowsAffected=" + rowsAffected)
+                .toString();
     }
 }

@@ -124,7 +124,7 @@ class CompositePkTest extends AbstractE2eTest {
         litebridge.save(test1);
         litebridge.save(test2);
 
-//        // Then
+        // Then
         final CompositePkFkTest test1Result = litebridge.select(CompositePkFkTest.class)
                 .join(CompositePkLookup.class).on("lookup")
                 .where("lookup.id").eq(123L)
