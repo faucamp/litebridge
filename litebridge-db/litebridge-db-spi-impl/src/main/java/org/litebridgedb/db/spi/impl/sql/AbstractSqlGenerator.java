@@ -18,6 +18,7 @@ import org.litebridgedb.db.spi.expression.SelectReference;
 import org.litebridgedb.db.spi.expression.SubselectExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.query.Condition;
+import org.litebridgedb.db.spi.query.ConditionGroup;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.sql.BindValue;
 import org.litebridgedb.db.spi.sql.PreparedSql;
@@ -190,5 +191,32 @@ public abstract class AbstractSqlGenerator {
         }
 
         return bindValue;
+    }
+
+    protected void appendConditionsAndSubgroups(final StringBuilder sb,
+                                                final List<@Nullable BindValue> bindValues,
+                                                final ConditionGroup conditionGroup,
+                                                final Operation operation,
+                                                final ConnectionProvider connectionProvider) {
+
+        boolean firstCondition = true;
+
+        for (Condition condition : conditionGroup.conditions()) {
+            if (firstCondition) {
+                firstCondition = false;
+            } else {
+                sb.append(' ').append(conditionGroup.logicOperator()).append(' ');
+            }
+
+            final PreparedSql conditionSql = createCondition(condition, operation, connectionProvider);
+            sb.append(conditionSql.sql());
+            bindValues.addAll(conditionSql.bindValues());
+        }
+
+        for (ConditionGroup subgroup : conditionGroup.conditionGroups()) {
+            sb.append(' ').append(conditionGroup.logicOperator()).append(" (");
+            appendConditionsAndSubgroups(sb, bindValues, subgroup, operation, connectionProvider);
+            sb.append(')');
+        }
     }
 }

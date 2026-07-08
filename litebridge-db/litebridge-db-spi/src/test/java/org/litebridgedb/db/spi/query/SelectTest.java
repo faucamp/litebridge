@@ -30,7 +30,8 @@ class SelectTest {
         final Operator operator = Operator.EQ;
         final Object value = "testValue";
         final Condition condition = new Condition(ColumnExpressionTest.select(column), operator, new LiteralExpression(value));
-        final Join join = new Join(table, List.of(condition));
+        final ConditionGroup conditionGroup = new ConditionGroup(LogicOperator.AND, List.of(condition));
+        final Join join = new Join(table, List.of(conditionGroup));
         final List<SelectExpression> groupBy = List.of(new ColumnExpressionTest.SelectColumnExpression(column));
         final OrderBy orderBy = new OrderBy(new ColumnExpressionTest.SelectColumnExpression(column), true);
         final Limit limit = new Limit(Optional.of(10), Optional.of(20));
@@ -40,7 +41,7 @@ class SelectTest {
                 table,
                 List.of(new TestColumnExpression(column)),
                 List.of(join),
-                List.of(condition),
+                List.of(conditionGroup),
                 groupBy,
                 Collections.emptyList(),
                 List.of(orderBy),

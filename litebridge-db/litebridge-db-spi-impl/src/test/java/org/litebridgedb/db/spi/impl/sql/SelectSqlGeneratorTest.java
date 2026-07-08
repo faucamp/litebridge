@@ -15,8 +15,10 @@ import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.query.Condition;
+import org.litebridgedb.db.spi.query.ConditionGroup;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
@@ -70,8 +72,9 @@ class SelectSqlGeneratorTest {
         final ColumnExpression columnExpression = new SelectColumn(column, selectSqlGenerator.columnIdentifierGenerator);
 
         final Condition condition = new Condition(columnExpression, Operator.EQ, "testValue");
+        final ConditionGroup conditionGroup = new ConditionGroup(LogicOperator.AND, List.of(condition));
 
-        final Join join = new Join(table, List.of(condition));
+        final Join join = new Join(table, List.of(conditionGroup));
 
         // When
         final PreparedSql result = selectSqlGenerator.createJoin(join, mock(Select.class), mock(ConnectionProvider.class));
@@ -93,6 +96,7 @@ class SelectSqlGeneratorTest {
 
         final Condition condition1 = new Condition(columnExression1, Operator.EQ, "value1");
         final Condition condition2 = new Condition(columnExression2, Operator.NEQ, "value2");
+        final ConditionGroup conditionGroup = new ConditionGroup(LogicOperator.AND, List.of(condition1, condition2));
 
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         when(ensureTableMetaData.apply(eq(table), any(ConnectionProvider.class))).thenReturn(tableMetaData);
@@ -107,7 +111,7 @@ class SelectSqlGeneratorTest {
 
         when(typeConverter.convert(anyString(), eq(Types.VARCHAR))).then(i -> i.getArgument(0));
 
-        final Join join = new Join(table, List.of(condition1, condition2));
+        final Join join = new Join(table, List.of(conditionGroup));
 
         // When
         final PreparedSql result = selectSqlGenerator.createJoin(join, mock(Select.class), mock(ConnectionProvider.class));
@@ -169,15 +173,18 @@ class SelectSqlGeneratorTest {
 
         final Table joinTable = new Table("JOIN_TABLE", "j1");
         final Column joinCol = new Column(joinTable, "JCOL");
-        final Join join = new Join(joinTable, List.of(new Condition(new SelectColumn(joinCol, selectSqlGenerator.columnIdentifierGenerator), Operator.EQ, "val")));
+        final ConditionGroup conditionGroup = new ConditionGroup(LogicOperator.AND, List.of(new Condition(new SelectColumn(joinCol, selectSqlGenerator.columnIdentifierGenerator), Operator.EQ, "val")));
+        final Join join = new Join(joinTable, List.of(conditionGroup));
 
-        final List<Condition> where = List.of(new Condition(new SelectColumn(col2, selectSqlGenerator.columnIdentifierGenerator), Operator.GT, 10));
+        final List<Condition> whereConditions = List.of(new Condition(new SelectColumn(col2, selectSqlGenerator.columnIdentifierGenerator), Operator.GT, 10));
+        final List<ConditionGroup> where = List.of(new ConditionGroup(LogicOperator.AND, whereConditions));
 
         final List<OrderBy> orderBy = List.of(new OrderBy(selectCol1, false));
         final Limit limit = new Limit(Optional.of(10), Optional.of(5));
 
         final List<SelectExpression> groupBy = List.of(selectCol1);
-        final List<Condition> having = List.of(new Condition(new SelectColumn(col1, selectSqlGenerator.columnIdentifierGenerator), Operator.NEQ, "foo"));
+        final List<Condition> havingConditions = List.of(new Condition(new SelectColumn(col1, selectSqlGenerator.columnIdentifierGenerator), Operator.NEQ, "foo"));
+        final List<ConditionGroup> having = List.of(new ConditionGroup(LogicOperator.AND, havingConditions));
 
         final Select select = new Select(
                 table,
@@ -236,7 +243,8 @@ class SelectSqlGeneratorTest {
         // Given
         final Table table = new Table("JOIN_TABLE");
         final Column column = new Column(table, "COL1");
-        final Join join = new Join(table, List.of(new Condition(new SelectColumn(column, selectSqlGenerator.columnIdentifierGenerator), Operator.USING, null)));
+        final List<Condition> conditions = List.of(new Condition(new SelectColumn(column, selectSqlGenerator.columnIdentifierGenerator), Operator.USING, null));
+        final Join join = new Join(table, List.of(new ConditionGroup(LogicOperator.AND, conditions)));
 
         // When
         final PreparedSql result = selectSqlGenerator.createJoin(join, mock(Select.class), mock(ConnectionProvider.class));

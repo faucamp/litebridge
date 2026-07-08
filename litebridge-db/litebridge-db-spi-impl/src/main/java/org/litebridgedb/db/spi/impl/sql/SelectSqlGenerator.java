@@ -10,6 +10,7 @@ import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.query.Condition;
+import org.litebridgedb.db.spi.query.ConditionGroup;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
 import org.litebridgedb.db.spi.query.Operator;
@@ -79,19 +80,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         // Where
         if (!CollectionUtils.isEmpty(select.where())) {
             sql.append(" WHERE ");
-
-            first = true;
-            for (Condition condition : select.where()) {
-                if (first) {
-                    first = false;
-                } else {
-                    sql.append(" AND ");
-                }
-
-                final PreparedSql conditionSql = createCondition(condition, select, connectionProvider);
-                sql.append(conditionSql.sql());
-                bindValues.addAll(conditionSql.bindValues());
-            }
+            appendConditionGroups(sql, select.where(), bindValues, select, connectionProvider);
         }
 
         // Group by
@@ -111,19 +100,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
 
             if (!select.having().isEmpty()) {
                 sql.append(" HAVING ");
-
-                first = true;
-                for (Condition condition : select.having()) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        sql.append(" AND ");
-                    }
-
-                    final PreparedSql conditionSql = createCondition(condition, select, connectionProvider);
-                    sql.append(conditionSql.sql());
-                    bindValues.addAll(conditionSql.bindValues());
-                }
+                appendConditionGroups(sql, select.having(), bindValues, select, connectionProvider);
             }
         }
 
@@ -170,24 +147,28 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
             sb.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(join.table().alias())));
         }
 
-        if (join.conditions().getFirst().operator() != Operator.USING) {
-            sb.append(" ON ");
-        } else {
+        if (join.conditions().size() == 1
+                && join.conditions().getFirst().conditions().size() == 1
+                && join.conditions().getFirst().conditions().getFirst().operator() == Operator.USING) {
             sb.append(' ');
+        } else {
+            sb.append(" ON ");
         }
 
-        boolean first = true;
+        boolean firstGroup = true;
 
-        for (Condition condition : join.conditions()) {
-            if (first) {
-                first = false;
-            } else {
-                sb.append(" AND ");
+        for (ConditionGroup conditionGroup : join.conditions()) {
+
+            if (!firstGroup) {
+                sb.append(' ').append(conditionGroup.logicOperator()).append(" (");
             }
 
-            final PreparedSql conditionSql = createCondition(condition, operation, connectionProvider);
-            sb.append(conditionSql.sql());
-            bindValues.addAll(conditionSql.bindValues());
+            appendConditionsAndSubgroups(sb, bindValues, conditionGroup, operation, connectionProvider);
+
+            if (firstGroup) {
+                firstGroup = false;
+                sb.append(')');
+            }
         }
 
         return new PreparedSql(sb.toString(), bindValues);
@@ -196,5 +177,29 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
     protected void appendLimitClause(final Limit limit, final StringBuilder sql) {
         limit.limit().ifPresent(limitVal -> sql.append(" LIMIT ").append(limitVal));
         limit.offset().ifPresent(offset -> sql.append(" OFFSET ").append(offset));
+    }
+
+    protected void appendConditionGroups(final StringBuilder sql, final List<ConditionGroup> conditionGroups, final List<BindValue> bindValues, final Operation operation, final ConnectionProvider connectionProvider) {
+        boolean first;
+        first = true;
+        for (ConditionGroup conditionGroup : conditionGroups) {
+            if (first) {
+                first = false;
+            } else {
+                sql.append(' ').append(conditionGroup.logicOperator()).append(' ');
+            }
+
+            for (Condition condition : conditionGroup.conditions()) {
+                final PreparedSql conditionSql = createCondition(condition, operation, connectionProvider);
+                sql.append(conditionSql.sql());
+                bindValues.addAll(conditionSql.bindValues());
+            }
+
+            if (!CollectionUtils.isEmpty(conditionGroup.conditionGroups())) {
+                sql.append(' ').append(conditionGroup.logicOperator()).append(" (");
+                appendConditionGroups(sql, conditionGroup.conditionGroups(), bindValues, operation, connectionProvider);
+                sql.append(")");
+            }
+        }
     }
 }

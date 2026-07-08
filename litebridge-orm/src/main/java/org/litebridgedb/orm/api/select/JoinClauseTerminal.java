@@ -1,5 +1,6 @@
 package org.litebridgedb.orm.api.select;
 
+import org.litebridgedb.orm.api.select.model.ConditionGroupSpecBuilder;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 
 /**
@@ -49,4 +50,6 @@ public interface JoinClauseTerminal<DTO,
     WCC where(final String column);
 
     WCC where(final ExpressionSpec expression);
+
+    WCCT where(final ConditionGroupSpecBuilder conditions);
 }

@@ -2,14 +2,12 @@ package org.litebridgedb.orm.api.update.model;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.ObjectUtils;
-import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.update.ColumnValue;
 import org.litebridgedb.db.spi.update.Update;
-import org.litebridgedb.orm.api.select.model.ConditionSpec;
+import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
-import org.litebridgedb.orm.expression.ExpressionSpec;
-import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,7 +22,7 @@ public class UpdateSpec {
     protected Table table;
     protected final List<ColumnValue> columnValues = new ArrayList<>();
     @Nullable
-    protected List<ConditionSpec> whereConditions;
+    protected List<ConditionGroupSpec> whereConditions;
 
     private final SelectExpressionMapper selectExpressionMapper;
 
@@ -40,27 +38,10 @@ public class UpdateSpec {
         this.table = table;
     }
 
-    public @Nullable List<ConditionSpec> getWhereConditions() {
-        return whereConditions;
-    }
-
-    public void setWhereConditions(@Nullable final List<ConditionSpec> whereConditions) {
-        this.whereConditions = whereConditions;
-    }
-
-    public ConditionSpec newWhereCondition(final Column column) {
-        return newWhereCondition(new SelectColumnSpec(column));
-    }
-
-    public ConditionSpec newWhereCondition(final ExpressionSpec expression) {
-        if (this.whereConditions == null) {
-            whereConditions = new ArrayList<>();
-        }
-
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(expression);
-        whereConditions.add(conditionSpec);
-        return conditionSpec;
+    public ConditionGroupSpec newWhereConditionGroup(final LogicOperator logicOperator) {
+        final ConditionGroupSpec conditionGroupSpec = new ConditionGroupSpec(logicOperator);
+        whereConditions.add(conditionGroupSpec);
+        return conditionGroupSpec;
     }
 
     public void addColumnValue(final ColumnValue columnValue) {
@@ -73,7 +54,7 @@ public class UpdateSpec {
         return new Update(table,
                 columnValues,
                 whereConditions != null ? whereConditions.stream()
-                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper, Collections.singletonList(table)))
+                        .map(conditionGroupSpec -> conditionGroupSpec.toConditionGroup(selectExpressionMapper, Collections.singleton(table)))
                         .toList() : Collections.emptyList());
     }
 }

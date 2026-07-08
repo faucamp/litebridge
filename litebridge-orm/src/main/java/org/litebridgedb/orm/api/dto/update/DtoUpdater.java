@@ -1,12 +1,15 @@
 package org.litebridgedb.orm.api.dto.update;
 
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.query.LogicOperator;
+import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.update.UpdateSetStep;
 import org.litebridgedb.orm.api.update.impl.AbstractUpdater;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.meta.QFInspector;
 import org.litebridgedb.orm.meta.QueryField;
 import org.litebridgedb.orm.persistence.OrmTable;
@@ -25,12 +28,12 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
     @Override
     public DtoUpdateWhereConditionClause<DTO> where(final String field) {
         final Column column = updateSpec.dtoTable().getColumnForFieldName(field).toColumn();
-        return new DtoUpdateWhereConditionClause<>(updateSpec.newWhereCondition(column), new DtoUpdateWhereConditionClauseTerminalImpl<>(this), litebridgeContext);
+        return where(new SelectColumnSpec(column));
     }
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> where(final ExpressionSpec expression) {
-        return new DtoUpdateWhereConditionClause<>(updateSpec.newWhereCondition(expression), new DtoUpdateWhereConditionClauseTerminalImpl<>(this), litebridgeContext);
+        return whereImpl(LogicOperator.AND, expression);
     }
 
     @Override
@@ -49,5 +52,10 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
     public UpdateSetStep<DtoUpdateStep<DTO>> set(final QueryField field) {
         final Column column = updateSpec.dtoTable().getColumnForFieldName(QFInspector.getFieldName(field)).toColumn();
         return new UpdateSetStep<>(column, this);
+    }
+
+    private DtoUpdateWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        final ConditionGroupSpec conditionGroupSpec = updateSpec.newWhereConditionGroup(logicOperator);
+        return new DtoUpdateWhereConditionClause<>(conditionGroupSpec.newCondition(expression), new DtoUpdateWhereConditionClauseTerminalImpl<>(this), litebridgeContext);
     }
 }

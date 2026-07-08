@@ -13,8 +13,10 @@ import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.impl.function.SelectColumn;
 import org.litebridgedb.db.spi.impl.function.SelectReferenceImpl;
 import org.litebridgedb.db.spi.query.Condition;
+import org.litebridgedb.db.spi.query.ConditionGroup;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
@@ -409,9 +411,9 @@ class AbstractDatabaseProviderTest {
         final Select select = new Select(
                 table,
                 List.of(selectColumn),
-                List.of(new Join(table, List.of(new Condition(selectColumn, Operator.USING, null),
-                        new Condition(selectColumn, Operator.EQ, "TEST_VALUE")))),
-                List.of(new Condition(selectColumn, Operator.EQ, "TEST_VALUE")),
+                List.of(new Join(table, List.of(new ConditionGroup(LogicOperator.AND, List.of(new Condition(selectColumn, Operator.USING, null),
+                        new Condition(selectColumn, Operator.EQ, "TEST_VALUE")), Collections.emptyList())))),
+                List.of(new ConditionGroup(LogicOperator.AND, List.of(new Condition(selectColumn, Operator.EQ, "TEST_VALUE")), Collections.emptyList())),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 List.of(new OrderBy(selectColumn, true)),
@@ -494,9 +496,9 @@ class AbstractDatabaseProviderTest {
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column1, columnIdentifierGenerator), new SelectColumn(column2, columnIdentifierGenerator)),
-                List.of(new Join(table, List.of(new Condition(selectColumn2, Operator.EQ, "TEST_VALUE")))),
-                List.of(new Condition(selectColumn2, Operator.EQ, "TEST_VALUE"),
-                        new Condition(selectColumn2, Operator.NEQ, "OTHER_VALUE")),
+                List.of(new Join(table, List.of(new ConditionGroup(LogicOperator.AND, List.of(new Condition(selectColumn2, Operator.EQ, "TEST_VALUE")))))),
+                List.of(new ConditionGroup(LogicOperator.AND, List.of(new Condition(selectColumn2, Operator.EQ, "TEST_VALUE"),
+                        new Condition(selectColumn2, Operator.NEQ, "OTHER_VALUE")))),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 List.of(new OrderBy(new SelectReferenceImpl(column1, new ColumnIdentifierGenerator()), true)),

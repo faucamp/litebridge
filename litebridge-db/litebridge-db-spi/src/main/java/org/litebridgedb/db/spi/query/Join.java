@@ -23,5 +23,5 @@ import java.util.List;
  * @param conditions The list of conditions defining the join relationship.
  * @see Select
  */
-public record Join(Table table, List<Condition> conditions) {
+public record Join(Table table, List<ConditionGroup> conditions) {
 }

@@ -128,6 +128,47 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
+    @DisplayName("Select DTO without related DTOs")
+    void select_groupLogicalConditions(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+
+        final Person person = new Person();
+        person.setName("Alice");
+        person.setSurname("Smith");
+        person.setAge(20);
+        person.setEyeColour("blue");
+
+        litebridge.save(person);
+
+        // When
+        final Person result = litebridge.select(Person.class)
+                .where(c -> c.conditions()
+                .oneOrThrow();
+
+        // Then
+        assertNull(result.getOwner());
+
+        // Since the data was loaded from the database, saving it again should do nothing
+        litebridge.save(result);
+
+        // Execute the same query, but this time create a partially-constructed related DTO
+        final Account result2 = litebridge.select(Account.class, RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN)
+                .where("id").eq(person.getId())
+                .oneOrThrow();
+
+        // Then
+        assertNotNull(result2.getOwner());
+        assertNotEquals(person, result2.getOwner());
+        assertEquals(person.getId(), result2.getOwner().getId());
+        assertNull(result2.getOwner().getName());
+        assertNull(result2.getOwner().getSurname());
+        assertNull(result2.getOwner().getAccounts());
+        assertNull(result2.getOwner().getEyeColour());
+        assertEquals(0, result2.getOwner().getAge());
+    }
+
+    @TestTemplate
     @DisplayName("Select, join multiple tables")
     void nestedDtos_multiJoin(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings

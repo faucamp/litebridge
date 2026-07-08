@@ -2,9 +2,13 @@ package org.litebridgedb.orm.api.sql;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
+import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
+import org.litebridgedb.orm.api.select.model.ConditionGroupSpecBuilder;
 import org.litebridgedb.orm.api.select.model.GroupBySpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
         SqlJoinClause,
@@ -33,12 +37,20 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     @Override
     public SqlWhereConditionClause where(final String column) {
         final Column spiColumn = new Column(selectSpec.getTable(), column);
-        return new SqlWhereConditionClause(selectSpec.newWhereCondition(spiColumn), new SqlWhereConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
+        return where(new SelectColumnSpec(spiColumn));
     }
 
     @Override
     public SqlWhereConditionClause where(final ExpressionSpec expression) {
-        return new SqlWhereConditionClause(selectSpec.newWhereCondition(expression), new SqlWhereConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
+        return whereImpl(LogicOperator.AND, expression);
+    }
+
+    @Override
+    public SqlWhereConditionClauseTerminal where(final ConditionGroupSpecBuilder conditions) {
+        final ConditionGroupSpec conditionGroupSpec = selectSpec.newWhereConditionGroup(LogicOperator.AND);
+        conditions.accept(conditionGroupSpec);
+        selectSpec.getWhereConditionGroups().add(conditionGroupSpec);
+        return new SqlWhereConditionClauseTerminal((SqlSelector) delegate);
     }
 
     @Override
@@ -61,5 +73,10 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
         return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+    }
+
+    private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        final ConditionGroupSpec conditionGroupSpec = selectSpec.newWhereConditionGroup(logicOperator);
+        return new SqlWhereConditionClause(conditionGroupSpec.newCondition(expression), new SqlWhereConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
     }
 }

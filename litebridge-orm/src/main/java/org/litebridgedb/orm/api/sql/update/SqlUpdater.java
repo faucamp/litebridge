@@ -2,12 +2,15 @@ package org.litebridgedb.orm.api.sql.update;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.query.LogicOperator;
+import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.update.impl.AbstractUpdater;
 import org.litebridgedb.orm.api.update.model.UpdateSpec;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 
 public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements SqlUpdateStep {
@@ -22,12 +25,12 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
 
     @Override
     public SqlUpdateWhereConditionClause where(final String column) {
-        return new SqlUpdateWhereConditionClause(updateSpec.newWhereCondition(new Column(updateSpec.getTable(), column)), new SqlUpdateWhereConditionClauseTerminalImpl(this), litebridgeContext);
+        return where(new SelectColumnSpec(new Column(updateSpec.getTable(), column)));
     }
 
     @Override
     public SqlUpdateWhereConditionClause where(final ExpressionSpec expression) {
-        return new SqlUpdateWhereConditionClause(updateSpec.newWhereCondition(expression), new SqlUpdateWhereConditionClauseTerminalImpl(this), litebridgeContext);
+        return whereImpl(LogicOperator.AND, expression);
     }
 
     @Override
@@ -39,5 +42,10 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
     @Override
     public SqlUpdateSetStep set(final ColumnExpressionSpec column) {
         return new SqlUpdateSetStep(column.getColumn(), this);
+    }
+
+    private SqlUpdateWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        final ConditionGroupSpec conditionGroupSpec = updateSpec.newWhereConditionGroup(logicOperator);
+        return new SqlUpdateWhereConditionClause(conditionGroupSpec.newCondition(expression), new SqlUpdateWhereConditionClauseTerminalImpl(this), litebridgeContext);
     }
 }

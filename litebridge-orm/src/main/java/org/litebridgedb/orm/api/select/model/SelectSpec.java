@@ -8,15 +8,15 @@ import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.expression.DelegateExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
-import org.litebridgedb.db.spi.query.Condition;
+import org.litebridgedb.db.spi.query.ConditionGroup;
 import org.litebridgedb.db.spi.query.Join;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.intent.ExpressionSpecArray;
-import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,9 +47,9 @@ public abstract class SelectSpec {
     protected @Nullable Table table;
     protected List<ExpressionSpec> expressionSpecs = new ArrayList<>();
     protected @Nullable List<JoinSpec> joins;
-    protected @Nullable List<ConditionSpec> whereConditions;
+    protected @Nullable List<ConditionGroupSpec> whereConditions;
     protected @Nullable GroupBySpec groupBy;
-    protected @Nullable List<ConditionSpec> havingConditions;
+    protected @Nullable List<ConditionGroupSpec> havingConditions;
     protected @Nullable List<OrderBySpec> orderBys;
     protected @Nullable LimitSpec limit;
     protected @Nullable Map<Class<?>, String> dtoAliases;
@@ -98,38 +98,28 @@ public abstract class SelectSpec {
         this.joins = joins;
     }
 
-    public @Nullable List<ConditionSpec> getWhereConditions() {
-        return whereConditions;
-    }
-
-    public void setWhereConditions(@Nullable final List<ConditionSpec> whereConditions) {
-        this.whereConditions = whereConditions;
-    }
-
-    public ConditionSpec newWhereCondition(final Column column) {
-        return newWhereCondition(new SelectColumnSpec(column));
-    }
-
-    public ConditionSpec newWhereCondition(final ExpressionSpec expressionSpec) {
+    public List<ConditionGroupSpec> getWhereConditionGroups() {
         if (this.whereConditions == null) {
             whereConditions = new ArrayList<>();
         }
 
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(expressionSpec);
-        whereConditions.add(conditionSpec);
-        return conditionSpec;
+        return whereConditions;
     }
 
-    public ConditionSpec newHavingCondition(final ExpressionSpec expressionSpec) {
+    public ConditionGroupSpec newWhereConditionGroup(final LogicOperator logicOperator) {
+        final ConditionGroupSpec conditionGroupSpec = new ConditionGroupSpec(logicOperator);
+        getWhereConditionGroups().add(conditionGroupSpec);
+        return conditionGroupSpec;
+    }
+
+    public ConditionGroupSpec newHavingConditionGroup(final LogicOperator logicOperator) {
         if (this.havingConditions == null) {
             havingConditions = new ArrayList<>();
         }
 
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(expressionSpec);
-        havingConditions.add(conditionSpec);
-        return conditionSpec;
+        final ConditionGroupSpec conditionGroupSpec = new ConditionGroupSpec(logicOperator);
+        havingConditions.add(conditionGroupSpec);
+        return conditionGroupSpec;
     }
 
     public @Nullable GroupBySpec getGroupBy() {
@@ -232,8 +222,8 @@ public abstract class SelectSpec {
                 .collect(Collectors.toSet());
 
         // WHERE
-        final List<Condition> whereClause = whereConditions != null ? whereConditions.stream()
-                .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper, selectedTables))
+        final List<ConditionGroup> whereClause = whereConditions != null ? whereConditions.stream()
+                .map(conditionGroupSpec -> conditionGroupSpec.toConditionGroup(selectExpressionMapper, selectedTables))
                 .toList() : Collections.emptyList();
 
         // GROUP BY
@@ -273,7 +263,7 @@ public abstract class SelectSpec {
                 whereClause,
                 groupByClause,
                 havingConditions != null ? havingConditions.stream()
-                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper, selectedTables))
+                        .map(conditionGroupSpec -> conditionGroupSpec.toConditionGroup(selectExpressionMapper, selectedTables))
                         .toList() : Collections.emptyList(),
                 orderByClause,
                 limit != null ? limit.toLimit() : Optional.empty());

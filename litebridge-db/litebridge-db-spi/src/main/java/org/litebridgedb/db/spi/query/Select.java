@@ -17,18 +17,18 @@ import java.util.Optional;
  * @param table       The main table from which data is being selected.
  * @param expressions A list of expressions (e.g. columns or functions) to be included in the SELECT query.
  * @param joins       A list of joins that define relationships with other tables.
- * @param where       A list of conditions used to filter the data in the SELECT query.
+ * @param where       A list of conditions/condition groups used to filter the data in the SELECT query.
  * @param groupBy     A list of expressions used to group the result set.
- * @param having      A list of conditions used to filter the grouped data in the SELECT query.
+ * @param having      A list of conditions/condition groups used to filter the grouped data in the SELECT query.
  * @param orderBy     A list of ordering instructions specifying the order of the result set.
  * @param limit       Optional pagination settings for limiting the number of rows in the result set.
  */
 public record Select(Table table,
                      List<SelectExpression> expressions,
                      List<Join> joins,
-                     List<Condition> where,
+                     List<ConditionGroup> where,
                      List<SelectExpression> groupBy,
-                     List<Condition> having,
+                     List<ConditionGroup> having,
                      List<OrderBy> orderBy,
                      Optional<Limit> limit) implements Operation {
 
