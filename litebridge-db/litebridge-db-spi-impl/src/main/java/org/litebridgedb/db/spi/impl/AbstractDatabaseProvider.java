@@ -1,5 +1,6 @@
 package org.litebridgedb.db.spi.impl;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridgedb.commons.CollectionUtils;
 import org.litebridgedb.commons.type.ConcurrentLazy;
 import org.litebridgedb.db.spi.Column;
@@ -122,6 +123,68 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     @Override
     public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
         return new DefaultSequenceColumnValueGenerator(sequence);
+    }
+
+    @Override
+    public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
+        return switch (operation) {
+            case Select select -> selectSqlGenerator.orThrow().prepareSql(select, connectionProvider).sql();
+            case Insert insert -> insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider).sql();
+            case Update update -> updateSqlGenerator.orThrow().prepareSql(update, connectionProvider).sql();
+            case Delete delete -> deleteSqlGenerator.orThrow().prepareSql(delete, connectionProvider).sql();
+        };
+    }
+
+    @Override
+    public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, ConnectionProvider connectionProvider) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareNativStatement(sql, bindParameters, false, connectionProvider)) {
+            // Execute SQL query
+            final ResultSet resultSet = preparedStatement.executeQuery();
+
+            // Parse results
+            final List<Row> rows = new ArrayList<>();
+
+            while (resultSet.next()) {
+                final Row row = new Row();
+                final int columnCount = resultSet.getMetaData().getColumnCount();
+
+                for (int i = 1; i <= columnCount; i++) {
+                    final String schemaName = resultSet.getMetaData().getSchemaName(i);
+                    final String tableName = resultSet.getMetaData().getTableName(i);
+                    final String columnName = resultSet.getMetaData().getColumnName(i);
+                    final String columnAlias = resultSet.getMetaData().getColumnLabel(i);
+                    final int columnSqlType = resultSet.getMetaData().getColumnType(i);
+
+                    final Table table = new Table(null, schemaName, tableName);
+                    final Column column = new Column(table, columnName, columnAlias);
+
+                    final Object value = typeConverter.convert(resultSet.getObject(i), columnSqlType);
+                    row.withColumn(column, value);
+                }
+
+                rows.add(row);
+            }
+
+            return rows;
+        }
+    }
+
+    @Override
+    public UpdateResult nativeSqlUpdate(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareNativStatement(sql, bindParameters, false, connectionProvider)) {
+            final int updateCount = preparedStatement.executeUpdate();
+            return new UpdateResult(updateCount);
+        }
+    }
+
+    @Override
+    public SqlFunctionRegistry getSqlFunctionRegistry() {
+        return sqlFunctionRegistry.orThrow();
+    }
+
+    @Override
+    public AliasTransformer getAliasTransformer() {
+        return aliasTransformer.orThrow();
     }
 
     /**
@@ -280,26 +343,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
-    @Override
-    public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
-        return switch (operation) {
-            case Select select -> selectSqlGenerator.orThrow().prepareSql(select, connectionProvider).sql();
-            case Insert insert -> insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider).sql();
-            case Update update -> updateSqlGenerator.orThrow().prepareSql(update, connectionProvider).sql();
-            case Delete delete -> deleteSqlGenerator.orThrow().prepareSql(delete, connectionProvider).sql();
-        };
-    }
-
-    @Override
-    public SqlFunctionRegistry getSqlFunctionRegistry() {
-        return sqlFunctionRegistry.orThrow();
-    }
-
-    @Override
-    public AliasTransformer getAliasTransformer() {
-        return aliasTransformer.orThrow();
-    }
-
     protected List<ColumnMetaData> getColumnMetaData(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
         try (final ResultSet dbColumns = databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)) {
             final List<ColumnMetaData> columns = new ArrayList<>();
@@ -378,7 +421,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      */
     protected PreparedStatement prepareStatement(final PreparedSql preparedSql,
                                                  final boolean returnGeneratedKeys,
-                                                 final TableMetaData tableMetaData,
+                                                 final @Nullable TableMetaData tableMetaData,
                                                  final ConnectionProvider connectionProvider) throws SQLException {
         if (getLogger().isTraceEnabled() && !CollectionUtils.isEmpty(preparedSql.bindValues())) {
             getLogger().trace("Generated SQL: {} with bind parameters: {}", preparedSql.sql(), preparedSql.bindValues().stream()
@@ -429,12 +472,55 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return preparedStatement;
     }
 
+    protected PreparedStatement prepareNativStatement(final String sql,
+                                                      final List<@Nullable Object> bindParameters,
+                                                      final boolean returnGeneratedKeys,
+                                                      final ConnectionProvider connectionProvider) throws SQLException {
+        if (getLogger().isTraceEnabled() && !CollectionUtils.isEmpty(bindParameters)) {
+            getLogger().trace("Executing native SQL: {} with bind parameters: {}", sql, bindParameters.stream()
+                    .map(bindParam -> bindParam != null ? bindParam : "<null>")
+                    .toList());
+        } else {
+            getLogger().debug("Executing native SQL: {}", sql);
+        }
+
+        final ManagedConnection connection = connectionProvider.connection();
+        final PreparedStatement preparedStatement = connection.prepareStatement(sql);
+
+        final int[] ordinal = {1};
+
+        if (!CollectionUtils.isEmpty(bindParameters)) {
+            for (Object bindParameter : bindParameters) {
+                if (bindParameter == null) {
+                    preparedStatement.setString(ordinal[0]++, null);
+                    continue;
+                }
+
+                switch (bindParameter) {
+                    case Integer integer -> preparedStatement.setInt(ordinal[0]++, integer);
+                    case Long longValue -> preparedStatement.setLong(ordinal[0]++, longValue);
+                    case Short shortValue -> preparedStatement.setShort(ordinal[0]++, shortValue);
+                    case Double doubleValue -> preparedStatement.setDouble(ordinal[0]++, doubleValue);
+                    case Float floatValue -> preparedStatement.setFloat(ordinal[0]++, floatValue);
+                    case BigDecimal bigDecimal -> preparedStatement.setBigDecimal(ordinal[0]++, bigDecimal);
+                    case Boolean bool -> preparedStatement.setBoolean(ordinal[0]++, bool);
+                    case String string -> preparedStatement.setString(ordinal[0]++, string);
+                    case Timestamp timestamp -> preparedStatement.setTimestamp(ordinal[0]++, timestamp);
+                    case byte[] bytes -> preparedStatement.setBytes(ordinal[0]++, bytes);
+                    default -> preparedStatement.setObject(ordinal[0]++, bindParameter);
+                }
+            }
+        }
+
+        return preparedStatement;
+    }
+
     protected PreparedStatement createPreparedStatementUsingConnection(final PreparedSql preparedSql,
                                                                        final boolean returnGeneratedKeys,
-                                                                       final TableMetaData tableMetaData,
+                                                                       final @Nullable TableMetaData tableMetaData,
                                                                        final ManagedConnection connection) throws SQLException {
         if (returnGeneratedKeys) {
-            final String[] generatedKeyNames = getGeneratedPrimaryKeyColumns(tableMetaData).stream()
+            final String[] generatedKeyNames = getGeneratedPrimaryKeyColumns(Objects.requireNonNull(tableMetaData, "No table metadata provided")).stream()
                     .map(ColumnMetaData::name)
                     .toArray(String[]::new);
 

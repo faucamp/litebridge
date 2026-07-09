@@ -1,5 +1,6 @@
 package org.litebridgedb.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Operation;
 import org.litebridgedb.db.spi.Row;
@@ -10,6 +11,7 @@ import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.query.Select;
+import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.db.spi.update.Delete;
@@ -63,6 +65,16 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     @Override
     public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
         return databaseProvider.toSql(operation, transactionManager);
+    }
+
+    @Override
+    public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
+        return databaseProvider.nativeSqlQuery(sql, bindParameters, transactionManager);
+    }
+
+    @Override
+    public UpdateResult nativeSqlUpdate(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
+        return databaseProvider.nativeSqlUpdate(sql, bindParameters, transactionManager);
     }
 
     @Override

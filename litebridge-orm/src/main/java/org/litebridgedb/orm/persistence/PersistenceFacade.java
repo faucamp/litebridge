@@ -13,6 +13,7 @@ import org.litebridgedb.db.spi.query.ConditionGroup;
 import org.litebridgedb.db.spi.query.LogicCondition;
 import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.Operator;
+import org.litebridgedb.db.spi.sql.BindValue;
 import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.db.spi.update.ColumnValue;
 import org.litebridgedb.db.spi.update.Delete;
