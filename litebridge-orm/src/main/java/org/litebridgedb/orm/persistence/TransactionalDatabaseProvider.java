@@ -11,7 +11,6 @@ import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
 import org.litebridgedb.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridgedb.db.spi.query.Select;
-import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.db.spi.update.Delete;

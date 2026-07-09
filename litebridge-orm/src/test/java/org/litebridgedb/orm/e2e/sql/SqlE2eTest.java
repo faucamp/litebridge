@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -338,11 +339,18 @@ class SqlE2eTest extends AbstractE2eTest {
                 123L, "Name1", "Surname1");
         assertEquals(1, updateResult.rowsAffected());
 
-        // Query using a native SQL query
+        // Query using a native SQL query, positional bind parameters
         final List<Row> rows = litebridge.nativeSql().query(
                 "SELECT * FROM %s WHERE %s LIKE ?".formatted(tableName, firstNameColumn),
                 "%me1");
         assertEquals(1, rows.size());
+
+        // Query using a native SQL query, named bind parameters
+        final List<Row> rows2 = litebridge.nativeSql().query(
+                "SELECT * FROM %s WHERE %s LIKE :firstName AND %s = :surname AND %s <> :firstName".formatted(tableName, firstNameColumn, surnameColumn, surnameColumn),
+                Map.of("firstName", "%me1",
+                        "surname", "Surname1"));
+        assertEquals(1, rows2.size());
     }
 
     private void insertTestPersonRecords(final String personTableName) throws SQLException {

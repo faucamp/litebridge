@@ -90,10 +90,10 @@ public interface DatabaseProvider {
     String toSql(Operation operation, ConnectionProvider connectionProvider);
 
     /**
-     * Executes a SQL query with the given SQL string and a list of bind parameters.
+     * Executes a SQL query with the given SQL string and a list of positional bind parameters.
      *
      * @param sql                the SQL query string to be executed; must not be {@code null}
-     * @param bindParameters     the variable-length list of parameters to bind to the query
+     * @param bindParameters     the list of parameters to bind to the query
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
      * @return a list of {@code Row} objects representing the result set of the query
      * @throws IllegalStateException if an error occurs during query execution
@@ -101,12 +101,12 @@ public interface DatabaseProvider {
     List<Row> nativeSqlQuery(String sql, final List<@Nullable Object> bindParameters, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
-     * Executes a SQL update statement with the given SQL string and a variable-length list of bind parameters.
+     * Executes a SQL update statement with the given SQL string and a list of positional bind parameters.
      * <p>
      * This method delegates to the overloaded execute method that accepts a list of bind parameters.
      *
      * @param sql                the SQL update statement to execute; must not be {@code null}
-     * @param bindParameters     the variable-length list of parameters to bind to the statement
+     * @param bindParameters     the list of named parameters to bind to the statement
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
      * @return an {@code UpdateResult} object that encapsulates the outcome of the update operation
      * @throws IllegalStateException if an error occurs while executing the update statement
