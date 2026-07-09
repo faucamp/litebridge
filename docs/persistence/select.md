@@ -19,7 +19,7 @@ Litebridge supports five main types of select queries:
 
 ## Usage
 
-The following example demonstrates DTO-level, SQL
+The following example demonstrates DTO-level and SQL-level queries:
 
 ```java
 import org.litebridgedb.orm.expression.Fn;

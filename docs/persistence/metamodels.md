@@ -45,7 +45,7 @@ Metamodel fields can be used in the `select()` method to retrieve only specific 
 ```java
 import static org.example.meta.PersonMeta.*;
 
-// Selec the ID and uppercase first name and populate that in a Person object
+// Select the ID and uppercase first name and populate that in a Person object
 List<Person> results = litebridge.select(id, firstName.upper())
     .from(Person.class)
     .list();
