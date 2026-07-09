@@ -5,7 +5,7 @@
 Litebridge allows direct mapping of entities/Data Transfer Objects (DTOs) to tables, similar to other ORMs, but with a strong focus
 on using DTOs directly without modification or annotations, etc.
 
-There are four ways to register DTO-table mappings:
+There are three ways to register DTO-table mappings:
 1. **[Fluent API](#fluent-api)**: Programmatic registration using a callback-based API.
 2. **[Entity Annotations](entity-annotations.md)**: Annotation-based registration on entity classes.
 3. **[Low-level API](#low-level-api)**: Manual creation of mapping specifications.
