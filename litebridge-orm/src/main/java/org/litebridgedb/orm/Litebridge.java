@@ -91,6 +91,7 @@ public final class Litebridge implements SelectApi {
     private final TableRegistry tableRegistry = new TableRegistry();
     private final TransactionalDatabaseProvider databaseProvider;
     private final TransactionContext transactionContext;
+    private final NativeSqlContext nativeSqlContext;
     private final PersistenceFacade persistenceFacade;
     private final ChangeTracker changeTracker;
     private final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
@@ -210,6 +211,7 @@ public final class Litebridge implements SelectApi {
                       final MethodHandles.Lookup lookup) {
         this.databaseProvider = new TransactionalDatabaseProvider(transactionManager, databaseProvider);
         this.transactionContext = new TransactionContext(transactionManager);
+        this.nativeSqlContext = new NativeSqlContext(this.databaseProvider);
         this.litebridgeConfig = litebridgeConfig != null ? litebridgeConfig : new LitebridgeConfig();
         this.changeTracker = new ChangeTracker(lookup);
         this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor);
@@ -503,7 +505,7 @@ public final class Litebridge implements SelectApi {
      * @return the native SQL execution API
      */
     public NativeSqlContext nativeSql() {
-        return new NativeSqlContext(databaseProvider);
+        return nativeSqlContext;
     }
 
     /**
