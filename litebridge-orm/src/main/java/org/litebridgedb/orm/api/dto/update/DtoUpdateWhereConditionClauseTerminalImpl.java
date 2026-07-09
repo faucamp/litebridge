@@ -1,9 +1,10 @@
 package org.litebridgedb.orm.api.dto.update;
 
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.update.UpdateResult;
+import org.litebridgedb.orm.api.condition.QueryConditionBuilder;
 import org.litebridgedb.orm.api.update.UpdateTerminal;
 import org.litebridgedb.orm.api.update.model.UpdateSpec;
-import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 
 public final class DtoUpdateWhereConditionClauseTerminalImpl<DTO>
@@ -18,12 +19,32 @@ public final class DtoUpdateWhereConditionClauseTerminalImpl<DTO>
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> and(final String field) {
-        return delegate.where(field);
+        return delegate.whereImpl(LogicOperator.AND, field);
     }
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> and(final ExpressionSpec expression) {
-        return delegate.where(expression);
+        return delegate.whereImpl(LogicOperator.AND, expression);
+    }
+
+    @Override
+    public DtoUpdateWhereConditionClauseTerminal<DTO> and(final QueryConditionBuilder<DTO> query) {
+        return delegate.whereImpl(LogicOperator.AND, query);
+    }
+
+    @Override
+    public DtoUpdateWhereConditionClause<DTO> or(final String field) {
+        return delegate.whereImpl(LogicOperator.OR, field);
+    }
+
+    @Override
+    public DtoUpdateWhereConditionClause<DTO> or(final ExpressionSpec expression) {
+        return delegate.whereImpl(LogicOperator.OR, expression);
+    }
+
+    @Override
+    public DtoUpdateWhereConditionClauseTerminal<DTO> or(final QueryConditionBuilder<DTO> query) {
+        return delegate.whereImpl(LogicOperator.OR, query);
     }
 
     @Override

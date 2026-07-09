@@ -2,8 +2,6 @@ package org.litebridgedb.db.spi.query;
 
 import org.litebridgedb.db.spi.Table;
 
-import java.util.List;
-
 /**
  * A database table join operation in a query.
  * <p>
@@ -20,8 +18,8 @@ import java.util.List;
  * within SQL select statements.
  *
  * @param table      The target table for the join operation.
- * @param conditions The list of conditions defining the join relationship.
+ * @param conditions The group of conditions defining the join relationship.
  * @see Select
  */
-public record Join(Table table, List<ConditionGroup> conditions) {
+public record Join(Table table, ConditionGroup conditions) {
 }

@@ -13,5 +13,10 @@ public enum LogicOperator {
     /**
      * OR logical operator
      */
-    OR
+    OR,
+
+    /**
+     * No operation
+     */
+    NOOP
 }

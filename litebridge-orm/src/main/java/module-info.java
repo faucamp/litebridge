@@ -50,4 +50,6 @@ module litebridge.orm {
     opens org.litebridgedb.orm.api.select to litebridge.commons, litebridge.tracking;
     opens org.litebridgedb.orm.api.select.model to litebridge.commons, litebridge.tracking;
     opens org.litebridgedb.orm.engine to litebridge.commons, litebridge.tracking;
+    exports org.litebridgedb.orm.api.dto.condition;
+    opens org.litebridgedb.orm.api.dto.condition to litebridge.commons, litebridge.tracking;
 }

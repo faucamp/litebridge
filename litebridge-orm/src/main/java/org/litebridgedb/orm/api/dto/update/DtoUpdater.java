@@ -2,7 +2,10 @@ package org.litebridgedb.orm.api.dto.update;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.query.LogicOperator;
+import org.litebridgedb.orm.api.condition.QueryConditionBuilder;
+import org.litebridgedb.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
+import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.update.UpdateSetStep;
 import org.litebridgedb.orm.api.update.impl.AbstractUpdater;
@@ -27,13 +30,12 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> where(final String field) {
-        final Column column = updateSpec.dtoTable().getColumnForFieldName(field).toColumn();
-        return where(new SelectColumnSpec(column));
+        return whereImpl(LogicOperator.NOOP, field);
     }
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> where(final ExpressionSpec expression) {
-        return whereImpl(LogicOperator.AND, expression);
+        return whereImpl(LogicOperator.NOOP, expression);
     }
 
     @Override
@@ -54,8 +56,20 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
         return new UpdateSetStep<>(column, this);
     }
 
-    private DtoUpdateWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionGroupSpec conditionGroupSpec = updateSpec.newWhereConditionGroup(logicOperator);
-        return new DtoUpdateWhereConditionClause<>(conditionGroupSpec.newCondition(expression), new DtoUpdateWhereConditionClauseTerminalImpl<>(this), litebridgeContext);
+    DtoUpdateWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final String field) {
+        final Column column = updateSpec.dtoTable().getColumnForFieldName(field).toColumn();
+        return whereImpl(logicOperator, new SelectColumnSpec(column));
+    }
+
+    DtoUpdateWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        final ConditionSpec conditionSpec = updateSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
+        return new DtoUpdateWhereConditionClause<>(conditionSpec, new DtoUpdateWhereConditionClauseTerminalImpl<>(this), litebridgeContext);
+    }
+
+    DtoUpdateWhereConditionClauseTerminalImpl<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
+        final ConditionGroupSpec subgroup = updateSpec.pushConditionGroupSpec(logicOperator);
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, updateSpec.dtoTable(), litebridgeContext.fromClauseEngine());
+        query.apply(conditionClauseStart);
+        return new DtoUpdateWhereConditionClauseTerminalImpl<>(this);
     }
 }

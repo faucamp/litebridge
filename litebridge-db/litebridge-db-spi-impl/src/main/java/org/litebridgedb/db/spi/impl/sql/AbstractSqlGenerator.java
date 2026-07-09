@@ -19,6 +19,9 @@ import org.litebridgedb.db.spi.expression.SubselectExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.ConditionGroup;
+import org.litebridgedb.db.spi.query.LogicCondition;
+import org.litebridgedb.db.spi.query.LogicConditionGroup;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.sql.BindValue;
 import org.litebridgedb.db.spi.sql.PreparedSql;
@@ -193,30 +196,30 @@ public abstract class AbstractSqlGenerator {
         return bindValue;
     }
 
-    protected void appendConditionsAndSubgroups(final StringBuilder sb,
-                                                final List<@Nullable BindValue> bindValues,
+    protected void appendConditionsAndSubgroups(final StringBuilder sql,
                                                 final ConditionGroup conditionGroup,
+                                                final List<@Nullable BindValue> bindValues,
                                                 final Operation operation,
                                                 final ConnectionProvider connectionProvider) {
 
-        boolean firstCondition = true;
-
-        for (Condition condition : conditionGroup.conditions()) {
-            if (firstCondition) {
-                firstCondition = false;
-            } else {
-                sb.append(' ').append(conditionGroup.logicOperator()).append(' ');
+        for (LogicCondition logicCondition : conditionGroup.conditions()) {
+            if (logicCondition.logicOperator() != LogicOperator.NOOP) {
+                sql.append(' ').append(logicCondition.logicOperator()).append(' ');
             }
 
-            final PreparedSql conditionSql = createCondition(condition, operation, connectionProvider);
-            sb.append(conditionSql.sql());
+            final PreparedSql conditionSql = createCondition(logicCondition.condition(), operation, connectionProvider);
+            sql.append(conditionSql.sql());
             bindValues.addAll(conditionSql.bindValues());
         }
 
-        for (ConditionGroup subgroup : conditionGroup.conditionGroups()) {
-            sb.append(' ').append(conditionGroup.logicOperator()).append(" (");
-            appendConditionsAndSubgroups(sb, bindValues, subgroup, operation, connectionProvider);
-            sb.append(')');
+        for (LogicConditionGroup logicConditionGroup : conditionGroup.subgroups()) {
+            if (logicConditionGroup.logicOperator() != LogicOperator.NOOP) {
+                sql.append(' ').append(logicConditionGroup.logicOperator());
+            }
+
+            sql.append(" (");
+            appendConditionsAndSubgroups(sql, logicConditionGroup.conditionGroup(), bindValues, operation, connectionProvider);
+            sql.append(')');
         }
     }
 }

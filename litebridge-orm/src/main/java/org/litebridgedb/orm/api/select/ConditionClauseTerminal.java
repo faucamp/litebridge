@@ -1,5 +1,6 @@
 package org.litebridgedb.orm.api.select;
 
+import org.litebridgedb.orm.api.condition.QueryConditionBuilder;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 
 /**
@@ -40,6 +41,16 @@ public interface ConditionClauseTerminal<DTO,
     CC and(ExpressionSpec expression);
 
     /**
+     * Adds an "AND" condition with a nested condition clause.
+     * <p>
+     * The nested condition clause is grouped with parentheses to ensure proper SQL syntax.
+     *
+     * @param query Function that builds the nested condition clause
+     * @return the parent condition clause interface, allowing further chaining of conditions
+     */
+    SELF and(QueryConditionBuilder<DTO> query);
+
+    /**
      * Adds an "OR" condition to the current condition clause using the specified column.
      * <p>
      * This method is used to chain additional conditions in a SQL query in a fluent manner.
@@ -58,4 +69,14 @@ public interface ConditionClauseTerminal<DTO,
      * @return the parent condition clause interface, allowing further chaining of conditions
      */
     CC or(ExpressionSpec expression);
+
+    /**
+     * Adds an "OR" condition with specified nested condition clause.
+     * <p>
+     * The nested condition clause is grouped with parentheses to ensure proper SQL syntax.
+     *
+     * @param query Function that builds the nested condition clause
+     * @return the parent condition clause interface, allowing further chaining of conditions
+     */
+    SELF or(QueryConditionBuilder<DTO> query);
 }

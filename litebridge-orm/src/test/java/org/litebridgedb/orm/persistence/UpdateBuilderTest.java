@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
-import org.litebridgedb.db.spi.query.Condition;
+import org.litebridgedb.db.spi.query.ConditionGroup;
 import org.litebridgedb.db.spi.update.ColumnValue;
 import org.litebridgedb.db.spi.update.Update;
 import org.litebridgedb.tracking.ChangeTracker;
@@ -53,11 +53,11 @@ class UpdateBuilderTest {
         // Given
         final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable());
         final ColumnValue columnValue = new ColumnValue(column("test_table", "name", Types.VARCHAR).toColumn(), "test");
-        final Condition condition = mock(Condition.class);
+        final ConditionGroup conditionGroup = mock(ConditionGroup.class);
         updateBuilder.setColumnValues(List.of(columnValue));
 
         // When
-        final UpdateBuilder result = updateBuilder.where(condition);
+        final UpdateBuilder result = updateBuilder.where(conditionGroup);
 
         // Then
         assertSame(updateBuilder, result);
@@ -71,10 +71,10 @@ class UpdateBuilderTest {
         final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable);
 
         final ColumnValue columnValue = new ColumnValue(column("test_table", "name", Types.VARCHAR).toColumn(), "test");
-        final Condition condition = mock(Condition.class);
+        final ConditionGroup conditionGroup = mock(ConditionGroup.class);
 
         updateBuilder.setColumnValues(List.of(columnValue));
-        updateBuilder.where(condition);
+        updateBuilder.where(conditionGroup);
 
         // When
         final Update result = updateBuilder.build();
@@ -82,7 +82,7 @@ class UpdateBuilderTest {
         // Then
         assertEquals(ormTable.getMetaData().toTable(), result.table());
         assertEquals(List.of(columnValue), result.columnValues());
-        assertEquals(List.of(condition), result.where());
+        assertEquals(conditionGroup, result.where());
     }
 
     @Test

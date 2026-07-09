@@ -2,10 +2,12 @@ package org.litebridgedb.orm.api.dto;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.query.LogicOperator;
+import org.litebridgedb.orm.api.condition.QueryConditionBuilder;
+import org.litebridgedb.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridgedb.orm.api.select.JoinClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
-import org.litebridgedb.orm.api.select.model.ConditionGroupSpecBuilder;
+import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.GroupBySpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
@@ -62,6 +64,11 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     }
 
     @Override
+    public DtoJoinConditionClauseTerminal<DTO> and(final QueryConditionBuilder<DTO> query) {
+        return joinImpl(LogicOperator.AND, query);
+    }
+
+    @Override
     public DtoJoinConditionClause<DTO> or(final String field) {
         final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), ormTable.getColumnForFieldName(field));
         return or(new SelectColumnSpec(column));
@@ -73,6 +80,11 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     }
 
     @Override
+    public DtoJoinConditionClauseTerminal<DTO> or(final QueryConditionBuilder<DTO> query) {
+        return joinImpl(LogicOperator.OR, query);
+    }
+
+    @Override
     public DtoWhereConditionClause<DTO> where(final String field) {
         final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), ormTable.getColumnForFieldName(field));
         return where(new SelectColumnSpec(column));
@@ -80,16 +92,9 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoWhereConditionClause<DTO> where(final ExpressionSpec expression) {
-        return whereImpl(LogicOperator.AND, expression);
+        return whereImpl(LogicOperator.NOOP, expression);
     }
 
-    @Override
-    public DtoWhereConditionClauseTerminal<DTO> where(final ConditionGroupSpecBuilder conditions) {
-        final ConditionGroupSpec conditionGroupSpec = selectSpec.newWhereConditionGroup(LogicOperator.AND);
-        conditions.accept(conditionGroupSpec);
-        selectSpec.getWhereConditionGroups().add(conditionGroupSpec);
-        return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate);
-    }
 
     @Override
     public DtoJoinClause<DTO> join(final Class<?> dtoClass) {
@@ -130,12 +135,19 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     }
 
     private DtoJoinConditionClause<DTO> joinImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionGroupSpec conditionGroupSpec = joinSpec.newConditionGroup(logicOperator);
-        return new DtoJoinConditionClause<>(conditionGroupSpec.newCondition(expression), this, delegate.litebridgeContext());
+        final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
+        return new DtoJoinConditionClause<>(conditionSpec, this, delegate.litebridgeContext());
     }
 
     private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionGroupSpec conditionGroupSpec = selectSpec.newWhereConditionGroup(logicOperator);
-        return new DtoWhereConditionClause<>(conditionGroupSpec.newCondition(expression), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate), delegate.litebridgeContext());
+        final ConditionSpec conditionSpec = selectSpec.currentWhereConditionGroupSpec().newCondition(logicOperator, expression);
+        return new DtoWhereConditionClause<>(conditionSpec, new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate), delegate.litebridgeContext());
+    }
+
+    private DtoJoinConditionClauseTerminal<DTO> joinImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
+        final ConditionGroupSpec subgroup = joinSpec.pushConditionGroupSpec(logicOperator);
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, joinSpec.dtoTable(), delegate.litebridgeContext().fromClauseEngine());
+        query.apply(conditionClauseStart);
+        return new DtoJoinConditionClauseTerminal<>(joinSpec, (DtoSelector<DTO>) delegate, aliasGenerator);
     }
 }

@@ -21,8 +21,8 @@ import java.util.List;
  *
  * @param table        {@link TableMetaData} provides metadata about the table being updated, including its structure.
  * @param columnValues The {@link ColumnValue} pairs a column with its new value, ensuring clear definition of updates.
- * @param where        The {@link ConditionGroup} objects define filter criteria that determine which rows of the table will be updated.
+ * @param where        Defined filter criteria that determine which rows of the table will be updated.
  */
-public record Update(Table table, List<ColumnValue> columnValues, List<ConditionGroup> where)
+public record Update(Table table, List<ColumnValue> columnValues, ConditionGroup where)
         implements UpdateStatement {
 }

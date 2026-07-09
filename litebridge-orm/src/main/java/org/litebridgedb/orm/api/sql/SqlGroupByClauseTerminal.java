@@ -4,6 +4,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.orm.api.select.impl.AbstractGroupByClauseTerminal;
 import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
+import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 
 public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
@@ -19,7 +20,7 @@ public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
 
     @Override
     public SqlHavingConditionClause having(final ExpressionSpec expression) {
-        return havingImpl(LogicOperator.AND, expression);
+        return havingImpl(LogicOperator.NOOP, expression);
     }
 
     @Override
@@ -33,7 +34,7 @@ public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
     }
 
     private SqlHavingConditionClause havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionGroupSpec conditionGroupSpec = selectSpec.newHavingConditionGroup(logicOperator);
-        return new SqlHavingConditionClause(conditionGroupSpec.newCondition(expression), new SqlHavingConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
+        final ConditionSpec conditionSpec = selectSpec.currentHavingConditionGroupSpec().newCondition(logicOperator, expression);
+        return new SqlHavingConditionClause(conditionSpec, new SqlHavingConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
     }
 }

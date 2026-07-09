@@ -7,6 +7,9 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.expression.ColumnExpressionTest;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.query.Condition;
+import org.litebridgedb.db.spi.query.ConditionGroup;
+import org.litebridgedb.db.spi.query.LogicCondition;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.Operator;
 
 import java.sql.Types;
@@ -23,13 +26,14 @@ class UpdateTest {
         final ColumnMetaData column = new ColumnMetaData(table, "TEST_COLUMN", true, Types.VARCHAR);
         final ColumnValue columnValue = new ColumnValue(column.toColumn(), "testValue");
         final Condition condition = new Condition(ColumnExpressionTest.select(new Column(table, "ID")), Operator.EQ, new LiteralExpression(1L));
+        final ConditionGroup conditionGroup = new ConditionGroup(new LogicCondition(LogicOperator.AND, condition));
 
         // When
-        final Update result = new Update(table, List.of(columnValue), List.of(condition));
+        final Update result = new Update(table, List.of(columnValue), conditionGroup);
 
         // Then
         assertEquals(table, result.table());
         assertEquals(List.of(columnValue), result.columnValues());
-        assertEquals(List.of(condition), result.where());
+        assertEquals(condition, result.where().conditions().getFirst().condition());
     }
 }

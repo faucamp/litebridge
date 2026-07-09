@@ -27,7 +27,7 @@ class SqlJoinClauseTest {
 
         // Then
         assertNotNull(result);
-        assertTrue(joinSpec.conditions().isEmpty());
+        assertTrue(joinSpec.currentConditionGroupSpec().conditions().isEmpty());
     }
 
     @Test
@@ -43,9 +43,9 @@ class SqlJoinClauseTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(1, joinSpec.conditions().size());
+        assertEquals(1, joinSpec.currentConditionGroupSpec().conditions().size());
 
-        final ConditionSpec condition = joinSpec.conditions().getFirst();
+        final ConditionSpec condition = joinSpec.currentConditionGroupSpec().conditions().getFirst().conditionSpec();
         final Column column = ((ColumnExpressionSpec) condition.getLhs()).getColumn();
         assertEquals(joinTable, column.table());
         assertEquals("joined_id", column.name());
@@ -66,9 +66,9 @@ class SqlJoinClauseTest {
 
         // Then
         assertNotNull(terminal);
-        assertEquals(1, joinSpec.conditions().size());
+        assertEquals(1, joinSpec.currentConditionGroupSpec().conditions().size());
 
-        final ConditionSpec condition = joinSpec.conditions().getFirst();
+        final ConditionSpec condition = joinSpec.currentConditionGroupSpec().conditions().getFirst().conditionSpec();
         final Column column = ((ColumnExpressionSpec) condition.getLhs()).getColumn();
         assertEquals(joinTable, column.table());
         assertEquals("joined_id", column.name());
@@ -89,9 +89,9 @@ class SqlJoinClauseTest {
 
         // Then
         assertNotNull(terminal);
-        assertEquals(1, joinSpec.conditions().size());
+        assertEquals(1, joinSpec.currentConditionGroupSpec().conditions().size());
 
-        final ConditionSpec condition = joinSpec.conditions().getFirst();
+        final ConditionSpec condition = joinSpec.currentConditionGroupSpec().conditions().getFirst().conditionSpec();
         final Column column = ((ColumnExpressionSpec) condition.getLhs()).getColumn();
         assertEquals(joinTable, column.table());
         assertEquals("optional_id", column.name());
@@ -112,9 +112,9 @@ class SqlJoinClauseTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(1, joinSpec.conditions().size());
+        assertEquals(1, joinSpec.currentConditionGroupSpec().conditions().size());
 
-        final ConditionSpec condition = joinSpec.conditions().getFirst();
+        final ConditionSpec condition = joinSpec.currentConditionGroupSpec().conditions().getFirst().conditionSpec();
         final Column column = ((ColumnExpressionSpec) condition.getLhs()).getColumn();
         assertEquals(joinTable, column.table());
         assertEquals("shared_id", column.name());

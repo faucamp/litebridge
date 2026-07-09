@@ -3,9 +3,11 @@ package org.litebridgedb.orm.api.dto;
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.query.LogicOperator;
+import org.litebridgedb.orm.api.condition.QueryConditionBuilder;
+import org.litebridgedb.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
-import org.litebridgedb.orm.api.select.model.ConditionGroupSpecBuilder;
+import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.GroupBySpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
@@ -44,19 +46,28 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     @Override
     public DtoWhereConditionClause<DTO> where(final String field) {
-        Column column = ormTable.getColumnForFieldName(field).toColumn();
+        final Column column = ormTable.getColumnForFieldName(field).toColumn();
         return where(new SelectColumnSpec(column));
     }
 
     @Override
     public DtoWhereConditionClause<DTO> where(final ExpressionSpec expression) {
-        return whereImpl(LogicOperator.AND, expression);
+        return whereImpl(LogicOperator.NOOP, expression);
     }
 
-    @Override
-    public DtoWhereConditionClauseTerminal<DTO> where(final ConditionGroupSpecBuilder conditions) {
-        final ConditionGroupSpec conditionGroupSpec = selectSpec.newWhereConditionGroup(LogicOperator.AND);
-        selectSpec.getWhereConditionGroups().add(conditionGroupSpec);
+    /**
+     * Adds a nested condition clause.
+     * <p>
+     * The nested condition clause is grouped with parentheses to ensure proper SQL syntax.
+     *
+     * @param query Function that builds the nested condition clause
+     * @return the parent condition clause interface, allowing further chaining of conditions
+     */
+    public DtoWhereConditionClauseTerminal<DTO> where(final QueryConditionBuilder<DTO> query) {
+        final ConditionGroupSpec conditionGroupSpec = selectSpec.pushWhereConditionGroup(LogicOperator.NOOP);
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(conditionGroupSpec, ormTable, delegate.litebridgeContext().fromClauseEngine());
+        query.apply(conditionClauseStart);
+        selectSpec.popWhereConditionGroup();
         return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate);
     }
 
@@ -196,7 +207,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     }
 
     private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionGroupSpec conditionGroupSpec = selectSpec.newWhereConditionGroup(logicOperator);
-        return new DtoWhereConditionClause<>(conditionGroupSpec.newCondition(expression), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate), delegate.litebridgeContext());
+        final ConditionSpec conditionSpec = selectSpec.currentWhereConditionGroupSpec().newCondition(logicOperator, expression);
+        return new DtoWhereConditionClause<>(conditionSpec, new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate), delegate.litebridgeContext());
     }
 }

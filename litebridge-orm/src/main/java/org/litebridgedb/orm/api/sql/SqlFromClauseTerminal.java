@@ -5,7 +5,7 @@ import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
-import org.litebridgedb.orm.api.select.model.ConditionGroupSpecBuilder;
+import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.GroupBySpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
@@ -42,15 +42,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
 
     @Override
     public SqlWhereConditionClause where(final ExpressionSpec expression) {
-        return whereImpl(LogicOperator.AND, expression);
-    }
-
-    @Override
-    public SqlWhereConditionClauseTerminal where(final ConditionGroupSpecBuilder conditions) {
-        final ConditionGroupSpec conditionGroupSpec = selectSpec.newWhereConditionGroup(LogicOperator.AND);
-        conditions.accept(conditionGroupSpec);
-        selectSpec.getWhereConditionGroups().add(conditionGroupSpec);
-        return new SqlWhereConditionClauseTerminal((SqlSelector) delegate);
+        return whereImpl(LogicOperator.NOOP, expression);
     }
 
     @Override
@@ -76,7 +68,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     }
 
     private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionGroupSpec conditionGroupSpec = selectSpec.newWhereConditionGroup(logicOperator);
-        return new SqlWhereConditionClause(conditionGroupSpec.newCondition(expression), new SqlWhereConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
+        final ConditionSpec conditionSpec = selectSpec.currentWhereConditionGroupSpec().newCondition(logicOperator, expression);
+        return new SqlWhereConditionClause(conditionSpec, new SqlWhereConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
     }
 }

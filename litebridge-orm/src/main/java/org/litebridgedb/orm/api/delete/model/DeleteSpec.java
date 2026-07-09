@@ -1,71 +1,22 @@
 package org.litebridgedb.orm.api.delete.model;
 
-import org.jspecify.annotations.Nullable;
-import org.litebridgedb.commons.ObjectUtils;
-import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.update.Delete;
-import org.litebridgedb.orm.api.select.model.ConditionSpec;
+import org.litebridgedb.orm.api.select.impl.AbstractConditionBasedSpec;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
-import org.litebridgedb.orm.expression.ExpressionSpec;
-import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * Base specification for constructing a SQL DELETE statement.
  */
-public class DeleteSpec {
+public class DeleteSpec extends AbstractConditionBasedSpec {
 
-    @Nullable
-    protected Table table;
-    @Nullable
-    protected List<ConditionSpec> whereConditions;
-    private final SelectExpressionMapper selectExpressionMapper;
-
-    public DeleteSpec(final SelectExpressionMapper selectExpressionMapper) {
-        this.selectExpressionMapper = selectExpressionMapper;
-    }
-
-    public Table getTable() {
-        return ObjectUtils.requireNonNull(table, () -> new IllegalStateException("DeleteSpec.table not set"));
-    }
-
-    public void setTable(final Table table) {
-        this.table = table;
-    }
-
-    public @Nullable List<ConditionSpec> getWhereConditions() {
-        return whereConditions;
-    }
-
-    public void setWhereConditions(@Nullable final List<ConditionSpec> whereConditions) {
-        this.whereConditions = whereConditions;
-    }
-
-    public ConditionSpec newWhereCondition(final Column column) {
-        return newWhereCondition(new SelectColumnSpec(column));
-    }
-
-    public ConditionSpec newWhereCondition(final ExpressionSpec expression) {
-        if (this.whereConditions == null) {
-            whereConditions = new ArrayList<>();
-        }
-
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(expression);
-        whereConditions.add(conditionSpec);
-        return conditionSpec;
+    public DeleteSpec(final Table table, final SelectExpressionMapper selectExpressionMapper) {
+        super(table, selectExpressionMapper);
     }
 
     public Delete toDelete() {
-        ObjectUtils.requireNonNull(table, () -> new IllegalStateException("Table not specified"));
-
-        return new Delete(table,
-                whereConditions != null ? whereConditions.stream()
-                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper, Collections.singletonList(table)))
-                        .toList() : Collections.emptyList());
+        return new Delete(table, conditions.toConditionGroup(selectExpressionMapper, Collections.singleton(table)));
     }
 }

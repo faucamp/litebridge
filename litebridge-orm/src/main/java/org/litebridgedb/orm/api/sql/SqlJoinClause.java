@@ -4,7 +4,7 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinClause;
-import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
+import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 public final class SqlJoinClause extends AbstractJoinClause<Row,
@@ -27,8 +27,8 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
     public SqlJoinConditionClause on(final String column) {
         final Column spiColumn = new Column(joinSpec.table(), column);
         final SqlJoinConditionClauseTerminal joinConditionClauseTerminal = new SqlJoinConditionClauseTerminal(joinSpec, (SqlSelector) delegate);
-        final ConditionGroupSpec conditionGroupSpec = joinSpec.newConditionGroup(LogicOperator.AND);
-        return new SqlJoinConditionClause(conditionGroupSpec.newCondition(new SelectColumnSpec(spiColumn)), joinConditionClauseTerminal, delegate.litebridgeContext());
+        final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(spiColumn));
+        return new SqlJoinConditionClause(conditionSpec, joinConditionClauseTerminal, delegate.litebridgeContext());
     }
 
     /**

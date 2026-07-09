@@ -6,21 +6,22 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.update.ColumnValue;
 import org.litebridgedb.db.spi.update.Update;
+import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
 import org.litebridgedb.orm.expression.TestSelectReferenceExpressionFactory;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -38,26 +39,18 @@ class UpdateSpecTest {
 
         final ProtoExpressionResolver protoExpressionResolver = mock(ProtoExpressionResolver.class);
         when(protoExpressionResolver.resolveExpression(any(ExpressionSpec.class), any(ClauseType.class))).thenAnswer(i -> Stream.of((ExpressionSpec) i.getArgument(0)));
-        final UpdateSpec spec = new UpdateSpec(new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver));
         final Table table = new Table("cat", "sch", "tab");
-        spec.setTable(table);
-        assertEquals(table, spec.getTable());
+        final UpdateSpec spec = new UpdateSpec(table, new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver));
 
-        Column col = new Column(table, "col");
+        final Column col = new Column(table, "col");
         spec.addColumnValue(new ColumnValue(col, "val"));
-        ConditionSpec conditionSpec = spec.newWhereCondition(col);
+        final ConditionSpec conditionSpec = spec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(col));
         conditionSpec.setOperator(Operator.EQ);
         conditionSpec.setValue("test");
 
-        assertNotNull(spec.getWhereConditions());
-        assertEquals(1, spec.getWhereConditions().size());
-
-        Update update = spec.toUpdate();
+        final Update update = spec.toUpdate();
         assertEquals(table, update.table());
         assertEquals(1, update.columnValues().size());
-        assertEquals(1, update.where().size());
-
-        spec.setWhereConditions(null);
-        assertNull(spec.getWhereConditions());
+        assertEquals(1, update.where().conditions().size());
     }
 }

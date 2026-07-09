@@ -5,8 +5,10 @@ import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
+import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.JoinSpec;
 import org.litebridgedb.orm.api.select.model.LimitSpec;
@@ -152,7 +154,7 @@ class SqlSelectSpecTest {
     }
 
     @Test
-    void setWhereConditions() {
+    void pushWhereConditionGroup() {
         // Given
         final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
@@ -165,36 +167,10 @@ class SqlSelectSpecTest {
         conditionSpec.setValue(123);
 
         // When
-        sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
-        final List<ConditionSpec> result = sqlSelectSpec.getWhereConditions();
+        final ConditionGroupSpec result = sqlSelectSpec.pushWhereConditionGroup(LogicOperator.OR);
 
         // Then
         assertNotNull(result);
-        assertEquals(1, result.size());
-        assertSame(conditionSpec, result.getFirst());
-    }
-
-    @Test
-    void newWhereCondition() {
-        // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        sqlSelectSpec.setTable(table);
-        final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(column);
-        conditionSpec.setOperator(Operator.LTE);
-        conditionSpec.setValue(123);
-
-        // When
-        final ConditionSpec result = sqlSelectSpec.newWhereCondition(column);
-
-        // Then
-        assertNotNull(result);
-        assertNotNull(sqlSelectSpec.getWhereConditions());
-        assertEquals(1, sqlSelectSpec.getWhereConditions().size());
-        assertSame(result, sqlSelectSpec.getWhereConditions().getFirst());
     }
 
     @Test
@@ -205,11 +181,6 @@ class SqlSelectSpecTest {
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(column);
-        conditionSpec.setOperator(Operator.LTE);
-        conditionSpec.setValue(123);
-        sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
         final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
         final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectColumnSpec));
 
@@ -231,11 +202,6 @@ class SqlSelectSpecTest {
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(column);
-        conditionSpec.setOperator(Operator.LTE);
-        conditionSpec.setValue(123);
-        sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
         final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
 
         // When
@@ -256,11 +222,6 @@ class SqlSelectSpecTest {
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(column);
-        conditionSpec.setOperator(Operator.LTE);
-        conditionSpec.setValue(123);
-        sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
         final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
         final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectColumnSpec));
         sqlSelectSpec.setOrderBys(List.of(orderBySpec));
@@ -284,11 +245,6 @@ class SqlSelectSpecTest {
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(column);
-        conditionSpec.setOperator(Operator.LTE);
-        conditionSpec.setValue(123);
-        sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
         final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
         final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectColumnSpec));
         sqlSelectSpec.setOrderBys(List.of(orderBySpec));
@@ -343,11 +299,6 @@ class SqlSelectSpecTest {
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(column);
-        conditionSpec.setOperator(Operator.LTE);
-        conditionSpec.setValue(123);
-        sqlSelectSpec.setWhereConditions(List.of(conditionSpec));
         final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
         final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectColumnSpec));
         sqlSelectSpec.setOrderBys(List.of(orderBySpec));

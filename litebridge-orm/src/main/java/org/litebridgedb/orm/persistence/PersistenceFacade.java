@@ -9,6 +9,9 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.query.Condition;
+import org.litebridgedb.db.spi.query.ConditionGroup;
+import org.litebridgedb.db.spi.query.LogicCondition;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.db.spi.update.ColumnValue;
@@ -34,6 +37,7 @@ import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -656,26 +660,44 @@ public class PersistenceFacade {
      * @param <DTO>            class of the DTO
      */
     private <DTO> void addPrimaryKeyConditions(final DTO dto, final OrmTable table, final AbstractStatementBuilder<?> statementBuilder) {
-        table.getMetaData().primaryKey().forEach(columnMetaData -> {
-            final Column pkColumn = columnMetaData.toColumn();
-            final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
-            final Object pkValue = field.get(dto);
-            final ColumnExpression pkColumnExpression = databaseProvider.getSqlFunctionRegistry().select().column().create(pkColumn);
-            final Condition condition;
+        final List<Condition> conditions = table.getMetaData().primaryKey().stream()
+                .map(columnMetaData -> {
+                    final Column pkColumn = columnMetaData.toColumn();
+                    final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
+                    final Object pkValue = field.get(dto);
+                    final ColumnExpression pkColumnExpression = databaseProvider.getSqlFunctionRegistry().select().column().create(pkColumn);
+                    final Condition condition;
 
-            if (pkValue != null) {
-                condition = new Condition(pkColumnExpression, Operator.EQ, this.databaseProvider.getSqlFunctionRegistry().select().literal().create(pkValue));
-            } else {
-                condition = new Condition(pkColumnExpression, Operator.IS_NULL);
-            }
+                    if (pkValue != null) {
+                        condition = new Condition(pkColumnExpression, Operator.EQ, this.databaseProvider.getSqlFunctionRegistry().select().literal().create(pkValue));
+                    } else {
+                        condition = new Condition(pkColumnExpression, Operator.IS_NULL);
+                    }
 
-            if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                updateBuilder.where(condition);
-            } else if (statementBuilder instanceof DeleteBuilder deleteBuilder) {
-                deleteBuilder.where(condition);
+                    return condition;
+                })
+                .toList();
+
+        final List<LogicCondition> logicConditions = new ArrayList<>(conditions.size());
+        boolean first = true;
+
+        for (Condition condition : conditions) {
+            if (first) {
+                first = false;
+                logicConditions.add(new LogicCondition(LogicOperator.NOOP, condition));
             } else {
-                throw new IllegalStateException("Unsupported statement builder type: " + statementBuilder.getClass().getName());
+                logicConditions.add(new LogicCondition(LogicOperator.AND, condition));
             }
-        });
+        }
+
+        final ConditionGroup conditionGroup = new ConditionGroup(logicConditions, Collections.emptyList());
+
+        if (statementBuilder instanceof UpdateBuilder updateBuilder) {
+            updateBuilder.where(conditionGroup);
+        } else if (statementBuilder instanceof DeleteBuilder deleteBuilder) {
+            deleteBuilder.where(conditionGroup);
+        } else {
+            throw new IllegalStateException("Unsupported statement builder type: " + statementBuilder.getClass().getName());
+        }
     }
 }

@@ -4,18 +4,23 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Groups conditions and condition subgroups using a logical operator.
+ * A group of logically combined conditions and condition subgroups.
  *
- * @param logicOperator   The logical operator used to combine conditions and sub-groups.
- * @param conditions      A list of conditions to be combined.
- * @param conditionGroups A list of subgroups of conditions to be combined.
+ * @param conditions A list of conditions to be combined.
+ * @param subgroups  A list of subgroups of conditions to be combined.
  */
-public record ConditionGroup(LogicOperator logicOperator,
-                             List<Condition> conditions,
-                             List<ConditionGroup> conditionGroups) {
+public record ConditionGroup(List<LogicCondition> conditions,
+                             List<LogicConditionGroup> subgroups) {
 
-    public ConditionGroup(LogicOperator logicOperator,
-                          List<Condition> conditions) {
-        this(logicOperator, conditions, Collections.emptyList());
+    public ConditionGroup(List<LogicCondition> conditions) {
+        this(conditions, Collections.emptyList());
+    }
+
+    public ConditionGroup(LogicCondition condition) {
+        this(List.of(condition));
+    }
+
+    public boolean isEmpty() {
+        return conditions.isEmpty() && subgroups.isEmpty();
     }
 }

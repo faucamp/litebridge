@@ -82,7 +82,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select DTO without related DTOs")
-    void nestedDtos_donNotFetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    void nestedDtos_doNotFetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
@@ -128,8 +128,8 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Select DTO without related DTOs")
-    void select_groupLogicalConditions(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    @DisplayName("Select DTO with nested conditional where clause")
+    void select_nestedLogicalConditions(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
@@ -143,29 +143,15 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // When
         final Person result = litebridge.select(Person.class)
-                .where(c -> c.conditions()
+                .where("name").eq("Alice")
+                .and(q ->
+                        q.where("surname").eq("Jones")
+                                .or("age").eq(20)
+                                .or(q2 -> q2.where("eyeColour").eq("green")
+                                        .and("age").gt(35)))
                 .oneOrThrow();
 
-        // Then
-        assertNull(result.getOwner());
-
-        // Since the data was loaded from the database, saving it again should do nothing
-        litebridge.save(result);
-
-        // Execute the same query, but this time create a partially-constructed related DTO
-        final Account result2 = litebridge.select(Account.class, RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN)
-                .where("id").eq(person.getId())
-                .oneOrThrow();
-
-        // Then
-        assertNotNull(result2.getOwner());
-        assertNotEquals(person, result2.getOwner());
-        assertEquals(person.getId(), result2.getOwner().getId());
-        assertNull(result2.getOwner().getName());
-        assertNull(result2.getOwner().getSurname());
-        assertNull(result2.getOwner().getAccounts());
-        assertNull(result2.getOwner().getEyeColour());
-        assertEquals(0, result2.getOwner().getAge());
+        assertEquals(person, result);
     }
 
     @TestTemplate

@@ -6,7 +6,6 @@ import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.math.MathOperation;
-import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
 import org.litebridgedb.db.spi.update.ColumnValue;
@@ -65,20 +64,7 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
 
         if (!update.where().isEmpty()) {
             sql.append(" WHERE ");
-
-            first = true;
-
-            for (Condition condition : update.where()) {
-                if (first) {
-                    first = false;
-                } else {
-                    sql.append(" AND ");
-                }
-
-                final PreparedSql conditionSql = createCondition(condition, update, connectionProvider);
-                sql.append(conditionSql.sql());
-                bindValues.addAll(conditionSql.bindValues());
-            }
+            appendConditionsAndSubgroups(sql, update.where(), bindValues, update, connectionProvider);
         }
 
         return new PreparedSql(sql.toString(), bindValues);

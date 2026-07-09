@@ -6,10 +6,9 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.impl.function.SelectColumn;
-import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.ConditionGroup;
 import org.litebridgedb.db.spi.query.Join;
-import org.litebridgedb.db.spi.query.LogicOperator;
+import org.litebridgedb.db.spi.query.LogicCondition;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
 
@@ -46,9 +45,9 @@ class OracleColumnIdentifierGeneratorTest {
                 table,
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 
@@ -64,15 +63,15 @@ class OracleColumnIdentifierGeneratorTest {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
-        final List<Condition> conditions = List.of(new Condition(new SelectColumn(column, generator), Operator.EQ, "TEST_VALUE"));
-        final Join join = new Join(table, List.of(new ConditionGroup(LogicOperator.AND, conditions)));
+        final List<LogicCondition> conditions = List.of(new LogicCondition(new SelectColumn(column, generator), Operator.EQ, "TEST_VALUE"));
+        final Join join = new Join(table, new ConditionGroup(conditions));
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column, new ColumnIdentifierGenerator())),
                 Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 
@@ -114,15 +113,15 @@ class OracleColumnIdentifierGeneratorTest {
         // Given
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
-        final List<Condition> conditions = List.of(new Condition(new SelectColumn(column, generator), Operator.USING, null));
-        final Join join = new Join(table, List.of(new ConditionGroup(LogicOperator.AND, conditions)));
+        final List<LogicCondition> conditions = List.of(new LogicCondition(new SelectColumn(column, generator), Operator.USING, null));
+        final Join join = new Join(table, new ConditionGroup(conditions));
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column, generator)),
                 List.of(join),
+                Optional.empty(),
                 Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 
@@ -140,15 +139,15 @@ class OracleColumnIdentifierGeneratorTest {
         final Table joinedTable = new Table("JOINED_TABLE", null);
         final Column column = new Column(joinedTable, "TEST_COLUMN");
         final Column tableColumn = new Column(table, "TEST_COLUMN");
-        final List<Condition> conditions = List.of(new Condition(new SelectColumn(tableColumn, generator), Operator.USING, null));
-        final Join join = new Join(joinedTable, List.of(new ConditionGroup(LogicOperator.AND, conditions)));
+        final List<LogicCondition> conditions = List.of(new LogicCondition(new SelectColumn(tableColumn, generator), Operator.USING, null));
+        final Join join = new Join(table, new ConditionGroup(conditions));
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column, generator)),
                 List.of(join),
+                Optional.empty(),
                 Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 
@@ -168,19 +167,19 @@ class OracleColumnIdentifierGeneratorTest {
         final Column column = new Column(joinedTable2, "TEST_COLUMN");
         final Column tableColumn = new Column(table, "TEST_COLUMN");
 
-        final List<Condition> join1Conditions = List.of(new Condition(new SelectColumn(tableColumn, generator), Operator.EQ, "OTHER"));
-        final List<Condition> join2Conditions = List.of(new Condition(new SelectColumn(tableColumn, generator), Operator.USING, null));
+        final List<LogicCondition> join1Conditions = List.of(new LogicCondition(new SelectColumn(tableColumn, generator), Operator.EQ, "OTHER"));
+        final List<LogicCondition> join2Conditions = List.of(new LogicCondition(new SelectColumn(tableColumn, generator), Operator.USING, null));
 
-        final Join join1 = new Join(joinedTable1, List.of(new ConditionGroup(LogicOperator.AND, join1Conditions)));
-        final Join join2 = new Join(joinedTable2, List.of(new ConditionGroup(LogicOperator.AND, join2Conditions)));
+        final Join join1 = new Join(joinedTable1, new ConditionGroup(join1Conditions));
+        final Join join2 = new Join(joinedTable2, new ConditionGroup(join2Conditions));
 
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column, generator)),
                 List.of(join1, join2),
+                Optional.empty(),
                 Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 
@@ -197,15 +196,15 @@ class OracleColumnIdentifierGeneratorTest {
         final Table table = new Table("TEST_TABLE", "T");
         final Column column = new Column(table, "TEST_COLUMN");
         final Column columnWithAlias = new Column(table, "TEST_COLUMN", "C");
-        final List<Condition> conditions = List.of(new Condition(new SelectColumn(columnWithAlias, generator), Operator.USING, null));
-        final Join join = new Join(table, List.of(new ConditionGroup(LogicOperator.AND, conditions)));
+        final List<LogicCondition> conditions = List.of(new LogicCondition(new SelectColumn(columnWithAlias, generator), Operator.USING, null));
+        final Join join = new Join(table, new ConditionGroup(conditions));
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column, generator)),
                 List.of(join),
+                Optional.empty(),
                 Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 
@@ -223,15 +222,15 @@ class OracleColumnIdentifierGeneratorTest {
         final Table joinedTable = new Table("JOINED_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN");
         final Column joinColumn = new Column(joinedTable, "TEST_COLUMN");
-        final List<Condition> conditions = List.of(new Condition(new SelectColumn(joinColumn, generator), Operator.USING, null));
-        final Join join = new Join(joinedTable, List.of(new ConditionGroup(LogicOperator.AND, conditions)));
+        final List<LogicCondition> conditions = List.of(new LogicCondition(new SelectColumn(joinColumn, generator), Operator.USING, null));
+        final Join join = new Join(table, new ConditionGroup(conditions));
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column, generator)),
                 List.of(join),
+                Optional.empty(),
                 Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 
@@ -248,15 +247,15 @@ class OracleColumnIdentifierGeneratorTest {
         final Table table = new Table("TEST_TABLE", null);
         final Column column = new Column(table, "TEST_COLUMN", "MY_ALIAS");
         final Column tableColumn = new Column(table, "TEST_COLUMN");
-        final List<Condition> conditions = List.of(new Condition(new SelectColumn(tableColumn, generator), Operator.USING, null));
-        final Join join = new Join(table, List.of(new ConditionGroup(LogicOperator.AND, conditions)));
+        final List<LogicCondition> conditions = List.of(new LogicCondition(new SelectColumn(tableColumn, generator), Operator.USING, null));
+        final Join join = new Join(table, new ConditionGroup(conditions));
         final Select select = new Select(
                 table,
                 List.of(new SelectColumn(column, generator)),
                 List.of(join),
+                Optional.empty(),
                 Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList(),
+                Optional.empty(),
                 Collections.emptyList(),
                 Optional.empty());
 

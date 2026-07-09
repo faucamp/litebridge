@@ -3,8 +3,11 @@ package org.litebridgedb.orm.api.sql.update;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.query.LogicOperator;
+import org.litebridgedb.orm.api.condition.QueryConditionBuilder;
 import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
+import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
+import org.litebridgedb.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridgedb.orm.api.update.impl.AbstractUpdater;
 import org.litebridgedb.orm.api.update.model.UpdateSpec;
 import org.litebridgedb.orm.engine.LitebridgeContext;
@@ -19,23 +22,22 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
                       final TransactionalDatabaseProvider databaseProvider,
                       final SelectExpressionMapper selectExpressionMapper,
                       final LitebridgeContext litebridgeContext) {
-        super(new UpdateSpec(selectExpressionMapper), databaseProvider, litebridgeContext);
-        updateSpec.setTable(table);
+        super(new UpdateSpec(table, selectExpressionMapper), databaseProvider, litebridgeContext);
     }
 
     @Override
     public SqlUpdateWhereConditionClause where(final String column) {
-        return where(new SelectColumnSpec(new Column(updateSpec.getTable(), column)));
+        return whereImpl(LogicOperator.NOOP, column);
     }
 
     @Override
     public SqlUpdateWhereConditionClause where(final ExpressionSpec expression) {
-        return whereImpl(LogicOperator.AND, expression);
+        return whereImpl(LogicOperator.NOOP, expression);
     }
 
     @Override
     public SqlUpdateSetStep set(final String column) {
-        final Column col = new Column(updateSpec.getTable(), column);
+        final Column col = new Column(updateSpec.table(), column);
         return new SqlUpdateSetStep(col, this);
     }
 
@@ -44,8 +46,19 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
         return new SqlUpdateSetStep(column.getColumn(), this);
     }
 
-    private SqlUpdateWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionGroupSpec conditionGroupSpec = updateSpec.newWhereConditionGroup(logicOperator);
-        return new SqlUpdateWhereConditionClause(conditionGroupSpec.newCondition(expression), new SqlUpdateWhereConditionClauseTerminalImpl(this), litebridgeContext);
+    SqlUpdateWhereConditionClause whereImpl(final LogicOperator logicOperator, final String column) {
+        return whereImpl(logicOperator, new SelectColumnSpec(new Column(updateSpec.table(), column)));
+    }
+
+    SqlUpdateWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        final ConditionSpec conditionSpec = updateSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
+        return new SqlUpdateWhereConditionClause(conditionSpec, new SqlUpdateWhereConditionClauseTerminalImpl(this), litebridgeContext);
+    }
+
+    SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder query) {
+        final ConditionGroupSpec subgroup = updateSpec.pushConditionGroupSpec(logicOperator);
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, updateSpec.table(), litebridgeContext.fromClauseEngine());
+        query.apply(conditionClauseStart);
+        return new SqlUpdateWhereConditionClauseTerminalImpl(this);
     }
 }
