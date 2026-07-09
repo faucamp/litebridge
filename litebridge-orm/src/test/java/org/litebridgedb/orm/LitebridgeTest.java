@@ -281,10 +281,10 @@ class LitebridgeTest {
         assertEquals(1, update.columnValues().size());
         assertEquals("MY_VAR", update.columnValues().getFirst().column().name());
         assertEquals("updatedValue", update.columnValues().getFirst().value());
-        assertEquals(1, update.where().size());
-        assertInstanceOf(ColumnExpression.class, update.where().getFirst().lhs());
-        assertEquals("MY_ID", ((ColumnExpression) update.where().getFirst().lhs()).column().name());
-        assertEquals(123L, ((LiteralExpression) update.where().getFirst().rhs()).value());
+        assertEquals(1, update.where().conditions().size());
+        assertInstanceOf(ColumnExpression.class, update.where().conditions().getFirst().condition().lhs());
+        assertEquals("MY_ID", ((ColumnExpression) update.where().conditions().getFirst().condition().lhs()).column().name());
+        assertEquals(123L, ((LiteralExpression) update.where().conditions().getFirst().condition().rhs()).value());
     }
 
     @Test

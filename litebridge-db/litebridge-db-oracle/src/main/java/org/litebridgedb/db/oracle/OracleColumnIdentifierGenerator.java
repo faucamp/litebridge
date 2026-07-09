@@ -8,6 +8,7 @@ import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
+import org.litebridgedb.db.spi.query.LogicCondition;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
 
@@ -55,12 +56,20 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
 
         // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the column
         for (Join join : select.joins()) {
-            for (Condition condition : join.conditions()) {
+
+            if (join.conditions().conditions().size() != 1
+                    && join.conditions().subgroups().isEmpty()) {
+                continue;
+            }
+
+            for (LogicCondition logicCondition : join.conditions().conditions()) {
+                final Condition condition = logicCondition.condition();
+
                 if (condition.operator() == Operator.USING
                         // JOIN USING <expression>
                         && condition.lhs() instanceof ColumnExpression columnExpression
                         // Same expression
-                        && (columnExpression.column().equalsIgnoreAlias(column)
+                        && (columnExpression.column().name().equals(column.name())
                         // Same expression but from other side of join
                         || (columnExpression.column().equalsColumnOnlyIgnoreAlias(column)
                         && (select.table().equalsIgnoreAlias(column.table()) || join.table().equalsIgnoreAlias(column.table()))))) {
@@ -74,6 +83,7 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
                 break;
             }
         }
+
         return applyTableQualifier;
     }
 }

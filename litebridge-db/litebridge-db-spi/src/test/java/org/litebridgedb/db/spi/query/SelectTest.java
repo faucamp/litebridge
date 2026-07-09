@@ -13,7 +13,6 @@ import org.litebridgedb.db.spi.expression.DelegateExpression;
 import org.litebridgedb.db.spi.expression.LiteralExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +29,8 @@ class SelectTest {
         final Operator operator = Operator.EQ;
         final Object value = "testValue";
         final Condition condition = new Condition(ColumnExpressionTest.select(column), operator, new LiteralExpression(value));
-        final Join join = new Join(table, List.of(condition));
+        final ConditionGroup conditionGroup = new ConditionGroup(new LogicCondition(LogicOperator.AND, condition));
+        final Join join = new Join(table, conditionGroup);
         final List<SelectExpression> groupBy = List.of(new ColumnExpressionTest.SelectColumnExpression(column));
         final OrderBy orderBy = new OrderBy(new ColumnExpressionTest.SelectColumnExpression(column), true);
         final Limit limit = new Limit(Optional.of(10), Optional.of(20));
@@ -40,9 +40,9 @@ class SelectTest {
                 table,
                 List.of(new TestColumnExpression(column)),
                 List.of(join),
-                List.of(condition),
+                Optional.of(conditionGroup),
                 groupBy,
-                Collections.emptyList(),
+                Optional.empty(),
                 List.of(orderBy),
                 Optional.of(limit)
         );
@@ -54,7 +54,7 @@ class SelectTest {
         assertEquals(column, ((TestColumnExpression) result.expressions().getFirst()).column());
         assertEquals(List.of(join), result.joins());
         assertEquals(List.of(orderBy), result.orderBy());
-        assertEquals(List.of(condition), result.where());
+        assertEquals(conditionGroup, result.where().orElseThrow());
         assertEquals(Optional.of(limit), result.limit());
     }
 

@@ -9,7 +9,6 @@ import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.query.Join;
 import org.litebridgedb.db.spi.query.Limit;
 import org.litebridgedb.db.spi.query.Operator;
@@ -77,21 +76,9 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         }
 
         // Where
-        if (!CollectionUtils.isEmpty(select.where())) {
+        if (select.where().isPresent()) {
             sql.append(" WHERE ");
-
-            first = true;
-            for (Condition condition : select.where()) {
-                if (first) {
-                    first = false;
-                } else {
-                    sql.append(" AND ");
-                }
-
-                final PreparedSql conditionSql = createCondition(condition, select, connectionProvider);
-                sql.append(conditionSql.sql());
-                bindValues.addAll(conditionSql.bindValues());
-            }
+            appendConditionsAndSubgroups(sql, select.where().get(), bindValues, select, connectionProvider);
         }
 
         // Group by
@@ -109,21 +96,9 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
                 sql.append(expression.toSql(select, ClauseType.GROUP_BY));
             }
 
-            if (!select.having().isEmpty()) {
+            if (select.having().isPresent()) {
                 sql.append(" HAVING ");
-
-                first = true;
-                for (Condition condition : select.having()) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        sql.append(" AND ");
-                    }
-
-                    final PreparedSql conditionSql = createCondition(condition, select, connectionProvider);
-                    sql.append(conditionSql.sql());
-                    bindValues.addAll(conditionSql.bindValues());
-                }
+                appendConditionsAndSubgroups(sql, select.having().get(), bindValues, select, connectionProvider);
             }
         }
 
@@ -170,26 +145,15 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
             sb.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(join.table().alias())));
         }
 
-        if (join.conditions().getFirst().operator() != Operator.USING) {
-            sb.append(" ON ");
-        } else {
+        if (join.conditions().conditions().size() == 1
+                && join.conditions().subgroups().isEmpty()
+                && join.conditions().conditions().getFirst().condition().operator() == Operator.USING) {
             sb.append(' ');
+        } else {
+            sb.append(" ON ");
         }
 
-        boolean first = true;
-
-        for (Condition condition : join.conditions()) {
-            if (first) {
-                first = false;
-            } else {
-                sb.append(" AND ");
-            }
-
-            final PreparedSql conditionSql = createCondition(condition, operation, connectionProvider);
-            sb.append(conditionSql.sql());
-            bindValues.addAll(conditionSql.bindValues());
-        }
-
+        appendConditionsAndSubgroups(sb, join.conditions(), bindValues, operation, connectionProvider);
         return new PreparedSql(sb.toString(), bindValues);
     }
 

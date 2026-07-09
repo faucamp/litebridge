@@ -2,10 +2,8 @@ package org.litebridgedb.orm.api.dto;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.query.Join;
-import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.persistence.OrmTable;
 
@@ -63,17 +61,6 @@ class DtoJoinSpecTest {
 
         // Then
         assertSame(table, result);
-    }
-
-    @Test
-    void conditions() {
-        // When
-        final ConditionSpec conditionSpec = dtoJoinSpec.newCondition(new Column(table, "TEST_COLUMN", "c1"));
-
-        // Then
-        assertNotNull(conditionSpec);
-        assertNotNull(dtoJoinSpec.conditions());
-        assertEquals(1, dtoJoinSpec.conditions().size());
     }
 
     @Test

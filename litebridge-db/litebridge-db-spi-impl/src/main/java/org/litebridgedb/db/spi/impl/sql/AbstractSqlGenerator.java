@@ -18,6 +18,10 @@ import org.litebridgedb.db.spi.expression.SelectReference;
 import org.litebridgedb.db.spi.expression.SubselectExpression;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridgedb.db.spi.query.Condition;
+import org.litebridgedb.db.spi.query.ConditionGroup;
+import org.litebridgedb.db.spi.query.LogicCondition;
+import org.litebridgedb.db.spi.query.LogicConditionGroup;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.sql.BindValue;
 import org.litebridgedb.db.spi.sql.PreparedSql;
@@ -190,5 +194,32 @@ public abstract class AbstractSqlGenerator {
         }
 
         return bindValue;
+    }
+
+    protected void appendConditionsAndSubgroups(final StringBuilder sql,
+                                                final ConditionGroup conditionGroup,
+                                                final List<@Nullable BindValue> bindValues,
+                                                final Operation operation,
+                                                final ConnectionProvider connectionProvider) {
+
+        for (LogicCondition logicCondition : conditionGroup.conditions()) {
+            if (logicCondition.logicOperator() != LogicOperator.NOOP) {
+                sql.append(' ').append(logicCondition.logicOperator()).append(' ');
+            }
+
+            final PreparedSql conditionSql = createCondition(logicCondition.condition(), operation, connectionProvider);
+            sql.append(conditionSql.sql());
+            bindValues.addAll(conditionSql.bindValues());
+        }
+
+        for (LogicConditionGroup logicConditionGroup : conditionGroup.subgroups()) {
+            if (logicConditionGroup.logicOperator() != LogicOperator.NOOP) {
+                sql.append(' ').append(logicConditionGroup.logicOperator());
+            }
+
+            sql.append(" (");
+            appendConditionsAndSubgroups(sql, logicConditionGroup.conditionGroup(), bindValues, operation, connectionProvider);
+            sql.append(')');
+        }
     }
 }

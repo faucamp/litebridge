@@ -1,15 +1,10 @@
 package org.litebridgedb.orm.api.update.model;
 
-import org.jspecify.annotations.Nullable;
-import org.litebridgedb.commons.ObjectUtils;
-import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.update.ColumnValue;
 import org.litebridgedb.db.spi.update.Update;
-import org.litebridgedb.orm.api.select.model.ConditionSpec;
+import org.litebridgedb.orm.api.select.impl.AbstractConditionBasedSpec;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
-import org.litebridgedb.orm.expression.ExpressionSpec;
-import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,49 +13,12 @@ import java.util.List;
 /**
  * Base specification for constructing a SQL UPDATE statement.
  */
-public class UpdateSpec {
+public class UpdateSpec extends AbstractConditionBasedSpec {
 
-    @Nullable
-    protected Table table;
     protected final List<ColumnValue> columnValues = new ArrayList<>();
-    @Nullable
-    protected List<ConditionSpec> whereConditions;
 
-    private final SelectExpressionMapper selectExpressionMapper;
-
-    public UpdateSpec(final SelectExpressionMapper selectExpressionMapper) {
-        this.selectExpressionMapper = selectExpressionMapper;
-    }
-
-    public Table getTable() {
-        return ObjectUtils.requireNonNull(table, () -> new IllegalStateException("UpdateSpec.table not set"));
-    }
-
-    public void setTable(final Table table) {
-        this.table = table;
-    }
-
-    public @Nullable List<ConditionSpec> getWhereConditions() {
-        return whereConditions;
-    }
-
-    public void setWhereConditions(@Nullable final List<ConditionSpec> whereConditions) {
-        this.whereConditions = whereConditions;
-    }
-
-    public ConditionSpec newWhereCondition(final Column column) {
-        return newWhereCondition(new SelectColumnSpec(column));
-    }
-
-    public ConditionSpec newWhereCondition(final ExpressionSpec expression) {
-        if (this.whereConditions == null) {
-            whereConditions = new ArrayList<>();
-        }
-
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(expression);
-        whereConditions.add(conditionSpec);
-        return conditionSpec;
+    public UpdateSpec(final Table table, final SelectExpressionMapper selectExpressionMapper) {
+        super(table, selectExpressionMapper);
     }
 
     public void addColumnValue(final ColumnValue columnValue) {
@@ -68,12 +26,8 @@ public class UpdateSpec {
     }
 
     public Update toUpdate() {
-        ObjectUtils.requireNonNull(table, () -> new IllegalStateException("Table not specified"));
-
         return new Update(table,
                 columnValues,
-                whereConditions != null ? whereConditions.stream()
-                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper, Collections.singletonList(table)))
-                        .toList() : Collections.emptyList());
+                conditions.toConditionGroup(selectExpressionMapper, Collections.singleton(table)));
     }
 }

@@ -82,7 +82,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select DTO without related DTOs")
-    void nestedDtos_donNotFetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    void nestedDtos_doNotFetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
@@ -125,6 +125,33 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertNull(result2.getOwner().getAccounts());
         assertNull(result2.getOwner().getEyeColour());
         assertEquals(0, result2.getOwner().getAge());
+    }
+
+    @TestTemplate
+    @DisplayName("Select DTO with nested conditional where clause")
+    void select_nestedLogicalConditions(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+
+        final Person person = new Person();
+        person.setName("Alice");
+        person.setSurname("Smith");
+        person.setAge(20);
+        person.setEyeColour("blue");
+
+        litebridge.save(person);
+
+        // When
+        final Person result = litebridge.select(Person.class)
+                .where("name").eq("Alice")
+                .and(q ->
+                        q.where("surname").eq("Jones")
+                                .or("age").eq(20)
+                                .or(q2 -> q2.where("eyeColour").eq("green")
+                                        .and("age").gt(35)))
+                .oneOrThrow();
+
+        assertEquals(person, result);
     }
 
     @TestTemplate

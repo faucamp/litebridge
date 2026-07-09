@@ -1,5 +1,6 @@
 package org.litebridgedb.orm.api.select;
 
+import org.litebridgedb.orm.api.condition.QueryConditionBuilder;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 
 /**
@@ -21,6 +22,7 @@ public interface ConditionClauseTerminal<DTO,
 
     /**
      * Adds an "AND" condition to the current condition clause using the specified column.
+     * <p>
      * This method is used to chain additional conditions in a SQL query in a fluent manner.
      *
      * @param column the name of the column to be used in the "AND" condition
@@ -30,10 +32,51 @@ public interface ConditionClauseTerminal<DTO,
 
     /**
      * Adds an "AND" condition to the current condition clause using the specified expression.
+     * <p>
      * This method is used to chain additional conditions in a SQL query in a type-safe and fluent manner.
      *
      * @param expression the expression to be used in the "AND" condition
      * @return the parent condition clause interface, allowing further chaining of conditions
      */
     CC and(ExpressionSpec expression);
+
+    /**
+     * Adds an "AND" condition with a nested condition clause.
+     * <p>
+     * The nested condition clause is grouped with parentheses to ensure proper SQL syntax.
+     *
+     * @param query Function that builds the nested condition clause
+     * @return the parent condition clause interface, allowing further chaining of conditions
+     */
+    SELF and(QueryConditionBuilder<DTO> query);
+
+    /**
+     * Adds an "OR" condition to the current condition clause using the specified column.
+     * <p>
+     * This method is used to chain additional conditions in a SQL query in a fluent manner.
+     *
+     * @param column the name of the column to be used in the "AND" condition
+     * @return the parent condition clause interface, allowing further chaining of conditions
+     */
+    CC or(String column);
+
+    /**
+     * Adds an "OR" condition to the current condition clause using the specified expression.
+     * <p>
+     * This method is used to chain additional conditions in a SQL query in a type-safe and fluent manner.
+     *
+     * @param expression the expression to be used in the "AND" condition
+     * @return the parent condition clause interface, allowing further chaining of conditions
+     */
+    CC or(ExpressionSpec expression);
+
+    /**
+     * Adds an "OR" condition with specified nested condition clause.
+     * <p>
+     * The nested condition clause is grouped with parentheses to ensure proper SQL syntax.
+     *
+     * @param query Function that builds the nested condition clause
+     * @return the parent condition clause interface, allowing further chaining of conditions
+     */
+    SELF or(QueryConditionBuilder<DTO> query);
 }

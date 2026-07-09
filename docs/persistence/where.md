@@ -152,21 +152,52 @@ Person person = litebridge.select(Person.class)
 
 ## Logical Operators
 
-Conditions can be combined using `.and()` and `.or()`:
+Conditions can be combined using `.and()` and `.or()`. These operators are available both as standard methods for simple chaining, and as functional variants for creating complex, nested conditions.
+
+### Chaining Conditions
+
+By default, conditions are chained together. Chaining `.and()` and `.or()` methods will result in a flat list of conditions in the generated SQL:
 
 ```java
 litebridge.select(Person.class)
     .where("name").eq("Alice")
     .and("age").gte(21)
+    .or("status").eq("VIP")
     .list();
 ```
 
-By default, Litebridge chains these conditions. Complex grouping of conditions (using parentheses) is also supported 
-via the functional `and()` and `or()` variants:
+SQL Equivalent: `... WHERE NAME = ? AND AGE >= ? OR STATUS = ?`
+
+### Nested Conditions
+
+For more complex logic involving precedence, Litebridge supports nesting conditions using lambdas. When a lambda is used with `.and()` or `.or()`, Litebridge encloses the conditions defined within that lambda in parentheses.
 
 ```java
 litebridge.select(Person.class)
     .where("name").eq("Alice")
     .and(c -> c.where("age").lt(18).or("age").gt(65))
     .list();
+```
+
+SQL Equivalent: `... WHERE NAME = ? AND (AGE < ? OR AGE > ?)`
+
+These logical operators and nesting capabilities are also available for `HAVING` clauses in aggregate queries.
+
+#### Complex Nesting Example
+
+Deeply nested conditions can be constructed to build highly specific filters:
+
+```java
+final Person result = litebridge.select(Person.class)
+        .where("name").eq("Alice")
+        .and(q -> q.where("surname").eq("Jones")
+                   .or("age").eq(20)
+                   .or(q2 -> q2.where("eyeColour").eq("green")
+                               .and("age").gt(35)))
+        .oneOrThrow();
+```
+
+SQL Equivalent:
+```sql
+SELECT ... FROM LB.PERSON WHERE FIRST_NAME = ? AND (SURNAME = ? OR AGE = ? OR (EYE_COLOUR = ? AND AGE > ?))
 ```

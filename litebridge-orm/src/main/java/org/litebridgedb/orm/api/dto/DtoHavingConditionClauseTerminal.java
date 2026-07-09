@@ -1,10 +1,15 @@
 package org.litebridgedb.orm.api.dto;
 
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.query.LogicOperator;
+import org.litebridgedb.orm.api.condition.QueryConditionBuilder;
+import org.litebridgedb.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridgedb.orm.api.select.HavingConditionClauseTerminal;
 import org.litebridgedb.orm.api.select.impl.AbstractHavingClauseTerminal;
+import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
+import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
-import org.litebridgedb.orm.expression.select.SelectFieldSpec;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 
 public final class DtoHavingConditionClauseTerminal<DTO>
@@ -19,11 +24,11 @@ public final class DtoHavingConditionClauseTerminal<DTO>
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 
-    private final OrmTable table;
+    private final OrmTable ormTable;
 
     public DtoHavingConditionClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);
-        table = delegate.table();
+        ormTable = delegate.table();
     }
 
     /**
@@ -35,30 +40,34 @@ public final class DtoHavingConditionClauseTerminal<DTO>
      */
     @Override
     public DtoHavingConditionClause<DTO> and(final String field) {
-        Column column = table.getColumnForFieldName(field).toColumn();
-
-        // Use the aliased column if it is part of the SELECT clause, else use the unaliased column
-        for (final ExpressionSpec expressionSpec : selectSpec.getExpressions()) {
-            Column selectedColumn;
-
-            if (expressionSpec instanceof SelectFieldSpec selectFieldSpec) {
-                selectedColumn = selectFieldSpec.getColumn();
-            } else {
-                continue;
-            }
-
-            if (selectedColumn.equalsIgnoreAlias(column)) {
-                column = selectedColumn;
-                break;
-            }
-        }
-
-        return new DtoHavingConditionClause<>(selectSpec.newWhereCondition(column), this, delegate.litebridgeContext());
+        final Column column = ormTable.getColumnForFieldName(field).toColumn();
+        return and(new SelectColumnSpec(column));
     }
 
     @Override
     public DtoHavingConditionClause<DTO> and(final ExpressionSpec expression) {
-        return new DtoHavingConditionClause<>(selectSpec.newWhereCondition(expression), this, delegate.litebridgeContext());
+        return havingImpl(LogicOperator.AND, expression);
+    }
+
+    @Override
+    public DtoHavingConditionClauseTerminal<DTO> and(final QueryConditionBuilder<DTO> query) {
+        return havingImpl(LogicOperator.AND, query);
+    }
+
+    @Override
+    public DtoHavingConditionClause<DTO> or(final String field) {
+        final Column column = ormTable.getColumnForFieldName(field).toColumn();
+        return or(new SelectColumnSpec(column));
+    }
+
+    @Override
+    public DtoHavingConditionClause<DTO> or(final ExpressionSpec expression) {
+        return havingImpl(LogicOperator.OR, expression);
+    }
+
+    @Override
+    public DtoHavingConditionClauseTerminal<DTO> or(final QueryConditionBuilder<DTO> query) {
+        return havingImpl(LogicOperator.OR, query);
     }
 
     @Override
@@ -69,5 +78,17 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
         return new DtoOrderByClause<>(selectSpec.newOrderBy(fields), (DtoSelector<DTO>) delegate);
+    }
+
+    private DtoHavingConditionClause<DTO> havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        final ConditionSpec conditionSpec = selectSpec.currentHavingConditionGroupSpec().newCondition(logicOperator, expression);
+        return new DtoHavingConditionClause<>(conditionSpec, this, delegate.litebridgeContext());
+    }
+
+    private DtoHavingConditionClauseTerminal<DTO> havingImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
+        final ConditionGroupSpec subgroup = selectSpec.pushHavingConditionGroup(logicOperator);
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, ormTable, delegate.litebridgeContext().fromClauseEngine());
+        query.apply(conditionClauseStart);
+        return this;
     }
 }

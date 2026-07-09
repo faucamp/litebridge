@@ -1,34 +1,27 @@
 package org.litebridgedb.orm.api.dto;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridgedb.commons.ObjectUtils;
-import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.db.spi.query.Join;
-import org.litebridgedb.orm.api.select.model.ConditionSpec;
-import org.litebridgedb.orm.api.select.model.JoinSpec;
+import org.litebridgedb.orm.api.select.impl.AbstractJoinSpec;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
-import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public final class DtoJoinSpec implements JoinSpec, DtoDataSpec {
+public final class DtoJoinSpec extends AbstractJoinSpec implements DtoDataSpec {
 
     private final Class<?> dtoClass;
     private final OrmTable ormTable;
-    private final Table table;
-    private final List<ConditionSpec> conditions = new ArrayList<>();
+
     private final SelectExpressionMapper selectExpressionMapper;
     @Nullable
     private List<DtoSelectSpec.FieldColumn> fieldColumns;
 
     public DtoJoinSpec(final Class<?> dtoClass, final OrmTable ormTable, final Table table, final SelectExpressionMapper selectExpressionMapper) {
+        super(table, selectExpressionMapper);
         this.dtoClass = dtoClass;
         this.ormTable = ormTable;
-        this.table = table;
         this.selectExpressionMapper = selectExpressionMapper;
     }
 
@@ -47,37 +40,5 @@ public final class DtoJoinSpec implements JoinSpec, DtoDataSpec {
 
     public void setFieldColumns(@Nullable final List<DtoSelectSpec.FieldColumn> fieldColumns) {
         this.fieldColumns = fieldColumns;
-    }
-
-    @Override
-    public Table table() {
-        return table;
-    }
-
-    @Override
-    public List<ConditionSpec> conditions() {
-        return conditions;
-    }
-
-    public ConditionSpec newCondition(final Column column) {
-        ObjectUtils.requireNonNull(column.alias(), () -> new IllegalArgumentException("Column alias not specified"));
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(column);
-        conditions.add(conditionSpec);
-        return conditionSpec;
-    }
-
-    public ConditionSpec newCondition(final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(expression);
-        conditions.add(conditionSpec);
-        return conditionSpec;
-    }
-
-    @Override
-    public Join toJoin() {
-        return new Join(table, conditions.stream()
-                .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper, Collections.singletonList(table)))
-                .toList());
     }
 }

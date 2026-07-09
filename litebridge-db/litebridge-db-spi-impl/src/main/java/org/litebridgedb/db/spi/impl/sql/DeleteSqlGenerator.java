@@ -4,7 +4,6 @@ import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.convert.TypeConverter;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridgedb.db.spi.query.Condition;
 import org.litebridgedb.db.spi.sql.BindValue;
 import org.litebridgedb.db.spi.sql.PreparedSql;
 import org.litebridgedb.db.spi.tx.ConnectionProvider;
@@ -26,22 +25,9 @@ public class DeleteSqlGenerator extends AbstractSqlGenerator {
         final StringBuilder sql = appendTable(new StringBuilder("DELETE FROM "), delete.table());
         final List<BindValue> bindValues = new ArrayList<>();
 
-        boolean first = true;
-
         if (!delete.where().isEmpty()) {
             sql.append(" WHERE ");
-
-            for (Condition condition : delete.where()) {
-                if (first) {
-                    first = false;
-                } else {
-                    sql.append(" AND ");
-                }
-
-                final PreparedSql conditionSql = createCondition(condition, delete, connectionProvider);
-                sql.append(conditionSql.sql());
-                bindValues.addAll(conditionSql.bindValues());
-            }
+            appendConditionsAndSubgroups(sql, delete.where(), bindValues, delete, connectionProvider);
         }
 
         return new PreparedSql(sql.toString(), bindValues);

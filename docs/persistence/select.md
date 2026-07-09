@@ -494,7 +494,7 @@ List<Row> results = litebridge.select(row(
 
 ### Grouping and Having
 
-The select API supports `groupBy()` and `having()` clauses for aggregate queries.
+The select API supports `groupBy()` and `having()` clauses for aggregate queries. Just like `WHERE` clauses, `HAVING` clauses support `.and()`, `.or()`, and nested conditions:
 
 ```java
 import static org.litebridgedb.orm.expression.Fn.*;
@@ -503,6 +503,7 @@ List<Row> results = litebridge.select(row(f("eyeColour"), count()))
         .from(Person.class)
         .groupBy("eyeColour")
         .having(count()).gt(5)
+        .or(c -> c.where(f("eyeColour")).eq("blue").and(count()).gt(0))
         .list();
 ```
 

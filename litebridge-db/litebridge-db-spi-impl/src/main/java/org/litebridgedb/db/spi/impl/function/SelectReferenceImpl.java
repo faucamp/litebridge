@@ -8,6 +8,8 @@ import org.litebridgedb.db.spi.expression.DelegateExpression;
 import org.litebridgedb.db.spi.expression.SelectReference;
 import org.litebridgedb.db.spi.impl.ColumnIdentifierGenerator;
 
+import java.util.StringJoiner;
+
 public class SelectReferenceImpl extends SelectReference {
 
     private final ColumnIdentifierGenerator columnIdentifierGenerator;
@@ -26,5 +28,12 @@ public class SelectReferenceImpl extends SelectReference {
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
         return columnIdentifierGenerator.createColumnRef(column, operation, clause);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", SelectReferenceImpl.class.getSimpleName() + "[", "]")
+                .add("column=" + column)
+                .toString();
     }
 }

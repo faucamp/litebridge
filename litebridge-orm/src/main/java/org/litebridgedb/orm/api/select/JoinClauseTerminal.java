@@ -1,6 +1,10 @@
 package org.litebridgedb.orm.api.select;
 
+import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
+import org.litebridgedb.orm.api.dto.DtoWhereConditionClauseTerminal;
 import org.litebridgedb.orm.expression.ExpressionSpec;
+
+import java.util.function.Function;
 
 /**
  * Terminal clause in a fluent API for constructing SQL JOIN statements.

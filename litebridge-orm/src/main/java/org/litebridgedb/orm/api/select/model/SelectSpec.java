@@ -8,19 +8,21 @@ import org.litebridgedb.db.spi.expression.ClauseType;
 import org.litebridgedb.db.spi.expression.ColumnExpression;
 import org.litebridgedb.db.spi.expression.DelegateExpression;
 import org.litebridgedb.db.spi.expression.SelectExpression;
-import org.litebridgedb.db.spi.query.Condition;
+import org.litebridgedb.db.spi.query.ConditionGroup;
 import org.litebridgedb.db.spi.query.Join;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.OrderBy;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.intent.ExpressionSpecArray;
-import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,12 +49,14 @@ public abstract class SelectSpec {
     protected @Nullable Table table;
     protected List<ExpressionSpec> expressionSpecs = new ArrayList<>();
     protected @Nullable List<JoinSpec> joins;
-    protected @Nullable List<ConditionSpec> whereConditions;
+    protected @Nullable ConditionGroupSpec whereConditions;
     protected @Nullable GroupBySpec groupBy;
-    protected @Nullable List<ConditionSpec> havingConditions;
+    protected @Nullable ConditionGroupSpec havingConditions;
     protected @Nullable List<OrderBySpec> orderBys;
     protected @Nullable LimitSpec limit;
     protected @Nullable Map<Class<?>, String> dtoAliases;
+    private final Deque<ConditionGroupSpec> whereConditionGroupStack = new ArrayDeque<>();
+    private final Deque<ConditionGroupSpec> havingConditionGroupStack = new ArrayDeque<>();
 
     public SelectSpec(final LitebridgeContext litebridgeContext) {
         this.litebridgeContext = litebridgeContext;
@@ -98,38 +102,40 @@ public abstract class SelectSpec {
         this.joins = joins;
     }
 
-    public @Nullable List<ConditionSpec> getWhereConditions() {
-        return whereConditions;
-    }
-
-    public void setWhereConditions(@Nullable final List<ConditionSpec> whereConditions) {
-        this.whereConditions = whereConditions;
-    }
-
-    public ConditionSpec newWhereCondition(final Column column) {
-        return newWhereCondition(new SelectColumnSpec(column));
-    }
-
-    public ConditionSpec newWhereCondition(final ExpressionSpec expressionSpec) {
-        if (this.whereConditions == null) {
-            whereConditions = new ArrayList<>();
+    public ConditionGroupSpec currentWhereConditionGroupSpec() {
+        if (whereConditionGroupStack.isEmpty()) {
+            return ensureWhereConditions();
         }
 
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(expressionSpec);
-        whereConditions.add(conditionSpec);
-        return conditionSpec;
+        return whereConditionGroupStack.peek();
     }
 
-    public ConditionSpec newHavingCondition(final ExpressionSpec expressionSpec) {
-        if (this.havingConditions == null) {
-            havingConditions = new ArrayList<>();
+    public ConditionGroupSpec pushWhereConditionGroup(final LogicOperator logicOperator) {
+        final ConditionGroupSpec subgroup = ensureWhereConditions().newSubgroup(logicOperator).conditionGroupSpec();
+        whereConditionGroupStack.push(subgroup);
+        return subgroup;
+    }
+
+    public void popWhereConditionGroup() {
+        whereConditionGroupStack.pop();
+    }
+
+    public ConditionGroupSpec currentHavingConditionGroupSpec() {
+        if (havingConditionGroupStack.isEmpty()) {
+            return ensureHavingConditions();
         }
 
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(expressionSpec);
-        havingConditions.add(conditionSpec);
-        return conditionSpec;
+        return havingConditionGroupStack.peek();
+    }
+
+    public ConditionGroupSpec pushHavingConditionGroup(final LogicOperator logicOperator) {
+        final ConditionGroupSpec subgroup = ensureHavingConditions().newSubgroup(logicOperator).conditionGroupSpec();
+        havingConditionGroupStack.push(subgroup);
+        return subgroup;
+    }
+
+    public void popHavingConditionGroup() {
+        havingConditionGroupStack.pop();
     }
 
     public @Nullable GroupBySpec getGroupBy() {
@@ -232,9 +238,7 @@ public abstract class SelectSpec {
                 .collect(Collectors.toSet());
 
         // WHERE
-        final List<Condition> whereClause = whereConditions != null ? whereConditions.stream()
-                .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper, selectedTables))
-                .toList() : Collections.emptyList();
+        final Optional<ConditionGroup> whereClause = whereConditions != null ? Optional.of(whereConditions.toConditionGroup(selectExpressionMapper, selectedTables)) : Optional.empty();
 
         // GROUP BY
         final List<SelectExpression> groupByClause;
@@ -254,6 +258,8 @@ public abstract class SelectSpec {
             groupByClause = Collections.emptyList();
         }
 
+        final Optional<ConditionGroup> havingClause = havingConditions != null ? Optional.of(havingConditions.toConditionGroup(selectExpressionMapper, selectedTables)) : Optional.empty();
+
         final List<OrderBy> orderByClause;
 
         // ORDER BY
@@ -272,9 +278,7 @@ public abstract class SelectSpec {
                 joinClause,
                 whereClause,
                 groupByClause,
-                havingConditions != null ? havingConditions.stream()
-                        .map(conditionSpec -> conditionSpec.toCondition(selectExpressionMapper, selectedTables))
-                        .toList() : Collections.emptyList(),
+                havingClause,
                 orderByClause,
                 limit != null ? limit.toLimit() : Optional.empty());
     }
@@ -326,5 +330,21 @@ public abstract class SelectSpec {
                     }
                 })
                 .toList();
+    }
+
+    private ConditionGroupSpec ensureWhereConditions() {
+        if (whereConditions == null) {
+            whereConditions = new ConditionGroupSpec();
+        }
+
+        return whereConditions;
+    }
+
+    private ConditionGroupSpec ensureHavingConditions() {
+        if (havingConditions == null) {
+            havingConditions = new ConditionGroupSpec();
+        }
+
+        return havingConditions;
     }
 }

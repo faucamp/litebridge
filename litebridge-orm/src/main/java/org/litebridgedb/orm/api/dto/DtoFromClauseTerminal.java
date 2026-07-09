@@ -2,10 +2,15 @@ package org.litebridgedb.orm.api.dto;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.query.LogicOperator;
+import org.litebridgedb.orm.api.condition.QueryConditionBuilder;
+import org.litebridgedb.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
+import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
+import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.GroupBySpec;
-import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
 
@@ -41,49 +46,29 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     @Override
     public DtoWhereConditionClause<DTO> where(final String field) {
-        Column column = ormTable.getColumnForFieldName(field).toColumn();
-
-        // Use the aliased column if it is part of the SELECT clause, else use the unaliased column
-        if (!selectSpec.getExpressions().isEmpty()) {
-            Column replacementColumn = null;
-
-            // Look for an exact column match
-            for (ExpressionSpec expressionSpec : selectSpec.getExpressions()) {
-                Column selectedColumn;
-
-                if (expressionSpec instanceof ColumnExpressionSpec columnExpression) {
-                    selectedColumn = columnExpression.getColumn();
-                } else {
-                    continue;
-                }
-
-                if (selectedColumn.equalsIgnoreAlias(column)) {
-                    replacementColumn = selectedColumn;
-                    break;
-                }
-            }
-
-            // No exact match; use the table's alias if it matches
-            if (replacementColumn == null && column.table().equalsIgnoreAlias(selectSpec.getTable())) {
-                replacementColumn = new Column(selectSpec.getTable(), column.name(), column.alias());
-            }
-
-            if (replacementColumn != null) {
-                column = replacementColumn;
-            }
-        } else {
-            // Select all - override the column's table with the selected one
-            if (column.table() != selectSpec.getTable() && column.table().equalsIgnoreAlias(selectSpec.getTable())) {
-                column = new Column(selectSpec.getTable(), column.name(), column.alias());
-            }
-        }
-
-        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(column), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate), delegate.litebridgeContext());
+        final Column column = ormTable.getColumnForFieldName(field).toColumn();
+        return where(new SelectColumnSpec(column));
     }
 
     @Override
     public DtoWhereConditionClause<DTO> where(final ExpressionSpec expression) {
-        return new DtoWhereConditionClause<>(selectSpec.newWhereCondition(expression), new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate), delegate.litebridgeContext());
+        return whereImpl(LogicOperator.NOOP, expression);
+    }
+
+    /**
+     * Adds a nested condition clause.
+     * <p>
+     * The nested condition clause is grouped with parentheses to ensure proper SQL syntax.
+     *
+     * @param query Function that builds the nested condition clause
+     * @return the parent condition clause interface, allowing further chaining of conditions
+     */
+    public DtoWhereConditionClauseTerminal<DTO> where(final QueryConditionBuilder<DTO> query) {
+        final ConditionGroupSpec conditionGroupSpec = selectSpec.pushWhereConditionGroup(LogicOperator.NOOP);
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(conditionGroupSpec, ormTable, delegate.litebridgeContext().fromClauseEngine());
+        query.apply(conditionClauseStart);
+        selectSpec.popWhereConditionGroup();
+        return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate);
     }
 
     /**
@@ -219,5 +204,10 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
                 throw new IllegalArgumentException("Invalid composite primary key value type provided; expected: List<?>, Object[], or Map<String, ?>");
             }
         }
+    }
+
+    private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        final ConditionSpec conditionSpec = selectSpec.currentWhereConditionGroupSpec().newCondition(logicOperator, expression);
+        return new DtoWhereConditionClause<>(conditionSpec, new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate), delegate.litebridgeContext());
     }
 }

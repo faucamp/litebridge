@@ -2,9 +2,13 @@ package org.litebridgedb.orm.api.sql;
 
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.Row;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.orm.api.select.impl.AbstractFromClauseTerminal;
+import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
+import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.GroupBySpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
         SqlJoinClause,
@@ -33,12 +37,12 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     @Override
     public SqlWhereConditionClause where(final String column) {
         final Column spiColumn = new Column(selectSpec.getTable(), column);
-        return new SqlWhereConditionClause(selectSpec.newWhereCondition(spiColumn), new SqlWhereConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
+        return where(new SelectColumnSpec(spiColumn));
     }
 
     @Override
     public SqlWhereConditionClause where(final ExpressionSpec expression) {
-        return new SqlWhereConditionClause(selectSpec.newWhereCondition(expression), new SqlWhereConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
+        return whereImpl(LogicOperator.NOOP, expression);
     }
 
     @Override
@@ -61,5 +65,10 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
         return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+    }
+
+    private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        final ConditionSpec conditionSpec = selectSpec.currentWhereConditionGroupSpec().newCondition(logicOperator, expression);
+        return new SqlWhereConditionClause(conditionSpec, new SqlWhereConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
     }
 }

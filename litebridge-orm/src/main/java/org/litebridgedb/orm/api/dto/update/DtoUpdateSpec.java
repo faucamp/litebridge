@@ -11,10 +11,9 @@ public final class DtoUpdateSpec extends UpdateSpec implements DtoDataSpec {
     private final OrmTable dtoTable;
 
     public DtoUpdateSpec(final Class<?> dtoClass, final OrmTable dtoTable, final SelectExpressionMapper selectExpressionMapper) {
-        super(selectExpressionMapper);
+        super(dtoTable.getMetaData().toTable(), selectExpressionMapper);
         this.dtoClass = dtoClass;
         this.dtoTable = dtoTable;
-        this.table = dtoTable.getMetaData().toTable();
     }
 
     public Class<?> dtoClass() {

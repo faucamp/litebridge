@@ -4,13 +4,13 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.Column;
 import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.orm.api.select.impl.AbstractJoinClause;
 import org.litebridgedb.orm.api.select.model.ConditionSpec;
-import org.litebridgedb.orm.api.spec.FieldColumnSpec;
-import org.litebridgedb.orm.expression.ColumnExpressionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.ProtoExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.meta.QFInspector;
 import org.litebridgedb.orm.meta.QueryField;
@@ -102,7 +102,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
                         && column.equalsIgnoreAlias(rightColumn))
                 .findFirst().orElseThrow(() -> new IllegalArgumentException("Left JOIN column not found"));
 
-        final ConditionSpec conditionSpec = joinSpec.newCondition(leftColumn);
+        final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(leftColumn));
         final ColumnMetaData targetColumnMetaData = rightOrmTable.getColumnMetaData(rightColumnMetaData.getJoinColumn());
 
         if (rightColumnMetaData.name().equals(targetColumnMetaData.name())) {
@@ -144,11 +144,11 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         selectSpec.addExpressions(joinFieldColumns);
 
         // Create JOIN clause
-        joinSpec.setFieldColumns(joinFieldColumns.stream().map(selectField ->  new DtoSelectSpec.FieldColumn(selectField.field(), selectField.getColumn())).toList());
+        joinSpec.setFieldColumns(joinFieldColumns.stream().map(selectField -> new DtoSelectSpec.FieldColumn(selectField.field(), selectField.getColumn())).toList());
 
         final Column rightColumn = aliasGenerator.aliasColumn(rightTable, rightOrmTable.getColumnMetaData(mappedManyToMany.inverseJoinColumn()));
 
-        final ConditionSpec conditionSpec = joinSpec.newCondition(leftColumn);
+        final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(leftColumn));
         conditionSpec.setOperator(Operator.EQ);
         conditionSpec.setValue(rightColumn);
 
@@ -168,7 +168,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         final Column rightColumn = aliasGenerator.aliasColumn(rightTable, rightOrmTable.getColumnMetaData(mappedManyToMany.joinColumn()));
 
         final DtoJoinSpec intermediateJoinSpec = selectSpec.newJoinSpecBefore(joinSpec, selectSpec.dtoClass(), rightOrmTable, rightTable);
-        final ConditionSpec intermediateJoinCondition = intermediateJoinSpec.newCondition(leftColumn);
+        final ConditionSpec intermediateJoinCondition = intermediateJoinSpec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(leftColumn));
         intermediateJoinCondition.setOperator(Operator.EQ);
         intermediateJoinCondition.setValue(rightColumn);
 

@@ -2,8 +2,7 @@ package org.litebridgedb.db.spi.update;
 
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.query.Condition;
-
-import java.util.List;
+import org.litebridgedb.db.spi.query.ConditionGroup;
 
 /**
  * A SQL DELETE statement targeting a specific table with optional conditions.
@@ -21,6 +20,6 @@ import java.util.List;
  * @param where The conditions for the rows to delete. If empty, all rows in the table
  *              will be deleted (depending on database permissions and constraints).
  */
-public record Delete(Table table, List<Condition> where)
+public record Delete(Table table, ConditionGroup where)
         implements UpdateStatement {
 }

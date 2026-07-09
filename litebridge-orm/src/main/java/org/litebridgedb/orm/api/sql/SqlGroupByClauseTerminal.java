@@ -1,7 +1,10 @@
 package org.litebridgedb.orm.api.sql;
 
 import org.litebridgedb.db.spi.Row;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.orm.api.select.impl.AbstractGroupByClauseTerminal;
+import org.litebridgedb.orm.api.select.model.ConditionGroupSpec;
+import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 
 public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
@@ -17,9 +20,7 @@ public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
 
     @Override
     public SqlHavingConditionClause having(final ExpressionSpec expression) {
-        return new SqlHavingConditionClause(selectSpec.newHavingCondition(expression),
-                new SqlHavingConditionClauseTerminal((SqlSelector) delegate),
-                delegate.litebridgeContext());
+        return havingImpl(LogicOperator.NOOP, expression);
     }
 
     @Override
@@ -30,5 +31,10 @@ public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
         return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+    }
+
+    private SqlHavingConditionClause havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        final ConditionSpec conditionSpec = selectSpec.currentHavingConditionGroupSpec().newCondition(logicOperator, expression);
+        return new SqlHavingConditionClause(conditionSpec, new SqlHavingConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
     }
 }

@@ -9,6 +9,7 @@ import org.litebridgedb.db.spi.expression.SelectExpression;
 import org.litebridgedb.db.spi.expression.SelectReference;
 import org.litebridgedb.db.spi.expression.SubselectExpression;
 import org.litebridgedb.db.spi.query.Condition;
+import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.Operator;
 import org.litebridgedb.db.spi.query.Select;
 import org.litebridgedb.orm.expression.ColumnExpressionSpec;
@@ -17,6 +18,7 @@ import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.StringJoiner;
 
 /**
  * Specification for a condition in a database query.
@@ -105,5 +107,14 @@ public class ConditionSpec {
 
         final LiteralExpression literalExpression = selectExpressionMapper.sqlFunctionRegistry().select().literal().create(value);
         return new Condition(lhsSelectExpression, operator, literalExpression);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", ConditionSpec.class.getSimpleName() + "[", "]")
+                .add("lhs=" + lhs)
+                .add("operator=" + operator)
+                .add("value=" + value)
+                .toString();
     }
 }
