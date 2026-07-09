@@ -3,6 +3,7 @@ package org.litebridgedb.orm.e2e.sql;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridgedb.db.spi.Row;
+import org.litebridgedb.db.spi.update.UpdateResult;
 import org.litebridgedb.orm.e2e.AbstractE2eTest;
 import org.litebridgedb.orm.e2e.basic.dto.Person;
 import org.litebridgedb.orm.e2e.setup.DbEnvDtoTableMapper;
@@ -321,6 +322,27 @@ class SqlE2eTest extends AbstractE2eTest {
                 .one();
 
         assertTrue(results.isPresent());
+    }
+
+    @TestTemplate
+    @DisplayName("Select LIKE")
+    void nativeSql(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        final String tableName = tableMapper.qualifyName("PERSON");
+        final String personIdColumn = tableMapper.transformColumnName("PERSON_ID");
+        final String firstNameColumn = tableMapper.transformColumnName("FIRST_NAME");
+        final String surnameColumn = tableMapper.transformColumnName("SURNAME");
+
+        // Insert data using native SQL
+        final UpdateResult updateResult = litebridge.nativeSql().execute(
+                "INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?)".formatted(tableName, personIdColumn, firstNameColumn, surnameColumn),
+                123L, "Name1", "Surname1");
+        assertEquals(1, updateResult.rowsAffected());
+
+        // Query using a native SQL query
+        final List<Row> rows = litebridge.nativeSql().query(
+                "SELECT * FROM %s WHERE %s LIKE ?".formatted(tableName, firstNameColumn),
+                "%me1");
+        assertEquals(1, rows.size());
     }
 
     private void insertTestPersonRecords(final String personTableName) throws SQLException {

@@ -42,6 +42,7 @@ import org.litebridgedb.orm.expression.TypeOverride;
 import org.litebridgedb.orm.expression.TypeOverrideExpressionSpec;
 import org.litebridgedb.orm.expression.intent.ConvertIntent;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
+import org.litebridgedb.orm.nativesql.NativeSqlContext;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.DtoEntityMapping;
 import org.litebridgedb.orm.persistence.EntityDtoMapper;
@@ -492,6 +493,17 @@ public final class Litebridge implements SelectApi {
      */
     public void delete(final String tableName) {
         delete(tableName, sqlDeletor -> sqlDeletor);
+    }
+
+    /**
+     * Provides access to execute native/raw SQL queries.
+     * <p>
+     * These types of queries/statements bypass most of the ORM layers and returns the low-level result.
+     *
+     * @return the native SQL execution API
+     */
+    public NativeSqlContext nativeSql() {
+        return new NativeSqlContext(databaseProvider);
     }
 
     /**
