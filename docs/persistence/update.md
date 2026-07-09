@@ -9,6 +9,7 @@ Updates and inserts can be performed in a variety of ways:
 - Explicitly by updating an existing DTO via `litebridge.update(Object)`
 - Explicitly via a DTO-level query: `litebridge.update(Object, Function)`
 - Explicitly via a SQL-level query: `litebridge.update(String, Function)`
+- **Natively** via raw SQL: `litebridge.nativeSql().execute(String, ...)`
 
 For the query-based APIs, the `Function` allows access to chain a sequence of update clauses,
 similar to the [`select()`](select.md) API.
@@ -112,13 +113,16 @@ litebridge.update(Person.class, p -> p
 
 ### SQL-level updates
 
-Updates may be perfomed on a SQL-level, without requiring a DTO mapping:
+Updates may be perfomed on a SQL-level using the fluent API, without requiring a DTO mapping:
 
 ```java
 litebridge.update("LB.PERSON", p -> p
         .set("AGE").to(50)
         .where("FIRST_NAME").eq("Bob"));
 ```
+
+> [!NOTE]
+> If you need to execute raw SQL `UPDATE`, `INSERT`, `DELETE` or DDL strings without using the fluent API, see [Native SQL Execution](native-sql.md).
 
 ### Atomic operations
 

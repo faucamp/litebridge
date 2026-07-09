@@ -8,6 +8,7 @@ Litebridge provides a fluent API for deleting data, which allows for:
   * direct deletion of DTOs 
   * deletion via queries
 * SQL-level deletes
+* **Native SQL** deletes via raw SQL strings
 
 ## Deleting DTOs
 
@@ -74,3 +75,6 @@ To delete all rows from a table without specifying a query:
 ```java
 litebridge.delete("LB.PERSON");
 ```
+
+> [!NOTE]
+> If you need to execute raw SQL `DELETE` strings without using the fluent API, see [Native SQL Execution](native-sql.md).

@@ -337,12 +337,14 @@ class SqlE2eTest extends AbstractE2eTest {
         final UpdateResult updateResult = litebridge.nativeSql().execute(
                 "INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?)".formatted(tableName, personIdColumn, firstNameColumn, surnameColumn),
                 123L, "Name1", "Surname1");
+
         assertEquals(1, updateResult.rowsAffected());
 
         // Query using a native SQL query, positional bind parameters
         final List<Row> rows = litebridge.nativeSql().query(
                 "SELECT * FROM %s WHERE %s LIKE ?".formatted(tableName, firstNameColumn),
                 "%me1");
+
         assertEquals(1, rows.size());
 
         // Query using a native SQL query, named bind parameters
@@ -350,7 +352,24 @@ class SqlE2eTest extends AbstractE2eTest {
                 "SELECT * FROM %s WHERE %s LIKE :firstName AND %s = :surname AND %s <> :firstName".formatted(tableName, firstNameColumn, surnameColumn, surnameColumn),
                 Map.of("firstName", "%me1",
                         "surname", "Surname1"));
+
         assertEquals(1, rows2.size());
+
+        // Query without bind parameters
+        final List<Row> rows3 = litebridge.nativeSql().query("SELECT COUNT(*) FROM %s".formatted(tableName));
+        assertEquals(1, rows3.size());
+
+        // Native query and map result back to a DTO
+        tableMapper.registerPersonDtoTableMapping(litebridge);
+
+        final Person person = litebridge.nativeSql().query(
+                        "SELECT * FROM %s WHERE %s = ?".formatted(tableName, personIdColumn),
+                        123L)
+                .stream()
+                .map(row -> litebridge.toDto(row, Person.class))
+                .findFirst().orElseThrow();
+
+        assertEquals("Name1", person.getName());
     }
 
     private void insertTestPersonRecords(final String personTableName) throws SQLException {

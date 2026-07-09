@@ -10,11 +10,12 @@ covering use cases for both DTO-marshalling and raw SQL queries.
 Each query is built-up using a chained sequence of methods corresponding to the SQL clauses. The query is executed
 by invoking a terminal method, which defines how results must be returned.
 
-Litebridge supports four main types of select queries:
+Litebridge supports five main types of select queries:
 - **DTO-level queries**: Selecting full DTO objects from registered tables.
-- **SQL-level queries**: Selecting specific columns or `*` from any table.
+- **SQL-level queries**: Selecting specific columns or `*` from any table using a fluent API.
 - **Expression-level queries**: Selecting specific SQL expressions, functions, or using ORM-side conversions.
 - **Metamodel-level queries**: Using type-safe metamodel fields to build queries.
+- **Native SQL queries**: Executing raw SQL strings directly via `litebridge.nativeSql().query()`.
 
 ## Usage
 
@@ -163,8 +164,12 @@ Long maxAge = litebridge.select(age.max()).from(Person.class).oneOrThrow();
 
 ## SQL-level queries
 
-When making a SQL-level query, no prior registration steps are required. Specific columns can be selected
-using the `litebridge.select(String...)` method, or all columns can be selected using `litebridge.select()`:
+SQL-level queries allow performing SQL queries using Litebridge's fluent API, without requiring table registration or a DTO mapping. 
+
+Specific columns can be selected using the `litebridge.select(String...)` method, or all columns can be selected using `litebridge.select()`:
+
+> [!NOTE]
+> To execute raw SQL strings without using the fluent API, see [Native SQL Execution](native-sql.md).
 
 ```java
 // Selects all columns from the PERSON table
