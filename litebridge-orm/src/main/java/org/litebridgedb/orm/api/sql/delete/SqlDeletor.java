@@ -51,6 +51,7 @@ public final class SqlDeletor extends AbstractDeletor<DeleteSpec> implements Sql
         final ConditionGroupSpec subgroup = deleteSpec.pushConditionGroupSpec(logicOperator);
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, deleteSpec.table(), litebridgeContext.fromClauseEngine());
         query.apply(conditionClauseStart);
+        deleteSpec.popConditionGroupSpec();
         return new SqlDeleteWhereConditionClauseTerminalImpl(this);
     }
 }

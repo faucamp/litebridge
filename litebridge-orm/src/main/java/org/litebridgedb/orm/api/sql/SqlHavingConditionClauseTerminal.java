@@ -79,6 +79,7 @@ public final class SqlHavingConditionClauseTerminal
         final ConditionGroupSpec subgroup = selectSpec.pushHavingConditionGroup(logicOperator);
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, selectSpec.getTable(), delegate.litebridgeContext().fromClauseEngine());
         query.apply(conditionClauseStart);
-        return new SqlHavingConditionClauseTerminal((SqlSelector) delegate);
+        selectSpec.popHavingConditionGroup();
+        return this;
     }
 }

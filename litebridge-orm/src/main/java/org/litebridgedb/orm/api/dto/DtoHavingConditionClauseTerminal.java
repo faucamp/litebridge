@@ -89,6 +89,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
         final ConditionGroupSpec subgroup = selectSpec.pushHavingConditionGroup(logicOperator);
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, ormTable, delegate.litebridgeContext().fromClauseEngine());
         query.apply(conditionClauseStart);
+        selectSpec.popHavingConditionGroup();
         return this;
     }
 }

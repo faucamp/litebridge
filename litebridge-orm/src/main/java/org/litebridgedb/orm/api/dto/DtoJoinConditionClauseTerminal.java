@@ -148,6 +148,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         final ConditionGroupSpec subgroup = joinSpec.pushConditionGroupSpec(logicOperator);
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, joinSpec.dtoTable(), delegate.litebridgeContext().fromClauseEngine());
         query.apply(conditionClauseStart);
-        return new DtoJoinConditionClauseTerminal<>(joinSpec, (DtoSelector<DTO>) delegate, aliasGenerator);
+        joinSpec.popConditionGroupSpec();
+        return this;
     }
 }

@@ -113,6 +113,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
         final ConditionGroupSpec subgroup = joinSpec.pushConditionGroupSpec(logicOperator);
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, joinSpec.table(), delegate.litebridgeContext().fromClauseEngine());
         query.apply(conditionClauseStart);
-        return new SqlJoinConditionClauseTerminal(joinSpec, (SqlSelector) delegate);
+        joinSpec.popConditionGroupSpec();
+        return this;
     }
 }

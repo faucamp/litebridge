@@ -1,6 +1,7 @@
 package org.litebridgedb.spring.boot3.test;
 
 import org.flywaydb.core.Flyway;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Operation;
@@ -212,6 +213,16 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         @Override
         public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
             return "";
+        }
+
+        @Override
+        public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
+            return null;
+        }
+
+        @Override
+        public UpdateResult nativeSqlUpdate(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
+            return null;
         }
 
         @Override

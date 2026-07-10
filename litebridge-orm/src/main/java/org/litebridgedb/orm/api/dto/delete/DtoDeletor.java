@@ -51,6 +51,7 @@ public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implem
         final ConditionGroupSpec subgroup = deleteSpec.pushConditionGroupSpec(logicOperator);
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, deleteSpec.dtoTable(), litebridgeContext.fromClauseEngine());
         query.apply(conditionClauseStart);
+        deleteSpec.popConditionGroupSpec();
         return new DtoDeleteWhereConditionClauseTerminalImpl<>(this);
     }
 }

@@ -59,6 +59,7 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
         final ConditionGroupSpec subgroup = updateSpec.pushConditionGroupSpec(logicOperator);
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, updateSpec.table(), litebridgeContext.fromClauseEngine());
         query.apply(conditionClauseStart);
+        updateSpec.popConditionGroupSpec();
         return new SqlUpdateWhereConditionClauseTerminalImpl(this);
     }
 }

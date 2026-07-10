@@ -98,6 +98,7 @@ public final class SqlWhereConditionClauseTerminal
         final ConditionGroupSpec subgroup = selectSpec.pushWhereConditionGroup(logicOperator);
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, selectSpec.getTable(), delegate.litebridgeContext().fromClauseEngine());
         query.apply(conditionClauseStart);
-        return new SqlWhereConditionClauseTerminal((SqlSelector) delegate);
+        selectSpec.popWhereConditionGroup();
+        return this;
     }
 }

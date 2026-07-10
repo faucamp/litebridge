@@ -29,9 +29,13 @@ public abstract class AbstractConditionBasedSpec {
     }
 
     public ConditionGroupSpec pushConditionGroupSpec(final LogicOperator logicOperator) {
-        final ConditionGroupSpec subgroup = conditions.newSubgroup(logicOperator).conditionGroupSpec();
+        final ConditionGroupSpec subgroup = currentConditionGroupSpec().newSubgroup(logicOperator).conditionGroupSpec();
         conditionGroupStack.push(subgroup);
         return subgroup;
+    }
+
+    public void popConditionGroupSpec() {
+        conditionGroupStack.pop();
     }
 
     public Table table() {

@@ -70,6 +70,7 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
         final ConditionGroupSpec subgroup = updateSpec.pushConditionGroupSpec(logicOperator);
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, updateSpec.dtoTable(), litebridgeContext.fromClauseEngine());
         query.apply(conditionClauseStart);
+        updateSpec.popConditionGroupSpec();
         return new DtoUpdateWhereConditionClauseTerminalImpl<>(this);
     }
 }
