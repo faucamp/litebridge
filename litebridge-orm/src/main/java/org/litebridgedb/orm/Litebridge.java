@@ -1,6 +1,8 @@
 package org.litebridgedb.orm;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
@@ -523,7 +525,9 @@ public final class Litebridge implements SelectApi {
         selectSpec.setExpressions(row.columnStream()
                 .map(rowColumn -> {
                     final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(rowColumn.column().name());
-                    return (ExpressionSpec) new SelectFieldSpec(fieldAccessor, rowColumn.column());
+                    // Some database providers do not return the table schema in the results; compensate for that
+                    final Column targetColumn = ormTable.getColumnMetaData(rowColumn.column().name()).toColumn();
+                    return (ExpressionSpec) new SelectFieldSpec(fieldAccessor, targetColumn);
                 })
                 .toList());
 
