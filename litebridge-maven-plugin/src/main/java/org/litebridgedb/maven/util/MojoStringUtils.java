@@ -1,5 +1,7 @@
 package org.litebridgedb.maven.util;
 
+import org.litebridgedb.commons.StringUtils;
+
 import java.util.Objects;
 
 public final class MojoStringUtils {
@@ -37,5 +39,36 @@ public final class MojoStringUtils {
         }
 
         return builder.toString();
+    }
+
+    public static String lowerFirst(final String name) {
+        if (StringUtils.isEmpty(name)) {
+            return name;
+        }
+
+        return name.substring(0, 1).toLowerCase() + name.substring(1);
+    }
+
+    public static String pluralise(final String name) {
+        if (name == null || name.isEmpty()) {
+            return name;
+        }
+
+        // Words ending in y preceded by a consonant (e.g. company -> companies, category -> categories)
+        // but NOT preceded by a vowel (e.g., day -> days, key -> keys)
+        if (name.endsWith("y") && name.length() > 1) {
+            char prev = name.charAt(name.length() - 2);
+            if (prev != 'a' && prev != 'e' && prev != 'i' && prev != 'o' && prev != 'u') {
+                return name.substring(0, name.length() - 1) + "ies";
+            }
+        }
+
+        // Words ending in s, sh, ch, x, or z need "es" (e.g. bus -> buses, wish -> wishes, bench -> benches, box -> boxes)
+        if (name.endsWith("s") || name.endsWith("sh") || name.endsWith("ch") || name.endsWith("x") || name.endsWith("z")) {
+            return name + "es";
+        }
+
+        // Default rule: just add s (e.g. account -> accounts, user -> users)
+        return name + "s";
     }
 }

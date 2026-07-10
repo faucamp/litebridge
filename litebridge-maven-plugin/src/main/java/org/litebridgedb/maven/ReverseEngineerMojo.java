@@ -20,8 +20,10 @@ import org.litebridgedb.maven.config.reverse.SqlTypeMappingConfig;
 import org.litebridgedb.maven.config.reverse.TableMappingConfig;
 import org.litebridgedb.maven.reverse.EntityGenerator;
 import org.litebridgedb.maven.reverse.GeneratedEntity;
-import org.litebridgedb.maven.util.PackageInfoGenerator;
+import org.litebridgedb.maven.reverse.ManyToManyMapper;
+import org.litebridgedb.maven.reverse.ManyToManyMapping;
 import org.litebridgedb.maven.util.JavaFileWriter;
+import org.litebridgedb.maven.util.PackageInfoGenerator;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridgedb.orm.tx.DefaultTransactionManager;
 import org.litebridgedb.orm.tx.LitebridgeDriverManagerDataSource;
@@ -137,12 +139,15 @@ public final class ReverseEngineerMojo extends AbstractMojo {
             javaFileWriter.writeJavaFile(output.getOutputPackage(), "package-info.java", packageInfo);
         }
 
+        // Extract many-to-many mappings
+        final List<ManyToManyMapping> manyToManyMappings = ManyToManyMapper.extractManyToManyMappings(tableMetaDataMap);
+
         // Generate entities
         final Map<String, GeneratedEntity> entities = new HashMap<>(input.getTables().size());
 
         for (final String tableName : input.getTables()) {
             final TableMetaData tableMetaData = tableMetaDataMap.get(tableName);
-            final GeneratedEntity generatedEntity = entityGenerator.createEntityClassForTable(tableMetaData, tableMetaDataMap, entities);
+            final GeneratedEntity generatedEntity = entityGenerator.createEntityClassForTable(tableMetaData, tableMetaDataMap, manyToManyMappings, entities);
             javaFileWriter.writeEntityJavaFile(generatedEntity);
         }
     }
