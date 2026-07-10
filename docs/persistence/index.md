@@ -16,7 +16,7 @@ This section covers the core persistence features provided by Litebridge:
        classes.
 2. **[Querying data](select.md)**: Retrieve records from the database and map results back into DTOs.
     1. **[Where clauses](where.md)**: Details on constructing `WHERE`/`HAVING` clauses.
-    2. **[Query expressions](query-expressions.md)**: Details on constructing advanced `SELECT`/`JOIN`/`GROUP BY`
+    2. **[Query expressions](expressions.md)**: Details on constructing advanced `SELECT`/`JOIN`/`GROUP BY`
        clauses.
     3. **[Metamodels](metamodels.md)**: Build type-safe queries using generated or manual metamodel classes.
     4. **[Native SQL](native-sql.md)**: Execute raw SQL queries and statements directly bypassing the ORM.
