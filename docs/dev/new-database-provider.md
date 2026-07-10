@@ -46,7 +46,7 @@ Add dependencies on `litebridge-converter` (if the default type converter is des
 ### 2. Configure Modularity
 
 Litebridge uses the Java Platform Module System (JPMS). A `module-info.java` file must be included in `src/main/java`. 
-At should require `litebridge.db.spi` and (optionally) `litebridge.db.spi.impl` and `litebridge.converter`:
+It should require `litebridge.db.spi` and (optionally) `litebridge.db.spi.impl` and `litebridge.converter`, and must provide the `DatabaseProvider` implementation:
 
 ```java
 @NullMarked
@@ -57,6 +57,8 @@ module litebridge.db.yourdb {
     requires litebridge.db.spi.impl;
     requires org.slf4j;
     requires java.sql;
+
+    provides org.litebridgedb.db.spi.DatabaseProvider with org.litebridgedb.db.yourdb.YourDatabaseProvider;
 
     exports org.litebridgedb.db.yourdb;
 }
@@ -72,19 +74,35 @@ Implement the `DatabaseProvider` interface from the `litebridge.db.spi` module. 
 - SQL statement preparation and execution.
 - Metadata caching.
 - Type conversion using a `TypeConverter`.
-- Standard SQL generation for `SELECT`, `INSERT`, `UPDATE`, and `DELETE`.
+- Delegating SQL generation for `SELECT`, `INSERT`, `UPDATE`, and `DELETE` to specialized generator classes.
 
-By extending `AbstractDatabaseProvider`, the focus can be placed on the database-specific SQL dialect and JDBC behaviors.
+By extending `AbstractDatabaseProvider`, the focus can be placed on the database-specific SQL dialect and JDBC behaviors by providing custom implementations of the various SQL generators and transformers.
 
-Key methods to override in the implementation:
+Key methods to override in the provider implementation:
 
 - **Constructor**: Call `super(new DefaultTypeConverter())` or provide a custom converter.
-- **`quoteIdentifier(String)`**: Define how to quote identifiers (tables, columns) to handle reserved words or case sensitivity.
-- **`createAlias(String)`**: Define the syntax for aliases (e.g., whether to use `AS` for table aliases).
-- **`appendLimitClause(Limit, StringBuilder)`**: Implement the specific pagination syntax for the database (e.g., `LIMIT/OFFSET`, `FETCH FIRST`, etc.).
-- **`createSequenceNextValueForDirectInsert(String)`**: If the database supports sequences, provide the syntax for fetching the next value.
-- **`createColumnIdentifier(...)`**: Customize how columns are referenced, especially in complex `JOIN` scenarios.
+- **`createColumnIdentifierGenerator()`**: Return a custom `ColumnIdentifierGenerator` to define how to quote identifiers (tables, columns) and handle alias declarations.
+- **`createSelectSqlGenerator()`**: Return a custom `SelectSqlGenerator` to implement specific pagination syntax or other `SELECT` statement customizations.
+- **`createAliasTransformer()`**: Return a custom `AliasTransformer` if the database expects specific alias formatting (e.g., all uppercase).
+- **`createPreparedStatementUsingConnection(...)`**: Customize how `PreparedStatement` instances are created, for example to handle generated keys differently.
+- **`extractGeneratedKeys(...)`**: Customize how generated keys are retrieved from the `PreparedStatement` after an insert.
+- **`getSequenceColumnValueGenerator(String)`**: If the database supports sequences, provide an implementation that returns the SQL for fetching the next value.
 - **`getLogger()`**: Return a logger specific to the provider class.
+
+#### Customizing SQL Generation
+
+To customize the SQL dialect, you typically create subclasses of `ColumnIdentifierGenerator` or `SelectSqlGenerator`.
+
+##### Customizing Identifiers
+
+Extend `ColumnIdentifierGenerator` to override methods like:
+- `quoteIdentifier(String)`: Define how to quote identifiers.
+- `createAliasDeclaration(String)`: Define the syntax for aliases.
+
+##### Customizing SELECT Statements
+
+Extend `SelectSqlGenerator` to override methods like:
+- `appendLimitClause(Limit, StringBuilder)`: Implement the specific pagination syntax for the database (e.g., `LIMIT/OFFSET`, `FETCH FIRST`, etc.).
 
 Example snippet:
 
@@ -97,9 +115,39 @@ public class YourDatabaseProvider extends AbstractDatabaseProvider {
     }
 
     @Override
-    protected String quoteIdentifier(String identifier) {
+    protected ColumnIdentifierGenerator createColumnIdentifierGenerator() {
+        return new YourColumnIdentifierGenerator();
+    }
+
+    @Override
+    protected SelectSqlGenerator createSelectSqlGenerator() {
+        return new YourSelectSqlGenerator(typeConverter, columnIdentifierGenerator.orThrow(), this::ensureTableMetaData);
+    }
+
+    @Override
+    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(String sequence) {
+        return new YourSequenceColumnValueGenerator(sequence);
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return LOGGER;
+    }
+}
+
+class YourColumnIdentifierGenerator extends ColumnIdentifierGenerator {
+    @Override
+    public String quoteIdentifier(String identifier) {
         // Example: double quote for case-sensitive or reserved words
         return "\"" + identifier + "\"";
+    }
+}
+
+class YourSelectSqlGenerator extends SelectSqlGenerator {
+    public YourSelectSqlGenerator(TypeConverter typeConverter, 
+                                  ColumnIdentifierGenerator columnIdentifierGenerator, 
+                                  BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
+        super(typeConverter, columnIdentifierGenerator, ensureTableMetaData);
     }
 
     @Override
@@ -107,10 +155,16 @@ public class YourDatabaseProvider extends AbstractDatabaseProvider {
         limit.limit().ifPresent(l -> sql.append(" LIMIT ").append(l));
         limit.offset().ifPresent(o -> sql.append(" OFFSET ").append(o));
     }
+}
+
+class YourSequenceColumnValueGenerator extends SequenceColumnValueGenerator {
+    public YourSequenceColumnValueGenerator(String sequence) {
+        super(sequence);
+    }
 
     @Override
-    protected Logger getLogger() {
-        return LOGGER;
+    public String generate(ColumnMetaData columnMetaData) {
+        return "NEXT VALUE FOR " + sequence;
     }
 }
 ```
