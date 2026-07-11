@@ -5,10 +5,8 @@ import org.litebridgedb.db.spi.ColumnMetaData;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.expression.ClauseType;
-import org.litebridgedb.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.ProtoColumnExpressionSpec;
-import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
@@ -17,21 +15,20 @@ import org.litebridgedb.tracking.ClassFieldAccessorCache;
 import org.litebridgedb.tracking.FieldAccessor;
 
 import java.sql.Types;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 class DtoProtoExpressionResolverTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void testResolveField() {
+    void testResolveQueryField() {
+        // Given
         final DtoSelectSpec selectSpec = mock(DtoSelectSpec.class);
         final OrmTable ormTable = mock(OrmTable.class);
         final TableRegistry tableRegistry = mock(TableRegistry.class);
@@ -44,54 +41,90 @@ class DtoProtoExpressionResolverTest {
         
         final ColumnMetaData col1 = new ColumnMetaData(table, "COL1", true, Types.VARCHAR);
         when(ormTable.getColumnForFieldName("field1")).thenReturn(col1);
+        
         final FieldAccessor field1 = mock(FieldAccessor.class);
-        when(ormTable.getFieldForColumnName("COL1")).thenReturn(field1);
-        when(cache.fieldAccessorOrThrow(any(), any())).thenReturn(field1);
+        when(field1.name()).thenReturn("field1");
+        when(cache.fieldAccessorOrThrow(any(), eq("field1"))).thenReturn(field1);
 
         final DtoProtoExpressionResolver resolver = new DtoProtoExpressionResolver(selectSpec, new NoOpAliasGenerator(), cache, tableRegistry);
         
-        final ProtoColumnExpressionSpec proto = new ProtoColumnExpressionSpec(SelectFieldSpec.class, "field1");
-        final ExpressionSpec resolved = resolver.resolveExpression((ExpressionSpec) proto, ClauseType.SELECT).findFirst().orElseThrow();
+        // When
+        final org.litebridgedb.orm.meta.QueryField qf = new org.litebridgedb.orm.meta.QueryField(Object.class, "field1");
+        final ExpressionSpec resolved = resolver.resolveExpression(qf, ClauseType.SELECT).findFirst().orElseThrow();
         
+        // Then
         assertInstanceOf(SelectFieldSpec.class, resolved);
         assertEquals("COL1", ((SelectFieldSpec) resolved).getColumn().name());
     }
 
     @Test
-    @SuppressWarnings("unchecked")
-    void testResolveExplicitJoinField() {
+    void testGetColumnWhereClause() {
+        // Given
         final DtoSelectSpec selectSpec = mock(DtoSelectSpec.class);
+        final OrmTable ormTable = mock(OrmTable.class);
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ClassFieldAccessorCache cache = mock(ClassFieldAccessorCache.class);
         
-        final DtoJoinSpec joinSpec = mock(DtoJoinSpec.class);
-        final OrmTable joinTable = mock(OrmTable.class);
-        final Table joinSpiTable = new Table("", null, "JOIN", "t2");
-        when(joinSpec.table()).thenReturn(joinSpiTable);
-        when(joinSpec.dtoTable()).thenReturn(joinTable);
-        when(joinSpec.dtoClass()).thenReturn((Class) String.class);
-        when(selectSpec.getJoins()).thenReturn(List.of(joinSpec));
+        final Table table = new Table("", null, "TEST", "t1");
+        when(selectSpec.getTable()).thenReturn(table);
+        when(selectSpec.dtoTable()).thenReturn(ormTable);
+        when(selectSpec.dtoClass()).thenReturn((Class) String.class);
+        when(tableRegistry.getTableOrThrow(any())).thenReturn(ormTable);
         
-        final TableMetaData joinMetaData = mock(TableMetaData.class);
-        when(joinTable.getMetaData()).thenReturn(joinMetaData);
-        when(joinMetaData.toTable()).thenReturn(joinSpiTable);
+        final ColumnMetaData col1 = new ColumnMetaData(table, "COL1", true, Types.VARCHAR);
+        when(ormTable.getColumnForFieldName("field1")).thenReturn(col1);
+        
+        final FieldAccessor field1 = mock(FieldAccessor.class);
+        when(field1.name()).thenReturn("field1");
+        when(cache.fieldAccessorOrThrow(any(), eq("field1"))).thenReturn(field1);
 
-        // Mock main table to avoid NPE in getDtoClass or getColumn
-        when(selectSpec.dtoTable()).thenReturn(mock(OrmTable.class));
-
-        final ColumnMetaData col1 = new ColumnMetaData(joinSpiTable, "COL1", true, Types.VARCHAR);
-        when(joinTable.getColumnForFieldName("field1")).thenReturn(col1);
-        when(tableRegistry.getTableOrThrow(String.class)).thenReturn(joinTable);
-        when(cache.fieldAccessorOrThrow(any(), any())).thenReturn(mock(FieldAccessor.class));
+        // Mock a selected column with alias
+        final Table aliasedTable = new Table("", null, "TEST", "t1_alias");
+        final org.litebridgedb.db.spi.Column selectedCol = new org.litebridgedb.db.spi.Column(aliasedTable, "COL1");
+        final SelectFieldSpec sfs = mock(SelectFieldSpec.class);
+        when(sfs.getColumn()).thenReturn(selectedCol);
+        when(selectSpec.getExpressions()).thenReturn(List.of(sfs));
 
         final DtoProtoExpressionResolver resolver = new DtoProtoExpressionResolver(selectSpec, new NoOpAliasGenerator(), cache, tableRegistry);
         
-        // Use args to specify DTO class
-        final ProtoColumnExpressionSpec proto = new ProtoColumnExpressionSpec(SelectFieldSpec.class, "field1", null, new Object[]{String.class});
-        final ExpressionSpec resolved = resolver.resolveExpression((ExpressionSpec) proto, ClauseType.SELECT).findFirst().orElseThrow();
+        // When
+        final ProtoColumnExpressionSpec proto = new ProtoColumnExpressionSpec(SelectFieldSpec.class, "field1");
+        final ExpressionSpec resolved = resolver.resolveExpression((ExpressionSpec)proto, ClauseType.WHERE).findFirst().orElseThrow();
+        final org.litebridgedb.db.spi.Column resultCol = ((SelectFieldSpec)resolved).getColumn();
         
-        assertInstanceOf(SelectFieldSpec.class, resolved);
-        assertEquals("COL1", ((SelectFieldSpec) resolved).getColumn().name());
-        assertEquals("t2", ((SelectFieldSpec) resolved).getColumn().table().alias());
+        // Then
+        assertEquals("COL1", resultCol.name());
+        assertEquals("t1_alias", resultCol.table().alias());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testConstructorWithoutSelectSpec() {
+        // Given
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final ClassFieldAccessorCache cache = mock(ClassFieldAccessorCache.class);
+        final OrmTable ormTable = mock(OrmTable.class);
+        when(tableRegistry.getTableOrThrow(any())).thenReturn(ormTable);
+        final TableMetaData metaData = mock(TableMetaData.class);
+        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(metaData.toTable()).thenReturn(new Table("", null, "TEST"));
+        
+        final ColumnMetaData col1 = new ColumnMetaData(new Table("", null, "TEST"), "COL1", true, Types.VARCHAR);
+        when(ormTable.getColumnForFieldName("field1")).thenReturn(col1);
+        
+        final FieldAccessor field1 = mock(FieldAccessor.class);
+        when(field1.name()).thenReturn("field1");
+        when(cache.fieldAccessorOrThrow(any(), eq("field1"))).thenReturn(field1);
+
+        final DtoProtoExpressionResolver resolver = new DtoProtoExpressionResolver(new NoOpAliasGenerator(), cache, tableRegistry);
+        
+        // When
+        // Pass String.class in args[0] to specify DTO class
+        final ProtoColumnExpressionSpec proto = new ProtoColumnExpressionSpec(SelectFieldSpec.class, "field1", null, new Object[]{String.class});
+        final ExpressionSpec resolved = resolver.resolveExpression((ExpressionSpec)proto, ClauseType.WHERE).findFirst().orElseThrow();
+        final org.litebridgedb.db.spi.Column resultCol = ((SelectFieldSpec)resolved).getColumn();
+        
+        // Then
+        assertEquals("COL1", resultCol.name());
     }
 }

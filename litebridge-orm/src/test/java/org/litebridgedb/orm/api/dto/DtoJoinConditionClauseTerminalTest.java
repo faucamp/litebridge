@@ -8,6 +8,7 @@ import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
 import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
+import org.litebridgedb.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.api.select.model.SelectSpec;
 import org.litebridgedb.orm.engine.LitebridgeContext;
@@ -29,6 +30,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class DtoJoinConditionClauseTerminalTest {
 
@@ -38,10 +40,20 @@ class DtoJoinConditionClauseTerminalTest {
         final TestContext<TestDto> context = testContext();
 
         // When
-        final DtoJoinConditionClause<TestDto> result = context.terminal().and("myVar");
+        assertNotNull(context.terminal().and("myVar"));
+        assertNotNull(context.terminal().and(new org.litebridgedb.orm.expression.select.SelectColumnSpec(mock(org.litebridgedb.db.spi.Column.class))));
+        assertNotNull(context.terminal().and(q -> q.where("myVar").eq("val")));
+    }
 
-        // Then
-        assertNotNull(result);
+    @Test
+    void or() {
+        // Given
+        final TestContext<TestDto> context = testContext();
+
+        // When
+        assertNotNull(context.terminal().or("myVar"));
+        assertNotNull(context.terminal().or(new org.litebridgedb.orm.expression.select.SelectColumnSpec(mock(org.litebridgedb.db.spi.Column.class))));
+        assertNotNull(context.terminal().or(q -> q.where("myVar").eq("val")));
     }
 
     @Test
@@ -58,10 +70,50 @@ class DtoJoinConditionClauseTerminalTest {
                 context.aliasGenerator());
 
         // When
-        final DtoWhereConditionClause<TestDto> result = terminal.where("myVar");
+        assertNotNull(terminal.where("myVar"));
+        assertNotNull(terminal.where(new org.litebridgedb.orm.expression.select.SelectColumnSpec(mock(org.litebridgedb.db.spi.Column.class))));
+    }
 
-        // Then
-        assertNotNull(result);
+    @Test
+    void join() {
+        // Given
+        final TestContext<TestDto> context = testContext();
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final OrmTable joinedTable = mock(OrmTable.class);
+        final TableMetaData metaData = mock(TableMetaData.class);
+        when(metaData.name()).thenReturn("JOINED_TABLE");
+        when(joinedTable.getMetaData()).thenReturn(metaData);
+        when(joinedTable.dtoClass()).thenReturn((Class) String.class);
+        when(tableRegistry.getTableOrThrow(String.class)).thenReturn(joinedTable);
+        
+        final DtoSelector<TestDto> selector = new DtoSelector<>(
+                        TestDto.class,
+                        context.ormTable(),
+                        tableRegistry,
+                        mock(ClassFieldAccessorCache.class),
+                        mock(DtoConstructor.class),
+                        mock(TransactionalDatabaseProvider.class),
+                        context.aliasGenerator(),
+                        mock(LitebridgeContext.class));
+        selector.selectSpec().setProtoExpressionResolver(mock(ProtoExpressionResolver.class));
+
+        final DtoJoinConditionClauseTerminal<TestDto> terminal = new DtoJoinConditionClauseTerminal<>(
+                ObjectUtils.getFieldValue(context.terminal(), "joinSpec", DtoJoinSpec.class),
+                selector,
+                context.aliasGenerator());
+
+        // When
+        assertNotNull(terminal.join(String.class));
+    }
+
+    @Test
+    void groupBy() {
+        // Given
+        final TestContext<TestDto> context = testContext();
+
+        // When
+        assertNotNull(context.terminal().groupBy("myVar"));
+        assertNotNull(context.terminal().groupBy(new org.litebridgedb.orm.expression.select.SelectColumnSpec(mock(org.litebridgedb.db.spi.Column.class))));
     }
 
     @Test
@@ -70,10 +122,8 @@ class DtoJoinConditionClauseTerminalTest {
         final TestContext<TestDto> context = testContext();
 
         // When
-        final DtoOrderByClause<TestDto> result = context.terminal().orderBy("myVar");
-
-        // Then
-        assertNotNull(result);
+        assertNotNull(context.terminal().orderBy("myVar"));
+        assertNotNull(context.terminal().orderBy(new org.litebridgedb.orm.expression.select.SelectColumnSpec(mock(org.litebridgedb.db.spi.Column.class))));
     }
 
     private static TestContext<TestDto> testContext() {
@@ -112,6 +162,12 @@ class DtoJoinConditionClauseTerminalTest {
                 aliasGenerator);
 
         return new TestContext<>(ormTable, aliasGenerator, dtoSelector, terminal);
+    }
+
+    private static void setFieldValue(final Object obj, final String fieldName, final Object value) throws Exception {
+        final java.lang.reflect.Field field = obj.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(obj, value);
     }
 
     private record TestContext<DTO>(
