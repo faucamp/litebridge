@@ -6,79 +6,79 @@ The `reverse-engineer` goal connects to a database and generates Litebridge enti
 
 ## Configuration Parameters
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `database` | `DatabaseConfig` | Yes | - | Database connection settings. |
-| `input` | `RevEngInputConfig` | Yes | - | Specifies which tables to reverse engineer. |
-| `output` | `RevEngOutputConfig` | Yes | - | Settings for the generated source files. |
-| `sqlTypeMappings` | `List<SqlTypeMappingConfig>` | No | - | Custom mapping of SQL types to Java types. |
-| `tableMappings` | `List<TableMappingConfig>` | No | - | Custom mapping for specific tables and columns. |
-| `skip` | `boolean` | No | `false` | Skips goal execution if set to `true`. |
+| Parameter         | Type                         | Required | Default | Description                                     |
+|:------------------|:-----------------------------|:---------|:--------|:------------------------------------------------|
+| `database`        | `DatabaseConfig`             | Yes      | -       | Database connection settings.                   |
+| `input`           | `RevEngInputConfig`          | Yes      | -       | Specifies which tables to reverse engineer.     |
+| `output`          | `RevEngOutputConfig`         | Yes      | -       | Settings for the generated source files.        |
+| `sqlTypeMappings` | `List<SqlTypeMappingConfig>` | No       | -       | Custom mapping of SQL types to Java types.      |
+| `tableMappings`   | `List<TableMappingConfig>`   | No       | -       | Custom mapping for specific tables and columns. |
+| `skip`            | `boolean`                    | No       | `false` | Skips goal execution if set to `true`.          |
 
 ### `database` Settings
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `databaseProviderClass` | `String` | Yes | - | The fully qualified class name of the Litebridge `DatabaseProvider` to use (e.g., `org.litebridgedb.db.h2.H2DatabaseProvider`). |
-| `url` | `String` | Yes | - | JDBC connection URL. |
-| `user` | `String` | Yes | - | Database username. |
-| `password` | `String` | No | (empty) | Database password. |
+| Parameter               | Type     | Required | Default | Description                                                                                                                     |
+|:------------------------|:---------|:---------|:--------|:--------------------------------------------------------------------------------------------------------------------------------|
+| `databaseProviderClass` | `String` | Yes      | -       | The fully qualified class name of the Litebridge `DatabaseProvider` to use (e.g., `org.litebridgedb.db.h2.H2DatabaseProvider`). |
+| `url`                   | `String` | Yes      | -       | JDBC connection URL.                                                                                                            |
+| `user`                  | `String` | Yes      | -       | Database username.                                                                                                              |
+| `password`              | `String` | No       | (empty) | Database password.                                                                                                              |
 
 ### `input` Settings
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `tables` | `List<String>` | Yes | - | List of table names to generate entities for. Names should be qualified with schema if necessary. |
+| Parameter | Type           | Required | Default | Description                                                                                       |
+|:----------|:---------------|:---------|:--------|:--------------------------------------------------------------------------------------------------|
+| `tables`  | `List<String>` | Yes      | -       | List of table names to generate entities for. Names should be qualified with schema if necessary. |
 
 ### `output` Settings
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `outputPackage` | `String` | Yes | - | The package name for the generated entity classes. |
-| `outputDir` | `String` | No | `${project.build.directory}/generated-sources/java` | The directory where generated Java files will be written. |
-| `packageInfo` | `boolean` | No | `true` | Whether to generate a `package-info.java` file. |
-| `javadoc` | `boolean` | No | `true` | Whether to include Javadoc comments in generated classes. |
-| `finalClasses` | `boolean` | No | `true` | Whether to declare generated entity classes as `final`. |
-| `jspecify` | `RevEngJSpecifyConfig` | No | - | Configuration for JSpecify nullability annotations. |
+| Parameter       | Type                   | Required | Default                                             | Description                                               |
+|:----------------|:-----------------------|:---------|:----------------------------------------------------|:----------------------------------------------------------|
+| `outputPackage` | `String`               | Yes      | -                                                   | The package name for the generated entity classes.        |
+| `outputDir`     | `String`               | No       | `${project.build.directory}/generated-sources/java` | The directory where generated Java files will be written. |
+| `packageInfo`   | `boolean`              | No       | `true`                                              | Whether to generate a `package-info.java` file.           |
+| `javadoc`       | `boolean`              | No       | `true`                                              | Whether to include Javadoc comments in generated classes. |
+| `finalClasses`  | `boolean`              | No       | `true`                                              | Whether to declare generated entity classes as `final`.   |
+| `jspecify`      | `RevEngJSpecifyConfig` | No       | -                                                   | Configuration for JSpecify nullability annotations.       |
 
 #### `jspecify` Settings
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `annotate` | `boolean` | No | `false` | Enable JSpecify annotations in generated code. |
-| `nullMarked` | `boolean` | No | `true` | Use `@NullMarked` at the class or package level. If `false`, `@NullUnmarked` is used. This setting is only used if `annotate` is `true`. |
-| `databaseNullable` | `boolean` | No | `false` | If `true`, fields are marked `@Nullable` only if the database column is nullable. If `false`, all non-primitive fields are marked `@Nullable`. This setting is only used if `annotate` and `nullMarked` are both `true`. |
+| Parameter          | Type      | Required | Default | Description                                                                                                                                                                                                              |
+|:-------------------|:----------|:---------|:--------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `annotate`         | `boolean` | No       | `false` | Enable JSpecify annotations in generated code.                                                                                                                                                                           |
+| `nullMarked`       | `boolean` | No       | `true`  | Use `@NullMarked` at the class or package level. If `false`, `@NullUnmarked` is used. This setting is only used if `annotate` is `true`.                                                                                 |
+| `databaseNullable` | `boolean` | No       | `false` | If `true`, fields are marked `@Nullable` only if the database column is nullable. If `false`, all non-primitive fields are marked `@Nullable`. This setting is only used if `annotate` and `nullMarked` are both `true`. |
 
 ### `sqlTypeMappings` Settings
 
 Allows overriding the default Java type mapping for specific SQL types.
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `jdbcType` | `String` | Yes | - | JDBC type name (e.g., `NUMERIC`, `VARCHAR`). |
-| `fieldType` | `String` | Yes | - | Fully qualified Java class name for the field. |
-| `precision` | `Integer` | No | - | Optional precision to match. |
-| `notNull` | `Boolean` | No | - | Optional nullability to match. |
+| Parameter   | Type      | Required | Default | Description                                    |
+|:------------|:----------|:---------|:--------|:-----------------------------------------------|
+| `jdbcType`  | `String`  | Yes      | -       | JDBC type name (e.g., `NUMERIC`, `VARCHAR`).   |
+| `fieldType` | `String`  | Yes      | -       | Fully qualified Java class name for the field. |
+| `precision` | `Integer` | No       | -       | Optional precision to match.                   |
+| `notNull`   | `Boolean` | No       | -       | Optional nullability to match.                 |
 
 ### `tableMappings` Settings
 
 Allows fine-grained control over how specific tables and columns are mapped.
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `table` | `String` | Yes | - | The database table name this mapping applies to. |
-| `entityName` | `String` | No | - | Explicit name for the generated entity class. |
-| `columnMappings` | `List<ColumnMappingConfig>` | No | - | Custom mappings for specific columns. |
+| Parameter        | Type                        | Required | Default | Description                                      |
+|:-----------------|:----------------------------|:---------|:--------|:-------------------------------------------------|
+| `table`          | `String`                    | Yes      | -       | The database table name this mapping applies to. |
+| `entityName`     | `String`                    | No       | -       | Explicit name for the generated entity class.    |
+| `columnMappings` | `List<ColumnMappingConfig>` | No       | -       | Custom mappings for specific columns.            |
 
 #### `columnMappings` Settings
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `column` | `String` | Yes | - | The database column name. |
-| `fieldName` | `String` | No | - | Explicit name for the generated Java field. |
-| `fieldType` | `String` | No | - | Explicit Java type for the field. |
-| `generateUsingSequence` | `String` | No | - | Name of a database sequence to use for value generation. |
-| `generatorClass` | `String` | No | - | Fully qualified class name of a custom value generator. |
+| Parameter               | Type     | Required | Default | Description                                              |
+|:------------------------|:---------|:---------|:--------|:---------------------------------------------------------|
+| `column`                | `String` | Yes      | -       | The database column name.                                |
+| `fieldName`             | `String` | No       | -       | Explicit name for the generated Java field.              |
+| `fieldType`             | `String` | No       | -       | Explicit Java type for the field.                        |
+| `generateUsingSequence` | `String` | No       | -       | Name of a database sequence to use for value generation. |
+| `generatorClass`        | `String` | No       | -       | Fully qualified class name of a custom value generator.  |
 
 ## Usage Example
 
@@ -164,28 +164,33 @@ Allows fine-grained control over how specific tables and columns are mapped.
 
 ## Relationship Handling
 
-The `reverse-engineer` goal automatically detects relationships between tables based on foreign key constraints in the database.
+The `reverse-engineer` goal automatically detects relationships between tables based on foreign key constraints in the
+database.
 
 ### Many-to-One Relationships
 
-When a table has a foreign key referencing another table that is also being reverse-engineered, the plugin generates a field with the related entity's type instead of a scalar type (like `Long`). 
+When a table has a foreign key referencing another table that is also being reverse-engineered, the plugin generates a
+field with the related entity's type instead of a scalar type (like `Long`).
 
-*   **Detection:** Based on foreign key constraints.
-*   **Mapping:** Uses the `@Column` annotation with the `joinOn` attribute specifying the join column in the related entity.
+* **Detection:** Based on foreign key constraints.
+* **Mapping:** Uses the `@Column` annotation with the `joinOn` attribute specifying the join column in the related
+  entity.
 
 ### One-to-Many Relationships
 
-For every Many-to-One relationship detected, Litebridge can generate a corresponding reverse One-to-Many relationship in the referenced entity.
+For every Many-to-One relationship detected, Litebridge can generate a corresponding reverse One-to-Many relationship in
+the referenced entity.
 
-*   **Detection:** Automatically created for the "other side" of a foreign key relationship.
-*   **Mapping:** Uses a `List<RelatedEntity>` field annotated with `@OneToMany(mappedByField = "...")`.
+* **Detection:** Automatically created for the "other side" of a foreign key relationship.
+* **Mapping:** Uses a `List<RelatedEntity>` field annotated with `@OneToMany(mappedByField = "...")`.
 
 ### Many-to-Many Relationships
 
-Many-to-Many relationships are detected when a join table exists that is not explicitly included in the `tables` configuration but contains exactly two foreign keys referencing two tables that *are* included.
+Many-to-Many relationships are detected when a join table exists that is not explicitly included in the `tables`
+configuration but contains exactly two foreign keys referencing two tables that *are* included.
 
-*   **Detection:** Join tables with two foreign keys to mapped entities.
-*   **Mapping:** Generates `List<RelatedEntity>` fields in both related entities, annotated with `@ManyToMany`.
+* **Detection:** Join tables with two foreign keys to mapped entities.
+* **Mapping:** Generates `List<RelatedEntity>` fields in both related entities, annotated with `@ManyToMany`.
 
 ## Generated Entity Examples
 
@@ -198,13 +203,13 @@ Based on the `tableMappings` and `sqlTypeMappings` in the configuration example:
 ```java
 @Table("PUBLIC.USERS")
 public final class User {
-    
+
     @Column(value = "USER_ID", generateUsingSequence = "PUBLIC.USER_SEQ")
     private Long id;
 
     @Column("USERNAME")
     private String username;
-    
+
     // ... getters and setters ...
 }
 ```
@@ -214,28 +219,30 @@ public final class User {
 Example of an `Account` entity belonging to a `Person`:
 
 **Account.java (Many-to-One side)**
+
 ```java
 @Table("LB.ACCOUNT")
 public final class Account {
-    
+
     @Column(value = "PERSON_ID", joinOn = "id")
     private PersonEntity owner;
-    
+
     // ...
 }
 ```
 
 **PersonEntity.java (One-to-Many side)**
+
 ```java
 @Table("LB.PERSON")
 public final class PersonEntity {
-    
+
     @Column(value = "PERSON_ID")
     private Long id;
-    
+
     @OneToMany(mappedByField = "owner")
     private List<Account> accounts;
-    
+
     // ...
 }
 ```
@@ -247,10 +254,10 @@ Example of a relationship between `PersonEntity` and `Address` via a `PERSON_ADD
 ```java
 @Table("LB.PERSON")
 public final class PersonEntity {
-    
+
     @ManyToMany(joinTable = "LB.PERSON_ADDRESS", joinColumn = "PERSON_ID", inverseJoinColumn = "ADDRESS_ID")
     private List<Address> addresses;
-    
+
     // ...
 }
 ```
@@ -258,7 +265,7 @@ public final class PersonEntity {
 ```java
 @Table("LB.ADDRESS")
 public final class Address {
-    
+
     @ManyToMany(joinTable = "LB.PERSON_ADDRESS", joinColumn = "ADDRESS_ID", inverseJoinColumn = "PERSON_ID")
     private List<PersonEntity> personEntities;
 
@@ -268,20 +275,21 @@ public final class Address {
 
 ### JSpecify Nullability
 
-When JSpecify support is enabled (`<annotate>true</annotate>`), generated entities include `@Nullable` and `@NullMarked` annotations.
+When JSpecify support is enabled (`<annotate>true</annotate>`), generated entities include `@Nullable` and `@NullMarked`
+annotations.
 
 ```java
 @NullMarked
 @Table("LB.PERSON")
 public final class PersonEntity {
-    
+
     @Nullable
     @Column("SURNAME")
     private String surname;
 
     @Column("AGE")
     private int age; // Primitive because it's NOT NULL in DB or mapped specifically
-    
+
     // ...
 }
 ```
