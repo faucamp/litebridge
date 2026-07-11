@@ -27,6 +27,19 @@ public class TableMappingConfig {
     private @Nullable String entityName;
 
     /**
+     * Specifies additional superinterfaces of the entity class that will be recognised by Litebridge relational mapping
+     * if used in collections.
+     * <p>
+     * For example, if the entity class is defined as {@code class MyEntity implements MyInterface},
+     * then {@code MyInterface.class} should be specified via this setting to ensure that Litebridge can correctly handle
+     * collections of {@code MyInterface} instances in related entities.
+     * <p>
+     * This is mostly useful if combining generated entities with hand-crafted entities or manually registered DTOs
+     * that make use of this interface in collections.
+     */
+    private @Nullable String allowInterface;
+
+    /**
      * Configuration for specific columns.
      */
     private @Nullable List<ColumnMappingConfig> columnMappings;
@@ -45,6 +58,14 @@ public class TableMappingConfig {
 
     public void setEntityName(final @Nullable String entityName) {
         this.entityName = entityName;
+    }
+
+    public @Nullable String getAllowInterface() {
+        return allowInterface;
+    }
+
+    public void setAllowInterface(@Nullable final String allowInterface) {
+        this.allowInterface = allowInterface;
     }
 
     public @Nullable List<ColumnMappingConfig> getColumnMappings() {

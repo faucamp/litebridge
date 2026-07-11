@@ -15,6 +15,7 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.litebridgedb.orm.annotation.AllowInterface;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -73,6 +74,19 @@ class ReverseEngineerMojoTest {
         assertFalse(address.isAnnotationPresent(NullMarked.class));
         address.getFields().forEach(field -> assertFalse(field.isAnnotationPresent(Nullable.class)));
         address.getMethods().forEach(method -> assertFalse(method.isAnnotationPresent(Nullable.class)));
+    }
+
+    @Test
+    @DisplayName("Reverse engineer")
+    @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-allowInterface.xml")
+    void execute_allowInterface(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
+        final ExecuteResult result = executeImpl(reverseEngineerMojo);
+
+        assertTrue(result.person.getImports().stream().noneMatch(importDeclaration ->
+                importDeclaration.getNameAsString().equals("org.jspecify.annotations.AllowInterface")));
+        final ClassOrInterfaceDeclaration person = result.person.getClassByName("PersonEntity").orElseThrow();
+        assertTrue(person.isAnnotationPresent(AllowInterface.class));
+        assertEquals("org.litebridgedb.maven.test.TestInterface.class", person.getAnnotationByClass(AllowInterface.class).orElseThrow().getChildNodes().get(1).toString());
     }
 
     @Test

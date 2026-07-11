@@ -32,6 +32,7 @@ import org.litebridgedb.maven.config.reverse.RevEngOutputConfig;
 import org.litebridgedb.maven.config.reverse.SqlTypeMappingConfig;
 import org.litebridgedb.maven.config.reverse.TableMappingConfig;
 import org.litebridgedb.maven.util.MojoStringUtils;
+import org.litebridgedb.orm.annotation.AllowInterface;
 import org.litebridgedb.orm.annotation.ManyToMany;
 import org.litebridgedb.orm.annotation.OneToMany;
 
@@ -91,7 +92,7 @@ public final class EntityGenerator {
         final boolean jspecify = output.getJspecify() != null && output.getJspecify().isAnnotate();
 
         // Create class
-        final CompilationUnitAndClass cuClass = createCompilationUnitAndClass(tableMetaData, entityClassName, jspecify);
+        final CompilationUnitAndClass cuClass = createCompilationUnitAndClass(tableMetaData, tableMappingConfig, entityClassName, jspecify);
         final CompilationUnit entity = cuClass.entity();
         final ClassOrInterfaceDeclaration entityClass = cuClass.entityClass();
 
@@ -296,7 +297,10 @@ public final class EntityGenerator {
         return fieldName;
     }
 
-    private CompilationUnitAndClass createCompilationUnitAndClass(final TableMetaData tableMetaData, final String entityClassName, final boolean jspecify) {
+    private CompilationUnitAndClass createCompilationUnitAndClass(final TableMetaData tableMetaData,
+                                                                  final @Nullable TableMappingConfig tableMappingConfig,
+                                                                  final String entityClassName,
+                                                                  final boolean jspecify) {
         final CompilationUnit entity = new CompilationUnit();
         entity.setPackageDeclaration(output.getOutputPackage())
                 .addImport(Objects.class)
@@ -319,9 +323,15 @@ public final class EntityGenerator {
         entityClass.addSingleMemberAnnotation(org.litebridgedb.orm.annotation.Table.class.getSimpleName(),
                 "\"%s\"".formatted(tableMetaData.qualifiedName()));
 
+        // @AllowInterface annotation
+        if (tableMappingConfig != null && tableMappingConfig.getAllowInterface() != null) {
+            entityClass.addSingleMemberAnnotation(AllowInterface.class, tableMappingConfig.getAllowInterface() + ".class");
+        }
+
         if (output.isJavadoc()) {
             entityClass.setJavadocComment("Entity class for table: {@code %s}".formatted(tableMetaData.qualifiedName()));
         }
+
         CompilationUnitAndClass cuClass = new CompilationUnitAndClass(entity, entityClass);
         return cuClass;
     }

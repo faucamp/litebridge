@@ -64,11 +64,12 @@ Allows overriding the default Java type mapping for specific SQL types.
 
 Allows fine-grained control over how specific tables and columns are mapped.
 
-| Parameter        | Type                        | Required | Default | Description                                      |
-|:-----------------|:----------------------------|:---------|:--------|:-------------------------------------------------|
-| `table`          | `String`                    | Yes      | -       | The database table name this mapping applies to. |
-| `entityName`     | `String`                    | No       | -       | Explicit name for the generated entity class.    |
-| `columnMappings` | `List<ColumnMappingConfig>` | No       | -       | Custom mappings for specific columns.            |
+| Parameter        | Type                        | Required | Default | Description                                                                                              |
+|:-----------------|:----------------------------|:---------|:--------|:---------------------------------------------------------------------------------------------------------|
+| `table`          | `String`                    | Yes      | -       | The database table name this mapping applies to.                                                         |
+| `entityName`     | `String`                    | No       | -       | Explicit name for the generated entity class.                                                            |
+| `allowInterface` | `String`                    | No       | -       | Adds an `@AllowInterface` annotation with the specified class. Useful for interface-based relationships. |
+| `columnMappings` | `List<ColumnMappingConfig>` | No       | -       | Custom mappings for specific columns.                                                                    |
 
 #### `columnMappings` Settings
 
@@ -290,6 +291,33 @@ public final class PersonEntity {
     @Column("AGE")
     private int age; // Primitive because it's NOT NULL in DB or mapped specifically
 
+    // ...
+}
+```
+
+### Interface Support
+
+Using `allowInterface` in the configuration adds an `@AllowInterface` annotation to the entity class. 
+
+This is useful when the entity should be treated as an implementation of a specific interface in relational mappings;
+see [Handling Interfaces and Base Classes](../persistence/entity-annotations.md#handling-interfaces-and-base-classes-allowinterface)
+for more information.
+
+**POM Configuration:**
+
+```xml
+<tableMapping>
+    <table>LB.PERSON</table>
+    <allowInterface>com.example.Identifiable</allowInterface>
+</tableMapping>
+```
+
+**Generated Entity:**
+
+```java
+@Table("LB.PERSON")
+@AllowInterface(com.example.Identifiable.class)
+public final class PersonEntity {
     // ...
 }
 ```
