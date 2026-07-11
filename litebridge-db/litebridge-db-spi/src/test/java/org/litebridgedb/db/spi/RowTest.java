@@ -1,7 +1,9 @@
 package org.litebridgedb.db.spi;
 
 import org.junit.jupiter.api.Test;
+import org.jspecify.annotations.Nullable;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -265,5 +267,51 @@ class RowTest {
 
         // Then
         assertEquals(2, result);
+    }
+
+    @Test
+    void updateColumn() {
+        // Given
+        final Column column = new Column(new Table("T1"), "C1");
+        final Row row = new Row();
+
+        // When
+        row.updateColumn(column, "v1");
+        assertEquals("v1", row.column("C1").orElseThrow().value());
+
+        row.updateColumn(column, "v2");
+        assertEquals("v2", row.column("C1").orElseThrow().value());
+    }
+
+    @Test
+    void columns_and_columnByIndex() {
+        // Given
+        final Column column1 = new Column(new Table("T1"), "C1");
+        final Column column2 = new Column(new Table("T1"), "C2");
+        final Row row = new Row().withColumn(column1, "v1").withColumn(column2, "v2");
+
+        // When
+        final List<Row.RowColumn> columns = row.columns();
+
+        // Then
+        assertEquals(2, columns.size());
+        assertEquals("C1", row.column(0).column().name());
+        assertEquals("C2", row.column(1).column().name());
+    }
+
+    @Test
+    void valueStream() {
+        // Given
+        final Column column1 = new Column(new Table("T1"), "C1");
+        final Column column2 = new Column(new Table("T1"), "C2");
+        final Row row = new Row().withColumn(column1, "v1").withColumn(column2, "v2");
+
+        // When
+        final List<@Nullable Object> values = row.valueStream().toList();
+
+        // Then
+        assertEquals(2, values.size());
+        assertTrue(values.contains("v1"));
+        assertTrue(values.contains("v2"));
     }
 }

@@ -210,4 +210,61 @@ class ColumnMetaDataTest {
         assertEquals(columnMetaData.name(), result.name());
         assertNull(result.alias());
     }
+
+    @Test
+    void foreignKeyConstraints() {
+        // Given
+        final Table table = new Table("T1");
+        final ColumnMetaData column = new ColumnMetaData(table, "C1", false, 1);
+        final Column foreignKeyColumn = new Column(new Table("T2"), "C2");
+        final ForeignKeyConstraint constraint = new ForeignKeyConstraint("FK1", foreignKeyColumn);
+
+        // When
+        column.addForeignKeyConstraint(constraint);
+
+        // Then
+        assertEquals(1, column.getForeignKeyConstraints().size());
+        assertEquals(constraint, column.getForeignKeyConstraints().get(0));
+    }
+
+    @Test
+    void foreignReferences() {
+        // Given
+        final Table table = new Table("T1");
+        final ColumnMetaData column = new ColumnMetaData(table, "C1", false, 1);
+        final Column foreignKeyColumn = new Column(new Table("T2"), "C2");
+        final ForeignKeyConstraint constraint = new ForeignKeyConstraint("FK1", foreignKeyColumn);
+
+        // When
+        column.addForeignReference(constraint);
+
+        // Then
+        assertEquals(1, column.getForeignReferences().size());
+        assertEquals(constraint, column.getForeignReferences().get(0));
+    }
+
+    @Test
+    void foreignKeyConstraints_empty() {
+        final Table table = new Table("T1");
+        final ColumnMetaData column = new ColumnMetaData(table, "C1", false, 1);
+        assertTrue(column.getForeignKeyConstraints().isEmpty());
+    }
+
+    @Test
+    void foreignReferences_empty() {
+        final Table table = new Table("T1");
+        final ColumnMetaData column = new ColumnMetaData(table, "C1", false, 1);
+        assertTrue(column.getForeignReferences().isEmpty());
+    }
+
+    @Test
+    void getters_nullable_dataType_size_decimalDigits() {
+        final Table table = new Table("T1");
+        final ColumnMetaData column = new ColumnMetaData(table, "C1", true, 1, 10, 2, false, null);
+
+        assertTrue(column.isNullable());
+        assertEquals(1, column.getDataType());
+        assertEquals(10, column.getSize());
+        assertEquals(2, column.getDecimalDigits());
+    }
 }
