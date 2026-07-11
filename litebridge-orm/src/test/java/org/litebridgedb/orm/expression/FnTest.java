@@ -13,6 +13,7 @@ import org.litebridgedb.orm.expression.function.scalar.AbsSpec;
 import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
 import org.litebridgedb.orm.expression.function.scalar.SubstringSpec;
 import org.litebridgedb.orm.expression.function.scalar.UpperSpec;
+import org.litebridgedb.orm.expression.intent.ConvertIntent;
 import org.litebridgedb.orm.expression.intent.ConvertSpec;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
@@ -56,6 +57,18 @@ class FnTest {
     }
 
     @Test
+    void testFieldAndColumnDto() {
+        final ExpressionSpec f = Fn.f(Object.class, "field");
+        assertInstanceOf(ProtoColumnExpressionSpec.class, f);
+        assertEquals(SelectFieldSpec.class, ((ProtoColumnExpressionSpec) f).type());
+        assertArrayEquals(new Object[]{Object.class}, ((ProtoColumnExpressionSpec) f).args());
+
+        final ExpressionSpec field = Fn.field(Object.class, "field");
+        assertInstanceOf(ProtoColumnExpressionSpec.class, field);
+        assertArrayEquals(new Object[]{Object.class}, ((ProtoColumnExpressionSpec) field).args());
+    }
+
+    @Test
     void testColumnAlias() {
         final Table table = new Table("TABLE");
         final ExpressionSpec caTable = Fn.ca(table, "COL", "alias");
@@ -85,6 +98,19 @@ class FnTest {
         final ConvertSpec<Integer> intent = Fn.convert(target, Integer.class);
         assertEquals(target, intent.target());
         assertEquals(Integer.class, intent.returnType());
+    }
+
+    @Test
+    void testConvertIntent() {
+        final ExpressionSpec e1 = new SelectColumnSpec(mock(Column.class));
+        final ExpressionSpec e2 = new SelectColumnSpec(mock(Column.class));
+        final ConvertIntent<Integer> intent = Fn.convert(Integer.class, e1, e2);
+        assertEquals(Integer.class, intent.returnType());
+        assertArrayEquals(new ExpressionSpec[]{e1, e2}, intent.target());
+
+        final ConvertIntent<org.litebridgedb.db.spi.Row> rowIntent = Fn.row(e1, e2);
+        assertEquals(org.litebridgedb.db.spi.Row.class, rowIntent.returnType());
+        assertArrayEquals(new ExpressionSpec[]{e1, e2}, rowIntent.target());
     }
 
     @Test

@@ -11,6 +11,7 @@ import java.lang.invoke.MethodHandles;
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -77,6 +78,49 @@ class TableRegistryTest {
 
         // When/Then
         assertThrows(NullPointerException.class, () -> tableRegistry.getTableOrThrow(TestDto.class));
+    }
+
+    @Test
+    void getTableInContext() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final OrmTable contextTable = ormTable(ContextDto.class, "public", "context_table");
+        final OrmTable nestedTable = ormTable(TestDto.class, "public", "test_table");
+        contextTable.getContextTableRegistry().addTable(TestDto.class, nestedTable);
+        tableRegistry.addTable(ContextDto.class, contextTable);
+
+        // When
+        final Optional<OrmTable> result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
+
+        // Then
+        assertTrue(result.isPresent());
+        assertSame(nestedTable, result.get());
+    }
+
+    @Test
+    void getTableInContext_notFound() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final OrmTable contextTable = ormTable(ContextDto.class, "public", "context_table");
+        tableRegistry.addTable(ContextDto.class, contextTable);
+
+        // When
+        final Optional<OrmTable> result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
+
+        // Then
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void getTableInContext_contextNotFound() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+
+        // When
+        final Optional<OrmTable> result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
+
+        // Then
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -150,6 +194,15 @@ class TableRegistryTest {
     }
 
     @Test
+    void getTable_table_nullSchema() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+
+        // When/Then
+        assertThrows(NullPointerException.class, () -> tableRegistry.getTable(new Table("", null, "test_table")));
+    }
+
+    @Test
     void containsTable() {
         // Given
         final TableRegistry tableRegistry = new TableRegistry();
@@ -218,6 +271,34 @@ class TableRegistryTest {
         // Then
         assertNull(result.catalog());
         assertEquals("public", result.schema());
+        assertEquals("test_table", result.name());
+    }
+
+    @Test
+    void getOrCreateSpiTable_withCatalog() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+
+        // When
+        final Table result = tableRegistry.getOrCreateSpiTable("cat.public.test_table");
+
+        // Then
+        assertEquals("cat", result.catalog());
+        assertEquals("public", result.schema());
+        assertEquals("test_table", result.name());
+    }
+
+    @Test
+    void getOrCreateSpiTable_onlyTable() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+
+        // When
+        final Table result = tableRegistry.getOrCreateSpiTable("test_table");
+
+        // Then
+        assertNull(result.catalog());
+        assertNull(result.schema());
         assertEquals("test_table", result.name());
     }
 

@@ -8,43 +8,33 @@ import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
-import org.litebridgedb.tracking.ChangeTracker;
-import org.litebridgedb.tracking.ClassFieldAccessorCache;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.Types;
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class DtoDeletorTest {
 
     @Test
-    void where_string() {
-        // Given
-        final OrmTable ormTable = ormTable();
+    @SuppressWarnings("unchecked")
+    void testWhere() {
+        final OrmTable ormTable = mock(OrmTable.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final DtoDeletor<TestDto> deletor = new DtoDeletor<>(TestDto.class, ormTable, databaseProvider, mock(SelectExpressionMapper.class), mock(LitebridgeContext.class));
+        final SelectExpressionMapper mapper = mock(SelectExpressionMapper.class);
+        final LitebridgeContext context = mock(LitebridgeContext.class);
 
-        // When
-        final DtoDeleteWhereConditionClause<TestDto> result = deletor.where("id");
+        final Table table = new Table("TEST");
+        final TableMetaData metaData = mock(TableMetaData.class);
+        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(metaData.toTable()).thenReturn(table);
+        final ColumnMetaData col = new ColumnMetaData(table, "COL", true, Types.VARCHAR);
+        when(ormTable.getColumnForFieldName("field")).thenReturn(col);
 
-        // Then
-        assertNotNull(result);
-    }
-
-    private static OrmTable ormTable() {
-        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final Table table = new Table("", "public", "test_table");
-        final ColumnMetaData idColumn = new ColumnMetaData(table, "id", false, Types.BIGINT);
-        final TableMetaData tableMetaData = new TableMetaData(table, List.of("id"), List.of(idColumn));
-        final org.litebridgedb.tracking.FieldAccessor idField = changeTracker.classFieldAccessorCache().fieldAccessor(TestDto.class, "id");
-        return new OrmTable(TestDto.class, tableMetaData, Map.of(idField, idColumn), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
-    }
-
-    private static class TestDto {
-        private Long id;
+        final DtoDeletor<Object> deletor = new DtoDeletor<>(Object.class, ormTable, databaseProvider, mapper, context);
+        
+        final DtoDeleteWhereConditionClause<Object> clause = deletor.where("field");
+        assertNotNull(clause);
     }
 }

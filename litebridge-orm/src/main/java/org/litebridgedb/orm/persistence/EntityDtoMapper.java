@@ -178,14 +178,12 @@ public class EntityDtoMapper<DTO> {
         if (fieldType.isPrimitive()) {
             if (Boolean.TYPE == fieldType) {
                 return !((boolean) value);
-            } else if (Character.TYPE == fieldType
-                    || Byte.TYPE == fieldType
-                    || Short.TYPE == fieldType
-                    || Integer.TYPE == fieldType
-                    || Long.TYPE == fieldType
-                    || Float.TYPE == fieldType
-                    || Double.TYPE == fieldType) {
-                return value.equals(0);
+            } else if (Character.TYPE == fieldType) {
+                return (char) value == 0;
+            } else if (Byte.TYPE == fieldType || Short.TYPE == fieldType || Integer.TYPE == fieldType || Long.TYPE == fieldType) {
+                return ((Number) value).longValue() == 0L;
+            } else if (Float.TYPE == fieldType || Double.TYPE == fieldType) {
+                return ((Number) value).doubleValue() == 0.0;
             }
         }
 

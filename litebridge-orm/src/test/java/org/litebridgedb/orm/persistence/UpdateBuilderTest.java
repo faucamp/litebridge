@@ -104,6 +104,16 @@ class UpdateBuilderTest {
         assertThrows(IllegalArgumentException.class, updateBuilder::build);
     }
 
+    @Test
+    void build_noConditions() {
+        // Given
+        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable());
+        updateBuilder.setColumnValues(List.of(new ColumnValue(column("test_table", "name", Types.VARCHAR).toColumn(), "test")));
+
+        // When/Then
+        assertThrows(NullPointerException.class, updateBuilder::build);
+    }
+
     private static OrmTable ormTable() {
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final Table table = new Table("", "public", "test_table");

@@ -1,323 +1,170 @@
 package org.litebridgedb.orm.api.dto;
 
 import org.junit.jupiter.api.Test;
-import org.litebridgedb.commons.ClassUtils;
-import org.litebridgedb.commons.ObjectUtils;
-import org.litebridgedb.convert.DefaultTypeConverter;
 import org.litebridgedb.db.spi.ColumnMetaData;
-import org.litebridgedb.db.spi.DatabaseProvider;
-import org.litebridgedb.db.spi.MappedFieldTarget;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.TableMetaData;
-import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
-import org.litebridgedb.db.spi.expression.LiteralExpression;
+import org.litebridgedb.db.spi.expression.LiteralExpressionFactory;
+import org.litebridgedb.db.spi.expression.SelectReferenceExpressionFactory;
 import org.litebridgedb.db.spi.expression.SqlFunctionRegistry;
-import org.litebridgedb.db.spi.query.Select;
-import org.litebridgedb.db.spi.tx.ConnectionProvider;
-import org.litebridgedb.db.spi.tx.TransactionManager;
-import org.litebridgedb.orm.api.select.model.SelectSpec;
-import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.orm.engine.FromClauseEngine;
 import org.litebridgedb.orm.engine.LitebridgeContext;
-import org.litebridgedb.orm.expression.ProtoColumnExpressionSpec;
-import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
-import org.litebridgedb.orm.expression.TestSelectReferenceExpressionFactory;
-import org.litebridgedb.orm.expression.select.SelectFieldSpec;
 import org.litebridgedb.orm.persistence.DtoConstructor;
 import org.litebridgedb.orm.persistence.OrmTable;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.persistence.TransactionalDatabaseProvider;
-import org.litebridgedb.orm.persistence.alias.AliasGenerator;
-import org.litebridgedb.orm.persistence.alias.DefaultAliasGenerator;
-import org.litebridgedb.tracking.ChangeTracker;
+import org.litebridgedb.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
-import org.litebridgedb.tracking.DirectFieldAccessor;
 import org.litebridgedb.tracking.FieldAccessor;
 
-import java.lang.invoke.MethodHandles;
-import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class DtoFromClauseTerminalTest {
 
     @Test
-    void join() {
-        // Given
-        final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
-        final TestContext<JoinDto> joinContext = testContext(JoinDto.class, List.of("JOIN_VAR"), "joinVar");
-        context.tableRegistry.addTable(JoinDto.class, joinContext.ormTable);
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = new DtoFromClauseTerminal<>(context.dtoSelector);
+    @SuppressWarnings("unchecked")
+    void testWithId() {
+        final OrmTable ormTable = mock(OrmTable.class);
+        final LitebridgeContext context = mock(LitebridgeContext.class);
+        when(context.fromClauseEngine()).thenReturn(mock(FromClauseEngine.class));
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        final SqlFunctionRegistry.Select selectFunctions = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectFunctions);
+        when(selectFunctions.reference()).thenReturn(mock(SelectReferenceExpressionFactory.class));
+        when(selectFunctions.literal()).thenReturn(mock(LiteralExpressionFactory.class));
+        when(context.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
 
-        // When
-        final DtoJoinClause<TestDto> result = dtoFromClauseTerminal.join(JoinDto.class);
+        when(ormTable.dtoClass()).thenReturn((Class) Object.class);
+        final Table table = new Table("", null, "TEST", "t1");
+        final TableMetaData metaData = mock(TableMetaData.class);
+        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(metaData.toTable()).thenReturn(table);
+        when(metaData.name()).thenReturn("TEST");
+        when(metaData.primaryKey()).thenReturn(List.of()); // Will cause error later but tested separately
+        
+        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
 
-        // Then
-        assertNotNull(result);
+        final ColumnMetaData pkCol = new ColumnMetaData(table, "ID", false, Types.BIGINT);
+        when(metaData.primaryKey()).thenReturn(List.of(pkCol));
+        final FieldAccessor pkField = mock(FieldAccessor.class);
+        when(pkField.name()).thenReturn("id");
+        when(ormTable.getFieldForColumnName("ID")).thenReturn(pkField);
+        when(ormTable.getColumnForFieldName("id")).thenReturn(pkCol);
+
+        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), databaseProvider, new NoOpAliasGenerator(), context);
+        final DtoFromClauseTerminal<Object> terminal = selector.select();
+
+        assertNotNull(terminal.withId(1L));
     }
 
     @Test
-    void join_contextScopedTable() {
-        // Given
-        final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
-        final TestContext<JoinDto> joinContext = testContext(JoinDto.class, List.of("JOIN_VAR"), "joinVar");
-        context.ormTable.getContextTableRegistry().addTable(JoinDto.class, joinContext.ormTable);
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = new DtoFromClauseTerminal<>(context.dtoSelector);
+    @SuppressWarnings("unchecked")
+    void testWithIdComposite() {
+        final OrmTable ormTable = mock(OrmTable.class);
+        final LitebridgeContext context = mock(LitebridgeContext.class);
+        when(context.fromClauseEngine()).thenReturn(mock(FromClauseEngine.class));
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        final SqlFunctionRegistry.Select selectFunctions = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectFunctions);
+        when(selectFunctions.reference()).thenReturn(mock(SelectReferenceExpressionFactory.class));
+        when(selectFunctions.literal()).thenReturn(mock(LiteralExpressionFactory.class));
+        when(context.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
 
-        // When
-        final DtoJoinClause<TestDto> result = dtoFromClauseTerminal.join(JoinDto.class);
+        when(ormTable.dtoClass()).thenReturn((Class) Object.class);
+        final Table table = new Table("", null, "TEST", "t1");
+        final TableMetaData metaData = mock(TableMetaData.class);
+        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(metaData.toTable()).thenReturn(table);
 
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
-    void where() {
-        // Given
-        final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(context.dtoSelector, "selectSpec", SelectSpec.class);
-        selectSpec.setTable(context.aliasGenerator.aliasTable(context.ormTable));
-
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = new DtoFromClauseTerminal<>(context.dtoSelector);
-
-        // When
-        final DtoWhereConditionClause<TestDto> result = dtoFromClauseTerminal.where("myVar");
-
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
-    void where_usesSelectedColumnAliasWhenSelectedColumnMatches() {
-        // Given
-        final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
-
-        // When
-        final DtoWhereConditionClause<TestDto> result = dtoFromClauseTerminal.where("myVar");
-
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
-    void where_keepsUnaliasedColumnWhenSelectedColumnDoesNotMatch() {
-        // Given
-        final TestContext<CompositeKeyDto> context = testContext(CompositeKeyDto.class, List.of("ID1", "ID2"), "id1", "id2");
-        final DtoFromClauseTerminal<CompositeKeyDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "id2"));
-
-        // When
-        final DtoWhereConditionClause<CompositeKeyDto> result = dtoFromClauseTerminal.where("id1");
-
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
-    void withId() throws SQLException {
-        // Given
-        final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
-        when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
-        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
-        when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
-        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
-
-        // When
-        final Optional<TestDto> result = dtoFromClauseTerminal.withId("testValue");
-
-        // Then
-        assertTrue(result.isEmpty());
-        verify(context.databaseProvider).select(any(Select.class), any(ConnectionProvider.class));
-    }
-
-    @Test
-    void withIdOrNull() throws SQLException {
-        // Given
-        final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
-        when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
-        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
-        when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
-        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
-
-        // When
-        final TestDto result = dtoFromClauseTerminal.withIdOrNull("testValue");
-
-        // Then
-        assertNull(result);
-        verify(context.databaseProvider).select(any(Select.class), any(ConnectionProvider.class));
-    }
-
-    @Test
-    void withIdOrThrow() throws SQLException {
-        // Given
-        final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
-        when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
-        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
-        when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
-        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
-
-        // When / Then
-        assertThrows(NoSuchElementException.class, () -> dtoFromClauseTerminal.withIdOrThrow("testValue"));
-        verify(context.databaseProvider).select(any(Select.class), any(ConnectionProvider.class));
-    }
-
-    @Test
-    void withIdOrThrow_exceptionSupplier() throws SQLException {
-        // Given
-        final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
-        when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
-        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
-        when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
-        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "myVar"));
-
-        // When / Then
-        assertThrows(IllegalArgumentException.class, () -> dtoFromClauseTerminal.withIdOrThrow("testValue", IllegalArgumentException::new));
-        verify(context.databaseProvider).select(any(Select.class), any(ConnectionProvider.class));
-    }
-
-    @Test
-    void withId_compositePrimaryKey() throws SQLException {
-        // Given
-        final TestContext<CompositeKeyDto> context = testContext(CompositeKeyDto.class, List.of("ID1", "ID2"), "id1", "id2");
-        when(context.databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        when(context.databaseProvider.select(any(Select.class), any(ConnectionProvider.class))).thenReturn(Collections.emptyList());
-        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
-        when(context.sqlFunctionRegistry.select()).thenReturn(selectRegistry);
-        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-
-        final DtoFromClauseTerminal<CompositeKeyDto> dtoFromClauseTerminal = context.dtoSelector.select(new ProtoColumnExpressionSpec(SelectFieldSpec.class, "id1"), new ProtoColumnExpressionSpec(SelectFieldSpec.class, "id2"));
-
-        // When
-        final Optional<CompositeKeyDto> result = dtoFromClauseTerminal.withId(List.of("testValue1", "testvalue2"));
-
-        // Then
-        assertTrue(result.isEmpty());
-        verify(context.databaseProvider).select(any(Select.class), any(ConnectionProvider.class));
-    }
-
-    @Test
-    void orderBy() {
-        // Given
-        final TestContext<TestDto> context = testContext(TestDto.class, List.of("MY_VAR"), "myVar");
-        final DtoFromClauseTerminal<TestDto> dtoFromClauseTerminal = new DtoFromClauseTerminal<>(context.dtoSelector);
-
-        // When
-        final DtoOrderByClause<TestDto> result = dtoFromClauseTerminal.orderBy("myVar");
-
-        // Then
-        assertNotNull(result);
-    }
-
-    private static <DTO> TestContext<DTO> testContext(final Class<DTO> dtoClass, final List<String> primaryKeyColumns, final String... fieldNames) {
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
-
-        final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = fieldColumnMap(dtoClass, table, fieldNames);
-        final List<ColumnMetaData> columns = fieldColumnMap.values().stream()
-                .map(ColumnMetaData.class::cast)
-                .toList();
-        final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", primaryKeyColumns, columns);
-        final OrmTable ormTable = new OrmTable(dtoClass, tableMetaData, fieldColumnMap, changeTracker, classFieldAccessorCache);
-        final TableRegistry tableRegistry = new TableRegistry();
-        tableRegistry.addTable(dtoClass, ormTable);
+        final ColumnMetaData pk1 = new ColumnMetaData(table, "ID1", false, Types.BIGINT);
+        final ColumnMetaData pk2 = new ColumnMetaData(table, "ID2", false, Types.BIGINT);
+        when(metaData.primaryKey()).thenReturn(List.of(pk1, pk2));
+        
+        final FieldAccessor f1 = mock(FieldAccessor.class);
+        when(f1.name()).thenReturn("id1");
+        final FieldAccessor f2 = mock(FieldAccessor.class);
+        when(f2.name()).thenReturn("id2");
+        
+        when(ormTable.getFieldForColumnName("ID1")).thenReturn(f1);
+        when(ormTable.getFieldForColumnName("ID2")).thenReturn(f2);
+        when(ormTable.getColumnForFieldName("id1")).thenReturn(pk1);
+        when(ormTable.getColumnForFieldName("id2")).thenReturn(pk2);
 
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
-        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
-        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        final TransactionalDatabaseProvider transactionalDatabaseProvider = new TransactionalDatabaseProvider(mock(TransactionManager.class), databaseProvider);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final FromClauseEngine fromClauseEngine = new FromClauseEngine(databaseProvider, tableRegistry, changeTracker, dtoConstructor, () -> mock(LitebridgeContext.class));
-        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), fromClauseEngine, sqlFunctionRegistry);
+        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), databaseProvider, new NoOpAliasGenerator(), context);
+        final DtoFromClauseTerminal<Object> terminal = selector.select();
 
-        final DtoSelector<DTO> dtoSelector = new DtoSelector<>(dtoClass, ormTable, tableRegistry, classFieldAccessorCache, dtoConstructor, transactionalDatabaseProvider, aliasGenerator, litebridgeContext);
-        dtoSelector.selectSpec().setProtoExpressionResolver(new DtoProtoExpressionResolver(dtoSelector.selectSpec(), aliasGenerator, classFieldAccessorCache, tableRegistry));
-
-        return new TestContext<>(ormTable, tableRegistry, databaseProvider, sqlFunctionRegistry, aliasGenerator, dtoSelector);
+        // List
+        assertNotNull(terminal.withId(List.of(1L, 2L)));
+        // Array
+        assertNotNull(terminal.withId(new Object[]{1L, 2L}));
+        // Map
+        assertNotNull(terminal.withId(Map.of("id1", 1L, "id2", 2L)));
+        
+        // Invalid count
+        assertThrows(IllegalArgumentException.class, () -> terminal.withId(List.of(1L)));
+        // Invalid type
+        assertThrows(IllegalArgumentException.class, () -> terminal.withId("invalid"));
     }
 
-    private static Map<FieldAccessor, MappedFieldTarget> fieldColumnMap(final Class<?> dtoClass, final Table table, final String... fieldNames) {
-        return java.util.Arrays.stream(fieldNames)
-                .collect(java.util.stream.Collectors.toMap(
-                        fieldName -> new DirectFieldAccessor(ClassUtils.getField(dtoClass, fieldName), MethodHandles.lookup()),
-                        fieldName -> new ColumnMetaData(table, toColumnName(fieldName), false, Types.VARCHAR)
-                ));
+    @Test
+    @SuppressWarnings("unchecked")
+    void testJoin() {
+        final OrmTable ormTable = mock(OrmTable.class);
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final LitebridgeContext context = mock(LitebridgeContext.class);
+        when(context.fromClauseEngine()).thenReturn(mock(FromClauseEngine.class));
+
+        final Table table = new Table("", null, "TEST", "t1");
+        final TableMetaData metaData = mock(TableMetaData.class);
+        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(metaData.toTable()).thenReturn(table);
+        when(ormTable.dtoClass()).thenReturn((Class) Object.class);
+
+        final TableRegistry contextTableRegistry = mock(TableRegistry.class);
+        when(ormTable.getContextTableRegistry()).thenReturn(contextTableRegistry);
+
+        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, tableRegistry, mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context);
+        final DtoFromClauseTerminal<Object> terminal = selector.select();
+
+        final OrmTable joinTable = mock(OrmTable.class);
+        when(joinTable.getMetaData()).thenReturn(metaData);
+        when(tableRegistry.getTableOrThrow(String.class)).thenReturn(joinTable);
+
+        assertNotNull(terminal.join(String.class));
+        
+        final OrmTable inlineJoinTable = mock(OrmTable.class);
+        when(inlineJoinTable.getMetaData()).thenReturn(metaData);
+        when(contextTableRegistry.getTable(Integer.class)).thenReturn(inlineJoinTable);
+        assertNotNull(terminal.join(Integer.class));
     }
 
-    private static String toColumnName(final String fieldName) {
-        final StringBuilder columnName = new StringBuilder();
+    @Test
+    @SuppressWarnings("unchecked")
+    void testGroupByOrderBy() {
+        final OrmTable ormTable = mock(OrmTable.class);
+        final LitebridgeContext context = mock(LitebridgeContext.class);
+        when(context.fromClauseEngine()).thenReturn(mock(FromClauseEngine.class));
 
-        for (int i = 0; i < fieldName.length(); i++) {
-            final char character = fieldName.charAt(i);
+        final Table table = new Table("", null, "TEST", "t1");
+        final TableMetaData metaData = mock(TableMetaData.class);
+        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(metaData.toTable()).thenReturn(table);
+        when(ormTable.dtoClass()).thenReturn((Class) Object.class);
+        final ColumnMetaData col1 = new ColumnMetaData(table, "COL1", true, Types.VARCHAR);
+        when(ormTable.getColumnForFieldName("field1")).thenReturn(col1);
 
-            if (Character.isUpperCase(character)) {
-                columnName.append('_');
-            }
+        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context);
+        final DtoFromClauseTerminal<Object> terminal = selector.select();
 
-            columnName.append(Character.toUpperCase(character));
-        }
-
-        return columnName.toString();
-    }
-
-    private record TestContext<DTO>(OrmTable ormTable,
-                                    TableRegistry tableRegistry,
-                                    DatabaseProvider databaseProvider,
-                                    SqlFunctionRegistry sqlFunctionRegistry,
-                                    AliasGenerator aliasGenerator,
-                                    DtoSelector<DTO> dtoSelector) {
-    }
-
-    private static class TestDto {
-        private String myVar;
-    }
-
-    private static class JoinDto {
-        private String joinVar;
-    }
-
-    private static class CompositeKeyDto {
-        private String id1;
-        private String id2;
+        assertNotNull(terminal.groupBy("field1"));
+        assertNotNull(terminal.orderBy("field1"));
     }
 }

@@ -2,26 +2,19 @@ package org.litebridgedb.orm.persistence;
 
 import org.junit.jupiter.api.Test;
 import org.litebridgedb.db.spi.Column;
-import org.litebridgedb.db.spi.ColumnMetaData;
-import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
-import org.litebridgedb.db.spi.TableMetaData;
-import org.litebridgedb.db.spi.alias.DefaultAliasTransformer;
 import org.litebridgedb.orm.api.dto.DtoJoinSpec;
 import org.litebridgedb.orm.api.dto.DtoSelectSpec;
-import org.litebridgedb.orm.engine.LitebridgeContext;
-import org.litebridgedb.orm.api.select.model.SelectExpressionMapper;
+import org.litebridgedb.orm.expression.DelegateExpressionSpec;
+import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.expression.select.SelectFieldSpec;
-import org.litebridgedb.orm.persistence.alias.DefaultAliasGenerator;
-import org.litebridgedb.tracking.ChangeTracker;
-import org.litebridgedb.tracking.ClassFieldAccessorCache;
 import org.litebridgedb.tracking.FieldAccessor;
 
-import java.lang.invoke.MethodHandles;
-import java.sql.Types;
+import org.litebridgedb.orm.expression.function.scalar.LowerSpec;
+
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -31,69 +24,69 @@ import static org.mockito.Mockito.when;
 class DtoBlueprintTest {
 
     @Test
-    void constructor() {
-        // Given
-        final DtoSelectSpec dtoSelectSpec = new DtoSelectSpec(TestDto.class, createOrmTable(TestDto.class, "test_table"), new DefaultAliasGenerator(new DefaultAliasTransformer()), mock(LitebridgeContext.class));
-        final List<Object> primaryKey = List.of(123L);
-        final Row row = new Row().withColumn(new Column(new Table("", "public", "test_table"), "id"), 123L);
+    void testDtoBlueprint() {
+        final DtoSelectSpec selectSpec = mock(DtoSelectSpec.class);
+        final List<Object> pk = List.of(1L);
+        final Row row = mock(Row.class);
+        final Table table = new Table("TEST");
+        when(selectSpec.getTable()).thenReturn(table);
+        when(selectSpec.dtoClass()).thenReturn((Class) Object.class);
+
+        final SelectFieldSpec fieldSpec = mock(SelectFieldSpec.class);
+        final Column column = mock(Column.class);
         final FieldAccessor fieldAccessor = mock(FieldAccessor.class);
-        when(fieldAccessor.name()).thenReturn("id");
-        dtoSelectSpec.setExpressions(List.of(new SelectFieldSpec(fieldAccessor, new Column(new Table("", "public", "test_table"), "id"))));
+        when(fieldAccessor.name()).thenReturn("field");
+        when(fieldSpec.getColumn()).thenReturn(column);
+        when(column.table()).thenReturn(table);
+        when(fieldSpec.field()).thenReturn(fieldAccessor);
+        when(selectSpec.getExpressions()).thenReturn(List.of(fieldSpec));
 
-        // When
-        final DtoBlueprint dtoBlueprint = new DtoBlueprint(dtoSelectSpec, primaryKey, row);
+        final DtoBlueprint blueprint = new DtoBlueprint(selectSpec, pk, row);
+        
+        assertEquals(selectSpec, blueprint.dtoData().spec());
+        assertEquals(pk, blueprint.dtoData().primaryKey());
+        assertEquals(row, blueprint.dtoData().row());
+        assertEquals(Object.class, blueprint.dtoData().dtoClass());
+        assertEquals(1, blueprint.dtoData().fieldColumns().size());
+        assertEquals("field", blueprint.dtoData().fieldColumns().get(0).fieldAccessor().name());
 
-        // Then
-        assertSame(dtoSelectSpec, dtoBlueprint.dtoData().spec());
-        assertSame(primaryKey, dtoBlueprint.dtoData().primaryKey());
-        assertSame(row, dtoBlueprint.dtoData().row());
-        assertEquals(TestDto.class, dtoBlueprint.dtoData().dtoClass());
-        assertEquals(List.of(), dtoBlueprint.joinedDtoData());
+        final DtoJoinSpec joinSpec = mock(DtoJoinSpec.class);
+        final List<Object> joinPk = List.of(2L);
+        final Row joinRow = mock(Row.class);
+        final List<DtoSelectSpec.FieldColumn> joinFields = Collections.emptyList();
+        when(joinSpec.getFieldColumns()).thenReturn(joinFields);
+        when(joinSpec.dtoClass()).thenReturn((Class) String.class);
+
+        blueprint.addJoinedDtoData(joinSpec, joinPk, joinRow);
+        assertEquals(1, blueprint.joinedDtoData().size());
+        final DtoBlueprint.JoinDtoData joinData = blueprint.joinedDtoData().get(0);
+        assertEquals(joinSpec, joinData.spec());
+        assertEquals(joinPk, joinData.primaryKey());
+        assertEquals(joinRow, joinData.row());
+        assertEquals(String.class, joinData.dtoClass());
+        assertSame(joinFields, joinData.fieldColumns());
     }
 
     @Test
-    void addJoinedDtoData() {
-        // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final OrmTable ormTable = createOrmTable(TestDto.class, "test_table");
-        final DtoSelectSpec dtoSelectSpec = new DtoSelectSpec(TestDto.class, ormTable, new DefaultAliasGenerator(new DefaultAliasTransformer()), mock(LitebridgeContext.class));
+    void testSelectDtoDataWithDelegate() {
+        final DtoSelectSpec selectSpec = mock(DtoSelectSpec.class);
+        final Table table = new Table("TEST");
+        when(selectSpec.getTable()).thenReturn(table);
+
+        final SelectFieldSpec fieldSpec = mock(SelectFieldSpec.class);
+        final Column column = mock(Column.class);
         final FieldAccessor fieldAccessor = mock(FieldAccessor.class);
-        when(fieldAccessor.name()).thenReturn("id");
-        dtoSelectSpec.setExpressions(List.of(new SelectFieldSpec(fieldAccessor, new Column(new Table(ormTable.getMetaData().catalog(), ormTable.getMetaData().schema(), ormTable.getMetaData().name()), "id"))));
-        final List<Object> primaryKey = List.of(123L);
-        final Row row = new Row().withColumn(new Column(ormTable.getMetaData().toTable(), "id"), 123L);
-        final DtoBlueprint dtoBlueprint = new DtoBlueprint(dtoSelectSpec, primaryKey, row);
+        when(fieldAccessor.name()).thenReturn("field");
+        when(fieldSpec.getColumn()).thenReturn(column);
+        when(column.table()).thenReturn(table);
+        when(fieldSpec.field()).thenReturn(fieldAccessor);
 
-        final Table joinTable = new Table("", "public", "joined_test_table");
-        final OrmTable joinOrmTable = createOrmTable(JoinedTestDto.class, joinTable.name());
-        final DtoJoinSpec dtoJoinSpec = new DtoJoinSpec(JoinedTestDto.class, ormTable, joinTable, mock(SelectExpressionMapper.class));
-        dtoJoinSpec.setFieldColumns(List.of(new DtoSelectSpec.FieldColumn(null, new Column(joinTable, "id"))));
-        final List<Object> joinPrimaryKey = List.of(456L);
-        final Row joinRow = new Row().withColumn(new Column(joinTable, "id"), 456L);
+        final LowerSpec delegate = new LowerSpec(fieldSpec);
 
-        // When
-        dtoBlueprint.addJoinedDtoData(dtoJoinSpec, joinPrimaryKey, joinRow);
+        when(selectSpec.getExpressions()).thenReturn(List.of(delegate));
 
-        // Then
-        assertEquals(1, dtoBlueprint.joinedDtoData().size());
-        assertSame(dtoJoinSpec, dtoBlueprint.joinedDtoData().getFirst().spec());
-        assertSame(joinPrimaryKey, dtoBlueprint.joinedDtoData().getFirst().primaryKey());
-        assertSame(joinRow, dtoBlueprint.joinedDtoData().getFirst().row());
-        assertEquals(JoinedTestDto.class, dtoBlueprint.joinedDtoData().getFirst().dtoClass());
-    }
-
-    private static OrmTable createOrmTable(final Class<?> dtoClass, final String tableName) {
-        final Table table = new Table("", "public", tableName);
-        final ColumnMetaData idColumn = new ColumnMetaData(table, "id", false, Types.BIGINT);
-        final TableMetaData tableMetaData = new TableMetaData(table, List.of("id"), List.of(idColumn));
-        return new OrmTable(dtoClass, tableMetaData, Map.of(), new ChangeTracker(MethodHandles.lookup()), new ClassFieldAccessorCache(MethodHandles.lookup()));
-    }
-
-    private static class TestDto {
-        private String myVar;
-    }
-
-    private static class JoinedTestDto {
-        private String myVar;
+        final DtoBlueprint.SelectDtoData data = new DtoBlueprint.SelectDtoData(selectSpec, List.of(), mock(Row.class));
+        assertEquals(1, data.fieldColumns().size());
+        assertEquals("field", data.fieldColumns().get(0).fieldAccessor().name());
     }
 }
