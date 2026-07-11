@@ -1,0 +1,12 @@
+# Release Notes
+
+← [Home](../index.md)
+
+Detailed release notes. See also [Changelog](../../CHANGELOG.md).
+
+## Releases
+
+| Version                             | Release date |
+|-------------------------------------|--------------|
+| **[0.3.0](release-notes-0.3.0.md)** | 2026-07-11   |
+

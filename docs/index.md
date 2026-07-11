@@ -20,6 +20,7 @@ Advanced query expressions including SQL functions and explicit ORM-side type co
 5. [Maven Plugin](maven/index.md)
 6. [Spring Integration](spring/index.md)
 7. [Litebridge Development](dev/index.md)
+8. [Release Notes](release-notes/index.md)
 
 ## API documentation
 
