@@ -29,22 +29,22 @@ jobs:
       - name: Detect package manager
         id: detect-package-manager
         run: |
-          if [ -f "${{ github.workspace }}/{{ env.BUILD_PATH }}/yarn.lock" ]; then
+          if [ -f "${{ github.workspace }}/${{ env.BUILD_PATH }}/yarn.lock" ]; then
             echo "manager=yarn" >> $GITHUB_OUTPUT
             echo "command=install" >> $GITHUB_OUTPUT
             echo "runner=yarn" >> $GITHUB_OUTPUT
             exit 0
-          elif [ -f "${{ github.workspace }}/{{ env.BUILD_PATH }}/pnpm-lock.yaml" ]; then
+          elif [ -f "${{ github.workspace }}/${{ env.BUILD_PATH }}/pnpm-lock.yaml" ]; then
             echo "manager=pnpm" >> $GITHUB_OUTPUT
             echo "command=install" >> $GITHUB_OUTPUT
             echo "runner=pnpm" >> $GITHUB_OUTPUT
             exit 0
-          elif [ -f "${{ github.workspace }}/{{ env.BUILD_PATH }}/bun.lockb" ]; then
+          elif [ -f "${{ github.workspace }}/${{ env.BUILD_PATH }}/bun.lockb" ]; then
             echo "manager=bun" >> $GITHUB_OUTPUT
             echo "command=install" >> $GITHUB_OUTPUT
             echo "runner=bun" >> $GITHUB_OUTPUT
             exit 0
-          elif [ -f "${{ github.workspace }}/{{ env.BUILD_PATH }}/package-json.lock" ] || [ -f "${{ github.workspace }}/{{ env.BUILD_PATH }}/package-lock.json" ]; then
+          elif [ -f "${{ github.workspace }}/{{ env.BUILD_PATH }}/package-lock.json" ]; then
             echo "manager=npm" >> $GITHUB_OUTPUT
             echo "command=ci" >> $GITHUB_OUTPUT
             echo "runner=npx --no-install" >> $GITHUB_OUTPUT
