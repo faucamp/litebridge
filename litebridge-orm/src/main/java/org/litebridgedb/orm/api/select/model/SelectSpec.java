@@ -54,7 +54,6 @@ public abstract class SelectSpec {
     protected @Nullable ConditionGroupSpec havingConditions;
     protected @Nullable List<OrderBySpec> orderBys;
     protected @Nullable LimitSpec limit;
-    protected @Nullable Map<Class<?>, String> dtoAliases;
     private final Deque<ConditionGroupSpec> whereConditionGroupStack = new ArrayDeque<>();
     private final Deque<ConditionGroupSpec> havingConditionGroupStack = new ArrayDeque<>();
 
@@ -96,10 +95,6 @@ public abstract class SelectSpec {
 
     public @Nullable List<JoinSpec> getJoins() {
         return joins;
-    }
-
-    public void setJoins(@Nullable final List<JoinSpec> joins) {
-        this.joins = joins;
     }
 
     public ConditionGroupSpec currentWhereConditionGroupSpec() {
@@ -150,10 +145,6 @@ public abstract class SelectSpec {
         return orderBys;
     }
 
-    public void setOrderBys(@Nullable final List<OrderBySpec> orderBys) {
-        this.orderBys = orderBys;
-    }
-
     public OrderBySpec newOrderBy(final ExpressionSpec... expressions) {
         Objects.requireNonNull(expressions, "No LHS expressions specified for ORDER BY");
         return newOrderBy(Arrays.stream(expressions).toList());
@@ -173,32 +164,12 @@ public abstract class SelectSpec {
         return limit;
     }
 
-    public void setLimit(final LimitSpec limit) {
-        this.limit = limit;
-    }
-
     public LimitSpec ensureLimit() {
         if (this.limit == null) {
             limit = new LimitSpec();
         }
 
         return limit;
-    }
-
-    public void setDtoAlias(Class<?> dtoClass, String alias) {
-        if (dtoAliases == null) {
-            dtoAliases = new HashMap<>();
-        }
-
-        dtoAliases.put(dtoClass, alias);
-    }
-
-    public @Nullable String getDtoAlias(Class<?> dtoClass) {
-        if (dtoAliases != null) {
-            return dtoAliases.get(dtoClass);
-        } else {
-            return null;
-        }
     }
 
     public Select toSelect() {

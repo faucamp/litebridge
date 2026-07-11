@@ -46,14 +46,6 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
         this.tableRegistry = tableRegistry;
     }
 
-    public @Nullable DtoSelectSpec getSelectSpec() {
-        return selectSpec;
-    }
-
-    public void setSelectSpec(final DtoSelectSpec selectSpec) {
-        this.selectSpec = selectSpec;
-    }
-
     @Override
     protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable, final ClauseType clause) {
         // Map the input DTO field names to database column names

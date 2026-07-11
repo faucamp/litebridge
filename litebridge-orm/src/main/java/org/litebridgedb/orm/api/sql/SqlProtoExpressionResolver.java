@@ -24,14 +24,6 @@ public final class SqlProtoExpressionResolver extends ProtoExpressionResolver {
     public SqlProtoExpressionResolver() {
     }
 
-    public @Nullable SelectSpec getSelectSpec() {
-        return selectSpec;
-    }
-
-    public void setSelectSpec(@Nullable final SelectSpec selectSpec) {
-        this.selectSpec = selectSpec;
-    }
-
     @Override
     protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable, final ClauseType clause) {
         return new SelectColumnSpec(getColumn(resolvable, clause));

@@ -73,7 +73,6 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
         assert table.alias() != null;
         selectSpec.setTable(table);
         selectSpec.setProtoExpressionResolver(new DtoProtoExpressionResolver(selectSpec, aliasGenerator, classFieldAccessorCache, tableRegistry));
-        selectSpec.setDtoAlias(selectSpec.dtoClass(), Objects.requireNonNull(table.alias()));
         selectSpec.setExpressions(expressionSpecs);
         return new DtoFromClauseTerminal<>(this);
     }

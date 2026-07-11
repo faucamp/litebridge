@@ -103,12 +103,9 @@ class SqlSelectSpecTest {
         sqlSelectSpec.setProtoExpressionResolver(mock(ProtoExpressionResolver.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
-        final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
-        final JoinSpec joinSpec = sqlSelectSpec.newJoinSpec("TEST_SCHEMA.TEST_TABLE");
 
         // When
-        sqlSelectSpec.setJoins(List.of(joinSpec));
+        final JoinSpec joinSpec = sqlSelectSpec.newJoinSpec("TEST_SCHEMA.TEST_TABLE");
         final List<JoinSpec> result = sqlSelectSpec.getJoins();
 
         // Then
@@ -178,27 +175,6 @@ class SqlSelectSpecTest {
     }
 
     @Test
-    void setOrderBys() {
-        // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        sqlSelectSpec.setTable(table);
-        final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
-        final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
-        final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectColumnSpec));
-
-        // When
-        sqlSelectSpec.setOrderBys(List.of(orderBySpec));
-        final List<OrderBySpec> result = sqlSelectSpec.getOrderBys();
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertSame(orderBySpec, result.getFirst());
-    }
-
-    @Test
     void newOrderBy() {
         // Given
         final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
@@ -219,29 +195,6 @@ class SqlSelectSpecTest {
     }
 
     @Test
-    void setLimit() {
-        // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
-        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        sqlSelectSpec.setTable(table);
-        final Column column = new Column(table, "TEST_COLUMN");
-        sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
-        final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
-        final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectColumnSpec));
-        sqlSelectSpec.setOrderBys(List.of(orderBySpec));
-        final LimitSpec limitSpec = new LimitSpec();
-        limitSpec.setOffset(100);
-        limitSpec.setLimit(200);
-
-        // When
-        sqlSelectSpec.setLimit(limitSpec);
-        final LimitSpec result = sqlSelectSpec.getLimit();
-
-        // Then
-        assertSame(limitSpec, result);
-    }
-
-    @Test
     void ensureLimit() {
         // Given
         final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
@@ -250,8 +203,7 @@ class SqlSelectSpecTest {
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
         final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
-        final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectColumnSpec));
-        sqlSelectSpec.setOrderBys(List.of(orderBySpec));
+        sqlSelectSpec.newOrderBy(selectColumnSpec);
 
         // When
         final LimitSpec result = sqlSelectSpec.ensureLimit();
@@ -260,30 +212,6 @@ class SqlSelectSpecTest {
         assertNotNull(result);
     }
 
-    @Test
-    void setDtoAlias() {
-        // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
-        sqlSelectSpec.setDtoAlias(TestDto.class, "TEST_ALIAS");
-
-        // When
-        final String result = sqlSelectSpec.getDtoAlias(TestDto.class);
-
-        // Then
-        assertEquals("TEST_ALIAS", result);
-    }
-
-    @Test
-    void getDtoAlias_null() {
-        // Given
-        final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
-
-        // When
-        final String result = sqlSelectSpec.getDtoAlias(TestDto.class);
-
-        // Then
-        assertNull(result);
-    }
 
     @Test
     void toSelect() {
@@ -304,12 +232,10 @@ class SqlSelectSpecTest {
         final Column column = new Column(table, "TEST_COLUMN");
         sqlSelectSpec.setExpressions(List.of(new SelectColumnSpec(column)));
         final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(new Column(new Table("TEST_TABLE"), "TEST_COLUMN"));
-        final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectColumnSpec));
-        sqlSelectSpec.setOrderBys(List.of(orderBySpec));
-        final LimitSpec limitSpec = new LimitSpec();
+        sqlSelectSpec.newOrderBy(selectColumnSpec);
+        final LimitSpec limitSpec = sqlSelectSpec.ensureLimit();
         limitSpec.setOffset(100);
         limitSpec.setLimit(200);
-        sqlSelectSpec.setLimit(limitSpec);
 
         // When
         final Select result = sqlSelectSpec.toSelect();
