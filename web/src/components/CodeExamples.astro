@@ -1,0 +1,140 @@
+---
+import { Code } from 'astro:components';
+
+const examples = [
+  {
+    id: 'mapping',
+    title: 'Registration',
+    description: 'Map DTOs to database tables using a fluent, programmatic API.',
+    code: `// Register the table mapping for the Person DTO class
+litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
+    .with(spec -> spec.mapField("id").toColumn("PERSON_ID")
+        .generateUsingSequence("LB.PERSON_SEQ"))
+    .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
+    .with(spec -> spec.mapField("accounts")
+        .oneToMany(c -> c.mappedByField("owner"))));`,
+  },
+  {
+    id: 'persisting',
+    title: 'Persisting',
+    description: 'Save, insert, or update DTOs with automatic change tracking.',
+    code: `final Person person = new Person();
+person.setName("Alice");
+person.setSurname("Smith");
+
+// Executes an INSERT or UPDATE statement as needed
+litebridge.save(person);
+
+person.setName("Bob");
+// Executes an UPDATE statement only for changed fields
+litebridge.save(person);`,
+  },
+  {
+    id: 'querying',
+    title: 'Querying',
+    description: 'Retrieve data using a familiar, SQL-like fluent builder.',
+    code: `final Optional<Person> alice = litebridge.select(Person.class)
+        .where("name").eq("Alice")
+        .and("surname").eq("Smith")
+        .orderBy("id").asc()
+        .first();
+
+litebridge.select(Person.class)
+        .where("eyeColour").isNull()
+        .stream()
+        .forEach(p -> logger.info("Found: {}", p));`,
+  },
+];
+---
+
+<section id="examples" class="py-24 bg-white dark:bg-dark-bg">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mb-16 text-center">
+      <h2 class="text-base font-semibold uppercase tracking-wider text-accent">Code Examples</h2>
+      <p class="mt-2 text-3xl font-extrabold tracking-tight text-primary dark:text-white sm:text-4xl">
+        SQL-Like, Minimal Magic
+      </p>
+      <p class="mx-auto mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400">
+        Litebridge treats SQL as a first-class citizen while keeping your Java code clean.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start reveal">
+      <div class="lg:col-span-4 flex flex-col gap-4">
+        {examples.map((example) => (
+          <button
+            class="example-tab group flex flex-col items-start rounded-xl border border-gray-200 p-6 text-left transition-all hover:border-accent hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50 aria-selected:border-accent aria-selected:bg-accent/5 dark:aria-selected:bg-accent/10"
+            data-id={example.id}
+            aria-selected={example.id === 'mapping'}
+          >
+            <h3 class="text-lg font-bold text-primary dark:text-white group-hover:text-accent transition-colors">
+              {example.title}
+            </h3>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              {example.description}
+            </p>
+          </button>
+        ))}
+      </div>
+
+      <div class="lg:col-span-8 relative">
+        <div class="overflow-hidden rounded-2xl bg-gray-900 shadow-2xl">
+          <div class="flex items-center justify-between bg-gray-800 px-4 py-2">
+            <div class="flex gap-1.5">
+              <div class="h-3 w-3 rounded-full bg-red-500/50"></div>
+              <div class="h-3 w-3 rounded-full bg-yellow-500/50"></div>
+              <div class="h-3 w-3 rounded-full bg-green-500/50"></div>
+            </div>
+            <span class="text-xs font-mono text-gray-400">LitebridgeExample.java</span>
+          </div>
+          <div class="p-6 overflow-x-auto min-h-[300px]">
+            {examples.map((example) => (
+              <div 
+                id={`code-${example.id}`} 
+                class={`example-code transition-all duration-300 ${example.id === 'mapping' ? 'block' : 'hidden'}`}
+              >
+                <Code code={example.code} lang="java" theme="github-dark" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const tabs = document.querySelectorAll('.example-tab');
+  const codes = document.querySelectorAll('.example-code');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const id = tab.getAttribute('data-id');
+      
+      // Update tabs
+      tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+      tab.setAttribute('aria-selected', 'true');
+      
+      // Update code blocks
+      codes.forEach(c => {
+        if (c.id === `code-${id}`) {
+          c.classList.remove('hidden');
+          c.classList.add('block');
+        } else {
+          c.classList.remove('block');
+          c.classList.add('hidden');
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  :global(.astro-code) {
+    background-color: transparent !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.6 !important;
+  }
+</style>

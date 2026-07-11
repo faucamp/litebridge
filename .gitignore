@@ -36,6 +36,24 @@ build/
 ### VS Code ###
 .vscode/
 
-### Mac OS ###
+### OS stuff ###
 .DS_Store
+Thumbs.db
 
+### Web ###
+# Build output and framework cache
+dist/
+.astro/
+
+# Package manager dependencies
+node_modules/
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Environment variables and secrets
+.env
+.env.production
+.env.development
+.env.local
+*.env
