@@ -13,6 +13,7 @@ import org.litebridgedb.orm.api.select.model.ConditionSpec;
 import org.litebridgedb.orm.api.select.model.JoinSpec;
 import org.litebridgedb.orm.api.select.model.LimitSpec;
 import org.litebridgedb.orm.api.select.model.OrderBySpec;
+import org.litebridgedb.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridgedb.orm.engine.LitebridgeContext;
 import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.TestColumnExpression;
@@ -99,6 +100,7 @@ class SqlSelectSpecTest {
     void getJoins() {
         // Given
         final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
+        sqlSelectSpec.setProtoExpressionResolver(mock(ProtoExpressionResolver.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -119,6 +121,7 @@ class SqlSelectSpecTest {
     void newJoinSpec() {
         // Given
         final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
+        sqlSelectSpec.setProtoExpressionResolver(mock(ProtoExpressionResolver.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");
@@ -138,6 +141,7 @@ class SqlSelectSpecTest {
     void newJoinSpec_noSchema() {
         // Given
         final SqlSelectSpec sqlSelectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
+        sqlSelectSpec.setProtoExpressionResolver(mock(ProtoExpressionResolver.class));
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         sqlSelectSpec.setTable(table);
         final Column column = new Column(table, "TEST_COLUMN");

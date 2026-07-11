@@ -10,6 +10,7 @@ import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Specification for constructing a SQL SELECT statement.
@@ -32,7 +33,7 @@ public class SqlSelectSpec extends SelectSpec {
             joins = new ArrayList<>();
         }
 
-        final SqlJoinSpec joinSpec = new SqlJoinSpec(table, selectExpressionMapper);
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(table, Objects.requireNonNull(selectExpressionMapper));
         joins.add(joinSpec);
         return joinSpec;
     }

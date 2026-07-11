@@ -31,6 +31,7 @@ import java.sql.Types;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 public abstract class AbstractSqlGenerator {
@@ -96,7 +97,7 @@ public abstract class AbstractSqlGenerator {
                     sqlFragment = fragmentPreparedSql.sql();
                     bindValues = fragmentPreparedSql.bindValues();
                 } else {
-                    sqlFragment = condition.rhs().toSql(operation, ClauseType.WHERE);
+                    sqlFragment = Objects.requireNonNull(condition.rhs()).toSql(operation, ClauseType.WHERE);
                     bindValues = Collections.emptyList();
                 }
 
@@ -116,7 +117,7 @@ public abstract class AbstractSqlGenerator {
                 final Column referencedColumn = selectReference.column();
                 sql = "%s %s %s.%s".formatted(lhs, mapOperator(condition.operator()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.table().aliasOrName()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.name()));
             } else {
-                final Object rawValue = getExpressionValue(condition.rhs());
+                final Object rawValue = getExpressionValue(Objects.requireNonNull(condition.rhs()));
                 final BindValue bindValue = createBindValue(column, rawValue, connectionProvider);
                 sql = "%s %s ?".formatted(lhs, mapOperator(condition.operator()));
                 return new PreparedSql(sql, List.of(bindValue));

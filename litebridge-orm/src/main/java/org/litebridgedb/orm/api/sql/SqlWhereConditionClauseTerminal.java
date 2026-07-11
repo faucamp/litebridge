@@ -48,7 +48,7 @@ public final class SqlWhereConditionClauseTerminal
 
     @Override
     public SqlWhereConditionClauseTerminal and(final QueryConditionBuilder<Row> query) {
-        return null;
+        return whereImpl(LogicOperator.AND, query);
     }
 
     @Override
@@ -64,7 +64,7 @@ public final class SqlWhereConditionClauseTerminal
 
     @Override
     public SqlWhereConditionClauseTerminal or(final QueryConditionBuilder<Row> query) {
-        return null;
+        return whereImpl(LogicOperator.OR, query);
     }
 
     @Override
