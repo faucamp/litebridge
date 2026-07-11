@@ -13,7 +13,6 @@ import org.litebridgedb.db.spi.query.ConditionGroup;
 import org.litebridgedb.db.spi.query.LogicCondition;
 import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.db.spi.query.Operator;
-import org.litebridgedb.db.spi.sql.BindValue;
 import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.db.spi.update.ColumnValue;
 import org.litebridgedb.db.spi.update.Delete;
@@ -371,13 +370,7 @@ public class PersistenceFacade {
 
                     if (existingStatement == null) {
                         final AbstractStatementBuilder<?> dependantStatementBuilder = createStatementBuilder(value, inProgressDtos);
-                        statementChain.addDependant(value, new PipedStatement(dependantStatementBuilder, value, updateResult -> {
-                            if (updateResult instanceof InsertResult insertResult
-                                    && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-                                insertResult.generatedKeys().forEach((pkColumn, pkValue) -> columnValues.add(new ColumnValue(pkColumn.toColumn(), pkValue)));
-                                updateDtoPrimaryKey(dto, insertResult.generatedKeys());
-                            }
-                        }));
+                        statementChain.addDependant(value, new PipedStatement(dependantStatementBuilder, value));
                     }
                 }
             }
