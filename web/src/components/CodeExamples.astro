@@ -6,26 +6,31 @@ const examples = [
     id: 'mapping',
     title: 'Registration',
     description: 'Map DTOs to database tables using a fluent, programmatic API.',
-    code: `// Register the table mapping for the Person DTO class
+    code: `// Register a Litebridge entity
+litebridge.register(PersonEntity.class);
+
+// Or register any DTO programmatically
 litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
     .with(spec -> spec.mapField("id").toColumn("PERSON_ID")
         .generateUsingSequence("LB.PERSON_SEQ"))
     .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
     .with(spec -> spec.mapField("accounts")
-        .oneToMany(c -> c.mappedByField("owner"))));`,
+        .oneToMany(c -> c.mappedByField("owner"))));
+`,
   },
   {
     id: 'persisting',
     title: 'Persisting',
     description: 'Save, insert, or update DTOs with automatic change tracking.',
-    code: `final Person person = new Person();
+    code: `Person person = new Person();
 person.setName("Alice");
 person.setSurname("Smith");
 
-// Executes an INSERT or UPDATE statement as needed
+// Executes an INSERT statement
 litebridge.save(person);
 
 person.setName("Bob");
+
 // Executes an UPDATE statement only for changed fields
 litebridge.save(person);`,
   },
@@ -33,14 +38,18 @@ litebridge.save(person);`,
     id: 'querying',
     title: 'Querying',
     description: 'Retrieve data using a familiar, SQL-like fluent builder.',
-    code: `final Optional<Person> alice = litebridge.select(Person.class)
-        .where("name").eq("Alice")
-        .and("surname").eq("Smith")
-        .orderBy("id").asc()
+    code: `import static org.example.PersonMeta.*;
+
+// Use metamodels for type-safe queries
+Optional<Person> alice = litebridge.select(Person.class)
+        .where(name).eq("Alice")
+        .and(surname).eq("Smith")
+        .orderBy(id).asc()
         .first();
 
+// ...or simply via strings
 litebridge.select(Person.class)
-        .where("eyeColour").isNull()
+        .where("name").isNull()
         .stream()
         .forEach(p -> logger.info("Found: {}", p));`,
   },
@@ -107,9 +116,61 @@ litebridge.select(Person.class)
   const tabs = document.querySelectorAll('.example-tab');
   const codes = document.querySelectorAll('.example-code');
 
+  function prepareCodeBlocks() {
+    codes.forEach(codeBlock => {
+      const walker = document.createTreeWalker(codeBlock, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      let node;
+      while (node = walker.nextNode()) nodes.push(node);
+
+      let charIndex = 0;
+      nodes.forEach(node => {
+        const text = node.nodeValue || '';
+        const fragment = document.createDocumentFragment();
+        for (let i = 0; i < text.length; i++) {
+          const charSpan = document.createElement('span');
+          charSpan.textContent = text[i];
+          charSpan.className = 'code-char';
+          charSpan.style.transitionDelay = `${charIndex * 10}ms`;
+          fragment.appendChild(charSpan);
+          charIndex++;
+        }
+        node.parentNode?.replaceChild(fragment, node);
+      });
+    });
+  }
+
+  function startAnimation(id: string) {
+    const codeBlock = document.getElementById(`code-${id}`);
+    if (codeBlock) {
+      codeBlock.classList.remove('typing-active');
+      void codeBlock.offsetWidth; // Force reflow
+      codeBlock.classList.add('typing-active');
+    }
+  }
+
+  // Initialize
+  prepareCodeBlocks();
+
+  // Trigger when scrolled into view
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const activeTab = document.querySelector('.example-tab[aria-selected="true"]');
+        const id = activeTab?.getAttribute('data-id');
+        if (id) startAnimation(id);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  const section = document.getElementById('examples');
+  if (section) observer.observe(section);
+
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       const id = tab.getAttribute('data-id');
+      if (!id) return;
       
       // Update tabs
       tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
@@ -120,6 +181,7 @@ litebridge.select(Person.class)
         if (c.id === `code-${id}`) {
           c.classList.remove('hidden');
           c.classList.add('block');
+          startAnimation(id);
         } else {
           c.classList.remove('block');
           c.classList.add('hidden');
@@ -130,6 +192,15 @@ litebridge.select(Person.class)
 </script>
 
 <style>
+  :global(.code-char) {
+    opacity: 0;
+    transition: opacity 0.05s linear;
+  }
+  
+  :global(.typing-active .code-char) {
+    opacity: 1;
+  }
+
   :global(.astro-code) {
     background-color: transparent !important;
     margin: 0 !important;
