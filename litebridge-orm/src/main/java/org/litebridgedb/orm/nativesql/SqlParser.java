@@ -10,6 +10,9 @@ public final class SqlParser {
     private static final Pattern tokenPattern = Pattern.compile("('([^'\\\\]|\\\\.)*')|(\"([^\"\\\\]|\\\\.)*\")|(::)|(:([a-zA-Z0-9_]+))");
     private static final int GROUP_VARIABLE = 7;
 
+    private SqlParser() {
+    }
+
     public static ParsedSql parseSql(final String sql) {
         final StringBuilder outputSql = new StringBuilder();
         final List<String> extractedVariables = new ArrayList<>();
@@ -27,6 +30,7 @@ public final class SqlParser {
                 matcher.appendReplacement(outputSql, matcher.group());
             }
         }
+        matcher.appendTail(outputSql);
 
         return new ParsedSql(outputSql.toString(), extractedVariables);
     }

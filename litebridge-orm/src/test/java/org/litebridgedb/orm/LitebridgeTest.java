@@ -17,32 +17,49 @@ import org.litebridgedb.db.spi.tx.TransactionManager;
 import org.litebridgedb.db.spi.update.Insert;
 import org.litebridgedb.db.spi.update.InsertResult;
 import org.litebridgedb.db.spi.update.Update;
+import org.litebridgedb.orm.annotation.Column;
+import org.litebridgedb.orm.annotation.Table;
 import org.litebridgedb.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridgedb.orm.api.select.FromClauseStart;
+import org.litebridgedb.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridgedb.orm.api.spec.ColumnMapping;
 import org.litebridgedb.orm.api.spec.ColumnSpec;
 import org.litebridgedb.orm.api.spec.DtoTableSpec;
 import org.litebridgedb.orm.api.spec.FieldMapping;
 import org.litebridgedb.orm.api.spec.FieldSpec;
 import org.litebridgedb.orm.api.spec.TableSpec;
+import org.litebridgedb.orm.api.tx.TransactionContext;
+import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.engine.FromClauseEngine;
+import org.litebridgedb.orm.engine.RegistrationEngine;
+import org.litebridgedb.orm.expression.ExpressionSpec;
 import org.litebridgedb.orm.expression.TestColumnExpressionFactory;
 import org.litebridgedb.orm.expression.TestSelectReferenceExpressionFactory;
+import org.litebridgedb.orm.expression.function.aggregate.CountSpec;
+import org.litebridgedb.orm.expression.intent.ConvertIntent;
+import org.litebridgedb.orm.nativesql.NativeSqlContext;
+import org.litebridgedb.orm.persistence.EntityDtoMapper;
 import org.litebridgedb.orm.persistence.OrmTable;
+import org.litebridgedb.orm.persistence.PersistenceFacade;
 import org.litebridgedb.orm.persistence.TableRegistry;
 import org.litebridgedb.orm.tx.DefaultTransactionManager;
 import org.mockito.ArgumentCaptor;
 
 import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
+import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -479,6 +496,20 @@ class LitebridgeTest {
     }
 
     @Test
+    void nativeSql() {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+
+        // When
+        final NativeSqlContext result = litebridge.nativeSql();
+
+        // Then
+        assertNotNull(result);
+    }
+
+    @Test
     void transaction() {
         // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
@@ -486,7 +517,7 @@ class LitebridgeTest {
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
         // When
-        final org.litebridgedb.orm.api.tx.TransactionContext result = litebridge.transaction();
+        final TransactionContext result = litebridge.transaction();
 
         // Then
         assertNotNull(result);
@@ -496,9 +527,318 @@ class LitebridgeTest {
     void constructors() {
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionManager transactionManager = mock(TransactionManager.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final LitebridgeConfig config = new LitebridgeConfig();
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
 
+        assertNotNull(new Litebridge(databaseProvider, dataSource));
+        assertNotNull(new Litebridge(databaseProvider, dataSource, config));
+        assertNotNull(new Litebridge(databaseProvider, dataSource, config, lookup));
         assertNotNull(new Litebridge(databaseProvider, transactionManager));
-        assertNotNull(new Litebridge(databaseProvider, transactionManager, MethodHandles.lookup()));
+        assertNotNull(new Litebridge(databaseProvider, transactionManager, config));
+        assertNotNull(new Litebridge(databaseProvider, transactionManager, lookup));
+        assertNotNull(new Litebridge(databaseProvider, transactionManager, config, lookup));
+    }
+
+    @Test
+    void register_entityClasses() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final RegistrationEngine registrationEngine = mock(RegistrationEngine.class);
+        setFieldValue(litebridge, "registrationEngine", registrationEngine);
+
+        // When
+        assertThrows(IllegalArgumentException.class, () -> litebridge.register(new Class<?>[0]));
+        litebridge.register(new Class<?>[]{TestEntity.class});
+
+        // Then
+        verify(registrationEngine).register(eq(new Class<?>[]{TestEntity.class}));
+    }
+
+    @Test
+    void register_dtoTableSpecs() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final RegistrationEngine registrationEngine = mock(RegistrationEngine.class);
+        setFieldValue(litebridge, "registrationEngine", registrationEngine);
+        final DtoTableSpec spec = mock(DtoTableSpec.class);
+
+        // When
+        litebridge.register(new DtoTableSpec[]{spec});
+
+        // Then
+        verify(registrationEngine).register(any(DtoTableSpec[].class));
+    }
+
+    @Test
+    void register_lambda() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final RegistrationEngine registrationEngine = mock(RegistrationEngine.class);
+        setFieldValue(litebridge, "registrationEngine", registrationEngine);
+
+        // When
+        litebridge.register(TestDto.class, rc -> rc.mapToTable("TEST"));
+
+        // Then
+        verify(registrationEngine).register(eq(TestDto.class), any(Function.class));
+    }
+
+    @Test
+    void track_notRegistered() {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final TestDto dto = new TestDto();
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> litebridge.track(dto));
+        assertThrows(NullPointerException.class, () -> litebridge.track(null));
+    }
+
+    @Test
+    void save_multiple() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
+        setFieldValue(litebridge, "persistenceFacade", persistenceFacade);
+
+        final TestDto dto1 = new TestDto();
+        final TestDto dto2 = new TestDto();
+
+        // When
+        litebridge.save(dto1, dto2);
+
+        // Then
+        verify(persistenceFacade).save(any(Collection.class));
+    }
+
+    @Test
+    void save_collection() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
+        setFieldValue(litebridge, "persistenceFacade", persistenceFacade);
+
+        final List<Object> dtos = List.of(new TestDto());
+
+        // When
+        litebridge.save(dtos);
+
+        // Then
+        verify(persistenceFacade).save(dtos);
+    }
+
+    @Test
+    void save_exception() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
+        setFieldValue(litebridge, "persistenceFacade", persistenceFacade);
+        org.mockito.Mockito.doThrow(new SQLException("Test")).when(persistenceFacade).save(any(Object.class));
+
+        // When / Then
+        assertThrows(IllegalStateException.class, () -> litebridge.save(new Object()));
+    }
+
+    @Test
+    void save_collection_exception() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
+        setFieldValue(litebridge, "persistenceFacade", persistenceFacade);
+        org.mockito.Mockito.doThrow(new SQLException("Test")).when(persistenceFacade).save(any(Collection.class));
+
+        // When / Then
+        assertThrows(IllegalStateException.class, () -> litebridge.save(List.of()));
+    }
+
+    @Test
+    void insert_exception() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
+        setFieldValue(litebridge, "persistenceFacade", persistenceFacade);
+        org.mockito.Mockito.doThrow(new SQLException("Test")).when(persistenceFacade).insert(any(Object.class));
+
+        // When / Then
+        assertThrows(IllegalStateException.class, () -> litebridge.insert(new Object()));
+    }
+
+    @Test
+    void update_exception() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
+        setFieldValue(litebridge, "persistenceFacade", persistenceFacade);
+        org.mockito.Mockito.doThrow(new SQLException("Test")).when(persistenceFacade).update(any(Object.class));
+
+        // When / Then
+        assertThrows(IllegalStateException.class, () -> litebridge.update(new Object()));
+    }
+
+    @Test
+    void delete_exception() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
+        setFieldValue(litebridge, "persistenceFacade", persistenceFacade);
+        org.mockito.Mockito.doThrow(new SQLException("Test")).when(persistenceFacade).delete(any(Object.class));
+
+        // When / Then
+        assertThrows(IllegalStateException.class, () -> litebridge.delete(new Object()));
+    }
+
+    @Test
+    void select_dto_context() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final FromClauseEngine fromClauseEngine = mock(FromClauseEngine.class);
+        setFieldValue(litebridge, "fromClauseEngine", fromClauseEngine);
+
+        // When
+        litebridge.select(TestDto.class, String.class);
+
+        // Then
+        verify(fromClauseEngine).from(eq(TestDto.class), eq(String.class));
+    }
+
+    @Test
+    void select_expressions() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final ExpressionSpec expression = new org.litebridgedb.orm.meta.QueryField(TestDto.class, "myVar");
+
+        // When
+        final FromClauseStart result = litebridge.select(new ExpressionSpec[]{expression});
+
+        // Then
+        assertNotNull(result);
+    }
+
+    @Test
+    void select_typeOverride() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+
+        final CountSpec override = new CountSpec();
+
+        // When
+        final FromClauseStartTypeOverride<Long> result = litebridge.select(override);
+
+        // Then
+        assertNotNull(result);
+    }
+
+    @Test
+    void select_convertIntent() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+
+        final ConvertIntent<String> convertIntent = new ConvertIntent<>(new ExpressionSpec[0], String.class);
+
+        // When
+        final FromClauseStartTypeOverride<String> result = litebridge.select(convertIntent);
+
+        // Then
+        assertNotNull(result);
+    }
+
+    @Test
+    void toDto_empty() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+
+        final FieldSpec fieldSpec = new FieldSpec("myVar", false);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
+        final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
+        final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
+        final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
+        when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(new TableMetaData(tableSpec, List.of("MY_VAR"), List.of(columnMetaData)));
+        final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
+        litebridge.register(dtoTableSpec);
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+
+        final Row row = new Row(); // Empty row
+        
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> litebridge.toDto(row, TestDto.class));
+    }
+
+    @Test
+    void entityDtoMapper() {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+
+        // When
+        final EntityDtoMapper<TestDto> mapper = litebridge.entityDtoMapper(TestDto.class, List.of());
+
+        // Then
+        assertNotNull(mapper);
+    }
+    
+    @Test
+    void update_lambda() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        
+        final FieldSpec fieldSpec = new FieldSpec("myVar", false);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
+        final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
+        final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
+        final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
+        when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(new TableMetaData(tableSpec, List.of("MY_VAR"), List.of(columnMetaData)));
+        final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
+        litebridge.register(dtoTableSpec);
+
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.getAliasTransformer()).thenReturn(new DefaultAliasTransformer());
+
+        // When
+        litebridge.update(TestDto.class, u -> u.set("myVar").to("newVal"));
+
+        // Then
+        verify(databaseProvider).update(any(), any());
     }
 
     @Test
@@ -538,8 +878,20 @@ class LitebridgeTest {
         verify(databaseProvider).update(any(), any());
     }
 
+    private static void setFieldValue(final Object obj, final String fieldName, final Object value) throws Exception {
+        final java.lang.reflect.Field field = obj.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(obj, value);
+    }
+
     private static class TestDto {
         private Long myId;
         private String myVar;
+    }
+
+    @Table("TEST_ENTITY")
+    private static class TestEntity {
+        @Column("ID")
+        private Long id;
     }
 }
