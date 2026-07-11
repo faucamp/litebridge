@@ -19,6 +19,8 @@ import org.litebridgedb.orm.persistence.alias.AliasGenerator;
 import org.litebridgedb.tracking.ClassFieldAccessorCache;
 import org.litebridgedb.tracking.FieldAccessor;
 
+import java.util.Objects;
+
 public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
 
     private @Nullable DtoSelectSpec selectSpec;
@@ -80,7 +82,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
             }
         }
 
-        return selectSpec.dtoClass();
+        return Objects.requireNonNull(selectSpec).dtoClass();
     }
 
     @Override

@@ -37,6 +37,7 @@ public class ColumnIdentifierGenerator {
 
     public String createColumnRef(final Column column, final Operation operation, final ClauseType clause) {
         if (column.alias() != null && clause != ClauseType.WHERE) {
+            //noinspection DataFlowIssue
             return column.alias();
         }
 

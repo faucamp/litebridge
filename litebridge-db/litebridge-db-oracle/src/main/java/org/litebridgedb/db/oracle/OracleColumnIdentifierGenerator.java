@@ -27,6 +27,7 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
         final StringBuilder columnSql = new StringBuilder(quoteIdentifier(column.name()));
 
         if (clause == ClauseType.SELECT && !StringUtils.isBlank(column.alias())) {
+            //noinspection DataFlowIssue
             columnSql.append(' ').append(createAliasDeclaration(quoteIdentifier(column.alias())));
         }
 

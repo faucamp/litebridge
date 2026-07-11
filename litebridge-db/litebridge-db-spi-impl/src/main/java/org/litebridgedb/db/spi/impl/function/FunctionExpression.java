@@ -38,7 +38,8 @@ public abstract class FunctionExpression extends DelegateColumnExpressionImpl {
         if (clause == ClauseType.SELECT
                 && parent == null
                 && target.column().alias() != null) {
-            return "%s %s".formatted(sql, columnIdentifierGenerator.createAliasDeclaration(column.alias()));
+            //noinspection DataFlowIssue
+            return "%s %s".formatted(sql, columnIdentifierGenerator.createAliasDeclaration(target.column().alias()));
         } else {
             return sql;
         }

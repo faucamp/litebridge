@@ -46,6 +46,7 @@ public abstract class ProtoExpressionResolver {
             MinSpec.class, MinSpec::new,
             MaxSpec.class, MaxSpec::new);
 
+    @SuppressWarnings("DataFlowIssue")
     private static final Map<Class<? extends ExpressionSpec>, TriFunction<ColumnExpressionSpec, Class<?>, @Nullable Object[], DelegateExpressionSpec>> argTypeOverrideExpressions = Map.of(
             SubstringSpec.class, (target, type, args) -> new SubstringSpec(target, (int) args[0], (Integer) args[1]));
 

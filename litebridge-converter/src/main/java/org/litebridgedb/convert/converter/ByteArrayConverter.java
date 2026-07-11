@@ -33,6 +33,7 @@ public class ByteArrayConverter implements SqlConverter<byte[]> {
     @Override
     public @Nullable byte[] convert(final @Nullable Object value) {
         if (value == null) {
+            //noinspection DataFlowIssue
             return null;
         }
 
