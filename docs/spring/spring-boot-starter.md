@@ -29,17 +29,19 @@ When the starter is on the classpath, Litebridge will automatically:
 
 The autoconfiguration can be customised using the following properties in `application.properties` or `application.yml`:
 
-| Property | Description | Default |
-| :--- | :--- | :--- |
-| `litebridge.database-provider.class` | Fully qualified class name of the `DatabaseProvider` to use. | (Auto-detected) |
-| `litebridge.database-provider.scan-base-package` | Base package to scan for `DatabaseProvider` implementations if `class` is not set. | `org.litebridgedb.db` |
-| `litebridge.scan-base-package` | One or more base packages to scan for Litebridge entities (annotated with `@Table`) and `TypeSafeDtoTableMapping` implementations. | (None) |
+| Property                                         | Description                                                                                                                                                              | Default               |
+|:-------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------|
+| `litebridge.database-provider.class`             | Fully qualified class name of the `DatabaseProvider` to use.                                                                                                             | (Auto-detected)       |
+| `litebridge.database-provider.scan-base-package` | Base package(s) to scan for `DatabaseProvider` implementations if `class` is not set.                                                                                    | `org.litebridgedb.db` |
+| `litebridge.scan-base-package`                   | One or more base packages to scan for Litebridge entities (annotated with `@Table`) and `TypeSafeDtoTableMapping` implementations.                                       | (None)                |
+| `litebridge.related-dto-strategy`                | How related DTOs should be handled when not included as a JOIN in a query. See [Related DTO Strategy](../persistence/configuration.md#related-dto-strategy) for details. | `NULL_IF_NO_JOIN`     |
 
 ### Example
 
 ```properties
 litebridge.database-provider.class=org.litebridgedb.db.h2.H2DatabaseProvider
 litebridge.scan-base-package=com.example.app.entities,com.example.app.mappings
+litebridge.related-dto-strategy=PARTIAL_OBJECT_IF_NO_JOIN
 ```
 
 ## Entity and Mapping Registration

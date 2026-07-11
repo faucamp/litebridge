@@ -20,6 +20,8 @@ import org.litebridgedb.db.spi.update.InsertResult;
 import org.litebridgedb.db.spi.update.Update;
 import org.litebridgedb.db.spi.update.UpdateResult;
 import org.litebridgedb.orm.Litebridge;
+import org.litebridgedb.orm.config.LitebridgeConfig;
+import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.litebridgedb.spring.LitebridgeTransactionManager;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -175,6 +177,25 @@ class LitebridgeAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).hasSingleBean(Litebridge.class);
                     assertThat(configured).isTrue();
+                });
+    }
+
+    @Test
+    void autoConfigure_relatedDtoStrategy() {
+        this.contextRunner
+                .withPropertyValues(
+                        "litebridge.database-provider.class=org.litebridgedb.db.h2.H2DatabaseProvider",
+                        "litebridge.related-dto-strategy=PARTIAL_OBJECT_IF_NO_JOIN"
+                )
+                .run(context -> {
+                    assertThat(context).hasSingleBean(Litebridge.class);
+                    final Litebridge litebridge = context.getBean(Litebridge.class);
+
+                    // Verify via reflection since it's not exposed
+                    final java.lang.reflect.Field configField = Litebridge.class.getDeclaredField("litebridgeConfig");
+                    configField.setAccessible(true);
+                    final LitebridgeConfig config = (LitebridgeConfig) configField.get(litebridge);
+                    assertThat(config.getRelatedDtoStrategy()).isEqualTo(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
                 });
     }
 

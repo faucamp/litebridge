@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridgedb.db.spi.DatabaseProvider;
 import org.litebridgedb.orm.Litebridge;
 import org.litebridgedb.orm.api.select.SelectApi;
+import org.litebridgedb.orm.config.LitebridgeConfig;
 import org.litebridgedb.spring.LitebridgeEntityScanner;
 import org.litebridgedb.spring.LitebridgeTransactionManager;
 import org.slf4j.Logger;
@@ -80,7 +81,11 @@ public class LitebridgeAutoConfiguration {
         }
 
         LOGGER.trace("Creating Litebridge instance with DatabaseProvider: {} (transaction manager: {})", databaseProvider.getClass().getName(), transactionManager.getClass().getName());
-        final Litebridge litebridge = new Litebridge(databaseProvider, transactionManager, MethodHandles.lookup());
+
+        final LitebridgeConfig litebridgeConfig = new LitebridgeConfig();
+        litebridgeConfig.setRelatedDtoStrategy(properties.getRelatedDtoStrategy());
+
+        final Litebridge litebridge = new Litebridge(databaseProvider, transactionManager, litebridgeConfig, MethodHandles.lookup());
         final @Nullable String[] scanBasePackages = properties.getScanBasePackage();
 
         if (scanBasePackages != null) {

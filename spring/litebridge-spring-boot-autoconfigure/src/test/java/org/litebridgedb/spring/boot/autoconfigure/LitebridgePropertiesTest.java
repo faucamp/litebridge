@@ -41,4 +41,27 @@ class LitebridgePropertiesTest {
         litebridgeProperties.setScanBasePackage(new String[]{"com.example"});
         assertArrayEquals(new String[]{"com.example"}, litebridgeProperties.getScanBasePackage());
     }
+
+    @Test
+    void getSetRelatedDtoStrategy() {
+        final LitebridgeProperties litebridgeProperties = new LitebridgeProperties();
+        assertEquals(org.litebridgedb.orm.config.RelatedDtoStrategy.NULL_IF_NO_JOIN, litebridgeProperties.getRelatedDtoStrategy());
+        litebridgeProperties.setRelatedDtoStrategy(org.litebridgedb.orm.config.RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
+        assertEquals(org.litebridgedb.orm.config.RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN, litebridgeProperties.getRelatedDtoStrategy());
+    }
+
+    @Test
+    void getSetDatabaseProviderScanBasePackage() {
+        final LitebridgeProperties.DatabaseProviderProperties properties = new LitebridgeProperties.DatabaseProviderProperties();
+        assertEquals("org.litebridgedb.db", properties.getScanBasePackage());
+        properties.setScanBasePackage("com.example");
+        assertEquals("com.example", properties.getScanBasePackage());
+    }
+
+    @Test
+    void setDatabaseProviderClassAlias() {
+        final LitebridgeProperties.DatabaseProviderProperties properties = new LitebridgeProperties.DatabaseProviderProperties();
+        properties.setClass("org.litebridgedb.db.h2.H2DatabaseProvider");
+        assertEquals("org.litebridgedb.db.h2.H2DatabaseProvider", properties.getProviderClass());
+    }
 }

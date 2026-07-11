@@ -69,7 +69,15 @@ config.setRelatedDtoStrategy(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
 Litebridge litebridge = new Litebridge(databaseProvider, dataSource, config);
 ```
 
-For Spring-based applications, it can be defined as a bean:
+For Spring Boot applications, the configuration can be set via application properties:
+
+```properties
+litebridge.related-dto-strategy=PARTIAL_OBJECT_IF_NO_JOIN
+```
+
+See [Spring Boot Starter](../spring/spring-boot-starter.md) for more details on property-based configuration.
+
+Alternatively, for manual Spring configuration, it can be defined as a bean:
 
 ```java
 @Bean

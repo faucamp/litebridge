@@ -1,6 +1,7 @@
 package org.litebridgedb.spring.boot.autoconfigure;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridgedb.orm.config.RelatedDtoStrategy;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.Name;
 
@@ -19,6 +20,42 @@ public class LitebridgeProperties {
      * One or more base packages to scan for Litebridge entities or type-safe DTO mappings.
      */
     private @Nullable String[] scanBasePackage;
+
+    /**
+     * Defines how related DTOs should be handled when not included as a JOIN in a query.
+     * <p>
+     * This sets the Litebridge instance's default related DTO strategy.
+     * It can be overriden on a per-query basis.
+     * <p>
+     * Default: {@link RelatedDtoStrategy#NULL_IF_NO_JOIN}
+     */
+    private RelatedDtoStrategy relatedDtoStrategy = RelatedDtoStrategy.NULL_IF_NO_JOIN;
+
+    /**
+     * How related DTOs should be handled when not included as a JOIN in a query.
+     * <p>
+     * This returns the Litebridge instance's default related DTO strategy.
+     * It can be overriden on a per-query basis.
+     * <p>
+     * Default: {@link RelatedDtoStrategy#NULL_IF_NO_JOIN}
+     *
+     * @return the Litebridge instance's default related DTO strategy
+     */
+    public RelatedDtoStrategy getRelatedDtoStrategy() {
+        return relatedDtoStrategy;
+    }
+
+    /**
+     * Sets how related DTOs should be handled when not included as a JOIN in a query.
+     * <p>
+     * This sets the Litebridge instance's default related DTO strategy.
+     * It can be overriden on a per-query basis.
+     * <p>
+     * Default: {@link RelatedDtoStrategy#NULL_IF_NO_JOIN}
+     */
+    public void setRelatedDtoStrategy(final RelatedDtoStrategy relatedDtoStrategy) {
+        this.relatedDtoStrategy = relatedDtoStrategy;
+    }
 
     /**
      * Get the database provider configuration.
