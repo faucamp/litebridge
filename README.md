@@ -447,6 +447,14 @@ Spring Framework integration for Litebridge.
 
   Spring Boot Autoconfiguration implementation.
 
+#### `litebridge-maven-plugin`
+
+![Coverage](.github/badges/litebridge-maven-plugin/jacoco.svg)
+![Branches](.github/badges/litebridge-maven-plugin/branches.svg)
+
+Litebridge Maven plugin. Allows reverse-engineering database tables into Litebridge entity classes and generating metamodels
+for type-safe querying.
+
 ### Documentation and examples
 
 #### `docs`
