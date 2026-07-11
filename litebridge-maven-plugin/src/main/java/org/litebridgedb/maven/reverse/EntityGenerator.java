@@ -186,6 +186,7 @@ public final class EntityGenerator {
         }
 
         // Annotate field for nullability with JSpecify if applicable
+        //noinspection DataFlowIssue
         if (jspecify
                 && output.getJspecify().isNullMarked()
                 && (!output.getJspecify().isDatabaseNullable() || columnMetaData.isNullable())
@@ -312,6 +313,7 @@ public final class EntityGenerator {
 
         // Annotate class with @NullMarked/@NullUnmarked to allow nullability checks if package-info does not exist
         if (jspecify && !output.isPackageInfo()) {
+            //noinspection DataFlowIssue
             if (output.getJspecify().isNullMarked()) {
                 entityClass.addMarkerAnnotation(NullMarked.class);
             } else {
@@ -371,12 +373,12 @@ public final class EntityGenerator {
 
         if (lhs) {
             remoteTable = manyToManyMapping.rightTable();
-            pairs.put("joinColumn", "\"%s\"".formatted(manyToManyMapping.leftJoinColumn().name(), true));
+            pairs.put("joinColumn", "\"%s\"".formatted(manyToManyMapping.leftJoinColumn().name()));
             pairs.put("inverseJoinColumn", "\"%s\"".formatted(manyToManyMapping.rightJoinColumn().name()));
         } else {
             remoteTable = manyToManyMapping.leftTable();
             pairs.put("joinColumn", "\"%s\"".formatted(manyToManyMapping.rightJoinColumn().name()));
-            pairs.put("inverseJoinColumn", "\"%s\"".formatted(manyToManyMapping.leftJoinColumn().name(), true));
+            pairs.put("inverseJoinColumn", "\"%s\"".formatted(manyToManyMapping.leftJoinColumn().name()));
         }
 
         final String remoteEntityClassName = createEntityClassName(remoteTable, getTableMappingConfig(remoteTable));
@@ -562,6 +564,7 @@ public final class EntityGenerator {
                     .setModifiers(Modifier.Keyword.PRIVATE)
                     .addVariable(new VariableDeclarator(listType, reverseMappingCollectionName));
 
+            //noinspection DataFlowIssue
             if (jspecify && output.getJspecify().isNullMarked()) {
                 reverseMappingCollectionField.addMarkerAnnotation(Nullable.class);
             }
@@ -591,6 +594,7 @@ public final class EntityGenerator {
                     .setModifiers(Modifier.Keyword.PRIVATE)
                     .addVariable(new VariableDeclarator(listType, reverseMappingCollectionName));
 
+            //noinspection DataFlowIssue
             if (jspecify && output.getJspecify().isNullMarked()) {
                 reverseMappingCollectionField.addMarkerAnnotation(Nullable.class);
             }

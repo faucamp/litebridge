@@ -19,6 +19,7 @@ public class ColumnIdentifierGenerator {
         final Table table = column.table();
 
         if (!StringUtils.isBlank(table.alias())) {
+            //noinspection DataFlowIssue
             sb.append(quoteIdentifier(table.alias()));
         } else {
             sb.append(quoteIdentifier(table.name()));
@@ -27,6 +28,7 @@ public class ColumnIdentifierGenerator {
         sb.append('.').append(quoteIdentifier(column.name()));
 
         if (!nested && column.alias() != null) {
+            //noinspection DataFlowIssue
             sb.append(' ').append(createAliasDeclaration(column.alias()));
         }
 

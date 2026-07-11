@@ -137,7 +137,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     @Override
     public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, ConnectionProvider connectionProvider) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareNativStatement(sql, bindParameters, false, connectionProvider)) {
+        try (final PreparedStatement preparedStatement = prepareNativeStatement(sql, bindParameters, false, connectionProvider)) {
             // Execute SQL query
             final ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -171,7 +171,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     @Override
     public UpdateResult nativeSqlUpdate(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareNativStatement(sql, bindParameters, false, connectionProvider)) {
+        try (final PreparedStatement preparedStatement = prepareNativeStatement(sql, bindParameters, false, connectionProvider)) {
             final int updateCount = preparedStatement.executeUpdate();
             return new UpdateResult(updateCount);
         }
@@ -472,10 +472,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return preparedStatement;
     }
 
-    protected PreparedStatement prepareNativStatement(final String sql,
-                                                      final List<@Nullable Object> bindParameters,
-                                                      final boolean returnGeneratedKeys,
-                                                      final ConnectionProvider connectionProvider) throws SQLException {
+    protected PreparedStatement prepareNativeStatement(final String sql,
+                                                       final List<@Nullable Object> bindParameters,
+                                                       final boolean returnGeneratedKeys,
+                                                       final ConnectionProvider connectionProvider) throws SQLException {
         if (getLogger().isTraceEnabled() && !CollectionUtils.isEmpty(bindParameters)) {
             getLogger().trace("Executing native SQL: {} with bind parameters: {}", sql, bindParameters.stream()
                     .map(bindParam -> bindParam != null ? bindParam : "<null>")
@@ -484,30 +484,32 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             getLogger().debug("Executing native SQL: {}", sql);
         }
 
-        final ManagedConnection connection = connectionProvider.connection();
-        final PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        final PreparedStatement preparedStatement;
+        try (ManagedConnection connection = connectionProvider.connection()) {
+            preparedStatement = connection.prepareStatement(sql);
 
-        final int[] ordinal = {1};
+            final int[] ordinal = {1};
 
-        if (!CollectionUtils.isEmpty(bindParameters)) {
-            for (Object bindParameter : bindParameters) {
-                if (bindParameter == null) {
-                    preparedStatement.setString(ordinal[0]++, null);
-                    continue;
-                }
+            if (!CollectionUtils.isEmpty(bindParameters)) {
+                for (Object bindParameter : bindParameters) {
+                    if (bindParameter == null) {
+                        preparedStatement.setString(ordinal[0]++, null);
+                        continue;
+                    }
 
-                switch (bindParameter) {
-                    case Integer integer -> preparedStatement.setInt(ordinal[0]++, integer);
-                    case Long longValue -> preparedStatement.setLong(ordinal[0]++, longValue);
-                    case Short shortValue -> preparedStatement.setShort(ordinal[0]++, shortValue);
-                    case Double doubleValue -> preparedStatement.setDouble(ordinal[0]++, doubleValue);
-                    case Float floatValue -> preparedStatement.setFloat(ordinal[0]++, floatValue);
-                    case BigDecimal bigDecimal -> preparedStatement.setBigDecimal(ordinal[0]++, bigDecimal);
-                    case Boolean bool -> preparedStatement.setBoolean(ordinal[0]++, bool);
-                    case String string -> preparedStatement.setString(ordinal[0]++, string);
-                    case Timestamp timestamp -> preparedStatement.setTimestamp(ordinal[0]++, timestamp);
-                    case byte[] bytes -> preparedStatement.setBytes(ordinal[0]++, bytes);
-                    default -> preparedStatement.setObject(ordinal[0]++, bindParameter);
+                    switch (bindParameter) {
+                        case Integer integer -> preparedStatement.setInt(ordinal[0]++, integer);
+                        case Long longValue -> preparedStatement.setLong(ordinal[0]++, longValue);
+                        case Short shortValue -> preparedStatement.setShort(ordinal[0]++, shortValue);
+                        case Double doubleValue -> preparedStatement.setDouble(ordinal[0]++, doubleValue);
+                        case Float floatValue -> preparedStatement.setFloat(ordinal[0]++, floatValue);
+                        case BigDecimal bigDecimal -> preparedStatement.setBigDecimal(ordinal[0]++, bigDecimal);
+                        case Boolean bool -> preparedStatement.setBoolean(ordinal[0]++, bool);
+                        case String string -> preparedStatement.setString(ordinal[0]++, string);
+                        case Timestamp timestamp -> preparedStatement.setTimestamp(ordinal[0]++, timestamp);
+                        case byte[] bytes -> preparedStatement.setBytes(ordinal[0]++, bytes);
+                        default -> preparedStatement.setObject(ordinal[0]++, bindParameter);
+                    }
                 }
             }
         }

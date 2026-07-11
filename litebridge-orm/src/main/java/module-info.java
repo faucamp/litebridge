@@ -15,6 +15,7 @@ module litebridge.orm {
     requires litebridge.tracking;
 
     exports org.litebridgedb.orm;
+    exports org.litebridgedb.orm.api.condition;
     exports org.litebridgedb.orm.api.delete;
     exports org.litebridgedb.orm.api.dto;
     exports org.litebridgedb.orm.api.dto.delete;
@@ -39,6 +40,7 @@ module litebridge.orm {
     exports org.litebridgedb.orm.expression.intent;
     exports org.litebridgedb.orm.expression.select;
     exports org.litebridgedb.orm.meta;
+    exports org.litebridgedb.orm.nativesql;
     exports org.litebridgedb.orm.persistence;
     exports org.litebridgedb.orm.persistence.alias;
     exports org.litebridgedb.orm.tx;

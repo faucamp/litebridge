@@ -51,7 +51,7 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
 
     @Override
     public final AbstractCbConditionClause<DTO> or(final ExpressionSpec expression) {
-        return null;
+        return whereImpl(LogicOperator.OR, expression);
     }
 
     protected abstract AbstractCbConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final String column);

@@ -1,6 +1,7 @@
 package org.litebridgedb.orm.api.sql.update;
 
 import org.litebridgedb.db.spi.Column;
+import org.litebridgedb.db.spi.Row;
 import org.litebridgedb.db.spi.Table;
 import org.litebridgedb.db.spi.query.LogicOperator;
 import org.litebridgedb.orm.api.condition.QueryConditionBuilder;
@@ -55,7 +56,7 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
         return new SqlUpdateWhereConditionClause(conditionSpec, new SqlUpdateWhereConditionClauseTerminalImpl(this), litebridgeContext);
     }
 
-    SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder query) {
+    SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
         final ConditionGroupSpec subgroup = updateSpec.pushConditionGroupSpec(logicOperator);
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, updateSpec.table(), litebridgeContext.fromClauseEngine());
         query.apply(conditionClauseStart);

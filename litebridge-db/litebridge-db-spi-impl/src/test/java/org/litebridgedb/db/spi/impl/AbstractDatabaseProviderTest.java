@@ -1326,7 +1326,7 @@ class AbstractDatabaseProviderTest {
     }
 
     @Test
-    void prepareNativStatement_allTypes() throws Exception {
+    void prepareNativeStatement_allTypes() throws Exception {
         // Given
         mockTransactionManager();
         final String sql = "INSERT INTO ALL_TYPES VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -1347,7 +1347,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(sql)).thenReturn(ps);
 
         // When
-        databaseProvider.prepareNativStatement(sql, bindParameters, false, transactionManager);
+        databaseProvider.prepareNativeStatement(sql, bindParameters, false, transactionManager);
 
         // Then
         verify(ps).setInt(1, 10);
