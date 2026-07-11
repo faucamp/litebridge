@@ -122,7 +122,7 @@ litebridge.update("LB.PERSON", p -> p
 ```
 
 > [!NOTE]
-> If you need to execute raw SQL `UPDATE`, `INSERT`, `DELETE` or DDL strings without using the fluent API, see [Native SQL Execution](native-sql.md).
+> To execute raw SQL `UPDATE`, `INSERT`, `DELETE` or DDL strings without using the fluent API, see [Native SQL Execution](native-sql.md).
 
 ### Atomic operations
 

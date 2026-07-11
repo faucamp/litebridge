@@ -81,6 +81,19 @@ For more details on Spring integration, see:
 - [Spring Boot Starter Guide](spring/spring-boot-starter.md)
 - [Manual Spring Configuration](spring/manual-configuration.md)
 
+## 5. Configuration
+
+Litebridge can be configured using `LitebridgeConfig` to alter global behaviour, such as how related DTOs are handled.
+
+```java
+LitebridgeConfig config = new LitebridgeConfig();
+config.setRelatedDtoStrategy(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
+
+Litebridge litebridge = new Litebridge(databaseProvider, dataSource, config);
+```
+
+See the [Configuration Guide](persistence/configuration.md) for more details.
+
 ## Next Steps
 
-After adding the dependencies, the [Litebridge API](persistence/index.md) can be explored.
+After adding the dependencies and configuring Litebridge, the [Litebridge API](persistence/index.md) can be explored.

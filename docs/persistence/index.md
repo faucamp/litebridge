@@ -25,6 +25,7 @@ This section covers the core persistence features provided by Litebridge:
 4. **[Deleting data](delete.md)**: Remove records from the database using mapped DTOs.
 5. **[Change tracking](change-tracking.md)**: Optimise updates by only persisting modified fields.
 6. **[Transactions](transactions.md)**: Coordinate persistence operations safely using Litebridge transaction support.
+7. **[Configuration](configuration.md)**: Configure global behaviour of the Litebridge ORM.
 
 ## Core Concepts
 

@@ -77,4 +77,4 @@ litebridge.delete("LB.PERSON");
 ```
 
 > [!NOTE]
-> If you need to execute raw SQL `DELETE` strings without using the fluent API, see [Native SQL Execution](native-sql.md).
+> To execute raw SQL `DELETE` strings without using the fluent API, see [Native SQL Execution](native-sql.md).

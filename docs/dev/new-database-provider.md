@@ -91,7 +91,7 @@ Key methods to override in the provider implementation:
 
 #### Customizing SQL Generation
 
-To customize the SQL dialect, you typically create subclasses of `ColumnIdentifierGenerator` or `SelectSqlGenerator`.
+To customize the SQL dialect, subclasses of `ColumnIdentifierGenerator` or `SelectSqlGenerator` are typically created.
 
 ##### Customizing Identifiers
 

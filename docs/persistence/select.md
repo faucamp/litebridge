@@ -319,6 +319,21 @@ Person person = litebridge.select(Person.class)
 // person.accounts contains the related Account objects
 ```
 
+#### Query-specific Related DTO Strategy
+
+The strategy for handling related DTOs can also be overridden on a per-query basis by passing a `RelatedDtoStrategy` to the `select()` method:
+
+```java
+import org.litebridgedb.orm.config.RelatedDtoStrategy;
+
+// Even if no JOIN is specified, the "owner" field will be partially populated with a Person instance containing its ID
+Account account = litebridge.select(Account.class, RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN)
+        .where("id").eq(234L)
+        .oneOrThrow();
+```
+
+This override takes precedence over the global configuration. See [Configuration](configuration.md) for more details on available strategies.
+
 #### Joining multiple DTOs
 
 Multiple related DTOs can be fetched in a single query by chaining `join()` calls:

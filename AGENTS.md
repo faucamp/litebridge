@@ -99,7 +99,7 @@ They are bound to Maven's `integration-test` phase and thus executed using `mvn 
 
 ## Common Agent Tasks
 
-- **Write Documentation**: Follow the same style as existing documentation. Documentation is found in the `docs`
+- **Write Documentation**: Follow the same style as existing documentation. Use a formal tone; avoid using words like "you". Documentation is found in the `docs`
   directory. Ensure that all relevant pages are updated when adding/extending a specific topic.
 - **Adding a DB Provider**: Implement the `DatabaseProvider` SPI in a new module and ensure it passes the SPI TCK/common
   tests. Update relevant documentation to reflect the new provider. Add unit tests and E2E tests for the new provider.
