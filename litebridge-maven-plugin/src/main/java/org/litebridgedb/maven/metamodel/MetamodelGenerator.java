@@ -48,6 +48,9 @@ public final class MetamodelGenerator {
             final List<ClassOrInterfaceDeclaration> classDeclarations = source.getLocalDeclarationFromClassname(sourceClassName);
 
             if (classDeclarations.isEmpty()) {
+                if (log.isDebugEnabled()) {
+                    log.debug("No class declaration found for " + sourceClassName);
+                }
                 return Optional.empty();
             }
 

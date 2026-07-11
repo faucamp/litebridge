@@ -169,6 +169,9 @@ public final class MetamodelMojo extends AbstractMojo {
                 createMetamodelsForJavaSourceFiles(file, metamodelGenerator, javaFileWriter);
             } else if (file.getName().endsWith(".java")) {
                 // Create metamodel
+                if (getLog().isDebugEnabled()) {
+                    getLog().debug("Creating metamodel for file: " + file.getAbsolutePath());
+                }
                 final Optional<GeneratedMetamodel> generatedMetamodelOptional = metamodelGenerator.createMetaModel(file);
 
                 if (generatedMetamodelOptional.isEmpty()) {

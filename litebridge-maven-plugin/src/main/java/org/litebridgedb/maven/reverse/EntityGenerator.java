@@ -661,9 +661,13 @@ public final class EntityGenerator {
 
     private @Nullable ColumnMappingConfig getColumnMappingConfig(final ColumnMetaData columnMetaData, final @Nullable TableMappingConfig tableMappingConfig) {
         if (tableMappingConfig != null && tableMappingConfig.getColumnMappings() != null) {
-            return tableMappingConfig.getColumnMappings().stream()
+            final ColumnMappingConfig mapping = tableMappingConfig.getColumnMappings().stream()
                     .filter(c -> c.getColumn().equals(columnMetaData.name()))
                     .findFirst().orElse(null);
+            if (mapping == null && log.isDebugEnabled()) {
+                log.debug("No column mapping found for " + columnMetaData.name() + " in table " + tableMappingConfig.getTable());
+            }
+            return mapping;
         } else {
             return null;
         }

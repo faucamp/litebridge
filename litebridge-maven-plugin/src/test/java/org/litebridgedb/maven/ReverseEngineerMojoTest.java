@@ -22,10 +22,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @MojoTest
 class ReverseEngineerMojoTest {
@@ -514,6 +512,77 @@ class ReverseEngineerMojoTest {
         return new ExecuteResult(personCompilationUnit, accountCompilationUnit, adressCompilationUnit);
     }
 
+    @Test
+    void testExecute_Skip() throws Exception {
+        ReverseEngineerMojo mojo = new ReverseEngineerMojo();
+        Log log = mock(Log.class);
+        mojo.setLog(log);
+        setField(mojo, "skip", true);
+
+        mojo.execute();
+
+        verify(log).debug(argThat((CharSequence s) -> String.valueOf(s).contains("Skipping")));
+    }
+
+    @Test
+    void testExecute_MandatoryConfigMissing() throws Exception {
+        ReverseEngineerMojo mojo = new ReverseEngineerMojo();
+        mojo.setLog(new DebugMojoLog(ReverseEngineerMojo.class));
+
+        // database is null
+        assertThrows(MojoExecutionException.class, mojo::execute);
+
+        org.litebridgedb.maven.config.reverse.DatabaseConfig db = new org.litebridgedb.maven.config.reverse.DatabaseConfig();
+        setField(mojo, "database", db);
+
+        // input is null
+        assertThrows(MojoExecutionException.class, mojo::execute);
+
+        org.litebridgedb.maven.config.reverse.RevEngInputConfig input = new org.litebridgedb.maven.config.reverse.RevEngInputConfig();
+        setField(mojo, "input", input);
+
+        // output is null
+        assertThrows(MojoExecutionException.class, mojo::execute);
+    }
+
+    @Test
+    void testExecute_InvalidDatabaseProviderClass() throws Exception {
+        ReverseEngineerMojo mojo = new ReverseEngineerMojo();
+        mojo.setLog(new DebugMojoLog(ReverseEngineerMojo.class));
+
+        org.litebridgedb.maven.config.reverse.DatabaseConfig db = new org.litebridgedb.maven.config.reverse.DatabaseConfig();
+        db.setDatabaseProviderClass("java.lang.String");
+        db.setUrl("jdbc:h2:mem:test_invalid");
+        setField(mojo, "database", db);
+
+        org.litebridgedb.maven.config.reverse.RevEngInputConfig input = new org.litebridgedb.maven.config.reverse.RevEngInputConfig();
+        input.setTables(List.of("test"));
+        setField(mojo, "input", input);
+
+        org.litebridgedb.maven.config.reverse.RevEngOutputConfig output = new org.litebridgedb.maven.config.reverse.RevEngOutputConfig();
+        setField(mojo, "output", output);
+
+        assertThrows(IllegalArgumentException.class, mojo::execute);
+    }
+
+    @Test
+    void testExecute_DatabaseProviderClassNotFound() throws Exception {
+        ReverseEngineerMojo mojo = new ReverseEngineerMojo();
+        mojo.setLog(new DebugMojoLog(ReverseEngineerMojo.class));
+
+        org.litebridgedb.maven.config.reverse.DatabaseConfig db = new org.litebridgedb.maven.config.reverse.DatabaseConfig();
+        db.setDatabaseProviderClass("com.nonexistent.Provider");
+        setField(mojo, "database", db);
+
+        org.litebridgedb.maven.config.reverse.RevEngInputConfig input = new org.litebridgedb.maven.config.reverse.RevEngInputConfig();
+        setField(mojo, "input", input);
+
+        org.litebridgedb.maven.config.reverse.RevEngOutputConfig output = new org.litebridgedb.maven.config.reverse.RevEngOutputConfig();
+        setField(mojo, "output", output);
+
+        assertThrows(IllegalArgumentException.class, mojo::execute);
+    }
+
     /**
      * Setup H2 in-memory database
      */
@@ -537,5 +606,11 @@ class ReverseEngineerMojoTest {
     }
 
     private record ExecuteResult(CompilationUnit person, CompilationUnit account, CompilationUnit address) {
+    }
+
+    private void setField(Object target, String fieldName, Object value) throws Exception {
+        java.lang.reflect.Field field = target.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 }
