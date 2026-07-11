@@ -76,6 +76,67 @@ class ColumnIdentifierGeneratorTest {
     }
 
     @Test
+    void createSelectColumn_nested() {
+        // Given
+        final Column column = new Column(new Table("TEST_TABLE"), "TEST_COLUMN", "col_alias");
+
+        // When
+        final String result = generator.createSelectColumn(column, mock(Select.class), ClauseType.SELECT, true);
+
+        // Then
+        assertEquals("TEST_TABLE.TEST_COLUMN", result);
+    }
+
+    @Test
+    void createColumnRef_withoutAlias() {
+        // Given
+        final Column column = new Column(new Table("TEST_TABLE"), "TEST_COLUMN");
+
+        // When
+        final String result = generator.createColumnRef(column, mock(Select.class), ClauseType.WHERE);
+
+        // Then
+        assertEquals("TEST_TABLE.TEST_COLUMN", result);
+    }
+
+    @Test
+    void createColumnRef_withAlias_notWhere() {
+        // Given
+        final Column column = new Column(new Table("TEST_TABLE"), "TEST_COLUMN", "col_alias");
+
+        // When
+        final String result = generator.createColumnRef(column, mock(Select.class), ClauseType.ORDER_BY);
+
+        // Then
+        assertEquals("col_alias", result);
+    }
+
+    @Test
+    void createColumnRef_withAlias_where() {
+        // Given
+        final Column column = new Column(new Table("TEST_TABLE"), "TEST_COLUMN", "col_alias");
+
+        // When
+        final String result = generator.createColumnRef(column, mock(Select.class), ClauseType.WHERE);
+
+        // Then
+        assertEquals("TEST_TABLE.TEST_COLUMN", result);
+    }
+
+    @Test
+    void createColumnRef_withTableAlias() {
+        // Given
+        final Column column = new Column(new Table("TEST_TABLE"), "TEST_COLUMN");
+        column.table().setAlias("t1");
+
+        // When
+        final String result = generator.createColumnRef(column, mock(Select.class), ClauseType.WHERE);
+
+        // Then
+        assertEquals("t1.TEST_COLUMN", result);
+    }
+
+    @Test
     void quoteIdentifier_reservedKeyword() {
         // Given
         final String identifier = "TABLE";

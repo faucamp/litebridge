@@ -526,6 +526,56 @@ class AbstractSqlGeneratorTest {
         assertThrows(IllegalArgumentException.class, () -> sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class)));
     }
 
+    @Test
+    void appendConditionsAndSubgroups_nested() {
+        // Given
+        final StringBuilder sql = new StringBuilder();
+        final List<BindValue> bindValues = new java.util.ArrayList<>();
+        final ColumnExpression col1 = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
+        final org.litebridgedb.db.spi.query.LogicCondition cond1 = new org.litebridgedb.db.spi.query.LogicCondition(col1, Operator.EQ, "v1");
+
+        final org.litebridgedb.db.spi.query.ConditionGroup subGroup = new org.litebridgedb.db.spi.query.ConditionGroup(
+                List.of(new org.litebridgedb.db.spi.query.LogicCondition(col1, Operator.NEQ, "v2"))
+        );
+        final org.litebridgedb.db.spi.query.LogicConditionGroup logicSubGroup = new org.litebridgedb.db.spi.query.LogicConditionGroup(org.litebridgedb.db.spi.query.LogicOperator.AND, subGroup);
+
+        final org.litebridgedb.db.spi.query.ConditionGroup root = new org.litebridgedb.db.spi.query.ConditionGroup(
+                List.of(cond1),
+                List.of(logicSubGroup)
+        );
+
+        final ColumnMetaData cmd = mock(ColumnMetaData.class);
+        when(cmd.getDataType()).thenReturn(Types.VARCHAR);
+        when(tableMetaData.column(any())).thenReturn(cmd);
+        when(typeConverter.convert(any(), anyInt())).then(i -> i.getArgument(0));
+
+        // When
+        sqlGenerator.appendConditionsAndSubgroups(sql, root, bindValues, mock(Select.class), mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals("TEST_TABLE.TEST_COLUMN = ? AND (TEST_TABLE.TEST_COLUMN <> ?)", sql.toString());
+        assertEquals(2, bindValues.size());
+    }
+
+    @Test
+    void createCondition_in_connectionProviderExpression() {
+        // Given
+        final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
+        final org.litebridgedb.db.spi.expression.ConnectionProviderExpression cpe = mock(org.litebridgedb.db.spi.expression.ConnectionProviderExpression.class);
+        final Condition condition = new Condition(column, Operator.IN, cpe);
+        final PreparedSql fragment = new PreparedSql("SUB_SQL", List.of(new BindValue("v", Types.VARCHAR)));
+
+        when(cpe.toSql(any(Operation.class), any(ConnectionProvider.class))).thenReturn(fragment);
+
+        // When
+        final PreparedSql result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals("TEST_TABLE.TEST_COLUMN IN (SUB_SQL)", result.sql());
+        assertEquals(1, result.bindValues().size());
+        assertEquals("v", result.bindValues().get(0).value());
+    }
+
     private class TestSqlGenerator extends AbstractSqlGenerator {
         public TestSqlGenerator(final TypeConverter typeConverter) {
             super(typeConverter, new ColumnIdentifierGenerator(), (table, connectionProvider) -> tableMetaData);

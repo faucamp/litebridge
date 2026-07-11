@@ -12,6 +12,7 @@ import org.litebridgedb.db.spi.query.Select;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,6 +35,33 @@ class CoreFunctionExpressionsTest {
     }
 
     @Test
+    void selectColumn_toSql_where() {
+        // Given
+        final Column column = new Column(new Table("TEST"), "VAL");
+        final SelectColumn selectColumn = new SelectColumn(column, generator);
+
+        // When
+        final String sql = selectColumn.toSql(select, ClauseType.WHERE);
+
+        // Then
+        assertEquals("TEST.VAL", sql);
+    }
+
+    @Test
+    void selectColumn_toSql_withParent() {
+        // Given
+        final Column column = new Column(new Table("TEST"), "VAL");
+        final SelectColumn selectColumn = new SelectColumn(column, generator);
+        final org.litebridgedb.db.spi.expression.DelegateExpression parent = mock(org.litebridgedb.db.spi.expression.DelegateExpression.class);
+
+        // When
+        final String sql = selectColumn.toSql(select, ClauseType.SELECT, parent);
+
+        // Then
+        assertEquals("TEST.VAL", sql);
+    }
+
+    @Test
     void selectReferenceImpl_toSql() {
         // Given
         final Column column = new Column(new Table("TEST"), "VAL");
@@ -44,6 +72,19 @@ class CoreFunctionExpressionsTest {
 
         // Then
         assertEquals("TEST.VAL", sql);
+    }
+
+    @Test
+    void selectReferenceImpl_toString() {
+        // Given
+        final Column column = new Column(new Table("TEST"), "VAL");
+        final SelectReferenceImpl reference = new SelectReferenceImpl(column, new ColumnIdentifierGenerator());
+
+        // When
+        final String str = reference.toString();
+
+        // Then
+        assertTrue(str.contains("VAL"));
     }
 
     @Test
@@ -74,6 +115,37 @@ class CoreFunctionExpressionsTest {
 
         // Then
         assertEquals("TEST.VAL AS v", sql);
+    }
+
+    @Test
+    void aliasedDelegateColumnExpression_toSql_where() {
+        // Given
+        final Column column = new Column(new Table("TEST"), "VAL");
+        final ColumnExpression target = mock(ColumnExpression.class);
+        when(target.column()).thenReturn(column);
+        final DelegateColumnExpressionImpl expression = new DelegateColumnExpressionImpl(target, generator);
+
+        // When
+        final String sql = expression.toSql(select, ClauseType.WHERE);
+
+        // Then
+        assertEquals("TEST.VAL", sql);
+    }
+
+    @Test
+    void aliasedDelegateColumnExpression_toSql_withParent() {
+        // Given
+        final Column column = new Column(new Table("TEST"), "VAL");
+        final ColumnExpression target = mock(ColumnExpression.class);
+        when(target.column()).thenReturn(column);
+        final DelegateColumnExpressionImpl expression = new DelegateColumnExpressionImpl(target, generator);
+        final org.litebridgedb.db.spi.expression.DelegateExpression parent = mock(org.litebridgedb.db.spi.expression.DelegateExpression.class);
+
+        // When
+        final String sql = expression.toSql(select, ClauseType.SELECT, parent);
+
+        // Then
+        assertEquals("TEST.VAL", sql);
     }
 
     @Test
