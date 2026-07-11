@@ -161,3 +161,127 @@ Allows fine-grained control over how specific tables and columns are mapped.
     </executions>
 </plugin>
 ```
+
+## Relationship Handling
+
+The `reverse-engineer` goal automatically detects relationships between tables based on foreign key constraints in the database.
+
+### Many-to-One Relationships
+
+When a table has a foreign key referencing another table that is also being reverse-engineered, the plugin generates a field with the related entity's type instead of a scalar type (like `Long`). 
+
+*   **Detection:** Based on foreign key constraints.
+*   **Mapping:** Uses the `@Column` annotation with the `joinOn` attribute specifying the join column in the related entity.
+
+### One-to-Many Relationships
+
+For every Many-to-One relationship detected, Litebridge can generate a corresponding reverse One-to-Many relationship in the referenced entity.
+
+*   **Detection:** Automatically created for the "other side" of a foreign key relationship.
+*   **Mapping:** Uses a `List<RelatedEntity>` field annotated with `@OneToMany(mappedByField = "...")`.
+
+### Many-to-Many Relationships
+
+Many-to-Many relationships are detected when a join table exists that is not explicitly included in the `tables` configuration but contains exactly two foreign keys referencing two tables that *are* included.
+
+*   **Detection:** Join tables with two foreign keys to mapped entities.
+*   **Mapping:** Generates `List<RelatedEntity>` fields in both related entities, annotated with `@ManyToMany`.
+
+## Generated Entity Examples
+
+Below are snippets of generated entity classes showing various configuration options and relationship mappings.
+
+### Basic Column Mapping and Sequences
+
+Based on the `tableMappings` and `sqlTypeMappings` in the configuration example:
+
+```java
+@Table("PUBLIC.USERS")
+public final class User {
+    
+    @Column(value = "USER_ID", generateUsingSequence = "PUBLIC.USER_SEQ")
+    private Long id;
+
+    @Column("USERNAME")
+    private String username;
+    
+    // ... getters and setters ...
+}
+```
+
+### Many-to-One and One-to-Many
+
+Example of an `Account` entity belonging to a `Person`:
+
+**Account.java (Many-to-One side)**
+```java
+@Table("LB.ACCOUNT")
+public final class Account {
+    
+    @Column(value = "PERSON_ID", joinOn = "id")
+    private PersonEntity owner;
+    
+    // ...
+}
+```
+
+**PersonEntity.java (One-to-Many side)**
+```java
+@Table("LB.PERSON")
+public final class PersonEntity {
+    
+    @Column(value = "PERSON_ID")
+    private Long id;
+    
+    @OneToMany(mappedByField = "owner")
+    private List<Account> accounts;
+    
+    // ...
+}
+```
+
+### Many-to-Many
+
+Example of a relationship between `PersonEntity` and `Address` via a `PERSON_ADDRESS` join table:
+
+```java
+@Table("LB.PERSON")
+public final class PersonEntity {
+    
+    @ManyToMany(joinTable = "LB.PERSON_ADDRESS", joinColumn = "PERSON_ID", inverseJoinColumn = "ADDRESS_ID")
+    private List<Address> addresses;
+    
+    // ...
+}
+```
+
+```java
+@Table("LB.ADDRESS")
+public final class Address {
+    
+    @ManyToMany(joinTable = "LB.PERSON_ADDRESS", joinColumn = "ADDRESS_ID", inverseJoinColumn = "PERSON_ID")
+    private List<PersonEntity> personEntities;
+
+    // ...
+}
+```
+
+### JSpecify Nullability
+
+When JSpecify support is enabled (`<annotate>true</annotate>`), generated entities include `@Nullable` and `@NullMarked` annotations.
+
+```java
+@NullMarked
+@Table("LB.PERSON")
+public final class PersonEntity {
+    
+    @Nullable
+    @Column("SURNAME")
+    private String surname;
+
+    @Column("AGE")
+    private int age; // Primitive because it's NOT NULL in DB or mapped specifically
+    
+    // ...
+}
+```

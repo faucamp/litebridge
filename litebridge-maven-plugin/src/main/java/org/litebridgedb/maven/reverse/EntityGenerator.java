@@ -574,7 +574,7 @@ public final class EntityGenerator {
         for (ManyToManySpec manyToManySpec : manyToManySpecs) {
             final Type listType = StaticJavaParser.parseType("List<%s>".formatted(manyToManySpec.remoteEntityClassName()));
             entity.addImport(List.class);
-            entity.addImport(OneToMany.class);
+            entity.addImport(ManyToMany.class);
             final String reverseMappingCollectionName = MojoStringUtils.pluralise((MojoStringUtils.lowerFirst(manyToManySpec.remoteEntityClassName())));
 
             final FieldDeclaration reverseMappingCollectionField = new FieldDeclaration()
