@@ -154,8 +154,8 @@ jobs:
       if: github.ref == 'refs/heads/main'
       uses: cicirello/jacoco-badge-generator@v2
       with:
-        jacoco-csv-file: spring/litebridge-maven-plugin/target/site/jacoco/jacoco.csv
-        badges-directory: .github/badges/spring/litebridge-maven-plugin
+        jacoco-csv-file: litebridge-maven-plugin/target/site/jacoco/jacoco.csv
+        badges-directory: .github/badges/litebridge-maven-plugin
         generate-branches-badge: true
 
     - name: "Generate JaCoCo Badge: aggregate"
