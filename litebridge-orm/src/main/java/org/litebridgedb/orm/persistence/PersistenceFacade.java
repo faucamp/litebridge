@@ -519,8 +519,7 @@ public class PersistenceFacade {
 
     private AbstractStatementBuilder<?> createStatementBuilder(final Object dto, final Set<Object> inProgressDtos) {
         if (inProgressDtos.contains(dto)) {
-            LOGGER.trace("Skipping DTO: {} - already in progress", dto);
-            return null;
+            throw new IllegalStateException("DTO already in progress: %s".formatted(dto));
         }
 
         final OrmTable table = tableProvider.getTableOrThrow(dto.getClass());

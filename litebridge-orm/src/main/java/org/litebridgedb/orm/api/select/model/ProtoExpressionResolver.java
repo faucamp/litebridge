@@ -140,6 +140,7 @@ public abstract class ProtoExpressionResolver {
             return typeOverrideColumnExpressions.get(expression.type()).apply(resolvedNestedExpressionSpec, expression.type());
         }
 
+        //noinspection DataFlowIssue
         return argTypeOverrideExpressions.get(expression.type()).apply(resolvedNestedExpressionSpec, expression.type(), expression.args());
     }
 

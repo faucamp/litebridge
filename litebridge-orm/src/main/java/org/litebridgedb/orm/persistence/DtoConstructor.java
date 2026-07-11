@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -229,7 +230,10 @@ public final class DtoConstructor {
                                 List<FieldAccessorValue> targetPrimaryKey) {
 
         public List<Object> targetPrimaryKeyValue() {
-            return targetPrimaryKey.stream().map(FieldAccessorValue::value).toList();
+            return targetPrimaryKey.stream()
+                    .map(FieldAccessorValue::value)
+                    .filter(Objects::nonNull)
+                    .toList();
         }
     }
 }
