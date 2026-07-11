@@ -18,7 +18,7 @@ public sealed interface FieldMapping permits FieldSpec, NoFieldMapping {
      * Creates a new {@link FieldSpec} configured for field-level access of the specified field name.
      *
      * @param field the name of the field/property in a class
-     * @return this {@code FieldSpecBuilder} for further chaining
+     * @return the created {@code FieldSpec}
      */
     static FieldSpec f(final String field) {
         return field(field);
@@ -28,7 +28,7 @@ public sealed interface FieldMapping permits FieldSpec, NoFieldMapping {
      * Creates a new {@link FieldSpec} configured for field-level access of the specified field name.
      *
      * @param field the name of the field/property in a class
-     * @return this {@code FieldSpecBuilder} for further chaining
+     * @return the created {@code FieldSpec}
      */
     static FieldSpec field(final String field) {
         return new FieldSpec(field, false);
@@ -39,7 +39,7 @@ public sealed interface FieldMapping permits FieldSpec, NoFieldMapping {
      * Creates a new {@code FieldSpecBuilder} configured for property access of the specified property name.
      *
      * @param property the name of the property in a class
-     * @return this {@code FieldSpecBuilder} for further chaining
+     * @return the created {@code FieldSpec}
      */
     static FieldSpec p(final String property) {
         return property(property);
@@ -49,7 +49,7 @@ public sealed interface FieldMapping permits FieldSpec, NoFieldMapping {
      * Creates a new {@code FieldSpecBuilder} configured for property access of the specified property name.
      *
      * @param property the name of the property in a class
-     * @return this {@code FieldSpecBuilder} for further chaining
+     * @return the created {@code FieldSpec}
      */
     static FieldSpec property(final String property) {
         return new FieldSpec(property, true);

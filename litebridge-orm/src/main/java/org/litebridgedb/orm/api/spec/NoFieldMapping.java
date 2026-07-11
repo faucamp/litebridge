@@ -6,4 +6,9 @@ package org.litebridgedb.orm.api.spec;
  * This is used internally by the ORM when traversing many-to-many JOIN tables.
  */
 public final class NoFieldMapping implements FieldMapping {
+
+    @Override
+    public String toString() {
+        return "NoFieldMapping";
+    }
 }

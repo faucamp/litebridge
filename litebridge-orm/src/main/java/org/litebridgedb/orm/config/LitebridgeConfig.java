@@ -9,30 +9,15 @@ import java.util.Objects;
  * <p>
  * This class provides the ability to specify or modify the strategy used when
  * related DTOs are not explicitly included in JOIN clauses of a query.
+ * <p>
+ * Defaults:
+ * <ul>
+ *     <li>{@link #relatedDtoStrategy} set to {@link RelatedDtoStrategy#NULL_IF_NO_JOIN}
+ * </ul>
  */
-public class LitebridgeConfig {
+public final class LitebridgeConfig {
 
     private RelatedDtoStrategy relatedDtoStrategy = RelatedDtoStrategy.NULL_IF_NO_JOIN;
-
-    /**
-     * Constructs a new {@code LitebridgeConfig} with default settings.
-     * <p>
-     * Defaults:
-     * <ul>
-     *     <li>{@link #relatedDtoStrategy} set to {@link RelatedDtoStrategy#NULL_IF_NO_JOIN}
-     * </ul>
-     */
-    public LitebridgeConfig() {
-    }
-
-    /**
-     * Copy constructor.
-     *
-     * @param other config to copy
-     */
-    public LitebridgeConfig(final LitebridgeConfig other) {
-        this.relatedDtoStrategy = other.relatedDtoStrategy;
-    }
 
     /**
      * Retrieves the current strategy for handling related DTO (Data Transfer Object) fields

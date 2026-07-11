@@ -107,4 +107,21 @@ class TableSpecTest {
         assertNotSame(fieldColumnMap, result.fieldColumnMap());
         assertEquals(fieldColumnMap, result.fieldColumnMap());
     }
+
+    @Test
+    void constructor_fullDotNotation() {
+        final Map<FieldMapping, ColumnMapping> fieldColumnMap = new HashMap<>();
+        fieldColumnMap.put(new FieldSpec("testField", false), new ColumnSpec("testColumn"));
+
+        // When
+        final TableSpec result = new TableSpec("TEST_CATALOG.TEST_SCHEMA.TEST_TABLE", fieldColumnMap);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("TEST_CATALOG", result.catalog());
+        assertEquals("TEST_SCHEMA", result.schema());
+        assertEquals("TEST_TABLE", result.name());
+        assertNotSame(fieldColumnMap, result.fieldColumnMap());
+        assertEquals(fieldColumnMap, result.fieldColumnMap());
+    }
 }

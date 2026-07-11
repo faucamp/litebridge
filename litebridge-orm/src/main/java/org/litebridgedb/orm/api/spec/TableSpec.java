@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * Specification of a database tab, used to map DTO instances to to target tables.
+ * Specification of a database table, used to map DTO instances to target tables.
  * <p>
  * This class is immutable and provides various factory methods to create instances
  * with different configurations.

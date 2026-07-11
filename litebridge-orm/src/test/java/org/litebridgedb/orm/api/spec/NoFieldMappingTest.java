@@ -13,5 +13,6 @@ class NoFieldMappingTest {
 
         // Then
         assertNotNull(noFieldMapping);
+        assertNotNull(noFieldMapping.toString());
     }
 }
