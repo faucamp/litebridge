@@ -25,6 +25,12 @@ public final class DirectFieldAccessor implements FieldAccessor {
     private final VarHandle varHandle;
     private final ConcurrentLazy<Class<?>[]> genericTypes;
 
+    /**
+     * Constructs a new {@code DirectFieldAccessor} for the specified field using the provided lookup.
+     *
+     * @param field  the field to access
+     * @param lookup the lookup to use for unreflecting the field into a {@link VarHandle}
+     */
     public DirectFieldAccessor(final Field field, final MethodHandles.Lookup lookup) {
         this.field = field;
         try {

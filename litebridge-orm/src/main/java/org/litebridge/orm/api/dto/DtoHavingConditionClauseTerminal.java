@@ -12,6 +12,11 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
+/**
+ * Terminal clause for DTO HAVING conditions.
+ *
+ * @param <DTO> the type of the DTO
+ */
 public final class DtoHavingConditionClauseTerminal<DTO>
         extends AbstractHavingClauseTerminal<DTO,
         DtoOrderByClause<DTO>,
@@ -26,6 +31,11 @@ public final class DtoHavingConditionClauseTerminal<DTO>
 
     private final OrmTable ormTable;
 
+    /**
+     * Creates a new DtoHavingConditionClauseTerminal.
+     *
+     * @param delegate the DTO selector delegate
+     */
     public DtoHavingConditionClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);
         ormTable = delegate.table();

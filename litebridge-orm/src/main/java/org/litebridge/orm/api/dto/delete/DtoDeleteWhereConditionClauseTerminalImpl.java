@@ -6,12 +6,22 @@ import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.delete.DeleteTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * Implementation of {@link DtoDeleteWhereConditionClauseTerminal} for DTO delete operations.
+ *
+ * @param <DTO> the type of the DTO
+ */
 public final class DtoDeleteWhereConditionClauseTerminalImpl<DTO>
         implements DtoDeleteWhereConditionClauseTerminal<DTO>,
         DeleteTerminal {
 
     private final DtoDeletor<DTO> delegate;
 
+    /**
+     * Creates a new DtoDeleteWhereConditionClauseTerminalImpl.
+     *
+     * @param delegate the DTO deletor delegate
+     */
     public DtoDeleteWhereConditionClauseTerminalImpl(final DtoDeletor<DTO> delegate) {
         this.delegate = delegate;
     }

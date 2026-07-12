@@ -17,11 +17,22 @@ public final class ConvertSpec<T> implements TypeOverrideExpressionSpec<T>, Reso
     private final ExpressionSpec target;
     private final Class<T> returnType;
 
+    /**
+     * Constructs a {@code ConvertSpec} with the specified target expression and return type.
+     *
+     * @param target     the target expression to convert
+     * @param returnType the class of the target Java type
+     */
     public ConvertSpec(final ExpressionSpec target, final Class<T> returnType) {
         this.target = target;
         this.returnType = returnType;
     }
 
+    /**
+     * Gets the target expression for conversion.
+     *
+     * @return the target expression
+     */
     public ExpressionSpec target() {
         return target;
     }
@@ -41,6 +52,12 @@ public final class ConvertSpec<T> implements TypeOverrideExpressionSpec<T>, Reso
         return target.getClass();
     }
 
+    /**
+     * Creates a new {@code ConvertSpec} with a replaced target expression.
+     *
+     * @param resolvedExpressionSpec the new target expression
+     * @return a new {@code ConvertSpec} instance
+     */
     public ConvertSpec<T> replaceTarget(final ExpressionSpec resolvedExpressionSpec) {
         return new ConvertSpec<>(resolvedExpressionSpec, returnType);
     }

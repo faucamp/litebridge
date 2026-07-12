@@ -19,8 +19,17 @@ import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
  */
 public class DelegateColumnExpressionImpl extends DelegateColumnExpression {
 
+    /**
+     * The generator used for creating SQL column identifiers.
+     */
     protected final ColumnIdentifierGenerator columnIdentifierGenerator;
 
+    /**
+     * Constructs a {@code DelegateColumnExpressionImpl} with the specified target column and identifier generator.
+     *
+     * @param target                    the target column expression
+     * @param columnIdentifierGenerator the generator to use for creating SQL identifiers
+     */
     public DelegateColumnExpressionImpl(final ColumnExpression target, final ColumnIdentifierGenerator columnIdentifierGenerator) {
         super(target);
         this.columnIdentifierGenerator = columnIdentifierGenerator;

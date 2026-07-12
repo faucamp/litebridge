@@ -21,6 +21,13 @@ public interface TransactionManager extends TransactionControl {
      */
     void begin() throws TransactionException;
 
+    /**
+     * Begins a new transaction for the current thread with the specified read-only status and isolation level.
+     *
+     * @param readOnly  {@code true} for a read-only transaction; {@code false} for read-write
+     * @param isolation the isolation level for the transaction
+     * @throws TransactionException if an error occurs during starting the transaction
+     */
     void begin(boolean readOnly, Isolation isolation) throws TransactionException;
 
     /**

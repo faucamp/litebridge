@@ -14,6 +14,15 @@ import org.litebridge.db.spi.util.SqlReservedWords;
  */
 public class ColumnIdentifierGenerator {
 
+    /**
+     * Creates a SQL identifier for a column to be used in a SELECT clause.
+     *
+     * @param column    the column for which to create the identifier
+     * @param operation the current database operation
+     * @param clause    the SQL clause where the identifier will be used
+     * @param nested    whether the column is part of a nested expression
+     * @return the generated SQL column identifier
+     */
     public String createSelectColumn(final Column column, final Operation operation, final ClauseType clause, final boolean nested) {
         final StringBuilder sb = new StringBuilder();
         final Table table = column.table();
@@ -35,6 +44,14 @@ public class ColumnIdentifierGenerator {
         return sb.toString();
     }
 
+    /**
+     * Creates a SQL reference to a column.
+     *
+     * @param column    the column to reference
+     * @param operation the current database operation
+     * @param clause    the SQL clause where the reference will be used
+     * @return the generated SQL column reference
+     */
     public String createColumnRef(final Column column, final Operation operation, final ClauseType clause) {
         if (column.alias() != null && clause != ClauseType.WHERE) {
             //noinspection DataFlowIssue
@@ -48,6 +65,12 @@ public class ColumnIdentifierGenerator {
         return column.table().name() + "." + column.name();
     }
 
+    /**
+     * Quotes a SQL identifier if it is a reserved word.
+     *
+     * @param identifier the identifier to potentially quote
+     * @return the quoted (if necessary) or original identifier
+     */
     public String quoteIdentifier(final String identifier) {
         if (SqlReservedWords.contains(identifier)) {
             return "\"%s\"".formatted(identifier);
@@ -56,6 +79,12 @@ public class ColumnIdentifierGenerator {
         }
     }
 
+    /**
+     * Creates a SQL alias declaration.
+     *
+     * @param alias the alias to declare
+     * @return the SQL alias declaration (e.g., "AS alias")
+     */
     public String createAliasDeclaration(final String alias) {
         return "AS %s".formatted(quoteIdentifier(alias));
     }

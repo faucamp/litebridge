@@ -550,6 +550,16 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return preparedStatement;
     }
 
+    /**
+     * Prepares a native SQL statement with the provided bind parameters.
+     *
+     * @param sql                the SQL query to prepare
+     * @param bindParameters     the list of parameters to bind to the query
+     * @param returnGeneratedKeys whether to return generated keys
+     * @param connectionProvider the provider to use for obtaining a connection
+     * @return the prepared statement
+     * @throws SQLException if a database access error occurs
+     */
     protected PreparedStatement prepareNativeStatement(final String sql,
                                                        final List<@Nullable Object> bindParameters,
                                                        final boolean returnGeneratedKeys,
@@ -595,6 +605,16 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return preparedStatement;
     }
 
+    /**
+     * Creates a {@link PreparedStatement} using the provided connection and prepared SQL.
+     *
+     * @param preparedSql         the SQL and bind values to use
+     * @param returnGeneratedKeys whether to return generated keys
+     * @param tableMetaData       the metadata for the table, required if returnGeneratedKeys is true
+     * @param connection          the connection to use for preparing the statement
+     * @return the created prepared statement
+     * @throws SQLException if a database access error occurs
+     */
     protected PreparedStatement createPreparedStatementUsingConnection(final PreparedSql preparedSql,
                                                                        final boolean returnGeneratedKeys,
                                                                        final @Nullable TableMetaData tableMetaData,

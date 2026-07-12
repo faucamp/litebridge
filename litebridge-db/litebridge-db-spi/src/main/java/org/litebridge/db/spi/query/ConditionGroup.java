@@ -12,14 +12,29 @@ import java.util.List;
 public record ConditionGroup(List<LogicCondition> conditions,
                              List<LogicConditionGroup> subgroups) {
 
-    public ConditionGroup(List<LogicCondition> conditions) {
+    /**
+     * Constructs a {@code ConditionGroup} with the specified conditions.
+     *
+     * @param conditions the list of conditions
+     */
+    public ConditionGroup(final List<LogicCondition> conditions) {
         this(conditions, Collections.emptyList());
     }
 
-    public ConditionGroup(LogicCondition condition) {
+    /**
+     * Constructs a {@code ConditionGroup} with a single condition.
+     *
+     * @param condition the condition to add
+     */
+    public ConditionGroup(final LogicCondition condition) {
         this(List.of(condition));
     }
 
+    /**
+     * Checks if the condition group is empty.
+     *
+     * @return {@code true} if the group contains no conditions or subgroups; {@code false} otherwise
+     */
     public boolean isEmpty() {
         return conditions.isEmpty() && subgroups.isEmpty();
     }

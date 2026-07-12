@@ -59,6 +59,8 @@ public final class CollectionUtils {
      * <p>
      * If the collection is null or empty, an {@link IllegalArgumentException} is thrown with the given message.
      *
+     * @param <T>        the type of the collection
+     * @param <U>        the type of the elements in the collection
      * @param collection the collection to validate; may be null
      * @param message    the exception message to use if the validation fails
      * @return the validated non-null and non-empty collection
@@ -73,6 +75,7 @@ public final class CollectionUtils {
      * <p>
      * If the map is null or empty, an {@link IllegalArgumentException} is thrown with the given message.
      *
+     * @param <T>     the type of the map
      * @param map     the map to validate; may be null
      * @param message the exception message to use if the validation fails
      * @return the validated non-null and non-empty map

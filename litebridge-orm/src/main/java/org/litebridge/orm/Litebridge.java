@@ -547,6 +547,7 @@ public final class Litebridge implements SelectApi {
      * <p>
      * This allows raw row results to be mapped to DTO instances.
      *
+     * @param <DTO>             the type of the DTO
      * @param dtoClass          the class of the DTO that the mapper will handle
      * @param dtoEntityMappings the list of mappings between DTO fields and corresponding entity fields
      * @return an instance of EntityDtoMapper configured for the specified DTO class and mappings

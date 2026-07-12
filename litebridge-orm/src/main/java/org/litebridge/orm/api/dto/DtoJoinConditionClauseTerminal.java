@@ -15,6 +15,11 @@ import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 
+/**
+ * Represents the terminal part of a JOIN condition clause in a DTO-based query.
+ *
+ * @param <DTO> the type of the DTO being queried
+ */
 public final class DtoJoinConditionClauseTerminal<DTO>
         extends AbstractJoinConditionClauseTerminal<DTO,
         DtoJoinConditionClause<DTO>,
@@ -45,6 +50,13 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     private final AliasGenerator aliasGenerator;
     private final TableRegistry tableRegistry;
 
+    /**
+     * Creates a new instance of {@code DtoJoinConditionClauseTerminal}.
+     *
+     * @param joinSpec the join specification
+     * @param delegate the selector delegate
+     * @param aliasGenerator the alias generator
+     */
     public DtoJoinConditionClauseTerminal(final DtoJoinSpec joinSpec, final DtoSelector<DTO> delegate, final AliasGenerator aliasGenerator) {
         super(joinSpec, delegate);
         this.ormTable = delegate.table();

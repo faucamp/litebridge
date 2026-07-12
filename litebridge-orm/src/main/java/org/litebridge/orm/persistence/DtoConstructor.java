@@ -46,6 +46,11 @@ public final class DtoConstructor {
     private final Map<Class<?>, Object> canonicalConstructorCache = new ConcurrentHashMap<>();
     private final Map<Class<?>, List<FieldAccessor>> canonicalConstructorFieldAccessorCache = new ConcurrentHashMap<>();
 
+    /**
+     * Creates a new DTO constructor instance.
+     *
+     * @param tableRegistry the table registry to use for dependency resolution
+     */
     public DtoConstructor(final TableRegistry tableRegistry) {
         this.tableRegistry = tableRegistry;
     }
@@ -297,6 +302,11 @@ public final class DtoConstructor {
     public record DtoDependency(FieldAccessor field, Class<?> targetDtoClass,
                                 List<FieldAccessorValue> targetPrimaryKey) {
 
+        /**
+         * Returns the primary key values of the target DTO.
+         *
+         * @return the target primary key values
+         */
         public List<Object> targetPrimaryKeyValue() {
             return targetPrimaryKey.stream()
                     .map(FieldAccessorValue::value)

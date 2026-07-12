@@ -91,10 +91,20 @@ public final class ColumnMetaData implements MappedFieldTarget {
         this(table, name, nullable, dataType, 0);
     }
 
+    /**
+     * Gets the name of the column.
+     *
+     * @return the column name
+     */
     public String name() {
         return name;
     }
 
+    /**
+     * Gets the table this column belongs to.
+     *
+     * @return the table
+     */
     public Table table() {
         return table;
     }
@@ -145,26 +155,56 @@ public final class ColumnMetaData implements MappedFieldTarget {
         return autoIncrement;
     }
 
+    /**
+     * Sets whether this column is an auto-increment column.
+     *
+     * @param autoIncrement {@code true} if auto-increment; {@code false} otherwise
+     */
     public void setAutoIncrement(final boolean autoIncrement) {
         this.autoIncrement = autoIncrement;
     }
 
+    /**
+     * Gets the value generator for this column.
+     *
+     * @return the value generator, or {@code null} if none
+     */
     public @Nullable ColumnValueGenerator getGenerator() {
         return generator;
     }
 
+    /**
+     * Sets the value generator for this column.
+     *
+     * @param generator the value generator to set
+     */
     public void setGenerator(final @Nullable ColumnValueGenerator generator) {
         this.generator = generator;
     }
 
+    /**
+     * Gets the name of the join column, if applicable.
+     *
+     * @return the join column name
+     */
     public @Nullable String getJoinColumn() {
         return joinColumn;
     }
 
+    /**
+     * Sets the name of the join column.
+     *
+     * @param joinColumn the join column name to set
+     */
     public void setJoinColumn(final @Nullable String joinColumn) {
         this.joinColumn = joinColumn;
     }
 
+    /**
+     * Adds a foreign key constraint to this column.
+     *
+     * @param foreignKeyConstraint the constraint to add
+     */
     public void addForeignKeyConstraint(final ForeignKeyConstraint foreignKeyConstraint) {
         if (foreignKeyConstraints == null) {
             foreignKeyConstraints = new ArrayList<>();
@@ -173,10 +213,20 @@ public final class ColumnMetaData implements MappedFieldTarget {
         foreignKeyConstraints.add(foreignKeyConstraint);
     }
 
+    /**
+     * Gets all foreign key constraints associated with this column.
+     *
+     * @return the list of foreign key constraints
+     */
     public List<ForeignKeyConstraint> getForeignKeyConstraints() {
         return foreignKeyConstraints != null ? foreignKeyConstraints : Collections.emptyList();
     }
 
+    /**
+     * Adds a foreign reference to this column.
+     *
+     * @param foreignKeyConstraint the reference to add
+     */
     public void addForeignReference(final ForeignKeyConstraint foreignKeyConstraint) {
         if (foreignReferences == null) {
             foreignReferences = new ArrayList<>();
@@ -185,10 +235,20 @@ public final class ColumnMetaData implements MappedFieldTarget {
         foreignReferences.add(foreignKeyConstraint);
     }
 
+    /**
+     * Gets all foreign references associated with this column.
+     *
+     * @return the list of foreign references
+     */
     public List<ForeignKeyConstraint> getForeignReferences() {
         return foreignReferences != null ? foreignReferences : Collections.emptyList();
     }
 
+    /**
+     * Converts this metadata into a {@link Column} instance.
+     *
+     * @return a new {@link Column} instance
+     */
     public Column toColumn() {
         return new Column(new Table(table), name);
     }

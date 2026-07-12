@@ -47,10 +47,24 @@ public final class ConcurrentLazy<T> {
     }
 
 
+    /**
+     * Returns the value, or throws a {@link NoSuchElementException} if the value is null.
+     *
+     * @return the value
+     * @throws NoSuchElementException if the value is null
+     */
     public T orThrow() {
         return orThrow(NoSuchElementException::new);
     }
 
+    /**
+     * Returns the value, or throws an exception provided by the supplier if the value is null.
+     *
+     * @param <X>               the type of the exception to be thrown
+     * @param exceptionSupplier the supplier of the exception to be thrown
+     * @return the value
+     * @throws X if the value is null
+     */
     public <X extends Exception> T orThrow(Supplier<X> exceptionSupplier) throws X {
         final T result = orNull();
 
@@ -89,6 +103,8 @@ public final class ConcurrentLazy<T> {
     /**
      * Returns the current value without triggering initialization.
      * Useful for logging or debugging where you don't want to force a side-effect.
+     *
+     * @return the current value, or {@code null} if not yet initialized
      */
     @Nullable
     @SuppressWarnings("unchecked")

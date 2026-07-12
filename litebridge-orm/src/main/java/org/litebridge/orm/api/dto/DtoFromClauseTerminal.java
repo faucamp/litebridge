@@ -20,6 +20,11 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+/**
+ * Terminal clause for DTO FROM clauses.
+ *
+ * @param <DTO> the type of the DTO
+ */
 public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal<DTO,
         DtoJoinClause<DTO>,
         DtoJoinConditionClause<DTO>,
@@ -38,6 +43,11 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     private final TableRegistry tableRegistry;
     private final OrmTable ormTable;
 
+    /**
+     * Creates a new DtoFromClauseTerminal.
+     *
+     * @param delegate the DTO selector delegate
+     */
     public DtoFromClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);
         tableRegistry = delegate.tableRegistry();

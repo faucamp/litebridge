@@ -9,6 +9,9 @@ import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Date;
 
+/**
+ * A converter that converts various date/time types to {@link java.util.Date}.
+ */
 public class DateConverter implements Converter<Date> {
 
     @Override

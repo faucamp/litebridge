@@ -14,10 +14,24 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 
+/**
+ * Executor for DTO delete operations.
+ *
+ * @param <DTO> the type of the DTO
+ */
 public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implements DtoDeleteWhereClause<DTO> {
 
     private final LitebridgeContext litebridgeContext;
 
+    /**
+     * Creates a new DtoDeletor.
+     *
+     * @param dtoClass                the DTO class
+     * @param dtoTable                the DTO table
+     * @param databaseProvider        the database provider
+     * @param selectExpressionMapper the select expression mapper
+     * @param litebridgeContext       the Litebridge context
+     */
     public DtoDeletor(final Class<DTO> dtoClass,
                       final OrmTable dtoTable,
                       final TransactionalDatabaseProvider databaseProvider,

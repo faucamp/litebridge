@@ -21,18 +21,42 @@ public class DtoBlueprint {
     private final SelectDtoData selectDtoData;
     private final List<JoinDtoData> joinedDtoData = new ArrayList<>();
 
+    /**
+     * Creates a new DTO blueprint.
+     *
+     * @param dtoSelectSpec the select specification for the DTO
+     * @param primaryKey    the primary key values
+     * @param dtoRow        the database row data
+     */
     public DtoBlueprint(final DtoSelectSpec dtoSelectSpec, final List<Object> primaryKey, final Row dtoRow) {
         this.selectDtoData = new SelectDtoData(dtoSelectSpec, primaryKey, dtoRow);
     }
 
+    /**
+     * Returns the primary DTO data.
+     *
+     * @return the primary DTO data
+     */
     public SelectDtoData dtoData() {
         return selectDtoData;
     }
 
+    /**
+     * Returns the list of joined DTO data.
+     *
+     * @return the list of joined DTO data
+     */
     public List<JoinDtoData> joinedDtoData() {
         return joinedDtoData;
     }
 
+    /**
+     * Adds joined DTO data to this blueprint.
+     *
+     * @param dtoJoinSpec the join specification
+     * @param primaryKey  the primary key values
+     * @param dtoRow      the database row data
+     */
     public void addJoinedDtoData(final DtoJoinSpec dtoJoinSpec, final List<Object> primaryKey, final Row dtoRow) {
         joinedDtoData.add(new JoinDtoData(dtoJoinSpec, primaryKey, dtoRow));
     }
@@ -46,6 +70,9 @@ public class DtoBlueprint {
      * @param <S> The type parameter defining the specification for the DTO data, which must extend {@link DtoDataSpec}.
      */
     public static sealed abstract class DtoData<S extends DtoDataSpec> permits SelectDtoData, JoinDtoData {
+        /**
+         * The specification associated with this data.
+         */
         protected final S spec;
         private final List<DtoSelectSpec.FieldColumn> fieldColumns;
         private final List<Object> primaryKey;
@@ -120,6 +147,13 @@ public class DtoBlueprint {
      * isolating only those that correspond to {@link SelectFieldSpec} for the relevant table.
      */
     public static final class SelectDtoData extends DtoData<DtoSelectSpec> {
+        /**
+         * Creates a new select DTO data instance.
+         *
+         * @param dtoSelectSpec the select specification
+         * @param primaryKey    the primary key values
+         * @param dtoRows       the database row data
+         */
         public SelectDtoData(final DtoSelectSpec dtoSelectSpec, final List<Object> primaryKey, final Row dtoRows) {
             super(dtoSelectSpec,
                     dtoSelectSpec.getExpressions().stream()
@@ -145,8 +179,18 @@ public class DtoBlueprint {
         }
     }
 
+    /**
+     * Specialised data container for DTO-based joins in the context of a {@link DtoBlueprint}.
+     */
     public static final class JoinDtoData extends DtoData<DtoJoinSpec> {
 
+        /**
+         * Creates a new join DTO data instance.
+         *
+         * @param dtoJoinSpec the join specification
+         * @param primaryKey  the primary key values
+         * @param dtoRows     the database row data
+         */
         public JoinDtoData(final DtoJoinSpec dtoJoinSpec, final List<Object> primaryKey, final Row dtoRows) {
             super(dtoJoinSpec,
                     Objects.requireNonNull(dtoJoinSpec.getFieldColumns()),

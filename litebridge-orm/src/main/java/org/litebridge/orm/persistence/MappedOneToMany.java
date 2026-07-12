@@ -13,9 +13,9 @@ import org.litebridge.tracking.FieldAccessor;
  * Implements {@link MappedFieldTarget}, serving as a target for mapped fields in an ORM context.
  *
  * @param mappedByField Refers to the field accessor for the field on the "one" side
- *                      that maps to the "many" side of the relationship.</li>
+ *                      that maps to the "many" side of the relationship.
  * @param collection    Refers to the field accessor for the collection on the "many" side
- *                      that represents the related entities.</li>
+ *                      that represents the related entities.
  */
 public record MappedOneToMany(FieldAccessor mappedByField, FieldAccessor collection) implements MappedFieldTarget {
 

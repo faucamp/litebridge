@@ -13,14 +13,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
+/**
+ * Generator for SQL DELETE statements.
+ */
 public class DeleteSqlGenerator extends AbstractSqlGenerator {
 
+    /**
+     * Constructs a {@code DeleteSqlGenerator} with the specified components.
+     *
+     * @param typeConverter             the converter to use for SQL types
+     * @param columnIdentifierGenerator the generator for column identifiers
+     * @param ensureTableMetaData       the function to retrieve table metadata
+     */
     public DeleteSqlGenerator(final TypeConverter typeConverter,
                               final ColumnIdentifierGenerator columnIdentifierGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
         super(typeConverter, columnIdentifierGenerator, ensureTableMetaData);
     }
 
+    /**
+     * Prepares the SQL statement for a DELETE operation.
+     *
+     * @param delete             the delete operation metadata
+     * @param connectionProvider the provider for database connections
+     * @return the prepared SQL statement with bind values
+     */
     public PreparedSql prepareSql(final Delete delete, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = appendTable(new StringBuilder("DELETE FROM "), delete.table());
         final List<BindValue> bindValues = new ArrayList<>();

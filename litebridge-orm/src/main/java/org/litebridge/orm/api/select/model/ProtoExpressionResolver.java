@@ -56,6 +56,7 @@ public abstract class ProtoExpressionResolver {
      * If the input expression is not a {@link Resolvable}, it returns the expression as is.
      *
      * @param expressionSpec the proto-expression to resolve
+     * @param clause the clause type where the expression is being used
      * @return the resolved {@link ExpressionSpec} corresponding to the provided column
      */
     public Stream<ExpressionSpec> resolveExpression(final ExpressionSpec expressionSpec, final ClauseType clause) {
@@ -74,6 +75,7 @@ public abstract class ProtoExpressionResolver {
      * If the input expression is not a {@link Resolvable}, it returns the expression as is.
      *
      * @param resolvable the {@link Resolvable} to resolve
+     * @param clause the clause type where the expression is being used
      * @return the resolved {@link ExpressionSpec} corresponding to the provided column
      */
     public Stream<ExpressionSpec> resolveExpression(final Resolvable resolvable, final ClauseType clause) {
@@ -148,9 +150,30 @@ public abstract class ProtoExpressionResolver {
         return Stream.of(resolveSelectField(queryField, clause));
     }
 
+    /**
+     * Resolves a resolvable into a column expression specification.
+     *
+     * @param resolvable the resolvable to resolve
+     * @param clause the clause type where the expression is being used
+     * @return the resolved column expression specification
+     */
     protected abstract ColumnExpressionSpec resolveSelectField(final Resolvable resolvable, final ClauseType clause);
 
+    /**
+     * Resolves a query field into a column expression specification.
+     *
+     * @param queryField the query field to resolve
+     * @param clause the clause type where the expression is being used
+     * @return the resolved column expression specification
+     */
     protected abstract ColumnExpressionSpec resolveSelectField(final QueryField queryField, final ClauseType clause);
 
+    /**
+     * Returns the database column for a resolvable.
+     *
+     * @param resolvable the resolvable to get the column for
+     * @param clause the clause type where the expression is being used
+     * @return the database column
+     */
     protected abstract Column getColumn(final Resolvable resolvable, final ClauseType clause);
 }

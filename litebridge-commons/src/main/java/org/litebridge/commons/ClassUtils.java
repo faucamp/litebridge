@@ -35,6 +35,7 @@ public final class ClassUtils {
      * Equivalent to {@code getAllFields(type, false)}.
      *
      * @param type the class from which to retrieve all declared fields
+     * @param lookup the lookup to use for access checking
      * @return a list of all fields declared in the given class and its superclasses
      */
     public static List<Field> getAllFields(final Class<?> type, final MethodHandles.Lookup lookup) {
@@ -46,6 +47,8 @@ public final class ClassUtils {
      * (except for fields of the `Object` class) and (optionally) static fields.
      *
      * @param type the class from which to retrieve all declared fields
+     * @param includeStatic whether to include static fields
+     * @param lookup the lookup to use for access checking
      * @return a list of all fields declared in the given class and its superclasses
      */
     public static List<Field> getAllFields(final Class<?> type, final boolean includeStatic, final MethodHandles.Lookup lookup) {
@@ -68,6 +71,15 @@ public final class ClassUtils {
         return fields;
     }
 
+    /**
+     * Retrieves all methods from a given class, including methods declared in its superclasses
+     * (except for methods of the `Object` class) and (optionally) static methods.
+     *
+     * @param type          the class from which to retrieve all declared methods
+     * @param includeStatic whether to include static methods
+     * @param lookup        the lookup to use for access checking
+     * @return a list of all methods declared in the given class and its superclasses
+     */
     public static List<Method> getAllMethods(final Class<?> type, final boolean includeStatic, final MethodHandles.Lookup lookup) {
         try {
             lookup.accessClass(type);
@@ -220,6 +232,16 @@ public final class ClassUtils {
         }
     }
 
+    /**
+     * Creates a new instance of the specified class using the provided constructor and arguments.
+     *
+     * @param <DTO>       the type of the object to be created
+     * @param dtoClass    the class object representing the type to instantiate
+     * @param constructor the constructor to use
+     * @param args        the arguments to pass to the constructor
+     * @return a new instance of the specified class type
+     * @throws IllegalStateException if the instantiation fails
+     */
     public static <DTO> DTO newInstance(final Class<DTO> dtoClass, final Constructor<DTO> constructor, final Object... args) {
         try {
             constructor.setAccessible(true);
@@ -229,6 +251,13 @@ public final class ClassUtils {
         }
     }
 
+    /**
+     * Retrieves all declared constructors for the specified class.
+     *
+     * @param <DTO>    the type of the class
+     * @param dtoClass the class object for which to retrieve constructors
+     * @return an array of all declared constructors for the class
+     */
     @SuppressWarnings("unchecked")
     public static <DTO> Constructor<DTO>[] getConstructors(final Class<DTO> dtoClass) {
         return (Constructor<DTO>[]) getConcreteClass(dtoClass).getDeclaredConstructors();

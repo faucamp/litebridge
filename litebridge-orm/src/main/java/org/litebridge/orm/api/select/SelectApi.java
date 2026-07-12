@@ -28,8 +28,9 @@ public interface SelectApi {
      * <p>
      * Shortcut method; equivalent to {@code select().from(dtoClass, relatedDtoStrategy)}.
      *
-     * @param <DTO>    The type of the DTO to select.
-     * @param dtoClass The class of the DTO to be queried, which must already be registered.
+     * @param <DTO>              The type of the DTO to select.
+     * @param dtoClass           The class of the DTO to be queried, which must already be registered.
+     * @param relatedDtoStrategy The strategy to use for fetching related DTOs.
      * @return A {@link DtoFromClauseTerminal} instance for querying and retrieving data for the specified DTO class.
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */
@@ -40,8 +41,9 @@ public interface SelectApi {
      * <p>
      * Shortcut method; equivalent to {@code select().from(dtoClass, contextDtoClass)}.
      *
-     * @param <DTO>    The type of the DTO to select.
-     * @param dtoClass The class of the DTO to be queried, which must already be registered.
+     * @param <DTO>            The type of the DTO to select.
+     * @param dtoClass         The class of the DTO to be queried, which must already be registered.
+     * @param contextDtoClass  The context DTO class for determining the table mapping.
      * @return A {@link DtoFromClauseTerminal} instance for querying and retrieving data for the specified DTO class.
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */

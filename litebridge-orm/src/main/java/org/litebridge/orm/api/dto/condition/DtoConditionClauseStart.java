@@ -8,10 +8,22 @@ import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
+/**
+ * Start of a DTO-based condition clause.
+ *
+ * @param <DTO> the type of the DTO
+ */
 public class DtoConditionClauseStart<DTO> extends AbstractConditionClauseStart<DTO> {
 
     private final OrmTable ormTable;
 
+    /**
+     * Creates a new DTO condition clause start.
+     *
+     * @param conditionGroupSpec the condition group specification
+     * @param ormTable           the ORM table metadata
+     * @param fromClauseEngine   the from clause engine
+     */
     public DtoConditionClauseStart(final ConditionGroupSpec conditionGroupSpec,
                                    final OrmTable ormTable,
                                    final FromClauseEngine fromClauseEngine) {

@@ -21,6 +21,9 @@ import org.litebridge.tracking.FieldAccessor;
 
 import java.util.Objects;
 
+/**
+ * Resolves proto-expressions into DTO-based select expressions.
+ */
 public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
 
     private @Nullable DtoSelectSpec selectSpec;
@@ -28,6 +31,14 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     private final ClassFieldAccessorCache classFieldAccessorCache;
     private final TableRegistry tableRegistry;
 
+    /**
+     * Creates a new instance of {@code DtoProtoExpressionResolver}.
+     *
+     * @param selectSpec the select specification
+     * @param aliasGenerator the alias generator
+     * @param classFieldAccessorCache the field accessor cache
+     * @param tableRegistry the table registry
+     */
     public DtoProtoExpressionResolver(final DtoSelectSpec selectSpec,
                                       final AliasGenerator aliasGenerator,
                                       final ClassFieldAccessorCache classFieldAccessorCache,
@@ -38,6 +49,13 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
         this.tableRegistry = tableRegistry;
     }
 
+    /**
+     * Creates a new instance of {@code DtoProtoExpressionResolver} without a select specification.
+     *
+     * @param aliasGenerator the alias generator
+     * @param classFieldAccessorCache the field accessor cache
+     * @param tableRegistry the table registry
+     */
     public DtoProtoExpressionResolver(final AliasGenerator aliasGenerator,
                                       final ClassFieldAccessorCache classFieldAccessorCache,
                                       final TableRegistry tableRegistry) {

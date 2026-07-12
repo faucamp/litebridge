@@ -19,7 +19,8 @@ public class ConvertExpression implements DelegateExpression {
     /**
      * Constructor.
      *
-     * @param target The encapsulated target column expression for this expression.
+     * @param target       The encapsulated target column expression for this expression.
+     * @param typeOverride The class type that overrides the default type.
      */
     public ConvertExpression(final SelectExpression target, final Class<?> typeOverride) {
         this.target = target;

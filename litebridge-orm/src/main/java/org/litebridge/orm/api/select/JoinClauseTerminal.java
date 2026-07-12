@@ -52,5 +52,13 @@ public interface JoinClauseTerminal<DTO,
      */
     WCC where(final String column);
 
+    /**
+     * Starts a WHERE clause for the SQL query.
+     * <p>
+     * Adds a filtering condition to the SQL query based on the specified expression.
+     *
+     * @param expression the expression to apply the filtering condition on
+     * @return an instance of {@code WCC} representing the next stage of the where condition clause
+     */
     WCC where(final ExpressionSpec expression);
 }

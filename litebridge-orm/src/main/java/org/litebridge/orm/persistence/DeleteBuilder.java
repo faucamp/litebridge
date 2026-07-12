@@ -17,10 +17,21 @@ public final class DeleteBuilder extends AbstractStatementBuilder<Delete> {
 
     private @Nullable ConditionGroup conditions;
 
+    /**
+     * Constructs a {@code DeleteBuilder} for the specified ORM table.
+     *
+     * @param table the table to delete from
+     */
     public DeleteBuilder(final OrmTable table) {
         super(table);
     }
 
+    /**
+     * Sets the conditions for the DELETE statement.
+     *
+     * @param conditionGroup the group of conditions to apply
+     * @return this builder instance
+     */
     public DeleteBuilder where(final ConditionGroup conditionGroup) {
         this.conditions = conditionGroup;
         return this;

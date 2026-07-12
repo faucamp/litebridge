@@ -44,6 +44,11 @@ public final class DefaultTransactionManager implements TransactionManager {
     private final DataSource dataSource;
     private final ThreadLocal<@Nullable TransactionState> holder = new ThreadLocal<>();
 
+    /**
+     * Constructs a new {@code DefaultTransactionManager} using the provided {@link DataSource}.
+     *
+     * @param dataSource the data source to use for connections
+     */
     public DefaultTransactionManager(final DataSource dataSource) {
         this.dataSource = dataSource;
     }

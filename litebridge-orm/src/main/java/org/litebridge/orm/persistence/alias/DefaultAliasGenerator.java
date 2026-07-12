@@ -34,6 +34,11 @@ public final class DefaultAliasGenerator implements AliasGenerator {
      */
     private final Map<String, Integer> aliasCount = new HashMap<>();
 
+    /**
+     * Constructs a {@code DefaultAliasGenerator} with the specified {@link AliasTransformer}.
+     *
+     * @param aliasTransformer the transformer to use for creating base aliases
+     */
     public DefaultAliasGenerator(final AliasTransformer aliasTransformer) {
         this.aliasTransformer = aliasTransformer;
     }

@@ -34,34 +34,76 @@ public class ConditionSpec {
     private Operator operator;
     private @Nullable Object value;
 
+    /**
+     * Gets the left-hand side expression of the condition.
+     *
+     * @return the LHS expression
+     */
     public ExpressionSpec getLhs() {
         return lhs;
     }
 
+    /**
+     * Sets the left-hand side expression of the condition.
+     *
+     * @param lhs the LHS expression to set
+     */
     public void setLhs(final ExpressionSpec lhs) {
         this.lhs = lhs;
     }
 
+    /**
+     * Sets the left-hand side expression of the condition to a specific column.
+     *
+     * @param column the column to set as LHS
+     */
     public void setLhs(final Column column) {
         this.lhs = new SelectColumnSpec(column);
     }
 
+    /**
+     * Gets the operator used in the condition.
+     *
+     * @return the operator
+     */
     public Operator getOperator() {
         return operator;
     }
 
+    /**
+     * Sets the operator for the condition.
+     *
+     * @param operator the operator to set
+     */
     public void setOperator(final Operator operator) {
         this.operator = operator;
     }
 
+    /**
+     * Gets the right-hand side value of the condition.
+     *
+     * @return the RHS value, or {@code null}
+     */
     public @Nullable Object getValue() {
         return value;
     }
 
+    /**
+     * Sets the right-hand side value for the condition.
+     *
+     * @param value the RHS value to set
+     */
     public void setValue(final @Nullable Object value) {
         this.value = value;
     }
 
+    /**
+     * Converts this specification into a {@link Condition}.
+     *
+     * @param selectExpressionMapper the mapper to use for expressions
+     * @param selectedTables         the collection of tables included in the query
+     * @return the resulting {@link Condition}
+     */
     public Condition toCondition(final SelectExpressionMapper selectExpressionMapper, final Collection<Table> selectedTables) {
         final List<ExpressionSpec> lhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(lhs, ClauseType.WHERE).stream()
                 .peek(expressionSpec -> {

@@ -3,7 +3,7 @@ package org.litebridge.orm.api.select;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
- * Represents the terminal
+ * Terminal clause in a fluent API for constructing SQL GROUP BY statements.
  *
  * @param <DTO>  the data transfer object (DTO) type that represents the result of the query
  * @param <HCC>  the type of the HAVING condition clause for further filtering
@@ -19,6 +19,12 @@ public interface GroupByClauseTerminal<DTO,
 
         extends HavingClauseTerminal<DTO, OBC, OBCC> {
 
+    /**
+     * Starts a HAVING clause for the SQL query.
+     *
+     * @param expression the expression to apply the filtering condition on
+     * @return an instance of {@code HCC} representing the next stage of the having condition clause
+     */
     HCC having(ExpressionSpec expression);
 
 }

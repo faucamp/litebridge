@@ -29,18 +29,40 @@ public class ClassFieldAccessorCache {
     private final MethodHandles.Lookup lookup;
     private final Map<Class<?>, MethodHandles.Lookup> elevatedLookups = new ConcurrentHashMap<>();
 
+    /**
+     * Constructs a new {@code ClassFieldAccessorCache} using the default {@link MethodHandles#lookup()}.
+     */
     public ClassFieldAccessorCache() {
         this(MethodHandles.lookup());
     }
 
+    /**
+     * Constructs a new {@code ClassFieldAccessorCache} using the provided {@link MethodHandles.Lookup}.
+     *
+     * @param lookup the lookup to use for access checking
+     */
     public ClassFieldAccessorCache(final MethodHandles.Lookup lookup) {
         this.lookup = lookup;
     }
 
+    /**
+     * Registers an elevated {@link MethodHandles.Lookup} for a specific DTO class, allowing access to private fields.
+     *
+     * @param dtoClass       the class for which to register the lookup
+     * @param elevatedLookup the elevated lookup instance
+     */
     public void registerElevatedLookup(final Class<?> dtoClass, final MethodHandles.Lookup elevatedLookup) {
         this.elevatedLookups.put(dtoClass, elevatedLookup);
     }
 
+    /**
+     * Retrieves a {@link FieldAccessor} for the specified field path, or throws an exception if it doesn't exist.
+     *
+     * @param dtoClass the class containing the field
+     * @param field    the field path (can be dot-separated for nested fields)
+     * @return the field accessor
+     * @throws IllegalArgumentException if the field cannot be found
+     */
     public FieldAccessor fieldAccessorOrThrow(final Class<?> dtoClass, final String field) {
         if (field.indexOf('.') != -1) {
             final String[] subFieldAndRestOfPath = StringUtils.splitOnce(field, '.');
@@ -57,6 +79,12 @@ public class ClassFieldAccessorCache {
         }
     }
 
+    /**
+     * Retrieves all field accessors for the specified class.
+     *
+     * @param dtoClass the class to retrieve accessors for
+     * @return a list of all field accessors
+     */
     public List<FieldAccessor> fieldAccessors(final Class<?> dtoClass) {
         if (classFieldAccessors.containsKey(dtoClass)) {
             return classFieldAccessors.get(dtoClass).values().stream().toList();
@@ -66,6 +94,13 @@ public class ClassFieldAccessorCache {
         }
     }
 
+    /**
+     * Determines if a field represents a nested DTO.
+     *
+     * @param dtoClass the class containing the field
+     * @param field    the field accessor to check
+     * @return {@code true} if the field is a nested DTO; {@code false} otherwise
+     */
     public boolean isNestedDtoField(final Class<?> dtoClass, final FieldAccessor field) {
         if (field.dtoClass() != dtoClass
                 || ClassUtils.isBasicType(field.type())
@@ -77,6 +112,13 @@ public class ClassFieldAccessorCache {
         return ensureFieldAccessors(dtoClass).containsKey(field.name());
     }
 
+    /**
+     * Retrieves a {@link FieldAccessor} for the specified field name or path.
+     *
+     * @param dtoClass  the class containing the field
+     * @param fieldName the field name or path
+     * @return the field accessor
+     */
     public FieldAccessor fieldAccessor(final Class<?> dtoClass, final String fieldName) {
         if (fieldName.indexOf('.') != -1) {
             // Nested field specification - traverse the field/property path
@@ -103,6 +145,13 @@ public class ClassFieldAccessorCache {
         }
     }
 
+    /**
+     * Retrieves a property accessor for the specified property name.
+     *
+     * @param dtoClass     the class containing the property
+     * @param propertyName the name of the property
+     * @return the field accessor for the property
+     */
     public FieldAccessor propertyAccessor(final Class<?> dtoClass, final String propertyName) {
         return ensureFieldAccessors(dtoClass).get(propertyName);
     }
@@ -141,6 +190,12 @@ public class ClassFieldAccessorCache {
                 .collect(Collectors.toMap(FieldAccessor::name, Function.identity()));
     }
 
+    /**
+     * Retrieves the generic type arguments for a given field, with caching.
+     *
+     * @param field the field to inspect
+     * @return an array of classes representing the generic type arguments
+     */
     public Class<?>[] getGenericTypes(final Field field) {
         return getGenericTypes(field.getGenericType());
     }

@@ -20,6 +20,12 @@ import java.util.Set;
 public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
                                  List<LogicConditionGroupSpec> subgroups) {
 
+    /**
+     * Constructs a {@code ConditionGroupSpec} with the specified conditions and subgroups.
+     *
+     * @param conditions the list of logic condition specifications
+     * @param subgroups  the list of logic condition group specifications
+     */
     public ConditionGroupSpec(final List<LogicConditionSpec> conditions, final List<LogicConditionGroupSpec> subgroups) {
         if (conditions instanceof ArrayList<LogicConditionSpec> arrayList) {
             this.conditions = arrayList;
@@ -34,14 +40,29 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
         }
     }
 
-    public ConditionGroupSpec(List<LogicConditionSpec> conditions) {
+    /**
+     * Constructs a {@code ConditionGroupSpec} with the specified conditions.
+     *
+     * @param conditions the list of logic condition specifications
+     */
+    public ConditionGroupSpec(final List<LogicConditionSpec> conditions) {
         this(conditions, new ArrayList<>());
     }
 
+    /**
+     * Constructs an empty {@code ConditionGroupSpec}.
+     */
     public ConditionGroupSpec() {
         this(new ArrayList<>(), new ArrayList<>());
     }
 
+    /**
+     * Adds a new condition to the group and returns its specification.
+     *
+     * @param logicOperator  the logic operator for the condition
+     * @param expressionSpec the expression specification for the condition
+     * @return the newly created {@link ConditionSpec}
+     */
     public ConditionSpec newCondition(final LogicOperator logicOperator, final ExpressionSpec expressionSpec) {
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setLhs(expressionSpec);
@@ -50,12 +71,25 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
         return conditionSpec;
     }
 
+    /**
+     * Adds a new subgroup to the group and returns its specification.
+     *
+     * @param logicOperator the logic operator for the subgroup
+     * @return the newly created {@link LogicConditionGroupSpec}
+     */
     public LogicConditionGroupSpec newSubgroup(final LogicOperator logicOperator) {
         final LogicConditionGroupSpec logicConditionGroupSpec = new LogicConditionGroupSpec(logicOperator);
         subgroups.add(logicConditionGroupSpec);
         return logicConditionGroupSpec;
     }
 
+    /**
+     * Converts this specification into a {@link ConditionGroup}.
+     *
+     * @param selectExpressionMapper the mapper to use for expressions
+     * @param selectedTables         the set of tables included in the query
+     * @return the resulting {@link ConditionGroup}
+     */
     public ConditionGroup toConditionGroup(final SelectExpressionMapper selectExpressionMapper, final Set<Table> selectedTables) {
         final List<LogicConditionGroup> subConditionGroups = subgroups.stream()
                 .map(subgroup -> {

@@ -22,6 +22,11 @@ import org.litebridge.tracking.FieldAccessor;
 
 import java.util.List;
 
+/**
+ * Represents a JOIN clause in a DTO-based query.
+ *
+ * @param <DTO> the type of the DTO being queried
+ */
 public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         DtoJoinConditionClause<DTO>,
         DtoJoinConditionClauseTerminal<DTO>,
@@ -33,6 +38,13 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
     private final DtoSelectSpec selectSpec;
     private final ClassFieldAccessorCache classFieldAccessorCache;
 
+    /**
+     * Creates a new instance of {@code DtoJoinClause}.
+     *
+     * @param dtoClass the class of the DTO being joined
+     * @param joinTable the metadata of the table being joined
+     * @param delegate the selector delegate for further query building
+     */
     public DtoJoinClause(final Class<?> dtoClass, final OrmTable joinTable, final DtoSelector<DTO> delegate) {
         super(delegate.selectSpec().newJoinSpec(dtoClass, joinTable, delegate.dtoAliasRegistry().aliasTable(joinTable)), delegate);
         table = delegate.table();
@@ -62,6 +74,12 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
                         .orElseGet(() -> joinOn(table, fieldAccessor.name())));
     }
 
+    /**
+     * Adds a join ON condition based on a query expression.
+     *
+     * @param expression the expression to use for the join condition
+     * @return an instance of the join condition clause to allow further configuration
+     */
     public DtoJoinConditionClauseTerminal<DTO> on(final ExpressionSpec expression) {
         return switch (expression) {
             case QueryField queryField -> on(QFInspector.getFieldName(queryField));

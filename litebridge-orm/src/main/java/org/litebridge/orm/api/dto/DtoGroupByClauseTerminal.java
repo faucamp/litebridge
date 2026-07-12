@@ -6,6 +6,11 @@ import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
+/**
+ * Terminal clause for DTO GROUP BY clauses.
+ *
+ * @param <DTO> the type of the DTO
+ */
 public class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal<DTO,
         DtoHavingConditionClause<DTO>,
         DtoHavingConditionClauseTerminal<DTO>,
@@ -15,6 +20,11 @@ public class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal
 
     private final OrmTable ormTable;
 
+    /**
+     * Creates a new DtoGroupByClauseTerminal.
+     *
+     * @param delegate the DTO selector delegate
+     */
     public DtoGroupByClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);
         this.ormTable = delegate.table();

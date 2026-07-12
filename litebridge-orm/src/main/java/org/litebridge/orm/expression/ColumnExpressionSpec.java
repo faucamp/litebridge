@@ -15,5 +15,10 @@ public sealed interface ColumnExpressionSpec extends ExpressionSpec permits Dele
      */
     Column getColumn();
 
+    /**
+     * Sets the target column for this expression.
+     *
+     * @param column the target column to set.
+     */
     void setColumn(Column column);
 }
