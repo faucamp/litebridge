@@ -82,13 +82,17 @@ litebridge.transaction()
 The isolation level for the transaction can be specified using the `isolation()` method.
 
 ```java
-import org.litebridgedb.db.spi.tx.Isolation;
+import org.litebridge.db.spi.tx.Isolation;
 
 litebridge.transaction()
-    .isolation(Isolation.SERIALIZABLE)
-    .execute(() -> {
+    .
+
+isolation(Isolation.SERIALIZABLE)
+    .
+
+execute(() ->{
         // ...
-    });
+        });
 ```
 
 Available isolation levels depend on the `DatabaseProvider` but generally include:

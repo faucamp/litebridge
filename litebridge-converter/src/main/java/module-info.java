@@ -1,7 +1,7 @@
 import org.jspecify.annotations.NullMarked;
-import org.litebridgedb.convert.converter.Converter;
-import org.litebridgedb.convert.converter.SqlConverter;
-import org.litebridgedb.db.spi.convert.TypeConverter;
+import org.litebridge.convert.converter.Converter;
+import org.litebridge.convert.converter.SqlConverter;
+import org.litebridge.db.spi.convert.TypeConverter;
 
 /**
  * Litebridge type converter
@@ -17,49 +17,49 @@ module litebridge.converter {
     requires org.slf4j;
 
     provides TypeConverter with
-            org.litebridgedb.convert.ConfigurableTypeConverter,
-            org.litebridgedb.convert.DefaultTypeConverter;
+            org.litebridge.convert.ConfigurableTypeConverter,
+            org.litebridge.convert.DefaultTypeConverter;
 
     provides Converter with
-            org.litebridgedb.convert.converter.BigDecimalConverter,
-            org.litebridgedb.convert.converter.BigIntegerConverter,
-            org.litebridgedb.convert.converter.BooleanConverter,
-            org.litebridgedb.convert.converter.ByteArrayConverter,
-            org.litebridgedb.convert.converter.ByteConverter,
-            org.litebridgedb.convert.converter.CharacterConverter,
-            org.litebridgedb.convert.converter.DateConverter,
-            org.litebridgedb.convert.converter.DoubleConverter,
-            org.litebridgedb.convert.converter.FloatConverter,
-            org.litebridgedb.convert.converter.IntegerConverter,
-            org.litebridgedb.convert.converter.LocalDateConverter,
-            org.litebridgedb.convert.converter.LocalDateTimeConverter,
-            org.litebridgedb.convert.converter.LongConverter,
-            org.litebridgedb.convert.converter.OffsetDateTimeConverter,
-            org.litebridgedb.convert.converter.ShortConverter,
-            org.litebridgedb.convert.converter.SqlDateConverter,
-            org.litebridgedb.convert.converter.SqlTimeConverter,
-            org.litebridgedb.convert.converter.SqlTimestampConverter,
-            org.litebridgedb.convert.converter.StringConverter,
-            org.litebridgedb.convert.converter.ZonedDateTimeConverter;
+            org.litebridge.convert.converter.BigDecimalConverter,
+            org.litebridge.convert.converter.BigIntegerConverter,
+            org.litebridge.convert.converter.BooleanConverter,
+            org.litebridge.convert.converter.ByteArrayConverter,
+            org.litebridge.convert.converter.ByteConverter,
+            org.litebridge.convert.converter.CharacterConverter,
+            org.litebridge.convert.converter.DateConverter,
+            org.litebridge.convert.converter.DoubleConverter,
+            org.litebridge.convert.converter.FloatConverter,
+            org.litebridge.convert.converter.IntegerConverter,
+            org.litebridge.convert.converter.LocalDateConverter,
+            org.litebridge.convert.converter.LocalDateTimeConverter,
+            org.litebridge.convert.converter.LongConverter,
+            org.litebridge.convert.converter.OffsetDateTimeConverter,
+            org.litebridge.convert.converter.ShortConverter,
+            org.litebridge.convert.converter.SqlDateConverter,
+            org.litebridge.convert.converter.SqlTimeConverter,
+            org.litebridge.convert.converter.SqlTimestampConverter,
+            org.litebridge.convert.converter.StringConverter,
+            org.litebridge.convert.converter.ZonedDateTimeConverter;
 
     provides SqlConverter with
-            org.litebridgedb.convert.converter.BigDecimalConverter,
-            org.litebridgedb.convert.converter.BooleanConverter,
-            org.litebridgedb.convert.converter.ByteArrayConverter,
-            org.litebridgedb.convert.converter.ByteConverter,
-            org.litebridgedb.convert.converter.DoubleConverter,
-            org.litebridgedb.convert.converter.FloatConverter,
-            org.litebridgedb.convert.converter.IntegerConverter,
-            org.litebridgedb.convert.converter.LongConverter,
-            org.litebridgedb.convert.converter.OffsetDateTimeConverter,
-            org.litebridgedb.convert.converter.ShortConverter,
-            org.litebridgedb.convert.converter.SqlDateConverter,
-            org.litebridgedb.convert.converter.SqlTimeConverter,
-            org.litebridgedb.convert.converter.SqlTimestampConverter,
-            org.litebridgedb.convert.converter.StringConverter;
+            org.litebridge.convert.converter.BigDecimalConverter,
+            org.litebridge.convert.converter.BooleanConverter,
+            org.litebridge.convert.converter.ByteArrayConverter,
+            org.litebridge.convert.converter.ByteConverter,
+            org.litebridge.convert.converter.DoubleConverter,
+            org.litebridge.convert.converter.FloatConverter,
+            org.litebridge.convert.converter.IntegerConverter,
+            org.litebridge.convert.converter.LongConverter,
+            org.litebridge.convert.converter.OffsetDateTimeConverter,
+            org.litebridge.convert.converter.ShortConverter,
+            org.litebridge.convert.converter.SqlDateConverter,
+            org.litebridge.convert.converter.SqlTimeConverter,
+            org.litebridge.convert.converter.SqlTimestampConverter,
+            org.litebridge.convert.converter.StringConverter;
 
     uses Converter;
 
-    exports org.litebridgedb.convert;
-    exports org.litebridgedb.convert.converter;
+    exports org.litebridge.convert;
+    exports org.litebridge.convert.converter;
 }

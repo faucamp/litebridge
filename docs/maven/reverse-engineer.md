@@ -19,7 +19,7 @@ The `reverse-engineer` goal connects to a database and generates Litebridge enti
 
 | Parameter               | Type     | Required | Default | Description                                                                                                                     |
 |:------------------------|:---------|:---------|:--------|:--------------------------------------------------------------------------------------------------------------------------------|
-| `databaseProviderClass` | `String` | Yes      | -       | The fully qualified class name of the Litebridge `DatabaseProvider` to use (e.g., `org.litebridgedb.db.h2.H2DatabaseProvider`). |
+| `databaseProviderClass` | `String` | Yes      | -       | The fully qualified class name of the Litebridge `DatabaseProvider` to use (e.g., `org.litebridge.db.h2.H2DatabaseProvider`). |
 | `url`                   | `String` | Yes      | -       | JDBC connection URL.                                                                                                            |
 | `user`                  | `String` | Yes      | -       | Database username.                                                                                                              |
 | `password`              | `String` | No       | (empty) | Database password.                                                                                                              |
@@ -84,8 +84,9 @@ Allows fine-grained control over how specific tables and columns are mapped.
 ## Usage Example
 
 ```xml
+
 <plugin>
-    <groupId>org.litebridgedb.maven</groupId>
+    <groupId>org.litebridge.maven</groupId>
     <artifactId>litebridge-maven-plugin</artifactId>
     <version>0.3.0</version> <!-- Replace with latest version -->
     <executions>
@@ -98,7 +99,7 @@ Allows fine-grained control over how specific tables and columns are mapped.
                 <database>
                     <url>jdbc:h2:mem:test</url>
                     <user>sa</user>
-                    <databaseProviderClass>org.litebridgedb.db.h2.H2DatabaseProvider</databaseProviderClass>
+                    <databaseProviderClass>org.litebridge.db.h2.H2DatabaseProvider</databaseProviderClass>
                 </database>
 
                 <!-- Specify input tables to reverse engineer -->

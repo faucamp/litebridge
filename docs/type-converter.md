@@ -59,7 +59,7 @@ For example, a module providing a custom converter for a specific library type w
 ```java
 module my.custom.module {
     requires litebridge.converter;
-    provides org.litebridgedb.convert.converter.Converter with my.package.MyCustomConverter;
+    provides org.litebridge.convert.converter.Converter with my.package.MyCustomConverter;
 }
 ```
 

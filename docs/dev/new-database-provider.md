@@ -17,8 +17,9 @@ New database providers should be added as a new module in the `litebridge-db` di
 The `pom.xml` should use `litebridge-db` as its parent:
 
 ```xml
+
 <parent>
-    <groupId>org.litebridgedb.db</groupId>
+    <groupId>org.litebridge.db</groupId>
     <artifactId>litebridge-db</artifactId>
     <version>${project.version}</version>
     <relativePath>../pom.xml</relativePath>
@@ -28,15 +29,16 @@ The `pom.xml` should use `litebridge-db` as its parent:
 Add dependencies on `litebridge-converter` (if the default type converter is desired) and (optionally) `litebridge-db-spi-impl`:
 
 ```xml
+
 <dependencies>
     <dependency>
         <!-- Litebridge default type converter -->
-        <groupId>org.litebridgedb</groupId>
+        <groupId>org.litebridge</groupId>
         <artifactId>litebridge-converter</artifactId>
     </dependency>
     <dependency>
         <!-- Provides the AbstractDatabaseProvider class -->
-        <groupId>org.litebridgedb.db</groupId>
+        <groupId>org.litebridge.db</groupId>
         <artifactId>litebridge-db-spi-impl</artifactId>
     </dependency>
     <!-- The database JDBC driver -->
@@ -49,6 +51,7 @@ Litebridge uses the Java Platform Module System (JPMS). A `module-info.java` fil
 It should require `litebridge.db.spi` and (optionally) `litebridge.db.spi.impl` and `litebridge.converter`, and must provide the `DatabaseProvider` implementation:
 
 ```java
+
 @NullMarked
 module litebridge.db.yourdb {
     requires org.jspecify;
@@ -58,9 +61,9 @@ module litebridge.db.yourdb {
     requires org.slf4j;
     requires java.sql;
 
-    provides org.litebridgedb.db.spi.DatabaseProvider with org.litebridgedb.db.yourdb.YourDatabaseProvider;
+    provides org.litebridge.db.spi.DatabaseProvider with org.litebridge.db.yourdb.YourDatabaseProvider;
 
-    exports org.litebridgedb.db.yourdb;
+    exports org.litebridge.db.yourdb;
 }
 ```
 
@@ -180,8 +183,8 @@ Create unit tests in the module to verify that the generated SQL matches the exp
 To fully validate the provider, it can be added to the E2E test suite in `litebridge-orm`:
 1. Add the new module as a test dependency in `litebridge-orm/pom.xml`.
 2. Update the E2E test configuration to include the database (usually involving Testcontainers):
-   1. Add a new `org.litebridgedb.orm.e2e.setup.DbEnvironment` implementation for the database.
-   1. Update `org.litebridgedb.orm.e2e.setup.MultiDbTestExtension` and add the new environment as an invocation context.
+   1. Add a new `org.litebridge.orm.e2e.setup.DbEnvironment` implementation for the database.
+   1. Update `org.litebridge.orm.e2e.setup.MultiDbTestExtension` and add the new environment as an invocation context.
 4. Verify that all standard E2E tests pass against the new provider.
 
 Refer to the [End-to-End Tests](tests.md) documentation for more details on running integration tests.

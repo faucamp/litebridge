@@ -35,11 +35,11 @@
                 <configuration>
                     <argLine>@{argLine}
                         -javaagent:${org.mockito:mockito-core:jar}
-                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.entity=spring.beans
-                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.mapping=spring.beans
-                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.mapping=litebridge.orm
-                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridgedb.spring.boot.autoconfigure.test.entity=litebridge.orm
-                        --add-opens litebridge.orm/org.litebridgedb.orm=litebridge.spring.boot.autoconfigure
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridge.spring.boot.autoconfigure.test.entity=spring.beans
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridge.spring.boot.autoconfigure.test.mapping=spring.beans
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridge.spring.boot.autoconfigure.test.mapping=litebridge.orm
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridge.spring.boot.autoconfigure.test.entity=litebridge.orm
+                        --add-opens litebridge.orm/org.litebridge.orm=litebridge.spring.boot.autoconfigure
                     </argLine>
                 </configuration>
             </plugin>

@@ -1,5 +1,5 @@
 import org.jspecify.annotations.NullMarked;
-import org.litebridgedb.db.postgres.PostgresDatabaseProvider;
+import org.litebridge.db.postgres.PostgresDatabaseProvider;
 
 /**
  * PostgreSQL Database Provider
@@ -13,7 +13,7 @@ module litebridge.db.postgres {
     requires org.slf4j;
     requires java.sql;
 
-    provides org.litebridgedb.db.spi.DatabaseProvider with PostgresDatabaseProvider;
+    provides org.litebridge.db.spi.DatabaseProvider with PostgresDatabaseProvider;
 
-    exports org.litebridgedb.db.postgres;
+    exports org.litebridge.db.postgres;
 }

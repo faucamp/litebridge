@@ -9,15 +9,16 @@ For applications not using Spring Boot, or when complete control over bean lifec
 Add the `litebridge-spring` and the chosen database provider to the `pom.xml`:
 
 ```xml
+
 <dependency>
-    <groupId>org.litebridgedb</groupId>
+    <groupId>org.litebridge</groupId>
     <artifactId>litebridge-spring</artifactId>
     <version>0.3.0</version> <!-- Replace with latest version -->
 </dependency>
 <dependency>
-    <groupId>org.litebridgedb</groupId>
-    <artifactId>litebridge-db-h2</artifactId>
-    <version>0.3.0</version> <!-- Replace with latest version -->
+<groupId>org.litebridge</groupId>
+<artifactId>litebridge-db-h2</artifactId>
+<version>0.3.0</version> <!-- Replace with latest version -->
 </dependency>
 ```
 
@@ -26,10 +27,10 @@ Add the `litebridge-spring` and the chosen database provider to the `pom.xml`:
 Define the `LitebridgeTransactionManager` and `Litebridge` beans in a `@Configuration` class.
 
 ```java
-import org.litebridgedb.orm.Litebridge;
-import org.litebridgedb.spring.LitebridgeEntityScanner;
-import org.litebridgedb.spring.LitebridgeTypeSafeDtoMappingScanner;
-import org.litebridgedb.spring.LitebridgeTransactionManager;
+import org.litebridge.orm.Litebridge;
+import org.litebridge.spring.LitebridgeEntityScanner;
+import org.litebridge.spring.LitebridgeTypeSafeDtoMappingScanner;
+import org.litebridge.spring.LitebridgeTransactionManager;
 
 @Configuration
 @EnableTransactionManagement
@@ -44,7 +45,7 @@ public class LitebridgeConfig {
     public Litebridge litebridge(LitebridgeTransactionManager transactionManager) {
         // Select the database provider
         DatabaseProvider databaseProvider = new H2DatabaseProvider();
-        
+
         Litebridge litebridge = new Litebridge(databaseProvider, transactionManager);
 
         // Register DTOs manually

@@ -49,7 +49,7 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 ### 2. Entity/DTO Mappings
 
 - Litebridge supports unaltered DTOS as well as annotated entity classes as database entities.
-- Entity classes are annotated with `org.litebridgedb.orm.annotation.Table`
+- Entity classes are annotated with `org.litebridge.orm.annotation.Table`
 - Unannotated DTOs can be used via the fluent programmatic registration API.
 - All entity/DTO mappings are registered via `Litebridge.register(...)` methods.
 
@@ -60,7 +60,7 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 In DTO mode, the API refers to class fields in expressions and returns a mapped DTO (or other type, dependent on the query). 
 In SQL-mode, "raw" row data is returned. The API changes this based on what is provided as input for the various steps in the API chain, notably the `from()` part.
 - The API has evolved from simple column-based access to query expressions. Query power what SQL is generated in different clauses. The API is designed to support simple string-based parameter specification and query expressions.
-- Query expressions are the the primary component of the query API. They represent SQL functions, columns, literal expressions and specialised Java-side conversions. They are typically created using static methods in the `org.litebridgedb.orm.expression.Fn` utility class, or through metamodel fields. 
+- Query expressions are the the primary component of the query API. They represent SQL functions, columns, literal expressions and specialised Java-side conversions. They are typically created using static methods in the `org.litebridge.orm.expression.Fn` utility class, or through metamodel fields. 
 - There are 3 mains phases of query expressions:
   - Proto-query expressions: in the first few steps of the fluent API, there is potentially not enough information to determine e.g. a target table
   - Expression specifications: Non-ambigous expression of intent (e.g. selecting a specific column in a specific table)
@@ -94,8 +94,8 @@ They are bound to Maven's `integration-test` phase and thus executed using `mvn 
 
 ## Key Classes and APIs
 
-- `org.litebridgedb.orm.Litebridge`: The main entry point for `save`, `select`, `update`, `delete`.
-- `org.litebridgedb.db.spi.DatabaseProvider`: The SPI that must be implemented for each supported database.
+- `org.litebridge.orm.Litebridge`: The main entry point for `save`, `select`, `update`, `delete`.
+- `org.litebridge.db.spi.DatabaseProvider`: The SPI that must be implemented for each supported database.
 
 ## Common Agent Tasks
 

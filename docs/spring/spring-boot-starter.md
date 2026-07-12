@@ -9,8 +9,9 @@ The `litebridge-spring-boot-starter` provides a convenient way to integrate Lite
 Add the following dependency to the `pom.xml`:
 
 ```xml
+
 <dependency>
-    <groupId>org.litebridgedb</groupId>
+    <groupId>org.litebridge</groupId>
     <artifactId>litebridge-spring-boot-starter</artifactId>
     <version>0.3.0</version> <!-- Replace with latest version -->
 </dependency>
@@ -32,14 +33,14 @@ The autoconfiguration can be customised using the following properties in `appli
 | Property                                         | Description                                                                                                                                                              | Default               |
 |:-------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------|
 | `litebridge.database-provider.class`             | Fully qualified class name of the `DatabaseProvider` to use.                                                                                                             | (Auto-detected)       |
-| `litebridge.database-provider.scan-base-package` | Base package(s) to scan for `DatabaseProvider` implementations if `class` is not set.                                                                                    | `org.litebridgedb.db` |
+| `litebridge.database-provider.scan-base-package` | Base package(s) to scan for `DatabaseProvider` implementations if `class` is not set.                                                                                    | `org.litebridge.db` |
 | `litebridge.scan-base-package`                   | One or more base packages to scan for Litebridge entities (annotated with `@Table`) and `TypeSafeDtoTableMapping` implementations.                                       | (None)                |
 | `litebridge.related-dto-strategy`                | How related DTOs should be handled when not included as a JOIN in a query. See [Related DTO Strategy](../persistence/configuration.md#related-dto-strategy) for details. | `NULL_IF_NO_JOIN`     |
 
 ### Example
 
 ```properties
-litebridge.database-provider.class=org.litebridgedb.db.h2.H2DatabaseProvider
+litebridge.database-provider.class=org.litebridge.db.h2.H2DatabaseProvider
 litebridge.scan-base-package=com.example.app.entities,com.example.app.mappings
 litebridge.related-dto-strategy=PARTIAL_OBJECT_IF_NO_JOIN
 ```

@@ -21,9 +21,9 @@ server:
 
 litebridge:
   scan-base-package:
-    - org.litebridgedb.example.common.entity
+    - org.litebridge.example.common.entity
   database-provider:
-    class: org.litebridgedb.db.h2.H2DatabaseProvider
+    class: org.litebridge.db.h2.H2DatabaseProvider
 
 springdoc:
   api-docs:
@@ -34,5 +34,5 @@ springdoc:
 logging:
   level:
     root: INFO
-    org.litebridgedb: TRACE
+    org.litebridge: TRACE
 

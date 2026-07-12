@@ -22,7 +22,7 @@ Litebridge supports five main types of select queries:
 The following example demonstrates DTO-level and SQL-level queries:
 
 ```java
-import org.litebridgedb.orm.expression.Fn;
+import org.litebridge.orm.expression.Fn;
 
 // Simple string-based API
 Optional<Person> alice1 = litebridge.select(Person.class)
@@ -31,26 +31,26 @@ Optional<Person> alice1 = litebridge.select(Person.class)
         .orderBy("id").asc()
         .first();
 
-// Equivalent type-safe metamodel query
-Optional<Person> bob = litebridge.select(Person.class)
-        .where(PersonMeta.name).eq("Alice")
-        .and(PersonMeta.surname).eq("Smith")
-        .orderBy(PersonMeta.id).asc()
-        .first();
+        // Equivalent type-safe metamodel query
+        Optional<Person> bob = litebridge.select(Person.class)
+                .where(PersonMeta.name).eq("Alice")
+                .and(PersonMeta.surname).eq("Smith")
+                .orderBy(PersonMeta.id).asc()
+                .first();
 
-// Equivalent query using query expressions
-Optional<Person> mark = litebridge.select(Person.class)
-        .where(Fn.f("name")).eq("Alice")
-        .and(Fn.f("surname")).eq("Smith")
-        .orderBy(Fn.f("id")).asc()
-        .first();
+        // Equivalent query using query expressions
+        Optional<Person> mark = litebridge.select(Person.class)
+                .where(Fn.f("name")).eq("Alice")
+                .and(Fn.f("surname")).eq("Smith")
+                .orderBy(Fn.f("id")).asc()
+                .first();
 
-// Equivalent SQL-level query
-Optional<Row> henry = litebridge.select().from("LB.PERSON")
-        .where("FIRST_NAME").eq("Alice")
-        .and("SURNAME").eq("Smith")
-        .orderBy("ID").asc()
-        .first();
+        // Equivalent SQL-level query
+        Optional<Row> henry = litebridge.select().from("LB.PERSON")
+                .where("FIRST_NAME").eq("Alice")
+                .and("SURNAME").eq("Smith")
+                .orderBy("ID").asc()
+                .first();
 ```
 
 This will result in a SQL query similar to:
@@ -146,20 +146,20 @@ Person personIdAgeOnly = litebridge.select("id", "age").from(Person.class).oneOr
 [Query expressions](#advanced-query-expressions) and [Metamodels](metamodels.md) can be used with general-form queries:
 
 ```java
-import static org.litebridgedb.orm.expression.Fn.*;
+import static org.litebridge.orm.expression.Fn.*;
 import static org.example.meta.PersonMeta.*;
 
 // Count the number of Person entites matching the query
 Long personCount = litebridge.select(count()).from(Person.class).oneOrThrow();
 
-// Select the highest age from Person.age
-Long maxAge = litebridge.select(max("age")).from(Person.class).oneOrThrow();
+        // Select the highest age from Person.age
+        Long maxAge = litebridge.select(max("age")).from(Person.class).oneOrThrow();
 
-// Select the highest age from Person.age combining a query expression and metamodel
-Long maxAge = litebridge.select(max(age)).from(Person.class).oneOrThrow();
+        // Select the highest age from Person.age combining a query expression and metamodel
+        Long maxAge = litebridge.select(max(age)).from(Person.class).oneOrThrow();
 
-// Select the highest age from Person.age using only the metamodel
-Long maxAge = litebridge.select(age.max()).from(Person.class).oneOrThrow();
+        // Select the highest age from Person.age using only the metamodel
+        Long maxAge = litebridge.select(age.max()).from(Person.class).oneOrThrow();
 ```
 
 ## SQL-level queries
@@ -196,16 +196,16 @@ Expressions are primarily created using the `Fn` utility class.
 See the [Query Expressions](expressions.md) page for a full list of available expressions.
 
 ```java
-import static org.litebridgedb.orm.expression.Fn.*;
+import static org.litebridge.orm.expression.Fn.*;
 
 // Select count of rows
 Long count = litebridge.select(count()).from(Person.class).oneOrThrow();
 
-// Select with SQL functions
-List<Row> names = litebridge.select(upper("FIRST_NAME")).from("LB.PERSON").list();
+        // Select with SQL functions
+        List<Row> names = litebridge.select(upper("FIRST_NAME")).from("LB.PERSON").list();
 
-// Select with ORM-side type conversion
-Double avgAge = litebridge.select(convert(avg("age"), Double.class)).from(Person.class).oneOrThrow();
+        // Select with ORM-side type conversion
+        Double avgAge = litebridge.select(convert(avg("age"), Double.class)).from(Person.class).oneOrThrow();
 ```
 
 ### Metamodels
@@ -324,7 +324,7 @@ Person person = litebridge.select(Person.class)
 The strategy for handling related DTOs can also be overridden on a per-query basis by passing a `RelatedDtoStrategy` to the `select()` method:
 
 ```java
-import org.litebridgedb.orm.config.RelatedDtoStrategy;
+import org.litebridge.orm.config.RelatedDtoStrategy;
 
 // Even if no JOIN is specified, the "owner" field will be partially populated with a Person instance containing its ID
 Account account = litebridge.select(Account.class, RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN)
@@ -359,7 +359,7 @@ Person person = litebridge.select(Person.class)
 Queries can also filter results based on fields of joined DTOs by the `f(Class, String)` expression:
 
 ```java
-import static org.litebridgedb.orm.expression.Fn.f;
+import static org.litebridge.orm.expression.Fn.f;
 
 Person person = litebridge.select(Person.class)
         .join(Account.class).on("accounts")
@@ -446,21 +446,67 @@ A complete list of available expressions and functions can be found on the [Quer
 Common SQL functions are supported and can be nested.
 
 ```java
-import static org.litebridgedb.orm.expression.Fn.*;
+import static org.litebridge.orm.expression.Fn.*;
 
 // Aggregates
-litebridge.select(avg("age")).from(Person.class).oneOrThrow();
-litebridge.select(min("age")).from(Person.class).oneOrThrow();
-litebridge.select(max("age")).from(Person.class).oneOrThrow();
-litebridge.select(count()).from(Person.class).oneOrThrow();
+litebridge.select(avg("age")).
+
+from(Person .class).
+
+oneOrThrow();
+litebridge.
+
+select(min("age")).
+
+from(Person .class).
+
+oneOrThrow();
+litebridge.
+
+select(max("age")).
+
+from(Person .class).
+
+oneOrThrow();
+litebridge.
+
+select(count()).
+
+from(Person .class).
+
+oneOrThrow();
 
 // String functions
-litebridge.select(upper("name")).from(Person.class).list();
-litebridge.select(lower("name")).from(Person.class).list();
-litebridge.select(substring("name", 1, 3)).from(Person.class).list();
+litebridge.
+
+select(upper("name")).
+
+from(Person .class).
+
+list();
+litebridge.
+
+select(lower("name")).
+
+from(Person .class).
+
+list();
+litebridge.
+
+select(substring("name", 1,3)).
+
+from(Person .class).
+
+list();
 
 // Math functions
-litebridge.select(abs("balance")).from(Account.class).list();
+litebridge.
+
+select(abs("balance")).
+
+from(Account .class).
+
+list();
 ```
 
 ### ORM-side Type Conversion
@@ -480,17 +526,17 @@ See the [Query Expressions](expressions.md#type-conversion-expressions) page for
 When selecting a single expression, the exact type that the terminal methods should return can be specified:
 
 ```java
-import static org.litebridgedb.orm.expression.Fn.*;
+import static org.litebridge.orm.expression.Fn.*;
 
 // Convert AVG() result to a Double instead of the database default (e.g. BigDecimal)
 Double avgAge = litebridge.select(convert(avg("age"), Double.class))
         .from(Person.class)
         .oneOrThrow();
 
-// Convert the result of COUNT() to a String
-String countStr = litebridge.select(convert(count(), String.class))
-        .from(Person.class)
-        .oneOrThrow();
+        // Convert the result of COUNT() to a String
+        String countStr = litebridge.select(convert(count(), String.class))
+                .from(Person.class)
+                .oneOrThrow();
 ```
 
 #### Generic Row results
@@ -501,8 +547,9 @@ This is typically done via the shorthand method `Fn.row()` to select multiple ex
 When selecting multiple expressions into a `Row`, `convert()` can ensure each column has the desired type:
 
 ```java
-import org.litebridgedb.db.spi.Row;
-import static org.litebridgedb.orm.expression.Fn.*;
+import org.litebridge.db.spi.Row;
+
+import static org.litebridge.orm.expression.Fn.*;
 
 List<Row> results = litebridge.select(row(
                 convert(f("age"), Integer.class),
@@ -517,7 +564,7 @@ List<Row> results = litebridge.select(row(
 The select API supports `groupBy()` and `having()` clauses for aggregate queries. Just like `WHERE` clauses, `HAVING` clauses support `.and()`, `.or()`, and nested conditions:
 
 ```java
-import static org.litebridgedb.orm.expression.Fn.*;
+import static org.litebridge.orm.expression.Fn.*;
 
 List<Row> results = litebridge.select(row(f("eyeColour"), count()))
         .from(Person.class)
@@ -533,12 +580,17 @@ Column selections can be aliased, which is especially useful when selecting from
 or when using expressions in "raw SQL" queries:
 
 ```java
-import static org.litebridgedb.orm.expression.Fn.*;
+import static org.litebridge.orm.expression.Fn.*;
 
 litebridge.select(
-    columnAlias("FIRST_NAME", "firstName"),
-    columnAlias("SURNAME", "lastName")
-).from("LB.PERSON").list();
+        columnAlias("FIRST_NAME", "firstName"),
+
+columnAlias("SURNAME","lastName")
+).
+
+from("LB.PERSON").
+
+list();
 ```
 
 When using `columnAlias()`, the resulting `Row` will contain the specified aliases as column names.

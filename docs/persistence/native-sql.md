@@ -27,7 +27,8 @@ The `query()` method returns a `List<Row>`, similar to the fluent SQL-level sele
 Positional parameters are specified using `?` in the SQL string, and values are provided as a list or variable-length array of arguments:
 
 ```java
-import org.litebridgedb.db.spi.Row;
+import org.litebridge.db.spi.Row;
+
 import java.util.List;
 
 // Using varargs as bind parameters 
@@ -35,14 +36,14 @@ List<Row> rows = litebridge.nativeSql().query(
         "SELECT * FROM PERSON WHERE FIRST_NAME LIKE ? AND SURNAME = ?",
         "A%", "Smith");
 
-// Use a list of bind parameters
-List<Object> params = List.of("A%", "Smith");
-List<Rows> rows2 = litebridge.nativeSql().query(
-        "SELECT * FROM PERSON WHERE FIRST_NAME LIKE ? AND SURNAME = ?",
-        params);
+        // Use a list of bind parameters
+        List<Object> params = List.of("A%", "Smith");
+        List<Rows> rows2 = litebridge.nativeSql().query(
+                "SELECT * FROM PERSON WHERE FIRST_NAME LIKE ? AND SURNAME = ?",
+                params);
 
-// Query without bind parameters
-List<Rows> rows3 = litebridge.nativeSql().query("SELECT COUNT(*) FROM PERSON");
+        // Query without bind parameters
+        List<Rows> rows3 = litebridge.nativeSql().query("SELECT COUNT(*) FROM PERSON");
 ```
 
 ### Named parameters
@@ -50,13 +51,14 @@ List<Rows> rows3 = litebridge.nativeSql().query("SELECT COUNT(*) FROM PERSON");
 Named parameters are specified using `:parameterName` in the SQL string, and values are provided as a `Map<String, Object>`:
 
 ```java
-import org.litebridgedb.db.spi.Row;
+import org.litebridge.db.spi.Row;
+
 import java.util.Map;
 
 List<Row> rows = litebridge.nativeSql().query(
         "SELECT * FROM PERSON WHERE FIRST_NAME LIKE :firstName AND SURNAME = :surname",
-        Map.of("firstName", "A%", 
-               "surname", "Smith"));
+        Map.of("firstName", "A%",
+                "surname", "Smith"));
 ```
 
 ## Executing statements
@@ -66,26 +68,31 @@ The `execute()` method returns an `UpdateResult`, which contains the number of r
 ### Positional parameters
 
 ```java
-import org.litebridgedb.db.spi.update.UpdateResult;
+import org.litebridge.db.spi.update.UpdateResult;
 
 UpdateResult result = litebridge.nativeSql().execute(
         "INSERT INTO PERSON (PERSON_ID, FIRST_NAME, SURNAME) VALUES (?, ?, ?)",
         123L, "Alice", "Smith");
 
-System.out.println("Rows inserted: " + result.rowsAffected());
+System.out.
+
+println("Rows inserted: "+result.rowsAffected());
 ```
 
 ### Named parameters
 
 ```java
-import org.litebridgedb.db.spi.update.UpdateResult;
+import org.litebridge.db.spi.update.UpdateResult;
+
 import java.util.Map;
 
 UpdateResult result = litebridge.nativeSql().execute(
         "UPDATE PERSON SET FIRST_NAME = :newName WHERE PERSON_ID = :id",
         Map.of("newName", "Bob", "id", 123L));
 
-System.out.println("Rows updated: " + result.rowsAffected());
+System.out.
+
+println("Rows updated: "+result.rowsAffected());
 ```
 
 ## Mapping results to DTOs

@@ -5,7 +5,7 @@
 Litebridge uses query expressions to define exactly what should be retrieved from the database.
 Expressions range from simple column selections to invoking SQL functions and ORM-side type conversions.
 
-Expressions are primarily constructed using static methods from the `org.litebridgedb.orm.expression.Fn` utility class.
+Expressions are primarily constructed using static methods from the `org.litebridge.orm.expression.Fn` utility class.
 
 ## Selectors
 
@@ -22,22 +22,22 @@ Selectors are the basic building blocks for choosing which fields or columns to 
 ### DTO Field Examples
 
 ```java
-import static org.litebridgedb.orm.expression.Fn.*;
+import static org.litebridge.orm.expression.Fn.*;
 import static org.example.meta.PersonMeta.id;
 import static org.example.meta.PersonMeta.firstName;
 
 // Select specific fields from a DTO using the shorthand field selector
 List<Person> persons1 = litebridge.select(f("id"), f("name")).from(Person.class).list();
 
-// Equivalent expression using metamodel fields (recommended)
-List<Person> persons2 = litebridge.select(id, firstName).from(Person.class).list();
+        // Equivalent expression using metamodel fields (recommended)
+        List<Person> persons2 = litebridge.select(id, firstName).from(Person.class).list();
 
 ```
 
 ### Column Aliasing Examples
 
 ```java
-import static org.litebridgedb.orm.expression.Fn.*;
+import static org.litebridge.orm.expression.Fn.*;
 
 // Simple alias
 litebridge.select(columnAlias("FIRST_NAME", "firstName")).
@@ -92,13 +92,18 @@ Scalar functions operate on a single value and return a single value based on th
 Functions can be nested to perform complex operations:
 
 ```java
-import static org.litebridgedb.orm.expression.Fn.*;
+import static org.litebridge.orm.expression.Fn.*;
+
 import org.example.meta.PersonMeta;
 
 // Get the uppercase of the first 3 characters of the surname using metamodel
-litebridge.select(upper(substring(PersonMeta.surname, 1, 3)))
-        .from(Person.class)
-        .list();
+litebridge.select(upper(substring(PersonMeta.surname, 1,3)))
+        .
+
+from(Person .class)
+        .
+
+list();
 ```
 
 ## Type conversion expressions
@@ -133,8 +138,9 @@ This is useful when the database driver returns a type that does not perfectly m
 When selecting multiple values into a `Row`, nested `convert()` calls can be used to specify the type of individual expressions:
 
 ```java
-import org.litebridgedb.db.spi.Row;
-import static org.litebridgedb.orm.expression.Fn.*;
+import org.litebridge.db.spi.Row;
+
+import static org.litebridge.orm.expression.Fn.*;
 
 // Returns a list of Row objects where the first column is an Integer and the second is a Long
 List<Row> results = litebridge.select(row(
@@ -144,8 +150,8 @@ List<Row> results = litebridge.select(row(
         .groupBy("age")
         .list();
 
-Integer age = (Integer) results.get(0).column("AGE").get().value();
-Long count = (Long) results.get(0).column("COUNT(*)").get().value();
+        Integer age = (Integer) results.get(0).column("AGE").get().value();
+        Long count = (Long) results.get(0).column("COUNT(*)").get().value();
 ```
 
 #### Result Type Override
@@ -153,15 +159,15 @@ Long count = (Long) results.get(0).column("COUNT(*)").get().value();
 When selecting a single expression, `convert()` can be used to define the return type of the entire query:
 
 ```java
-import static org.litebridgedb.orm.expression.Fn.*;
+import static org.litebridge.orm.expression.Fn.*;
 
 // The terminal 'oneOrThrow()' returns a Double because of Fn.convert()
 Double avgAge = litebridge.select(convert(avg("age"), Double.class))
         .from(Person.class)
         .oneOrThrow();
 
-// The terminal 'oneOrThrow()' returns a String
-String countStr = litebridge.select(convert(count(), String.class))
-        .from(Person.class)
-        .oneOrThrow();
+        // The terminal 'oneOrThrow()' returns a String
+        String countStr = litebridge.select(convert(count(), String.class))
+                .from(Person.class)
+                .oneOrThrow();
 ```

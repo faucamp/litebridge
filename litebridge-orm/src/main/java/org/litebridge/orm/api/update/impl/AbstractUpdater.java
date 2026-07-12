@@ -1,0 +1,54 @@
+package org.litebridge.orm.api.update.impl;
+
+import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.orm.api.dto.update.DtoUpdater;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.api.sql.update.SqlUpdater;
+import org.litebridge.orm.api.update.UpdateTerminal;
+import org.litebridge.orm.api.update.model.UpdateSpec;
+import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.sql.SQLException;
+
+public abstract sealed class AbstractUpdater<US extends UpdateSpec> implements UpdateTerminal
+        permits DtoUpdater, SqlUpdater {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractUpdater.class);
+
+    protected final US updateSpec;
+    protected final TransactionalDatabaseProvider databaseProvider;
+    protected final LitebridgeContext litebridgeContext;
+
+    protected AbstractUpdater(final US updateSpec,
+                              final TransactionalDatabaseProvider databaseProvider,
+                              final LitebridgeContext litebridgeContext) {
+        this.updateSpec = updateSpec;
+        this.databaseProvider = databaseProvider;
+        this.litebridgeContext = litebridgeContext;
+    }
+
+    @Override
+    public UpdateResult execute() {
+        return execute(updateSpec);
+    }
+
+    protected UpdateResult execute(final US updateSpec) {
+        // Execute SQL query
+        final UpdateResult updateResult;
+
+        try {
+            updateResult = databaseProvider.update(updateSpec.toUpdate(), databaseProvider.transactionManager());
+        } catch (final SQLException ex) {
+            throw new IllegalStateException("Failed to execute update", ex);
+        }
+
+        LOGGER.debug("Update result: {}", updateResult);
+        return updateResult;
+    }
+
+    public US updateSpec() {
+        return updateSpec;
+    }
+}

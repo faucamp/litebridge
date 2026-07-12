@@ -13,11 +13,11 @@
                         <srcDir>src/test/java</srcDir>
                         <entitiesOnly>false</entitiesOnly>
                         <inputPackages>
-                            <inputPackage>org.litebridgedb.maven.test.dto</inputPackage>
+                            <inputPackage>org.litebridge.maven.test.dto</inputPackage>
                         </inputPackages>
                     </input>
                     <output>
-                        <outputPackage>org.litebridgedb.maven.test.meta</outputPackage>
+                        <outputPackage>org.litebridge.maven.test.meta</outputPackage>
                     </output>
                 </configuration>
             </plugin>

@@ -20,5 +20,5 @@ module litebridge.orm.support {
     requires litebridge.orm;
     requires org.jspecify;
 
-    exports org.litebridgedb.orm.support;
+    exports org.litebridge.orm.support;
 }

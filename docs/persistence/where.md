@@ -116,29 +116,47 @@ For more advanced scenarios, such as when joining multiple tables and needing to
 the `f()` or `field()` selectors from the `Fn` class can be used to target a specific DTO type present in the query:
 
 ```java
-import static org.litebridgedb.orm.expression.Fn.f;
+import static org.litebridge.orm.expression.Fn.f;
 
-litebridge.select(Person.class)
-    .join(Account.class).on("accounts")
-    .join(Address.class).on("addresses")
-    .where(f(Person.class, "id")).eq(1L)
-    .and(f(Address.class, "id")).eq(123L)
-    .oneOrThrow();
+litebridge.select(Person .class)
+    .
+
+join(Account .class).
+
+on("accounts")
+    .
+
+join(Address .class).
+
+on("addresses")
+    .
+
+where(f(Person.class, "id")).
+
+eq(1L)
+    .
+
+and(f(Address.class, "id")).
+
+eq(123L)
+    .
+
+oneOrThrow();
 ```
 
 Alternatively (and recommended), [metamodels](metamodels.md) can be used:
 
 ```java
-import static org.litebridgedb.orm.expression.Fn.f;
+import static org.litebridge.orm.expression.Fn.f;
 import static org.example.meta.PersonMeta.*;
 import static org.example.meta.AddressMeta.*;
 
 Person person = litebridge.select(Person.class)
-    .join(Account.class).on(accounts)
-    .join(Address.class).on(addresses)
-    .where(PersonMeta.id).eq(1L)
-    .and(AddressMeta.id).eq(123L)
-    .oneOrThrow();
+        .join(Account.class).on(accounts)
+        .join(Address.class).on(addresses)
+        .where(PersonMeta.id).eq(1L)
+        .and(AddressMeta.id).eq(123L)
+        .oneOrThrow();
 ```
 
 The API allows using SQL function in where clauses via query expressions (though keep in mind that this should be used

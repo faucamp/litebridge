@@ -9,7 +9,7 @@ import org.jspecify.annotations.NullMarked;
 module litebridge.commons {
     requires org.jspecify;
 
-    exports org.litebridgedb.commons;
-    exports org.litebridgedb.commons.collector;
-    exports org.litebridgedb.commons.type;
+    exports org.litebridge.commons;
+    exports org.litebridge.commons.collector;
+    exports org.litebridge.commons.type;
 }

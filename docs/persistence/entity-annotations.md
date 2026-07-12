@@ -11,8 +11,9 @@ more concise and co-located with the data structure.
 To use Litebridge annotations, the `litebridge-annotations` module must be included in the project:
 
 ```xml
+
 <dependency>
-    <groupId>org.litebridgedb</groupId>
+    <groupId>org.litebridge</groupId>
     <artifactId>litebridge-annotations</artifactId>
     <version>${litebridge.version}</version>
 </dependency>
@@ -25,8 +26,8 @@ And update `module-info.java` if JPMS is used:
 
 ```java
 module my.module {
-    requires org.litebridgedb.orm;
-    requires org.litebridgedb.orm.annotation;
+    requires org.litebridge.orm;
+    requires org.litebridge.orm.annotation;
 }
 ```
 
@@ -35,8 +36,8 @@ module my.module {
 To register a class using annotations, use the `@Table` and `@Column` annotations:
 
 ```java
-import org.litebridgedb.orm.annotation.Column;
-import org.litebridgedb.orm.annotation.Table;
+import org.litebridge.orm.annotation.Column;
+import org.litebridge.orm.annotation.Table;
 
 @Table("LB.PERSON")
 public class Person {
@@ -90,8 +91,9 @@ The `litebridge-orm-support` module allows scanning packages for entity classes 
 Include the `litebridge-orm-support` module:
 
 ```xml
+
 <dependency>
-    <groupId>org.litebridgedb</groupId>
+    <groupId>org.litebridge</groupId>
     <artifactId>litebridge-orm-support</artifactId>
     <version>${litebridge.version}</version>
 </dependency>
@@ -101,8 +103,8 @@ And update `module-info.java` (if applicable):
 
 ```java
 module my.module {
-    requires org.litebridgedb.orm;
-    requires org.litebridgedb.orm.support;
+    requires org.litebridge.orm;
+    requires org.litebridge.orm.support;
 }
 ```
 
@@ -111,13 +113,15 @@ module my.module {
 Use `TypesafeRegistrationSupport` to scan one or more packages:
 
 ```java
-import org.litebridgedb.orm.support.EntityScanner;
+import org.litebridge.orm.support.EntityScanner;
 
 // Create the scanner with the Litebridge instance
 EntityScanner scanner = new EntityScanner(litebridge);
 
 // Scan and register all entity classes in the specified packages
-scanner.scanBasePackage("com.example.app.mappings");
+scanner.
+
+        scanBasePackage("com.example.app.mappings");
 ```
 
 ### Spring Integration
@@ -207,8 +211,9 @@ If there are many annotated entities, manually registering each one can be tedio
 To use the registration support, include the `litebridge-orm-support` module:
 
 ```xml
+
 <dependency>
-    <groupId>org.litebridgedb</groupId>
+    <groupId>org.litebridge</groupId>
     <artifactId>litebridge-orm-support</artifactId>
     <version>${litebridge.version}</version>
 </dependency>
@@ -218,8 +223,8 @@ And update `module-info.java`:
 
 ```java
 module my.module {
-    requires org.litebridgedb.orm;
-    requires org.litebridgedb.orm.support;
+    requires org.litebridge.orm;
+    requires org.litebridge.orm.support;
 }
 ```
 
@@ -228,13 +233,15 @@ module my.module {
 Use `EntityPackageRegistrationSupport` to scan one or more packages:
 
 ```java
-import org.litebridgedb.orm.support.EntityScanner;
+import org.litebridge.orm.support.EntityScanner;
 
 // Create the scanner with the Litebridge instance
 EntityPackageRegistrationSupport scanner = new EntityPackageRegistrationSupport(litebridge);
 
 // Scan and register all @Table annotated classes in the specified packages
-scanner.scanBasePackage("com.example.app.entities", "com.example.app.other.entities");
+scanner.
+
+        scanBasePackage("com.example.app.entities","com.example.app.other.entities");
 ```
 
 ## Annotation Reference

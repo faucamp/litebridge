@@ -18,8 +18,9 @@ The plugin provides the following goals:
 To use the Litebridge Maven Plugin, add it to the `<build>` section of the `pom.xml`:
 
 ```xml
+
 <plugin>
-    <groupId>org.litebridgedb.maven</groupId>
+    <groupId>org.litebridge.maven</groupId>
     <artifactId>litebridge-maven-plugin</artifactId>
     <version>0.3.0</version> <!-- Replace with latest version -->
     <executions>

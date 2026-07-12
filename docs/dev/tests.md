@@ -7,7 +7,7 @@ by interacting with specific or all supported databases.
 They also serve as a reference for developers to understand how the ORM works.
 
 The tests are found in: [
-`litebridge-orm/src/test/java/org/litebridge/orm/e2e/`](../../litebridge-orm/src/test/java/org/litebridgedb/orm/e2e/)
+`litebridge-orm/src/test/java/org/litebridge/orm/e2e/`](../../litebridge-orm/src/test/java/org/litebridge/orm/e2e/)
 
 They are bound to Maven's integration test phase; to run them, use `mvn verify`.
 
@@ -50,7 +50,7 @@ mvn clean test
 To run a specific end-to-end test in IntelliJ, it may be necessary to add the following VM option to the run configuration:
 
 ```
---add-opens litebridge.orm/org.litebridgedb.orm.e2e=ALL-UNNAMED --add-opens litebridge.orm/org.litebridgedb.orm.e2e.setup=ALL-UNNAMED
+--add-opens litebridge.orm/org.litebridge.orm.e2e=ALL-UNNAMED --add-opens litebridge.orm/org.litebridge.orm.e2e.setup=ALL-UNNAMED
 ```
 
 JUnit runs in the unnamed module; the above allows the test-specific `e2e` package to access the `litebridge.orm`

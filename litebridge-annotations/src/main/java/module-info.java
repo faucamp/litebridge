@@ -10,5 +10,5 @@ module litebridge.annotations {
     requires org.jspecify;
     requires litebridge.db.spi;
 
-    exports org.litebridgedb.orm.annotation;
+    exports org.litebridge.orm.annotation;
 }

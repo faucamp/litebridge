@@ -1,5 +1,5 @@
 import org.jspecify.annotations.NullMarked;
-import org.litebridgedb.db.oracle.convert.OracleOffsetDateTimeConverter;
+import org.litebridge.db.oracle.convert.OracleOffsetDateTimeConverter;
 
 /**
  * Oracle Database Provider
@@ -15,10 +15,10 @@ module litebridge.db.oracle {
     requires litebridge.commons;
     requires com.oracle.database.jdbc;
 
-    provides org.litebridgedb.db.spi.DatabaseProvider with org.litebridgedb.db.oracle.OracleDatabaseProvider;
-    provides org.litebridgedb.convert.converter.Converter with OracleOffsetDateTimeConverter;
-    provides org.litebridgedb.convert.converter.SqlConverter with OracleOffsetDateTimeConverter;
+    provides org.litebridge.db.spi.DatabaseProvider with org.litebridge.db.oracle.OracleDatabaseProvider;
+    provides org.litebridge.convert.converter.Converter with OracleOffsetDateTimeConverter;
+    provides org.litebridge.convert.converter.SqlConverter with OracleOffsetDateTimeConverter;
 
-    exports org.litebridgedb.db.oracle;
-    exports org.litebridgedb.db.oracle.convert;
+    exports org.litebridge.db.oracle;
+    exports org.litebridge.db.oracle.convert;
 }

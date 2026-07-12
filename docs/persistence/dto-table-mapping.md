@@ -130,7 +130,7 @@ public class Group {
 
     private String name;
     private String description;
-    private List<org.litebridgedb.orm.e2e.basic.dto.Person> members;
+    private List<org.litebridge.orm.e2e.basic.dto.Person> members;
 
     // Getters and setters, etc
 }

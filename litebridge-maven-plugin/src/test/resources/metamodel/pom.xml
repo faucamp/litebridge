@@ -12,11 +12,11 @@
                     <input>
                         <srcDir>src/test/java</srcDir>
                         <inputPackages>
-                            <inputPackage>org.litebridgedb.maven.test</inputPackage>
+                            <inputPackage>org.litebridge.maven.test</inputPackage>
                         </inputPackages>
                     </input>
                     <output>
-                        <outputPackage>org.litebridgedb.maven.test.meta</outputPackage>
+                        <outputPackage>org.litebridge.maven.test.meta</outputPackage>
                     </output>
                 </configuration>
             </plugin>

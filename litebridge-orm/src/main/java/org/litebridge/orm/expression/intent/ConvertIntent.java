@@ -1,0 +1,27 @@
+package org.litebridge.orm.expression.intent;
+
+import org.litebridge.orm.expression.ExpressionModifier;
+import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.TypeOverride;
+
+/**
+ * Intent to convert a database result into the specified Java type.
+ * <p>
+ * This uses Litebridge's registered type converter to perform the conversion;
+ * it is not a database operation via creation of a {@link ConvertSpec}.
+ * <p>
+ * This specific intent class is designed to help with a fluent API flow
+ * via the {@link org.litebridge.orm.Litebridge#select(TypeOverride)}
+ * select API.
+ *
+ * @param <T>        The target Java type for conversion.
+ * @param target     The expressions to be converted.
+ * @param returnType The target class type for conversion.
+ */
+public record ConvertIntent<T>(ExpressionSpec[] target, Class<T> returnType)
+        implements ExpressionModifier, TypeOverride<T> {
+
+    public ExpressionSpecArray toExpression() {
+        return new ExpressionSpecArray(target);
+    }
+}

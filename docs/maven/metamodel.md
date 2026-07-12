@@ -48,8 +48,9 @@ For more information on how to use metamodels in queries, see the [Metamodels](.
 ## Usage Example
 
 ```xml
+
 <plugin>
-    <groupId>org.litebridgedb.maven</groupId>
+    <groupId>org.litebridge.maven</groupId>
     <artifactId>litebridge-maven-plugin</artifactId>
     <version>0.3.0</version> <!-- Replace with latest version -->
     <executions>

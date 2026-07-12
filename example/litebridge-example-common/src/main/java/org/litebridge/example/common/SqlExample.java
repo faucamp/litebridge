@@ -1,0 +1,61 @@
+package org.litebridge.example.common;
+
+import org.litebridge.db.spi.Row;
+import org.litebridge.example.common.dto.Person;
+import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.expression.Fn;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+
+public class SqlExample extends AbstractExample {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SqlExample.class);
+
+    public SqlExample(final Litebridge litebridge) {
+        super(litebridge);
+    }
+
+    @Override
+    public void run() {
+        LOGGER.info("---======< SQL example >======---");
+
+        LOGGER.info("[EXAMPLE] Retrieve all persons");
+        final List<Row> personRows =
+                litebridge.select().from("LB.PERSON")
+                        .orderBy("PERSON_ID").asc()
+                        .list();
+
+        personRows.forEach(row -> LOGGER.info("Row data for PERSON record: {}", row));
+
+        LOGGER.info("[EXAMPLE] Retrieve persons using a WHERE clause");
+        litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
+                .where("AGE").gt(18)
+                .and("AGE").lt(25)
+                .stream()
+                .forEach(record -> LOGGER.info("SQL result: Selected data for PERSON record: {}", record));
+
+        LOGGER.info("[EXAMPLE] Retrieve persons using SQL and map results to a DTO");
+        litebridge.select("FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
+                .where("AGE").gt(18)
+                .and("AGE").lt(25)
+                .orderBy("PERSON_ID").asc()
+                .stream()
+                .map(row -> litebridge.toDto(row, Person.class))
+                .forEach(p -> LOGGER.info("SQL result: Mapped Person object: {}", p));
+
+        LOGGER.info("[EXAMPLE] Using joins");
+
+        litebridge.select(
+                        Fn.c("LB.PERSON", "FIRST_NAME"),
+                        Fn.c("LB.PERSON", "SURNAME"),
+                        Fn.c("LB.PERSON", "AGE"),
+                        Fn.c("LB.ACCOUNT", "ACCOUNT_ID"),
+                        Fn.c("LB.ACCOUNT", "ACCOUNT_NAME"))
+                .from("LB.PERSON")
+                .join("LB.ACCOUNT").using("PERSON_ID")
+                .stream()
+                .forEach(p -> LOGGER.info("Joined result: {}", p));
+    }
+}

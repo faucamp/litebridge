@@ -13,7 +13,7 @@
                         <url>jdbc:h2:mem:lb;DB_CLOSE_DELAY=-1</url>
                         <user>sa</user>
                         <password></password>
-                        <databaseProviderClass>org.litebridgedb.db.h2.H2DatabaseProvider</databaseProviderClass>
+                        <databaseProviderClass>org.litebridge.db.h2.H2DatabaseProvider</databaseProviderClass>
                     </database>
 
                     <input>
@@ -47,7 +47,7 @@
                         <tableMapping>
                             <table>LB.PERSON</table>
                             <entityName>PersonEntity</entityName>
-                            <allowInterface>org.litebridgedb.maven.test.TestInterface</allowInterface>
+                            <allowInterface>org.litebridge.maven.test.TestInterface</allowInterface>
                             <columnMappings>
                                 <columnMapping>
                                     <column>PERSON_ID</column>

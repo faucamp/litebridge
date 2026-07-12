@@ -15,7 +15,7 @@
                         </inputPackages>
                     </input>
                     <output>
-                        <outputPackage>org.litebridgedb.maven.test.meta</outputPackage>
+                        <outputPackage>org.litebridge.maven.test.meta</outputPackage>
                     </output>
                 </configuration>
             </plugin>

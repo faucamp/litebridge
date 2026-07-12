@@ -11,7 +11,7 @@ module litebridge.example.h2.jpms {
     requires litebridge.orm;
     requires litebridge.example.common;
 
-    exports org.litebridgedb.example.h2.jpms;
+    exports org.litebridge.example.h2.jpms;
 
     // Flyway classpath scanning
     opens db.migration;

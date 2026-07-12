@@ -28,5 +28,5 @@ springdoc:
 logging:
   level:
     root: INFO
-    org.litebridgedb: TRACE
+    org.litebridge: TRACE
 

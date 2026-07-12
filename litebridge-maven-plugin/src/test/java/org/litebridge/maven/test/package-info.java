@@ -1,0 +1,1 @@
+package org.litebridge.maven.test;

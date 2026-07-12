@@ -14,8 +14,9 @@ This guide provides instructions for setting up Litebridge in a Java project.
 To use Litebridge, add the `litebridge-orm` dependency to the `pom.xml`:
 
 ```xml
+
 <dependency>
-    <groupId>org.litebridgedb</groupId>
+    <groupId>org.litebridge</groupId>
     <artifactId>litebridge-orm</artifactId>
     <version>0.3.0</version> <!-- Replace with latest version -->
 </dependency>
@@ -37,8 +38,9 @@ Litebridge uses a modular architecture for database support. A database provider
 Example for H2:
 
 ```xml
+
 <dependency>
-    <groupId>org.litebridgedb</groupId>
+    <groupId>org.litebridge</groupId>
     <artifactId>litebridge-db-h2</artifactId>
     <version>0.3.0</version> <!-- Replace with latest version -->
 </dependency>
@@ -49,8 +51,9 @@ Example for H2:
 The Litebridge Maven Plugin can automate the creation of entity classes from an existing database and generate metamodels for type-safe queries.
 
 ```xml
+
 <plugin>
-    <groupId>org.litebridgedb.maven</groupId>
+    <groupId>org.litebridge.maven</groupId>
     <artifactId>litebridge-maven-plugin</artifactId>
     <version>0.3.0</version> <!-- Replace with latest version -->
 </plugin>
@@ -67,8 +70,9 @@ For applications using Spring or Spring Boot, Litebridge provides dedicated inte
 The easiest way to integrate Litebridge into a Spring Boot application is using the starter:
 
 ```xml
+
 <dependency>
-    <groupId>org.litebridgedb</groupId>
+    <groupId>org.litebridge</groupId>
     <artifactId>litebridge-spring-boot-starter</artifactId>
     <version>0.3.0</version> <!-- Replace with latest version -->
 </dependency>

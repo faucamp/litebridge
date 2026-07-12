@@ -17,5 +17,5 @@ module litebridge.spring {
     requires litebridge.orm;
     requires org.slf4j;
 
-    exports org.litebridgedb.spring;
+    exports org.litebridge.spring;
 }

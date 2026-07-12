@@ -4,7 +4,7 @@
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    <logger name="org.litebridgedb" level="TRACE" />
+    <logger name="org.litebridge" level="TRACE" />
     <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>

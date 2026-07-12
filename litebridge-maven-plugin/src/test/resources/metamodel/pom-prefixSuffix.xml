@@ -13,11 +13,11 @@
                         <srcDir>src/test/java</srcDir>
                         <entitiesOnly>true</entitiesOnly>
                         <inputPackages>
-                            <inputPackage>org.litebridgedb.maven.test.entity</inputPackage>
+                            <inputPackage>org.litebridge.maven.test.entity</inputPackage>
                         </inputPackages>
                     </input>
                     <output>
-                        <outputPackage>org.litebridgedb.maven.test.meta</outputPackage>
+                        <outputPackage>org.litebridge.maven.test.meta</outputPackage>
                         <classNamePrefix>M</classNamePrefix>
                         <classNameSuffix></classNameSuffix>
                     </output>
