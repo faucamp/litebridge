@@ -96,7 +96,7 @@ public interface DatabaseProvider {
      * @param bindParameters     the list of parameters to bind to the query
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
      * @return a list of {@code Row} objects representing the result set of the query
-     * @throws IllegalStateException if an error occurs during query execution
+     * @throws SQLException if an error occurs during query execution
      */
     List<Row> nativeSqlQuery(String sql, final List<@Nullable Object> bindParameters, ConnectionProvider connectionProvider) throws SQLException;
 
@@ -109,7 +109,7 @@ public interface DatabaseProvider {
      * @param bindParameters     the list of named parameters to bind to the statement
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
      * @return an {@code UpdateResult} object that encapsulates the outcome of the update operation
-     * @throws IllegalStateException if an error occurs while executing the update statement
+     * @throws SQLException if an error occurs while executing the update statement
      */
     UpdateResult nativeSqlUpdate(String sql, final List<@Nullable Object> bindParameters, ConnectionProvider connectionProvider) throws SQLException;
 
@@ -145,5 +145,10 @@ public interface DatabaseProvider {
      */
     SqlFunctionRegistry getSqlFunctionRegistry();
 
+    /**
+     * Retrieve the {@link AliasTransformer} instance associated with the database provider.
+     *
+     * @return the {@link AliasTransformer} instance for transforming aliases
+     */
     AliasTransformer getAliasTransformer();
 }

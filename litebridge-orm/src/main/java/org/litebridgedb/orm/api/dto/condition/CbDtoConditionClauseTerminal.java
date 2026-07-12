@@ -11,10 +11,22 @@ import org.litebridgedb.orm.engine.FromClauseEngine;
 import org.litebridgedb.orm.expression.select.SelectColumnSpec;
 import org.litebridgedb.orm.persistence.OrmTable;
 
+/**
+ * Implementation of a terminal condition clause for DTO-based queries.
+ *
+ * @param <DTO> The type of the DTO being queried.
+ */
 public final class CbDtoConditionClauseTerminal<DTO> extends AbstractCbConditionClauseTerminal<DTO> {
 
     private final OrmTable ormTable;
 
+    /**
+     * Constructs a new {@code CbDtoConditionClauseTerminal}.
+     *
+     * @param conditionGroupSpec The condition group specification.
+     * @param ormTable           The ORM table metadata.
+     * @param fromClauseEngine   The FROM clause engine.
+     */
     public CbDtoConditionClauseTerminal(final ConditionGroupSpec conditionGroupSpec, final OrmTable ormTable, final FromClauseEngine fromClauseEngine) {
         super(conditionGroupSpec, fromClauseEngine);
         this.ormTable = ormTable;

@@ -39,14 +39,29 @@ public final class ChangedCollectionField extends ChangedField {
         this.prevListSnapshot = prevListSnapshot != null ? Collections.unmodifiableList(prevListSnapshot) : Collections.emptyList();
     }
 
+    /**
+     * Returns the snapshot of the list at the time tracking started.
+     *
+     * @return the list snapshot
+     */
     public List<Integer> listSnapshot() {
         return listSnapshot;
     }
 
+    /**
+     * Returns the snapshot of the list before the last change.
+     *
+     * @return the previous list snapshot
+     */
     public List<Integer> prevListSnapshot() {
         return prevListSnapshot;
     }
 
+    /**
+     * Returns a list of indices that have been updated.
+     *
+     * @return a list of updated indices
+     */
     public List<Integer> updatedIndices() {
         final List<Integer> updatedIndices = new ArrayList<>();
 
@@ -59,6 +74,11 @@ public final class ChangedCollectionField extends ChangedField {
         return updatedIndices;
     }
 
+    /**
+     * Returns a list of values that have been updated in the collection.
+     *
+     * @return a list of updated values
+     */
     @SuppressWarnings("unchecked")
     public List<Object> updatedValues() {
         final List<Object> values = (List<Object>) Objects.requireNonNull(value);

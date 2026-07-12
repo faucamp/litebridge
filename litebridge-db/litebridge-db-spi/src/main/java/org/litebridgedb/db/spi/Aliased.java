@@ -22,10 +22,21 @@ public class Aliased {
     @Nullable
     private String alias;
 
+    /**
+     * Constructs a new {@code Aliased} instance with the specified name.
+     *
+     * @param name The target name.
+     */
     public Aliased(final String name) {
         this.name = name;
     }
 
+    /**
+     * Constructs a new {@code Aliased} instance with the specified name and alias.
+     *
+     * @param name  The target name.
+     * @param alias The target alias.
+     */
     public Aliased(final String name, @Nullable final String alias) {
         this.name = name;
         this.alias = alias;
@@ -84,6 +95,12 @@ public class Aliased {
         return equalsIgnoreAlias(aliased) && Objects.equals(alias, aliased.alias);
     }
 
+    /**
+     * Compares this instance with another {@code Aliased} instance, ignoring their aliases.
+     *
+     * @param aliased The other instance to compare with.
+     * @return {@code true} if the names are equal, {@code false} otherwise.
+     */
     public boolean equalsIgnoreAlias(final Aliased aliased) {
         return Objects.equals(name, aliased.name);
     }

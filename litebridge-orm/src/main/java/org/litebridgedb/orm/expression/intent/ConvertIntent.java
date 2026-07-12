@@ -13,6 +13,10 @@ import org.litebridgedb.orm.expression.TypeOverride;
  * This specific intent class is designed to help with a fluent API flow
  * via the {@link org.litebridgedb.orm.Litebridge#select(TypeOverride)}
  * select API.
+ *
+ * @param <T>        The target Java type for conversion.
+ * @param target     The expressions to be converted.
+ * @param returnType The target class type for conversion.
  */
 public record ConvertIntent<T>(ExpressionSpec[] target, Class<T> returnType)
         implements ExpressionModifier, TypeOverride<T> {

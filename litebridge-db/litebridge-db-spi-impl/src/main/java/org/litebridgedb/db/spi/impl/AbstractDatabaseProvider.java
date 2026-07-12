@@ -67,19 +67,57 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     static final String[] TYPES_TABLE = {"TABLE"};
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDatabaseProvider.class);
+
+    /**
+     * The type converter used for mapping between database and Java types.
+     */
     protected final TypeConverter typeConverter;
+
     /**
      * Map of qualified table name -> table metadata.
      */
     private final Map<String, TableMetaData> tableMetaDataCache = new ConcurrentHashMap<>();
+
+    /**
+     * Lazy-loaded SQL function registry.
+     */
     private final ConcurrentLazy<SqlFunctionRegistry> sqlFunctionRegistry = new ConcurrentLazy<>(() -> createSqlFunctionRegistryFactory().create());
+
+    /**
+     * Lazy-loaded alias transformer.
+     */
     private final ConcurrentLazy<AliasTransformer> aliasTransformer = new ConcurrentLazy<>(this::createAliasTransformer);
+
+    /**
+     * Lazy-loaded column identifier generator.
+     */
     protected final ConcurrentLazy<ColumnIdentifierGenerator> columnIdentifierGenerator = new ConcurrentLazy<>(this::createColumnIdentifierGenerator);
+
+    /**
+     * Lazy-loaded SELECT SQL generator.
+     */
     protected final ConcurrentLazy<SelectSqlGenerator> selectSqlGenerator = new ConcurrentLazy<>(this::createSelectSqlGenerator);
+
+    /**
+     * Lazy-loaded INSERT SQL generator.
+     */
     protected final ConcurrentLazy<InsertSqlGenerator> insertSqlGenerator = new ConcurrentLazy<>(this::createInsertSqlGenerator);
+
+    /**
+     * Lazy-loaded UPDATE SQL generator.
+     */
     protected final ConcurrentLazy<UpdateSqlGenerator> updateSqlGenerator = new ConcurrentLazy<>(this::createUpdateSqlGenerator);
+
+    /**
+     * Lazy-loaded DELETE SQL generator.
+     */
     protected final ConcurrentLazy<DeleteSqlGenerator> deleteSqlGenerator = new ConcurrentLazy<>(this::createDeleteSqlGenerator);
 
+    /**
+     * Constructs a new {@code AbstractDatabaseProvider}.
+     *
+     * @param typeConverter The type converter to use.
+     */
     public AbstractDatabaseProvider(final TypeConverter typeConverter) {
         this.typeConverter = Objects.requireNonNull(typeConverter, "No TypeConverter provided");
     }
@@ -198,6 +236,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @param returnGeneratedKeys a boolean indicating whether the statement should return generated keys.
      *                            Pass {@code true} to configure the statement to return generated keys,
      *                            or {@code false} otherwise.
+     * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
      * @return an {@link InsertResult} object encapsulating the number of affected rows and a list of generated keys (if any)
      * @throws SQLException if an error occurs while executing the SQL insert or retrieving the generated keys
      */
@@ -214,6 +253,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
+    /**
+     * Get the primary key columns for which the database generates values.
+     *
+     * @param tableMetaData the {@link TableMetaData} object containing the metadata of the target table
+     * @return a list of {@link ColumnMetaData} objects representing the generated primary key columns
+     */
     protected List<ColumnMetaData> getGeneratedPrimaryKeyColumns(final TableMetaData tableMetaData) {
         return tableMetaData.primaryKey().stream()
                 .filter(columnMetadata -> columnMetadata.isAutoIncrement()
@@ -221,6 +266,14 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 .toList();
     }
 
+    /**
+     * Extract the generated primary key values from the provided prepared statement.
+     *
+     * @param tableMetaData     the {@link TableMetaData} object containing the metadata of the target table
+     * @param preparedStatement the executed {@link PreparedStatement} containing any generated keys
+     * @return a map of {@link ColumnMetaData} to the generated key value
+     * @throws SQLException if an error occurs while retrieving the generated keys
+     */
     protected Map<ColumnMetaData, Object> extractGeneratedKeys(final TableMetaData tableMetaData, final PreparedStatement preparedStatement) throws SQLException {
         final List<ColumnMetaData> generatedPrimaryKeys = getGeneratedPrimaryKeyColumns(tableMetaData);
         final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(tableMetaData.primaryKey().size());
@@ -245,6 +298,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * of affected rows in an {@link UpdateResult} object.
      *
      * @param preparedSql        the {@link PreparedSql} object containing the SQL query string and bind values to be executed
+     * @param tableMetaData      the {@link TableMetaData} object containing the metadata of the target table
      * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
      * @return an {@link UpdateResult} object encapsulating the number of rows affected by the update operation
      * @throws SQLException if an error occurs while executing the SQL update
@@ -343,6 +397,14 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
+    /**
+     * Retrieve column metadata for the specified table.
+     *
+     * @param table            the {@link Table} object representing the table
+     * @param databaseMetaData the {@link DatabaseMetaData} object used to retrieve column information
+     * @return a list of {@link ColumnMetaData} objects representing the table's columns
+     * @throws SQLException if an error occurs while retrieving column metadata
+     */
     protected List<ColumnMetaData> getColumnMetaData(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
         try (final ResultSet dbColumns = databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)) {
             final List<ColumnMetaData> columns = new ArrayList<>();
@@ -362,6 +424,14 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
+    /**
+     * Retrieve the names of the primary key columns for the specified table.
+     *
+     * @param table            the {@link Table} object representing the table
+     * @param databaseMetaData the {@link DatabaseMetaData} object used to retrieve primary key information
+     * @return a list of primary key column names
+     * @throws SQLException if an error occurs while retrieving primary key information
+     */
     protected List<String> getPrimaryKeyColumnNames(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
         try (final ResultSet primaryKeys = databaseMetaData.getPrimaryKeys(table.catalog(), table.schema(), table.name())) {
             final List<String> primaryKeyColumnNames = new ArrayList<>();
@@ -375,6 +445,14 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
+    /**
+     * Verify that the specified schema and table exist in the database.
+     *
+     * @param table            the {@link Table} object representing the table to verify
+     * @param databaseMetaData the {@link DatabaseMetaData} object used to perform the verification
+     * @throws SQLException             if an error occurs while performing the verification
+     * @throws IllegalArgumentException if the schema or table is not found
+     */
     protected static void verifySchemaAndTableExists(final Table table, final DatabaseMetaData databaseMetaData) throws SQLException {
         final ResultSet schemas = databaseMetaData.getSchemas(table.catalog(), table.schema());
         boolean schemaExists = false;
@@ -541,6 +619,13 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return LOGGER;
     }
 
+    /**
+     * Ensure that table metadata is available for the specified table, fetching it if not already cached.
+     *
+     * @param table              the {@link Table} object representing the table
+     * @param connectionProvider the {@link ConnectionProvider} used to fetch metadata if needed
+     * @return the {@link TableMetaData} for the table
+     */
     protected TableMetaData ensureTableMetaData(final Table table, final ConnectionProvider connectionProvider) {
         TableMetaData tableMetaData = this.tableMetaDataCache.get(table.qualifiedName());
 
@@ -562,7 +647,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * <p>
      * This executes a database query to fetch database metadata.
      *
-     * @param table the table for which metadata is being fetched, containing schema, catalog, and table name details
+     * @param table              the table for which metadata is being fetched, containing schema, catalog, and table name details
+     * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
      * @return a {@code TableMetaData} object containing details about the table's structure, primary keys, and column metadata
      * @throws SQLException if an error occurs while fetching database metadata
      */
@@ -642,26 +728,56 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return new SqlFunctionRegistryFactory(columnIdentifierGenerator.orThrow(), selectSqlGenerator.orThrow());
     }
 
+    /**
+     * Create an {@link AliasTransformer} instance for the database provider.
+     *
+     * @return an {@link AliasTransformer} instance
+     */
     protected AliasTransformer createAliasTransformer() {
         return new UppercaseAliasTransformer();
     }
 
+    /**
+     * Create a {@link ColumnIdentifierGenerator} instance for the database provider.
+     *
+     * @return a {@link ColumnIdentifierGenerator} instance
+     */
     protected ColumnIdentifierGenerator createColumnIdentifierGenerator() {
         return new ColumnIdentifierGenerator();
     }
 
+    /**
+     * Create a {@link SelectSqlGenerator} instance for the database provider.
+     *
+     * @return a {@link SelectSqlGenerator} instance
+     */
     protected SelectSqlGenerator createSelectSqlGenerator() {
         return new SelectSqlGenerator(typeConverter, columnIdentifierGenerator.orThrow(), this::ensureTableMetaData);
     }
 
+    /**
+     * Create an {@link InsertSqlGenerator} instance for the database provider.
+     *
+     * @return an {@link InsertSqlGenerator} instance
+     */
     protected InsertSqlGenerator createInsertSqlGenerator() {
         return new InsertSqlGenerator(typeConverter, columnIdentifierGenerator.orThrow(), this::ensureTableMetaData);
     }
 
+    /**
+     * Create an {@link UpdateSqlGenerator} instance for the database provider.
+     *
+     * @return an {@link UpdateSqlGenerator} instance
+     */
     protected UpdateSqlGenerator createUpdateSqlGenerator() {
         return new UpdateSqlGenerator(typeConverter, columnIdentifierGenerator.orThrow(), this::ensureTableMetaData);
     }
 
+    /**
+     * Create a {@link DeleteSqlGenerator} instance for the database provider.
+     *
+     * @return a {@link DeleteSqlGenerator} instance
+     */
     protected DeleteSqlGenerator createDeleteSqlGenerator() {
         return new DeleteSqlGenerator(typeConverter, columnIdentifierGenerator.orThrow(), this::ensureTableMetaData);
     }

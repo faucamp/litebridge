@@ -9,9 +9,10 @@ import org.litebridgedb.orm.expression.select.SelectColumnSpec;
  * <p>
  * This record is used to create an expression instance (e.g. {@link SelectColumnSpec}) when table information is available.
  *
+ * @param type   The type of expression to create.
  * @param column The column name to select.
  * @param alias  The column alias to use, or {@code null} if not specified.
- * @param type   The type of expression to create.
+ * @param args   Optional additional arguments for the expression.
  */
 public record ProtoColumnExpressionSpec(Class<? extends ExpressionSpec> type,
                                         String column,

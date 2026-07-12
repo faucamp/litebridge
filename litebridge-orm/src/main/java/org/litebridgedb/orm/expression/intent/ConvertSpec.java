@@ -9,6 +9,8 @@ import org.litebridgedb.orm.expression.TypeOverrideExpressionSpec;
  * <p>
  * This uses Litebridge's registered type converter to perform the conversion;
  * it is not a database operation.
+ *
+ * @param <T> The target Java type for conversion.
  */
 public final class ConvertSpec<T> implements TypeOverrideExpressionSpec<T>, Resolvable {
 

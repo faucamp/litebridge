@@ -18,12 +18,35 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+/**
+ * Abstract base class for condition clauses in the fluent select API.
+ *
+ * @param <DTO> The type of the DTO being queried.
+ */
 public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<DTO, AbstractCbConditionClause<DTO>, AbstractCbConditionClauseTerminal<DTO>> {
 
+    /**
+     * The condition specification being built.
+     */
     protected final ConditionSpec conditionSpec;
+
+    /**
+     * The condition group specification.
+     */
     protected final ConditionGroupSpec conditionGroupSpec;
+
+    /**
+     * The engine used to process the FROM clause.
+     */
     protected final FromClauseEngine fromClauseEngine;
 
+    /**
+     * Constructs a new {@code AbstractCbConditionClause}.
+     *
+     * @param conditionSpec      The condition specification.
+     * @param conditionGroupSpec The condition group specification.
+     * @param fromClauseEngine   The FROM clause engine.
+     */
     public AbstractCbConditionClause(final ConditionSpec conditionSpec,
                                      final ConditionGroupSpec conditionGroupSpec,
                                      final FromClauseEngine fromClauseEngine) {
@@ -265,6 +288,11 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
         return createCbConditionClauseTerminal();
     }
 
+    /**
+     * Creates a new terminal condition clause instance.
+     *
+     * @return A new {@link AbstractCbConditionClauseTerminal} instance.
+     */
     protected abstract AbstractCbConditionClauseTerminal<DTO> createCbConditionClauseTerminal();
 
     private SelectSpec createSelectSpec(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {

@@ -69,6 +69,12 @@ public interface ConditionClause<DTO,
      */
     CCT gte(final Object value);
 
+    /**
+     * Creates a condition terminal for LIKE comparison with the specified value.
+     *
+     * @param value The pattern to match.
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
     CCT like(final String value);
 
     /**

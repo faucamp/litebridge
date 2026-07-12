@@ -17,8 +17,14 @@ import java.util.StringJoiner;
  */
 public sealed class ChangedField permits ChangedCollectionField, ChangedMapField {
 
+    /**
+     * The name of the field that has changed.
+     */
     protected final String name;
 
+    /**
+     * The current value of the field that has changed.
+     */
     @Nullable
     protected final Object value;
 

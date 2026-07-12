@@ -34,12 +34,33 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
+/**
+ * Abstract base class for SQL generators.
+ */
 public abstract class AbstractSqlGenerator {
 
+    /**
+     * The type converter used for mapping between database and Java types.
+     */
     protected final TypeConverter typeConverter;
+
+    /**
+     * The generator for column identifiers.
+     */
     protected final ColumnIdentifierGenerator columnIdentifierGenerator;
+
+    /**
+     * Function to ensure table metadata is available.
+     */
     private final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData;
 
+    /**
+     * Constructs a new {@code AbstractSqlGenerator}.
+     *
+     * @param typeConverter             The type converter to use.
+     * @param columnIdentifierGenerator The column identifier generator to use.
+     * @param ensureTableMetaData       The function to ensure table metadata is available.
+     */
     public AbstractSqlGenerator(final TypeConverter typeConverter,
                                 final ColumnIdentifierGenerator columnIdentifierGenerator,
                                 final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
@@ -53,9 +74,11 @@ public abstract class AbstractSqlGenerator {
      * This method constructs the SQL fragment by combining the column, operator,
      * and value (if applicable) for the provided condition.
      *
-     * @param condition the {@link Condition} object specifying the column, operator,
-     *                  and value for the SQL condition
-     * @return a {@code String} representing the constructed SQL condition fragment
+     * @param condition          the {@link Condition} object specifying the column, operator,
+     *                           and value for the SQL condition
+     * @param operation          the current database operation
+     * @param connectionProvider the connection provider
+     * @return a {@link PreparedSql} representing the constructed SQL condition fragment
      */
     protected PreparedSql createCondition(final Condition condition, final Operation operation, final ConnectionProvider connectionProvider) {
         final String lhs = condition.lhs().toSql(operation, ClauseType.WHERE);
@@ -150,10 +173,25 @@ public abstract class AbstractSqlGenerator {
         };
     }
 
+    /**
+     * Appends a table name to the SQL builder, quoting identifiers.
+     *
+     * @param sql   The SQL builder.
+     * @param table The table to append.
+     * @return The SQL builder.
+     */
     protected StringBuilder appendTable(final StringBuilder sql, final Table table) {
         return appendTable(sql, table.schema(), table.name());
     }
 
+    /**
+     * Appends a table name to the SQL builder, quoting identifiers.
+     *
+     * @param sql    The SQL builder.
+     * @param schema The schema name.
+     * @param table  The table name.
+     * @return The SQL builder.
+     */
     protected StringBuilder appendTable(final StringBuilder sql, @Nullable final String schema, final String table) {
         final ColumnIdentifierGenerator cig = columnIdentifierGenerator;
 
@@ -165,6 +203,12 @@ public abstract class AbstractSqlGenerator {
         return sql;
     }
 
+    /**
+     * Extracts the value from a select expression.
+     *
+     * @param selectExpression The select expression.
+     * @return The extracted value.
+     */
     protected @Nullable Object getExpressionValue(final SelectExpression selectExpression) {
         if (selectExpression instanceof LiteralExpression literalExpression) {
             return literalExpression.value();
@@ -173,14 +217,36 @@ public abstract class AbstractSqlGenerator {
         }
     }
 
+    /**
+     * Ensures that table metadata is available for the specified table.
+     *
+     * @param table              The table.
+     * @param connectionProvider The connection provider.
+     * @return The table metadata.
+     */
     protected TableMetaData ensureTableMetaData(final Table table, final ConnectionProvider connectionProvider) {
         return ensureTableMetaData.apply(table, connectionProvider);
     }
 
+    /**
+     * Ensures that column metadata is available for the specified column.
+     *
+     * @param column             The column.
+     * @param connectionProvider The connection provider.
+     * @return The column metadata.
+     */
     protected ColumnMetaData ensureColumnMetaData(final Column column, final ConnectionProvider connectionProvider) {
         return ensureTableMetaData.apply(column.table(), connectionProvider).column(column.name());
     }
 
+    /**
+     * Creates a bind value for a column and raw value.
+     *
+     * @param column             The column.
+     * @param rawValue           The raw value.
+     * @param connectionProvider The connection provider.
+     * @return The bind value.
+     */
     protected BindValue createBindValue(final @Nullable Column column, final @Nullable Object rawValue, final ConnectionProvider connectionProvider) {
         final BindValue bindValue;
 
@@ -197,6 +263,15 @@ public abstract class AbstractSqlGenerator {
         return bindValue;
     }
 
+    /**
+     * Appends conditions and subgroups to the SQL builder.
+     *
+     * @param sql                The SQL builder.
+     * @param conditionGroup     The condition group.
+     * @param bindValues         The list of bind values to populate.
+     * @param operation          The current database operation.
+     * @param connectionProvider The connection provider.
+     */
     protected void appendConditionsAndSubgroups(final StringBuilder sql,
                                                 final ConditionGroup conditionGroup,
                                                 final List<@Nullable BindValue> bindValues,

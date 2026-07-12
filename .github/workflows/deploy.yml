@@ -40,7 +40,7 @@ jobs:
         run: |
           mkdir -p ${{ env.BUILD_PATH }}/public/javadoc
           mvn install -pl litebridge-maven-plugin -am -DskipTests=true javadoc:aggregate
-          cp -r target/site/apidocs/* ${{ env.BUILD_PATH }}/public/javadoc/
+          cp -r target/reports/apidocs/* ${{ env.BUILD_PATH }}/public/javadoc/
 
       # Detect Node package manager
       - name: Detect package manager

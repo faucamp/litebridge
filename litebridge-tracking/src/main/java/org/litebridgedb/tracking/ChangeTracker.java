@@ -50,10 +50,18 @@ public final class ChangeTracker {
     private final Map<Object, TrackedDto<?>> trackedDtos = Collections.synchronizedMap(new WeakIdentityMap<>());
     private final ClassFieldAccessorCache classFieldAccessorCache;
 
+    /**
+     * Constructs a new {@code ChangeTracker} using the default {@link MethodHandles#lookup()}.
+     */
     public ChangeTracker() {
         this(MethodHandles.lookup());
     }
 
+    /**
+     * Constructs a new {@code ChangeTracker} using the provided {@link MethodHandles.Lookup}.
+     *
+     * @param lookup the {@code Lookup} instance to be used for accessing fields
+     */
     public ChangeTracker(final MethodHandles.Lookup lookup) {
         this.classFieldAccessorCache = new ClassFieldAccessorCache(lookup);
     }
@@ -134,7 +142,8 @@ public final class ChangeTracker {
      * <p>
      * The method looks up the internal storage for the tracked version of the given DTO and returns it.
      *
-     * @param dto the Data Transfer Object (DTO) whose tracked version is to be retrieved; can be null
+     * @param <DTO> the type of the DTO
+     * @param dto   the Data Transfer Object (DTO) whose tracked version is to be retrieved; can be null
      * @return the tracked version of the specified DTO, or null if no tracked version exists
      * @throws IllegalArgumentException if the specified DTO is not tracked
      */
