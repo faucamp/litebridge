@@ -1,0 +1,192 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Code } from 'astro:components';
+import { Terminal, Database, Rocket, Settings, Box, Code2, Cpu } from '@lucide/astro';
+
+const title = "Get Started with Litebridge";
+const description = "Learn how to integrate Litebridge into your Java 21+ project.";
+---
+
+<Layout title={title} description={description}>
+  <div class="pt-32 pb-20 lg:pt-48 lg:pb-32">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <div class="mb-16 reveal">
+        <h1 class="text-4xl font-extrabold tracking-tight text-primary dark:text-white sm:text-6xl mb-6">
+          Get Started
+        </h1>
+        <p class="text-xl text-gray-500 dark:text-gray-400">
+          This guide covers the basic steps to integrate Litebridge into a Java project, from setting up dependencies to performing your first database operations.
+        </p>
+      </div>
+
+      <div class="space-y-16">
+        <!-- Prerequisites -->
+        <section class="reveal">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+              <Settings class="h-6 w-6" />
+            </div>
+            <h2 class="text-3xl font-bold text-primary dark:text-white">1. Requirements</h2>
+          </div>
+          <ul class="space-y-4 text-gray-600 dark:text-gray-400 text-lg">
+            <li class="flex items-start gap-3">
+              <span class="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent"></span>
+              <span><strong>Java 21+</strong>: Leveraging modern features like records and pattern matching.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent"></span>
+              <span><strong>Maven</strong>: For dependency management and build automation.</span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Add Dependency -->
+        <section class="reveal" style="transition-delay: 100ms">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+              <Terminal class="h-6 w-6" />
+            </div>
+            <h2 class="text-3xl font-bold text-primary dark:text-white">2. Add Litebridge</h2>
+          </div>
+          <p class="mb-4 text-gray-600 dark:text-gray-400">Add the core ORM dependency to your <code class="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">pom.xml</code>:</p>
+          <div class="overflow-hidden rounded-xl bg-gray-900 shadow-lg">
+            <Code
+              code={`<dependency>\n    <groupId>org.litebridge</groupId>\n    <artifactId>litebridge-orm</artifactId>\n    <version>0.3.0</version>\n</dependency>`}
+              lang="xml"
+              theme="github-dark"
+              class="p-6 text-sm"
+            />
+          </div>
+        </section>
+
+        <!-- DB Provider -->
+        <section class="reveal" style="transition-delay: 200ms">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+              <Database class="h-6 w-6" />
+            </div>
+            <h2 class="text-3xl font-bold text-primary dark:text-white">3. Choose a Provider</h2>
+          </div>
+          <p class="mb-6 text-gray-600 dark:text-gray-400">Include the artifact for your target database. Litebridge supports multiple providers out of the box:</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            {[
+              { name: 'H2', id: 'litebridge-db-h2' },
+              { name: 'PostgreSQL', id: 'litebridge-db-postgres' },
+              { name: 'Oracle', id: 'litebridge-db-oracle' },
+              { name: 'SQLite', id: 'litebridge-db-sqlite' },
+            ].map(db => (
+              <div class="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-bg/30">
+                <span class="font-bold text-primary dark:text-white">{db.name}</span>
+                <code class="text-xs text-accent">{db.id}</code>
+              </div>
+            ))}
+          </div>
+
+          <p class="mb-4 text-gray-600 dark:text-gray-400 text-sm italic">Example for PostgreSQL:</p>
+          <div class="overflow-hidden rounded-xl bg-gray-900 shadow-lg">
+            <Code
+              code={`<dependency>\n    <groupId>org.litebridge</groupId>\n    <artifactId>litebridge-db-postgres</artifactId>\n    <version>0.3.0</version>\n</dependency>`}
+              lang="xml"
+              theme="github-dark"
+              class="p-6 text-sm"
+            />
+          </div>
+        </section>
+
+        <!-- Define Entity -->
+        <section class="reveal" style="transition-delay: 300ms">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+              <Code2 class="h-6 w-6" />
+            </div>
+            <h2 class="text-3xl font-bold text-primary dark:text-white">4. Define an Entity</h2>
+          </div>
+          <p class="mb-4 text-gray-600 dark:text-gray-400">Map your Java classes to database tables using Litebridge annotations:</p>
+          <div class="overflow-hidden rounded-xl bg-gray-900 shadow-lg mb-4">
+            <Code
+              code={`import org.litebridge.orm.annotation.Column;\nimport org.litebridge.orm.annotation.Table;\n\n@Table("EXAMPLE.PERSON")\npublic class Person {\n\n    @Column(value = "ID", generateUsingSequence = "PERSON_SEQ")\n    private Long id;\n\n    @Column("NAME")\n    private String name;\n\n    @Column("SURNAME")\n    private String surname;\n\n    // Getters and setters\n}`}
+              lang="java"
+              theme="github-dark"
+              class="p-6 text-sm"
+            />
+          </div>
+          <p class="text-gray-600 dark:text-gray-400 text-sm italic">Note: The Litebridge Maven plugin can automatically generate these entities from your database schema.</p>
+          <p class="text-gray-600 dark:text-gray-400 text-sm italic">Plain, unaltered DTOs can also be used; see the <a href="https://github.com/faucamp/litebridge/blob/main/docs/index.md">Litebridge documentation</a> for more details.</p>
+        </section>
+
+        <!-- Initialize -->
+        <section class="reveal" style="transition-delay: 400ms">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+              <Cpu class="h-6 w-6" />
+            </div>
+            <h2 class="text-3xl font-bold text-primary dark:text-white">5. Initialize</h2>
+          </div>
+          <p class="mb-4 text-gray-600 dark:text-gray-400">Create a <code class="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">Litebridge</code> instance and register your entities:</p>
+          <div class="overflow-hidden rounded-xl bg-gray-900 shadow-lg">
+            <Code
+              code={`// Create a litebridgedb instance\nLitebridge litebridge = new Litebridge(new H2DatabaseProvider(connection));\n\n// Register your entities\nlitebridge.register(Person.class);`}
+              lang="java"
+              theme="github-dark"
+              class="p-6 text-sm"
+            />
+          </div>
+        </section>
+
+        <!-- Operations -->
+        <section class="reveal" style="transition-delay: 500ms">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+              <Rocket class="h-6 w-6" />
+            </div>
+            <h2 class="text-3xl font-bold text-primary dark:text-white">6. Persistence & Queries</h2>
+          </div>
+          <p class="mb-4 text-gray-600 dark:text-gray-400">You are now ready to save and retrieve data using Litebridge's fluent API:</p>
+          <div class="overflow-hidden rounded-xl bg-gray-900 shadow-lg">
+            <Code
+              code={`// Save an entity\nlitebridge.save(person);\n\n// Query data\nOptional<Person> alice = litebridge.select(Person.class)\n    .where("name").eq("Alice")\n    .first();`}
+              lang="java"
+              theme="github-dark"
+              class="p-6 text-sm"
+            />
+          </div>
+        </section>
+
+        <!-- Next Steps -->
+        <section class="reveal" style="transition-delay: 600ms">
+          <div class="rounded-3xl bg-primary/5 dark:bg-accent/5 p-8 lg:p-12 border border-primary/10 dark:border-accent/10">
+            <div class="flex items-center gap-4 mb-6">
+              <Box class="h-8 w-8 text-accent" />
+              <h2 class="text-3xl font-bold text-primary dark:text-white">Next Steps</h2>
+            </div>
+            <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">
+              Explore the full functionality of Litebridge:
+            </p>
+            <div class="flex flex-wrap gap-4">
+              <a href="https://github.com/faucamp/litebridge/blob/main/docs/index.md" class="rounded-full bg-primary px-6 py-3 font-bold text-white transition-all hover:bg-primary/90 dark:bg-accent dark:text-primary">
+                Full Documentation
+              </a>
+              <a href="/" class="rounded-full border border-primary/20 px-6 py-3 font-bold text-primary transition-all hover:bg-primary/5 dark:border-accent/20 dark:text-accent">
+                Back to Home
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.8s ease-out;
+  }
+
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>

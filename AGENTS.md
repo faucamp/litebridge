@@ -27,7 +27,8 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 - `spring/litebridge-spring-boot-starter`: Starter for Spring Boot applications to simplify setup.
 - `litebridge-maven-plugin`: Maven plugin for reverse engineering database tables to Litebridge ORM entities, and entity metamodel creation. 
 - `example`: Contains example applications demonstrating Litebridge usage.
-- 
+- `web`: Contains the project's web site.
+
 ## Technical Stack
 
 - **Java**: 21+ (Modular)
@@ -35,6 +36,7 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 - **Null Safety**: JSpecify (`@NullMarked`, `@Nullable`).
 - **Access Control**: Uses `java.lang.invoke.MethodHandles.Lookup` for efficient DTO field/property access.
 - **Testing**: JUnit 6, Mockito, Testcontainers.
+- **Web site**: Astro, Tailwind
 
 ## Development Guidelines
 
