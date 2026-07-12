@@ -19,13 +19,30 @@ env:
   BUILD_PATH: "web"
 
 jobs:
-  build:
-    name: Build
+  build-and-deploy:
+    name: Build & Deploy Site
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Set up Java so we can generate the Javadocs
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Generate JavaDocs directly into Astro's public directory
+      # This ensures Astro bundles the docs at /javadoc/ without processing them as routing components
+      - name: Generate JavaDoc
+        run: |
+          mkdir -p ${{ env.BUILD_PATH }}/public/javadoc
+          mvn install -pl litebridge-maven-plugin -am -DskipTests=true javadoc:aggregate
+          cp -r target/site/apidocs/* ${{ env.BUILD_PATH }}/public/javadoc/
+
+      # Detect Node package manager
       - name: Detect package manager
         id: detect-package-manager
         run: |
@@ -38,11 +55,6 @@ jobs:
             echo "manager=pnpm" >> $GITHUB_OUTPUT
             echo "command=install" >> $GITHUB_OUTPUT
             echo "runner=pnpm" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/${{ env.BUILD_PATH }}/bun.lockb" ]; then
-            echo "manager=bun" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            echo "runner=bun" >> $GITHUB_OUTPUT
             exit 0
           elif [ -f "${{ github.workspace }}/${{ env.BUILD_PATH }}/package-lock.json" ]; then
             echo "manager=npm" >> $GITHUB_OUTPUT
@@ -59,7 +71,7 @@ jobs:
         with:
           node-version: "20"
           cache: ${{ steps.detect-package-manager.outputs.manager }}
-          cache-dependency-path: ${{ env.BUILD_PATH }}/package-lock.json # Adjust if using yarn/pnpm/bun
+          cache-dependency-path: ${{ env.BUILD_PATH }}/package-lock.json
 
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
@@ -69,23 +81,13 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.runner }} astro build
         working-directory: ${{ env.BUILD_PATH }}
 
+      # Package up the Astro build (which now contains the javadoc folder)
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ env.BUILD_PATH }}/dist
 
-
-  publish-javadoc:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write # Needed to write to the javadoc branch
-    steps:
-      - name: Deploy JavaDoc 🚀
-        uses: MathieuSoysal/Javadoc-publisher.yml@v3.0.2
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          javadoc-branch: javadoc
-          java-version: 21
-          target-folder: javadoc
-          project: maven
-          custom-command: mvn install -pl litebridge-maven-plugin -am -DskipTests=true javadoc:aggregate
+      # Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
