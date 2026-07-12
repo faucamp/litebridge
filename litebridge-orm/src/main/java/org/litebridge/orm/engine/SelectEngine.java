@@ -15,6 +15,12 @@ import org.litebridge.orm.expression.select.SelectFieldSpec;
 
 import java.util.Arrays;
 
+/**
+ * Provides methods for constructing SQL SELECT statements in a fluent, object-oriented manner.
+ * <p>
+ * This class supports the selection of data transfer objects (DTOs), raw fields/columns, and custom expressions with optional
+ * support for related DTO strategies and contextual mappings.
+ */
 public class SelectEngine implements SelectApi {
 
     private final FromClauseEngine fromClauseEngine;

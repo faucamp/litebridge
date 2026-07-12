@@ -32,6 +32,18 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
+/**
+ * The SelectSpecDtoMapper class is responsible for mapping data from rows of a database query to DTO (Data Transfer Object) instances.
+ * It facilitates the conversion of raw query results into structured DTO objects by using specifications, type conversions,
+ * table metadata, and a context for orchestration.
+ * <p>
+ * This class provides a flexible mechanism to handle complex mapping scenarios, including resolving dependencies between DTOs,
+ * handling related data through one-to-one, one-to-many, and many-to-many relationships, and processing data as per the blueprint
+ * defined for DTO creation.
+ * <p>
+ * This class supports custom mapping logic, lazy-loading of dependencies, and handling of various relationship types
+ * among DTOs.
+ */
 public class SelectSpecDtoMapper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SelectSpecDtoMapper.class);
@@ -42,6 +54,21 @@ public class SelectSpecDtoMapper {
     private final DtoConstructor dtoConstructor;
     private final LitebridgeContext litebridgeContext;
 
+    /**
+     * Constructs a new instance of the SelectSpecDtoMapper, initializing the required dependencies
+     * for mapping database query results into Data Transfer Objects (DTOs).
+     *
+     * @param dtoSelectSpec     The DTO selection specification, which provides the blueprint for mapping
+     *                          database rows to DTOs.
+     * @param typeConverter     The type converter responsible for converting database values into the
+     *                          appropriate type used in DTO fields.
+     * @param tableRegistry     The registry containing metadata about database tables, used for resolving
+     *                          table and column mappings.
+     * @param dtoConstructor    The constructor utility used to instantiate DTO instances during the
+     *                          mapping process.
+     * @param litebridgeContext The operational context that encapsulates system-wide configurations
+     *                          required for the mapping and object construction.
+     */
     public SelectSpecDtoMapper(final DtoSelectSpec dtoSelectSpec,
                                final TypeConverter typeConverter,
                                final TableRegistry tableRegistry,
@@ -55,6 +82,14 @@ public class SelectSpecDtoMapper {
         this.litebridgeContext = litebridgeContext;
     }
 
+    /**
+     * Converts a list of database rows into a list of DTO (Data Transfer Object) instances of the specified type.
+     *
+     * @param <DTO>    The generic type of the DTO to which the rows will be mapped.
+     * @param dtoClass The target DTO class to which the rows should be converted.
+     * @param rows     The list of database rows to be converted into DTOs.
+     * @return A list of DTOs of the specified type, created by mapping the given rows.
+     */
     public <DTO> List<DTO> toDtos(final Class<DTO> dtoClass, final List<Row> rows) {
         final List<DtoBlueprint> blueprints = createDtoBlueprints(rows);
 
@@ -469,7 +504,7 @@ public class SelectSpecDtoMapper {
         });
     }
 
-    public static @Nullable Object getDefaultValue(final Class<?> clazz) {
+    private static @Nullable Object getDefaultValue(final Class<?> clazz) {
         if (!clazz.isPrimitive()) {
             return null;
         }

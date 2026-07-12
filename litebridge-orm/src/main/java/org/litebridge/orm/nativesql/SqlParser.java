@@ -5,6 +5,17 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * A utility class for parsing SQL statements containing named parameters and converting them
+ * into SQL statements with positional placeholders.
+ * <p>
+ * This class uses regular expressions to identify named parameters in the SQL statement,
+ * replaces them with positional placeholders (e.g., "?"), and extracts a list of the original
+ * parameter names in the order they appear in the statement. The output is encapsulated
+ * in a {@code ParsedSql} object.
+ * <p>
+ * This is a final class with only static methods and is not intended to be instantiated.
+ */
 public final class SqlParser {
 
     private static final Pattern tokenPattern = Pattern.compile("('([^'\\\\]|\\\\.)*')|(\"([^\"\\\\]|\\\\.)*\")|(::)|(:([a-zA-Z0-9_]+))");

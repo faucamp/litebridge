@@ -18,6 +18,18 @@ import org.litebridge.tracking.ChangeTracker;
 
 import java.util.function.Supplier;
 
+/**
+ * The {@code FromClauseEngine} class represents the generation of SQL "FROM" clauses
+ * with support for both DTO-based and raw expression-based queries.
+ * <p>
+ * It acts as a builder for specifying the table and columns to be used in a query,
+ * while also managing aliasing, context, and relationships between entities.
+ * <p>
+ * This class depends on various components such as a database provider, table registry,
+ * change tracker, DTO constructor, and context supplier to construct SQL queries effectively.
+ * <p>
+ * This class is immutable and thread-safe. Instances of this class should not be modified after construction.
+ */
 public final class FromClauseEngine {
 
     /**

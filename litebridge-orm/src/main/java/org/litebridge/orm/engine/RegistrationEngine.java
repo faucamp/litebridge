@@ -25,6 +25,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
+/**
+ * The RegistrationEngine class handles the registration of data transfer objects (DTOs) and their
+ * corresponding table specifications to enable mapping between application entities and database tables.
+ * <p>
+ * This class supports various registration methods for defining table structures, relationships, and
+ * metadata for database operations.
+ */
 public class RegistrationEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationEngine.class);

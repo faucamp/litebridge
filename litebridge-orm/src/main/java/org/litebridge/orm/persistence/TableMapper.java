@@ -36,6 +36,15 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * A utility class responsible for mapping DTOs to database tables and managing
+ * the relationships between them.
+ * <p>
+ * The primary function of this class is to provide
+ * mappings for various table specifications, handle entity relationships like
+ * one-to-many and many-to-many mappings, and facilitate metadata management for
+ * database operations.
+ */
 public final class TableMapper {
 
     private final TransactionalDatabaseProvider databaseProvider;
@@ -52,6 +61,21 @@ public final class TableMapper {
         this.classFieldAccessorCache = changeTracker.classFieldAccessorCache();
     }
 
+    /**
+     * Maps a Data Transfer Object (DTO) class to a database table based on the provided specification.
+     * <p>
+     * Performs validation, ensures proper module accessibility, and generates metadata necessary
+     * for runtime table interactions.
+     *
+     * @param lookup        the {@link MethodHandles.Lookup} instance for reflection; must not be null
+     * @param dtoClass      the DTO class to be mapped to the database table; must not be null
+     * @param tableSpec     the specification of the database table, including field-column mappings; must not be null
+     * @param allDtoClasses a set of all DTO classes involved in the ORM mapping; must not be null
+     * @return a {@link MappedTable} instance representing the mapped table and its dependencies
+     * @throws NullPointerException     if any of the required arguments are null
+     * @throws IllegalArgumentException if the DTO class is invalid or the table specification is incomplete
+     * @throws IllegalStateException    if the table metadata cannot be read due to a database access issue
+     */
     public MappedTable mapToTable(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final TableSpec tableSpec, final Set<Class<?>> allDtoClasses) {
         // Up-front validation
         Objects.requireNonNull(lookup, "MethodHandles lookup is required for reflection");
@@ -301,6 +325,24 @@ public final class TableMapper {
                              List<FieldAccessor> manyToOneDependencies) {
     }
 
+    /**
+     * A database table and its corresponding relationships mapped within the ORM (Object-Relational Mapping) layer.
+     * <p>
+     * A MappedTable instance encapsulates the metadata of a database table and its many-to-one dependencies.
+     * It is used as part of the ORM infrastructure to facilitate operations like CRUD (Create, Read, Update, Delete),
+     * while ensuring database relationships and constraints are respected.
+     * <p>
+     * This class is typically constructed through the table mapping logic provided in the parent
+     * TableMapper class, which handles the specific mapping rules, validations, and metadata generation.
+     *
+     * @param ormTable              The metadata representation of the database table being mapped.
+     *                              This includes table-specific information such as the table name,
+     *                              columns, and primary keys.
+     * @param manyToOneDependencies A list of field accessors that represent many-to-one relationships
+     *                              associated with the table. These dependencies provide linkage
+     *                              between the current table and other tables it references.
+     *                              These relationships are typically mapped using foreign keys.
+     */
     public record MappedTable(OrmTable ormTable, List<FieldAccessor> manyToOneDependencies) {
     }
 }

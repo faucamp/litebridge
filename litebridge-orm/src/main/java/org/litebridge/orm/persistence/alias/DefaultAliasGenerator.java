@@ -12,6 +12,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * DefaultAliasGenerator is an implementation of {@link AliasGenerator} used for generating unique aliases
+ * for tables and columns in a database schema. It maintains internal mappings to ensure alias uniqueness
+ * across multiple calls.
+ * <p>
+ * This class uses an {@link AliasTransformer} to apply specific transformation rules to the base alias strings.
+ * The aliases are generated using a combination of base string transformations and integer suffixes for conflicts.
+ * <p>
+ * Thread-safety: This class is not thread-safe and should be used in single-threaded contexts unless externally synchronized.
+ */
 public final class DefaultAliasGenerator implements AliasGenerator {
 
     private final AliasTransformer aliasTransformer;

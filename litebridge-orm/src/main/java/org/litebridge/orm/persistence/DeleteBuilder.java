@@ -7,6 +7,12 @@ import org.litebridge.db.spi.update.Delete;
 
 import java.util.Objects;
 
+/**
+ * A builder class for constructing SQL DELETE statements.
+ * <p>
+ * This class provides an API to facilitate the creation of DELETE statements
+ * targeting a specific table with optional conditions.
+ */
 public final class DeleteBuilder extends AbstractStatementBuilder<Delete> {
 
     private @Nullable ConditionGroup conditions;

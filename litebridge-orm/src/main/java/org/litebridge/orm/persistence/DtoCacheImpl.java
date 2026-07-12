@@ -7,6 +7,9 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A concrete implementation of the {@link DtoCache} interface that uses a {@code Map}-based caching mechanism.
+ */
 public final class DtoCacheImpl implements DtoCache {
 
     private final Map<Class<?>, Map<List<Object>, Object>> cache = new IdentityHashMap<>();

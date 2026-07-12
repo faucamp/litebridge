@@ -22,16 +22,60 @@ import org.litebridge.db.spi.update.UpdateResult;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * A decorator class that wraps a {@link DatabaseProvider} to provide transactional support using
+ * a {@link TransactionManager}.
+ * <p>
+ * This class ensures that any database operation is executed
+ * with proper transaction management and cleanup logic when necessary.
+ *
+ * <h2>Responsibilities:</h2>
+ * <ul>
+ *   <li>Delegates all database operations to the underlying {@link DatabaseProvider}.</li>
+ *   <li>Ensures that transactional contexts are handled properly using the provided {@link TransactionManager}.</li>
+ *   <li>Cleans up the transaction context if it's no longer active and cleanup is required.</li>
+ * </ul>
+ *
+ * <h2>Thread Safety:</h2>
+ * This class is thread-safe if the provided {@link TransactionManager} and {@link DatabaseProvider}
+ * are thread-safe.
+ *
+ * <h2>Implementation Details:</h2>
+ * <ul>
+ *   <li>The class uses a {@code SqlOperationSupplier} functional interface to wrap database operations
+ * and ensure proper invocation of cleanup logic via the {@link #executeAndCleanupIfNeeded(SqlOperationSupplier)} method.</li>
+ *   <li>Transaction cleanup logic is triggered if no active transaction exists in the {@link TransactionManager},
+ * and cleanup is deemed necessary.</li>
+ * </ul>
+ *
+ * @see DatabaseProvider
+ * @see TransactionManager
+ */
 public final class TransactionalDatabaseProvider implements DatabaseProvider {
 
     private final TransactionManager transactionManager;
     private final DatabaseProvider databaseProvider;
 
+    /**
+     * Constructs a new TransactionalDatabaseProvider with the provided transaction manager
+     * and database provider.
+     * <p>
+     * This class is responsible for managing transactional interactions
+     * with the underlying database provider.
+     *
+     * @param transactionManager The transaction manager responsible for managing transaction lifecycles.
+     * @param databaseProvider   The database provider that executes database operations within transactions.
+     */
     public TransactionalDatabaseProvider(final TransactionManager transactionManager, final DatabaseProvider databaseProvider) {
         this.transactionManager = transactionManager;
         this.databaseProvider = databaseProvider;
     }
 
+    /**
+     * Returns the transaction manager responsible for managing transaction lifecycles.
+     *
+     * @return The transaction manager.
+     */
     public TransactionManager transactionManager() {
         return transactionManager;
     }

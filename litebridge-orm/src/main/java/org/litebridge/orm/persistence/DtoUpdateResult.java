@@ -4,6 +4,12 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.update.UpdateResult;
 
+/**
+ * Represents the result of an update operation on a Data Transfer Object (DTO).
+ * <p>
+ * This class encapsulates information about the updated DTO, the outcome
+ * of the update operation, and optionally, a parent result if nested updates occurred.
+ */
 public class DtoUpdateResult {
 
     private Object dto;

@@ -9,6 +9,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * A builder class for constructing SQL INSERT statements.
+ * <p>
+ * The {@code InsertBuilder} is responsible for creating instances of the {@link Insert} class
+ * by specifying the target table, column values to insert, and whether to return generated keys.
+ * <p>
+ * Instances of this class support method chaining for a fluent API style.
+ */
 final class InsertBuilder extends AbstractStatementBuilder<Insert> {
 
     private final List<DtoRowValue> rows = new ArrayList<>();

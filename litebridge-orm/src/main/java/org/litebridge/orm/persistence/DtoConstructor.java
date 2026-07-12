@@ -20,6 +20,23 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * A utility class responsible for constructing Data Transfer Object (DTO) instances
+ * using default or canonical constructors. This class leverages cached constructor data
+ * for performance optimization and ensures proper mapping of field values to parameters.
+ * It supports both Java POJOs and Java Records as DTOs.
+ * <p>
+ * The class heavily relies on a {@link TableRegistry} instance to retrieve metadata
+ * about the DTOs being constructed, and it computes or caches constructor and field
+ * accessor mappings as needed.
+ * <p>
+ * The caching mechanism ensures that constructors and their associated parameters
+ * are resolved only once for each DTO class, significantly improving performance
+ * for repeated instantiations.
+ * <p>
+ * Thread-safety is ensured via the use of {@link ConcurrentHashMap} for storing
+ * cached constructor and field accessor data.
+ */
 public final class DtoConstructor {
 
     static final Object NO_CONSTRUCTOR = new Object();
@@ -33,6 +50,18 @@ public final class DtoConstructor {
         this.tableRegistry = tableRegistry;
     }
 
+    /**
+     * Creates a new instance of the specified DTO class using the provided field accessor values
+     * to resolve constructor arguments.
+     *
+     * @param <DTO>               The type of the Data Transfer Object to instantiate.
+     * @param dtoClass            The class of the DTO to be instantiated.
+     * @param fieldAccessorValues A list of {@code FieldAccessorValue} objects, where each object
+     *                            specifies a field accessor and its corresponding value for the DTO.
+     * @return A {@code ConstructionResult<DTO>} containing the instantiated DTO object and a
+     * boolean indicating whether the default constructor was used.
+     * @throws IllegalArgumentException If no suitable constructor is found for the given DTO class.
+     */
     public <DTO> ConstructionResult<DTO> newInstance(final Class<DTO> dtoClass, final List<FieldAccessorValue> fieldAccessorValues) {
         cacheConstructors(dtoClass, null);
         return defaultConstructor(dtoClass)
@@ -220,12 +249,51 @@ public final class DtoConstructor {
         ormTable.getRelatedDtoClasses().forEach(relatedDtoClass -> cacheConstructors(relatedDtoClass, dtoClass));
     }
 
+    /**
+     * The result of constructing a Data Transfer Object (DTO).
+     * <p>
+     * The record encapsulates the instantiated DTO and a flag indicating
+     * whether the default constructor was used for the instantiation.
+     *
+     * @param <DTO>                  The type of the Data Transfer Object contained in the result.
+     * @param dto                    The instance of the constructed Data Transfer Object.
+     * @param defaultConstructorUsed A boolean flag indicating whether the default
+     *                               constructor was used to create the DTO. Returns {@code true} if the default
+     *                               constructor was used, otherwise {@code false}.
+     */
     public record ConstructionResult<DTO>(DTO dto, boolean defaultConstructorUsed) {
     }
 
+    /**
+     * A pair consisting of a {@link FieldAccessor} and its corresponding value.
+     * <p>
+     * This record is primarily used for associating a specific field of a Data Transfer Object (DTO)
+     * with its resolved value, often for the purpose of constructing DTOs or mapping data to their fields.
+     * <p>
+     * The {@code field} represents the metadata and manipulation methods for a given field or property
+     * in a DTO, while the {@code value} refers to the value assigned to that field.
+     *
+     * @param field The {@code FieldAccessor} instance representing the field to be accessed or manipulated.
+     *              Must not be {@code null} and provides field-level metadata and interaction capabilities.
+     * @param value The value associated with the specified field. Can be {@code null} if the field allows null values.
+     */
     public record FieldAccessorValue(FieldAccessor field, @Nullable Object value) {
     }
 
+    /**
+     * Dependency configuration for a Data Transfer Object (DTO).
+     * <p>
+     * This class encapsulates the relationships and dependencies between a field in a parent DTO
+     * and the DTO class to which it is related. It also includes the information needed to
+     * resolve the primary key values of the target DTO class.
+     *
+     * @param field            The {@code FieldAccessor} instance representing the field in the
+     *                         parent DTO that references the target DTO class.
+     * @param targetDtoClass   The {@code Class} object representing the target DTO type.
+     * @param targetPrimaryKey A {@code List} of {@code FieldAccessorValue} objects corresponding
+     *                         to the primary key fields of the target DTO class. Each entry
+     *                         specifies a field accessor and its corresponding value.
+     */
     public record DtoDependency(FieldAccessor field, Class<?> targetDtoClass,
                                 List<FieldAccessorValue> targetPrimaryKey) {
 
