@@ -22,6 +22,11 @@ import java.util.Objects;
  */
 public class LitebridgeTransactionManager extends DataSourceTransactionManager implements TransactionManager {
 
+    /**
+     * Creates a new {@code LitebridgeTransactionManager}.
+     *
+     * @param dataSource the DataSource to use
+     */
     public LitebridgeTransactionManager(DataSource dataSource) {
         super(dataSource);
     }

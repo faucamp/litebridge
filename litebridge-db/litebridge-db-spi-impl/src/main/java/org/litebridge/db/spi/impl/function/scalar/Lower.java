@@ -10,6 +10,12 @@ import org.litebridge.db.spi.impl.function.FunctionExpression;
  */
 public class Lower extends FunctionExpression {
 
+    /**
+     * Creates a new {@code LOWER} scalar function expression.
+     *
+     * @param target                    the target column expression
+     * @param columnIdentifierGenerator the column identifier generator
+     */
     public Lower(final ColumnExpression target, final ColumnIdentifierGenerator columnIdentifierGenerator) {
         super(target, columnIdentifierGenerator);
     }

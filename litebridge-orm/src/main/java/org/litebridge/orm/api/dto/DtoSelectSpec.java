@@ -16,12 +16,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Specification for a DTO select query.
+ */
 public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
 
     private final Class<?> dtoClass;
     private final OrmTable dtoTable;
     private final @Nullable Class<?> typeOverride;
 
+    /**
+     * Creates a new DtoSelectSpec.
+     *
+     * @param dtoClass          the DTO class
+     * @param dtoTable          the DTO table
+     * @param aliasGenerator    the alias generator
+     * @param litebridgeContext the litebridge context
+     * @param typeOverride      the type override
+     */
     public DtoSelectSpec(final Class<?> dtoClass,
                          final OrmTable dtoTable,
                          final AliasGenerator aliasGenerator,
@@ -34,6 +46,14 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
         this.typeOverride = typeOverride;
     }
 
+    /**
+     * Creates a new DtoSelectSpec without type override.
+     *
+     * @param dtoClass          the DTO class
+     * @param dtoTable          the DTO table
+     * @param aliasGenerator    the alias generator
+     * @param litebridgeContext the litebridge context
+     */
     public DtoSelectSpec(final Class<?> dtoClass,
                          final OrmTable dtoTable,
                          final AliasGenerator aliasGenerator,
@@ -41,6 +61,11 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
         this(dtoClass, dtoTable, aliasGenerator, litebridgeContext, null);
     }
 
+    /**
+     * Returns the DTO class.
+     *
+     * @return the DTO class
+     */
     public Class<?> dtoClass() {
         return dtoTable.dtoClass();
     }
@@ -50,14 +75,36 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
         return dtoTable;
     }
 
+    /**
+     * Returns the type override.
+     *
+     * @return the type override, or null if none
+     */
     public @Nullable Class<?> typeOverride() {
         return typeOverride;
     }
 
+    /**
+     * Creates a new join specification.
+     *
+     * @param dtoClass the DTO class to join
+     * @param ormTable the ORM table to join
+     * @param table    the database table to join
+     * @return the new join specification
+     */
     public DtoJoinSpec newJoinSpec(final Class<?> dtoClass, final OrmTable ormTable, final Table table) {
         return addNewJoinSpecBefore(null, dtoClass, ormTable, table);
     }
 
+    /**
+     * Creates a new join specification before another join specification.
+     *
+     * @param other    the join specification to insert before
+     * @param dtoClass the DTO class to join
+     * @param ormTable the ORM table to join
+     * @param table    the database table to join
+     * @return the new join specification
+     */
     public DtoJoinSpec newJoinSpecBefore(final DtoJoinSpec other, final Class<?> dtoClass, final OrmTable ormTable, final Table table) {
         return addNewJoinSpecBefore(other, dtoClass, ormTable, table);
     }
@@ -78,6 +125,12 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
         return joinSpec;
     }
 
+    /**
+     * Creates select field specifications for the given fields.
+     *
+     * @param fields the field names
+     * @return the list of expression specifications
+     */
     public List<ExpressionSpec> createSelectFieldSpecs(final String[] fields) {
         return Arrays.stream(fields)
                 .map(this::createSelectFieldSpec)
@@ -90,6 +143,12 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
         return new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn());
     }
 
+    /**
+     * Represents a pair of a field accessor and its corresponding database column.
+     *
+     * @param fieldAccessor the field accessor
+     * @param column        the database column
+     */
     public record FieldColumn(FieldAccessor fieldAccessor, Column column) {
     }
 }

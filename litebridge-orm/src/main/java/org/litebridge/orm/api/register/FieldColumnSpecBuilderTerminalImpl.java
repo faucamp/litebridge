@@ -35,11 +35,22 @@ public final class FieldColumnSpecBuilderTerminalImpl implements FieldColumnSpec
     private final FieldSpec fieldSpec;
     private final ColumnMapping columnMapping;
 
+    /**
+     * Constructs a new {@code FieldColumnSpecBuilderTerminalImpl}.
+     *
+     * @param fieldSpec     the field specification.
+     * @param columnMapping the column mapping.
+     */
     public FieldColumnSpecBuilderTerminalImpl(final FieldSpec fieldSpec, final ColumnMapping columnMapping) {
         this.fieldSpec = fieldSpec;
         this.columnMapping = columnMapping;
     }
 
+    /**
+     * Builds the field column specification.
+     *
+     * @return the built field column specification.
+     */
     public FieldColumnSpec build() {
         return new FieldColumnSpec(fieldSpec, columnMapping);
     }

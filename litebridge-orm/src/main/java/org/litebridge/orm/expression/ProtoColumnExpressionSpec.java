@@ -20,6 +20,13 @@ public record ProtoColumnExpressionSpec(Class<? extends ExpressionSpec> type,
                                         @Nullable Object @Nullable [] args)
         implements ProtoExpressionSpec {
 
+    /**
+     * Creates a new ProtoColumnExpressionSpec.
+     *
+     * @param type the type of expression to create
+     * @param column the column name
+     * @param alias the column alias
+     */
     public ProtoColumnExpressionSpec(final Class<? extends ExpressionSpec> type, final String column, final @Nullable String alias) {
         this(type, column, alias, null);
 
@@ -29,6 +36,12 @@ public record ProtoColumnExpressionSpec(Class<? extends ExpressionSpec> type,
         }
     }
 
+    /**
+     * Creates a new ProtoColumnExpressionSpec with no alias.
+     *
+     * @param type the type of expression to create
+     * @param column the column name
+     */
     public ProtoColumnExpressionSpec(final Class<? extends ExpressionSpec> type, final String column) {
         this(type, column, null);
     }

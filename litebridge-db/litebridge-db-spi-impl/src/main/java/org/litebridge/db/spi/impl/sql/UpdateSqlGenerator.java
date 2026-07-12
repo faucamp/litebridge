@@ -15,8 +15,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
+/**
+ * SQL generator for UPDATE statements.
+ */
 public class UpdateSqlGenerator extends AbstractSqlGenerator {
 
+    /**
+     * Creates a new {@code UpdateSqlGenerator}.
+     *
+     * @param typeConverter             the type converter
+     * @param columnIdentifierGenerator the column identifier generator
+     * @param ensureTableMetaData       a function to ensure table metadata
+     */
     public UpdateSqlGenerator(final TypeConverter typeConverter,
                               final ColumnIdentifierGenerator columnIdentifierGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
@@ -31,8 +41,9 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
      * It ensures proper formatting of the SQL query and converts values as needed using a type converter.
      * The resulting SQL query and its associated bind values are encapsulated in a {@link PreparedSql} object.
      *
-     * @param update the {@link Update} object containing table metadata, column-value pairs for the SET clause,
-     *               and conditions for the WHERE clause to specify target rows.
+     * @param update             the {@link Update} object containing table metadata, column-value pairs for the SET clause,
+     *                           and conditions for the WHERE clause to specify target rows.
+     * @param connectionProvider the connection provider
      * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values.
      */
     public PreparedSql prepareSql(final Update update, final ConnectionProvider connectionProvider) {
@@ -70,6 +81,13 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
         return new PreparedSql(sql.toString(), bindValues);
     }
 
+    /**
+     * Creates a SQL representation of a math operation.
+     *
+     * @param column        the column
+     * @param mathOperation the math operation
+     * @return the SQL representation of the math operation
+     */
     protected String createMathOperation(final ColumnMetaData column, final MathOperation mathOperation) {
         final Object convertedValue = typeConverter.convert(mathOperation.value(), column.getDataType());
         return "%s %s %s".formatted(columnIdentifierGenerator.quoteIdentifier(column.name()), mathOperation.operator().symbol(), convertedValue);

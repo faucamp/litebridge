@@ -14,6 +14,10 @@ public class Substring extends FunctionExpression {
      * Database index, 1-based.
      */
     protected final int start;
+
+    /**
+     * The number of characters to return.
+     */
     protected final @Nullable Integer length;
 
     /**

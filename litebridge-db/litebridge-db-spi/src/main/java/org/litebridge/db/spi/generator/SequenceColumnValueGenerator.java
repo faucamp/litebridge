@@ -11,6 +11,9 @@ import org.litebridge.db.spi.ColumnMetaData;
  */
 public abstract class SequenceColumnValueGenerator implements ColumnValueGenerator {
 
+    /**
+     * The name of the database sequence.
+     */
     protected final String sequence;
 
     /**

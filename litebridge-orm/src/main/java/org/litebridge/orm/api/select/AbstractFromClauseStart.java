@@ -6,7 +6,14 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 abstract sealed class AbstractFromClauseStart permits FromClauseStart, FromClauseStartTypeOverride{
 
+    /**
+     * The expression specifications to select.
+     */
     protected final ExpressionSpec[] expressionSpecs;
+
+    /**
+     * The from clause engine.
+     */
     protected final FromClauseEngine fromClauseEngine;
 
     protected AbstractFromClauseStart(FromClauseEngine fromClauseEngine) {
@@ -19,6 +26,12 @@ abstract sealed class AbstractFromClauseStart permits FromClauseStart, FromClaus
         this.fromClauseEngine = fromClauseEngine;
     }
 
+    /**
+     * Starts a FROM clause for the given SQL table.
+     *
+     * @param table the table name.
+     * @return the SQL from clause terminal.
+     */
     public SqlFromClauseTerminal from(final String table) {
         return fromClauseEngine.from(expressionSpecs, table);
     }

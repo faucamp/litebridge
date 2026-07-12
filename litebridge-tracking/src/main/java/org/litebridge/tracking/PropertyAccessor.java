@@ -27,6 +27,13 @@ public final class PropertyAccessor implements FieldAccessor {
     private final ConcurrentLazy<Class<?>[]> genericTypes;
     private final int hashCode;
 
+    /**
+     * Constructs a new {@code PropertyAccessor} for the specified field.
+     *
+     * @param field                   the field to access
+     * @param lookup                  the lookup to use for unreflecting the field
+     * @param classFieldAccessorCache the cache to use for generic type information
+     */
     public PropertyAccessor(final Field field, final MethodHandles.Lookup lookup, final ClassFieldAccessorCache classFieldAccessorCache) {
         try {
             this.getter = lookup.unreflectGetter(field);

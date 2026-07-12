@@ -31,6 +31,7 @@ public record PipedStatement(StatementBuilder<?> statementBuilder, Object dto, C
      * update results.
      *
      * @param statementBuilder The statement builder to be used for building the dependency statement.
+     * @param dto              The DTO associated with the statement.
      */
     public PipedStatement(final StatementBuilder<?> statementBuilder, final Object dto) {
         this(statementBuilder, dto, updateResult -> {

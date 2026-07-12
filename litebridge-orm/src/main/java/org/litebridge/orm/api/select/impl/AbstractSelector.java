@@ -109,6 +109,11 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
         return rows;
     }
 
+    /**
+     * Returns the select specification.
+     *
+     * @return the select specification
+     */
     protected SSP selectSpec() {
         return selectSpec;
     }

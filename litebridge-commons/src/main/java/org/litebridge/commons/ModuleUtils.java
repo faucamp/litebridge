@@ -1,14 +1,34 @@
 package org.litebridge.commons;
 
+/**
+ * Utility class for Java Module System (JPMS) related operations.
+ */
 public class ModuleUtils {
 
     private ModuleUtils() {
     }
 
+    /**
+     * Ensures that the specified class is accessible to the current module.
+     *
+     * @param <T>      the type of the class
+     * @param dtoClass the class to check for accessibility
+     * @return the specified class if it is accessible
+     * @throws IllegalArgumentException if the class is not accessible
+     */
     public static <T> Class<T> requireAccessible(final Class<T> dtoClass) {
         return requireAccessible(dtoClass, ModuleUtils.class.getModule());
     }
 
+    /**
+     * Ensures that the specified class is accessible to the target module.
+     *
+     * @param <T>          the type of the class
+     * @param dtoClass     the class to check for accessibility
+     * @param targetModule the module that needs access to the class
+     * @return the specified class if it is accessible
+     * @throws IllegalArgumentException if the class is not accessible
+     */
     public static <T> Class<T> requireAccessible(final Class<T> dtoClass, final Module targetModule) {
         final Module clientModule = dtoClass.getModule();
 

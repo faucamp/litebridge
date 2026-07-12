@@ -9,6 +9,12 @@ import org.litebridge.db.spi.impl.function.FunctionExpression;
  */
 public class Min extends FunctionExpression {
 
+    /**
+     * Creates a new {@code MIN} aggregate function.
+     *
+     * @param target                    the target column expression
+     * @param columnIdentifierGenerator the column identifier generator
+     */
     public Min(final ColumnExpression target, ColumnIdentifierGenerator columnIdentifierGenerator) {
         super(target, columnIdentifierGenerator);
     }

@@ -11,6 +11,11 @@ import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
  */
 public class PostgresSequenceColumnValueGenerator extends SequenceColumnValueGenerator {
 
+    /**
+     * Constructs a new {@code PostgresSequenceColumnValueGenerator} with the specified sequence name.
+     *
+     * @param sequence the name of the sequence to use
+     */
     public PostgresSequenceColumnValueGenerator(final String sequence) {
         super(sequence);
     }

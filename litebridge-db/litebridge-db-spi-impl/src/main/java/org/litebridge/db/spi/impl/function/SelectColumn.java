@@ -13,8 +13,17 @@ import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
  */
 public class SelectColumn extends ColumnExpressionImpl {
 
+    /**
+     * The column identifier generator used to create SQL column identifiers.
+     */
     protected final ColumnIdentifierGenerator columnIdentifierGenerator;
 
+    /**
+     * Creates a new {@code SelectColumn}.
+     *
+     * @param column                    the column
+     * @param columnIdentifierGenerator the column identifier generator
+     */
     public SelectColumn(final Column column, final ColumnIdentifierGenerator columnIdentifierGenerator) {
         super(column);
         this.columnIdentifierGenerator = columnIdentifierGenerator;

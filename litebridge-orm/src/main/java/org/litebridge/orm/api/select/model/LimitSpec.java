@@ -20,22 +20,47 @@ public final class LimitSpec {
     @Nullable
     private Integer offset;
 
+    /**
+     * Returns the limit as an {@link Optional}.
+     *
+     * @return an optional containing the limit.
+     */
     public Optional<Integer> getLimit() {
         return Optional.ofNullable(limit);
     }
 
+    /**
+     * Sets the limit for the query results.
+     *
+     * @param limit the limit to set.
+     */
     public void setLimit(final @Nullable Integer limit) {
         this.limit = limit;
     }
 
+    /**
+     * Returns the offset as an {@link Optional}.
+     *
+     * @return an optional containing the offset.
+     */
     public Optional<Integer> getOffset() {
         return Optional.ofNullable(offset);
     }
 
+    /**
+     * Sets the offset for the query results.
+     *
+     * @param offset the offset to set.
+     */
     public void setOffset(final @Nullable Integer offset) {
         this.offset = offset;
     }
 
+    /**
+     * Converts this specification to a database SPI {@link Limit} object.
+     *
+     * @return an optional containing the SPI limit object.
+     */
     public Optional<Limit> toLimit() {
         return Optional.of(new Limit(getLimit(), getOffset()));
     }

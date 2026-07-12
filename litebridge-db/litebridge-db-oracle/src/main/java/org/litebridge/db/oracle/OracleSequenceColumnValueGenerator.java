@@ -11,6 +11,11 @@ import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
  */
 public final class OracleSequenceColumnValueGenerator extends SequenceColumnValueGenerator {
 
+    /**
+     * Constructs a new {@code OracleSequenceColumnValueGenerator} with the specified sequence name.
+     *
+     * @param sequence the name of the sequence to use
+     */
     public OracleSequenceColumnValueGenerator(final String sequence) {
         super(sequence);
     }

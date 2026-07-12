@@ -23,18 +23,43 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
+/**
+ * SQL generator for SELECT statements.
+ */
 public class SelectSqlGenerator extends AbstractSqlGenerator {
 
+    /**
+     * Creates a new {@code SelectSqlGenerator}.
+     *
+     * @param typeConverter             the type converter
+     * @param columnIdentifierGenerator the column identifier generator
+     * @param ensureTableMetaData       a function to ensure table metadata
+     */
     public SelectSqlGenerator(final TypeConverter typeConverter,
                               final ColumnIdentifierGenerator columnIdentifierGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
         super(typeConverter, columnIdentifierGenerator, ensureTableMetaData);
     }
 
+    /**
+     * Prepares a SQL SELECT statement along with its bind values for execution.
+     *
+     * @param select             the select operation
+     * @param connectionProvider the connection provider
+     * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values
+     */
     public PreparedSql prepareSql(final Select select, final ConnectionProvider connectionProvider) {
         return prepareSql(select, connectionProvider, null);
     }
 
+    /**
+     * Prepares a SQL SELECT statement along with its bind values for execution.
+     *
+     * @param select             the select operation
+     * @param connectionProvider the connection provider
+     * @param parentOperation    the parent operation, if any
+     * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values
+     */
     public PreparedSql prepareSql(final Select select, final ConnectionProvider connectionProvider, final @Nullable Operation parentOperation) {
         final List<BindValue> bindValues = new ArrayList<>();
         final StringBuilder sql = new StringBuilder("SELECT ");
@@ -133,8 +158,10 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
      * and any associated conditions for the join operation. Conditional logic is applied
      * to determine the join type (e.g., ON or USING) and format the resulting SQL string.
      *
-     * @param join the {@link Join} object containing the target table information and the list
-     *             of conditions defining the join relationship
+     * @param join               the {@link Join} object containing the target table information and the list
+     *                           of conditions defining the join relationship
+     * @param operation          the select operation
+     * @param connectionProvider the connection provider
      * @return Prepared SQL join clause
      */
     protected PreparedSql createJoin(final Join join, final Select operation, final ConnectionProvider connectionProvider) {
@@ -157,6 +184,12 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         return new PreparedSql(sb.toString(), bindValues);
     }
 
+    /**
+     * Appends a LIMIT clause to the SQL.
+     *
+     * @param limit the limit
+     * @param sql   the SQL string builder
+     */
     protected void appendLimitClause(final Limit limit, final StringBuilder sql) {
         limit.limit().ifPresent(limitVal -> sql.append(" LIMIT ").append(limitVal));
         limit.offset().ifPresent(offset -> sql.append(" OFFSET ").append(offset));

@@ -19,6 +19,11 @@ public final class ReadOnlyClause {
 
     private final TransactionContextTerminal transactionContextTerminal;
 
+    /**
+     * Creates a new ReadOnlyClause.
+     *
+     * @param transactionContextTerminal the terminal context for transaction operations
+     */
     public ReadOnlyClause(final TransactionContextTerminal transactionContextTerminal) {
         this.transactionContextTerminal = transactionContextTerminal;
         this.transactionContextTerminal.setReadOnly();
@@ -31,6 +36,7 @@ public final class ReadOnlyClause {
      * for transactions, affecting how changes made by one transaction
      * are visible to other transactions.
      *
+     * @param level the isolation level to set
      * @return Available clauses for transaction configuration chaining
      */
     public TransactionContextTerminal isolation(Isolation level) {

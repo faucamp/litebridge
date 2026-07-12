@@ -40,6 +40,11 @@ public final class ManagedConnection implements Connection {
     private static final Logger LOGGER = LoggerFactory.getLogger(ManagedConnection.class);
     private final Connection connection;
 
+    /**
+     * Constructs a new {@code ManagedConnection} wrapping the specified connection.
+     *
+     * @param connection the underlying JDBC connection to manage
+     */
     public ManagedConnection(final Connection connection) {
         this.connection = connection;
     }

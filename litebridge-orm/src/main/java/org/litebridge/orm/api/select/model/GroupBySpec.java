@@ -12,6 +12,11 @@ import java.util.List;
  */
 public record GroupBySpec(List<ExpressionSpec> expressions) {
 
+    /**
+     * Constructs a new {@code GroupBySpec} from an array of expression specifications.
+     *
+     * @param expressions the expressions to group by.
+     */
     public GroupBySpec(ExpressionSpec[] expressions) {
         this(Arrays.stream(expressions).toList());
     }

@@ -7,12 +7,22 @@ import org.litebridge.orm.api.update.UpdateTerminal;
 import org.litebridge.orm.api.update.model.UpdateSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * Implementation of the terminal interface for DTO update where condition clauses.
+ *
+ * @param <DTO> the DTO type
+ */
 public final class DtoUpdateWhereConditionClauseTerminalImpl<DTO>
         implements DtoUpdateWhereConditionClauseTerminal<DTO>,
         UpdateTerminal {
 
     private final DtoUpdater<DTO> delegate;
 
+    /**
+     * Creates a new DtoUpdateWhereConditionClauseTerminalImpl.
+     *
+     * @param delegate the DTO updater to delegate to
+     */
     public DtoUpdateWhereConditionClauseTerminalImpl(final DtoUpdater<DTO> delegate) {
         this.delegate = delegate;
     }

@@ -43,6 +43,15 @@ public class RegistrationEngine {
     private final MethodHandles.Lookup lookup;
     private @Nullable List<FieldAccessor> pendingManyToOneDependencies;
 
+    /**
+     * Creates a new RegistrationEngine.
+     *
+     * @param databaseProvider the database provider to use
+     * @param tableRegistry the registry for DTO-to-table mappings
+     * @param tableMapper the mapper for converting DTO definitions to table definitions
+     * @param changeTracker the tracker for monitoring DTO changes
+     * @param lookup the lookup for accessing DTO fields
+     */
     public RegistrationEngine(final TransactionalDatabaseProvider databaseProvider, final TableRegistry tableRegistry, final TableMapper tableMapper, final ChangeTracker changeTracker, final MethodHandles.Lookup lookup) {
         this.databaseProvider = databaseProvider;
         this.tableRegistry = tableRegistry;

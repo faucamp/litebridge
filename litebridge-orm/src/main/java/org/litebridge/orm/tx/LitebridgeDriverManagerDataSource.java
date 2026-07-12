@@ -24,6 +24,13 @@ public class LitebridgeDriverManagerDataSource implements DataSource {
     private final String username;
     private final String password;
 
+    /**
+     * Constructs a new {@code LitebridgeDriverManagerDataSource} with the given URL, username, and password.
+     *
+     * @param url      the database URL.
+     * @param username the database username.
+     * @param password the database password.
+     */
     public LitebridgeDriverManagerDataSource(final String url, final String username, final String password) {
         this.url = url;
         this.username = username;

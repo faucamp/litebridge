@@ -10,6 +10,12 @@ import org.litebridge.db.spi.impl.function.FunctionExpression;
  */
 public class Upper extends FunctionExpression {
 
+    /**
+     * Creates a new {@code UPPER} function.
+     *
+     * @param target                    the target column expression
+     * @param columnIdentifierGenerator the column identifier generator
+     */
     public Upper(final ColumnExpression target, final ColumnIdentifierGenerator columnIdentifierGenerator) {
         super(target, columnIdentifierGenerator);
     }

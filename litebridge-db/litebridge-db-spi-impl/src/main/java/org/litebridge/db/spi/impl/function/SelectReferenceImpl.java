@@ -10,12 +10,15 @@ import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 
 import java.util.StringJoiner;
 
+/**
+ * Implementation of {@link SelectReference}.
+ */
 public class SelectReferenceImpl extends SelectReference {
 
     private final ColumnIdentifierGenerator columnIdentifierGenerator;
 
     /**
-     * Constructor.
+     * Creates a new {@code SelectReferenceImpl}.
      *
      * @param column                    The target selected column to reference.
      * @param columnIdentifierGenerator The column identifier generator to use.

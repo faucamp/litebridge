@@ -59,6 +59,12 @@ public class LiteralExpression implements SelectExpression {
         }
     }
 
+    /**
+     * Generates a SQL fragment with a placeholder for a bind value.
+     *
+     * @param operation the database operation context
+     * @return the SQL fragment with bind placeholders
+     */
     public String toBindValueSql(final Operation operation) {
         if (value == null) {
             return "?";

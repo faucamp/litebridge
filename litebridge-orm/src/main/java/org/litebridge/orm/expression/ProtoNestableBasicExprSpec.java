@@ -20,6 +20,13 @@ public record ProtoNestableBasicExprSpec(Class<? extends ExpressionSpec> type,
                                          @Nullable String alias)
         implements ProtoNestableExpressionSpec {
 
+    /**
+     * Creates a new ProtoNestableBasicExprSpec.
+     *
+     * @param type the type of expression to create
+     * @param target the target expression specification
+     * @param alias the column alias
+     */
     public ProtoNestableBasicExprSpec(final Class<? extends ExpressionSpec> type, final ProtoExpressionSpec target, final @Nullable String alias) {
         // Validate that a supported expression type is specified
         if (!ProtoExpressionResolver.isSupported(type)) {

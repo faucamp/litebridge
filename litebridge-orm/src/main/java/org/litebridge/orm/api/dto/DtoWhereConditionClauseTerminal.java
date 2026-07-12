@@ -13,6 +13,10 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
+/**
+ * DTO where condition clause terminal.
+ * @param <DTO> the DTO type.
+ */
 public final class DtoWhereConditionClauseTerminal<DTO>
         extends AbstractWhereClauseTerminal<DTO,
         DtoGroupByClauseTerminal<DTO>,
@@ -33,6 +37,11 @@ public final class DtoWhereConditionClauseTerminal<DTO>
 
     private final OrmTable ormTable;
 
+    /**
+     * Constructs a new {@code DtoWhereConditionClauseTerminal}.
+     *
+     * @param delegate the selector delegate.
+     */
     public DtoWhereConditionClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);
         ormTable = delegate.table();

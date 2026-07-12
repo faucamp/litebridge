@@ -12,6 +12,13 @@ import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.Select;
 
+/**
+ * Oracle-specific implementation of {@link ColumnIdentifierGenerator}.
+ * <p>
+ * This class handles Oracle-specific column identifier generation rules,
+ * particularly dealing with {@code JOIN USING} clauses where Oracle prohibits
+ * table qualifiers for columns listed in the {@code USING} clause.
+ */
 public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGenerator {
 
     @Override

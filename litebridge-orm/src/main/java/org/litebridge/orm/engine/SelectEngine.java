@@ -25,6 +25,11 @@ public class SelectEngine implements SelectApi {
 
     private final FromClauseEngine fromClauseEngine;
 
+    /**
+     * Creates a new SelectEngine.
+     *
+     * @param fromClauseEngine the engine for building FROM clauses
+     */
     public SelectEngine(final FromClauseEngine fromClauseEngine) {
         this.fromClauseEngine = fromClauseEngine;
     }

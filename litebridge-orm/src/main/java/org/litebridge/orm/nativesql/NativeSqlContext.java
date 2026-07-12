@@ -23,6 +23,11 @@ public final class NativeSqlContext {
 
     private final TransactionalDatabaseProvider databaseProvider;
 
+    /**
+     * Constructs a new {@code NativeSqlContext} instance.
+     *
+     * @param databaseProvider the database provider to use for executing SQL operations
+     */
     public NativeSqlContext(final TransactionalDatabaseProvider databaseProvider) {
         this.databaseProvider = databaseProvider;
     }

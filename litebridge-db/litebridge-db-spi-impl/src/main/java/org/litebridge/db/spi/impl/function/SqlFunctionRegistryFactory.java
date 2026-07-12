@@ -30,7 +30,14 @@ import org.litebridge.db.spi.query.Select;
  */
 public class SqlFunctionRegistryFactory {
 
+    /**
+     * The column identifier generator.
+     */
     protected final ColumnIdentifierGenerator columnIdentifierGenerator;
+
+    /**
+     * The select SQL generator.
+     */
     protected final SelectSqlGenerator selectSqlGenerator;
 
     /**
@@ -46,7 +53,7 @@ public class SqlFunctionRegistryFactory {
     }
 
     /**
-     * Creates the SQL function registry for this database provider.
+     * Creates a SQL function registry for this database provider.
      *
      * @return SQL function registry for the database provider
      */
@@ -86,14 +93,32 @@ public class SqlFunctionRegistryFactory {
         return new SelectColumn(column, columnIdentifierGenerator);
     }
 
+    /**
+     * Creates a subselect expression.
+     *
+     * @param subselect the select operation
+     * @return the subselect expression
+     */
     protected SubselectExpression createSubselect(final Select subselect) {
         return new Subselect(subselect, selectSqlGenerator);
     }
 
+    /**
+     * Creates a literal expression.
+     *
+     * @param value the literal value
+     * @return the literal expression
+     */
     protected LiteralExpression createLiteral(final @Nullable Object value) {
         return new LiteralExpression(value);
     }
 
+    /**
+     * Creates a select reference expression.
+     *
+     * @param column the column
+     * @return the select reference expression
+     */
     protected SelectReference createSelectReference(Column column) {
         return new SelectReferenceImpl(column, columnIdentifierGenerator);
     }
@@ -198,6 +223,11 @@ public class SqlFunctionRegistryFactory {
         return new Abs(target, columnIdentifierGenerator);
     }
 
+    /**
+     * Creates a CURRENT_TIMESTAMP-implementing expression.
+     *
+     * @return A CURRENT_TIMESTAMP-implementing expression
+     */
     protected SelectExpression createCurrentTimestamp() {
         return new CurrentTimestamp();
     }

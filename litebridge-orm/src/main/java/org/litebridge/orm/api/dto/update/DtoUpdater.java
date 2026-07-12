@@ -18,8 +18,22 @@ import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 
+/**
+ * Updater for DTOs.
+ *
+ * @param <DTO> the DTO type
+ */
 public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implements DtoUpdateStep<DTO> {
 
+    /**
+     * Creates a new DtoUpdater.
+     *
+     * @param dtoClass                 the DTO class
+     * @param dtoTable                 the DTO table
+     * @param databaseProvider         the database provider
+     * @param selectExpressionMapper the select expression mapper
+     * @param litebridgeContext        the litebridge context
+     */
     public DtoUpdater(final Class<DTO> dtoClass,
                       final OrmTable dtoTable,
                       final TransactionalDatabaseProvider databaseProvider,

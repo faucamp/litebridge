@@ -1,5 +1,12 @@
 package org.litebridge.orm.api.select;
 
+/**
+ * A terminal step for a {@code HAVING} clause in a SQL query.
+ *
+ * @param <DTO>  The DTO type.
+ * @param <OBC>  The OrderByClause type.
+ * @param <OBCC> The OrderByClauseChain type.
+ */
 public interface HavingClauseTerminal<DTO,
         OBC extends OrderByClause<DTO, OBC, OBCC>,
         OBCC extends OrderByClauseChain<DTO, OBC, OBCC>>

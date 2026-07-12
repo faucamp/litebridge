@@ -10,6 +10,11 @@ import org.springframework.boot.context.properties.bind.Name;
  */
 @ConfigurationProperties(prefix = "litebridge")
 public class LitebridgeProperties {
+    /**
+     * Constructs a new {@code LitebridgeProperties} instance.
+     */
+    public LitebridgeProperties() {
+    }
 
     /**
      * Database provider configuration.
@@ -52,6 +57,8 @@ public class LitebridgeProperties {
      * It can be overriden on a per-query basis.
      * <p>
      * Default: {@link RelatedDtoStrategy#NULL_IF_NO_JOIN}
+     *
+     * @param relatedDtoStrategy the default related DTO strategy
      */
     public void setRelatedDtoStrategy(final RelatedDtoStrategy relatedDtoStrategy) {
         this.relatedDtoStrategy = relatedDtoStrategy;
@@ -97,6 +104,11 @@ public class LitebridgeProperties {
      * Database provider configuration properties.
      */
     public static class DatabaseProviderProperties {
+        /**
+         * Constructs a new {@code DatabaseProviderProperties} instance.
+         */
+        public DatabaseProviderProperties() {
+        }
 
         /**
          * Fully qualified class name of the database provider implementation to use.
@@ -122,6 +134,8 @@ public class LitebridgeProperties {
 
         /**
          * Set the fully qualified class name of the database provider implementation to use.
+         *
+         * @param providerClass fully qualified class name of the database provider
          */
         public void setProviderClass(final @Nullable String providerClass) {
             this.providerClass = providerClass;
@@ -131,6 +145,8 @@ public class LitebridgeProperties {
          * Alias for {@link #setProviderClass(String)}, for compatibility with Spring Boot 3 due to lack of support for {@code @Name}.
          * <p>
          * Set the fully qualified class name of the database provider implementation to use.
+         *
+         * @param providerClass fully qualified class name of the database provider
          */
         public void setClass(final @Nullable String providerClass) {
             this.providerClass = providerClass;
@@ -140,6 +156,8 @@ public class LitebridgeProperties {
          * Get the base package to scan for {@link org.litebridge.db.spi.DatabaseProvider} implementations.
          * <p>
          * Default: "org.litebridge.db"
+         *
+         * @return the base package to scan
          */
         public String getScanBasePackage() {
             return scanBasePackage;

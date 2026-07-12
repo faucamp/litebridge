@@ -13,6 +13,12 @@ import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
  */
 public final class NumericQueryField extends QueryField {
 
+    /**
+     * Creates a new {@link NumericQueryField} instance.
+     *
+     * @param dtoClass  DTO class the field belongs to.
+     * @param fieldName Target field name.
+     */
     public NumericQueryField(final Class<?> dtoClass, final String fieldName) {
         super(dtoClass, fieldName);
     }

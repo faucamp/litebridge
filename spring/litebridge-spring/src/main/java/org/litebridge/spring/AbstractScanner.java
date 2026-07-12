@@ -5,8 +5,17 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import java.util.Arrays;
 import java.util.stream.Stream;
 
+/**
+ * Abstract base class for classpath scanners.
+ */
 abstract sealed class AbstractScanner permits LitebridgeEntityScanner {
 
+    /**
+     * Finds classes in the given base packages.
+     *
+     * @param packageNames the base packages to scan
+     * @return a stream of found classes
+     */
     protected Stream<Class<?>> findClasses(final String... packageNames) {
         return Arrays.stream(packageNames)
                 .flatMap(this::findClasses);
@@ -24,5 +33,10 @@ abstract sealed class AbstractScanner permits LitebridgeEntityScanner {
                 });
     }
 
+    /**
+     * Creates the scanning provider.
+     *
+     * @return the scanning provider
+     */
     protected abstract ClassPathScanningCandidateComponentProvider createScanningProvider();
 }

@@ -21,6 +21,12 @@ public final class RegistrationContext {
     private final DatabaseProvider databaseProvider;
     private @Nullable List<Class<?>> dtoInterfaces;
 
+    /**
+     * Creates a new RegistrationContext.
+     *
+     * @param dtoClass the DTO class to register
+     * @param databaseProvider the database provider to use
+     */
     public RegistrationContext(final Class<?> dtoClass, final DatabaseProvider databaseProvider) {
         this.dtoClass = dtoClass;
         this.databaseProvider = databaseProvider;

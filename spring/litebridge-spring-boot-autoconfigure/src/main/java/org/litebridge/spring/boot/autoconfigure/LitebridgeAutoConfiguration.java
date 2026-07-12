@@ -61,6 +61,7 @@ public class LitebridgeAutoConfiguration {
      *
      * @param properties         Litebridge Spring Boot autoconfiguration properties
      * @param transactionManager Litebridge Spring transaction manager
+     * @param configurer         Optional Litebridge configurer
      * @return Litebridge instance
      */
     @Bean(name = "litebridge")

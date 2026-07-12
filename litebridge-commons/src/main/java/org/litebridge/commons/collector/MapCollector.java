@@ -20,6 +20,16 @@ public final class MapCollector {
     private MapCollector() {
     }
 
+    /**
+     * Returns a {@link Collector} that accumulates elements into a {@link LinkedHashMap}.
+     *
+     * @param keyMapper   a mapping function to produce keys.
+     * @param valueMapper a mapping function to produce values.
+     * @param <T>         the type of the input elements.
+     * @param <K>         the output type of the key mapping function.
+     * @param <U>         the output type of the value mapping function.
+     * @return a {@code Collector} which collects elements into a {@code LinkedHashMap} in insertion order.
+     */
     public static <T, K, U>
     Collector<T, ?, LinkedHashMap<K, U>> toLinkedHashMap(Function<? super T, ? extends K> keyMapper,
                                                          Function<? super T, ? extends U> valueMapper) {

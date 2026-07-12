@@ -29,6 +29,13 @@ public class EntityDtoMapper<DTO> {
     private final Map<Class<?>, Map<FieldAccessor, FieldAccessor>> entityToDtoFieldMap;
     private final ClassFieldAccessorCache classFieldAccessorCache;
 
+    /**
+     * Constructs a new {@code EntityDtoMapper}.
+     *
+     * @param dtoClass                the DTO class.
+     * @param dtoEntityMappings       the DTO entity mappings.
+     * @param classFieldAccessorCache the field accessor cache.
+     */
     public EntityDtoMapper(final Class<DTO> dtoClass, final List<DtoEntityMapping> dtoEntityMappings, final ClassFieldAccessorCache classFieldAccessorCache) {
         this.dtoClass = dtoClass;
         this.classFieldAccessorCache = classFieldAccessorCache;
@@ -52,10 +59,20 @@ public class EntityDtoMapper<DTO> {
         this.entityToDtoFieldMap = Collections.unmodifiableMap(entityToDtoFieldMap);
     }
 
+    /**
+     * Returns the DTO class.
+     *
+     * @return the DTO class.
+     */
     public Class<DTO> dtoClass() {
         return dtoClass;
     }
 
+    /**
+     * Returns the entity classes.
+     *
+     * @return the entity classes.
+     */
     public List<Class<?>> entityClasses() {
         return entityClasses;
     }

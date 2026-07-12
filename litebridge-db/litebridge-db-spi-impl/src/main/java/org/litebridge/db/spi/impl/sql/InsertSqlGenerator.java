@@ -16,8 +16,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
+/**
+ * SQL generator for INSERT statements.
+ */
 public class InsertSqlGenerator extends AbstractSqlGenerator {
 
+    /**
+     * Creates a new {@code InsertSqlGenerator}.
+     *
+     * @param typeConverter             the type converter
+     * @param columnIdentifierGenerator the column identifier generator
+     * @param ensureTableMetaData       a function to ensure table metadata
+     */
     public InsertSqlGenerator(final TypeConverter typeConverter,
                               final ColumnIdentifierGenerator columnIdentifierGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
@@ -31,7 +41,8 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
      * which contains the table's metadata, expressions, and rows to be inserted.
      * The bind values are derived from the rows and included in the returned {@link  PreparedSql}.
      *
-     * @param insert the {@link Insert} object containing the table metadata, expressions, and rows for the SQL INSERT operation
+     * @param insert             the {@link Insert} object containing the table metadata, expressions, and rows for the SQL INSERT operation
+     * @param connectionProvider the connection provider
      * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values
      */
     public PreparedSql prepareSql(final Insert insert, final ConnectionProvider connectionProvider) {
@@ -67,7 +78,8 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
      * value specifiers and bind values for the prepared row. Handles nullable expressions,
      * auto-increment expressions, and sequence-based value generation as necessary.
      *
-     * @param rowValue the row value object containing the column definitions and their values
+     * @param rowValue           the row value object containing the column definitions and their values
+     * @param connectionProvider the connection provider
      * @return a PreparedRow instance containing processed value specifiers and bind values
      * @throws IllegalArgumentException if a non-nullable column without an auto-increment or sequence value is attempted to be set to NULL
      */

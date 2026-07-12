@@ -17,6 +17,9 @@ package org.litebridge.db.spi.math;
  */
 public record MathOperation(Operator operator, Object value) {
 
+    /**
+     * Predefined mathematical operators for use in SQL operations.
+     */
     public enum Operator {
         /**
          * Addition operator for mathematical calculations.

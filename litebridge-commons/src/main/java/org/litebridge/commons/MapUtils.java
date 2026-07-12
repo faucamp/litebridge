@@ -4,6 +4,9 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 
+/**
+ * Utility class for working with {@link Map} instances.
+ */
 public final class MapUtils {
 
     private MapUtils() {

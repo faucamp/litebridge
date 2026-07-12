@@ -76,14 +76,29 @@ public final class TableMetaData {
         }
     }
 
+    /**
+     * Returns the catalog name of the table.
+     *
+     * @return the catalog name, or {@code null} if not specified
+     */
     public @Nullable String catalog() {
         return catalog;
     }
 
+    /**
+     * Returns the schema name of the table.
+     *
+     * @return the schema name, or {@code null} if not specified
+     */
     public @Nullable String schema() {
         return schema;
     }
 
+    /**
+     * Returns the name of the table.
+     *
+     * @return the table name
+     */
     public String name() {
         return name;
     }
@@ -143,6 +158,11 @@ public final class TableMetaData {
         return columnMap.containsKey(columnName);
     }
 
+    /**
+     * Returns a {@link Table} object representing this table.
+     *
+     * @return a {@code Table} instance
+     */
     public Table toTable() {
         return new Table(catalog, schema, name);
     }

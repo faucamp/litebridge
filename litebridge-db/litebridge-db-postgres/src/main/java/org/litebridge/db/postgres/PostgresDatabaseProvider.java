@@ -22,6 +22,9 @@ public final class PostgresDatabaseProvider extends AbstractDatabaseProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresDatabaseProvider.class);
 
+    /**
+     * Constructs a new {@code PostgresDatabaseProvider} using a default type converter.
+     */
     public PostgresDatabaseProvider() {
         super(new DefaultTypeConverter());
     }

@@ -11,6 +11,9 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
 
+/**
+ * A converter for {@link LocalDate} objects.
+ */
 public class LocalDateConverter implements Converter<LocalDate> {
 
     @Override

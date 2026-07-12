@@ -55,6 +55,7 @@ public record ProtoNestableTOExpr<T>(Class<T> typeOverride,
      * @param type         The type of expression to create.
      * @param column       The target column name to select.
      * @param alias        The column alias to use, or {@code null} if not specified.
+     * @param args         Extra expression-specific arguments.
      */
     public ProtoNestableTOExpr(final Class<T> typeOverride, final Class<? extends ExpressionSpec> type, final String column, final @Nullable String alias, final @Nullable Object @Nullable [] args) {
         this(typeOverride, type, new ProtoColumnExpressionSpec(SelectColumnSpec.class, column), alias, args);

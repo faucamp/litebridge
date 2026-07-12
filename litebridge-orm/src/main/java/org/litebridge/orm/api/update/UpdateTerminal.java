@@ -8,8 +8,17 @@ import org.litebridge.orm.api.update.model.UpdateSpec;
 
 public sealed interface UpdateTerminal extends UpdateQuery permits DtoUpdateWhereConditionClauseTerminalImpl, SqlUpdateWhereConditionClauseTerminalImpl, AbstractUpdater {
 
+    /**
+     * Returns the update specification.
+     *
+     * @return the update specification.
+     */
     UpdateSpec updateSpec();
 
+    /**
+     * Executes the update.
+     * @return the update result.
+     */
     UpdateResult execute();
 
 }

@@ -37,6 +37,12 @@ public final class Row implements Result {
         return this;
     }
 
+    /**
+     * Updates the value of an existing column in the row.
+     *
+     * @param column the column to update
+     * @param value  the new value for the column
+     */
     public void updateColumn(final Column column, final @Nullable Object value) {
         columns.put(column, value);
     }
@@ -52,6 +58,11 @@ public final class Row implements Result {
                 .map(RowColumn::new);
     }
 
+    /**
+     * Returns a list of all columns in the current row.
+     *
+     * @return a list of {@code RowColumn} objects
+     */
     public List<RowColumn> columns() {
         return columnList.orThrow();
     }
@@ -78,6 +89,12 @@ public final class Row implements Result {
                 .findFirst();
     }
 
+    /**
+     * Retrieves a column from the row by its index.
+     *
+     * @param index the index of the column to retrieve
+     * @return the {@code RowColumn} at the specified index
+     */
     public RowColumn column(final int index) {
         return columns().get(index);
     }
@@ -96,6 +113,12 @@ public final class Row implements Result {
                 .findFirst();
     }
 
+    /**
+     * Retrieves a column from the row by its {@code Column} metadata.
+     *
+     * @param column the column metadata to match
+     * @return an {@code Optional} containing the {@code RowColumn} if found, or empty otherwise
+     */
     @SuppressWarnings("ConstantConditions")
     public Optional<RowColumn> column(final Column column) {
         if (column.alias() != null) {

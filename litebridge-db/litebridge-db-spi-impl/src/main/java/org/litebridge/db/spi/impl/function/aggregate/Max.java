@@ -9,7 +9,13 @@ import org.litebridge.db.spi.impl.function.FunctionExpression;
  */
 public class Max extends FunctionExpression {
 
-    public Max(final ColumnExpression target, ColumnIdentifierGenerator columnIdentifierGenerator) {
+    /**
+     * Creates a new {@code Max} function.
+     *
+     * @param target                    the target column expression
+     * @param columnIdentifierGenerator the column identifier generator
+     */
+    public Max(final ColumnExpression target, final ColumnIdentifierGenerator columnIdentifierGenerator) {
         super(target, columnIdentifierGenerator);
     }
 

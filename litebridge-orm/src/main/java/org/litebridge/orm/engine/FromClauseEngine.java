@@ -44,6 +44,15 @@ public final class FromClauseEngine {
     private final Supplier<LitebridgeContext> contextSupplier;
     private final AliasGenerator aliasGenerator;
 
+    /**
+     * Constructs a new {@code FromClauseEngine}.
+     *
+     * @param databaseProvider the database provider.
+     * @param tableRegistry    the table registry.
+     * @param changeTracker    the change tracker.
+     * @param dtoConstructor   the DTO constructor.
+     * @param contextSupplier  the context supplier.
+     */
     public FromClauseEngine(final TransactionalDatabaseProvider databaseProvider,
                             final TableRegistry tableRegistry,
                             final ChangeTracker changeTracker,
@@ -57,11 +66,30 @@ public final class FromClauseEngine {
         this.aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
     }
 
+    /**
+     * Constructs a DTO-based FROM clause.
+     *
+     * @param expressionSpecs    the expression specifications.
+     * @param dtoClass           the DTO class.
+     * @param relatedDtoStrategy the related DTO strategy.
+     * @param <DTO>              the DTO type.
+     * @return the DTO from clause terminal.
+     */
     public <DTO> DtoFromClauseTerminal<DTO> from(final ExpressionSpec[] expressionSpecs, final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
         final DtoSelector<DTO> dtoSelector = createDtoSelectorForType(dtoClass, dtoClass, relatedDtoStrategy);
         return select(expressionSpecs, dtoSelector);
     }
 
+    /**
+     * Constructs a DTO-based FROM clause with a type override.
+     *
+     * @param expressionSpecs    the expression specifications.
+     * @param dtoClass           the DTO class.
+     * @param typeOverrideClass  the type override class.
+     * @param relatedDtoStrategy the related DTO strategy.
+     * @param <TypeOverride>      the type override.
+     * @return the DTO from clause terminal.
+     */
     public <TypeOverride> DtoFromClauseTerminal<TypeOverride> from(final ExpressionSpec[] expressionSpecs, final Class<?> dtoClass, final Class<TypeOverride> typeOverrideClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
         final DtoSelector<TypeOverride> dtoSelector = createDtoSelectorForType(typeOverrideClass, dtoClass, relatedDtoStrategy);
 
@@ -93,6 +121,14 @@ public final class FromClauseEngine {
         return litebridgeContext;
     }
 
+    /**
+     * Constructs a DTO-based FROM clause using a context DTO class.
+     *
+     * @param dtoClass        the DTO class.
+     * @param contextDtoClass the context DTO class.
+     * @param <DTO>           the DTO type.
+     * @return the DTO from clause terminal.
+     */
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
         final OrmTable table = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
@@ -100,6 +136,13 @@ public final class FromClauseEngine {
                 .select();
     }
 
+    /**
+     * Constructs an SQL-based FROM clause.
+     *
+     * @param expressionSpecs the expression specifications.
+     * @param table           the table name.
+     * @return the SQL from clause terminal.
+     */
     public SqlFromClauseTerminal from(final ExpressionSpec[] expressionSpecs, final String table) {
         return new SqlSelector(databaseProvider, tableRegistry, createLitebridgeContext()).select(expressionSpecs).from(table);
     }

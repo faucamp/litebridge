@@ -19,6 +19,12 @@ import org.jspecify.annotations.Nullable;
  */
 public record FieldSpec(@Nullable Class<?> dtoClass, String name, boolean property) implements FieldMapping {
 
+    /**
+     * Constructs a new {@code FieldSpec} with the given name and property flag.
+     *
+     * @param name     The name of the field or property to be mapped.
+     * @param property Indicates whether property-level access is enabled.
+     */
     public FieldSpec(final String name, final boolean property) {
         this(null, name, property);
     }

@@ -38,8 +38,8 @@ public sealed class QueryField implements ExpressionSpec permits NumericQueryFie
      * <p>
      * This uses Litebridge's registered type converter to perform the conversion;
      * it is not a database operation.
-     * <p>
      *
+     * @param <T>        The type to convert the expression result to
      * @param returnType The type to convert the expression result to
      * @return a {@link ProtoColumnExpressionSpec} expression instance to convert the return value of the nested expression
      */

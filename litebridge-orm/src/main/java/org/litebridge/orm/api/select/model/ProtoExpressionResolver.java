@@ -30,6 +30,12 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+/**
+ * Resolver for proto-expressions that have not yet been bound to a specific table or context.
+ * <p>
+ * This class provides methods for resolving these proto-expressions into final
+ * {@link ExpressionSpec}s that can be used by the database provider.
+ */
 public abstract class ProtoExpressionResolver {
 
     private static final Map<Class<? extends ExpressionSpec>, Function<Column, ExpressionSpec>> columnExpressions = Map.of(
@@ -97,14 +103,34 @@ public abstract class ProtoExpressionResolver {
         return Stream.of(resolvedExpressionSpec);
     }
 
+    /**
+     * Resolves a list of expression specifications.
+     *
+     * @param expressionSpecs the list of expression specifications to resolve
+     * @param clause the clause type where the expressions are being used
+     * @return the list of resolved expression specifications
+     */
     public List<ExpressionSpec> resolveExpressions(final List<ExpressionSpec> expressionSpecs, final ClauseType clause) {
         return expressionSpecs.stream().flatMap(expressionSpec -> resolveExpression(expressionSpec, clause)).toList();
     }
 
+    /**
+     * Resolves a convert specification.
+     *
+     * @param convertSpec the convert specification to resolve
+     * @param clause the clause type where the expression is being used
+     * @return a stream containing the resolved expression specification
+     */
     protected Stream<ExpressionSpec> resolveConvertSpec(final ConvertSpec<?> convertSpec, final ClauseType clause) {
         return Stream.of(convertSpec.replaceTarget(resolveExpression(convertSpec.target(), clause).findFirst().orElseThrow()));
     }
 
+    /**
+     * Checks if a given expression type is supported for resolution.
+     *
+     * @param type the expression type to check
+     * @return {@code true} if supported, {@code false} otherwise
+     */
     public static boolean isSupported(final Class<? extends ExpressionSpec> type) {
         return columnExpressions.containsKey(type)
                 || nestableColumnExpressions.containsKey(type)

@@ -22,6 +22,13 @@ public final class FieldColumnSpecBuilderJoinStep implements FieldColumnSpecBuil
     private final String column;
     private final String joinColumn;
 
+    /**
+     * Constructs a new {@code FieldColumnSpecBuilderJoinStep}.
+     *
+     * @param fieldSpec  the field specification.
+     * @param column     the column name.
+     * @param joinColumn the join column name.
+     */
     public FieldColumnSpecBuilderJoinStep(final FieldSpec fieldSpec,
                                           final String column,
                                           final String joinColumn) {

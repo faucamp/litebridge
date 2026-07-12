@@ -7,10 +7,22 @@ import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
+/**
+ * A subselect expression.
+ */
 public class Subselect extends SubselectExpression {
 
-    private SelectSqlGenerator selectSqlGenerator;
+    /**
+     * The select SQL generator.
+     */
+    private final SelectSqlGenerator selectSqlGenerator;
 
+    /**
+     * Creates a new {@code Subselect}.
+     *
+     * @param subselect          the subselect operation
+     * @param selectSqlGenerator the select SQL generator
+     */
     public Subselect(final Select subselect, final SelectSqlGenerator selectSqlGenerator) {
         super(subselect);
         this.selectSqlGenerator = selectSqlGenerator;

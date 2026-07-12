@@ -32,6 +32,9 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OracleDatabaseProvider.class);
 
+    /**
+     * Constructs a new {@code OracleDatabaseProvider} using a default type converter.
+     */
     public OracleDatabaseProvider() {
         super(new DefaultTypeConverter());
     }

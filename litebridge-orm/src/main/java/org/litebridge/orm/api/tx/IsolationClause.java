@@ -16,6 +16,12 @@ public final class IsolationClause {
 
     private final TransactionContextTerminal transactionContextTerminal;
 
+    /**
+     * Constructs a new {@code IsolationClause} with the specified isolation level.
+     *
+     * @param level                      the isolation level.
+     * @param transactionContextTerminal the transaction context terminal.
+     */
     public IsolationClause(final Isolation level, final TransactionContextTerminal transactionContextTerminal) {
         this.transactionContextTerminal = transactionContextTerminal;
         this.transactionContextTerminal.setIsolation(level);

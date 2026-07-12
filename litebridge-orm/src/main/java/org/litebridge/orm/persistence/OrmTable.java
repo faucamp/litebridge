@@ -59,8 +59,9 @@ public class OrmTable {
      *
      * @param dtoClass       the DTO class associated with the table
      * @param metaData       the metadata describing the table structure
-     * @param fieldTargetMap a map associating field accessors with their corresponding column metadata
-     * @param changeTracker  the change tracker to monitor and track modifications made to the table's data
+     * @param fieldTargetMap  a map associating field accessors with their corresponding column metadata
+     * @param changeTracker   the change tracker to monitor and track modifications made to the table's data
+     * @param classFieldAccessorCache the cache for field accessors
      */
     public OrmTable(final Class<?> dtoClass,
                     final TableMetaData metaData,
@@ -170,6 +171,11 @@ public class OrmTable {
         }
     }
 
+    /**
+     * Get the nested DTO classes.
+     *
+     * @return the list of nested DTO classes
+     */
     public List<Class<?>> getNestedDtoClasses() {
         return nestedDtoClasses;
     }
@@ -233,10 +239,21 @@ public class OrmTable {
         return ObjectUtils.requireNonNull(fieldForColumnNameOrNull(columnName), () -> new IllegalArgumentException("No field for column '" + columnName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'"));
     }
 
+    /**
+     * Get the field accessor for the specified column name, or null if not found.
+     *
+     * @param columnName the column name to retrieve the field accessor for
+     * @return the field accessor for the specified column name, or null if not found
+     */
     public @Nullable FieldAccessor fieldForColumnNameOrNull(final String columnName) {
         return columnNameFieldMap.get(columnName);
     }
 
+    /**
+     * Get a stream of field accessors for the table.
+     *
+     * @return a stream of field accessors
+     */
     public Stream<FieldAccessor> fieldAcessorStream() {
         return fieldTargetMap.keySet().stream();
     }
@@ -275,6 +292,11 @@ public class OrmTable {
         return persistedDtos.contains(dto);
     }
 
+    /**
+     * Get the one-to-many mappings for the table.
+     *
+     * @return the list of one-to-many mappings
+     */
     public final List<MappedOneToMany> getOneToManyMappings() {
         return fieldTargetMap.values().stream()
                 .filter(MappedOneToMany.class::isInstance)
@@ -282,6 +304,11 @@ public class OrmTable {
                 .toList();
     }
 
+    /**
+     * Get the many-to-many mappings for the table.
+     *
+     * @return the list of many-to-many mappings
+     */
     public final List<MappedManyToMany> getManyToManyMappings() {
         return fieldTargetMap.values().stream()
                 .filter(MappedManyToMany.class::isInstance)
@@ -289,6 +316,12 @@ public class OrmTable {
                 .toList();
     }
 
+    /**
+     * Get the one-to-many mapping for the specified field.
+     *
+     * @param field the field accessor to retrieve the mapping for
+     * @return the one-to-many mapping for the specified field, or empty if not found
+     */
     public Optional<MappedOneToMany> getOneToManyMappingForField(final FieldAccessor field) {
         final MappedFieldTarget mappedFieldTarget = fieldTargetMap.get(field);
 
@@ -299,6 +332,12 @@ public class OrmTable {
         }
     }
 
+    /**
+     * Get the many-to-many mapping for the specified field.
+     *
+     * @param field the field accessor to retrieve the mapping for
+     * @return the many-to-many mapping for the specified field, or empty if not found
+     */
     public Optional<MappedManyToMany> getManyToManyMappingForField(final FieldAccessor field) {
         final MappedFieldTarget mappedFieldTarget = fieldTargetMap.get(field);
 
@@ -309,14 +348,29 @@ public class OrmTable {
         }
     }
 
+    /**
+     * Get the mapped field targets.
+     *
+     * @return the list of field accessor and mapped field target entries
+     */
     public List<Map.Entry<FieldAccessor, MappedFieldTarget>> mappedFieldTargets() {
         return fieldTargetEntries;
     }
 
+    /**
+     * Get the context table registry.
+     *
+     * @return the context table registry
+     */
     public TableRegistry getContextTableRegistry() {
         return contextTableRegistry;
     }
 
+    /**
+     * Add a one-to-many reverse mapping for the specified field.
+     *
+     * @param fieldAccessor the field accessor to add as a reverse mapping
+     */
     public void addOneToManyReverseMapping(final FieldAccessor fieldAccessor) {
         if (oneToManyReverseMappings == null) {
             oneToManyReverseMappings = new ArrayList<>();
@@ -325,18 +379,38 @@ public class OrmTable {
         oneToManyReverseMappings.add(fieldAccessor);
     }
 
+    /**
+     * Get the one-to-many reverse mappings for the table.
+     *
+     * @return the list of one-to-many reverse mappings, or null if none
+     */
     public @Nullable List<FieldAccessor> getOneToManyReverseMappings() {
         return oneToManyReverseMappings;
     }
 
+    /**
+     * Get the DTO class interfaces.
+     *
+     * @return the set of DTO class interfaces
+     */
     public Set<Class<?>> getDtoClassInterfaces() {
         return dtoClassInterfaces;
     }
 
+    /**
+     * Set the DTO class interfaces.
+     *
+     * @param dtoClassInterfaces the set of DTO class interfaces
+     */
     public void setDtoClassInterfaces(final Set<Class<?>> dtoClassInterfaces) {
         this.dtoClassInterfaces = dtoClassInterfaces;
     }
 
+    /**
+     * Get the related DTO classes.
+     *
+     * @return the set of related DTO classes
+     */
     public Set<Class<?>> getRelatedDtoClasses() {
         return relatedDtoClasses;
     }

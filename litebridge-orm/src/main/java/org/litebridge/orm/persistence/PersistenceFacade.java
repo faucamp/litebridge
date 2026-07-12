@@ -69,6 +69,14 @@ public class PersistenceFacade {
     private final ClassFieldAccessorCache classFieldAccessorCache;
     private final DtoConstructor dtoConstructor;
 
+    /**
+     * Constructs a new {@code PersistenceFacade} instance.
+     *
+     * @param tableRegistry   the registry of ORM tables
+     * @param databaseProvider the database provider
+     * @param changeTracker    the change tracker
+     * @param dtoConstructor   the DTO constructor
+     */
     public PersistenceFacade(final TableRegistry tableRegistry,
                              final TransactionalDatabaseProvider databaseProvider,
                              final ChangeTracker changeTracker,
@@ -87,8 +95,9 @@ public class PersistenceFacade {
      * insert or update the DTO based on its current state. If the operation generates
      * primary keys (e.g., in the case of an insert), those keys are updated in the respective DTOs.
      *
-     * @param dtos the collection of Data Transfer Objects to be saved in the database.
-     *             Each DTO must correspond to a registered ORM table.
+     * @param dtos  the collection of Data Transfer Objects to be saved in the database.
+     *              Each DTO must correspond to a registered ORM table.
+     * @param <DTO> the type of the DTOs
      * @throws SQLException if a database access error occurs during any of the save operations.
      */
     public <DTO> void save(final Collection<DTO> dtos) throws SQLException {
@@ -103,8 +112,9 @@ public class PersistenceFacade {
      * operation generates primary keys (e.g., in the case of an insert), those keys
      * are updated in the DTO.
      *
-     * @param dto the Data Transfer Object to be saved in the database. It must
-     *            correspond to a registered ORM table.
+     * @param dto   the Data Transfer Object to be saved in the database. It must
+     *              correspond to a registered ORM table.
+     * @param <DTO> the type of the DTO
      * @throws SQLException if a database access error occurs during the save operation.
      */
     public <DTO> void save(DTO dto) throws SQLException {
@@ -166,6 +176,12 @@ public class PersistenceFacade {
         executeUpdateStatement(dto, null, statementBuilder);
     }
 
+    /**
+     * Deletes the specified Data Transfer Object (DTO) from the corresponding database table.
+     *
+     * @param dto the Data Transfer Object to be deleted from the database
+     * @throws SQLException if a database access error occurs during the delete process
+     */
     public void delete(final Object dto) throws SQLException {
         final DeleteBuilder statementBuilder = createDeleteBuilder(dto, tableProvider.getTableOrThrow(dto.getClass()), new HashSet<>());
         executeUpdateStatement(dto, null, statementBuilder);

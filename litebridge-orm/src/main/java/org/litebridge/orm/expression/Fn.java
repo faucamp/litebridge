@@ -51,7 +51,8 @@ public final class Fn {
      * <p>
      * Shorthand for {@link #field(Class, String)}.
      *
-     * @param field The name of the DTO field to select.
+     * @param dtoClass The DTO class.
+     * @param field    The name of the DTO field to select.
      * @return a {@link SelectFieldSpec} expression instance to select the specified field.
      */
     public static ExpressionSpec f(final Class<?> dtoClass, final String field) {
@@ -71,7 +72,8 @@ public final class Fn {
     /**
      * Selects a DTO field by name for the specified DTO type that is selected/joined in the query.
      *
-     * @param field The name of the DTO field to select.
+     * @param dtoClass The DTO class.
+     * @param field    The name of the DTO field to select.
      * @return a {@link SelectFieldSpec} expression instance to select the specified field.
      */
     public static ExpressionSpec field(final Class<?> dtoClass, final String field) {
@@ -264,6 +266,7 @@ public final class Fn {
      * litebridge.select(Fn.convert(Fn.avg(column), Long.class));
      * </code>
      *
+     * @param <T>        The type to convert the expression result to
      * @param expression The target expression result to convert
      * @param returnType The type to convert the expression result to
      * @return a {@link ProtoColumnExpressionSpec} expression instance to convert the return value of the nested expression
@@ -272,10 +275,24 @@ public final class Fn {
         return new ConvertSpec<>(expression, returnType);
     }
 
+    /**
+     * Converts the results of multiple expressions into a single Java object of the specified type.
+     *
+     * @param <T>         The target type.
+     * @param returnType  The target type class.
+     * @param expressions The expressions to convert.
+     * @return a {@link ConvertIntent} instance.
+     */
     public static <T> ConvertIntent<T> convert(final Class<T> returnType, final ExpressionSpec... expressions) {
         return new ConvertIntent<>(expressions, returnType);
     }
 
+    /**
+     * Converts the results of multiple expressions into a single database {@link Row} object.
+     *
+     * @param expressions The expressions to convert.
+     * @return a {@link ConvertIntent} instance for {@link Row}.
+     */
     public static ConvertIntent<Row> row(final ExpressionSpec... expressions) {
         return convert(Row.class, expressions);
     }
@@ -468,7 +485,11 @@ public final class Fn {
         return new ProtoNestableTOExpr<>(Number.class, AbsSpec.class, expressionSpec, null);
     }
 
-    // Current system date/time
+    /**
+     * {@code CURRENT_TIMESTAMP}: Returns the current date and time.
+     *
+     * @return a {@link CurrentTimestampSpec} instance.
+     */
     public static CurrentTimestampSpec currentTimestamp() {
         return new CurrentTimestampSpec();
     }

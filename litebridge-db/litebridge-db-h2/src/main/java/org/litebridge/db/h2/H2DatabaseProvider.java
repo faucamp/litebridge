@@ -22,6 +22,9 @@ public final class H2DatabaseProvider extends AbstractDatabaseProvider {
 
     private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(H2DatabaseProvider.class);
 
+    /**
+     * Creates a new {@code H2DatabaseProvider}.
+     */
     public H2DatabaseProvider() {
         super(new DefaultTypeConverter());
     }

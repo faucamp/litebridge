@@ -23,10 +23,25 @@ public class Table extends Aliased {
      */
     private final @Nullable String schema;
 
+    /**
+     * Constructs a new {@code Table} with catalog, schema, and name.
+     *
+     * @param catalog the catalog name
+     * @param schema  the schema name
+     * @param name    the table name
+     */
     public Table(final @Nullable String catalog, final @Nullable String schema, final String name) {
         this(catalog, schema, name, null);
     }
 
+    /**
+     * Constructs a new {@code Table} with catalog, schema, name, and alias.
+     *
+     * @param catalog the catalog name
+     * @param schema  the schema name
+     * @param name    the table name
+     * @param alias   the table alias
+     */
     public Table(final @Nullable String catalog, final @Nullable String schema, final String name, final @Nullable String alias) {
         super(name, alias);
 
@@ -43,10 +58,21 @@ public class Table extends Aliased {
         }
     }
 
+    /**
+     * Constructs a new {@code Table} with name and alias.
+     *
+     * @param name  the table name
+     * @param alias the table alias
+     */
     public Table(final String name, final @Nullable String alias) {
         this(StringUtils.splitArray(name, '.', 3, true), alias);
     }
 
+    /**
+     * Constructs a new {@code Table} with a name.
+     *
+     * @param name the table name
+     */
     public Table(final String name) {
         this(name, null);
     }
@@ -55,19 +81,39 @@ public class Table extends Aliased {
         this(catalogSchemaTable[0], catalogSchemaTable[1], catalogSchemaTable[2], alias);
     }
 
+    /**
+     * Constructs a new {@code Table} as a copy of another table.
+     *
+     * @param other the table to copy
+     */
     @SuppressWarnings("IncompleteCopyConstructor")
     public Table(final Table other) {
         this(other.catalog(), other.schema(), other.name(), other.alias());
     }
 
+    /**
+     * Returns the catalog name of the table.
+     *
+     * @return the catalog name, or {@code null} if not specified
+     */
     public @Nullable String catalog() {
         return catalog;
     }
 
+    /**
+     * Returns the schema name of the table.
+     *
+     * @return the schema name, or {@code null} if not specified
+     */
     public @Nullable String schema() {
         return schema;
     }
 
+    /**
+     * Returns the qualified name of the table (schema.name).
+     *
+     * @return the qualified table name
+     */
     public String qualifiedName() {
         return schema + "." + name();
     }

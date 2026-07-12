@@ -24,6 +24,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Selector for DTOs.
+ *
+ * @param <TypeOverride> the type of the DTO
+ */
 public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverride, DtoSelectSpec> {
 
     private final TableRegistry tableRegistry;
@@ -31,6 +36,18 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
     private final DtoConstructor dtoConstructor;
     private final AliasGenerator aliasGenerator;
 
+    /**
+     * Creates a new DtoSelector.
+     *
+     * @param typeOverride            the type of the DTO
+     * @param ormTable                the ORM table
+     * @param tableRegistry           the table registry
+     * @param classFieldAccessorCache the class field accessor cache
+     * @param dtoConstructor          the DTO constructor
+     * @param databaseProvider        the database provider
+     * @param aliasGenerator          the alias generator
+     * @param litebridgeContext       the litebridge context
+     */
     public DtoSelector(final Class<TypeOverride> typeOverride,
                        final OrmTable ormTable,
                        final TableRegistry tableRegistry,
@@ -49,10 +66,21 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
         this.aliasGenerator = aliasGenerator;
     }
 
+    /**
+     * Selects specific fields.
+     *
+     * @param expressionSpecs the expression specifications to select
+     * @return the from clause terminal
+     */
     public DtoFromClauseTerminal<TypeOverride> select(final ExpressionSpec... expressionSpecs) {
         return selectImpl(selectSpec.getTable(), Arrays.stream(expressionSpecs).toList());
     }
 
+    /**
+     * Selects all fields of the DTO.
+     *
+     * @return the from clause terminal
+     */
     public DtoFromClauseTerminal<TypeOverride> select() {
         return selectImpl(selectSpec.getTable(), createAllFieldsSelectExpressions());
     }
@@ -122,6 +150,11 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
         return super.selectSpec();
     }
 
+    /**
+     * Returns the class field accessor cache.
+     *
+     * @return the class field accessor cache
+     */
     public ClassFieldAccessorCache classFieldAccessorCache() {
         return classFieldAccessorCache;
     }
