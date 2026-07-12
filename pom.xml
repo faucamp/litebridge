@@ -13,6 +13,12 @@
     <description>Parent POM for Litebridge: a fast, lightweight Object-Relational Mapper (ORM) for Java 21+
     </description>
     <url>https://litebridgedb.org</url>
+    <inceptionYear>2025</inceptionYear>
+
+    <organization>
+        <name>Francois Aucamp</name>
+        <url>https://github.com/faucamp</url>
+    </organization>
 
     <licenses>
         <license>
