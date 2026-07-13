@@ -8,6 +8,7 @@ import org.litebridge.db.spi.TableMetaData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,7 +19,7 @@ public class ManyToManyMapper {
     private ManyToManyMapper() {
     }
 
-    public static List<ManyToManyMapping> extractManyToManyMappings(final Map<String, TableMetaData> tableMetaDataMap) {
+    public static ManyToManyMappingResult extractManyToManyMappings(final Map<String, TableMetaData> tableMetaDataMap) {
         final Map<Table, List<JoinHalf>> referencedTables = new HashMap<>();
         final Set<Table> entityTables = tableMetaDataMap.values().stream()
                 .map(TableMetaData::toTable)
@@ -40,6 +41,7 @@ public class ManyToManyMapper {
         }
 
         final List<ManyToManyMapping> mappings = new ArrayList<>();
+        final Set<String> collapsedTables = new HashSet<>();
 
         for (Map.Entry<Table, List<JoinHalf>> entry : referencedTables.entrySet()) {
             final Table joinTable = entry.getKey();
@@ -52,8 +54,18 @@ public class ManyToManyMapper {
 
             // See if the foreign key is referenced by a mapped table
             if (entityTables.contains(joinTable)) {
-                // This table will be represented as an entity
-                continue;
+                // Check if the join table can be collapsed into a many-to-many, or if it needs to be an entity
+                final String joinTableName = joinTable.qualifiedName();
+                final TableMetaData joinTableMetaData = tableMetaDataMap.get(joinTableName);
+
+                if (joinTableMetaData.columns().size() == 2) {
+                    // Collapse the join table into a many-to-many
+                    entityTables.remove(joinTable);
+                    collapsedTables.add(joinTableName);
+                } else {
+                    // This join table will be represented as an entity since there are additional columns
+                    continue;
+                }
             }
 
             // The foreign key is referenced by two entities in the set; apply a many-to-many
@@ -66,7 +78,7 @@ public class ManyToManyMapper {
             mappings.add(new ManyToManyMapping(leftTable, leftColumn, joinTable, leftJoinColumn, rightJoinColumn, rightTable, rightColumn));
         }
 
-        return mappings;
+        return new ManyToManyMappingResult(mappings, collapsedTables);
     }
 
     private record JoinHalf(TableMetaData tableMetaData, ColumnMetaData columnMetaData, Column joinColumn) {

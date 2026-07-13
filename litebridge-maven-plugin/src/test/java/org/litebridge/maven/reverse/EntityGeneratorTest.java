@@ -53,7 +53,7 @@ class EntityGeneratorTest {
         when(table.columns()).thenReturn(List.of(column));
 
         // When
-        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), Collections.emptyList(), new HashMap<>());
+        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), new ManyToManyMappingResult(Collections.emptyList(), Collections.emptySet()), new HashMap<>());
 
         // Then
         assertNotNull(result);
@@ -113,7 +113,7 @@ class EntityGeneratorTest {
         when(table.columns()).thenReturn(List.of(column1, column2, column3));
 
         // When
-        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), Collections.emptyList(), new HashMap<>());
+        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), new ManyToManyMappingResult(Collections.emptyList(), Collections.emptySet()), new HashMap<>());
 
         // Then
         assertNotNull(result);
@@ -152,7 +152,7 @@ class EntityGeneratorTest {
         when(table.columns()).thenReturn(List.of(column));
 
         // When / Then should throw MojoExecutionException because getPrimitiveClass will throw CNFE
-        assertThrows(MojoExecutionException.class, () -> generator.createEntityClassForTable(table, Collections.emptyMap(), Collections.emptyList(), new HashMap<>()));
+        assertThrows(MojoExecutionException.class, () -> generator.createEntityClassForTable(table, Collections.emptyMap(), new ManyToManyMappingResult(Collections.emptyList(), Collections.emptySet()), new HashMap<>()));
     }
 
     @Test
@@ -181,7 +181,7 @@ class EntityGeneratorTest {
         when(table.columns()).thenReturn(List.of(column));
 
         // When
-        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), Collections.emptyList(), new HashMap<>());
+        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), new ManyToManyMappingResult(Collections.emptyList(), Collections.emptySet()), new HashMap<>());
 
         // Then
         assertNotNull(result);
@@ -222,7 +222,7 @@ class EntityGeneratorTest {
         );
 
         // When
-        final GeneratedEntity result = generator.createEntityClassForTable(personTable, Collections.emptyMap(), List.of(mtm), new HashMap<>());
+        final GeneratedEntity result = generator.createEntityClassForTable(personTable, Collections.emptyMap(), new ManyToManyMappingResult(List.of(mtm), Collections.emptySet()), new HashMap<>());
 
         // Then
         assertNotNull(result);
@@ -269,7 +269,7 @@ class EntityGeneratorTest {
         final Map<String, GeneratedEntity> entities = new HashMap<>();
 
         // When
-        final GeneratedEntity result = generator.createEntityClassForTable(personTable, tableMetaDataMap, Collections.emptyList(), entities);
+        final GeneratedEntity result = generator.createEntityClassForTable(personTable, tableMetaDataMap, new ManyToManyMappingResult(Collections.emptyList(), Collections.emptySet()), entities);
 
         // Then
         assertNotNull(result);
@@ -315,7 +315,7 @@ class EntityGeneratorTest {
         final Map<String, GeneratedEntity> entities = new HashMap<>();
 
         // When / Then
-        assertThrows(MojoExecutionException.class, () -> generator.createEntityClassForTable(personTable, tableMetaDataMap, Collections.emptyList(), entities));
+        assertThrows(MojoExecutionException.class, () -> generator.createEntityClassForTable(personTable, tableMetaDataMap, new ManyToManyMappingResult(Collections.emptyList(), Collections.emptySet()), entities));
     }
 
     @Test
@@ -343,7 +343,7 @@ class EntityGeneratorTest {
         when(table.columns()).thenReturn(List.of(column));
 
         // When
-        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), Collections.emptyList(), new HashMap<>());
+        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), new ManyToManyMappingResult(Collections.emptyList(), Collections.emptySet()), new HashMap<>());
 
         // Then
         assertNotNull(result);
@@ -376,7 +376,7 @@ class EntityGeneratorTest {
         when(table.columns()).thenReturn(List.of(column));
 
         // When
-        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), Collections.emptyList(), new HashMap<>());
+        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), new ManyToManyMappingResult(Collections.emptyList(), Collections.emptySet()), new HashMap<>());
 
         // Then
         assertNotNull(result);

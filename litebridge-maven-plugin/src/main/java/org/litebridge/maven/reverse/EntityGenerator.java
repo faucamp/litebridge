@@ -16,6 +16,7 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.Type;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
@@ -74,16 +75,16 @@ public final class EntityGenerator {
     /**
      * Creates a generated entity class for a specified database table based on its metadata.
      *
-     * @param tableMetaData      the metadata of the database table for which the entity class is being created
-     * @param tableMetaDataMap   a map of table names to their corresponding metadata, used for resolving related tables
-     * @param manyToManyMappings a list of many-to-many mappings, used for resolving related tables
-     * @param entities           a map of table names to generated entity classes, used to cache entities under construction and for cross-referencing
+     * @param tableMetaData           the metadata of the database table for which the entity class is being created
+     * @param tableMetaDataMap        a map of table names to their corresponding metadata, used for resolving related tables
+     * @param manyToManyMappingResult a list of many-to-many mappings, used for resolving related tables
+     * @param entities                a map of table names to generated entity classes, used to cache entities under construction and for cross-referencing
      * @return a {@code GeneratedEntity} representing the generated entity class, including its associated metadata, mappings, and structure
      * @throws MojoExecutionException if any error occurs during the generation of the entity class, such as resolving class types, column mappings, or foreign key relationships
      */
     public GeneratedEntity createEntityClassForTable(final TableMetaData tableMetaData,
                                                      final Map<String, TableMetaData> tableMetaDataMap,
-                                                     final List<ManyToManyMapping> manyToManyMappings,
+                                                     final ManyToManyMappingResult manyToManyMappingResult,
                                                      final Map<String, GeneratedEntity> entities) throws MojoExecutionException {
         final @Nullable TableMappingConfig tableMappingConfig = getTableMappingConfig(tableMetaData);
         final String entityClassName = createEntityClassName(tableMetaData, tableMappingConfig);
@@ -121,14 +122,14 @@ public final class EntityGenerator {
             final FieldClassInfo fieldClassInfo = createFieldClassInfo(columnMetaData, columnMappingConfig);
 
             // Check if the field points to a related entity, and update the field type accordingly
-            final JoinOnInfo joinOnInfo = createJoinOnInfo(columnMetaData, tableMetaDataMap, manyToManyMappings, entities);
+            final JoinOnInfo joinOnInfo = createJoinOnInfo(columnMetaData, tableMetaDataMap, manyToManyMappingResult, entities);
 
             // Create entity field
             final FieldDeclaration field = createFieldDeclaration(fieldName, fieldClassInfo, joinOnInfo, entityClass, columnMetaData, columnMappingConfig, jspecify);
             declaredFields.add(new FieldInfo(field, columnMetaData.isNullable()));
 
             // Many-to-many relationships
-            final List<ManyToManySpec> manyToManySpecs = manyToManyMappings.stream()
+            final List<ManyToManySpec> manyToManySpecs = manyToManyMappingResult.mappings().stream()
                     .filter(manyToManyMapping -> manyToManyMapping.leftColumn().equals(columnMetaData)
                             || manyToManyMapping.rightColumn().equals(columnMetaData))
                     .map(manyToManyMapping -> createManyToManySpec(columnMetaData, manyToManyMapping))
@@ -136,7 +137,7 @@ public final class EntityGenerator {
             appendFields.addAll(createManyToManyFieldInfos(manyToManySpecs, entity, jspecify));
 
             // Create one-to-many reverse mapping collection fields
-            final List<OneToManySpec> oneToManySpecs = createOneToManyMappings(columnMetaData, tableMetaDataMap, manyToManyMappings, entities);
+            final List<OneToManySpec> oneToManySpecs = createOneToManyMappings(columnMetaData, tableMetaDataMap, manyToManyMappingResult, entities);
             createReverseCollectionFieldInfos(oneToManySpecs, entity, jspecify).forEach(fieldInfo -> {
                 final String collectionFieldName = fieldInfo.field().getVariable(0).getNameAsString();
 
@@ -528,7 +529,7 @@ public final class EntityGenerator {
 
     private List<OneToManySpec> createOneToManyMappings(final ColumnMetaData columnMetaData,
                                                         final Map<String, TableMetaData> tableMetaDataMap,
-                                                        final List<ManyToManyMapping> manyToManyMappings,
+                                                        final @MonotonicNonNull ManyToManyMappingResult manyToManyMappingResult,
                                                         final Map<String, GeneratedEntity> entities) throws MojoExecutionException {
         final List<OneToManySpec> oneToManySpecs = new ArrayList<>();
 
@@ -538,8 +539,10 @@ public final class EntityGenerator {
             final String remoteTableName = remoteColumn.table().qualifiedName();
             GeneratedEntity remoteEntity = entities.get(remoteTableName);
 
-            if (remoteEntity == null && tableMetaDataMap.containsKey(remoteTableName)) {
-                remoteEntity = createEntityClassForTable(tableMetaDataMap.get(remoteTableName), tableMetaDataMap, manyToManyMappings, entities);
+            if (remoteEntity == null
+                    && !manyToManyMappingResult.collapsedTables().contains(remoteTableName)
+                    && tableMetaDataMap.containsKey(remoteTableName)) {
+                remoteEntity = createEntityClassForTable(tableMetaDataMap.get(remoteTableName), tableMetaDataMap, manyToManyMappingResult, entities);
             }
 
             if (remoteEntity != null) {
@@ -620,7 +623,7 @@ public final class EntityGenerator {
 
     private @Nullable JoinOnInfo createJoinOnInfo(final ColumnMetaData columnMetaData,
                                                   final Map<String, TableMetaData> tableMetaDataMap,
-                                                  final List<ManyToManyMapping> manyToManyMappings,
+                                                  final @MonotonicNonNull ManyToManyMappingResult manyToManyMappings,
                                                   final Map<String, GeneratedEntity> entities) throws MojoExecutionException {
         for (ForeignKeyConstraint foreignKeyConstraint : columnMetaData.getForeignKeyConstraints()) {
             // Check if an entity for this reference exists

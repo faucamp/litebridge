@@ -22,8 +22,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 @MojoTest
 class ReverseEngineerMojoTest {
@@ -44,7 +50,7 @@ class ReverseEngineerMojoTest {
     @DisplayName("Reverse engineer")
     @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom.xml")
     void execute(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
-        final ExecuteResult result = executeImpl(reverseEngineerMojo);
+        final org.litebridge.maven.ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo);
 
         assertTrue(result.person.getImports().stream().noneMatch(importDeclaration ->
                 importDeclaration.getNameAsString().equals("org.jspecify.annotations.Nullable")));
@@ -78,7 +84,7 @@ class ReverseEngineerMojoTest {
     @DisplayName("Reverse engineer")
     @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-allowInterface.xml")
     void execute_allowInterface(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
-        final ExecuteResult result = executeImpl(reverseEngineerMojo);
+        final org.litebridge.maven.ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo);
 
         assertTrue(result.person.getImports().stream().noneMatch(importDeclaration ->
                 importDeclaration.getNameAsString().equals("org.jspecify.annotations.AllowInterface")));
@@ -91,7 +97,7 @@ class ReverseEngineerMojoTest {
     @DisplayName("JSpecify defaults: Strict Java nullability")
     @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-jspecify.xml")
     void execute_jspecify(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
-        final ExecuteResult result = executeImpl(reverseEngineerMojo);
+        final org.litebridge.maven.ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo);
 
         assertTrue(result.person.getImports().stream().noneMatch(importDeclaration ->
                 importDeclaration.getNameAsString().equals("org.jspecify.annotations.NullMarked")));
@@ -205,7 +211,7 @@ class ReverseEngineerMojoTest {
     @DisplayName("JSpecify: no package-info.java")
     @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-jspecify-noPackageInfo.xml")
     void execute_jspecify_noPackageInfo(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
-        final ExecuteResult result = executeImpl(reverseEngineerMojo);
+        final org.litebridge.maven.ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo);
 
         final ClassOrInterfaceDeclaration person = result.person.getClassByName("PersonEntity").orElseThrow();
         assertTrue(person.isAnnotationPresent(NullMarked.class));
@@ -315,7 +321,7 @@ class ReverseEngineerMojoTest {
     @DisplayName("JSpecify: use database NULLABLE attribute")
     @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-jspecify-databaseNullable.xml")
     void execute_jspecify_databaseNullable(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
-        final ExecuteResult result = executeImpl(reverseEngineerMojo);
+        final org.litebridge.maven.ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo);
 
         final ClassOrInterfaceDeclaration person = result.person.getClassByName("PersonEntity").orElseThrow();
         assertFalse(person.isAnnotationPresent(NullMarked.class));
@@ -437,7 +443,18 @@ class ReverseEngineerMojoTest {
                 });
     }
 
-    private ExecuteResult executeImpl(final ReverseEngineerMojo reverseEngineerMojo) throws MojoExecutionException, IOException {
+    @Test
+    @DisplayName("Reverse engineer: complex structure")
+    @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-complex.xml")
+    void execute_complex(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
+        // Given
+        setupH2();
+
+        // When
+        reverseEngineerMojo.execute();
+    }
+
+    private org.litebridge.maven.ReverseEngineerMojoTest.ExecuteResult executeImpl(final ReverseEngineerMojo reverseEngineerMojo) throws MojoExecutionException, IOException {
         // Given
         setupH2();
 
@@ -509,7 +526,7 @@ class ReverseEngineerMojoTest {
             }
         }
 
-        return new ExecuteResult(personCompilationUnit, accountCompilationUnit, adressCompilationUnit);
+        return new org.litebridge.maven.ReverseEngineerMojoTest.ExecuteResult(personCompilationUnit, accountCompilationUnit, adressCompilationUnit);
     }
 
     @Test
