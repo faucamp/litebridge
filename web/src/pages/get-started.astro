@@ -126,7 +126,7 @@ const description = "Learn how to integrate Litebridge into your Java 21+ projec
           <p class="mb-4 text-gray-600 dark:text-gray-400">Create a <code class="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">Litebridge</code> instance and register your entities:</p>
           <div class="overflow-hidden rounded-xl bg-gray-900 shadow-lg">
             <Code
-              code={`// Create a litebridgedb instance\nLitebridge litebridge = new Litebridge(new H2DatabaseProvider(), dataSource);\n\n// Register your entities\nlitebridge.register(Person.class);`}
+              code={`// Create a litebridgedb instance\nLitebridge litebridge = new Litebridge(new PostgresDatabaseProvider(), dataSource);\n\n// Register your entities\nlitebridge.register(Person.class);`}
               lang="java"
               theme="github-dark"
               class="p-6 text-sm"
