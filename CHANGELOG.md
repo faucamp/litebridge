@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.2
+
+### Added
+- None.
+
+### Changed
+- Fixed issue with complex circular dependencies in the Litebridge Maven plugin's `reverse-engineer` goal.
+
+### Deprecated
+- None.
+
+### Removed
+- None.
+
 ## 0.3.1
 
 ### Added
