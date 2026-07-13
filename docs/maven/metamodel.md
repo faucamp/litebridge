@@ -52,7 +52,7 @@ For more information on how to use metamodels in queries, see the [Metamodels](.
 <plugin>
     <groupId>org.litebridge.maven</groupId>
     <artifactId>litebridge-maven-plugin</artifactId>
-    <version>0.3.0</version> <!-- Replace with latest version -->
+    <version>0.3.1</version> <!-- Replace with latest version -->
     <executions>
         <execution>
             <goals>

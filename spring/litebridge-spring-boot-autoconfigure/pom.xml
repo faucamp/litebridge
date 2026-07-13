@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.litebridgedb.spring</groupId>
         <artifactId>litebridge-spring-parent</artifactId>
-        <version>0.3.1-SNAPSHOT</version>
+        <version>0.3.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 

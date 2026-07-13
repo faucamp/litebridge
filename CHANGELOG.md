@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.1
+
+### Added
+- None.
+
+### Changed
+- Renamed main `org.litebridgedb` package back to original `org.litebridge`
+- JavaDocs expanded
+
+### Deprecated
+- None.
+
+### Removed
+- None.
+
 ## 0.3.0
 
 ### Added
