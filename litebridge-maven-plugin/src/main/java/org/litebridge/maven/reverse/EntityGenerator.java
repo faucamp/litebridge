@@ -104,11 +104,18 @@ public final class EntityGenerator {
         // Cache the entity class under construction
         entities.put(tableMetaData.qualifiedName(), new GeneratedEntity(entity, tableMetaData.qualifiedName(), entityClassName, columnfieldMap));
 
+        // Preprocess the column-field map to assist with inter-entity joins
         for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
-            // Get config and create field-column tracking link
             final ColumnMappingConfig columnMappingConfig = getColumnMappingConfig(columnMetaData, tableMappingConfig);
             final String fieldName = createFieldName(columnMetaData, columnMappingConfig);
             columnfieldMap.put(columnMetaData.toColumn(), fieldName);
+        }
+
+        // Process fields
+        for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
+            // Get config and create field-column tracking link
+            final ColumnMappingConfig columnMappingConfig = getColumnMappingConfig(columnMetaData, tableMappingConfig);
+            final String fieldName = columnfieldMap.get(columnMetaData.toColumn());
 
             // Determine field type
             final FieldClassInfo fieldClassInfo = createFieldClassInfo(columnMetaData, columnMappingConfig);
