@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0B2E4E;
+  --color-accent: #4FD1F9;
+  
+  --color-light-bg: #F8FAFC;
+  --color-light-text: #0B2E4E;
+  
+  --color-dark-bg: #020617;
+  --color-dark-text: #F8FAFC;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
