@@ -40,7 +40,7 @@ Example for H2:
 ```xml
 
 <dependency>
-    <groupId>org.litebridge</groupId>
+    <groupId>org.litebridge.db</groupId>
     <artifactId>litebridge-db-h2</artifactId>
     <version>0.3.0</version> <!-- Replace with latest version -->
 </dependency>

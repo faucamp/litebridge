@@ -67,7 +67,7 @@ const description = "Learn how to integrate Litebridge into your Java 21+ projec
             </div>
             <h2 class="text-3xl font-bold text-primary dark:text-white">3. Choose a Provider</h2>
           </div>
-          <p class="mb-6 text-gray-600 dark:text-gray-400">Include the artifact for your target database. Litebridge supports multiple providers out of the box:</p>
+          <p class="mb-6 text-gray-600 dark:text-gray-400">Include the artifact for your target database. Litebridge supports the following providers:</p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             {[
@@ -86,7 +86,7 @@ const description = "Learn how to integrate Litebridge into your Java 21+ projec
           <p class="mb-4 text-gray-600 dark:text-gray-400 text-sm italic">Example for PostgreSQL:</p>
           <div class="overflow-hidden rounded-xl bg-gray-900 shadow-lg">
             <Code
-              code={`<dependency>\n    <groupId>org.litebridge</groupId>\n    <artifactId>litebridge-db-postgres</artifactId>\n    <version>0.3.0</version>\n</dependency>`}
+              code={`<dependency>\n    <groupId>org.litebridge.db</groupId>\n    <artifactId>litebridge-db-postgres</artifactId>\n    <version>0.3.0</version>\n</dependency>`}
               lang="xml"
               theme="github-dark"
               class="p-6 text-sm"

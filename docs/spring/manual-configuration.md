@@ -16,7 +16,7 @@ Add the `litebridge-spring` and the chosen database provider to the `pom.xml`:
     <version>0.3.0</version> <!-- Replace with latest version -->
 </dependency>
 <dependency>
-<groupId>org.litebridge</groupId>
+<groupId>org.litebridge.db</groupId>
 <artifactId>litebridge-db-h2</artifactId>
 <version>0.3.0</version> <!-- Replace with latest version -->
 </dependency>
