@@ -7,7 +7,7 @@
     <groupId>org.litebridgedb</groupId>
     <artifactId>litebridge</artifactId>
     <packaging>pom</packaging>
-    <version>0.3.1</version>
+    <version>0.3.2-SNAPSHOT</version>
 
     <name>Litebridge</name>
     <description>Parent POM for Litebridge: a fast, lightweight Object-Relational Mapper (ORM) for Java 21+
