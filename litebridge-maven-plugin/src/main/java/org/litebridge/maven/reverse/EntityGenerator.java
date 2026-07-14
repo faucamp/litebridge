@@ -96,7 +96,7 @@ public final class EntityGenerator {
 
         // Create class
         if (log.isInfoEnabled()) {
-            log.info("Creating entity class '%s' for table: %s".formatted(entityClassName, tableMetaData.qualifiedName()));
+            log.info("[%s] Creating entity class for table: %s".formatted(entityClassName, tableMetaData.qualifiedName()));
         }
 
         final CompilationUnitAndClass cuClass = createCompilationUnitAndClass(tableMetaData, tableMappingConfig, entityClassName, jspecify);
@@ -113,7 +113,7 @@ public final class EntityGenerator {
 
         // Preprocess the column-field map to assist with inter-entity joins
         for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
-            final ColumnMappingConfig columnMappingConfig = getColumnMappingConfig(columnMetaData, tableMappingConfig);
+            final ColumnMappingConfig columnMappingConfig = getColumnMappingConfig(entityClassName, columnMetaData, tableMappingConfig);
             final String fieldName = createFieldName(columnMetaData, columnMappingConfig);
             columnfieldMap.put(columnMetaData.toColumn(), fieldName);
         }
@@ -128,23 +128,23 @@ public final class EntityGenerator {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("Resolve entity relationships for table %s: %b".formatted(tableMetaData.qualifiedName(), resolveRelationships));
+            log.debug("[%s] Resolve entity relationships: %b".formatted(entityClassName, resolveRelationships));
         }
 
         // Process fields
         for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
             // Get config and create field-column tracking link
-            final ColumnMappingConfig columnMappingConfig = getColumnMappingConfig(columnMetaData, tableMappingConfig);
+            final ColumnMappingConfig columnMappingConfig = getColumnMappingConfig(entityClassName, columnMetaData, tableMappingConfig);
             final String fieldName = columnfieldMap.get(columnMetaData.toColumn());
 
             // Determine field type
-            final FieldClassInfo fieldClassInfo = createFieldClassInfo(columnMetaData, columnMappingConfig);
+            final FieldClassInfo fieldClassInfo = createFieldClassInfo(entityClassName, columnMetaData, columnMappingConfig);
 
             // Check if the field points to a related entity, and update the field type accordingly
             final JoinOnInfo joinOnInfo;
 
             if (resolveRelationships) {
-                joinOnInfo = createJoinOnInfo(columnMetaData, tableMetaDataMap, manyToManyMappingResult, entities);
+                joinOnInfo = createJoinOnInfo(entityClassName, columnMetaData, tableMetaDataMap, manyToManyMappingResult, entities);
             } else {
                 joinOnInfo = null;
             }
@@ -259,7 +259,7 @@ public final class EntityGenerator {
         return field;
     }
 
-    private FieldClassInfo createFieldClassInfo(final ColumnMetaData columnMetaData, final @Nullable ColumnMappingConfig columnMappingConfig) throws MojoExecutionException {
+    private FieldClassInfo createFieldClassInfo(final String entityClassName, final ColumnMetaData columnMetaData, final @Nullable ColumnMappingConfig columnMappingConfig) throws MojoExecutionException {
         Class<?> fieldClass = null;
         String fieldClassType = null;
 
@@ -267,7 +267,7 @@ public final class EntityGenerator {
             try {
                 fieldClass = PrimitiveLookup.getPrimitiveClass(columnMappingConfig.getFieldType());
             } catch (ClassNotFoundException ex) {
-                throw new MojoExecutionException("Failed to load field type class '%s' for column mapping: %s".formatted(columnMappingConfig.getFieldType(), columnMetaData.name()));
+                throw new MojoExecutionException("Failed to load field type class '%s' for column mapping: %s for entity class: %s".formatted(columnMappingConfig.getFieldType(), columnMetaData.name(), entityClassName));
             }
         }
 
@@ -312,7 +312,7 @@ public final class EntityGenerator {
                     fieldClass = PrimitiveLookup.getPrimitiveClass(sqlTypeMapping.getFieldType());
                 } catch (ClassNotFoundException ex) {
                     fieldClassType = sqlTypeMapping.getFieldType();
-                    log.warn("Could not find class for specified field type '%s' for column: %s".formatted(fieldClassType, columnMetaData.name()));
+                    log.warn("[%s] Could not find class for specified field type '%s' for column: %s".formatted(entityClassName, fieldClassType, columnMetaData.name()));
                 }
             } else {
                 final Class<?> convertedType = typeConverter.getClassForSqlType(columnMetaData.getDataType());
@@ -666,7 +666,8 @@ public final class EntityGenerator {
         return appendFields;
     }
 
-    private @Nullable JoinOnInfo createJoinOnInfo(final ColumnMetaData columnMetaData,
+    private @Nullable JoinOnInfo createJoinOnInfo(final String entityClassName,
+                                                  final ColumnMetaData columnMetaData,
                                                   final Map<String, TableMetaData> tableMetaDataMap,
                                                   final @MonotonicNonNull ManyToManyMappingResult manyToManyMappings,
                                                   final Map<String, GeneratedEntity> entities) throws MojoExecutionException {
@@ -682,12 +683,12 @@ public final class EntityGenerator {
 
             if (remoteEntity != null) {
                 if (log.isDebugEnabled()) {
-                    log.debug("Overriding field type for column %s to: %s".formatted(columnMetaData.name(), remoteEntity.className()));
+                    log.debug("[%s] Overriding field type for column %s to: %s".formatted(entityClassName, columnMetaData.name(), remoteEntity.className()));
                 }
 
                 return new JoinOnInfo(remoteEntity.className(), remoteColumn.name());
             } else {
-                log.warn("Could not find related entity for column %s.%s for remote table: %s; skipping related field resolution".formatted(columnMetaData.table().name(), columnMetaData.name(), remoteTableName));
+                log.warn("[%s] Could not find related entity for column %s.%s for remote table: %s; skipping related field resolution".formatted(entityClassName, columnMetaData.table().name(), columnMetaData.name(), remoteTableName));
             }
         }
 
@@ -714,13 +715,13 @@ public final class EntityGenerator {
         return annotation;
     }
 
-    private @Nullable ColumnMappingConfig getColumnMappingConfig(final ColumnMetaData columnMetaData, final @Nullable TableMappingConfig tableMappingConfig) {
+    private @Nullable ColumnMappingConfig getColumnMappingConfig(final String entityClassName, final ColumnMetaData columnMetaData, final @Nullable TableMappingConfig tableMappingConfig) {
         if (tableMappingConfig != null && tableMappingConfig.getColumnMappings() != null) {
             final ColumnMappingConfig mapping = tableMappingConfig.getColumnMappings().stream()
                     .filter(c -> c.getColumn().equals(columnMetaData.name()))
                     .findFirst().orElse(null);
             if (mapping == null && log.isDebugEnabled()) {
-                log.debug("No column mapping found for " + columnMetaData.name() + " in table " + tableMappingConfig.getTable());
+                log.debug("[%s] No column mapping found for %s in table %s".formatted(entityClassName, columnMetaData.name(), tableMappingConfig.getTable()));
             }
             return mapping;
         } else {
