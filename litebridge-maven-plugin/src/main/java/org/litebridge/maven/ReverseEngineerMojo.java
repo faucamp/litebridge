@@ -143,7 +143,11 @@ public final class ReverseEngineerMojo extends AbstractMojo {
         final ManyToManyMappingResult manyToManyMappingResult = ManyToManyMapper.extractManyToManyMappings(tableMetaDataMap);
 
         // Remove input tables that were collapsed into many-to-many mappings
-        manyToManyMappingResult.collapsedTables().forEach(collapsedTable -> input.getTables().remove(collapsedTable));
+        manyToManyMappingResult.collapsedTables()
+                .forEach(collapsedTable -> {
+                    if (output.isResolveRelationships())
+                    input.getTables().remove(collapsedTable);
+                });
 
         // Generate entities
         final Map<String, GeneratedEntity> entities = new HashMap<>(input.getTables().size());

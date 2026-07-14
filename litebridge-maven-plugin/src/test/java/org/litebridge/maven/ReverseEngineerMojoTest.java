@@ -50,7 +50,7 @@ class ReverseEngineerMojoTest {
     @DisplayName("Reverse engineer")
     @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom.xml")
     void execute(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
-        final org.litebridge.maven.ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo);
+        final ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo, true);
 
         assertTrue(result.person.getImports().stream().noneMatch(importDeclaration ->
                 importDeclaration.getNameAsString().equals("org.jspecify.annotations.Nullable")));
@@ -84,7 +84,7 @@ class ReverseEngineerMojoTest {
     @DisplayName("Reverse engineer")
     @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-allowInterface.xml")
     void execute_allowInterface(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
-        final org.litebridge.maven.ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo);
+        final ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo, true);
 
         assertTrue(result.person.getImports().stream().noneMatch(importDeclaration ->
                 importDeclaration.getNameAsString().equals("org.jspecify.annotations.AllowInterface")));
@@ -94,10 +94,17 @@ class ReverseEngineerMojoTest {
     }
 
     @Test
+    @DisplayName("Reverse engineer")
+    @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-resolveRelationshipsFalse.xml")
+    void execute_relationshipsFalse(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
+        executeImpl(reverseEngineerMojo, false);
+    }
+
+    @Test
     @DisplayName("JSpecify defaults: Strict Java nullability")
     @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-jspecify.xml")
     void execute_jspecify(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
-        final org.litebridge.maven.ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo);
+        final ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo, true);
 
         assertTrue(result.person.getImports().stream().noneMatch(importDeclaration ->
                 importDeclaration.getNameAsString().equals("org.jspecify.annotations.NullMarked")));
@@ -211,7 +218,7 @@ class ReverseEngineerMojoTest {
     @DisplayName("JSpecify: no package-info.java")
     @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-jspecify-noPackageInfo.xml")
     void execute_jspecify_noPackageInfo(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
-        final org.litebridge.maven.ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo);
+        final ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo, true);
 
         final ClassOrInterfaceDeclaration person = result.person.getClassByName("PersonEntity").orElseThrow();
         assertTrue(person.isAnnotationPresent(NullMarked.class));
@@ -321,7 +328,7 @@ class ReverseEngineerMojoTest {
     @DisplayName("JSpecify: use database NULLABLE attribute")
     @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-jspecify-databaseNullable.xml")
     void execute_jspecify_databaseNullable(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
-        final org.litebridge.maven.ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo);
+        final ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo, true);
 
         final ClassOrInterfaceDeclaration person = result.person.getClassByName("PersonEntity").orElseThrow();
         assertFalse(person.isAnnotationPresent(NullMarked.class));
@@ -454,7 +461,7 @@ class ReverseEngineerMojoTest {
         reverseEngineerMojo.execute();
     }
 
-    private org.litebridge.maven.ReverseEngineerMojoTest.ExecuteResult executeImpl(final ReverseEngineerMojo reverseEngineerMojo) throws MojoExecutionException, IOException {
+    private ReverseEngineerMojoTest.ExecuteResult executeImpl(final ReverseEngineerMojo reverseEngineerMojo, final boolean resolveRelationships) throws MojoExecutionException, IOException {
         // Given
         setupH2();
 
@@ -470,7 +477,12 @@ class ReverseEngineerMojoTest {
                 fieldDeclaration.isPrivate()
                         && !fieldDeclaration.isStatic()
                         && !fieldDeclaration.isFinal());
-        assertEquals(7, personFields.size());
+
+        if (resolveRelationships) {
+            assertEquals(7, personFields.size());
+        } else {
+            assertEquals(5, personFields.size());
+        }
 
         for (FieldDeclaration fieldDeclaration : personFields) {
             switch (fieldDeclaration.getVariable(0).getNameAsString()) {
@@ -502,6 +514,7 @@ class ReverseEngineerMojoTest {
                 case "balance" -> assertEquals("BigDecimal", fieldDeclaration.getVariable(0).getType().toString());
                 case "owner" -> assertEquals("PersonEntity", fieldDeclaration.getVariable(0).getType().toString());
                 case "accountName" -> assertEquals("String", fieldDeclaration.getVariable(0).getType().toString());
+                case "personId" -> assertEquals("Long", fieldDeclaration.getVariable(0).getType().toString());
                 default -> fail("Unknown generated field: " + fieldDeclaration);
             }
         }
@@ -514,7 +527,12 @@ class ReverseEngineerMojoTest {
                 fieldDeclaration.isPrivate()
                         && !fieldDeclaration.isStatic()
                         && !fieldDeclaration.isFinal());
-        assertEquals(3, addressFields.size());
+
+        if (resolveRelationships) {
+            assertEquals(3, addressFields.size());
+        } else {
+            assertEquals(2, addressFields.size());
+        }
 
         for (FieldDeclaration fieldDeclaration : addressFields) {
             switch (fieldDeclaration.getVariable(0).getNameAsString()) {

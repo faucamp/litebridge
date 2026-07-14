@@ -21,6 +21,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.BooleanUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.convert.DefaultTypeConverter;
@@ -113,6 +114,15 @@ public final class EntityGenerator {
             columnfieldMap.put(columnMetaData.toColumn(), fieldName);
         }
 
+        // See if we should resolve entity relationships
+        final boolean resolveRelationships;
+
+        if (tableMappingConfig != null) {
+            resolveRelationships = BooleanUtils.toBoolean(tableMappingConfig.getResolveRelationships());
+        } else {
+            resolveRelationships = output.isResolveRelationships();
+        }
+
         // Process fields
         for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
             // Get config and create field-column tracking link
@@ -123,30 +133,38 @@ public final class EntityGenerator {
             final FieldClassInfo fieldClassInfo = createFieldClassInfo(columnMetaData, columnMappingConfig);
 
             // Check if the field points to a related entity, and update the field type accordingly
-            final JoinOnInfo joinOnInfo = createJoinOnInfo(columnMetaData, tableMetaDataMap, manyToManyMappingResult, entities);
+            final JoinOnInfo joinOnInfo;
+
+            if (resolveRelationships) {
+                joinOnInfo = createJoinOnInfo(columnMetaData, tableMetaDataMap, manyToManyMappingResult, entities);
+            } else {
+                joinOnInfo = null;
+            }
 
             // Create entity field
             final FieldDeclaration field = createFieldDeclaration(fieldName, fieldClassInfo, joinOnInfo, entityClass, columnMetaData, columnMappingConfig, jspecify);
             declaredFields.add(new FieldInfo(field, columnMetaData.isNullable()));
 
-            // Many-to-many relationships
-            final List<ManyToManySpec> manyToManySpecs = manyToManyMappingResult.mappings().stream()
-                    .filter(manyToManyMapping -> manyToManyMapping.leftColumn().equals(columnMetaData)
-                            || manyToManyMapping.rightColumn().equals(columnMetaData))
-                    .map(manyToManyMapping -> createManyToManySpec(columnMetaData, manyToManyMapping))
-                    .toList();
-            appendFields.addAll(createManyToManyFieldInfos(manyToManySpecs, entity, jspecify));
+            // Resolve inter-entity relationships if configured to do so
+            if (resolveRelationships) {
+                // Many-to-many relationships
+                final List<ManyToManySpec> manyToManySpecs = manyToManyMappingResult.mappings().stream()
+                        .filter(manyToManyMapping -> manyToManyMapping.leftColumn().equals(columnMetaData)
+                                || manyToManyMapping.rightColumn().equals(columnMetaData))
+                        .map(manyToManyMapping -> createManyToManySpec(columnMetaData, manyToManyMapping))
+                        .toList();
+                appendFields.addAll(createManyToManyFieldInfos(manyToManySpecs, entity, jspecify));
 
-            // Create one-to-many reverse mapping collection fields
-            final List<OneToManySpec> oneToManySpecs = createOneToManyMappings(columnMetaData, tableMetaDataMap, manyToManyMappingResult, entities);
-            createReverseCollectionFieldInfos(oneToManySpecs, entity, jspecify).forEach(fieldInfo -> {
-                final String collectionFieldName = fieldInfo.field().getVariable(0).getNameAsString();
+                // Create one-to-many reverse mapping collection fields
+                final List<OneToManySpec> oneToManySpecs = createOneToManyMappings(columnMetaData, tableMetaDataMap, manyToManyMappingResult, entities);
+                createReverseCollectionFieldInfos(oneToManySpecs, entity, jspecify).forEach(fieldInfo -> {
+                    final String collectionFieldName = fieldInfo.field().getVariable(0).getNameAsString();
 
-                if (appendFields.stream().noneMatch(appendField -> collectionFieldName.equals(appendField.field().getVariable(0).getNameAsString()))) {
-                    appendFields.add(fieldInfo);
-                }
-            });
-
+                    if (appendFields.stream().noneMatch(appendField -> collectionFieldName.equals(appendField.field().getVariable(0).getNameAsString()))) {
+                        appendFields.add(fieldInfo);
+                    }
+                });
+            }
         }
 
         // Add getters/setters

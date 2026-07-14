@@ -40,6 +40,18 @@ public class TableMappingConfig {
     private @Nullable String allowInterface;
 
     /**
+     * Controls how related entities are mapped when foreign keys are encountered for this table.
+     * <p>
+     * Setting it to {@code false} disables entity resolution; foreign key fields will use the "flat" database type
+     * (e.g. {@code Long personId}) instead of replacing the field with the related entity (e.g. {@code Person person}.
+     * <p>
+     * This setting overrides the global output setting with the same name, for this table.
+     * <p>
+     * Default: uses global setting
+     */
+    private Boolean resolveRelationships;
+
+    /**
      * Configuration for specific columns.
      */
     private @Nullable List<ColumnMappingConfig> columnMappings;
@@ -66,6 +78,14 @@ public class TableMappingConfig {
 
     public void setAllowInterface(@Nullable final String allowInterface) {
         this.allowInterface = allowInterface;
+    }
+
+    public Boolean getResolveRelationships() {
+        return resolveRelationships;
+    }
+
+    public void setResolveRelationships(final Boolean resolveRelationships) {
+        this.resolveRelationships = resolveRelationships;
     }
 
     public @Nullable List<ColumnMappingConfig> getColumnMappings() {
