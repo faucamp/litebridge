@@ -13,6 +13,7 @@ import com.github.javaparser.ast.expr.MarkerAnnotationExpr;
 import com.github.javaparser.ast.expr.Name;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.type.PrimitiveType;
 import com.github.javaparser.ast.type.Type;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -170,7 +171,7 @@ public final class EntityGenerator {
         return new GeneratedEntity(cuClass.entity(), tableMetaData.name(), entityClassName, columnfieldMap);
     }
 
-    private FieldDeclaration createFieldDeclaration(final String fieldName,
+    private FieldDeclaration createFieldDeclaration(String fieldName,
                                                     final FieldClassInfo fieldClassInfo,
                                                     final @Nullable JoinOnInfo joinOnInfo,
                                                     final ClassOrInterfaceDeclaration entityClass,
@@ -187,6 +188,12 @@ public final class EntityGenerator {
                     Modifier.Keyword.PRIVATE);
         } else {
             final String fieldClassName = joinOnInfo != null ? joinOnInfo.fieldClassType() : fieldClassInfo.fieldClassName();
+
+            // Adapt the field name to avoid including "ID" in the name
+            if (columnMetaData.name().toLowerCase().endsWith("id") && fieldName.endsWith("Id")) {
+                fieldName = fieldName.substring(0, fieldName.length() - 2);
+            }
+
             field = entityClass.addField(
                     fieldClassName,
                     fieldName,
@@ -396,6 +403,18 @@ public final class EntityGenerator {
 
     private static void createGettersAndSetters(final FieldInfo fieldInfo) {
         final MethodDeclaration getter = fieldInfo.field().createGetter();
+
+        // Check if the type is a primitive boolean
+        final Type fieldType = fieldInfo.field().getElementType();
+        final boolean isPrimitiveBoolean = fieldType.isPrimitiveType() &&
+                fieldType.asPrimitiveType().getType() == PrimitiveType.Primitive.BOOLEAN;
+
+        // Replace the getter name if it's a primitive boolean
+        if (isPrimitiveBoolean) {
+            final String newName = getter.getNameAsString().replaceFirst("^get", "is");
+            getter.setName(newName);
+        }
+
         final MethodDeclaration setter = fieldInfo.field().createSetter();
         final Parameter setterParameter = setter.getParameter(0);
         setterParameter.setModifier(Modifier.Keyword.FINAL, true);
