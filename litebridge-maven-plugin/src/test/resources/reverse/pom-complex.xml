@@ -19,8 +19,6 @@
                     <input>
                         <tables>
                             <table>LB.OS_AUTH</table>
-                            <table>LB.OS_AUTH_GROUP</table>
-                            <table>LB.OS_AUTH_SERVICE</table>
                             <table>LB.OS_AUTH_TYPE</table>
                             <table>LB.OS_CLIENT</table>
                             <table>LB.OS_CONFIG</table>
@@ -39,7 +37,6 @@
                             <table>LB.OS_HIST_SRV_INST</table>
                             <table>LB.OS_HIST_STAT_DET</table>
                             <table>LB.OS_MAINTENANCE</table>
-                            <table>LB.OS_MNT_GROUP</table>
                             <table>LB.OS_MNT_SERVICE</table>
                             <table>LB.OS_SERV_COMPNT</table>
                             <table>LB.OS_SERVICE</table>

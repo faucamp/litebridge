@@ -185,6 +185,8 @@ create table LB.OS_HIST_SERVICE
     STATUS_MSG          VARCHAR2(100),
     STATUS_PROPAGATED   NUMBER(1) default 0 not null,
     HIST_STAT_DET_ID    NUMBER(15)
+        constraint OS_HIST_SERVICE_HIST_STAT_DET_ID
+            references LB.OS_HIST_STAT_DET
 );
 
 create index LB.OS_HIST_SERVICE_002N
@@ -242,6 +244,8 @@ create table LB.OS_HIST_SRV_INST
             references LB.OS_STATUS,
     STATUS_MSG       VARCHAR2(100),
     HIST_STAT_DET_ID NUMBER(15)
+        constraint OS_HIST_SRV_INST_HIST_STAT_DET_ID
+            references LB.OS_HIST_STAT_DET
 );
 
 create index LB.OS_HIST_SRV_INST_002N

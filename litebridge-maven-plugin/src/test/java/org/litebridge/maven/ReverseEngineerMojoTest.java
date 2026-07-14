@@ -16,17 +16,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.litebridge.orm.annotation.AllowInterface;
+import org.litebridge.orm.annotation.ManyToMany;
+import org.litebridge.orm.annotation.OneToMany;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.litebridge.maven.util.ClassGraphUtil.getFieldName;
 import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -112,7 +117,7 @@ class ReverseEngineerMojoTest {
         assertFalse(person.isAnnotationPresent(NullMarked.class));
 
         person.getFields().forEach(field -> {
-            final String fieldName = field.getVariable(0).getNameAsString();
+            final String fieldName = getFieldName(field);
 
             if (fieldName.equals("age")) {
                 // Note that "age" is nullable on a database level, but the SQL type mapping for the entity specifies a primitive int=
@@ -151,7 +156,7 @@ class ReverseEngineerMojoTest {
         assertFalse(account.isAnnotationPresent(NullMarked.class));
 
         account.getFields().forEach(field -> {
-            final String fieldName = field.getVariable(0).getNameAsString();
+            final String fieldName = getFieldName(field);
 
             if (fieldName.equals("active")) {
                 assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
@@ -224,7 +229,7 @@ class ReverseEngineerMojoTest {
         assertTrue(person.isAnnotationPresent(NullMarked.class));
 
         person.getFields().forEach(field -> {
-            final String fieldName = field.getVariable(0).getNameAsString();
+            final String fieldName = getFieldName(field);
 
             if (fieldName.equals("age")) {
                 // Note that "age" is nullable on a database level, but the SQL type mapping for the entity specifies a primitive int=
@@ -261,7 +266,7 @@ class ReverseEngineerMojoTest {
         assertTrue(account.isAnnotationPresent(NullMarked.class));
 
         account.getFields().forEach(field -> {
-            final String fieldName = field.getVariable(0).getNameAsString();
+            final String fieldName = getFieldName(field);
 
             if (fieldName.equals("active")) {
                 assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
@@ -334,7 +339,7 @@ class ReverseEngineerMojoTest {
         assertFalse(person.isAnnotationPresent(NullMarked.class));
 
         person.getFields().forEach(field -> {
-            final String fieldName = field.getVariable(0).getNameAsString();
+            final String fieldName = getFieldName(field);
 
             switch (fieldName) {
                 // Note that "age" is nullable on a database level, but the SQL type mapping for the entity specifies a primitive int=
@@ -374,7 +379,7 @@ class ReverseEngineerMojoTest {
         assertFalse(account.isAnnotationPresent(NullMarked.class));
 
         account.getFields().forEach(field -> {
-            final String fieldName = field.getVariable(0).getNameAsString();
+            final String fieldName = getFieldName(field);
 
             if (fieldName.equals("flagged")) {
                 assertTrue(field.isAnnotationPresent(Nullable.class),
@@ -415,7 +420,7 @@ class ReverseEngineerMojoTest {
         assertFalse(address.isAnnotationPresent(NullMarked.class));
 
         address.getFields().forEach(field -> {
-            final String fieldName = field.getVariable(0).getNameAsString();
+            final String fieldName = getFieldName(field);
 
             if (fieldName.equals("addressId") || fieldName.equals("address")) {
                 assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
@@ -459,6 +464,12 @@ class ReverseEngineerMojoTest {
 
         // When
         reverseEngineerMojo.execute();
+
+        // Then
+        final CompilationUnit osHistService = getEntity("OsHistService");
+        ensureFieldDeclaration("histStatDet", osHistService);
+        final FieldDeclaration osHistService_osHistSrvInts = ensureFieldDeclaration("osHistSrvInsts", osHistService);
+        assertTrue(osHistService_osHistSrvInts.getAnnotationByClass(OneToMany.class).isPresent());
     }
 
     private ReverseEngineerMojoTest.ExecuteResult executeImpl(final ReverseEngineerMojo reverseEngineerMojo, final boolean resolveRelationships) throws MojoExecutionException, IOException {
@@ -469,14 +480,8 @@ class ReverseEngineerMojoTest {
         reverseEngineerMojo.execute();
 
         // Then
-        final Path personEntityFile = Paths.get("target/generated-sources/java/com/example/generated/PersonEntity.java");
-        assertTrue(personEntityFile.toFile().exists());
-        final CompilationUnit personCompilationUnit = StaticJavaParser.parse(personEntityFile);
-        assertEquals("PersonEntity", personCompilationUnit.getPrimaryTypeName().orElseThrow());
-        final List<FieldDeclaration> personFields = personCompilationUnit.findAll(FieldDeclaration.class, fieldDeclaration ->
-                fieldDeclaration.isPrivate()
-                        && !fieldDeclaration.isStatic()
-                        && !fieldDeclaration.isFinal());
+        final CompilationUnit personCompilationUnit = getEntity("PersonEntity");
+        final List<FieldDeclaration> personFields = getFieldDeclarations(personCompilationUnit);
 
         if (resolveRelationships) {
             assertEquals(7, personFields.size());
@@ -485,7 +490,7 @@ class ReverseEngineerMojoTest {
         }
 
         for (FieldDeclaration fieldDeclaration : personFields) {
-            switch (fieldDeclaration.getVariable(0).getNameAsString()) {
+            switch (getFieldName(fieldDeclaration)) {
                 case "id" -> assertEquals("Long", fieldDeclaration.getVariable(0).getType().toString());
                 case "age" -> assertEquals("int", fieldDeclaration.getVariable(0).getType().toString());
                 case "firstName", "surname", "eyeColour" ->
@@ -496,18 +501,12 @@ class ReverseEngineerMojoTest {
             }
         }
 
-        final Path accountEntityFile = Paths.get("target/generated-sources/java/com/example/generated/Account.java");
-        assertTrue(accountEntityFile.toFile().exists());
-        final CompilationUnit accountCompilationUnit = StaticJavaParser.parse(accountEntityFile);
-        assertEquals("Account", accountCompilationUnit.getPrimaryTypeName().orElseThrow());
-        final List<FieldDeclaration> accountFields = accountCompilationUnit.findAll(FieldDeclaration.class, fieldDeclaration ->
-                fieldDeclaration.isPrivate()
-                        && !fieldDeclaration.isStatic()
-                        && !fieldDeclaration.isFinal());
+        final CompilationUnit accountCompilationUnit = getEntity("Account");
+        final List<FieldDeclaration> accountFields = getFieldDeclarations(accountCompilationUnit);
         assertEquals(6, accountFields.size());
 
         for (FieldDeclaration fieldDeclaration : accountFields) {
-            switch (fieldDeclaration.getVariable(0).getNameAsString()) {
+            switch (getFieldName(fieldDeclaration)) {
                 case "id" -> assertEquals("Long", fieldDeclaration.getVariable(0).getType().toString());
                 case "active" -> assertEquals("boolean", fieldDeclaration.getVariable(0).getType().toString());
                 case "flagged" -> assertEquals("Boolean", fieldDeclaration.getVariable(0).getType().toString());
@@ -519,14 +518,8 @@ class ReverseEngineerMojoTest {
             }
         }
 
-        final Path addressEntityFile = Paths.get("target/generated-sources/java/com/example/generated/Address.java");
-        assertTrue(addressEntityFile.toFile().exists());
-        final CompilationUnit adressCompilationUnit = StaticJavaParser.parse(addressEntityFile);
-        assertEquals("Address", adressCompilationUnit.getPrimaryTypeName().orElseThrow());
-        final List<FieldDeclaration> addressFields = adressCompilationUnit.findAll(FieldDeclaration.class, fieldDeclaration ->
-                fieldDeclaration.isPrivate()
-                        && !fieldDeclaration.isStatic()
-                        && !fieldDeclaration.isFinal());
+        final CompilationUnit adressCompilationUnit = getEntity("Address");
+        final List<FieldDeclaration> addressFields = getFieldDeclarations(adressCompilationUnit);
 
         if (resolveRelationships) {
             assertEquals(3, addressFields.size());
@@ -535,7 +528,7 @@ class ReverseEngineerMojoTest {
         }
 
         for (FieldDeclaration fieldDeclaration : addressFields) {
-            switch (fieldDeclaration.getVariable(0).getNameAsString()) {
+            switch (getFieldName(fieldDeclaration)) {
                 case "addressId" -> assertEquals("Long", fieldDeclaration.getVariable(0).getType().toString());
                 case "address" -> assertEquals("String", fieldDeclaration.getVariable(0).getType().toString());
                 case "personEntities" ->
@@ -647,5 +640,29 @@ class ReverseEngineerMojoTest {
         java.lang.reflect.Field field = target.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);
         field.set(target, value);
+    }
+
+    private static CompilationUnit getEntity(final String entityName) throws IOException {
+        final CompilationUnit compilationUnit;
+        final Path entityFile = Paths.get("target/generated-sources/java/com/example/generated/%s.java".formatted(entityName));
+        assertTrue(entityFile.toFile().exists());
+        compilationUnit = StaticJavaParser.parse(entityFile);
+        assertEquals(entityName, compilationUnit.getPrimaryTypeName().orElseThrow());
+        return compilationUnit;
+    }
+
+    private static List<FieldDeclaration> getFieldDeclarations(final CompilationUnit compilationUnit) {
+        final List<FieldDeclaration> fields = compilationUnit.findAll(FieldDeclaration.class, fieldDeclaration ->
+                fieldDeclaration.isPrivate()
+                        && !fieldDeclaration.isStatic()
+                        && !fieldDeclaration.isFinal());
+        return fields;
+    }
+
+    private static FieldDeclaration ensureFieldDeclaration(final String fieldName, final CompilationUnit compilationUnit) {
+        return getFieldDeclarations(compilationUnit).stream()
+                .filter(fieldDeclaration -> fieldName.equals(getFieldName(fieldDeclaration)))
+                .findFirst()
+                .orElseThrow(() -> assertionFailure().reason("Field '%s' not found in compilation unit".formatted(fieldName)).build());
     }
 }

@@ -6,7 +6,10 @@
 - Maven plugin: Added "resolveRelationships" config parameter to control foreign key behaviour.
 
 ### Changed
-- Maven plugin: Fixed issue with complex circular dependencies in the Litebridge Maven plugin's `reverse-engineer` goal.
+- Maven plugin:
+  - Fixed issue with complex circular dependencies in the Litebridge Maven plugin's `reverse-engineer` goal.
+  - Fix many-to-many join table indentification for tables with two columns (but aren't join tables).
+  - Refactor `ReverseEngineerMojo` to improve performance
 
 ### Deprecated
 - None.

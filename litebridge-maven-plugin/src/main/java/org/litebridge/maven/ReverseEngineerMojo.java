@@ -150,11 +150,9 @@ public final class ReverseEngineerMojo extends AbstractMojo {
                 });
 
         // Generate entities
-        final Map<String, GeneratedEntity> entities = new HashMap<>(input.getTables().size());
+        final List<GeneratedEntity> entities = entityGenerator.createEntitiesForTables(input.getTables(), tableMetaDataMap, manyToManyMappingResult);
 
-        for (final String tableName : input.getTables()) {
-            final TableMetaData tableMetaData = tableMetaDataMap.get(tableName);
-            final GeneratedEntity generatedEntity = entityGenerator.createEntityClassForTable(tableMetaData, tableMetaDataMap, manyToManyMappingResult, entities);
+        for (final GeneratedEntity generatedEntity : entities) {
             javaFileWriter.writeEntityJavaFile(generatedEntity);
         }
     }

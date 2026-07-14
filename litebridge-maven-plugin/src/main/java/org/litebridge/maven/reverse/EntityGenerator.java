@@ -41,6 +41,7 @@ import org.litebridge.orm.annotation.OneToMany;
 
 import java.sql.JDBCType;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -48,6 +49,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static org.litebridge.maven.util.ClassGraphUtil.getFieldName;
 
 /**
  * Entity generator utility class.
@@ -74,6 +77,26 @@ public final class EntityGenerator {
         this.log = log;
     }
 
+    public List<GeneratedEntity> createEntitiesForTables(final List<String> tables,
+                                                                final Map<String, TableMetaData> tableMetaDataMap,
+                                                                final ManyToManyMappingResult manyToManyMappingResult) throws MojoExecutionException {
+        final Map<String, GeneratedEntity> entities = new HashMap<>();
+
+        for (String tableName : tables) {
+            final TableMetaData tableMetaData = tableMetaDataMap.get(tableName);
+
+            if (tableMetaData == null) {
+                throw new MojoExecutionException("Table metadata not found for table: " + tableName);
+            }
+
+            createEntityClassForTable(tableMetaData, tableMetaDataMap, manyToManyMappingResult, entities);
+        }
+
+        return entities.values().stream()
+                .sorted(Comparator.comparing(GeneratedEntity::className))
+                .toList();
+    }
+
     /**
      * Creates a generated entity class for a specified database table based on its metadata.
      *
@@ -90,6 +113,14 @@ public final class EntityGenerator {
                                                      final Map<String, GeneratedEntity> entities) throws MojoExecutionException {
         final @Nullable TableMappingConfig tableMappingConfig = getTableMappingConfig(tableMetaData);
         final String entityClassName = createEntityClassName(tableMetaData, tableMappingConfig);
+
+        if (entities.containsKey(tableMetaData.qualifiedName())) {
+            if (log.isDebugEnabled()) {
+                log.debug("[%s] Returning entity from cache".formatted(entityClassName));
+            }
+
+            return entities.get(entityClassName);
+        }
 
         // Toggle nullability annotations
         final boolean jspecify = output.getJspecify() != null && output.getJspecify().isAnnotate();
@@ -161,14 +192,18 @@ public final class EntityGenerator {
                                 || manyToManyMapping.rightColumn().equals(columnMetaData))
                         .map(manyToManyMapping -> createManyToManySpec(columnMetaData, manyToManyMapping))
                         .toList();
-                appendFields.addAll(createManyToManyFieldInfos(manyToManySpecs, entity, jspecify));
+                appendFields.addAll(createManyToManyFieldInfos(entityClassName, manyToManySpecs, entity, jspecify));
 
                 // Create one-to-many reverse mapping collection fields
-                final List<OneToManySpec> oneToManySpecs = createOneToManyMappings(columnMetaData, tableMetaDataMap, manyToManyMappingResult, entities);
+                final List<OneToManySpec> oneToManySpecs = createOneToManyMappings(entityClassName, columnMetaData, tableMetaDataMap, manyToManyMappingResult, entities);
                 createReverseCollectionFieldInfos(oneToManySpecs, entity, jspecify).forEach(fieldInfo -> {
-                    final String collectionFieldName = fieldInfo.field().getVariable(0).getNameAsString();
+                    final String collectionFieldName = getFieldName(fieldInfo.field());
 
-                    if (appendFields.stream().noneMatch(appendField -> collectionFieldName.equals(appendField.field().getVariable(0).getNameAsString()))) {
+                    if (appendFields.stream().noneMatch(appendField -> collectionFieldName.equals(getFieldName(appendField.field())))) {
+                        if (log.isDebugEnabled()) {
+                            log.debug("[%s] Appending one-to-many reverse collection field '%s'".formatted(entityClass.getNameAsString(), fieldName));
+                        }
+
                         appendFields.add(fieldInfo);
                     }
                 });
@@ -179,11 +214,11 @@ public final class EntityGenerator {
         final List<String> fieldNames = new ArrayList<>(declaredFields.size());
 
         // Add one-to-many reverse collection fields and many-to-many collections
-        appendFields.stream().map(FieldInfo::field).forEach(cuClass.entityClass()::addMember);
+        appendFields.stream().map(FieldInfo::field).forEach(decl -> cuClass.entityClass().addMember(decl));
 
         // Add getters/setters
         declaredFields.forEach(fieldInfo -> {
-            fieldNames.add(fieldInfo.field().getVariable(0).getNameAsString());
+            fieldNames.add(getFieldName(fieldInfo.field()));
             createGettersAndSetters(fieldInfo);
         });
 
@@ -193,6 +228,10 @@ public final class EntityGenerator {
         cuClass.entityClass().addMember(createEquals(entityClassName, fieldNames));
         cuClass.entityClass().addMember(createHashCode(fieldNames));
         cuClass.entityClass().addMember(createToString(entityClassName, fieldNames));
+
+        if (log.isInfoEnabled()) {
+            log.info("[%s] Generated entity '%s' for table '%s'".formatted(entityClassName, entityClassName, tableMetaData.qualifiedName()));
+        }
 
         return new GeneratedEntity(cuClass.entity(), tableMetaData.name(), entityClassName, columnfieldMap);
     }
@@ -208,12 +247,20 @@ public final class EntityGenerator {
         final FieldDeclaration field;
 
         if (fieldClass != null) {
+            if (log.isDebugEnabled()) {
+                log.debug("[%s] Adding field '%s' of type '%s' for column '%s'".formatted(entityClass.getNameAsString(), fieldName, fieldClass.getSimpleName(), columnMetaData.name()));
+            }
+
             field = entityClass.addField(
                     fieldClass,
                     fieldName,
                     Modifier.Keyword.PRIVATE);
         } else {
             final String fieldClassName = joinOnInfo != null ? joinOnInfo.fieldClassType() : fieldClassInfo.fieldClassName();
+
+            if (log.isDebugEnabled()) {
+                log.debug("[%s] Adding field '%s' with type name '%s' for column '%s'".formatted(entityClass.getNameAsString(), fieldName, fieldClassName, columnMetaData.name()));
+            }
 
             // Adapt the field name to avoid including "ID" in the name
             if (columnMetaData.name().toLowerCase().endsWith("id") && fieldName.endsWith("Id")) {
@@ -572,9 +619,10 @@ public final class EntityGenerator {
         return annotation;
     }
 
-    private List<OneToManySpec> createOneToManyMappings(final ColumnMetaData columnMetaData,
+    private List<OneToManySpec> createOneToManyMappings(final String entityClassName,
+                                                        final ColumnMetaData columnMetaData,
                                                         final Map<String, TableMetaData> tableMetaDataMap,
-                                                        final @MonotonicNonNull ManyToManyMappingResult manyToManyMappingResult,
+                                                        final ManyToManyMappingResult manyToManyMappingResult,
                                                         final Map<String, GeneratedEntity> entities) throws MojoExecutionException {
         final List<OneToManySpec> oneToManySpecs = new ArrayList<>();
 
@@ -587,6 +635,10 @@ public final class EntityGenerator {
             if (remoteEntity == null
                     && !manyToManyMappingResult.collapsedTables().contains(remoteTableName)
                     && tableMetaDataMap.containsKey(remoteTableName)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("[%s] FK reference creating entity for remote table '%s': %s".formatted(entityClassName, remoteTableName, foreignRef));
+                }
+
                 remoteEntity = createEntityClassForTable(tableMetaDataMap.get(remoteTableName), tableMetaDataMap, manyToManyMappingResult, entities);
             }
 
@@ -636,18 +688,18 @@ public final class EntityGenerator {
         return appendFields;
     }
 
-    private List<FieldInfo> createManyToManyFieldInfos(final List<ManyToManySpec> manyToManySpecs, final CompilationUnit entity, final boolean jspecify) {
+    private List<FieldInfo> createManyToManyFieldInfos(final String entityClassName, final List<ManyToManySpec> manyToManySpecs, final CompilationUnit entity, final boolean jspecify) {
         final List<FieldInfo> appendFields = new ArrayList<>();
 
         for (ManyToManySpec manyToManySpec : manyToManySpecs) {
             final Type listType = StaticJavaParser.parseType("List<%s>".formatted(manyToManySpec.remoteEntityClassName()));
             entity.addImport(List.class);
             entity.addImport(ManyToMany.class);
-            final String reverseMappingCollectionName = MojoStringUtils.pluralise((MojoStringUtils.lowerFirst(manyToManySpec.remoteEntityClassName())));
+            final String collectionName = MojoStringUtils.pluralise((MojoStringUtils.lowerFirst(manyToManySpec.remoteEntityClassName())));
 
             final FieldDeclaration reverseMappingCollectionField = new FieldDeclaration()
                     .setModifiers(Modifier.Keyword.PRIVATE)
-                    .addVariable(new VariableDeclarator(listType, reverseMappingCollectionName));
+                    .addVariable(new VariableDeclarator(listType, collectionName));
 
             //noinspection DataFlowIssue
             if (jspecify && output.getJspecify().isNullMarked()) {
@@ -658,6 +710,10 @@ public final class EntityGenerator {
 
             if (output.isJavadoc()) {
                 reverseMappingCollectionField.setJavadocComment("Many-to-many collection to {@link %s}".formatted(manyToManySpec.remoteEntityClassName()));
+            }
+
+            if (log.isDebugEnabled()) {
+                log.debug("[%s] Appending many-to-many collection field '%s'".formatted(entityClassName, collectionName));
             }
 
             appendFields.add(new FieldInfo(reverseMappingCollectionField, true));
@@ -678,6 +734,10 @@ public final class EntityGenerator {
             GeneratedEntity remoteEntity = entities.get(remoteTableName);
 
             if (remoteEntity == null && tableMetaDataMap.containsKey(remoteTableName)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("[%s] FK constraint creating entity for remote table '%s': %s".formatted(entityClassName, remoteTableName, foreignKeyConstraint));
+                }
+
                 remoteEntity = createEntityClassForTable(tableMetaDataMap.get(remoteTableName), tableMetaDataMap, manyToManyMappings, entities);
             }
 
@@ -720,9 +780,6 @@ public final class EntityGenerator {
             final ColumnMappingConfig mapping = tableMappingConfig.getColumnMappings().stream()
                     .filter(c -> c.getColumn().equals(columnMetaData.name()))
                     .findFirst().orElse(null);
-            if (mapping == null && log.isDebugEnabled()) {
-                log.debug("[%s] No column mapping found for %s in table %s".formatted(entityClassName, columnMetaData.name(), tableMappingConfig.getTable()));
-            }
             return mapping;
         } else {
             return null;

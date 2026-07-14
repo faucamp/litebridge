@@ -52,22 +52,6 @@ public class ManyToManyMapper {
                 continue;
             }
 
-            // See if the foreign key is referenced by a mapped table
-            if (entityTables.contains(joinTable)) {
-                // Check if the join table can be collapsed into a many-to-many, or if it needs to be an entity
-                final String joinTableName = joinTable.qualifiedName();
-                final TableMetaData joinTableMetaData = tableMetaDataMap.get(joinTableName);
-
-                if (joinTableMetaData.columns().size() == 2) {
-                    // Collapse the join table into a many-to-many
-                    entityTables.remove(joinTable);
-                    collapsedTables.add(joinTableName);
-                } else {
-                    // This join table will be represented as an entity since there are additional columns
-                    continue;
-                }
-            }
-
             // The foreign key is referenced by two entities in the set; apply a many-to-many
             final TableMetaData leftTable = referencingTableColumns.getFirst().tableMetaData();
             final ColumnMetaData leftColumn = referencingTableColumns.getFirst().columnMetaData();
@@ -75,6 +59,27 @@ public class ManyToManyMapper {
             final TableMetaData rightTable = referencingTableColumns.get(1).tableMetaData();
             final ColumnMetaData rightColumn = referencingTableColumns.get(1).columnMetaData();
             final Column rightJoinColumn = referencingTableColumns.get(1).joinColumn();
+
+            // Check if the join table can be collapsed into a many-to-many, or if it needs to be an entity
+            final String joinTableName = joinTable.qualifiedName();
+
+            if (tableMetaDataMap.containsKey(joinTableName)) {
+                final TableMetaData joinTableMetaData = tableMetaDataMap.get(joinTableName);
+
+                if (joinTableMetaData.columns().size() == 2
+                        && joinTableMetaData.columns().stream()
+                        .allMatch(jc -> jc.getForeignKeyConstraints().stream()
+                                .map(fkc -> fkc.foreignKey())
+                                .anyMatch(fkColumn -> fkColumn.equals(leftColumn.toColumn()) || fkColumn.equals(rightColumn.toColumn())))) {
+                    // Collapse the join table into a many-to-many
+                    entityTables.remove(joinTable);
+                    collapsedTables.add(joinTableName);
+                } else {
+                    // This is not a join table, or it is but with additional columns and will be represented as an entity
+                    continue;
+                }
+            }
+
             mappings.add(new ManyToManyMapping(leftTable, leftColumn, joinTable, leftJoinColumn, rightJoinColumn, rightTable, rightColumn));
         }
 
