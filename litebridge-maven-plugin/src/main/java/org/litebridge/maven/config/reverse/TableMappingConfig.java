@@ -49,7 +49,7 @@ public class TableMappingConfig {
      * <p>
      * Default: uses global setting
      */
-    private Boolean resolveRelationships;
+    private @Nullable Boolean resolveRelationships;
 
     /**
      * Configuration for specific columns.
@@ -80,7 +80,7 @@ public class TableMappingConfig {
         this.allowInterface = allowInterface;
     }
 
-    public Boolean getResolveRelationships() {
+    public @Nullable Boolean getResolveRelationships() {
         return resolveRelationships;
     }
 

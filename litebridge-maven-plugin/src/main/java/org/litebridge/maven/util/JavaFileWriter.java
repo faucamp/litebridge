@@ -63,7 +63,7 @@ public class JavaFileWriter {
      */
     public void writeJavaFile(final File file, final CompilationUnit compilationUnit) throws MojoExecutionException {
         if (log.isDebugEnabled()) {
-            log.debug("Writing generated Java class to file: " + file.getAbsolutePath());
+            log.debug("Generated file: " + file.getAbsolutePath());
         }
 
         try {

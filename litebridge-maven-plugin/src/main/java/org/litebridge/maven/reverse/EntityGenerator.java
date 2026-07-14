@@ -95,6 +95,10 @@ public final class EntityGenerator {
         final boolean jspecify = output.getJspecify() != null && output.getJspecify().isAnnotate();
 
         // Create class
+        if (log.isInfoEnabled()) {
+            log.info("Creating entity class '%s' for table: %s".formatted(entityClassName, tableMetaData.qualifiedName()));
+        }
+
         final CompilationUnitAndClass cuClass = createCompilationUnitAndClass(tableMetaData, tableMappingConfig, entityClassName, jspecify);
         final CompilationUnit entity = cuClass.entity();
         final ClassOrInterfaceDeclaration entityClass = cuClass.entityClass();
@@ -117,10 +121,14 @@ public final class EntityGenerator {
         // See if we should resolve entity relationships
         final boolean resolveRelationships;
 
-        if (tableMappingConfig != null) {
+        if (tableMappingConfig != null && tableMappingConfig.getResolveRelationships() != null) {
             resolveRelationships = BooleanUtils.toBoolean(tableMappingConfig.getResolveRelationships());
         } else {
             resolveRelationships = output.isResolveRelationships();
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug("Resolve entity relationships for table %s: %b".formatted(tableMetaData.qualifiedName(), resolveRelationships));
         }
 
         // Process fields
