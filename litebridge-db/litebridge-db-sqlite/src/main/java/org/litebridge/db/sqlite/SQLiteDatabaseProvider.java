@@ -90,13 +90,14 @@ public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
             final List<ColumnMetaData> columns = new java.util.ArrayList<>();
             while (rs.next()) {
                 final String columnName = rs.getString("COLUMN_NAME");
+                final String defaultValue = rs.getString("COLUMN_DEF");
                 final int dataType = rs.getInt("DATA_TYPE");
                 final String isNullable = rs.getString("IS_NULLABLE");
                 final String isAutoincrement = rs.getString("IS_AUTOINCREMENT");
                 final int size = rs.getInt("COLUMN_SIZE");
                 final int decimalDigits = rs.getInt("DECIMAL_DIGITS");
 
-                columns.add(new ColumnMetaData(table, columnName, "YES".equals(isNullable), dataType, size, decimalDigits, "YES".equals(isAutoincrement), null));
+                columns.add(new ColumnMetaData(table, columnName, "YES".equals(isNullable), dataType, size, decimalDigits, "YES".equals(isAutoincrement), defaultValue, null));
             }
             return columns;
         }

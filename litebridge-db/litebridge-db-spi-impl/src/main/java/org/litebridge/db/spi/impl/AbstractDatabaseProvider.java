@@ -411,13 +411,14 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
             while (dbColumns.next()) {
                 final String name = dbColumns.getString("COLUMN_NAME");
+                final String defaultValue = dbColumns.getString("COLUMN_DEF");
                 final boolean nullable = dbColumns.getBoolean("IS_NULLABLE");
                 final int dataType = dbColumns.getInt("DATA_TYPE");
                 final int size = dbColumns.getInt("COLUMN_SIZE");
                 final boolean isAutoincrement = dbColumns.getBoolean("IS_AUTOINCREMENT");
                 final int decimalDigits = dbColumns.getInt("DECIMAL_DIGITS");
 
-                columns.add(new ColumnMetaData(table, name, nullable, dataType, size, decimalDigits, isAutoincrement, null));
+                columns.add(new ColumnMetaData(table, name, nullable, dataType, size, decimalDigits, isAutoincrement, defaultValue, null));
             }
 
             return columns;

@@ -78,8 +78,8 @@ public final class EntityGenerator {
     }
 
     public List<GeneratedEntity> createEntitiesForTables(final List<String> tables,
-                                                                final Map<String, TableMetaData> tableMetaDataMap,
-                                                                final ManyToManyMappingResult manyToManyMappingResult) throws MojoExecutionException {
+                                                         final Map<String, TableMetaData> tableMetaDataMap,
+                                                         final ManyToManyMappingResult manyToManyMappingResult) throws MojoExecutionException {
         final Map<String, GeneratedEntity> entities = new HashMap<>();
 
         for (String tableName : tables) {
@@ -255,6 +255,29 @@ public final class EntityGenerator {
                     fieldClass,
                     fieldName,
                     Modifier.Keyword.PRIVATE);
+
+            // Initialise the default value, if any
+            if (columnMetaData.getDefaultValue() != null) {
+                //final Object defaultValue = typeConverter.convert(columnMetaData.getDefaultValue(), fieldClass);
+                final String defaultValue;
+
+                if (fieldClass == Long.class || fieldClass == long.class) {
+                    defaultValue = "%sL".formatted(columnMetaData.getDefaultValue());
+                } else if (fieldClass == Short.class || fieldClass == short.class) {
+                    defaultValue = "%sS".formatted(columnMetaData.getDefaultValue());
+                } else if (fieldClass == Double.class || fieldClass == double.class) {
+                    defaultValue = "%sD".formatted(columnMetaData.getDefaultValue());
+                } else if (fieldClass == Float.class || fieldClass == float.class) {
+                    defaultValue = "%sF".formatted(columnMetaData.getDefaultValue());
+                } else {
+                    final Object convertedDefaultValue = typeConverter.convert(columnMetaData.getDefaultValue(), fieldClass);
+                    defaultValue = convertedDefaultValue != null ? convertedDefaultValue.toString() : null;
+                }
+
+                if (defaultValue != null) {
+                    field.getVariable(0).setInitializer(defaultValue);
+                }
+            }
         } else {
             final String fieldClassName = joinOnInfo != null ? joinOnInfo.fieldClassType() : fieldClassInfo.fieldClassName();
 
@@ -298,6 +321,10 @@ public final class EntityGenerator {
                 comment.append(", nullable");
             } else {
                 comment.append(", not nullable");
+            }
+
+            if (columnMetaData.getDefaultValue() != null) {
+                comment.append(", default value: ").append(columnMetaData.getDefaultValue());
             }
 
             field.setJavadocComment(comment.toString());

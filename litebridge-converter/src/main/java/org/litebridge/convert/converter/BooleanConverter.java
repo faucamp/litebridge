@@ -14,7 +14,11 @@ public class BooleanConverter extends AbstractStringParsingConverter<Boolean> im
 
     @Override
     protected Boolean convertString(final String value) {
-        return Boolean.valueOf(value);
+        if ("1".equals(value)) {
+            return Boolean.TRUE;
+        } else {
+            return Boolean.valueOf(value);
+        }
     }
 
     /**

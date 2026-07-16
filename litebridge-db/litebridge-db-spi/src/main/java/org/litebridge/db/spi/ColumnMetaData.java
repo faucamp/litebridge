@@ -27,6 +27,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
     private final int size;
     private final int decimalDigits;
     private boolean autoIncrement;
+    private final @Nullable String defaultValue;
     private @Nullable ColumnValueGenerator generator;
     private @Nullable String joinColumn;
     private @Nullable List<ForeignKeyConstraint> foreignKeyConstraints;
@@ -41,6 +42,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
      * @param dataType      the SQL data type of the column as defined in {@link java.sql.Types}
      * @param size          the size of the column, typically representing the maximum number of characters for string or digits for numeric types
      * @param decimalDigits the number of decimal digits for the column, applicable for numeric types
+     * @param defaultValue  the default value for the column, or {@code null} if no default value is specified
      * @param autoIncrement a flag indicating whether the column is defined as auto-increment
      * @param generator     the name of the sequence associated with the column, or null if no sequence is associated
      */
@@ -51,6 +53,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
                           final int size,
                           final int decimalDigits,
                           final boolean autoIncrement,
+                          @Nullable final String defaultValue,
                           final @Nullable ColumnValueGenerator generator) {
         this.table = table;
         this.name = name;
@@ -59,6 +62,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
         this.size = size;
         this.decimalDigits = decimalDigits;
         this.autoIncrement = autoIncrement;
+        this.defaultValue = defaultValue;
         this.generator = generator;
     }
 
@@ -74,7 +78,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
      * @param size     the size of the column, typically representing the maximum number of characters for string or digits for numeric types
      */
     public ColumnMetaData(final Table table, final String name, final boolean nullable, final int dataType, final int size) {
-        this(table, name, nullable, dataType, size, 0, false, null);
+        this(table, name, nullable, dataType, size, 0, false, null, null);
     }
 
     /**
@@ -116,6 +120,10 @@ public final class ColumnMetaData implements MappedFieldTarget {
      */
     public boolean isNullable() {
         return nullable;
+    }
+
+    public @Nullable String getDefaultValue() {
+        return defaultValue;
     }
 
     /**
@@ -160,6 +168,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
      *
      * @param autoIncrement {@code true} if auto-increment; {@code false} otherwise
      */
+    @Deprecated
     public void setAutoIncrement(final boolean autoIncrement) {
         this.autoIncrement = autoIncrement;
     }

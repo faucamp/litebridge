@@ -3,16 +3,22 @@
 ## 0.3.2
 
 ### Added
-- Maven plugin: Added "resolveRelationships" config parameter to control foreign key behaviour.
+- Database provider:
+  - `ColumnMetaData` now contains the default value of a column.
+- Maven plugin: 
+  - Added "resolveRelationships" config parameter to control foreign key behaviour.
 
 ### Changed
 - Maven plugin:
   - Fixed issue with complex circular dependencies in the Litebridge Maven plugin's `reverse-engineer` goal.
   - Fix many-to-many join table indentification for tables with two columns (but aren't join tables).
   - Refactor `ReverseEngineerMojo` to improve performance
+  - Initialise default values for fields representing columns with a default value defined in the database.
+- Type converter:
+  - Boolean converter now supports strings "1" and "0" as valid boolean values.
 
 ### Deprecated
-- None.
+- Deprecated SPI method: `ColumnMetadata.setAutoIncrement()`
 
 ### Removed
 - None.

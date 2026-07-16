@@ -31,6 +31,8 @@ class BooleanConverterTest {
         assertTrue(converter.convert("TRUE"));
         assertFalse(converter.convert("false"));
         assertFalse(converter.convert("abc"));
+        assertTrue(converter.convert("1"));
+        assertFalse(converter.convert("0"));
     }
 
     @Test

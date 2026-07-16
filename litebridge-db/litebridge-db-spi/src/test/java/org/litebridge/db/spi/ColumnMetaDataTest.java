@@ -28,6 +28,7 @@ class ColumnMetaDataTest {
                 10,
                 2,
                 true,
+                null,
                 generator
         );
 
@@ -92,8 +93,8 @@ class ColumnMetaDataTest {
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnValueGenerator generator = mock(ColumnValueGenerator.class);
 
-        final ColumnMetaData a = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
-        final ColumnMetaData b = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
+        final ColumnMetaData a = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, generator);
+        final ColumnMetaData b = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, generator);
 
         assertEquals(a, b);
         assertEquals(a.hashCode(), b.hashCode());
@@ -101,27 +102,27 @@ class ColumnMetaDataTest {
         assertNotEquals(a, null);
         assertNotEquals(a, "not a ColumnMetaData");
 
-        assertNotEquals(a, new ColumnMetaData(table, "different", false, 1, 20, 0, true, generator));
-        assertEquals(a, new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator));
+        assertNotEquals(a, new ColumnMetaData(table, "different", false, 1, 20, 0, true, null, generator));
+        assertEquals(a, new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, generator));
     }
 
     @Test
     void equals_differentFields() {
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnValueGenerator generator = mock(ColumnValueGenerator.class);
-        final ColumnMetaData base = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
+        final ColumnMetaData base = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, generator);
 
-        assertNotEquals(base, new ColumnMetaData(table, "id", true, 1, 20, 0, true, generator)); // nullable
-        assertNotEquals(base, new ColumnMetaData(table, "id", false, 2, 20, 0, true, generator)); // dataType
-        assertNotEquals(base, new ColumnMetaData(table, "id", false, 1, 21, 0, true, generator)); // size
-        assertNotEquals(base, new ColumnMetaData(table, "id", false, 1, 20, 1, true, generator)); // decimalDigits
-        assertNotEquals(base, new ColumnMetaData(table, "id", false, 1, 20, 0, false, generator)); // autoIncrement
-        assertNotEquals(base, new ColumnMetaData(table, "id", false, 1, 20, 0, true, mock(ColumnValueGenerator.class))); // sequence
+        assertNotEquals(base, new ColumnMetaData(table, "id", true, 1, 20, 0, true, null, generator)); // nullable
+        assertNotEquals(base, new ColumnMetaData(table, "id", false, 2, 20, 0, true, null, generator)); // dataType
+        assertNotEquals(base, new ColumnMetaData(table, "id", false, 1, 21, 0, true, null, generator)); // size
+        assertNotEquals(base, new ColumnMetaData(table, "id", false, 1, 20, 1, true, null, generator)); // decimalDigits
+        assertNotEquals(base, new ColumnMetaData(table, "id", false, 1, 20, 0, false, null, generator)); // autoIncrement
+        assertNotEquals(base, new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, mock(ColumnValueGenerator.class))); // sequence
 
         final Table table2 = new Table("OTHER", "OTHER", "OTHER");
-        assertNotEquals(base, new ColumnMetaData(table2, "id", false, 1, 20, 0, true, generator)); // table
+        assertNotEquals(base, new ColumnMetaData(table2, "id", false, 1, 20, 0, true, null, generator)); // table
 
-        ColumnMetaData withJoin = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
+        ColumnMetaData withJoin = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, generator);
         withJoin.setJoinColumn("JOIN");
         assertNotEquals(base, withJoin); // joinColumn
     }
@@ -131,10 +132,10 @@ class ColumnMetaDataTest {
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnValueGenerator generator = mock(ColumnValueGenerator.class);
 
-        final ColumnMetaData a = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
+        final ColumnMetaData a = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, generator);
         a.setJoinColumn("JOIN");
 
-        final ColumnMetaData b = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
+        final ColumnMetaData b = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, generator);
         b.setJoinColumn("JOIN");
 
         assertEquals(a, b);
@@ -146,16 +147,16 @@ class ColumnMetaDataTest {
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnValueGenerator generator = mock(ColumnValueGenerator.class);
 
-        final ColumnMetaData withGenerator = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
-        final ColumnMetaData withoutGenerator = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null);
+        final ColumnMetaData withGenerator = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, generator);
+        final ColumnMetaData withoutGenerator = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, null);
 
         assertNotEquals(withGenerator, withoutGenerator);
         assertNotEquals(withoutGenerator, withGenerator);
 
-        final ColumnMetaData withJoin = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
+        final ColumnMetaData withJoin = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, generator);
         withJoin.setJoinColumn("JOIN");
 
-        final ColumnMetaData withoutJoin = new ColumnMetaData(table, "id", false, 1, 20, 0, true, generator);
+        final ColumnMetaData withoutJoin = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, generator);
 
         assertNotEquals(withJoin, withoutJoin);
         assertNotEquals(withoutJoin, withJoin);
@@ -172,7 +173,7 @@ class ColumnMetaDataTest {
     void toString_containsUsefulParts() {
         // Given
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        final ColumnMetaData column = new ColumnMetaData(table, "id", false, 1, 20, 0, true, mock(ColumnValueGenerator.class));
+        final ColumnMetaData column = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, mock(ColumnValueGenerator.class));
 
         // When
         final String s = column.toString();
@@ -187,7 +188,7 @@ class ColumnMetaDataTest {
     void table() {
         // Given
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "id", false, 1, 20, 0, true, mock(ColumnValueGenerator.class));
+        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, mock(ColumnValueGenerator.class));
 
         // When
         final Table result = columnMetaData.table();
@@ -200,7 +201,7 @@ class ColumnMetaDataTest {
     void toColumn() {
         // Given
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "id", false, 1, 20, 0, true, mock(ColumnValueGenerator.class));
+        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, mock(ColumnValueGenerator.class));
 
         // When
         final Column result = columnMetaData.toColumn();
@@ -260,7 +261,7 @@ class ColumnMetaDataTest {
     @Test
     void getters_nullable_dataType_size_decimalDigits() {
         final Table table = new Table("T1");
-        final ColumnMetaData column = new ColumnMetaData(table, "C1", true, 1, 10, 2, false, null);
+        final ColumnMetaData column = new ColumnMetaData(table, "C1", true, 1, 10, 2, false, null, null);
 
         assertTrue(column.isNullable());
         assertEquals(1, column.getDataType());
