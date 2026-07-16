@@ -12,7 +12,7 @@ import java.util.StringJoiner;
 public class Person {
 
     @Column(value = "PERSON_ID", generateUsingSequence = "LB.PERSON_SEQ")
-    private Long id;
+    private long id;
     @Column("FIRST_NAME")
     private String name;
     @Column("SURNAME")
@@ -24,11 +24,11 @@ public class Person {
     @OneToMany(mappedByField = "owner")
     private List<Account> accounts;
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(long id) {
         this.id = id;
     }
 

@@ -292,8 +292,8 @@ class ManyToManyE2eTest extends AbstractE2eTest {
         assertEquals(group1.getName(), resultGroup1.getName());
         assertNotNull(resultGroup1.getMembers());
         assertEquals(2, resultGroup1.getMembers().size());
-        assertTrue(resultGroup1.getMembers().stream().anyMatch(p -> person1.getId().equals(p.getId())));
-        assertTrue(resultGroup1.getMembers().stream().anyMatch(p -> person2.getId().equals(p.getId())));
+        assertTrue(resultGroup1.getMembers().stream().anyMatch(p -> person1.getId() == p.getId()));
+        assertTrue(resultGroup1.getMembers().stream().anyMatch(p -> person2.getId() == p.getId()));
 
         // Load member from group 1
         LOGGER.info("Loading member from group 1: person1");
@@ -321,8 +321,8 @@ class ManyToManyE2eTest extends AbstractE2eTest {
         assertEquals(group2.getName(), resultGroup2.getName());
         assertNotNull(resultGroup2.getMembers());
         assertEquals(2, resultGroup2.getMembers().size());
-        assertTrue(resultGroup2.getMembers().stream().anyMatch(p -> person2.getId().equals(p.getId())));
-        assertTrue(resultGroup2.getMembers().stream().anyMatch(p -> person3.getId().equals(p.getId())));
+        assertTrue(resultGroup2.getMembers().stream().anyMatch(p -> person2.getId() == p.getId()));
+        assertTrue(resultGroup2.getMembers().stream().anyMatch(p -> person3.getId() == p.getId()));
 
         // Load member from group 2
         LOGGER.info("Loading member from group 2: person2");
@@ -356,9 +356,9 @@ class ManyToManyE2eTest extends AbstractE2eTest {
         assertEquals(group1.getName(), resultGroup1Updated.getName());
         assertNotNull(resultGroup1Updated.getMembers());
         assertEquals(3, resultGroup1Updated.getMembers().size());
-        assertTrue(resultGroup1Updated.getMembers().stream().anyMatch(p -> person1.getId().equals(p.getId())));
-        assertTrue(resultGroup1Updated.getMembers().stream().anyMatch(p -> person2.getId().equals(p.getId())));
-        assertTrue(resultGroup1Updated.getMembers().stream().anyMatch(p -> person3.getId().equals(p.getId())));
+        assertTrue(resultGroup1Updated.getMembers().stream().anyMatch(p -> person1.getId() == p.getId()));
+        assertTrue(resultGroup1Updated.getMembers().stream().anyMatch(p -> person2.getId() == p.getId()));
+        assertTrue(resultGroup1Updated.getMembers().stream().anyMatch(p -> person3.getId() == p.getId()));
     }
 
     private void registerDtoTableMappings(final DbEnvDtoTableMapper tableMapper) {

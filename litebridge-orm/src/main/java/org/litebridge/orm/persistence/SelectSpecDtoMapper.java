@@ -318,7 +318,7 @@ public class SelectSpecDtoMapper {
                 final Object value;
 
                 if (rawValue == null) {
-                    value = getDefaultValue(fieldAccessor.type());
+                    value = ClassUtils.getDefaultValue(fieldAccessor.type());
                 } else if (fieldAccessorValue.value() instanceof DtoConstructor.DtoDependency dependency) {
                     value = null;
                 } else {
@@ -502,23 +502,6 @@ public class SelectSpecDtoMapper {
             final Class<?> targetClass = collection.genericType();
             dtoCache.stream(targetClass).forEach(currentCollection::add);
         });
-    }
-
-    private static @Nullable Object getDefaultValue(final Class<?> clazz) {
-        if (!clazz.isPrimitive()) {
-            return null;
-        }
-
-        if (clazz == int.class) return 0;
-        if (clazz == boolean.class) return false;
-        if (clazz == long.class) return 0L;
-        if (clazz == double.class) return 0.0d;
-        if (clazz == float.class) return 0.0f;
-        if (clazz == char.class) return '\u0000';
-        if (clazz == byte.class) return (byte) 0;
-        if (clazz == short.class) return (short) 0;
-
-        throw new IllegalArgumentException("Unknown primitive type: " + clazz);
     }
 
     private record PartiallyConstructedDto(Object dto,

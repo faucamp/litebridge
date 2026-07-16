@@ -72,7 +72,7 @@ public class PersistenceFacade {
     /**
      * Constructs a new {@code PersistenceFacade} instance.
      *
-     * @param tableRegistry   the registry of ORM tables
+     * @param tableRegistry    the registry of ORM tables
      * @param databaseProvider the database provider
      * @param changeTracker    the change tracker
      * @param dtoConstructor   the DTO constructor
@@ -278,7 +278,7 @@ public class PersistenceFacade {
                         final boolean dtoPkSet = nestedDtoTable.getMetaData().primaryKey().stream().anyMatch(pkColumn -> {
                             final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                             final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
-                            return embeddedDtoPkValue != null;
+                            return !Objects.equals(embeddedDtoPkValue, ClassUtils.getDefaultValue(embeddedDtoPkAccessor.type()));
                         });
 
                         if (!inProgressDtos.contains(value)) {
@@ -447,12 +447,12 @@ public class PersistenceFacade {
             final Object currentPkValue = field.get(dto);
             currentPkValues.put(field, currentPkValue);
 
-            if (currentPkValue == null) {
+            if (Objects.equals(currentPkValue, ClassUtils.getDefaultValue(field.type()))) {
                 final Object generatedKey = generatedKeys.get(pkColumn);
                 final Object convertedValue = Objects.requireNonNull(databaseProvider.getTypeConverter().convert(generatedKey, field.type()));
                 generatedPkValues.put(field, convertedValue);
             } else {
-                LOGGER.trace("Generated key for DTO '{}' already set - ignoring", dto);
+                LOGGER.trace("Generated key for DTO '{}' already set - ignoring; current value: {}", dto, currentPkValue);
             }
         }
 

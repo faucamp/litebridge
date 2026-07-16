@@ -1,9 +1,9 @@
 # Changelog
 
-## 0.3.2
+## [Unreleased]
 
 ### Added
-- Database provider:
+- Databse Provider SPI:
   - `ColumnMetaData` now contains the default value of a column.
 - Maven plugin: 
   - Add "resolveRelationships" config parameter to control foreign key behaviour.
@@ -19,27 +19,20 @@
   - Boolean converter now supports strings "1" and "0" as valid boolean values.
 
 ### Deprecated
-- Deprecated SPI method: `ColumnMetadata.setAutoIncrement()`
+- Databse Provider SPI:
+  - Deprecated SPI method: `ColumnMetadata.setAutoIncrement()`
 
-### Removed
-- None.
+### Fixed
+- ORM:
+  - Fix setting generated PK value not being set if the target field is a primitive type.
 
-## 0.3.1
-
-### Added
-- None.
+## [0.3.1] - 2026-07-13
 
 ### Changed
 - Renamed main `org.litebridgedb` package back to original `org.litebridge`
 - JavaDocs expanded
 
-### Deprecated
-- None.
-
-### Removed
-- None.
-
-## 0.3.0
+## [0.3.0] - 2026-07-11
 
 ### Added
 - Advanced expression-based Query API supporting SQL functions (AVG, COUNT, UPPER, SUBSTRING, etc.).
@@ -57,9 +50,6 @@
 - Re-engineered Query API to use a unified expression-based model for consistency.
 - Improved relationship mapping logic for Many-to-Many and reverse mappings.
 - Leveraged Java 21+ features for internal implementation and public API idioms.
-
-### Deprecated
-- None.
 
 ### Removed
 - `TypeSafeDtoTableMapping` class has been replaced with metamodels.

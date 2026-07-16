@@ -1,5 +1,7 @@
 package org.litebridge.commons;
 
+import org.jspecify.annotations.Nullable;
+
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -34,7 +36,7 @@ public final class ClassUtils {
      * (except for fields the `Object` class).
      * Equivalent to {@code getAllFields(type, false)}.
      *
-     * @param type the class from which to retrieve all declared fields
+     * @param type   the class from which to retrieve all declared fields
      * @param lookup the lookup to use for access checking
      * @return a list of all fields declared in the given class and its superclasses
      */
@@ -46,9 +48,9 @@ public final class ClassUtils {
      * Retrieves all fields from a given class, including fields declared in its superclasses
      * (except for fields of the `Object` class) and (optionally) static fields.
      *
-     * @param type the class from which to retrieve all declared fields
+     * @param type          the class from which to retrieve all declared fields
      * @param includeStatic whether to include static fields
-     * @param lookup the lookup to use for access checking
+     * @param lookup        the lookup to use for access checking
      * @return a list of all fields declared in the given class and its superclasses
      */
     public static List<Field> getAllFields(final Class<?> type, final boolean includeStatic, final MethodHandles.Lookup lookup) {
@@ -261,6 +263,29 @@ public final class ClassUtils {
     @SuppressWarnings("unchecked")
     public static <DTO> Constructor<DTO>[] getConstructors(final Class<DTO> dtoClass) {
         return (Constructor<DTO>[]) getConcreteClass(dtoClass).getDeclaredConstructors();
+    }
+
+    /**
+     * Retrieves the default value for a primitive type.
+     *
+     * @param clazz the class object for which to retrieve the default value
+     * @return the default value for the specified primitive type, or {@code null} if the class is not a primitive type
+     */
+    public static @Nullable Object getDefaultValue(final Class<?> clazz) {
+        if (!clazz.isPrimitive()) {
+            return null;
+        }
+
+        if (clazz == int.class) return 0;
+        if (clazz == boolean.class) return false;
+        if (clazz == long.class) return 0L;
+        if (clazz == double.class) return 0.0d;
+        if (clazz == float.class) return 0.0f;
+        if (clazz == char.class) return '\u0000';
+        if (clazz == byte.class) return (byte) 0;
+        if (clazz == short.class) return (short) 0;
+
+        throw new IllegalArgumentException("Unknown primitive type: " + clazz);
     }
 
     @SuppressWarnings("unchecked")
