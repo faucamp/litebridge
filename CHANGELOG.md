@@ -3,28 +3,29 @@
 ## [Unreleased]
 
 ### Added
-- Databse Provider SPI:
+- Database Provider SPI:
   - `ColumnMetaData` now contains the default value of a column.
 - Maven plugin: 
-  - Add "resolveRelationships" config parameter to control foreign key behaviour.
-  - Add "initDefaultValues" config parameter to initialise default values for fields representing columns with a default value defined in the database.
+  - Add `resolveRelationships` config parameter to control foreign key behaviour.
+  - Add `initDefaultValues` config parameter to initialise default values for fields representing columns with a default value defined in the database.
 
 ### Changed
 - Maven plugin:
-  - Fix issue with complex circular dependencies in the Litebridge Maven plugin's `reverse-engineer` goal.
-  - Fix many-to-many join table indentification for tables with two columns (but aren't join tables).
   - Refactor `ReverseEngineerMojo` to improve performance
   - Initialise default values for fields representing columns with a default value defined in the database.
 - Type converter:
   - Boolean converter now supports strings "1" and "0" as valid boolean values.
 
 ### Deprecated
-- Databse Provider SPI:
+- Database Provider SPI:
   - Deprecated SPI method: `ColumnMetadata.setAutoIncrement()`
 
 ### Fixed
 - ORM:
   - Fix setting generated PK value not being set if the target field is a primitive type.
+- Maven plugin:
+  - Fix issue with complex circular dependencies in the Litebridge Maven plugin's `reverse-engineer` goal.
+  - Fix many-to-many join table indentification for tables with two columns (but aren't join tables).
 
 ## [0.3.1] - 2026-07-13
 
