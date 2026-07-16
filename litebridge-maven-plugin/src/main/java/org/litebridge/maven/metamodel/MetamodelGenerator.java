@@ -146,7 +146,7 @@ public final class MetamodelGenerator {
                                         fieldName));
                     });
 
-            return Optional.of(new GeneratedMetamodel(metamodel, metamodelClassName));
+            return Optional.of(new GeneratedMetamodel(metamodel, metamodelClassName, sourceClassName));
         } catch (IOException ex) {
             throw new MojoExecutionException("Error reading file: " + file.getAbsolutePath(), ex);
         }

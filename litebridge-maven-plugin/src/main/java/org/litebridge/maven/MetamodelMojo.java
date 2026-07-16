@@ -183,6 +183,7 @@ public final class MetamodelMojo extends AbstractMojo {
                 final GeneratedMetamodel generatedMetamodel = generatedMetamodelOptional.get();
                 final String filename = "%s.java".formatted(generatedMetamodel.className());
                 javaFileWriter.writeJavaFile(output.getOutputPackage(), filename, generatedMetamodel.metamodel());
+                getLog().info("Created metamodel '%s' for input class '%s': %s".formatted(generatedMetamodel.className(), generatedMetamodel.sourceClassName(), file.getAbsolutePath()));
             }
         }
     }

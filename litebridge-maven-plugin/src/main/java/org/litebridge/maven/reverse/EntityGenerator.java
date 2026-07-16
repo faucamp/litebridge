@@ -181,7 +181,7 @@ public final class EntityGenerator {
             }
 
             // Create entity field
-            final FieldDeclaration field = createFieldDeclaration(fieldName, fieldClassInfo, joinOnInfo, entityClass, columnMetaData, columnMappingConfig, jspecify);
+            final FieldDeclaration field = createFieldDeclaration(fieldName, fieldClassInfo, joinOnInfo, entityClass, columnMetaData, columnMappingConfig, tableMappingConfig, jspecify);
             declaredFields.add(new FieldInfo(field, columnMetaData.isNullable()));
 
             // Resolve inter-entity relationships if configured to do so
@@ -242,7 +242,8 @@ public final class EntityGenerator {
                                                     final ClassOrInterfaceDeclaration entityClass,
                                                     final ColumnMetaData columnMetaData,
                                                     final @Nullable ColumnMappingConfig columnMappingConfig,
-                                                    final boolean jspecify) {
+                                                    final @Nullable TableMappingConfig tableMappingConfig,
+                                                    final boolean jspecify) throws MojoExecutionException {
         final Class<?> fieldClass = fieldClassInfo.fieldClass() != null && joinOnInfo == null ? fieldClassInfo.fieldClass() : null;
         final FieldDeclaration field;
 
@@ -257,22 +258,18 @@ public final class EntityGenerator {
                     Modifier.Keyword.PRIVATE);
 
             // Initialise the default value, if any
-            if (columnMetaData.getDefaultValue() != null) {
-                //final Object defaultValue = typeConverter.convert(columnMetaData.getDefaultValue(), fieldClass);
-                final String defaultValue;
+            final boolean initDefaultValue;
 
-                if (fieldClass == Long.class || fieldClass == long.class) {
-                    defaultValue = "%sL".formatted(columnMetaData.getDefaultValue());
-                } else if (fieldClass == Short.class || fieldClass == short.class) {
-                    defaultValue = "%sS".formatted(columnMetaData.getDefaultValue());
-                } else if (fieldClass == Double.class || fieldClass == double.class) {
-                    defaultValue = "%sD".formatted(columnMetaData.getDefaultValue());
-                } else if (fieldClass == Float.class || fieldClass == float.class) {
-                    defaultValue = "%sF".formatted(columnMetaData.getDefaultValue());
-                } else {
-                    final Object convertedDefaultValue = typeConverter.convert(columnMetaData.getDefaultValue(), fieldClass);
-                    defaultValue = convertedDefaultValue != null ? convertedDefaultValue.toString() : null;
-                }
+            if (columnMetaData.getDefaultValue() == null) {
+                initDefaultValue = false;
+            } else if (tableMappingConfig != null && tableMappingConfig.getInitDefaultValues() != null) {
+                initDefaultValue = tableMappingConfig.getInitDefaultValues();
+            } else {
+                initDefaultValue = output.isInitDefaultValues();
+            }
+
+            if (initDefaultValue) {
+                final String defaultValue = getDefaultValueString(columnMetaData, fieldClass, fieldName);
 
                 if (defaultValue != null) {
                     field.getVariable(0).setInitializer(defaultValue);
@@ -811,6 +808,33 @@ public final class EntityGenerator {
         } else {
             return null;
         }
+    }
+
+    private @Nullable String getDefaultValueString(final ColumnMetaData columnMetaData, final Class<?> fieldClass, final String fieldName) throws MojoExecutionException {
+        final String defaultValue;
+
+        if (fieldClass == Long.class || fieldClass == long.class) {
+            defaultValue = "%sL".formatted(columnMetaData.getDefaultValue());
+        } else if (fieldClass == Short.class || fieldClass == short.class) {
+            defaultValue = "%sS".formatted(columnMetaData.getDefaultValue());
+        } else if (fieldClass == Double.class || fieldClass == double.class) {
+            defaultValue = "%sD".formatted(columnMetaData.getDefaultValue());
+        } else if (fieldClass == Float.class || fieldClass == float.class) {
+            defaultValue = "%sF".formatted(columnMetaData.getDefaultValue());
+        } else if (CharSequence.class.isAssignableFrom(fieldClass)) {
+            defaultValue = "\"%s\"".formatted(columnMetaData.getDefaultValue());
+        } else if (fieldClass == Character.class || fieldClass == char.class) {
+            if (columnMetaData.getDefaultValue().length() != 1) {
+                throw new MojoExecutionException("Default value for char field '%s' must be a single character, but is: %s", fieldName, columnMetaData.getDefaultValue());
+            }
+
+            defaultValue = "'%s'".formatted(columnMetaData.getDefaultValue());
+        } else {
+            final Object convertedDefaultValue = typeConverter.convert(columnMetaData.getDefaultValue(), fieldClass);
+            defaultValue = convertedDefaultValue != null ? convertedDefaultValue.toString() : null;
+        }
+
+        return defaultValue;
     }
 
     private record FieldInfo(FieldDeclaration field, boolean columnNullable) {

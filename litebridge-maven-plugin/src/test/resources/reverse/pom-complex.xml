@@ -47,6 +47,7 @@
                             <table>LB.OS_SRV_CHECK_TP</table>
                             <table>LB.OS_STATUS</table>
                             <table>LB.OS_TEST_REPORT</table>
+                            <table>LB.OS_GROUP_EUREKA</table>
                         </tables>
                     </input>
 

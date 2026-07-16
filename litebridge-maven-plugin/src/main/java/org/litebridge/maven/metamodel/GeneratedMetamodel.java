@@ -7,6 +7,7 @@ import com.github.javaparser.ast.CompilationUnit;
  *
  * @param metamodel The compilation unit representing the generated metamodel.
  * @param className The name of the generated metamodel class.
+ * @param sourceClassName The name of the source class for which the metamodel was generated.
  */
-public record GeneratedMetamodel(CompilationUnit metamodel, String className) {
+public record GeneratedMetamodel(CompilationUnit metamodel, String className, String sourceClassName) {
 }

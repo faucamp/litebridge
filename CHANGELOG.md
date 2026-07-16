@@ -6,11 +6,12 @@
 - Database provider:
   - `ColumnMetaData` now contains the default value of a column.
 - Maven plugin: 
-  - Added "resolveRelationships" config parameter to control foreign key behaviour.
+  - Add "resolveRelationships" config parameter to control foreign key behaviour.
+  - Add "initDefaultValues" config parameter to initialise default values for fields representing columns with a default value defined in the database.
 
 ### Changed
 - Maven plugin:
-  - Fixed issue with complex circular dependencies in the Litebridge Maven plugin's `reverse-engineer` goal.
+  - Fix issue with complex circular dependencies in the Litebridge Maven plugin's `reverse-engineer` goal.
   - Fix many-to-many join table indentification for tables with two columns (but aren't join tables).
   - Refactor `ReverseEngineerMojo` to improve performance
   - Initialise default values for fields representing columns with a default value defined in the database.

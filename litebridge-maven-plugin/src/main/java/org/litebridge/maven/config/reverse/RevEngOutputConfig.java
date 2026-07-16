@@ -27,6 +27,16 @@ public class RevEngOutputConfig extends OutputConfig {
     @Parameter(defaultValue = "true")
     private boolean resolveRelationships = true;
 
+    /**
+     * Controls whether default values are initialised for fields representing columns with a default database value.
+     * <p>
+     * This is the global setting for all tables. It can be overridden on a per-table basis.
+     * <p>
+     * Default: {@code true}
+     */
+    @Parameter(defaultValue = "true")
+    private boolean initDefaultValues = true;
+
     @Override
     public void setJspecify(final @Nullable RevEngJSpecifyConfig jspecify) {
         super.setJspecify(jspecify);
@@ -43,5 +53,13 @@ public class RevEngOutputConfig extends OutputConfig {
 
     public void setResolveRelationships(final boolean resolveRelationships) {
         this.resolveRelationships = resolveRelationships;
+    }
+
+    public boolean isInitDefaultValues() {
+        return initDefaultValues;
+    }
+
+    public void setInitDefaultValues(final boolean initDefaultValues) {
+        this.initDefaultValues = initDefaultValues;
     }
 }

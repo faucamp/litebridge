@@ -11,6 +11,7 @@ import org.apache.maven.api.plugin.testing.MojoParameters;
 import org.apache.maven.api.plugin.testing.MojoTest;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,14 +57,8 @@ class MetamodelMojoTest {
         assertFalse(packageInfoCu.getPackageDeclaration().orElseThrow()
                 .isAnnotationPresent("NullMarked"));
 
-        final Path expectedOutputFile1 = Paths.get("target/generated-sources/java/org/litebridge/maven/test/meta/TestEntityMeta.java");
-        assertTrue(expectedOutputFile1.toFile().exists());
-        final CompilationUnit compilationUnit1 = StaticJavaParser.parse(expectedOutputFile1);
-        assertEquals("TestEntityMeta", compilationUnit1.getPrimaryTypeName().orElseThrow());
-        final List<FieldDeclaration> fieldDeclarations1 = compilationUnit1.findAll(FieldDeclaration.class, fieldDeclaration ->
-                fieldDeclaration.isPublic()
-                        && fieldDeclaration.isStatic()
-                        && fieldDeclaration.isFinal());
+        final CompilationUnit compilationUnit1 = getMetaModel("TestEntityMeta");
+        final List<FieldDeclaration> fieldDeclarations1 = getMetaModelFields(compilationUnit1);
         assertEquals(3, fieldDeclarations1.size());
 
         for (FieldDeclaration fieldDeclaration : fieldDeclarations1) {
@@ -78,14 +73,8 @@ class MetamodelMojoTest {
             }
         }
 
-        final Path expectedOutputFile2 = Paths.get("target/generated-sources/java/org/litebridge/maven/test/meta/TestRelatedEntityMeta.java");
-        assertTrue(expectedOutputFile2.toFile().exists());
-        final CompilationUnit compilationUnit2 = StaticJavaParser.parse(expectedOutputFile2);
-        assertEquals("TestRelatedEntityMeta", compilationUnit2.getPrimaryTypeName().orElseThrow());
-        final List<FieldDeclaration> fieldDeclarations2 = compilationUnit2.findAll(FieldDeclaration.class, fieldDeclaration ->
-                fieldDeclaration.isPublic()
-                        && fieldDeclaration.isStatic()
-                        && fieldDeclaration.isFinal());
+        final CompilationUnit compilationUnit2 = getMetaModel("TestRelatedEntityMeta");
+        final List<FieldDeclaration> fieldDeclarations2 = getMetaModelFields(compilationUnit2);
         assertEquals(4, fieldDeclarations2.size());
 
         for (FieldDeclaration fieldDeclaration : fieldDeclarations2) {
@@ -122,18 +111,12 @@ class MetamodelMojoTest {
         assertTrue(packageInfoCu.getPackageDeclaration().orElseThrow()
                 .isAnnotationPresent("NullMarked"));
 
-        final Path expectedOutputFile1 = Paths.get("target/generated-sources/java/org/litebridge/maven/test/meta/TestEntityMeta.java");
-        assertTrue(expectedOutputFile1.toFile().exists());
-        final CompilationUnit compilationUnit1 = StaticJavaParser.parse(expectedOutputFile1);
-        assertEquals("TestEntityMeta", compilationUnit1.getPrimaryTypeName().orElseThrow());
+        final CompilationUnit compilationUnit1 = getMetaModel("TestEntityMeta");
         final ClassOrInterfaceDeclaration testEntityMeta = compilationUnit1.findAll(ClassOrInterfaceDeclaration.class).getFirst();
         assertFalse(testEntityMeta.isAnnotationPresent("NullMarked"));
         assertFalse(testEntityMeta.isAnnotationPresent("NullUnmarked"));
 
-        final Path expectedOutputFile2 = Paths.get("target/generated-sources/java/org/litebridge/maven/test/meta/TestRelatedEntityMeta.java");
-        assertTrue(expectedOutputFile2.toFile().exists());
-        final CompilationUnit compilationUnit2 = StaticJavaParser.parse(expectedOutputFile2);
-        assertEquals("TestRelatedEntityMeta", compilationUnit2.getPrimaryTypeName().orElseThrow());
+        getMetaModel("TestRelatedEntityMeta");
         final ClassOrInterfaceDeclaration TestRelatedEntityMeta = compilationUnit1.findAll(ClassOrInterfaceDeclaration.class).getFirst();
         assertFalse(TestRelatedEntityMeta.isAnnotationPresent("NullMarked"));
         assertFalse(TestRelatedEntityMeta.isAnnotationPresent("NullUnmarked"));
@@ -153,18 +136,12 @@ class MetamodelMojoTest {
         assertTrue(packageInfoCu.getPackageDeclaration().orElseThrow()
                 .isAnnotationPresent("NullUnmarked"));
 
-        final Path expectedOutputFile1 = Paths.get("target/generated-sources/java/org/litebridge/maven/test/meta/TestEntityMeta.java");
-        assertTrue(expectedOutputFile1.toFile().exists());
-        final CompilationUnit compilationUnit1 = StaticJavaParser.parse(expectedOutputFile1);
-        assertEquals("TestEntityMeta", compilationUnit1.getPrimaryTypeName().orElseThrow());
+        final CompilationUnit compilationUnit1 = getMetaModel("TestEntityMeta");
         final ClassOrInterfaceDeclaration testEntityMeta = compilationUnit1.findAll(ClassOrInterfaceDeclaration.class).getFirst();
         assertFalse(testEntityMeta.isAnnotationPresent("NullMarked"));
         assertFalse(testEntityMeta.isAnnotationPresent("NullUnmarked"));
 
-        final Path expectedOutputFile2 = Paths.get("target/generated-sources/java/org/litebridge/maven/test/meta/TestRelatedEntityMeta.java");
-        assertTrue(expectedOutputFile2.toFile().exists());
-        final CompilationUnit compilationUnit2 = StaticJavaParser.parse(expectedOutputFile2);
-        assertEquals("TestRelatedEntityMeta", compilationUnit2.getPrimaryTypeName().orElseThrow());
+        getMetaModel("TestRelatedEntityMeta");
         final ClassOrInterfaceDeclaration TestRelatedEntityMeta = compilationUnit1.findAll(ClassOrInterfaceDeclaration.class).getFirst();
         assertFalse(TestRelatedEntityMeta.isAnnotationPresent("NullMarked"));
         assertFalse(TestRelatedEntityMeta.isAnnotationPresent("NullUnmarked"));
@@ -178,16 +155,8 @@ class MetamodelMojoTest {
         metamodelMojo.execute();
 
         // Then
-        final Path expectedOutputFile1 = Paths.get("target/generated-sources/java/org/litebridge/maven/test/meta/MTestEntity.java");
-        assertTrue(expectedOutputFile1.toFile().exists());
-        final CompilationUnit compilationUnit1 = StaticJavaParser.parse(expectedOutputFile1);
-        assertEquals("MTestEntity", compilationUnit1.getPrimaryTypeName().orElseThrow());
-
-
-        final Path expectedOutputFile2 = Paths.get("target/generated-sources/java/org/litebridge/maven/test/meta/MTestRelatedEntity.java");
-        assertTrue(expectedOutputFile2.toFile().exists());
-        final CompilationUnit compilationUnit2 = StaticJavaParser.parse(expectedOutputFile2);
-        assertEquals("MTestRelatedEntity", compilationUnit2.getPrimaryTypeName().orElseThrow());
+        getMetaModel("MTestEntity");
+        getMetaModel("MTestRelatedEntity");
     }
 
     @Test
@@ -198,14 +167,8 @@ class MetamodelMojoTest {
         metamodelMojo.execute();
 
         // Then
-        final Path expectedOutputFile1 = Paths.get("target/generated-sources/java/org/litebridge/maven/test/meta/TestDtoMeta.java");
-        assertTrue(expectedOutputFile1.toFile().exists());
-        final CompilationUnit compilationUnit1 = StaticJavaParser.parse(expectedOutputFile1);
-        assertEquals("TestDtoMeta", compilationUnit1.getPrimaryTypeName().orElseThrow());
-        final List<FieldDeclaration> fieldDeclarations1 = compilationUnit1.findAll(FieldDeclaration.class, fieldDeclaration ->
-                fieldDeclaration.isPublic()
-                        && fieldDeclaration.isStatic()
-                        && fieldDeclaration.isFinal());
+        final CompilationUnit compilationUnit1 = getMetaModel("TestDtoMeta");
+        final List<FieldDeclaration> fieldDeclarations1 = getMetaModelFields(compilationUnit1);
         assertEquals(3, fieldDeclarations1.size());
 
         for (FieldDeclaration fieldDeclaration : fieldDeclarations1) {
@@ -220,14 +183,8 @@ class MetamodelMojoTest {
             }
         }
 
-        final Path expectedOutputFile2 = Paths.get("target/generated-sources/java/org/litebridge/maven/test/meta/TestRelatedDtoMeta.java");
-        assertTrue(expectedOutputFile2.toFile().exists());
-        final CompilationUnit compilationUnit2 = StaticJavaParser.parse(expectedOutputFile2);
-        assertEquals("TestRelatedDtoMeta", compilationUnit2.getPrimaryTypeName().orElseThrow());
-        final List<FieldDeclaration> fieldDeclarations2 = compilationUnit2.findAll(FieldDeclaration.class, fieldDeclaration ->
-                fieldDeclaration.isPublic()
-                        && fieldDeclaration.isStatic()
-                        && fieldDeclaration.isFinal());
+        final CompilationUnit compilationUnit2 = getMetaModel("TestRelatedDtoMeta");
+        final List<FieldDeclaration> fieldDeclarations2 = getMetaModelFields(compilationUnit2);
         assertEquals(4, fieldDeclarations2.size());
 
         for (FieldDeclaration fieldDeclaration : fieldDeclarations2) {
@@ -279,5 +236,20 @@ class MetamodelMojoTest {
     void execute_skip(final MetamodelMojo metamodelMojo) throws Exception {
         // When
         metamodelMojo.execute();
+    }
+
+    private static @NonNull CompilationUnit getMetaModel(final String className) throws IOException {
+        final Path metamodelFile = Paths.get("target/generated-sources/java/org/litebridge/maven/test/meta/%s.java".formatted(className));
+        assertTrue(metamodelFile.toFile().exists());
+        final CompilationUnit compilationUnit = StaticJavaParser.parse(metamodelFile);
+        assertEquals(className, compilationUnit.getPrimaryTypeName().orElseThrow());
+        return compilationUnit;
+    }
+
+    private static List<FieldDeclaration> getMetaModelFields(final CompilationUnit compilationUnit) {
+        return compilationUnit.findAll(FieldDeclaration.class, fieldDeclaration ->
+                fieldDeclaration.isPublic()
+                        && fieldDeclaration.isStatic()
+                        && fieldDeclaration.isFinal());
     }
 }

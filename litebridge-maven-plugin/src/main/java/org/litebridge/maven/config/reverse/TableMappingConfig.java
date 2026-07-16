@@ -52,6 +52,15 @@ public class TableMappingConfig {
     private @Nullable Boolean resolveRelationships;
 
     /**
+     * Controls whether default values are initialised for fields representing columns with a default database value.
+     * <p>
+     * This setting overrides the global output setting with the same name, for this table.
+     * <p>
+     * Default: uses global setting
+     */
+    private @Nullable Boolean initDefaultValues;
+
+    /**
      * Configuration for specific columns.
      */
     private @Nullable List<ColumnMappingConfig> columnMappings;
@@ -86,6 +95,14 @@ public class TableMappingConfig {
 
     public void setResolveRelationships(final Boolean resolveRelationships) {
         this.resolveRelationships = resolveRelationships;
+    }
+
+    public @Nullable Boolean getInitDefaultValues() {
+        return initDefaultValues;
+    }
+
+    public void setInitDefaultValues(@Nullable final Boolean initDefaultValues) {
+        this.initDefaultValues = initDefaultValues;
     }
 
     public @Nullable List<ColumnMappingConfig> getColumnMappings() {

@@ -470,6 +470,9 @@ class ReverseEngineerMojoTest {
         ensureFieldDeclaration("histStatDet", osHistService);
         final FieldDeclaration osHistService_osHistSrvInts = ensureFieldDeclaration("osHistSrvInsts", osHistService);
         assertTrue(osHistService_osHistSrvInts.getAnnotationByClass(OneToMany.class).isPresent());
+
+        final CompilationUnit osGroupEureka = getEntity("OsGroupEureka");
+        ensureFieldDeclaration("eurekaZone", osGroupEureka);
     }
 
     private ReverseEngineerMojoTest.ExecuteResult executeImpl(final ReverseEngineerMojo reverseEngineerMojo, final boolean resolveRelationships) throws MojoExecutionException, IOException {

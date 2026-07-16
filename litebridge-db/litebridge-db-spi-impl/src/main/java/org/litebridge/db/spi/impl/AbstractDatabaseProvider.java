@@ -236,7 +236,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @param returnGeneratedKeys a boolean indicating whether the statement should return generated keys.
      *                            Pass {@code true} to configure the statement to return generated keys,
      *                            or {@code false} otherwise.
-     * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
+     * @param connectionProvider  the {@link ConnectionProvider} used to obtain a database connection.
      * @return an {@link InsertResult} object encapsulating the number of affected rows and a list of generated keys (if any)
      * @throws SQLException if an error occurs while executing the SQL insert or retrieving the generated keys
      */
@@ -411,12 +411,21 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
             while (dbColumns.next()) {
                 final String name = dbColumns.getString("COLUMN_NAME");
-                final String defaultValue = dbColumns.getString("COLUMN_DEF");
                 final boolean nullable = dbColumns.getBoolean("IS_NULLABLE");
                 final int dataType = dbColumns.getInt("DATA_TYPE");
                 final int size = dbColumns.getInt("COLUMN_SIZE");
                 final boolean isAutoincrement = dbColumns.getBoolean("IS_AUTOINCREMENT");
                 final int decimalDigits = dbColumns.getInt("DECIMAL_DIGITS");
+                String defaultValue = dbColumns.getString("COLUMN_DEF");
+
+                // Remove the enclosing ' character from string defaults
+                if (defaultValue != null
+                        && defaultValue.length() >= 2
+                        && (dataType == Types.VARCHAR || dataType == Types.CHAR || dataType == Types.LONGVARCHAR)
+                        && defaultValue.charAt(0) == '\''
+                        && defaultValue.charAt(defaultValue.length() - 1) == '\'') {
+                    defaultValue = defaultValue.substring(1, defaultValue.length() - 1);
+                }
 
                 columns.add(new ColumnMetaData(table, name, nullable, dataType, size, decimalDigits, isAutoincrement, defaultValue, null));
             }
@@ -554,10 +563,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     /**
      * Prepares a native SQL statement with the provided bind parameters.
      *
-     * @param sql                the SQL query to prepare
-     * @param bindParameters     the list of parameters to bind to the query
+     * @param sql                 the SQL query to prepare
+     * @param bindParameters      the list of parameters to bind to the query
      * @param returnGeneratedKeys whether to return generated keys
-     * @param connectionProvider the provider to use for obtaining a connection
+     * @param connectionProvider  the provider to use for obtaining a connection
      * @return the prepared statement
      * @throws SQLException if a database access error occurs
      */
