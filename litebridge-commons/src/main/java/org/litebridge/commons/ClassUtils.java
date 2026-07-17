@@ -150,7 +150,7 @@ public final class ClassUtils {
                 || byte[].class.equals(type)
                 || (!Collection.class.isAssignableFrom(type)
                 && !Map.class.isAssignableFrom(type)
-                && type.getPackageName().startsWith("java.lang"));
+                && type.getPackageName().startsWith("java."));
     }
 
     /**
