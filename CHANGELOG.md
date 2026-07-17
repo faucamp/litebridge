@@ -12,6 +12,9 @@
   - Add `generateConstructors` config parameter to control whether constructors are generated for entities.
 
 ### Changed
+- ORM:
+  - Optimise DTO mapping performance in `SelectSpecDtoMapper` by implementing a two-phase resolution process. This reduces complexity from $O(N^2)$ to $O(N)$ for large result sets and improves handling of bidirectional relationships and Records.
+  - Improve efficiency of collection mappings using a high-performance DTO list cache.
 - Maven plugin:
   - Refactor `ReverseEngineerMojo` to improve performance
   - Initialise default values for fields representing columns with a default value defined in the database.

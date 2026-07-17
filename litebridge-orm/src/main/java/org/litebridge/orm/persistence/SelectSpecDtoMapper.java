@@ -93,62 +93,34 @@ public class SelectSpecDtoMapper {
     public <DTO> List<DTO> toDtos(final Class<DTO> dtoClass, final List<Row> rows) {
         final List<DtoBlueprint> blueprints = createDtoBlueprints(rows);
 
-        return blueprints.stream()
-                .map(this::toDto)
-                .filter(Objects::nonNull)
-                .map(dtoClass::cast)
-                .toList();
-    }
-
-    private @Nullable Object toDto(final DtoBlueprint blueprint) {
-        // Construct the primary DTO
-        final PartiallyConstructedDto partialDto = toDto(blueprint.dtoData());
-
-        if (partialDto == null) {
-            return null;
+        // Phase 1: Populate Cache
+        for (final DtoBlueprint blueprint : blueprints) {
+            toDto(blueprint.dtoData());
+            blueprint.joinedDtoData().forEach(this::toDto);
         }
 
-        // Construct related DTOs, caching them
-        blueprint.joinedDtoData().forEach(this::toDto);
-
-        // Resolve primary DTO dependencies and return the constructed DTO
-        final Set<PartiallyConstructedDto> resolvedDtos = Collections.newSetFromMap(new IdentityHashMap<>());
-        final Object dto = resolveRelatedDtoDependencies(partialDto, resolvedDtos);
-
-        // Ensure any other constructed DTOs in the caches are also resolved (setting bidirectional relationships)
-        dtoCache.stream()
-                .filter(partiallyConstructedDto -> !resolvedDtos.contains(partiallyConstructedDto))
-                .forEach(relatedDto -> resolveRelatedDtoDependencies(relatedDto, resolvedDtos));
-
-        return dto;
-    }
-
-    private Object resolveRelatedDtoDependencies(final PartiallyConstructedDto partialDto, Set<PartiallyConstructedDto> resolvedDtos) {
-        if (resolvedDtos.contains(partialDto)) {
-            return partialDto.dto();
-        }
-
-        PartiallyConstructedDto currentDto = partialDto;
-
-        for (final DtoConstructor.DtoDependency dependency : partialDto.dependencies()) {
-            final PartiallyConstructedDto relatedDto = dtoCache.get(dependency.targetDtoClass(), dependency.targetPrimaryKeyValue());
-
-            if (relatedDto != null) {
-                if (relatedDto.dto() instanceof Record) {
-                    // Can't set a record's field - recreate the record
-                    currentDto = recreateDto(partialDto, Map.of(dependency.field(), resolveRelatedDtoDependencies(relatedDto, resolvedDtos)));
-                } else {
-                    dependency.field().set(currentDto.dto(), resolveRelatedDtoDependencies(relatedDto, resolvedDtos));
+        // Phase 2: Batch Resolve
+        final Set<Object> resolvedDtoInstances = Collections.newSetFromMap(new IdentityHashMap<>());
+        boolean hasNewResolved;
+        do {
+            hasNewResolved = false;
+            final List<PartiallyConstructedDto> currentCacheSnapshot = dtoCache.stream().toList();
+            for (final PartiallyConstructedDto partialDto : currentCacheSnapshot) {
+                if (!resolvedDtoInstances.contains(partialDto.dto())) {
+                    resolveRelatedDtoDependencies(partialDto, resolvedDtoInstances);
+                    hasNewResolved = true;
                 }
-            } else {
-                LOGGER.debug("Unresolved dependency for field '{}' in DTO class '{}' with target key: {}: no matching DTO found", dependency.field().name(), partialDto.dto().getClass(), dependency.targetPrimaryKey());
             }
-        }
+        } while (hasNewResolved);
 
-        updateOneToManyCollectionMappings(currentDto);
-        updateManyToManyCollectionMappings(currentDto);
-        resolvedDtos.add(currentDto);
-        return currentDto.dto();
+        // Phase 3: Extract Results
+        return blueprints.stream()
+                .map(blueprint -> {
+                    final PartiallyConstructedDto partialDto = dtoCache.get(blueprint.dtoData().dtoClass(), blueprint.dtoData().primaryKey());
+                    return partialDto != null ? dtoClass.cast(partialDto.dto()) : null;
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     private @Nullable PartiallyConstructedDto toDto(final DtoBlueprint.SelectDtoData dtoData) {
@@ -161,6 +133,44 @@ public class SelectSpecDtoMapper {
 
     private @Nullable PartiallyConstructedDto toDto(final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
         return toDto(dtoData.dtoClass(), dtoData.spec().dtoTable(), dtoData, fieldColumns);
+    }
+
+    private Object resolveRelatedDtoDependencies(final PartiallyConstructedDto partialDto, final Set<Object> resolvedDtoInstances) {
+        if (resolvedDtoInstances.contains(partialDto.dto())) {
+            return partialDto.dto();
+        }
+
+        PartiallyConstructedDto currentDto = partialDto;
+        Map<FieldAccessor, Object> recordOverrides = null;
+
+        for (final DtoConstructor.DtoDependency dependency : partialDto.dependencies()) {
+            final PartiallyConstructedDto relatedDto = dtoCache.get(dependency.targetDtoClass(), dependency.targetPrimaryKeyValue());
+
+            if (relatedDto != null) {
+                final Object resolvedRelatedInstance = resolveRelatedDtoDependencies(relatedDto, resolvedDtoInstances);
+                if (currentDto.dto() instanceof Record) {
+                    if (recordOverrides == null) {
+                        recordOverrides = new HashMap<>();
+                    }
+                    recordOverrides.put(dependency.field(), resolvedRelatedInstance);
+                } else {
+                    dependency.field().set(currentDto.dto(), resolvedRelatedInstance);
+                }
+            } else {
+                LOGGER.debug("Unresolved dependency for field '{}' in DTO class '{}' with target key: {}: no matching DTO found", dependency.field().name(), partialDto.dto().getClass(), dependency.targetPrimaryKey());
+            }
+        }
+
+        if (recordOverrides != null) {
+            currentDto = recreateDto(currentDto, recordOverrides);
+            // Update cache with the new record instance
+            dtoCache.put(currentDto.dtoData().primaryKey(), currentDto);
+        }
+
+        updateOneToManyCollectionMappings(currentDto);
+        updateManyToManyCollectionMappings(currentDto);
+        resolvedDtoInstances.add(currentDto.dto());
+        return currentDto.dto();
     }
 
     private @Nullable PartiallyConstructedDto toDto(final Class<?> dtoClass, final OrmTable ormTable, final DtoBlueprint.DtoData<?> dtoData, final List<DtoSelectSpec.FieldColumn> fieldColumns) {
@@ -469,7 +479,7 @@ public class SelectSpecDtoMapper {
             }
 
             final Class<?> targetClass = collection.genericType();
-            dtoCache.stream(targetClass).forEach(currentCollection::add);
+            currentCollection.addAll(dtoCache.getDtosByClass(targetClass));
         });
     }
 
@@ -500,7 +510,7 @@ public class SelectSpecDtoMapper {
             }
 
             final Class<?> targetClass = collection.genericType();
-            dtoCache.stream(targetClass).forEach(currentCollection::add);
+            currentCollection.addAll(dtoCache.getDtosByClass(targetClass));
         });
     }
 
@@ -513,6 +523,7 @@ public class SelectSpecDtoMapper {
 
     private static final class PartiallyConstructedDtoCache {
         private final Map<Class<?>, Map<List<Object>, SelectSpecDtoMapper.PartiallyConstructedDto>> cache = new IdentityHashMap<>();
+        private final Map<Class<?>, List<Object>> listCache = new IdentityHashMap<>();
 
         public @Nullable PartiallyConstructedDto get(final Class<?> dtoClass, final List<Object> id) {
             return cache.computeIfAbsent(dtoClass, cls -> new HashMap<>())
@@ -522,11 +533,16 @@ public class SelectSpecDtoMapper {
         public void put(final List<Object> id, final SelectSpecDtoMapper.PartiallyConstructedDto dto) {
             cache.computeIfAbsent(dto.dto().getClass(), cls -> new HashMap<>())
                     .put(id, dto);
+            listCache.clear();
         }
 
         public Stream<PartiallyConstructedDto> stream() {
             return cache.values().stream()
                     .flatMap(pkPcDto -> pkPcDto.values().stream());
+        }
+
+        public List<Object> getDtosByClass(final Class<?> dtoClass) {
+            return listCache.computeIfAbsent(dtoClass, cls -> stream(cls).map(Object.class::cast).toList());
         }
 
         public <DTO> Stream<DTO> stream(final Class<DTO> dtoClass) {
