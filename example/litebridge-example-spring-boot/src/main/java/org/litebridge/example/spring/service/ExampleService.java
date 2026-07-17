@@ -1,7 +1,7 @@
 package org.litebridge.example.spring.service;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.litebridge.example.common.dto.Person;
+import org.litebridge.example.common.entity.Person;
 import org.litebridge.example.spring.db.DatabaseFacade;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

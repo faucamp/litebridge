@@ -2,7 +2,7 @@ package org.litebridge.example.spring.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import org.litebridge.example.common.dto.Person;
+import org.litebridge.example.common.entity.Person;
 import org.litebridge.example.spring.service.ExampleService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

@@ -3,14 +3,16 @@ package org.litebridge.spring;
 import org.litebridge.db.spi.tx.Isolation;
 import org.litebridge.db.spi.tx.ManagedConnection;
 import org.litebridge.db.spi.tx.TransactionManager;
-
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -21,6 +23,8 @@ import java.util.Objects;
  * in Spring-managed transactions.
  */
 public class LitebridgeTransactionManager extends DataSourceTransactionManager implements TransactionManager {
+
+    private final ThreadLocal<List<Connection>> nonTransactionalConnections = ThreadLocal.withInitial(ArrayList::new);
 
     /**
      * Creates a new {@code LitebridgeTransactionManager}.
@@ -43,12 +47,26 @@ public class LitebridgeTransactionManager extends DataSourceTransactionManager i
 
     @Override
     public void cleanup() throws org.litebridge.db.spi.tx.TransactionException {
-        // Handled by DataSourceTransactionManager
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            return;
+        }
+
+        final DataSource dataSource = getDataSource();
+        final List<Connection> currentConnections = nonTransactionalConnections.get();
+
+        try {
+            for (final Connection connection : currentConnections) {
+                DataSourceUtils.releaseConnection(connection, dataSource);
+            }
+        } finally {
+            currentConnections.clear();
+            nonTransactionalConnections.remove();
+        }
     }
 
     @Override
     public boolean requiresCleanup() {
-        return false;
+        return !TransactionSynchronizationManager.isActualTransactionActive();
     }
 
     @Override
@@ -102,6 +120,18 @@ public class LitebridgeTransactionManager extends DataSourceTransactionManager i
 
     @Override
     public ManagedConnection connection() throws SQLException {
-        return new ManagedConnection(DataSourceUtils.getConnection(Objects.requireNonNull(getDataSource(), "No datasource provided")));
+        final DataSource dataSource = getDataSource();
+        final Connection connection = DataSourceUtils.getConnection(dataSource);
+
+        if (!DataSourceUtils.isConnectionTransactional(connection, dataSource)) {
+            nonTransactionalConnections.get().add(connection);
+        }
+
+        return new ManagedConnection(connection);
+    }
+
+    @Override
+    public DataSource getDataSource() {
+        return Objects.requireNonNull(super.getDataSource(), "No datasource provided");
     }
 }

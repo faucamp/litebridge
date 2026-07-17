@@ -1,7 +1,10 @@
 package org.litebridge.example.spring.db;
 
-import org.litebridge.example.common.dto.Person;
+import jakarta.annotation.PostConstruct;
+import org.litebridge.example.common.entity.Person;
 import org.litebridge.orm.Litebridge;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,12 +14,21 @@ import java.util.Optional;
 @Component
 public class DatabaseFacade {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseFacade.class);
     private final Litebridge litebridge;
 
     public DatabaseFacade(final Litebridge litebridge) {
         this.litebridge = litebridge;
     }
 
+    @PostConstruct
+    public void init() {
+        LOGGER.info("Running some queries to test connection pool");
+
+        for (int i = 0; i < 15; i++) {
+            litebridge.select(Person.class).where("id").eq(i).one();
+        }
+    }
 
     @Transactional
     public void create(final Person person) {

@@ -145,13 +145,13 @@ class LitebridgeTransactionManagerTest {
     }
 
     @Test
-    void testCleanupIsNoOpAndDoesNotRequireCleanup() {
+    void testRequiresCleanup() {
         // Given
         LitebridgeTransactionManager tm = new LitebridgeTransactionManager(dataSource);
 
         // When / Then
+        assertTrue(tm.requiresCleanup());
         assertDoesNotThrow(tm::cleanup);
-        assertFalse(tm.requiresCleanup());
     }
 
     @Test

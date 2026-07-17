@@ -31,8 +31,9 @@
   - Fix issue with complex circular dependencies in the Litebridge Maven plugin's `reverse-engineer` goal.
   - Fix many-to-many join table indentification for tables with two columns (but aren't join tables).
   - Fix `joinOn` annotation parameter not being set if no `columnMapping` config was provided.
-- Spring Boot:
+- Spring:
   - Fix regression with automatic creation of `Litebridge` bean where it was being returned as `SelectApi`.
+  - Fix transaction manager not releasing connections correctly.
  
 ## [0.3.1] - 2026-07-13
 
