@@ -3,7 +3,6 @@ package org.litebridge.spring.boot.autoconfigure;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.orm.Litebridge;
-import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.spring.LitebridgeEntityScanner;
 import org.litebridge.spring.LitebridgeTransactionManager;
@@ -67,9 +66,9 @@ public class LitebridgeAutoConfiguration {
     @Bean(name = "litebridge")
     @ConditionalOnMissingBean
     @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "ConstantValue"})
-    public SelectApi litebridge(final LitebridgeProperties properties,
-                                final LitebridgeTransactionManager transactionManager,
-                                final Optional<LitebridgeConfigurer> configurer) {
+    public Litebridge litebridge(final LitebridgeProperties properties,
+                                 final LitebridgeTransactionManager transactionManager,
+                                 final Optional<LitebridgeConfigurer> configurer) {
         LOGGER.trace("Starting Litebridge Spring Boot autoconfiguration");
         final DatabaseProvider databaseProvider;
 

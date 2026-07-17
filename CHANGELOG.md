@@ -28,7 +28,9 @@
 - Maven plugin:
   - Fix issue with complex circular dependencies in the Litebridge Maven plugin's `reverse-engineer` goal.
   - Fix many-to-many join table indentification for tables with two columns (but aren't join tables).
-
+- Spring Boot:
+  - Fix regression with automatic creation of `Litebridge` bean where it was being returned as `SelectApi`.
+ 
 ## [0.3.1] - 2026-07-13
 
 ### Changed
