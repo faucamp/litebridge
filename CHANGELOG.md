@@ -8,6 +8,7 @@
 - Maven plugin: 
   - Add `resolveRelationships` config parameter to control foreign key behaviour.
   - Add `initDefaultValues` config parameter to initialise default values for fields representing columns with a default value defined in the database.
+  - Add `primitiveNotNulls` config parameter to control whether primitive fields are generated if the database column is not nullable, if applicable.
 
 ### Changed
 - Maven plugin:
