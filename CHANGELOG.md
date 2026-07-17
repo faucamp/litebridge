@@ -15,6 +15,7 @@
 - Maven plugin:
   - Refactor `ReverseEngineerMojo` to improve performance
   - Initialise default values for fields representing columns with a default value defined in the database.
+  - Use `joinUsing` instead of `joinOn` annotation parameter if applicable.
 - Type converter:
   - Boolean converter now supports strings "1" and "0" as valid boolean values.
 
@@ -28,6 +29,7 @@
 - Maven plugin:
   - Fix issue with complex circular dependencies in the Litebridge Maven plugin's `reverse-engineer` goal.
   - Fix many-to-many join table indentification for tables with two columns (but aren't join tables).
+  - Fix `joinOn` annotation parameter not being set if no `columnMapping` config was provided.
 - Spring Boot:
   - Fix regression with automatic creation of `Litebridge` bean where it was being returned as `SelectApi`.
  

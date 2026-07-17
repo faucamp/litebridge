@@ -650,6 +650,14 @@ public final class EntityGenerator {
         annotation.setName(new Name(org.litebridge.orm.annotation.Column.class.getSimpleName()));
         annotation.addPair("value", "\"%s\"".formatted(columnMetaData.name()));
 
+        if (joinOnInfo != null) {
+            if (joinOnInfo.joinOn().equals(columnMetaData.name())) {
+                annotation.addPair("joinUsing", "true");
+            } else {
+                annotation.addPair("joinOn", "\"%s\"".formatted(joinOnInfo.joinOn()));
+            }
+        }
+
         if (columnMappingConfig == null) {
             return annotation;
         }
@@ -660,10 +668,6 @@ public final class EntityGenerator {
 
         if (!StringUtils.isBlank(columnMappingConfig.getGeneratorClass())) {
             annotation.addPair("generator", columnMappingConfig.getGeneratorClass());
-        }
-
-        if (joinOnInfo != null) {
-            annotation.addPair("joinOn", "\"%s\"".formatted(joinOnInfo.joinOn()));
         }
 
         return annotation;
