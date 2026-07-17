@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Queue;
 import java.util.Set;
@@ -146,7 +147,10 @@ public final class ClassUtils {
                 || CharSequence.class.isAssignableFrom(type)
                 || Number.class.isAssignableFrom(type)
                 || Boolean.class.isAssignableFrom(type)
-                || byte[].class.equals(type);
+                || byte[].class.equals(type)
+                || (!Collection.class.isAssignableFrom(type)
+                && !Map.class.isAssignableFrom(type)
+                && type.getPackageName().startsWith("java.lang"));
     }
 
     /**

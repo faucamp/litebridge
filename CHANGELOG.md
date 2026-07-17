@@ -27,6 +27,8 @@
 ### Fixed
 - ORM:
   - Fix setting generated PK value not being set if the target field is a primitive type.
+- Commons:
+  - Improve detection of basic Java types in `ClassUtils`.
 - Maven plugin:
   - Fix issue with complex circular dependencies in the Litebridge Maven plugin's `reverse-engineer` goal.
   - Fix many-to-many join table indentification for tables with two columns (but aren't join tables).

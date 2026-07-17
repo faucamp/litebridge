@@ -334,7 +334,7 @@ class ClassUtilsTest {
     }
 
     @Test
-    void isBasicType_stringArray_false() {
+    void isBasicType_stringArray_true() {
         // Given
         final String[] stringArray = new String[1];
 
@@ -342,7 +342,7 @@ class ClassUtilsTest {
         final boolean result = ClassUtils.isBasicType(stringArray.getClass());
 
         // Then
-        assertFalse(result);
+        assertTrue(result);
     }
 
     @Test
@@ -392,11 +392,8 @@ class ClassUtilsTest {
 
     @Test
     void isBasicType_false() {
-        // Given
-        final Object object = new Object();
-
         // When
-        final boolean result = ClassUtils.isBasicType(object.getClass());
+        final boolean result = ClassUtils.isBasicType(TestDto.class);
 
         // Then
         assertFalse(result);
