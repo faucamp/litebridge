@@ -197,7 +197,7 @@ public final class EntityGenerator {
 
                 // Create one-to-many reverse mapping collection fields
                 final List<OneToManySpec> oneToManySpecs = createOneToManyMappings(entityClassName, columnMetaData, tableMetaDataMap, manyToManyMappingResult, entities);
-                createReverseCollectionFieldInfos(oneToManySpecs, entity, jspecify).forEach(fieldInfo -> {
+                createReverseCollectionFieldInfos(oneToManySpecs, entity, jspecify, columnMetaData).forEach(fieldInfo -> {
                     final String collectionFieldName = getFieldName(fieldInfo.field());
 
                     if (appendFields.stream().noneMatch(appendField -> collectionFieldName.equals(getFieldName(appendField.field())))) {
@@ -712,7 +712,7 @@ public final class EntityGenerator {
         return oneToManySpecs;
     }
 
-    private List<FieldInfo> createReverseCollectionFieldInfos(final List<OneToManySpec> oneToManySpecs, final CompilationUnit entity, final boolean jspecify) {
+    private List<FieldInfo> createReverseCollectionFieldInfos(final List<OneToManySpec> oneToManySpecs, final CompilationUnit entity, final boolean jspecify, final ColumnMetaData columnMetaData) {
         final List<FieldInfo> appendFields = new ArrayList<>();
 
         for (OneToManySpec oneToManySpec : oneToManySpecs) {
@@ -730,7 +730,14 @@ public final class EntityGenerator {
                 reverseMappingCollectionField.addMarkerAnnotation(Nullable.class);
             }
 
-            reverseMappingCollectionField.addAnnotation(createOneToManyAnnotation(oneToManySpec.mappedByField()));
+            String fieldName = oneToManySpec.mappedByField();
+
+            // Adapt the field name to avoid including "ID" in the name
+            if (columnMetaData.name().toLowerCase().endsWith("id") && fieldName.endsWith("Id")) {
+                fieldName = fieldName.substring(0, fieldName.length() - 2);
+            }
+
+            reverseMappingCollectionField.addAnnotation(createOneToManyAnnotation(fieldName));
 
             if (output.isJavadoc()) {
                 reverseMappingCollectionField.setJavadocComment("Reverse mapping for {@code %s.%s}".formatted(oneToManySpec.reverseMappingCollectionType(), oneToManySpec.mappedByField()));

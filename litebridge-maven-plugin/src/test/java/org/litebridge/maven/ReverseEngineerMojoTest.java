@@ -12,6 +12,7 @@ import org.apache.maven.api.plugin.testing.MojoTest;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.flywaydb.core.Flyway;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
@@ -494,7 +495,13 @@ class ReverseEngineerMojoTest {
         final FieldDeclaration osAuth_authType = ensureFieldDeclaration("authType", osAuth);
         assertTrue(osAuth_authType.getAnnotationByClass(Column.class).isPresent());
         final AnnotationExpr authTypeColumnAnnotation = ensureAnnotationExpr(Column.class, osAuth_authType);
-        ensureAnnotationPair("joinUsing", "true", authTypeColumnAnnotation);
+        ensureAnnotationPair("joinUsing", true, authTypeColumnAnnotation);
+
+        final CompilationUnit osAuthType = getEntity("OsAuthType");
+        final FieldDeclaration osAuthType_osAuths = ensureFieldDeclaration("osAuths", osAuthType);
+        assertTrue(osAuthType_osAuths.getAnnotationByClass(OneToMany.class).isPresent());
+        final AnnotationExpr osAuthsAnnotation = ensureAnnotationExpr(OneToMany.class, osAuthType_osAuths);
+        ensureAnnotationPair("mappedByField", "authType", osAuthsAnnotation);
     }
 
     private ReverseEngineerMojoTest.ExecuteResult executeImpl(final ReverseEngineerMojo reverseEngineerMojo, final boolean resolveRelationships) throws MojoExecutionException, IOException {
@@ -692,17 +699,27 @@ class ReverseEngineerMojoTest {
     }
 
     private static AnnotationExpr ensureAnnotationExpr(final Class<? extends Annotation> annotationClass, final FieldDeclaration fieldDeclaration) {
-        assertTrue(fieldDeclaration.getAnnotationByClass(Column.class).isPresent());
+        assertTrue(fieldDeclaration.getAnnotationByClass(annotationClass).isPresent());
         return fieldDeclaration.getAnnotationByClass(annotationClass).orElseThrow();
     }
 
+    private static MemberValuePair ensureAnnotationPair(final String paramName, final boolean paramValue, final AnnotationExpr annotationExpr) {
+        final MemberValuePair pair = ensureAnnotationPair(paramName, annotationExpr);
+        assertEquals(paramValue ? "true" : "false", pair.getValue().toString());
+        return pair;
+    }
+
     private static MemberValuePair ensureAnnotationPair(final String paramName, final String paramValue, final AnnotationExpr annotationExpr) {
+        final MemberValuePair pair = ensureAnnotationPair(paramName, annotationExpr);
+        assertEquals("\"" + paramValue + "\"", pair.getValue().toString());
+        return pair;
+    }
+
+    private static @NonNull MemberValuePair ensureAnnotationPair(final String paramName, final AnnotationExpr annotationExpr) {
         final MemberValuePair pair = annotationExpr.asNormalAnnotationExpr().getPairs().stream()
                 .filter(p -> p.getName().asString().equals(paramName))
                 .findFirst()
                 .orElseThrow(() -> assertionFailure().reason("Annotation '%s' does not have parameter '%s'".formatted(annotationExpr.asNormalAnnotationExpr().getNameAsString(), paramName)).build());
-
-        assertEquals(paramValue, pair.getValue().toString());
         return pair;
     }
 }

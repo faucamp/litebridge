@@ -16,6 +16,7 @@
   - Refactor `ReverseEngineerMojo` to improve performance
   - Initialise default values for fields representing columns with a default value defined in the database.
   - Use `joinUsing` instead of `joinOn` annotation parameter if applicable.
+  - Fix reverse collection `mappedByField` value if the target's field was altered because of "ID" suffix removal.
 - Type converter:
   - Boolean converter now supports strings "1" and "0" as valid boolean values.
 
