@@ -73,6 +73,15 @@ public class TableMappingConfig {
     private @Nullable Boolean primitiveNotNulls;
 
     /**
+     * Controls whether a default (no-arg) and a canonical (all-fields) constructor are generated for this entity.
+     * <p>
+     * This setting overrides the global output setting with the same name, for this table.
+     * <p>
+     * Default: uses global setting
+     */
+    private @Nullable Boolean generateConstructors;
+
+    /**
      * Configuration for specific columns.
      */
     private @Nullable List<ColumnMappingConfig> columnMappings;
@@ -123,6 +132,14 @@ public class TableMappingConfig {
 
     public void setPrimitiveNotNulls(@Nullable final Boolean primitiveNotNulls) {
         this.primitiveNotNulls = primitiveNotNulls;
+    }
+
+    public @Nullable Boolean getGenerateConstructors() {
+        return generateConstructors;
+    }
+
+    public void setGenerateConstructors(@Nullable final Boolean generateConstructors) {
+        this.generateConstructors = generateConstructors;
     }
 
     public @Nullable List<ColumnMappingConfig> getColumnMappings() {

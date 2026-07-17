@@ -4,6 +4,7 @@ import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
@@ -182,7 +183,7 @@ public final class EntityGenerator {
 
             // Create entity field
             final FieldDeclaration field = createFieldDeclaration(fieldName, fieldClassInfo, joinOnInfo, entityClass, columnMetaData, columnMappingConfig, tableMappingConfig, jspecify);
-            declaredFields.add(new FieldInfo(field, columnMetaData.isNullable()));
+            declaredFields.add(new FieldInfo(field, columnMetaData.isNullable(), columnMetaData));
 
             // Resolve inter-entity relationships if configured to do so
             if (resolveRelationships) {
@@ -215,6 +216,19 @@ public final class EntityGenerator {
 
         // Add one-to-many reverse collection fields and many-to-many collections
         appendFields.stream().map(FieldInfo::field).forEach(decl -> cuClass.entityClass().addMember(decl));
+
+        // Add constructors
+        final boolean generateConstructors;
+
+        if (tableMappingConfig != null && tableMappingConfig.getGenerateConstructors() != null) {
+            generateConstructors = tableMappingConfig.getGenerateConstructors();
+        } else {
+            generateConstructors = output.isGenerateConstructors();
+        }
+
+        if (generateConstructors) {
+            createConstructors(cuClass.entityClass(), declaredFields, jspecify);
+        }
 
         // Add getters/setters
         declaredFields.forEach(fieldInfo -> {
@@ -531,7 +545,7 @@ public final class EntityGenerator {
         if (fieldInfo.field().isAnnotationPresent(Nullable.class)) {
             getter.addMarkerAnnotation(Nullable.class);
 
-            if (fieldInfo.columnNullable()) {
+            if (fieldInfo.nullable()) {
                 setterParameter.addMarkerAnnotation(Nullable.class);
             }
         }
@@ -822,6 +836,76 @@ public final class EntityGenerator {
         }
     }
 
+    private void createConstructors(final ClassOrInterfaceDeclaration entityClass, final List<FieldInfo> declaredFields, final boolean jspecify) {
+        // Default constructor
+        final ConstructorDeclaration defaultConstructor = entityClass.addConstructor(Modifier.Keyword.PUBLIC);
+
+        if (output.isJavadoc()) {
+            defaultConstructor.setJavadocComment("Creates a new {@code %s} instance with default values.".formatted(entityClass.getNameAsString()));
+        }
+
+        if (declaredFields.isEmpty()) {
+            return;
+        }
+
+        // Canonical constructor
+        final ConstructorDeclaration canonicalConstructor = entityClass.addConstructor(Modifier.Keyword.PUBLIC);
+        final BlockStmt body = new BlockStmt();
+        final StringBuilder comment;
+
+        if (output.isJavadoc()) {
+            comment = new StringBuilder("Constructs a new {@code ").append(entityClass.getNameAsString()).append("} instance with the specified values.\n");
+        } else {
+            comment = null;
+        }
+
+        for (FieldInfo fieldInfo : declaredFields) {
+            final FieldDeclaration field = fieldInfo.field();
+            final String fieldName = getFieldName(field);
+            final Type fieldType = field.getCommonType();
+
+            final Parameter parameter = new Parameter(fieldType, fieldName);
+            parameter.setModifier(Modifier.Keyword.FINAL, true);
+
+            // Nullability
+            if (jspecify && field.isAnnotationPresent(Nullable.class)) {
+                parameter.addMarkerAnnotation(Nullable.class);
+            }
+
+            canonicalConstructor.addParameter(parameter);
+            body.addStatement("this.%s = %s;".formatted(fieldName, fieldName));
+
+            if (fieldInfo.columnMetaData != null && comment != null) {
+                final ColumnMetaData columnMetaData = fieldInfo.columnMetaData();
+
+                comment.append("\n@param ").append(fieldName).append(" Column: {@code ").append(fieldName).append('}');
+
+                final JDBCType jdbcType = JDBCType.valueOf(columnMetaData.getDataType());
+                comment.append(", type: {@code ").append(jdbcType.getName()).append('}');
+
+                if (columnMetaData.getSize() > 0) {
+                    comment.append(", size: ").append(columnMetaData.getSize());
+                }
+
+                if (columnMetaData.isNullable()) {
+                    comment.append(", nullable");
+                } else {
+                    comment.append(", not nullable");
+                }
+
+                if (columnMetaData.getDefaultValue() != null) {
+                    comment.append(", default value: ").append(columnMetaData.getDefaultValue());
+                }
+            }
+        }
+
+        canonicalConstructor.setBody(body);
+
+        if (comment != null) {
+            canonicalConstructor.setJavadocComment(comment.toString());
+        }
+    }
+
     private @Nullable String getDefaultValueString(final ColumnMetaData columnMetaData, final Class<?> fieldClass, final String fieldName) throws MojoExecutionException {
         final String defaultValue;
 
@@ -849,7 +933,10 @@ public final class EntityGenerator {
         return defaultValue;
     }
 
-    private record FieldInfo(FieldDeclaration field, boolean columnNullable) {
+    private record FieldInfo(FieldDeclaration field, boolean nullable, @Nullable ColumnMetaData columnMetaData) {
+        public FieldInfo(final FieldDeclaration field, final boolean nullable) {
+            this(field, nullable, null);
+        }
     }
 
     private record AnnotationSpec(Class<?> annotation, LinkedHashMap<String, String> pairs) {

@@ -50,6 +50,16 @@ public class RevEngOutputConfig extends OutputConfig {
     @Parameter(defaultValue = "true")
     private boolean primitiveNotNulls = true;
 
+    /**
+     * Controls whether a default (no-arg) and a canonical (all-fields) constructor are generated for entities.
+     * <p>
+     * This is the global setting for all tables. It can be overridden on a per-table basis.
+     * <p>
+     * Default: {@code true}
+     */
+    @Parameter(defaultValue = "true")
+    private boolean generateConstructors = true;
+
     @Override
     public void setJspecify(final @Nullable RevEngJSpecifyConfig jspecify) {
         super.setJspecify(jspecify);
@@ -82,5 +92,13 @@ public class RevEngOutputConfig extends OutputConfig {
 
     public void setPrimitiveNotNulls(final boolean primitiveNotNulls) {
         this.primitiveNotNulls = primitiveNotNulls;
+    }
+
+    public boolean isGenerateConstructors() {
+        return generateConstructors;
+    }
+
+    public void setGenerateConstructors(final boolean generateConstructors) {
+        this.generateConstructors = generateConstructors;
     }
 }

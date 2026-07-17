@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -61,6 +62,9 @@ class EntityGeneratorTest {
         final String code = result.entity().toString();
         assertTrue(code.contains("class Person"));
         assertTrue(code.contains("private long id;"));
+        // Check constructors
+        assertTrue(code.contains("public Person() {"));
+        assertTrue(code.contains("public Person(final long id) {"));
     }
 
     @Test
@@ -416,5 +420,127 @@ class EntityGeneratorTest {
         assertEquals("PersonDTO", result.className());
         final String code = result.entity().toString();
         assertTrue(code.contains("@AllowInterface(com.example.PersonInterface.class)"));
+    }
+
+    @Test
+    void createEntityClassForTable_generateConstructors() throws MojoExecutionException {
+        // Given
+        final Log log = new DebugMojoLog(EntityGenerator.class);
+        final RevEngOutputConfig output = new RevEngOutputConfig();
+        output.setOutputPackage("com.example.generated");
+        output.setGenerateConstructors(true);
+
+        final EntityGenerator generator = new EntityGenerator(null, null, output, log);
+
+        final TableMetaData table = mock(TableMetaData.class);
+        when(table.name()).thenReturn("person");
+        when(table.qualifiedName()).thenReturn("person");
+
+        final ColumnMetaData columnId = mock(ColumnMetaData.class);
+        when(columnId.name()).thenReturn("id");
+        when(columnId.getDataType()).thenReturn(Types.BIGINT);
+        when(columnId.isNullable()).thenReturn(false);
+        when(columnId.toColumn()).thenReturn(new Column(new Table("person"), "id"));
+
+        final ColumnMetaData columnName = mock(ColumnMetaData.class);
+        when(columnName.name()).thenReturn("name");
+        when(columnName.getDataType()).thenReturn(Types.VARCHAR);
+        when(columnName.isNullable()).thenReturn(true);
+        when(columnName.toColumn()).thenReturn(new Column(new Table("person"), "name"));
+
+        when(table.columns()).thenReturn(List.of(columnId, columnName));
+
+        // When
+        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), new ManyToManyMappingResult(Collections.emptyList(), Collections.emptySet()), new HashMap<>());
+
+        // Then
+        assertNotNull(result);
+        final String code = result.entity().toString();
+
+        // Check default constructor
+        assertTrue(code.contains("public Person() {"));
+
+        // Check canonical constructor
+        assertTrue(code.contains("public Person(final long id, final String name) {"));
+        assertTrue(code.contains("this.id = id;"));
+        assertTrue(code.contains("this.name = name;"));
+    }
+
+    @Test
+    void createEntityClassForTable_generateConstructors_jspecify() throws MojoExecutionException {
+        // Given
+        final Log log = new DebugMojoLog(EntityGenerator.class);
+        final RevEngOutputConfig output = new RevEngOutputConfig();
+        output.setOutputPackage("com.example.generated");
+        output.setGenerateConstructors(false);
+
+        final org.litebridge.maven.config.reverse.RevEngJSpecifyConfig jspecifyConfig = new org.litebridge.maven.config.reverse.RevEngJSpecifyConfig();
+        jspecifyConfig.setAnnotate(true);
+        jspecifyConfig.setNullMarked(true);
+        output.setJspecify(jspecifyConfig);
+
+        final EntityGenerator generator = new EntityGenerator(null, null, output, log);
+
+        final TableMetaData table = mock(TableMetaData.class);
+        when(table.name()).thenReturn("person");
+        when(table.qualifiedName()).thenReturn("person");
+
+        final ColumnMetaData columnId = mock(ColumnMetaData.class);
+        when(columnId.name()).thenReturn("id");
+        when(columnId.getDataType()).thenReturn(Types.BIGINT);
+        when(columnId.isNullable()).thenReturn(false);
+        when(columnId.toColumn()).thenReturn(new Column(new Table("person"), "id"));
+
+        final ColumnMetaData columnName = mock(ColumnMetaData.class);
+        when(columnName.name()).thenReturn("name");
+        when(columnName.getDataType()).thenReturn(Types.VARCHAR);
+        when(columnName.isNullable()).thenReturn(true);
+        when(columnName.toColumn()).thenReturn(new Column(new Table("person"), "name"));
+
+        when(table.columns()).thenReturn(List.of(columnId, columnName));
+
+        // When
+        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), new ManyToManyMappingResult(Collections.emptyList(), Collections.emptySet()), new HashMap<>());
+
+        // Then
+        assertNotNull(result);
+        final String code = result.entity().toString();
+        assertFalse(code.contains("public Person(final long id, @Nullable final String name) {"));
+    }
+
+    @Test
+    void createEntityClassForTable_generateConstructors_override() throws MojoExecutionException {
+        // Given
+        final Log log = new DebugMojoLog(EntityGenerator.class);
+        final RevEngOutputConfig output = new RevEngOutputConfig();
+        output.setOutputPackage("com.example.generated");
+        output.setGenerateConstructors(false); // Global false
+
+        final TableMappingConfig tableConfig = new TableMappingConfig();
+        tableConfig.setTable("person");
+        tableConfig.setGenerateConstructors(true); // Table true
+
+        final EntityGenerator generator = new EntityGenerator(null, List.of(tableConfig), output, log);
+
+        final TableMetaData table = mock(TableMetaData.class);
+        when(table.name()).thenReturn("person");
+        when(table.qualifiedName()).thenReturn("person");
+
+        final ColumnMetaData columnId = mock(ColumnMetaData.class);
+        when(columnId.name()).thenReturn("id");
+        when(columnId.getDataType()).thenReturn(Types.BIGINT);
+        when(columnId.isNullable()).thenReturn(false);
+        when(columnId.toColumn()).thenReturn(new Column(new Table("person"), "id"));
+
+        when(table.columns()).thenReturn(List.of(columnId));
+
+        // When
+        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), new ManyToManyMappingResult(Collections.emptyList(), Collections.emptySet()), new HashMap<>());
+
+        // Then
+        assertNotNull(result);
+        final String code = result.entity().toString();
+        assertTrue(code.contains("public Person() {"));
+        assertTrue(code.contains("public Person(final long id) {"));
     }
 }
