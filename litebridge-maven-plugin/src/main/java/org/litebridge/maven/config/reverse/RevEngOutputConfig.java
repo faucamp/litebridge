@@ -37,6 +37,19 @@ public class RevEngOutputConfig extends OutputConfig {
     @Parameter(defaultValue = "true")
     private boolean initDefaultValues = true;
 
+    /**
+     * Controls whether primitive fields are generated if the database column is not nullable, if applicable.
+     * <p>
+     * For example, if the non-null SQL type maps to a `java.lang.Long`, then a primitive `long` will be generated
+     * instead of a `java.lang.Long`.
+     * <p>
+     * This is the global setting for all tables. It can be overridden on a per-table basis.
+     * <p>
+     * Default: {@code true}
+     */
+    @Parameter(defaultValue = "true")
+    private boolean primitiveNotNulls = true;
+
     @Override
     public void setJspecify(final @Nullable RevEngJSpecifyConfig jspecify) {
         super.setJspecify(jspecify);
@@ -61,5 +74,13 @@ public class RevEngOutputConfig extends OutputConfig {
 
     public void setInitDefaultValues(final boolean initDefaultValues) {
         this.initDefaultValues = initDefaultValues;
+    }
+
+    public boolean isPrimitiveNotNulls() {
+        return primitiveNotNulls;
+    }
+
+    public void setPrimitiveNotNulls(final boolean primitiveNotNulls) {
+        this.primitiveNotNulls = primitiveNotNulls;
     }
 }

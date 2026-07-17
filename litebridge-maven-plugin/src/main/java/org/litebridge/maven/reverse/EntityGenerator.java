@@ -169,7 +169,7 @@ public final class EntityGenerator {
             final String fieldName = columnfieldMap.get(columnMetaData.toColumn());
 
             // Determine field type
-            final FieldClassInfo fieldClassInfo = createFieldClassInfo(entityClassName, columnMetaData, columnMappingConfig);
+            final FieldClassInfo fieldClassInfo = createFieldClassInfo(entityClassName, columnMetaData, columnMappingConfig, tableMappingConfig);
 
             // Check if the field points to a related entity, and update the field type accordingly
             final JoinOnInfo joinOnInfo;
@@ -246,6 +246,7 @@ public final class EntityGenerator {
                                                     final boolean jspecify) throws MojoExecutionException {
         final Class<?> fieldClass = fieldClassInfo.fieldClass() != null && joinOnInfo == null ? fieldClassInfo.fieldClass() : null;
         final FieldDeclaration field;
+        final boolean initDefaultValue;
 
         if (fieldClass != null) {
             if (log.isDebugEnabled()) {
@@ -258,8 +259,6 @@ public final class EntityGenerator {
                     Modifier.Keyword.PRIVATE);
 
             // Initialise the default value, if any
-            final boolean initDefaultValue;
-
             if (columnMetaData.getDefaultValue() == null) {
                 initDefaultValue = false;
             } else if (tableMappingConfig != null && tableMappingConfig.getInitDefaultValues() != null) {
@@ -277,6 +276,7 @@ public final class EntityGenerator {
             }
         } else {
             final String fieldClassName = joinOnInfo != null ? joinOnInfo.fieldClassType() : fieldClassInfo.fieldClassName();
+            initDefaultValue = false;
 
             if (log.isDebugEnabled()) {
                 log.debug("[%s] Adding field '%s' with type name '%s' for column '%s'".formatted(entityClass.getNameAsString(), fieldName, fieldClassName, columnMetaData.name()));
@@ -298,7 +298,8 @@ public final class EntityGenerator {
         if (jspecify
                 && output.getJspecify().isNullMarked()
                 && (!output.getJspecify().isDatabaseNullable() || columnMetaData.isNullable())
-                && (fieldClass == null || !fieldClass.isPrimitive())) {
+                && (fieldClass == null || !fieldClass.isPrimitive())
+                && (!initDefaultValue || columnMetaData.isNullable())) {
             field.addMarkerAnnotation(Nullable.class);
         }
 
@@ -330,7 +331,10 @@ public final class EntityGenerator {
         return field;
     }
 
-    private FieldClassInfo createFieldClassInfo(final String entityClassName, final ColumnMetaData columnMetaData, final @Nullable ColumnMappingConfig columnMappingConfig) throws MojoExecutionException {
+    private FieldClassInfo createFieldClassInfo(final String entityClassName,
+                                                final ColumnMetaData columnMetaData,
+                                                final @Nullable ColumnMappingConfig columnMappingConfig,
+                                                final @Nullable TableMappingConfig tableMappingConfig) throws MojoExecutionException {
         Class<?> fieldClass = null;
         String fieldClassType = null;
 
@@ -341,7 +345,6 @@ public final class EntityGenerator {
                 throw new MojoExecutionException("Failed to load field type class '%s' for column mapping: %s for entity class: %s".formatted(columnMappingConfig.getFieldType(), columnMetaData.name(), entityClassName));
             }
         }
-
 
         if (fieldClass == null) {
             final Optional<SqlTypeMappingConfig> sqlTypeMappingConfig = sqlTypeMappings == null ? Optional.empty() : sqlTypeMappings.stream()
@@ -386,8 +389,17 @@ public final class EntityGenerator {
                     log.warn("[%s] Could not find class for specified field type '%s' for column: %s".formatted(entityClassName, fieldClassType, columnMetaData.name()));
                 }
             } else {
-                final Class<?> convertedType = typeConverter.getClassForSqlType(columnMetaData.getDataType());
-                fieldClass = PrimitiveLookup.getPrimitiveClass(convertedType);
+                fieldClass = typeConverter.getClassForSqlType(columnMetaData.getDataType());
+            }
+        }
+
+        // Adjust the field class to a primitive type if the column is not nullable
+        if (fieldClass != null && !columnMetaData.isNullable()) {
+            final boolean primitiveNotNulls = tableMappingConfig != null && tableMappingConfig.getPrimitiveNotNulls() != null ?
+                    tableMappingConfig.getPrimitiveNotNulls() : output.isPrimitiveNotNulls();
+
+            if (primitiveNotNulls) {
+                fieldClass = PrimitiveLookup.getPrimitiveClass(fieldClass);
             }
         }
 

@@ -16,11 +16,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.litebridge.orm.annotation.AllowInterface;
-import org.litebridge.orm.annotation.ManyToMany;
 import org.litebridge.orm.annotation.OneToMany;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -86,7 +84,7 @@ class ReverseEngineerMojoTest {
     }
 
     @Test
-    @DisplayName("Reverse engineer")
+    @DisplayName("Reverse engineer with @AllowInterface")
     @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-allowInterface.xml")
     void execute_allowInterface(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
         final ReverseEngineerMojoTest.ExecuteResult result = executeImpl(reverseEngineerMojo, true);
@@ -99,7 +97,7 @@ class ReverseEngineerMojoTest {
     }
 
     @Test
-    @DisplayName("Reverse engineer")
+    @DisplayName("Reverse engineer without relationships")
     @InjectMojo(goal = "reverse-engineer", pom = "classpath:/reverse/pom-resolveRelationshipsFalse.xml")
     void execute_relationshipsFalse(final ReverseEngineerMojo reverseEngineerMojo) throws Exception {
         executeImpl(reverseEngineerMojo, false);
@@ -119,11 +117,11 @@ class ReverseEngineerMojoTest {
         person.getFields().forEach(field -> {
             final String fieldName = getFieldName(field);
 
-            if (fieldName.equals("age")) {
+            switch (fieldName) {
                 // Note that "age" is nullable on a database level, but the SQL type mapping for the entity specifies a primitive int=
-                assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
-            } else {
-                assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
+                case "id", "age" ->
+                        assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
+                default -> assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
             }
         });
 
@@ -131,7 +129,7 @@ class ReverseEngineerMojoTest {
                 .filter(method -> method.getNameAsString().startsWith("get"))
                 .forEach(getter -> {
                     switch (getter.getNameAsString()) {
-                        case "getAge" -> assertFalse(getter.isAnnotationPresent(Nullable.class),
+                        case "getId", "getAge" -> assertFalse(getter.isAnnotationPresent(Nullable.class),
                                 "Getter must not be @Nullable: " + getter.getNameAsString());
                         default -> assertTrue(getter.isAnnotationPresent(Nullable.class),
                                 "Getter must be @Nullable: " + getter.getNameAsString());
@@ -158,22 +156,21 @@ class ReverseEngineerMojoTest {
         account.getFields().forEach(field -> {
             final String fieldName = getFieldName(field);
 
-            if (fieldName.equals("active")) {
-                assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
-            } else {
-                assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
+            switch (fieldName) {
+                case "id", "active" ->
+                        assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
+                default -> assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
             }
         });
 
         account.getMethods().stream()
                 .filter(method -> method.getNameAsString().startsWith("get"))
                 .forEach(getter -> {
-                    if (getter.getNameAsString().equals("getActive")) {
-                        assertFalse(getter.isAnnotationPresent(Nullable.class),
-                                "Getter must not be @Nullable: " + getter);
-                    } else {
-                        assertTrue(getter.isAnnotationPresent(Nullable.class),
-                                "Getter must be @Nullable: " + getter);
+                    switch (getter.getNameAsString()) {
+                        case "getId", "getActive" ->
+                                assertFalse(getter.isAnnotationPresent(Nullable.class), "Getter must not be @Nullable: " + getter);
+                        default ->
+                                assertTrue(getter.isAnnotationPresent(Nullable.class), "Getter must be @Nullable: " + getter);
                     }
                 });
 
@@ -195,15 +192,23 @@ class ReverseEngineerMojoTest {
         assertFalse(address.isAnnotationPresent(NullMarked.class));
 
         address.getFields().forEach(field -> {
-            assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
+            final String fieldName = getFieldName(field);
+
+            if (fieldName.equals("addressId")) {
+                assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
+            } else {
+                assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
+            }
         });
 
         address.getMethods().stream()
                 .filter(method -> method.getNameAsString().startsWith("get"))
                 .forEach(getter -> {
-                    assertTrue(getter.isAnnotationPresent(Nullable.class),
-                            "Getter must be @Nullable: " + getter);
-
+                    if (getter.getNameAsString().equals("getAddressId")) {
+                        assertFalse(getter.isAnnotationPresent(Nullable.class), "Getter must not be @Nullable: " + getter);
+                    } else {
+                        assertTrue(getter.isAnnotationPresent(Nullable.class), "Getter must be @Nullable: " + getter);
+                    }
                 });
 
         address.getMethods().stream()
@@ -231,11 +236,11 @@ class ReverseEngineerMojoTest {
         person.getFields().forEach(field -> {
             final String fieldName = getFieldName(field);
 
-            if (fieldName.equals("age")) {
+            switch (fieldName) {
                 // Note that "age" is nullable on a database level, but the SQL type mapping for the entity specifies a primitive int=
-                assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
-            } else {
-                assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
+                case "id", "age" ->
+                        assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
+                default -> assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
             }
         });
 
@@ -243,7 +248,7 @@ class ReverseEngineerMojoTest {
                 .filter(method -> method.getNameAsString().startsWith("get"))
                 .forEach(getter -> {
                     switch (getter.getNameAsString()) {
-                        case "getAge" -> assertFalse(getter.isAnnotationPresent(Nullable.class),
+                        case "getId", "getAge" -> assertFalse(getter.isAnnotationPresent(Nullable.class),
                                 "Getter must not be @Nullable: " + getter.getNameAsString());
                         default -> assertTrue(getter.isAnnotationPresent(Nullable.class),
                                 "Getter must be @Nullable: " + getter.getNameAsString());
@@ -268,22 +273,21 @@ class ReverseEngineerMojoTest {
         account.getFields().forEach(field -> {
             final String fieldName = getFieldName(field);
 
-            if (fieldName.equals("active")) {
-                assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
-            } else {
-                assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
+            switch (fieldName) {
+                case "id", "active" ->
+                        assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
+                default -> assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
             }
         });
 
         account.getMethods().stream()
                 .filter(method -> method.getNameAsString().startsWith("get"))
                 .forEach(getter -> {
-                    if (getter.getNameAsString().equals("getActive")) {
-                        assertFalse(getter.isAnnotationPresent(Nullable.class),
-                                "Getter must not be @Nullable: " + getter);
-                    } else {
-                        assertTrue(getter.isAnnotationPresent(Nullable.class),
-                                "Getter must be @Nullable: " + getter);
+                    switch (getter.getNameAsString()) {
+                        case "getId", "getActive" ->
+                                assertFalse(getter.isAnnotationPresent(Nullable.class), "Getter must not be @Nullable: " + getter);
+                        default ->
+                                assertTrue(getter.isAnnotationPresent(Nullable.class), "Getter must be @Nullable: " + getter);
                     }
                 });
 
@@ -305,15 +309,23 @@ class ReverseEngineerMojoTest {
         assertTrue(address.isAnnotationPresent(NullMarked.class));
 
         address.getFields().forEach(field -> {
-            assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
+            final String fieldName = getFieldName(field);
+
+            if (fieldName.equals("addressId")) {
+                assertFalse(field.isAnnotationPresent(Nullable.class), "Field must not be @Nullable: " + field);
+            } else {
+                assertTrue(field.isAnnotationPresent(Nullable.class), "Field must be @Nullable: " + field);
+            }
         });
 
         address.getMethods().stream()
                 .filter(method -> method.getNameAsString().startsWith("get"))
                 .forEach(getter -> {
-                    assertTrue(getter.isAnnotationPresent(Nullable.class),
-                            "Getter must be @Nullable: " + getter);
-
+                    if (getter.getNameAsString().equals("getAddressId")) {
+                        assertFalse(getter.isAnnotationPresent(Nullable.class), "Getter must not be @Nullable: " + getter);
+                    } else {
+                        assertTrue(getter.isAnnotationPresent(Nullable.class), "Getter must be @Nullable: " + getter);
+                    }
                 });
 
         address.getMethods().stream()
@@ -494,7 +506,7 @@ class ReverseEngineerMojoTest {
 
         for (FieldDeclaration fieldDeclaration : personFields) {
             switch (getFieldName(fieldDeclaration)) {
-                case "id" -> assertEquals("Long", fieldDeclaration.getVariable(0).getType().toString());
+                case "id" -> assertEquals("long", fieldDeclaration.getVariable(0).getType().toString());
                 case "age" -> assertEquals("int", fieldDeclaration.getVariable(0).getType().toString());
                 case "firstName", "surname", "eyeColour" ->
                         assertEquals("String", fieldDeclaration.getVariable(0).getType().toString());
@@ -510,13 +522,13 @@ class ReverseEngineerMojoTest {
 
         for (FieldDeclaration fieldDeclaration : accountFields) {
             switch (getFieldName(fieldDeclaration)) {
-                case "id" -> assertEquals("Long", fieldDeclaration.getVariable(0).getType().toString());
+                case "id" -> assertEquals("long", fieldDeclaration.getVariable(0).getType().toString());
                 case "active" -> assertEquals("boolean", fieldDeclaration.getVariable(0).getType().toString());
                 case "flagged" -> assertEquals("Boolean", fieldDeclaration.getVariable(0).getType().toString());
                 case "balance" -> assertEquals("BigDecimal", fieldDeclaration.getVariable(0).getType().toString());
                 case "owner" -> assertEquals("PersonEntity", fieldDeclaration.getVariable(0).getType().toString());
                 case "accountName" -> assertEquals("String", fieldDeclaration.getVariable(0).getType().toString());
-                case "personId" -> assertEquals("Long", fieldDeclaration.getVariable(0).getType().toString());
+                case "personId" -> assertEquals("long", fieldDeclaration.getVariable(0).getType().toString());
                 default -> fail("Unknown generated field: " + fieldDeclaration);
             }
         }
@@ -532,7 +544,7 @@ class ReverseEngineerMojoTest {
 
         for (FieldDeclaration fieldDeclaration : addressFields) {
             switch (getFieldName(fieldDeclaration)) {
-                case "addressId" -> assertEquals("Long", fieldDeclaration.getVariable(0).getType().toString());
+                case "addressId" -> assertEquals("long", fieldDeclaration.getVariable(0).getType().toString());
                 case "address" -> assertEquals("String", fieldDeclaration.getVariable(0).getType().toString());
                 case "personEntities" ->
                         assertEquals("List<PersonEntity>", fieldDeclaration.getVariable(0).getType().toString());

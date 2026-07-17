@@ -64,6 +64,39 @@ class EntityGeneratorTest {
     }
 
     @Test
+    void createEntityClassForTable_basic_primitiveNotNullsFalse() throws MojoExecutionException {
+        // Given
+        final Log log = new DebugMojoLog(EntityGenerator.class);
+        final RevEngOutputConfig output = new RevEngOutputConfig();
+        output.setOutputPackage("com.example.generated");
+        output.setPrimitiveNotNulls(false);
+
+        final EntityGenerator generator = new EntityGenerator(null, null, output, log);
+
+        final TableMetaData table = mock(TableMetaData.class);
+        when(table.name()).thenReturn("person");
+        when(table.qualifiedName()).thenReturn("person");
+
+        final ColumnMetaData column = mock(ColumnMetaData.class);
+        when(column.name()).thenReturn("id");
+        when(column.getDataType()).thenReturn(Types.BIGINT);
+        when(column.isNullable()).thenReturn(false);
+        when(column.toColumn()).thenReturn(new Column(new Table("person"), "id"));
+
+        when(table.columns()).thenReturn(List.of(column));
+
+        // When
+        final GeneratedEntity result = generator.createEntityClassForTable(table, Collections.emptyMap(), new ManyToManyMappingResult(Collections.emptyList(), Collections.emptySet()), new HashMap<>());
+
+        // Then
+        assertNotNull(result);
+        assertEquals("Person", result.className());
+        final String code = result.entity().toString();
+        assertTrue(code.contains("class Person"));
+        assertTrue(code.contains("private Long id;"));
+    }
+
+    @Test
     void createEntityClassForTable_sqlTypeMapping_complexity() throws MojoExecutionException {
         // Given
         final Log log = new DebugMojoLog(EntityGenerator.class);
@@ -101,7 +134,7 @@ class EntityGeneratorTest {
 
         final Table testTableSpi = new Table(null, "public", "test");
 
-        // Test case 1: matches m2 (precision 10)
+        // Test case 1: matches m2 (precision 10, not null)
         final ColumnMetaData column1 = new ColumnMetaData(testTableSpi, "val1", false, Types.INTEGER, 10);
 
         // Test case 2: matches m3 (not null)
@@ -118,7 +151,7 @@ class EntityGeneratorTest {
         // Then
         assertNotNull(result);
         final String code = result.entity().toString();
-        assertTrue(code.contains("private Long val1;")); // m2 wins, it is NOT converted to primitive automatically if mapped via SqlTypeMapping?
+        assertTrue(code.contains("private long val1;")); // m2 wins, it is NOT converted to primitive automatically if mapped via SqlTypeMapping?
         assertTrue(code.contains("private int val2;")); // m3 wins, mapped to primitive "int"
         assertTrue(code.contains("private Integer val3;")); // m1 wins
     }

@@ -61,6 +61,18 @@ public class TableMappingConfig {
     private @Nullable Boolean initDefaultValues;
 
     /**
+     * Controls whether primitive fields are generated if the database column is not nullable, if applicable.
+     * <p>
+     * For example, if the non-null SQL type maps to a `java.lang.Long`, then a primitive `long` will be generated
+     * instead of a `java.lang.Long`.
+     * <p>
+     * This setting overrides the global output setting with the same name, for this table.
+     * <p>
+     * Default: uses global setting
+     */
+    private @Nullable Boolean primitiveNotNulls;
+
+    /**
      * Configuration for specific columns.
      */
     private @Nullable List<ColumnMappingConfig> columnMappings;
@@ -103,6 +115,14 @@ public class TableMappingConfig {
 
     public void setInitDefaultValues(@Nullable final Boolean initDefaultValues) {
         this.initDefaultValues = initDefaultValues;
+    }
+
+    public @Nullable Boolean getPrimitiveNotNulls() {
+        return primitiveNotNulls;
+    }
+
+    public void setPrimitiveNotNulls(@Nullable final Boolean primitiveNotNulls) {
+        this.primitiveNotNulls = primitiveNotNulls;
     }
 
     public @Nullable List<ColumnMappingConfig> getColumnMappings() {
