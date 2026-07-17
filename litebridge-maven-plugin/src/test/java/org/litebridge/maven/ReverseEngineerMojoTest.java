@@ -4,6 +4,8 @@ import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.MemberValuePair;
 import org.apache.maven.api.di.Provides;
 import org.apache.maven.api.plugin.testing.InjectMojo;
 import org.apache.maven.api.plugin.testing.MojoTest;
@@ -16,9 +18,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.litebridge.orm.annotation.AllowInterface;
+import org.litebridge.orm.annotation.Column;
 import org.litebridge.orm.annotation.OneToMany;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -485,6 +489,12 @@ class ReverseEngineerMojoTest {
 
         final CompilationUnit osGroupEureka = getEntity("OsGroupEureka");
         ensureFieldDeclaration("eurekaZone", osGroupEureka);
+
+        final CompilationUnit osAuth = getEntity("OsAuth");
+        final FieldDeclaration osAuth_authType = ensureFieldDeclaration("authType", osAuth);
+        assertTrue(osAuth_authType.getAnnotationByClass(Column.class).isPresent());
+        final AnnotationExpr authTypeColumnAnnotation = ensureAnnotationExpr(Column.class, osAuth_authType);
+        ensureAnnotationPair("joinUsing", "true", authTypeColumnAnnotation);
     }
 
     private ReverseEngineerMojoTest.ExecuteResult executeImpl(final ReverseEngineerMojo reverseEngineerMojo, final boolean resolveRelationships) throws MojoExecutionException, IOException {
@@ -679,5 +689,20 @@ class ReverseEngineerMojoTest {
                 .filter(fieldDeclaration -> fieldName.equals(getFieldName(fieldDeclaration)))
                 .findFirst()
                 .orElseThrow(() -> assertionFailure().reason("Field '%s' not found in compilation unit".formatted(fieldName)).build());
+    }
+
+    private static AnnotationExpr ensureAnnotationExpr(final Class<? extends Annotation> annotationClass, final FieldDeclaration fieldDeclaration) {
+        assertTrue(fieldDeclaration.getAnnotationByClass(Column.class).isPresent());
+        return fieldDeclaration.getAnnotationByClass(annotationClass).orElseThrow();
+    }
+
+    private static MemberValuePair ensureAnnotationPair(final String paramName, final String paramValue, final AnnotationExpr annotationExpr) {
+        final MemberValuePair pair = annotationExpr.asNormalAnnotationExpr().getPairs().stream()
+                .filter(p -> p.getName().asString().equals(paramName))
+                .findFirst()
+                .orElseThrow(() -> assertionFailure().reason("Annotation '%s' does not have parameter '%s'".formatted(annotationExpr.asNormalAnnotationExpr().getNameAsString(), paramName)).build());
+
+        assertEquals(paramValue, pair.getValue().toString());
+        return pair;
     }
 }
