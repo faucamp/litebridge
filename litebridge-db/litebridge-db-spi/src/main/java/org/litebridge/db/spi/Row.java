@@ -4,7 +4,6 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.query.Result;
 
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
@@ -87,6 +86,68 @@ public final class Row implements Result {
         return columnStream()
                 .filter(rc -> Objects.equals(rc.column().name(), column))
                 .findFirst();
+    }
+
+    /**
+     * Retrieves the index of a column from the row by its {@code Column} metadata.
+     *
+     * @param column the column metadata to match
+     * @return the index of the column if found, or -1 otherwise
+     */
+    public int getColumnIndex(final Column column) {
+        if (column.alias() != null) {
+            return getColumnIndexForAlias(column.alias());
+        } else {
+            return getColumnIndex(column.name());
+        }
+    }
+
+    /**
+     * Retrieves the index of a column from the row by its name.
+     *
+     * @param columnName the name of the column to retrieve
+     * @return the index of the column if found, or -1 otherwise
+     */
+    public int getColumnIndex(final String columnName) {
+        int index = 0;
+
+        for (Column col : columns.keySet()) {
+            if (Objects.equals(col.name(), columnName)) {
+                return index;
+            }
+            index++;
+        }
+
+        return -1;
+    }
+
+    /**
+     * Retrieves the index of a column from the row by its alias.
+     *
+     * @param alias the alias of the column to retrieve
+     * @return the index of the column if found, or -1 otherwise
+     */
+    public int getColumnIndexForAlias(final String alias) {
+        int index = 0;
+
+        for (Column col : columns.keySet()) {
+            if (Objects.equals(col.alias(), alias)) {
+                return index;
+            }
+            index++;
+        }
+
+        return -1;
+    }
+
+    /**
+     * Retrieves the value of a column by its index.
+     *
+     * @param index the index of the column
+     * @return the value of the column
+     */
+    public @Nullable Object getValue(final int index) {
+        return column(index).value();
     }
 
     /**

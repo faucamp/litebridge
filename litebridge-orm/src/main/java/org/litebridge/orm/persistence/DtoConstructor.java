@@ -4,6 +4,8 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.tracking.FieldAccessor;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.RecordComponent;
@@ -42,8 +44,8 @@ public final class DtoConstructor {
     static final Object NO_CONSTRUCTOR = new Object();
 
     private final TableRegistry tableRegistry;
-    private final Map<Class<?>, Object> defaultConstructorCache = new ConcurrentHashMap<>();
-    private final Map<Class<?>, Object> canonicalConstructorCache = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Object> defaultConstructorHandleCache = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Object> canonicalConstructorHandleCache = new ConcurrentHashMap<>();
     private final Map<Class<?>, List<FieldAccessor>> canonicalConstructorFieldAccessorCache = new ConcurrentHashMap<>();
 
     /**
@@ -53,6 +55,19 @@ public final class DtoConstructor {
      */
     public DtoConstructor(final TableRegistry tableRegistry) {
         this.tableRegistry = tableRegistry;
+    }
+
+    public MappingInfo getMappingInfo(final Class<?> dtoClass) {
+        cacheConstructors(dtoClass, null);
+        final Optional<MethodHandle> defaultHandle = defaultConstructor(dtoClass);
+
+        if (defaultHandle.isPresent()) {
+            return new MappingInfo(defaultHandle.get(), true, Collections.emptyList());
+        }
+        
+        final MethodHandle canonicalHandle = canonicalConstructor(dtoClass, Collections.emptyList())
+                .orElseThrow(() -> new IllegalArgumentException("No suitable constructor found for DTO class: " + dtoClass));
+        return new MappingInfo(canonicalHandle, false, canonicalConstructorFieldAccessorCache.get(dtoClass));
     }
 
     /**
@@ -70,9 +85,15 @@ public final class DtoConstructor {
     public <DTO> ConstructionResult<DTO> newInstance(final Class<DTO> dtoClass, final List<FieldAccessorValue> fieldAccessorValues) {
         cacheConstructors(dtoClass, null);
         return defaultConstructor(dtoClass)
-                .map(dtoConstructor -> new ConstructionResult<>(ClassUtils.newInstance(dtoClass, dtoConstructor), true))
+                .map(handle -> {
+                    try {
+                        return new ConstructionResult<>((DTO) handle.invoke(), true);
+                    } catch (Throwable e) {
+                        throw new RuntimeException("Failed to instantiate DTO: " + dtoClass, e);
+                    }
+                })
                 .orElseGet(() -> {
-                    final Constructor<DTO> dtoConstructor = canonicalConstructor(dtoClass, fieldAccessorValues)
+                    final MethodHandle handle = canonicalConstructor(dtoClass, fieldAccessorValues)
                             .orElseThrow(() -> new IllegalArgumentException("No suitable constructor found for DTO class: " + dtoClass));
 
                     final Map<FieldAccessor, @Nullable Object> valuesByField = new HashMap<>(fieldAccessorValues.size());
@@ -95,34 +116,36 @@ public final class DtoConstructor {
                         args[i] = valuesByField.get(fieldAccessor);
                     }
 
-                    return new ConstructionResult<>(ClassUtils.newInstance(dtoClass, dtoConstructor, args), false);
+                    try {
+                        return new ConstructionResult<>((DTO) handle.invokeWithArguments(args), false);
+                    } catch (Throwable e) {
+                        throw new RuntimeException("Failed to instantiate DTO: " + dtoClass, e);
+                    }
                 });
     }
 
-    @SuppressWarnings("unchecked")
-    private <DTO> Optional<Constructor<DTO>> defaultConstructor(final Class<DTO> dtoClass) {
-        final Object cachedConstructor = defaultConstructorCache.get(dtoClass);
+    private Optional<MethodHandle> defaultConstructor(final Class<?> dtoClass) {
+        final Object cachedHandle = defaultConstructorHandleCache.get(dtoClass);
 
-        if (cachedConstructor == NO_CONSTRUCTOR) {
+        if (cachedHandle == NO_CONSTRUCTOR) {
             return Optional.empty();
         }
 
-        return Optional.of((Constructor<DTO>) cachedConstructor);
+        return Optional.of((MethodHandle) cachedHandle);
     }
 
-    @SuppressWarnings("unchecked")
-    private <DTO> Optional<Constructor<DTO>> canonicalConstructor(final Class<DTO> dtoClass, final List<FieldAccessorValue> fieldAccessorValues) {
-        final Object cachedConstructor = canonicalConstructorCache.get(dtoClass);
+    private Optional<MethodHandle> canonicalConstructor(final Class<?> dtoClass, final List<FieldAccessorValue> fieldAccessorValues) {
+        final Object cachedHandle = canonicalConstructorHandleCache.get(dtoClass);
 
-        if (cachedConstructor == NO_CONSTRUCTOR) {
+        if (cachedHandle == NO_CONSTRUCTOR) {
             return Optional.empty();
         }
 
-        return Optional.of((Constructor<DTO>) cachedConstructor);
+        return Optional.of((MethodHandle) cachedHandle);
     }
 
     private <DTO> void cacheConstructors(final Class<DTO> dtoClass, final @Nullable Class<?> parentDtoClass) {
-        if (defaultConstructorCache.containsKey(dtoClass)) {
+        if (defaultConstructorHandleCache.containsKey(dtoClass)) {
             return;
         }
 
@@ -246,8 +269,19 @@ public final class DtoConstructor {
             throw new IllegalArgumentException("No suitable constructor found for DTO class: " + dtoClass);
         }
 
-        defaultConstructorCache.put(dtoClass, defaultConstructor != null ? defaultConstructor : NO_CONSTRUCTOR);
-        canonicalConstructorCache.put(dtoClass, canonicalConstructor != null ? canonicalConstructor : NO_CONSTRUCTOR);
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        try {
+            if (defaultConstructor != null) {
+                defaultConstructor.setAccessible(true);
+            }
+            if (canonicalConstructor != null) {
+                canonicalConstructor.setAccessible(true);
+            }
+            defaultConstructorHandleCache.put(dtoClass, defaultConstructor != null ? lookup.unreflectConstructor(defaultConstructor) : NO_CONSTRUCTOR);
+            canonicalConstructorHandleCache.put(dtoClass, canonicalConstructor != null ? lookup.unreflectConstructor(canonicalConstructor) : NO_CONSTRUCTOR);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("Failed to unreflect constructor for DTO class: " + dtoClass, e);
+        }
         canonicalConstructorFieldAccessorCache.put(dtoClass, canonicalConstructorFieldAccessors != null ? canonicalConstructorFieldAccessors : Collections.emptyList());
 
         // Cache related DTO constructors
@@ -313,5 +347,19 @@ public final class DtoConstructor {
                     .filter(Objects::nonNull)
                     .toList();
         }
+    }
+
+    /**
+     * Information about a particular constructor.
+     *
+     * @param constructor                        The constructor method handle
+     * @param defaultConstructorUsed             Whether the consructor is a default (no arg) constructor
+     * @param canonicalConstructorFieldAccessors The field accessors for the canonical constructor
+     */
+    public record MappingInfo(
+            MethodHandle constructor,
+            boolean defaultConstructorUsed,
+            List<FieldAccessor> canonicalConstructorFieldAccessors
+    ) {
     }
 }

@@ -146,6 +146,15 @@ public class OrmTable {
         return dtoClass;
     }
 
+    public Class<?> getPrimaryKeyType() {
+        final List<ColumnMetaData> pkColumns = getMetaData().primaryKey();
+        if (pkColumns.isEmpty()) {
+            throw new IllegalStateException("Table '%s' has no primary key".formatted(getMetaData().name()));
+        }
+        final String pkColumnName = pkColumns.getFirst().name();
+        return getFieldForColumnName(pkColumnName).type();
+    }
+
     /**
      * Get the table metadata.
      *

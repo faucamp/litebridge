@@ -8,6 +8,8 @@ import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
+import org.litebridge.orm.expression.ColumnExpressionSpec;
+import org.litebridge.orm.expression.DelegateExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.tracking.FieldAccessor;
@@ -15,6 +17,7 @@ import org.litebridge.tracking.FieldAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Specification for a DTO select query.
@@ -141,6 +144,26 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
         final ColumnMetaData columnMetaData = dtoTable.getColumnForFieldName(field);
         final FieldAccessor fieldAccessor = dtoTable.getFieldForColumnName(columnMetaData.name());
         return new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn());
+    }
+
+    /**
+     * Returns the list of field columns for this select.
+     *
+     * @return the list of field columns
+     */
+    public List<FieldColumn> getFieldColumns() {
+        return expressionSpecs.stream()
+                .flatMap(this::extractFieldColumns)
+                .toList();
+    }
+
+    private Stream<FieldColumn> extractFieldColumns(final ExpressionSpec expression) {
+        if (expression instanceof SelectFieldSpec sfs) {
+            return Stream.of(new FieldColumn(sfs.field(), sfs.getColumn()));
+        } else if (expression instanceof DelegateExpressionSpec des) {
+            return extractFieldColumns(des.target()).map(fc -> new FieldColumn(fc.fieldAccessor(), des.getColumn()));
+        }
+        return Stream.empty();
     }
 
     /**
