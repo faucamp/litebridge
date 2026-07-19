@@ -5,6 +5,7 @@
 ### Added
 - Database Provider SPI:
   - `ColumnMetaData` now contains the default value of a column.
+  - `Row` now supports index-based value retrieval for improved performance.
 - Maven plugin: 
   - Add `resolveRelationships` config parameter to control foreign key behaviour.
   - Add `initDefaultValues` config parameter to initialise default values for fields representing columns with a default value defined in the database.
@@ -13,8 +14,11 @@
 
 ### Changed
 - ORM:
-  - Optimise DTO mapping performance in `SelectSpecDtoMapper` by implementing a two-phase resolution process. This reduces complexity from $O(N^2)$ to $O(N)$ for large result sets and improves handling of bidirectional relationships and Records.
-  - Improve efficiency of collection mappings using a high-performance DTO list cache.
+  - Significantly optimised DTO mapping performance in `SelectSpecDtoMapper` through a multi-layered approach:
+    - Introduced a "compiled" `MappingPlan` to pre-calculate mapping logic, enabling index-based row access ($O(1)$ column lookups).
+    - Transitioned to `MethodHandle`-based DTO construction and field population to bypass standard reflection overhead.
+    - Implemented a two-phase resolution process (Populate & Batch Resolve) to reduce mapping complexity from $O(N^2)$ to $O(N)$ for large result sets.
+    - Added a high-performance DTO list cache to accelerate collection and relationship mappings.
 - Maven plugin:
   - Refactor `ReverseEngineerMojo` to improve performance
   - Initialise default values for fields representing columns with a default value defined in the database.
