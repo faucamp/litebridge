@@ -66,10 +66,16 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
 
         return table.getOneToManyMappingForField(fieldAccessor)
                 // Inverse join
-                .map(mappedOneToMany -> joinOn(joinSpec.dtoTable(), mappedOneToMany.mappedByField().name()))
+                .map(mappedOneToMany -> {
+                    joinSpec.setCollectionField(fieldAccessor);
+                    return joinOn(joinSpec.dtoTable(), mappedOneToMany.mappedByField().name());
+                })
                 .orElseGet(() -> table.getManyToManyMappingForField(fieldAccessor)
                         // Many-to-many join
-                        .map(this::manyToManyJoin)
+                        .map(mappedManyToMany -> {
+                            joinSpec.setCollectionField(fieldAccessor);
+                            return manyToManyJoin(mappedManyToMany);
+                        })
                         // Regular join
                         .orElseGet(() -> joinOn(table, fieldAccessor.name())));
     }
@@ -90,6 +96,12 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
     }
 
     private DtoJoinConditionClauseTerminal<DTO> joinOn(final OrmTable ormTable, final String field) {
+        final FieldAccessor sourceField = classFieldAccessorCache.fieldAccessorOrThrow(ormTable.dtoClass(), field);
+        joinSpec.dtoTable().getOneToManyMappings().stream()
+                .filter(m -> m.mappedByField().equals(sourceField))
+                .findFirst()
+                .ifPresent(m -> joinSpec.setReverseCollectionField(m.collection()));
+
         return joinOn(joinSpec.dtoTable(), joinSpec.table(), ormTable.getColumnForFieldName(field), field);
     }
 

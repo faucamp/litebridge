@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -113,8 +114,8 @@ class ManyToManyE2eTest extends AbstractE2eTest {
         assertEquals(person2.getName(), groupedMember2.getName());
         assertNotNull(groupedMember2.getGroups());
         assertEquals(2, groupedMember2.getGroups().size());
-        assertEquals(group2.getName(), groupedMember2.getGroups().getFirst().getName());
-        assertEquals(group2.getName(), groupedMember2.getGroups().getFirst().getName());
+        assertTrue(groupedMember2.getGroups().stream().anyMatch(g -> Objects.equals(g.getName(), group1.getName())));
+        assertTrue(groupedMember2.getGroups().stream().anyMatch(g -> Objects.equals(g.getName(), group2.getName())));
 
         // Save group 2 again (should do nothing)
         LOGGER.info("Saving group 1 again (should do nothing)");
@@ -334,8 +335,8 @@ class ManyToManyE2eTest extends AbstractE2eTest {
         assertEquals(person2.getName(), groupedMember2.getName());
         assertNotNull(groupedMember2.getGroups());
         assertEquals(2, groupedMember2.getGroups().size());
-        assertEquals(group2.getName(), groupedMember2.getGroups().getFirst().getName());
-        assertEquals(group2.getName(), groupedMember2.getGroups().getFirst().getName());
+        assertTrue(groupedMember2.getGroups().stream().anyMatch(g -> Objects.equals(g.getName(), group1.getName())));
+        assertTrue(groupedMember2.getGroups().stream().anyMatch(g -> Objects.equals(g.getName(), group2.getName())));
 
         // Save group 2 again (should do nothing)
         LOGGER.info("Saving group 1 again (should do nothing)");

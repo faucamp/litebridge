@@ -1,6 +1,5 @@
 package org.litebridge.orm.persistence;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
@@ -8,21 +7,17 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
-import org.litebridge.orm.api.dto.DtoDataSpec;
 import org.litebridge.orm.api.dto.DtoJoinSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.persistence.MappingPlan.FieldMapping;
+import org.litebridge.orm.persistence.DtoConstructor.FieldAccessorValue;
 import org.litebridge.tracking.FieldAccessor;
 import org.litebridge.tracking.FieldAccessorChain;
-import org.litebridge.orm.persistence.DtoConstructor.FieldAccessorValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,7 +26,6 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -63,6 +57,18 @@ public class SelectSpecDtoMapper {
         this.litebridgeContext = litebridgeContext;
     }
 
+    private Object safeConvert(final @Nullable Object value, final Class<?> targetType) {
+        if (value == null || targetType == Object.class || targetType.isInstance(value)) {
+            return value;
+        }
+
+        if (!ClassUtils.isBasicType(targetType)) {
+            return value;
+        }
+
+        return typeConverter.convert(value, targetType);
+    }
+
     public <DTO> List<DTO> toDtos(final Class<DTO> dtoClass, final List<Row> rows) {
         if (rows.isEmpty() || (selectSpec.getFieldColumns().isEmpty() && !ClassUtils.isBasicType(dtoClass))) {
             return Collections.emptyList();
@@ -72,7 +78,7 @@ public class SelectSpecDtoMapper {
             return rows.stream()
                     .map(row -> {
                         final Object value = row.getValue(0);
-                        return dtoClass.cast(typeConverter.convert(value, dtoClass));
+                        return dtoClass.cast(safeConvert(value, dtoClass));
                     })
                     .toList();
         }
@@ -97,6 +103,7 @@ public class SelectSpecDtoMapper {
         do {
             hasNewResolved = false;
             final List<PartiallyConstructedDto> currentCacheSnapshot = dtoCache.stream().toList();
+
             for (final PartiallyConstructedDto partialDto : currentCacheSnapshot) {
                 if (!resolvedDtoInstances.contains(partialDto.dto())) {
                     resolveRelatedDtoDependencies(partialDto, resolvedDtoInstances);
@@ -124,7 +131,7 @@ public class SelectSpecDtoMapper {
         for (int i = 0; i < pkColumns.size(); i++) {
             final ColumnMetaData pkCol = pkColumns.get(i);
             final FieldAccessor field = ormTable.getFieldForColumnName(pkCol.name());
-            pkTypes[i] = field != null ? field.type() : Object.class;
+            pkTypes[i] = (field != null && org.litebridge.commons.ClassUtils.isBasicType(field.type())) ? field.type() : Object.class;
             int index = -1;
 
             for (final DtoSelectSpec.FieldColumn fc : fieldColumns) {
@@ -141,23 +148,45 @@ public class SelectSpecDtoMapper {
         final List<MappingPlan.FieldMapping> mappings = new ArrayList<>();
         final Map<FieldAccessor, MappingPlan> nestedPlans = new HashMap<>();
 
+        // Group fields by their first accessor part for nested DTO handling
+        final Map<FieldAccessor, List<DtoSelectSpec.FieldColumn>> groupedByRoot = new HashMap<>();
         for (final DtoSelectSpec.FieldColumn fc : fieldColumns) {
             final FieldAccessor accessor = fc.fieldAccessor();
-            if (accessor == null || !accessor.dtoClass().isAssignableFrom(dtoClass) || !fc.column().table().equals(table)) {
+            if (accessor == null || !fc.column().table().equals(table)) {
                 continue;
             }
 
-            final int index = referenceRow.getColumnIndex(fc.column());
+            final FieldAccessor rootAccessor = (accessor instanceof FieldAccessorChain chain) ? chain.fieldAccessors().getFirst() : accessor;
+            if (rootAccessor.dtoClass().isAssignableFrom(dtoClass)) {
+                groupedByRoot.computeIfAbsent(rootAccessor, k -> new ArrayList<>()).add(fc);
+            }
+        }
+
+        for (final Map.Entry<FieldAccessor, List<DtoSelectSpec.FieldColumn>> entry : groupedByRoot.entrySet()) {
+            final FieldAccessor accessor = entry.getKey();
+            final List<DtoSelectSpec.FieldColumn> groupedFc = entry.getValue();
             final Class<?> fieldType = accessor.type();
 
             boolean isRelatedDto = false;
             boolean isNestedDto = false;
             FieldAccessor relatedPkAccessor = null;
 
-            if (accessor instanceof FieldAccessorChain) {
+            // Check if it's a nested DTO (has multiple fields or the accessor is a chain in the first fc)
+            final boolean hasChains = groupedFc.stream().anyMatch(fc -> fc.fieldAccessor() instanceof FieldAccessorChain);
+
+            if (hasChains && !ClassUtils.isBasicType(fieldType)) {
                 isNestedDto = true;
                 if (!nestedPlans.containsKey(accessor)) {
-                    nestedPlans.put(accessor, compileMappingPlan(fieldType, tableRegistry.getTableOrThrow(fieldType), table, fieldColumns, null, referenceRow));
+                    // Shift field columns for nested plan
+                    final List<DtoSelectSpec.FieldColumn> shiftedFc = groupedFc.stream()
+                            .map(fc -> {
+                                if (fc.fieldAccessor() instanceof FieldAccessorChain chain && chain.fieldAccessors().size() > 1) {
+                                    return new DtoSelectSpec.FieldColumn(chain.subChain(), fc.column());
+                                }
+                                return fc;
+                            })
+                            .toList();
+                    nestedPlans.put(accessor, compileMappingPlan(fieldType, tableRegistry.getTableOrThrow(fieldType), table, shiftedFc, null, referenceRow));
                 }
             } else if (!ClassUtils.isBasicType(accessor.type())) {
                 isRelatedDto = true;
@@ -170,6 +199,8 @@ public class SelectSpecDtoMapper {
                 }
             }
 
+            // For regular fields or related DTOs, we take the index from the (first) fc
+            final int index = referenceRow.getColumnIndex(groupedFc.getFirst().column());
             mappings.add(new MappingPlan.FieldMapping(index, accessor, fieldType, isRelatedDto, isNestedDto, relatedPkAccessor));
         }
 
@@ -188,6 +219,20 @@ public class SelectSpecDtoMapper {
             }
         }
 
+        final List<MappedOneToMany> requestedOneToMany = new ArrayList<>();
+        final List<MappedManyToMany> requestedManyToMany = new ArrayList<>();
+
+        if (joins != null) {
+            for (final JoinSpec join : joins) {
+                if (join instanceof DtoJoinSpec djs && djs.collectionField() != null) {
+                    ormTable.getOneToManyMappingForField(djs.collectionField())
+                            .ifPresent(requestedOneToMany::add);
+                    ormTable.getManyToManyMappingForField(djs.collectionField())
+                            .ifPresent(requestedManyToMany::add);
+                }
+            }
+        }
+
         return new MappingPlan(
                 dtoClass,
                 ormTable,
@@ -198,7 +243,9 @@ public class SelectSpecDtoMapper {
                 mappingInfo.defaultConstructorUsed(),
                 mappingInfo.canonicalConstructorFieldAccessors(),
                 joinPlans,
-                nestedPlans
+                nestedPlans,
+                requestedOneToMany,
+                requestedManyToMany
         );
     }
 
@@ -214,7 +261,7 @@ public class SelectSpecDtoMapper {
                 final Object value = row.getValue(index);
                 if (value != null) {
                     pkNull = false;
-                    pk.add(typeConverter.convert(value, plan.primaryKeyTypes()[i]));
+                    pk.add(safeConvert(value, plan.primaryKeyTypes()[i]));
                 } else {
                     pk.add(null);
                 }
@@ -249,7 +296,7 @@ public class SelectSpecDtoMapper {
                     final Object value = mapping.index() != -1 ? row.getValue(mapping.index()) : null;
                     if (mapping.isRelatedDto()) {
                         if (mapping.relatedPkAccessor() != null) {
-                            final Object relatedPkValue = typeConverter.convert(value, mapping.relatedPkAccessor().type());
+                            final Object relatedPkValue = safeConvert(value, mapping.relatedPkAccessor().type());
                             if (relatedPkValue != null) {
                                 final List<FieldAccessorValue> pkValues = Collections.singletonList(new FieldAccessorValue(mapping.relatedPkAccessor(), relatedPkValue));
                                 final DtoConstructor.DtoDependency dependency = new DtoConstructor.DtoDependency(mapping.accessor(), mapping.fieldType(), pkValues);
@@ -258,7 +305,7 @@ public class SelectSpecDtoMapper {
                             }
                         }
                     } else {
-                        fieldValues.add(new FieldAccessorValue(mapping.accessor(), typeConverter.convert(value, mapping.fieldType())));
+                        fieldValues.add(new FieldAccessorValue(mapping.accessor(), safeConvert(value, mapping.fieldType())));
                     }
                 }
             }
@@ -298,8 +345,16 @@ public class SelectSpecDtoMapper {
             dtoCache.put(pk, currentDto);
         }
 
-        for (final MappingPlan joinPlan : plan.joinPlans().values()) {
-            toDto(joinPlan, row, true);
+        for (final Map.Entry<DtoJoinSpec, MappingPlan> entry : plan.joinPlans().entrySet()) {
+            final PartiallyConstructedDto joinedDto = toDto(entry.getValue(), row, true);
+            if (joinedDto != null) {
+                if (entry.getKey().collectionField() != null) {
+                    dtoCache.addLink(currentDto.dto(), entry.getKey().collectionField(), joinedDto.dto());
+                }
+                if (entry.getKey().reverseCollectionField() != null) {
+                    dtoCache.addLink(joinedDto.dto(), entry.getKey().reverseCollectionField(), currentDto.dto());
+                }
+            }
         }
 
         return currentDto;
@@ -336,7 +391,9 @@ public class SelectSpecDtoMapper {
         }
 
         if (recordOverrides != null) {
+            final Object oldDto = currentDto.dto();
             currentDto = recreateDto(currentDto, recordOverrides);
+            dtoCache.updateInstance(oldDto, currentDto.dto());
             dtoCache.put(currentDto.primaryKey(), currentDto);
         }
 
@@ -350,7 +407,7 @@ public class SelectSpecDtoMapper {
         final Class<?> dtoClass = partialDto.dto().getClass();
         final DtoConstructor.MappingInfo mappingInfo = dtoConstructor.getMappingInfo(dtoClass);
         final List<FieldAccessorValue> fieldValues = new ArrayList<>();
-        
+
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
         table.fieldAcessorStream().forEach(accessor -> {
             Object value = valueOverrides.get(accessor);
@@ -403,8 +460,16 @@ public class SelectSpecDtoMapper {
             return;
         }
 
+        final boolean isRoot = table.dtoClass().equals(selectSpec.dtoClass());
+
         mappedOneToManyList.forEach(mappedOneToMany -> {
             final FieldAccessor collection = mappedOneToMany.collection();
+            final Collection<Object> links = dtoCache.getLinks(dto, collection);
+
+            if (links.isEmpty() && !isRoot) {
+                return;
+            }
+
             final Collection<Object> currentCollection;
             final Collection<Object> dtoCollection = (Collection<Object>) collection.get(dto);
 
@@ -415,8 +480,11 @@ public class SelectSpecDtoMapper {
                 collection.set(dto, currentCollection);
             }
 
-            final Class<?> targetClass = collection.genericType();
-            currentCollection.addAll(dtoCache.getDtosByClass(targetClass));
+            for (final Object targetDto : links) {
+                if (!currentCollection.contains(targetDto)) {
+                    currentCollection.add(targetDto);
+                }
+            }
         });
     }
 
@@ -430,8 +498,16 @@ public class SelectSpecDtoMapper {
             return;
         }
 
+        final boolean isRoot = table.dtoClass().equals(selectSpec.dtoClass());
+
         mappedManyToManyList.forEach(mappedManyToMany -> {
             final FieldAccessor collection = mappedManyToMany.collection();
+            final Collection<Object> links = dtoCache.getLinks(dto, collection);
+
+            if (links.isEmpty() && !isRoot) {
+                return;
+            }
+
             final Collection<Object> currentCollection;
             final Collection<Object> dtoCollection = (Collection<Object>) collection.get(dto);
 
@@ -442,8 +518,11 @@ public class SelectSpecDtoMapper {
                 collection.set(dto, currentCollection);
             }
 
-            final Class<?> targetClass = collection.genericType();
-            currentCollection.addAll(dtoCache.getDtosByClass(targetClass));
+            for (final Object targetDto : links) {
+                if (!currentCollection.contains(targetDto)) {
+                    currentCollection.add(targetDto);
+                }
+            }
         });
     }
 
@@ -481,6 +560,7 @@ public class SelectSpecDtoMapper {
     private static final class PartiallyConstructedDtoCache {
         private final Map<Class<?>, Map<List<Object>, SelectSpecDtoMapper.PartiallyConstructedDto>> cache = new IdentityHashMap<>();
         private final Map<Class<?>, List<Object>> listCache = new IdentityHashMap<>();
+        private final Map<Object, Map<FieldAccessor, Set<Object>>> links = new IdentityHashMap<>();
 
         public @Nullable PartiallyConstructedDto get(final Class<?> dtoClass, final List<Object> id) {
             final Map<List<Object>, PartiallyConstructedDto> classCache = cache.get(dtoClass);
@@ -499,25 +579,49 @@ public class SelectSpecDtoMapper {
             return null;
         }
 
-        public void put(final List<Object> id, final SelectSpecDtoMapper.PartiallyConstructedDto dto) {
+        private void put(final List<Object> id, final SelectSpecDtoMapper.PartiallyConstructedDto dto) {
             cache.computeIfAbsent(dto.ormTable().dtoClass(), cls -> new HashMap<>())
                     .put(id, dto);
             listCache.clear();
         }
 
-        public Stream<PartiallyConstructedDto> stream() {
-            return cache.values().stream()
-                    .flatMap(pkPcDto -> pkPcDto.values().stream());
+        private void addLink(final Object source, final FieldAccessor collection, final Object target) {
+            links.computeIfAbsent(source, k -> new IdentityHashMap<>())
+                    .computeIfAbsent(collection, k -> Collections.newSetFromMap(new IdentityHashMap<>()))
+                    .add(target);
         }
 
-        public List<Object> getDtosByClass(final Class<?> dtoClass) {
-            return listCache.computeIfAbsent(dtoClass, cls -> {
-                return cache.entrySet().stream()
-                        .filter(entry -> cls.isAssignableFrom(entry.getKey()))
-                        .flatMap(entry -> entry.getValue().values().stream())
-                        .map(PartiallyConstructedDto::dto)
-                        .toList();
-            });
+        private Collection<Object> getLinks(final Object source, final FieldAccessor collection) {
+            final Map<FieldAccessor, Set<Object>> sourceLinks = links.get(source);
+
+            if (sourceLinks == null) {
+                return Collections.emptyList();
+            }
+
+            final Set<Object> collectionLinks = sourceLinks.get(collection);
+            return collectionLinks != null ? collectionLinks : Collections.emptyList();
+        }
+
+        private void updateInstance(final Object oldInstance, final Object newInstance) {
+            final Map<FieldAccessor, Set<Object>> oldLinks = links.remove(oldInstance);
+
+            if (oldLinks != null) {
+                links.put(newInstance, oldLinks);
+            }
+
+            // Also need to update where this instance was a TARGET
+            for (final Map<FieldAccessor, Set<Object>> sourceMap : links.values()) {
+                for (final Set<Object> targets : sourceMap.values()) {
+                    if (targets.remove(oldInstance)) {
+                        targets.add(newInstance);
+                    }
+                }
+            }
+        }
+
+        private Stream<PartiallyConstructedDto> stream() {
+            return cache.values().stream()
+                    .flatMap(pkPcDto -> pkPcDto.values().stream());
         }
     }
 }

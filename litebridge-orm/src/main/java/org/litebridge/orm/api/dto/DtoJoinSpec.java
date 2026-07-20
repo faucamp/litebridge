@@ -5,6 +5,7 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.impl.AbstractJoinSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.persistence.OrmTable;
+import org.litebridge.tracking.FieldAccessor;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,6 +21,10 @@ public final class DtoJoinSpec extends AbstractJoinSpec implements DtoDataSpec {
     private final SelectExpressionMapper selectExpressionMapper;
     @Nullable
     private List<DtoSelectSpec.FieldColumn> fieldColumns;
+    @Nullable
+    private FieldAccessor collectionField;
+    @Nullable
+    private FieldAccessor reverseCollectionField;
 
     /**
      * Creates a new instance of {@code DtoJoinSpec}.
@@ -66,5 +71,41 @@ public final class DtoJoinSpec extends AbstractJoinSpec implements DtoDataSpec {
      */
     public void setFieldColumns(@Nullable final List<DtoSelectSpec.FieldColumn> fieldColumns) {
         this.fieldColumns = fieldColumns;
+    }
+
+    /**
+     * Returns the collection field for this join.
+     *
+     * @return the collection field, or null if not a collection join
+     */
+    public @Nullable FieldAccessor collectionField() {
+        return collectionField;
+    }
+
+    /**
+     * Sets the collection field for this join.
+     *
+     * @param collectionField the collection field
+     */
+    public void setCollectionField(@Nullable final FieldAccessor collectionField) {
+        this.collectionField = collectionField;
+    }
+
+    /**
+     * Returns the reverse collection field for this join.
+     *
+     * @return the reverse collection field, or null if none
+     */
+    public @Nullable FieldAccessor reverseCollectionField() {
+        return reverseCollectionField;
+    }
+
+    /**
+     * Sets the reverse collection field for this join.
+     *
+     * @param reverseCollectionField the reverse collection field
+     */
+    public void setReverseCollectionField(@Nullable final FieldAccessor reverseCollectionField) {
+        this.reverseCollectionField = reverseCollectionField;
     }
 }

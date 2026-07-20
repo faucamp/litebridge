@@ -22,8 +22,44 @@ public record MappingPlan(
         boolean defaultConstructorUsed,
         List<FieldAccessor> canonicalConstructorFieldAccessors,
         Map<DtoJoinSpec, MappingPlan> joinPlans,
-        Map<FieldAccessor, MappingPlan> nestedPlans
+        Map<FieldAccessor, MappingPlan> nestedPlans,
+        List<MappedOneToMany> oneToManyMappings,
+        List<MappedManyToMany> manyToManyMappings
 ) {
+    public java.util.List<Object> extractPk(org.litebridge.db.spi.Row row) {
+        java.util.List<Object> pk = new java.util.ArrayList<>(primaryKeyIndices.length);
+        boolean pkNull = true;
+        for (int i = 0; i < primaryKeyIndices.length; i++) {
+            int index = primaryKeyIndices[i];
+            if (index != -1) {
+                Object value = row.getValue(index);
+                if (value != null) {
+                    pkNull = false;
+                    pk.add(value); // Type conversion will happen in toDto if needed, but for cache key raw is fine if consistent
+                } else {
+                    pk.add(null);
+                }
+            } else {
+                pk.add(null);
+            }
+        }
+        if (pkNull && primaryKeyIndices.length > 0 && !allIndicesMissing()) {
+            return null;
+        }
+        if (pkNull) {
+            pk.clear();
+            pk.add(row.hashCode());
+        }
+        return pk;
+    }
+
+    private boolean allIndicesMissing() {
+        for (int index : primaryKeyIndices) {
+            if (index != -1) return false;
+        }
+        return true;
+    }
+
     public record FieldMapping(
             int index,
             FieldAccessor accessor,
