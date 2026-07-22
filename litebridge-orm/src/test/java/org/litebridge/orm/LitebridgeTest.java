@@ -199,7 +199,6 @@ class LitebridgeTest {
 
         // Then
         verify(databaseProvider).tableMetaData(eq(tableSpec), any(ConnectionProvider.class));
-        verify(databaseProvider).getAliasTransformer();
         verifyNoMoreInteractions(databaseProvider);
     }
 

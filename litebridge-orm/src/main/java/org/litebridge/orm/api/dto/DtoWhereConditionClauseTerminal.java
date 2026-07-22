@@ -5,6 +5,9 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.GroupByNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
@@ -81,29 +84,34 @@ public final class DtoWhereConditionClauseTerminal<DTO>
 
     @Override
     public DtoGroupByClauseTerminal<DTO> groupBy(final String... columns) {
-        selectSpec.setGroupBy(new GroupBySpec(selectSpec.createSelectFieldSpecs(columns)));
-        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate);
+        return groupBy(selectSpec.createSelectFieldSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override
     public DtoGroupByClauseTerminal<DTO> groupBy(final ExpressionSpec... fields) {
-        selectSpec.setGroupBy(new GroupBySpec(fields));
-        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate);
+        final QueryNode groupByNode = new GroupByNode(delegate.node(), fields);
+        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(groupByNode));
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(selectSpec.createSelectFieldSpecs(fields)), (DtoSelector<DTO>) delegate);
+        return orderBy(selectSpec.createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(fields), (DtoSelector<DTO>) delegate);
+        return new DtoOrderByClause<>(fields, (DtoSelector<DTO>) delegate);
     }
 
     private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
         final ConditionSpec conditionSpec = selectSpec.currentWhereConditionGroupSpec().newCondition(logicOperator, expression);
-        return new DtoWhereConditionClause<>(conditionSpec, new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate), delegate.litebridgeContext());
+
+        return new DtoWhereConditionClause<>(conditionSpec,
+                delegate.litebridgeContext(),
+                logicOperator,
+                expression,
+                delegate.node(),
+                node -> new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(node)));
     }
 
     private DtoWhereConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {

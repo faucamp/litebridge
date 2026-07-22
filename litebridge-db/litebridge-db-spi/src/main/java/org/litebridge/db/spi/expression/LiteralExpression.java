@@ -13,6 +13,7 @@ import java.util.StringJoiner;
 public class LiteralExpression implements SelectExpression {
 
     private final @Nullable Object value;
+    private final boolean parameter;
 
     /**
      * Constructs a new {@code LiteralExpression} with the given value.
@@ -20,7 +21,18 @@ public class LiteralExpression implements SelectExpression {
      * @param value the literal value to be represented
      */
     public LiteralExpression(final @Nullable Object value) {
+        this(value, false);
+    }
+
+    /**
+     * Constructs a new {@code LiteralExpression} with the given value and parameter flag.
+     *
+     * @param value     the literal value to be represented
+     * @param parameter whether this literal should be treated as a bind parameter
+     */
+    public LiteralExpression(final @Nullable Object value, final boolean parameter) {
         this.value = value;
+        this.parameter = parameter;
     }
 
     /**
@@ -32,8 +44,20 @@ public class LiteralExpression implements SelectExpression {
         return value;
     }
 
+    /**
+     * Returns whether this literal should be treated as a bind parameter.
+     *
+     * @return {@code true} if it's a parameter, {@code false} otherwise
+     */
+    public boolean isParameter() {
+        return parameter;
+    }
+
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
+        if (parameter) {
+            return toBindValueSql(operation);
+        }
         if (value == null) {
             return "NULL";
 //        } else if (value.getClass().isArray()) {
@@ -95,11 +119,14 @@ public class LiteralExpression implements SelectExpression {
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof final LiteralExpression that)) return false;
+        if (this.parameter != that.parameter) return false;
+        if (this.parameter) return true; // Structurally equal if both are parameters
         return Objects.equals(value, that.value);
     }
 
     @Override
     public int hashCode() {
+        if (parameter) return 31; // Constant hash for all parameters
         return Objects.hashCode(value);
     }
 

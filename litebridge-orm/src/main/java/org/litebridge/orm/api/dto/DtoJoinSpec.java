@@ -17,6 +17,8 @@ public final class DtoJoinSpec extends AbstractJoinSpec implements DtoDataSpec {
 
     private final Class<?> dtoClass;
     private final OrmTable ormTable;
+    @Nullable
+    private Class<?> sourceDtoClass;
 
     private final SelectExpressionMapper selectExpressionMapper;
     @Nullable
@@ -53,6 +55,24 @@ public final class DtoJoinSpec extends AbstractJoinSpec implements DtoDataSpec {
     @Override
     public OrmTable dtoTable() {
         return ormTable;
+    }
+
+    /**
+     * Returns the source DTO class for this join.
+     *
+     * @return the source DTO class
+     */
+    public @Nullable Class<?> sourceDtoClass() {
+        return sourceDtoClass;
+    }
+
+    /**
+     * Sets the source DTO class for this join.
+     *
+     * @param sourceDtoClass the source DTO class
+     */
+    public void setSourceDtoClass(@Nullable final Class<?> sourceDtoClass) {
+        this.sourceDtoClass = sourceDtoClass;
     }
 
     /**

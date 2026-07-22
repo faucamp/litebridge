@@ -1,28 +1,24 @@
 package org.litebridge.orm.api.select;
 
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.sql.SqlFromClauseTerminal;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 
-abstract sealed class AbstractFromClauseStart permits FromClauseStart, FromClauseStartTypeOverride{
+abstract sealed class AbstractFromClauseStart permits FromClauseStart, FromClauseStartTypeOverride {
 
     /**
-     * The expression specifications to select.
+     * The current query node.
      */
-    protected final ExpressionSpec[] expressionSpecs;
+    protected final QueryNode node;
 
     /**
      * The from clause engine.
      */
     protected final FromClauseEngine fromClauseEngine;
 
-    protected AbstractFromClauseStart(FromClauseEngine fromClauseEngine) {
-        this(new ExpressionSpec[0], fromClauseEngine);
-    }
-
-    protected AbstractFromClauseStart(final ExpressionSpec[] expressionSpecs,
-                                   final FromClauseEngine fromClauseEngine) {
-        this.expressionSpecs = expressionSpecs;
+    protected AbstractFromClauseStart(final QueryNode node, final FromClauseEngine fromClauseEngine) {
+        this.node = node;
         this.fromClauseEngine = fromClauseEngine;
     }
 
@@ -33,6 +29,6 @@ abstract sealed class AbstractFromClauseStart permits FromClauseStart, FromClaus
      * @return the SQL from clause terminal.
      */
     public SqlFromClauseTerminal from(final String table) {
-        return fromClauseEngine.from(expressionSpecs, table);
+        return fromClauseEngine.from(node, table);
     }
 }

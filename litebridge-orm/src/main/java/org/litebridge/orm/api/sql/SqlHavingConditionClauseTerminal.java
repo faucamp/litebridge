@@ -5,6 +5,8 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.HavingNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractHavingClauseTerminal;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
@@ -36,7 +38,7 @@ public final class SqlHavingConditionClauseTerminal
 
     @Override
     public SqlHavingConditionClause and(final ExpressionSpec expression) {
-        return havingImpl(LogicOperator.AND, expression);
+        return havingImpl(LogicOperator.AND, expression, (SqlSelector) delegate);
     }
 
     @Override
@@ -52,7 +54,7 @@ public final class SqlHavingConditionClauseTerminal
 
     @Override
     public SqlHavingConditionClause or(final ExpressionSpec expression) {
-        return havingImpl(LogicOperator.OR, expression);
+        return havingImpl(LogicOperator.OR, expression, (SqlSelector) delegate);
     }
 
     @Override
@@ -62,17 +64,23 @@ public final class SqlHavingConditionClauseTerminal
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.createSelectColumnSpecs(columns)), (SqlSelector) delegate);
+        return orderBy(selectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+        return new SqlOrderByClause(columns, (SqlSelector) delegate);
     }
 
-    private SqlHavingConditionClause havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+    private SqlHavingConditionClause havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression, final SqlSelector newDelegate) {
         final ConditionSpec conditionSpec = selectSpec.currentHavingConditionGroupSpec().newCondition(logicOperator, expression);
-        return new SqlHavingConditionClause(conditionSpec, new SqlHavingConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
+
+        return new SqlHavingConditionClause(conditionSpec,
+                delegate.litebridgeContext(),
+                logicOperator,
+                expression,
+                delegate.node(),
+                node -> new SqlHavingConditionClauseTerminal((SqlSelector) delegate.withNode(node)));
     }
 
     private SqlHavingConditionClauseTerminal havingImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {

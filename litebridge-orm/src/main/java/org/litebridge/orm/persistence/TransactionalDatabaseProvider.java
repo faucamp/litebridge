@@ -11,6 +11,7 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.Delete;
@@ -103,6 +104,16 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     @Override
     public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
         return executeAndCleanupIfNeeded(() -> databaseProvider.select(select, transactionManager));
+    }
+
+    @Override
+    public List<Row> select(final Select select, final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeAndCleanupIfNeeded(() -> databaseProvider.select(select, preparedSql, transactionManager));
+    }
+
+    @Override
+    public PreparedSql prepareSql(final Select select, final ConnectionProvider connectionProvider) {
+        return databaseProvider.prepareSql(select, transactionManager);
     }
 
     @Override

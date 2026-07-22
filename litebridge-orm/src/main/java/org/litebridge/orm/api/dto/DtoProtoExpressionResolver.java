@@ -92,7 +92,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
             }
         }
 
-        return Objects.requireNonNull(selectSpec).dtoClass();
+        return Objects.requireNonNull(selectSpec).dtoTable().dtoClass();
     }
 
     @Override
@@ -108,9 +108,18 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
         // Map the input DTO field names to database column names
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
         final Table table;
-
-        if (selectSpec != null && ormTable.equals(selectSpec.dtoTable())) {
-            table = selectSpec.getTable();
+        if (selectSpec != null) {
+            if (ormTable.equals(selectSpec.dtoTable())) {
+                table = selectSpec.getTable();
+            } else {
+                table = selectSpec.getJoins().stream()
+                        .filter(DtoJoinSpec.class::isInstance)
+                        .map(DtoJoinSpec.class::cast)
+                        .filter(join -> join.dtoTable().equals(ormTable))
+                        .map(org.litebridge.orm.api.select.model.JoinSpec::table)
+                        .findFirst()
+                        .orElseGet(() -> ormTable.getMetaData().toTable());
+            }
         } else {
             table = ormTable.getMetaData().toTable();
         }

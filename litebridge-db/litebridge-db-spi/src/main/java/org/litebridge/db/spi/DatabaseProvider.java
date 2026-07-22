@@ -6,6 +6,7 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.Insert;
@@ -65,6 +66,27 @@ public interface DatabaseProvider {
      * @throws SQLException if any SQL error occurs during the execution of the SELECT operation.
      */
     List<Row> select(Select select, ConnectionProvider connectionProvider) throws SQLException;
+
+    /**
+     * Executes a SELECT operation in the database using the provided {@link Select} statement
+     * and a pre-prepared {@link PreparedSql} object.
+     *
+     * @param select             the {@link Select} statement containing structural information.
+     * @param preparedSql        the {@link PreparedSql} object containing the SQL query string and bind values.
+     * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
+     * @return a {@link List} of {@link Row} objects representing the results of the SELECT operation.
+     * @throws SQLException if any SQL error occurs during the execution of the SELECT operation.
+     */
+    List<Row> select(Select select, PreparedSql preparedSql, ConnectionProvider connectionProvider) throws SQLException;
+
+    /**
+     * Prepares a SQL SELECT statement along with its bind values for execution.
+     *
+     * @param select             the select operation to prepare.
+     * @param connectionProvider the connection provider.
+     * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values.
+     */
+    PreparedSql prepareSql(Select select, ConnectionProvider connectionProvider);
 
     /**
      * Execute a DELETE operation in the database using the provided {@link Delete} statement.

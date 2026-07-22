@@ -22,6 +22,7 @@ module litebridge.orm {
     exports org.litebridge.orm.api.dto.update;
     exports org.litebridge.orm.api.register;
     exports org.litebridge.orm.api.select;
+    exports org.litebridge.orm.api.select.ast;
     exports org.litebridge.orm.api.select.model;
     exports org.litebridge.orm.api.spec;
     exports org.litebridge.orm.api.sql;
@@ -50,6 +51,7 @@ module litebridge.orm {
     opens org.litebridge.orm.persistence to litebridge.commons, litebridge.tracking;
     opens org.litebridge.orm.persistence.alias to litebridge.commons, litebridge.tracking;
     opens org.litebridge.orm.api.select to litebridge.commons, litebridge.tracking;
+    opens org.litebridge.orm.api.select.ast to litebridge.commons, litebridge.tracking;
     opens org.litebridge.orm.api.select.model to litebridge.commons, litebridge.tracking;
     opens org.litebridge.orm.engine to litebridge.commons, litebridge.tracking;
     exports org.litebridge.orm.api.dto.condition;

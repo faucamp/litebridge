@@ -4,10 +4,17 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Table;
+import org.litebridge.orm.api.select.LimitClauseTerminal;
+import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.sql.SqlProtoExpressionResolver;
 import org.litebridge.orm.api.sql.SqlSelectSpec;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryPlanCache;
+import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 
 import java.util.List;
 import java.util.Optional;
@@ -65,14 +72,28 @@ class SelectImplTest {
     @Test
     void limitClauseTerminalImpl_offset() {
         LimitClauseTerminalImpl<Object, SqlSelectSpec> limitClause = new LimitClauseTerminalImpl<>(selector);
-        limitClause.offset(10);
+        SelectTerminal<Object> resultTerminal = limitClause.offset(10);
+        
+        // Use a real context for compilation
+        final LitebridgeContext context = new LitebridgeContext(null, null, null, new QueryPlanCache(), new NoOpAliasGenerator());
+        final TestSelector finalSelector = (TestSelector) resultTerminal;
+        final TestSelector compiledSelector = new TestSelector(selectSpec, databaseProvider, context, finalSelector.node());
+        
+        compiledSelector.toSql(); // Trigger compilation
         assertEquals(10, selectSpec.getLimit().getOffset().get());
     }
 
     @Test
     void orderByClauseTerminalImpl_limit() {
         OrderByClauseTerminalImpl<Object, SqlSelectSpec> orderByClause = new OrderByClauseTerminalImpl<>(selector);
-        orderByClause.limit(20);
+        LimitClauseTerminal<Object> resultTerminal = orderByClause.limit(20);
+
+        // Use a real context for compilation
+        final LitebridgeContext context = new LitebridgeContext(null, null, null, new QueryPlanCache(), new NoOpAliasGenerator());
+        final TestSelector finalSelector = (TestSelector) ((DelegatingSelector) resultTerminal).delegate();
+        final TestSelector compiledSelector = new TestSelector(selectSpec, databaseProvider, context, finalSelector.node());
+
+        compiledSelector.toSql(); // Trigger compilation
         assertEquals(20, selectSpec.getLimit().getLimit().get());
     }
 
@@ -80,8 +101,22 @@ class SelectImplTest {
         private Object result;
         private List<Object> resultList;
 
+        protected TestSelector(SqlSelectSpec selectSpec, TransactionalDatabaseProvider databaseProvider, LitebridgeContext context, QueryNode node) {
+            super(selectSpec, databaseProvider, mock(TableRegistry.class), Object.class, context, node);
+        }
+
         protected TestSelector(SqlSelectSpec selectSpec, TransactionalDatabaseProvider databaseProvider) {
-            super(selectSpec, databaseProvider, Object.class, mock(LitebridgeContext.class));
+            this(selectSpec, databaseProvider, mock(LitebridgeContext.class), null);
+        }
+
+        @Override
+        public TestSelector withNode(QueryNode node) {
+            return new TestSelector(selectSpec, databaseProvider, litebridgeContext, node);
+        }
+
+        @Override
+        protected SqlSelectSpec createSelectSpec(org.litebridge.orm.persistence.alias.AliasGenerator aliasGenerator) {
+            return selectSpec;
         }
 
         public void setResult(Object result) {

@@ -20,4 +20,13 @@ public abstract class SubselectExpression implements ConnectionProviderExpressio
     public SubselectExpression(final Select subselect) {
         this.subselect = subselect;
     }
+
+    /**
+     * Returns the subselect query.
+     *
+     * @return the subselect query
+     */
+    public Select select() {
+        return subselect;
+    }
 }

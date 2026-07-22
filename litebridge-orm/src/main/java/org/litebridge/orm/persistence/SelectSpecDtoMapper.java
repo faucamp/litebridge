@@ -214,7 +214,10 @@ public class SelectSpecDtoMapper {
         if (joins != null) {
             for (final JoinSpec join : joins) {
                 if (join instanceof DtoJoinSpec djs) {
-                    joinPlans.put(djs, compileMappingPlan(djs.dtoClass(), djs.dtoTable(), djs.table(), djs.getFieldColumns(), null, referenceRow));
+                    final Class<?> sourceClass = djs.sourceDtoClass() != null ? djs.sourceDtoClass() : (selectSpec instanceof DtoSelectSpec dss ? dss.dtoClass() : null);
+                    if (dtoClass.equals(sourceClass)) {
+                        joinPlans.put(djs, compileMappingPlan(djs.dtoClass(), djs.dtoTable(), djs.table(), djs.getFieldColumns(), null, referenceRow));
+                    }
                 }
             }
         }
@@ -225,10 +228,13 @@ public class SelectSpecDtoMapper {
         if (joins != null) {
             for (final JoinSpec join : joins) {
                 if (join instanceof DtoJoinSpec djs && djs.collectionField() != null) {
-                    ormTable.getOneToManyMappingForField(djs.collectionField())
-                            .ifPresent(requestedOneToMany::add);
-                    ormTable.getManyToManyMappingForField(djs.collectionField())
-                            .ifPresent(requestedManyToMany::add);
+                    final Class<?> sourceClass = djs.sourceDtoClass() != null ? djs.sourceDtoClass() : (selectSpec instanceof DtoSelectSpec dss ? dss.dtoClass() : null);
+                    if (dtoClass.equals(sourceClass)) {
+                        ormTable.getOneToManyMappingForField(djs.collectionField())
+                                .ifPresent(requestedOneToMany::add);
+                        ormTable.getManyToManyMappingForField(djs.collectionField())
+                                .ifPresent(requestedManyToMany::add);
+                    }
                 }
             }
         }

@@ -10,6 +10,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.DelegateExpressionSpec;
+import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.tracking.FieldAccessor;
@@ -70,7 +71,7 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
      * @return the DTO class
      */
     public Class<?> dtoClass() {
-        return dtoTable.dtoClass();
+        return dtoClass;
     }
 
     @Override
@@ -162,6 +163,10 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
             return Stream.of(new FieldColumn(sfs.field(), sfs.getColumn()));
         } else if (expression instanceof DelegateExpressionSpec des) {
             return extractFieldColumns(des.target()).map(fc -> new FieldColumn(fc.fieldAccessor(), des.getColumn()));
+        } else if (expression instanceof TypeOverrideExpressionSpec<?> toes) {
+            if (toes instanceof org.litebridge.orm.expression.intent.ConvertSpec<?> cs) {
+                return extractFieldColumns(cs.target());
+            }
         }
         return Stream.empty();
     }

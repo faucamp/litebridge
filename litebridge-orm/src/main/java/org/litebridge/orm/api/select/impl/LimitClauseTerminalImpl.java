@@ -2,7 +2,10 @@ package org.litebridge.orm.api.select.impl;
 
 import org.litebridge.orm.api.select.LimitClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
+import org.litebridge.orm.api.select.ast.LimitNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
+
+import java.util.Optional;
 
 public class LimitClauseTerminalImpl<DTO, SSP extends SelectSpec>
         extends DelegatingSelector<DTO, SSP>
@@ -12,16 +15,11 @@ public class LimitClauseTerminalImpl<DTO, SSP extends SelectSpec>
 
     public LimitClauseTerminalImpl(final AbstractSelector<DTO, SSP> delegate) {
         super(delegate);
-        selectSpec = delegate.selectSpec();
+        this.selectSpec = delegate.selectSpec();
     }
 
     @Override
     public SelectTerminal<DTO> offset(final int offset) {
-        selectSpec().ensureLimit().setOffset(offset);
-        return this;
-    }
-
-    protected SelectSpec selectSpec() {
-        return selectSpec;
+        return delegate.withNode(new LimitNode(delegate.node(), Optional.empty(), Optional.of(offset)));
     }
 }

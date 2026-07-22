@@ -5,6 +5,8 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.HavingNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractHavingClauseTerminal;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
@@ -56,7 +58,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
 
     @Override
     public DtoHavingConditionClause<DTO> and(final ExpressionSpec expression) {
-        return havingImpl(LogicOperator.AND, expression);
+        return havingImpl(LogicOperator.AND, expression, (DtoSelector<DTO>) delegate);
     }
 
     @Override
@@ -72,7 +74,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
 
     @Override
     public DtoHavingConditionClause<DTO> or(final ExpressionSpec expression) {
-        return havingImpl(LogicOperator.OR, expression);
+        return havingImpl(LogicOperator.OR, expression, (DtoSelector<DTO>) delegate);
     }
 
     @Override
@@ -82,17 +84,23 @@ public final class DtoHavingConditionClauseTerminal<DTO>
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(selectSpec.createSelectFieldSpecs(fields)), (DtoSelector<DTO>) delegate);
+        return orderBy(selectSpec.createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(fields), (DtoSelector<DTO>) delegate);
+        return new DtoOrderByClause<>(fields, (DtoSelector<DTO>) delegate);
     }
 
-    private DtoHavingConditionClause<DTO> havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+    private DtoHavingConditionClause<DTO> havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression, final DtoSelector<DTO> newDelegate) {
         final ConditionSpec conditionSpec = selectSpec.currentHavingConditionGroupSpec().newCondition(logicOperator, expression);
-        return new DtoHavingConditionClause<>(conditionSpec, this, delegate.litebridgeContext());
+
+        return new DtoHavingConditionClause<>(conditionSpec,
+                delegate.litebridgeContext(),
+                logicOperator,
+                expression,
+                delegate.node(),
+                node -> new DtoHavingConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(node)));
     }
 
     private DtoHavingConditionClauseTerminal<DTO> havingImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {

@@ -44,7 +44,10 @@ public final class SqlDeletor extends AbstractDeletor<DeleteSpec> implements Sql
 
     SqlDeleteWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
         final ConditionSpec conditionSpec = deleteSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
-        return new SqlDeleteWhereConditionClause(conditionSpec, new SqlDeleteWhereConditionClauseTerminalImpl(this), litebridgeContext);
+
+        final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, SqlDeleteWhereConditionClauseTerminal> recreator = n -> new SqlDeleteWhereConditionClauseTerminalImpl(this);
+
+        return new SqlDeleteWhereConditionClause(conditionSpec, litebridgeContext, logicOperator, expression, recreator);
     }
 
     SqlDeleteWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {

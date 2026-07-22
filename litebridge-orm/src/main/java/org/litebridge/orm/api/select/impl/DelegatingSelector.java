@@ -19,6 +19,10 @@ public class DelegatingSelector<DTO, SSP extends SelectSpec> implements SelectTe
         this.delegate = delegate;
     }
 
+    public AbstractSelector<DTO, SSP> delegate() {
+        return delegate;
+    }
+
     @Override
     public Optional<DTO> one() {
         return delegate.one();

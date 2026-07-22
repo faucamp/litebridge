@@ -7,8 +7,11 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryCompiler;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.persistence.DtoConstructor;
@@ -31,6 +34,7 @@ import java.util.Objects;
  */
 public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverride, DtoSelectSpec> {
 
+    private final OrmTable ormTable;
     private final TableRegistry tableRegistry;
     private final ClassFieldAccessorCache classFieldAccessorCache;
     private final DtoConstructor dtoConstructor;
@@ -55,15 +59,54 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
                        final DtoConstructor dtoConstructor,
                        final TransactionalDatabaseProvider databaseProvider,
                        final AliasGenerator aliasGenerator,
-                       final LitebridgeContext litebridgeContext) {
-        super(new DtoSelectSpec(typeOverride, ormTable, aliasGenerator, litebridgeContext),
+                       final LitebridgeContext litebridgeContext,
+                       final QueryNode node) {
+        this(new DtoSelectSpec(typeOverride, ormTable, aliasGenerator, litebridgeContext),
+                ormTable,
+                tableRegistry,
+                classFieldAccessorCache,
+                dtoConstructor,
                 databaseProvider,
-                typeOverride,
-                litebridgeContext);
+                aliasGenerator,
+                litebridgeContext,
+                node);
+    }
+
+    private DtoSelector(final DtoSelectSpec selectSpec,
+                        final OrmTable ormTable,
+                        final TableRegistry tableRegistry,
+                        final ClassFieldAccessorCache classFieldAccessorCache,
+                        final DtoConstructor dtoConstructor,
+                        final TransactionalDatabaseProvider databaseProvider,
+                        final AliasGenerator aliasGenerator,
+                        final LitebridgeContext litebridgeContext,
+                        final QueryNode node) {
+        super(selectSpec,
+                databaseProvider,
+                tableRegistry,
+                (Class<TypeOverride>) selectSpec.dtoClass(),
+                litebridgeContext,
+                node);
+        this.ormTable = ormTable;
         this.tableRegistry = tableRegistry;
         this.classFieldAccessorCache = classFieldAccessorCache;
         this.dtoConstructor = dtoConstructor;
         this.aliasGenerator = aliasGenerator;
+
+        // Ensure SelectExpressionMapper is set
+        if (!selectSpec.isTableSet()) {
+            selectSpec.setTable(aliasGenerator.aliasTable(ormTable));
+        }
+        if (!selectSpec.isSelectExpressionMapperSet()) {
+            selectSpec.setProtoExpressionResolver(new DtoProtoExpressionResolver(selectSpec, aliasGenerator, classFieldAccessorCache, tableRegistry));
+        }
+    }
+
+    @Override
+    protected DtoSelectSpec createSelectSpec(final AliasGenerator aliasGenerator) {
+        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, aliasGenerator, litebridgeContext);
+        selectSpec.setProtoExpressionResolver(new DtoProtoExpressionResolver(selectSpec, aliasGenerator, classFieldAccessorCache, tableRegistry));
+        return selectSpec;
     }
 
     /**
@@ -73,7 +116,8 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
      * @return the from clause terminal
      */
     public DtoFromClauseTerminal<TypeOverride> select(final ExpressionSpec... expressionSpecs) {
-        return selectImpl(selectSpec.getTable(), Arrays.stream(expressionSpecs).toList());
+        final QueryNode selectNode = new SelectNode(node, expressionSpecs, dtoClass);
+        return selectImpl(selectSpec.getTable(), Arrays.stream(expressionSpecs).toList(), selectNode);
     }
 
     /**
@@ -82,7 +126,9 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
      * @return the from clause terminal
      */
     public DtoFromClauseTerminal<TypeOverride> select() {
-        return selectImpl(selectSpec.getTable(), createAllFieldsSelectExpressions());
+        final List<ExpressionSpec> expressionSpecs = createAllFieldsSelectExpressions();
+        final QueryNode selectNode = new SelectNode(node, expressionSpecs.toArray(ExpressionSpec[]::new), dtoClass);
+        return selectImpl(selectSpec.getTable(), expressionSpecs, selectNode);
     }
 
     private List<ExpressionSpec> createAllFieldsSelectExpressions() {
@@ -97,12 +143,16 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
                 .toList();
     }
 
-    private DtoFromClauseTerminal<TypeOverride> selectImpl(final Table table, final List<ExpressionSpec> expressionSpecs) {
-        assert table.alias() != null;
+    private DtoFromClauseTerminal<TypeOverride> selectImpl(final Table table, final List<ExpressionSpec> expressionSpecs, final QueryNode selectNode) {
         selectSpec.setTable(table);
         selectSpec.setProtoExpressionResolver(new DtoProtoExpressionResolver(selectSpec, aliasGenerator, classFieldAccessorCache, tableRegistry));
         selectSpec.setExpressions(expressionSpecs);
-        return new DtoFromClauseTerminal<>(this);
+        return new DtoFromClauseTerminal<>(new DtoSelector<>(selectSpec, selectSpec.dtoTable(), tableRegistry, classFieldAccessorCache, dtoConstructor, databaseProvider, aliasGenerator, litebridgeContext, selectNode));
+    }
+
+    @Override
+    public DtoSelector<TypeOverride> withNode(final QueryNode node) {
+        return new DtoSelector<>(selectSpec, ormTable, tableRegistry, classFieldAccessorCache, dtoConstructor, databaseProvider, aliasGenerator, litebridgeContext, node);
     }
 
     OrmTable table() {
@@ -129,25 +179,26 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
 
     @Override
     public List<TypeOverride> list() {
-        final List<Row> rows = executeQuery();
-        final OrmTable ormTable = selectSpec.dtoTable();
+        final DtoSelectSpec compiledSpec = compile();
+
+        final List<Row> rows = executeQuery(compiledSpec);
+        final OrmTable ormTable = compiledSpec.dtoTable();
 
         if (dtoClass == ormTable.dtoClass()
                 || ormTable.getDtoClassInterfaces().contains(dtoClass)) {
             // Selecting the actual DTO
-            final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, litebridgeContext);
+            final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(compiledSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, litebridgeContext);
             final List<TypeOverride> dtos = selectSpecDtoMapper.toDtos(dtoClass, rows);
             dtos.forEach(ormTable::syncPersistedDto);
             return dtos;
         } else {
-            // Type overridden-select (e.g. by a SQL function); <DTO> generic is not set to the actual DTO class
             return unwrap(dtoClass, rows);
         }
     }
 
     @Override
-    protected DtoSelectSpec selectSpec() {
-        return super.selectSpec();
+    public DtoSelectSpec selectSpec() {
+        return (DtoSelectSpec) super.selectSpec();
     }
 
     /**
@@ -160,12 +211,13 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
     }
 
     private @Nullable TypeOverride fetchOneDto(final boolean first) {
+        final List<TypeOverride> result;
         if (first) {
-            // Set LIMIT since we are only interested in the first record
-            selectSpec.ensureLimit().setLimit(1);
+            // Use a new selector with a LIMIT node
+            result = withNode(new org.litebridge.orm.api.select.ast.LimitNode(node, java.util.Optional.of(1), java.util.Optional.empty())).list();
+        } else {
+            result = list();
         }
-
-        final List<TypeOverride> result = list();
 
         if (CollectionUtils.isEmpty(result)) {
             return null;
@@ -184,9 +236,13 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
             return (List<T>) rows;
         }
 
-        final TypeConverter typeConverter = databaseProvider.getTypeConverter();
+        final org.litebridge.db.spi.convert.TypeConverter typeConverter = databaseProvider.getTypeConverter();
         return rows.stream()
-                .map(row -> typeConverter.convert(row.column(0).value(), type))
+                .map(row -> {
+                    if (row.size() == 0) return null;
+                    final Object converted = typeConverter.convert(row.column(0).value(), type);
+                    return type.cast(converted);
+                })
                 .filter(Objects::nonNull)
                 .toList();
     }

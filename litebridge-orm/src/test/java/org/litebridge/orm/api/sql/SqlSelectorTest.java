@@ -8,6 +8,7 @@ import org.junit.platform.commons.support.ReflectionSupport;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
+import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.mockito.Mock;
@@ -20,7 +21,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.litebridge.orm.expression.Fn.c;
 import static org.litebridge.orm.expression.Fn.ca;
+import static org.junit.platform.commons.support.ReflectionSupport.tryToReadFieldValue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SqlSelectorTest {
@@ -35,8 +40,24 @@ class SqlSelectorTest {
     @BeforeEach
     void beforeEach() {
         tableRegistry = new TableRegistry();
+        final LitebridgeContext context = mock(LitebridgeContext.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-        sqlSelector = new SqlSelector(databaseProvider, tableRegistry, mock(LitebridgeContext.class));
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        final org.litebridge.db.spi.expression.ColumnExpressionFactory columnFactory = mock(org.litebridge.db.spi.expression.ColumnExpressionFactory.class);
+        final org.litebridge.db.spi.expression.SelectReferenceExpressionFactory referenceFactory = mock(org.litebridge.db.spi.expression.SelectReferenceExpressionFactory.class);
+        final org.litebridge.db.spi.expression.LiteralExpressionFactory literalFactory = mock(org.litebridge.db.spi.expression.LiteralExpressionFactory.class);
+        lenient().when(context.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        lenient().when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        lenient().when(selectRegistry.column()).thenReturn(columnFactory);
+        lenient().when(selectRegistry.reference()).thenReturn(referenceFactory);
+        lenient().when(selectRegistry.literal()).thenReturn(literalFactory);
+        lenient().when(literalFactory.create(any(), any(boolean.class))).thenAnswer(invocation -> new org.litebridge.db.spi.expression.LiteralExpression(invocation.getArgument(0), invocation.getArgument(1)));
+        lenient().when(columnFactory.create(any())).thenAnswer(invocation -> {
+            final org.litebridge.db.spi.expression.ColumnExpression ce = mock(org.litebridge.db.spi.expression.ColumnExpression.class);
+            lenient().when(ce.column()).thenReturn(invocation.getArgument(0));
+            return ce;
+        });
+        sqlSelector = new SqlSelector(databaseProvider, tableRegistry, context, null);
     }
 
     @Test
@@ -47,12 +68,13 @@ class SqlSelectorTest {
                 .where("COL1").eq(123);
 
         // Then
-        final Field selectSpecField = ReflectionSupport.streamFields(result.getClass(),
-                        field -> field.getName().equals("selectSpec"),
+        final Field delegateField = ReflectionSupport.streamFields(result.getClass(),
+                        field -> field.getName().equals("delegate"),
                         HierarchyTraversalMode.BOTTOM_UP)
                 .findFirst().orElseThrow();
-        ReflectionSupport.makeAccessible(selectSpecField);
-        final SqlSelectSpec selectSpec = (SqlSelectSpec) ReflectionSupport.tryToReadFieldValue(selectSpecField, result).get();
+        ReflectionSupport.makeAccessible(delegateField);
+        final SqlSelector selector = (SqlSelector) ReflectionSupport.tryToReadFieldValue(delegateField, result).get();
+        final SqlSelectSpec selectSpec = selector.compile();
 
         assertNotNull(selectSpec);
         assertNotNull(selectSpec.getTable());
@@ -60,10 +82,10 @@ class SqlSelectorTest {
 
         assertNotNull(selectSpec.getExpressions());
         assertEquals(2, selectSpec.getExpressions().size());
-        assertEquals("COL1", ((ProtoColumnExpressionSpec) selectSpec.getExpressions().get(0)).column());
-        assertNull(((ProtoColumnExpressionSpec) selectSpec.getExpressions().get(0)).alias());
-        assertEquals("COL2", ((ProtoColumnExpressionSpec) selectSpec.getExpressions().get(1)).column());
-        assertNull(((ProtoColumnExpressionSpec) selectSpec.getExpressions().get(1)).alias());
+        assertEquals("COL1", ((org.litebridge.orm.expression.ProtoColumnExpressionSpec) selectSpec.getExpressions().get(0)).column());
+        assertNull(((org.litebridge.orm.expression.ProtoColumnExpressionSpec) selectSpec.getExpressions().get(0)).alias());
+        assertEquals("COL2", ((org.litebridge.orm.expression.ProtoColumnExpressionSpec) selectSpec.getExpressions().get(1)).column());
+        assertNull(((org.litebridge.orm.expression.ProtoColumnExpressionSpec) selectSpec.getExpressions().get(1)).alias());
     }
 
     @Test
@@ -74,12 +96,13 @@ class SqlSelectorTest {
                 .where("col1Alias").eq(123);
 
         // Then
-        final Field selectSpecField = ReflectionSupport.streamFields(result.getClass(),
-                        field -> field.getName().equals("selectSpec"),
+        final Field delegateField = ReflectionSupport.streamFields(result.getClass(),
+                        field -> field.getName().equals("delegate"),
                         HierarchyTraversalMode.BOTTOM_UP)
                 .findFirst().orElseThrow();
-        ReflectionSupport.makeAccessible(selectSpecField);
-        final SqlSelectSpec selectSpec = (SqlSelectSpec) ReflectionSupport.tryToReadFieldValue(selectSpecField, result).get();
+        ReflectionSupport.makeAccessible(delegateField);
+        final SqlSelector selector = (SqlSelector) ReflectionSupport.tryToReadFieldValue(delegateField, result).get();
+        final SqlSelectSpec selectSpec = selector.compile();
 
         assertNotNull(selectSpec);
         assertNotNull(selectSpec.getTable());
@@ -87,9 +110,9 @@ class SqlSelectorTest {
 
         assertNotNull(selectSpec.getExpressions());
         assertEquals(2, selectSpec.getExpressions().size());
-        assertEquals("COL1", ((ProtoColumnExpressionSpec) selectSpec.getExpressions().get(0)).column());
-        assertEquals("col1Alias", ((ProtoColumnExpressionSpec) selectSpec.getExpressions().get(0)).alias());
-        assertEquals("COL2", ((ProtoColumnExpressionSpec) selectSpec.getExpressions().get(1)).column());
-        assertEquals("col2Alias", ((ProtoColumnExpressionSpec) selectSpec.getExpressions().get(1)).alias());
+        assertEquals("COL1", ((org.litebridge.orm.expression.ProtoColumnExpressionSpec) selectSpec.getExpressions().get(0)).column());
+        assertEquals("col1Alias", ((org.litebridge.orm.expression.ProtoColumnExpressionSpec) selectSpec.getExpressions().get(0)).alias());
+        assertEquals("COL2", ((org.litebridge.orm.expression.ProtoColumnExpressionSpec) selectSpec.getExpressions().get(1)).column());
+        assertEquals("col2Alias", ((org.litebridge.orm.expression.ProtoColumnExpressionSpec) selectSpec.getExpressions().get(1)).alias());
     }
 }

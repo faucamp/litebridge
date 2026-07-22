@@ -2,7 +2,9 @@ package org.litebridge.orm.api.select.impl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.orm.api.select.ConditionClause;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.model.ConditionSpec;
@@ -11,6 +13,7 @@ import org.litebridge.orm.api.sql.SqlSelector;
 import org.litebridge.orm.api.sql.SqlWhereConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngine;
+import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 
@@ -19,6 +22,7 @@ import java.util.function.Function;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 
 class ConditionClauseImplTest {
@@ -30,8 +34,7 @@ class ConditionClauseImplTest {
     @BeforeEach
     void setUp() {
         conditionSpec = new ConditionSpec();
-        terminal = mock(TestConditionClauseTerminal.class);
-        clause = new ConditionClauseImpl<>(conditionSpec, terminal, mock(LitebridgeContext.class));
+        clause = new ConditionClauseImpl<>(conditionSpec, mock(LitebridgeContext.class), LogicOperator.NOOP, new org.litebridge.orm.expression.select.SelectColumnSpec(mock(org.litebridge.db.spi.Column.class)), null, n -> mock(TestConditionClauseTerminal.class));
     }
 
     @Test
@@ -148,7 +151,8 @@ class ConditionClauseImplTest {
         final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(new SqlSelector(
                 mock(TransactionalDatabaseProvider.class),
                 mock(TableRegistry.class),
-                mock(LitebridgeContext.class)));
+                mock(LitebridgeContext.class),
+                null));
 
         invoker.apply(subselect -> terminal);
 

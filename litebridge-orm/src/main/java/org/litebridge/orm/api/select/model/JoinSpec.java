@@ -15,6 +15,21 @@ public interface JoinSpec {
     Table table();
 
     /**
+     * Join using a specific column.
+     *
+     * @param column the column name
+     * @return the condition specification
+     */
+    ConditionSpec using(String column);
+
+    /**
+     * Returns the current condition group specification.
+     *
+     * @return the current condition group specification
+     */
+    ConditionGroupSpec currentConditionGroupSpec();
+
+    /**
      * Returns the SPI join object.
      *
      * @return the SPI join object.

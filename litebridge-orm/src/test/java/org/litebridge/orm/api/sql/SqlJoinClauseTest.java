@@ -6,13 +6,18 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class SqlJoinClauseTest {
 
@@ -36,6 +41,7 @@ class SqlJoinClauseTest {
         final Table joinTable = new Table("joined_table", null);
         final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable, mock(SelectExpressionMapper.class));
         final SqlSelector delegate = mock(SqlSelector.class);
+        when(delegate.litebridgeContext()).thenReturn(mock(LitebridgeContext.class));
         final SqlJoinClause clause = new SqlJoinClause(joinSpec, delegate);
 
         // When
@@ -46,7 +52,7 @@ class SqlJoinClauseTest {
         assertEquals(1, joinSpec.currentConditionGroupSpec().conditions().size());
 
         final ConditionSpec condition = joinSpec.currentConditionGroupSpec().conditions().getFirst().conditionSpec();
-        final Column column = ((ColumnExpressionSpec) condition.getLhs()).getColumn();
+        final Column column = ((org.litebridge.orm.expression.select.SelectColumnSpec) condition.getLhs()).getColumn();
         assertEquals(joinTable, column.table());
         assertEquals("joined_id", column.name());
         assertNull(condition.getOperator());
@@ -59,6 +65,10 @@ class SqlJoinClauseTest {
         final Table joinTable = new Table("joined_table", null);
         final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable, mock(SelectExpressionMapper.class));
         final SqlSelector delegate = mock(SqlSelector.class);
+        final SqlSelectSpec selectSpec = mock(SqlSelectSpec.class);
+        when(delegate.selectSpec()).thenReturn(selectSpec);
+        when(delegate.litebridgeContext()).thenReturn(mock(LitebridgeContext.class));
+        when(delegate.withNode(any())).thenReturn(delegate);
         final SqlJoinClause clause = new SqlJoinClause(joinSpec, delegate);
 
         // When
@@ -69,7 +79,7 @@ class SqlJoinClauseTest {
         assertEquals(1, joinSpec.currentConditionGroupSpec().conditions().size());
 
         final ConditionSpec condition = joinSpec.currentConditionGroupSpec().conditions().getFirst().conditionSpec();
-        final Column column = ((ColumnExpressionSpec) condition.getLhs()).getColumn();
+        final Column column = ((org.litebridge.orm.expression.select.SelectColumnSpec) condition.getLhs()).getColumn();
         assertEquals(joinTable, column.table());
         assertEquals("joined_id", column.name());
         assertEquals(Operator.EQ, condition.getOperator());
@@ -82,6 +92,10 @@ class SqlJoinClauseTest {
         final Table joinTable = new Table("joined_table", null);
         final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable, mock(SelectExpressionMapper.class));
         final SqlSelector delegate = mock(SqlSelector.class);
+        final SqlSelectSpec selectSpec = mock(SqlSelectSpec.class);
+        when(delegate.selectSpec()).thenReturn(selectSpec);
+        when(delegate.litebridgeContext()).thenReturn(mock(LitebridgeContext.class));
+        when(delegate.withNode(any())).thenReturn(delegate);
         final SqlJoinClause clause = new SqlJoinClause(joinSpec, delegate);
 
         // When
@@ -92,7 +106,7 @@ class SqlJoinClauseTest {
         assertEquals(1, joinSpec.currentConditionGroupSpec().conditions().size());
 
         final ConditionSpec condition = joinSpec.currentConditionGroupSpec().conditions().getFirst().conditionSpec();
-        final Column column = ((ColumnExpressionSpec) condition.getLhs()).getColumn();
+        final Column column = ((org.litebridge.orm.expression.select.SelectColumnSpec) condition.getLhs()).getColumn();
         assertEquals(joinTable, column.table());
         assertEquals("optional_id", column.name());
         assertEquals(Operator.IS_NULL, condition.getOperator());
@@ -105,6 +119,10 @@ class SqlJoinClauseTest {
         final Table joinTable = new Table("joined_table", null);
         final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable, mock(SelectExpressionMapper.class));
         final SqlSelector delegate = mock(SqlSelector.class);
+        final SqlSelectSpec selectSpec = mock(SqlSelectSpec.class);
+        when(delegate.selectSpec()).thenReturn(selectSpec);
+        when(delegate.litebridgeContext()).thenReturn(mock(LitebridgeContext.class));
+        when(delegate.withNode(any())).thenReturn(delegate);
         final SqlJoinClause clause = new SqlJoinClause(joinSpec, delegate);
 
         // When
@@ -115,7 +133,7 @@ class SqlJoinClauseTest {
         assertEquals(1, joinSpec.currentConditionGroupSpec().conditions().size());
 
         final ConditionSpec condition = joinSpec.currentConditionGroupSpec().conditions().getFirst().conditionSpec();
-        final Column column = ((ColumnExpressionSpec) condition.getLhs()).getColumn();
+        final Column column = ((org.litebridge.orm.expression.select.SelectColumnSpec) condition.getLhs()).getColumn();
         assertEquals(joinTable, column.table());
         assertEquals("shared_id", column.name());
         assertEquals(Operator.USING, condition.getOperator());

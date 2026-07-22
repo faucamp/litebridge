@@ -143,7 +143,92 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     @Override
     public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeSqlQuery(select, connectionProvider);
+        final PreparedSql preparedSql = prepareSql(select, connectionProvider);
+        return select(select, preparedSql, connectionProvider);
+    }
+
+    @Override
+    public List<Row> select(final Select select, final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.expressions().size());
+        final Class<?>[] typeOverrides = new Class<?>[select.expressions().size()];
+
+        for (int i = 0; i < select.expressions().size(); i++) {
+            SelectExpression expression = select.expressions().get(i);
+
+            if (expression instanceof ConvertExpression convertExpression) {
+                typeOverrides[i] = convertExpression.typeOverride();
+                // Process the nested expression (in case it targets a column)
+                expression = convertExpression.target();
+            }
+
+            if (expression instanceof ColumnExpression columnExpression) {
+                final Column column = columnExpression.column();
+                final String key = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(column.alias() != null ? column.alias() : column.name()));
+                final TableMetaData table = ensureTableMetaData(column.table(), connectionProvider);
+                final ColumnMetaData columnMetaData = table.column(column.name());
+                columnLabelsToColumnMetaData.put(key, columnMetaData);
+            }
+        }
+
+        final TableMetaData fromTable = ensureTableMetaData(select.table(), connectionProvider);
+
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false, fromTable, connectionProvider)) {
+            // Execute SQL query
+            final ResultSet resultSet = preparedStatement.executeQuery();
+
+            // Parse results
+            final List<Row> rows = new ArrayList<>();
+
+            while (resultSet.next()) {
+                final Row row = new Row();
+                final int columnCount = resultSet.getMetaData().getColumnCount();
+
+                for (int i = 1; i <= columnCount; i++) {
+                    final String alias = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(resultSet.getMetaData().getColumnLabel(i)));
+                    final ColumnMetaData columnMetaData = columnLabelsToColumnMetaData.get(alias);
+                    final int columnSqlType;
+                    final Column column;
+
+                    if (columnMetaData != null) {
+                        // Use ORM-side metadata
+                        columnSqlType = columnMetaData.getDataType();
+                        column = columnMetaData.toColumn().as(alias);
+                    } else {
+                        // Read the metadata from the result
+                        final String schemaName = resultSet.getMetaData().getSchemaName(i);
+                        final String tableName = resultSet.getMetaData().getTableName(i);
+                        final String columnName = resultSet.getMetaData().getColumnName(i);
+                        final String columnAlias = resultSet.getMetaData().getColumnLabel(i);
+                        columnSqlType = resultSet.getMetaData().getColumnType(i);
+
+                        final Table table = new Table(null, schemaName, tableName);
+                        column = new Column(table, columnName, columnAlias);
+                    }
+
+                    final Class<?> typeOverride = i <= typeOverrides.length ? typeOverrides[i - 1] : null;
+                    final Object value;
+
+                    if (typeOverride != null) {
+                        // Override the data type
+                        value = typeConverter.convert(resultSet.getObject(i), typeOverride);
+                    } else {
+                        // Use the column SQL data type
+                        value = typeConverter.convert(resultSet.getObject(i), columnSqlType);
+                    }
+
+                    row.withColumn(column, value);
+                }
+
+                rows.add(row);
+            }
+
+            return rows;
+        }
+    }
+
+    @Override
+    public PreparedSql prepareSql(final Select select, final ConnectionProvider connectionProvider) {
+        return selectSqlGenerator.orThrow().prepareSql(select, connectionProvider);
     }
 
     @Override
@@ -310,92 +395,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
     }
 
-    /**
-     * Execute the given SQL query with specified expressions, conditions, and table, and returns the result as a list of rows.
-     *
-     * @param select             the SQL select query to be executed
-     * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
-     * @return a list of {@code Row} objects representing the query results
-     * @throws SQLException if an SQL error occurs while executing the query
-     */
-    private List<Row> executeSqlQuery(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
-        final PreparedSql preparedSql = selectSqlGenerator.orThrow().prepareSql(select, connectionProvider);
-        final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.expressions().size());
-        final Class<?>[] typeOverrides = new Class<?>[select.expressions().size()];
-
-        for (int i = 0; i < select.expressions().size(); i++) {
-            SelectExpression expression = select.expressions().get(i);
-
-            if (expression instanceof ConvertExpression convertExpression) {
-                typeOverrides[i] = convertExpression.typeOverride();
-                // Process the nested expression (in case it targets a column)
-                expression = convertExpression.target();
-            }
-
-            if (expression instanceof ColumnExpression columnExpression) {
-                final Column column = columnExpression.column();
-                final String key = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(column.alias() != null ? column.alias() : column.name()));
-                final TableMetaData table = ensureTableMetaData(column.table(), connectionProvider);
-                final ColumnMetaData columnMetaData = table.column(column.name());
-                columnLabelsToColumnMetaData.put(key, columnMetaData);
-            }
-        }
-
-        final TableMetaData fromTable = ensureTableMetaData(select.table(), connectionProvider);
-
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false, fromTable, connectionProvider)) {
-            // Execute SQL query
-            final ResultSet resultSet = preparedStatement.executeQuery();
-
-            // Parse results
-            final List<Row> rows = new ArrayList<>();
-
-            while (resultSet.next()) {
-                final Row row = new Row();
-                final int columnCount = resultSet.getMetaData().getColumnCount();
-
-                for (int i = 1; i <= columnCount; i++) {
-                    final String alias = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(resultSet.getMetaData().getColumnLabel(i)));
-                    final ColumnMetaData columnMetaData = columnLabelsToColumnMetaData.get(alias);
-                    final int columnSqlType;
-                    final Column column;
-
-                    if (columnMetaData != null) {
-                        // Use ORM-side metadata
-                        columnSqlType = columnMetaData.getDataType();
-                        column = columnMetaData.toColumn().as(alias);
-                    } else {
-                        // Read the metadata from the result
-                        final String schemaName = resultSet.getMetaData().getSchemaName(i);
-                        final String tableName = resultSet.getMetaData().getTableName(i);
-                        final String columnName = resultSet.getMetaData().getColumnName(i);
-                        final String columnAlias = resultSet.getMetaData().getColumnLabel(i);
-                        columnSqlType = resultSet.getMetaData().getColumnType(i);
-
-                        final Table table = new Table(null, schemaName, tableName);
-                        column = new Column(table, columnName, columnAlias);
-                    }
-
-                    final Class<?> typeOverride = i <= typeOverrides.length ? typeOverrides[i - 1] : null;
-                    final Object value;
-
-                    if (typeOverride != null) {
-                        // Override the data type
-                        value = typeConverter.convert(resultSet.getObject(i), typeOverride);
-                    } else {
-                        // Use the column SQL data type
-                        value = typeConverter.convert(resultSet.getObject(i), columnSqlType);
-                    }
-
-                    row.withColumn(column, value);
-                }
-
-                rows.add(row);
-            }
-
-            return rows;
-        }
-    }
 
     /**
      * Retrieve column metadata for the specified table.

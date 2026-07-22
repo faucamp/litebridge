@@ -1,14 +1,19 @@
 package org.litebridge.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.ConditionClause;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
+import org.litebridge.orm.api.dto.DtoWhereConditionClause;
+import org.litebridge.orm.api.dto.DtoHavingConditionClause;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryCompiler;
 import org.litebridge.orm.engine.SelectEngine;
+import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,13 +28,31 @@ public class ConditionClauseImpl<DTO,
         implements ConditionClause<DTO, SELF, CCT> {
 
     private final ConditionSpec conditionSpec;
-    private final CCT conditionTerminal;
     private final LitebridgeContext litebridgeContext;
+    private final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, CCT> terminalRecreator;
+    private final LogicOperator logicOperator;
+    private final ExpressionSpec lhs;
+    private final org.litebridge.orm.api.select.ast.QueryNode node;
+    private @Nullable String relationshipField;
 
-    public ConditionClauseImpl(final ConditionSpec conditionSpec, final CCT conditionTerminal, final LitebridgeContext litebridgeContext) {
+    public ConditionClauseImpl(final ConditionSpec conditionSpec,
+                               final LitebridgeContext litebridgeContext,
+                               final LogicOperator logicOperator,
+                               final ExpressionSpec lhs,
+                               final org.litebridge.orm.api.select.ast.QueryNode node,
+                               final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, CCT> terminalRecreator) {
         this.conditionSpec = conditionSpec;
-        this.conditionTerminal = conditionTerminal;
         this.litebridgeContext = litebridgeContext;
+        this.logicOperator = logicOperator;
+        this.lhs = lhs;
+        this.node = node;
+        this.terminalRecreator = terminalRecreator;
+    }
+
+    @SuppressWarnings("unchecked")
+    public SELF withRelationshipField(final @Nullable String relationshipField) {
+        this.relationshipField = relationshipField;
+        return (SELF) this;
     }
 
     /**
@@ -40,6 +63,12 @@ public class ConditionClauseImpl<DTO,
      */
     public CCT eq(final @Nullable Object value) {
         return condition(Operator.EQ, value);
+    }
+
+    public CCT using(final String column) {
+        conditionSpec.setOperator(Operator.USING);
+        final org.litebridge.orm.api.select.ast.QueryNode newNode = new org.litebridge.orm.api.select.ast.JoinConditionNode(node, LogicOperator.NOOP, null, Operator.USING, column, relationshipField);
+        return terminalRecreator.apply(newNode);
     }
 
     /**
@@ -262,7 +291,19 @@ public class ConditionClauseImpl<DTO,
         }
 
         conditionSpec.setOperator(translatedOperator);
-        return conditionTerminal;
+
+        final org.litebridge.orm.api.select.ast.QueryNode newNode;
+        if (this instanceof DtoWhereConditionClause || this.getClass().getName().contains("Where")) {
+            newNode = new org.litebridge.orm.api.select.ast.WhereNode(node, logicOperator, lhs, translatedOperator, value);
+        } else if (this instanceof DtoHavingConditionClause || this.getClass().getName().contains("Having")) {
+            newNode = new org.litebridge.orm.api.select.ast.HavingNode(node, logicOperator, lhs, translatedOperator, value);
+        } else if (this.getClass().getName().contains("Join")) {
+            newNode = new org.litebridge.orm.api.select.ast.JoinConditionNode(node, logicOperator, lhs, translatedOperator, value, relationshipField);
+        } else {
+            newNode = node; // Fallback
+        }
+
+        return terminalRecreator.apply(newNode);
     }
 
     private SelectSpec createSelectSpec(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
@@ -272,10 +313,12 @@ public class ConditionClauseImpl<DTO,
     }
 
     private SelectSpec getSelectSpec(final SelectTerminal<?> selectTerminal) {
-        if (selectTerminal instanceof AbstractWhereClauseTerminal<?, ?, ?, ?, ?, ?, ?> terminal) {
-            return terminal.delegate.selectSpec();
-        } else {
-            throw new IllegalArgumentException("Unsupported terminal: " + selectTerminal);
-        }
+        final AbstractSelector<?, ?> selector = switch (selectTerminal) {
+            case DelegatingSelector<?, ?> delegating -> delegating.delegate();
+            case AbstractSelector<?, ?> s -> s;
+            default -> throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
+        };
+
+        return selector.compile();
     }
 }

@@ -1,11 +1,15 @@
 package org.litebridge.orm.api.select.impl;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.orm.api.select.model.LimitSpec;
+import org.litebridge.orm.api.select.ast.LimitNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class OrderByClauseTerminalImplTest {
@@ -14,16 +18,16 @@ class OrderByClauseTerminalImplTest {
     void limit() {
         // Given
         final AbstractSelector<String, SelectSpec> delegate = mock(AbstractSelector.class);
-        final SelectSpec selectSpec = mock(SelectSpec.class);
-        final LimitSpec limitSpec = new LimitSpec();
-        when(delegate.selectSpec()).thenReturn(selectSpec);
-        when(selectSpec.ensureLimit()).thenReturn(limitSpec);
+        when(delegate.selectSpec()).thenReturn(mock(SelectSpec.class));
+        when(delegate.withNode(any())).thenReturn(delegate);
         final OrderByClauseTerminalImpl<String, SelectSpec> terminal = new OrderByClauseTerminalImpl<>(delegate);
 
         // When
         terminal.limit(10);
 
         // Then
-        assertEquals(10, limitSpec.getLimit().orElseThrow());
+        verify(delegate).withNode(argThat(node ->
+                node instanceof LimitNode limitNode
+                && limitNode.limit().equals(Optional.of(10))));
     }
 }

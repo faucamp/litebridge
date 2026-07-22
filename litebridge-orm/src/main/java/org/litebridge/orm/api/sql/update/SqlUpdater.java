@@ -53,7 +53,10 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
 
     SqlUpdateWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
         final ConditionSpec conditionSpec = updateSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
-        return new SqlUpdateWhereConditionClause(conditionSpec, new SqlUpdateWhereConditionClauseTerminalImpl(this), litebridgeContext);
+
+        final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, SqlUpdateWhereConditionClauseTerminal> recreator = n -> new SqlUpdateWhereConditionClauseTerminalImpl(this);
+
+        return new SqlUpdateWhereConditionClause(conditionSpec, litebridgeContext, logicOperator, expression, recreator);
     }
 
     SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {

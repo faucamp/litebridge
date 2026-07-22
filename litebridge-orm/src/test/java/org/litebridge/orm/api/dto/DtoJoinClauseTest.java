@@ -61,7 +61,7 @@ class DtoJoinClauseTest {
         when(field1Accessor.name()).thenReturn("field1");
         when(cache.fieldAccessorOrThrow(any(), eq("field1"))).thenReturn(field1Accessor);
 
-        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context);
+        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context, null);
         selector.select();
 
         final OrmTable joinTable = mock(OrmTable.class);
@@ -119,7 +119,7 @@ class DtoJoinClauseTest {
         when(oneToMany.mappedByField()).thenReturn(mappedByField);
         when(ormTable.getOneToManyMappingForField(field1Accessor)).thenReturn(Optional.of(oneToMany));
 
-        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context);
+        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context, null);
         selector.select();
 
         final OrmTable joinTable = mock(OrmTable.class);
@@ -171,7 +171,7 @@ class DtoJoinClauseTest {
         when(field1Accessor.name()).thenReturn("field1");
         when(cache.fieldAccessorOrThrow(any(), eq("field1"))).thenReturn(field1Accessor);
 
-        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context);
+        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context, null);
         selector.select();
 
         final OrmTable joinTable = mock(OrmTable.class);

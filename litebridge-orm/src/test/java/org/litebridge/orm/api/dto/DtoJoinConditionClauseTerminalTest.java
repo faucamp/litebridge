@@ -94,7 +94,8 @@ class DtoJoinConditionClauseTerminalTest {
                         mock(DtoConstructor.class),
                         mock(TransactionalDatabaseProvider.class),
                         context.aliasGenerator(),
-                        mock(LitebridgeContext.class));
+                        mock(LitebridgeContext.class),
+                        null);
         selector.selectSpec().setProtoExpressionResolver(mock(ProtoExpressionResolver.class));
 
         final DtoJoinConditionClauseTerminal<TestDto> terminal = new DtoJoinConditionClauseTerminal<>(
@@ -154,7 +155,8 @@ class DtoJoinConditionClauseTerminalTest {
                 dtoConstructor,
                 databaseProvider,
                 aliasGenerator,
-                mock(LitebridgeContext.class));
+                mock(LitebridgeContext.class),
+                null);
         final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasGenerator.aliasTable(ormTable), mock(SelectExpressionMapper.class));
         final DtoJoinConditionClauseTerminal<TestDto> terminal = new DtoJoinConditionClauseTerminal<>(
                 joinSpec,

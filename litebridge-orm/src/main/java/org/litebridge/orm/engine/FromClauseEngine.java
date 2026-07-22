@@ -4,6 +4,9 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Aliased;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelector;
+import org.litebridge.orm.api.select.ast.FromNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.sql.SqlFromClauseTerminal;
 import org.litebridge.orm.api.sql.SqlSelector;
 import org.litebridge.orm.config.RelatedDtoStrategy;
@@ -42,7 +45,6 @@ public final class FromClauseEngine {
     private final ChangeTracker changeTracker;
     private final DtoConstructor dtoConstructor;
     private final Supplier<LitebridgeContext> contextSupplier;
-    private final AliasGenerator aliasGenerator;
 
     /**
      * Constructs a new {@code FromClauseEngine}.
@@ -63,48 +65,54 @@ public final class FromClauseEngine {
         this.changeTracker = changeTracker;
         this.dtoConstructor = dtoConstructor;
         this.contextSupplier = contextSupplier;
-        this.aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
     }
 
     /**
      * Constructs a DTO-based FROM clause.
      *
-     * @param expressionSpecs    the expression specifications.
+     * @param node               the current query node.
      * @param dtoClass           the DTO class.
      * @param relatedDtoStrategy the related DTO strategy.
      * @param <DTO>              the DTO type.
      * @return the DTO from clause terminal.
      */
-    public <DTO> DtoFromClauseTerminal<DTO> from(final ExpressionSpec[] expressionSpecs, final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        final DtoSelector<DTO> dtoSelector = createDtoSelectorForType(dtoClass, dtoClass, relatedDtoStrategy);
-        return select(expressionSpecs, dtoSelector);
+    public <DTO> DtoFromClauseTerminal<DTO> from(final QueryNode node, final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
+        final QueryNode fromNode = new FromNode(node, dtoClass, null, null, relatedDtoStrategy);
+        final DtoSelector<DTO> dtoSelector = createDtoSelectorForType(dtoClass, dtoClass, relatedDtoStrategy, fromNode);
+
+        if (hasExplicitSelect(node)) {
+            return new DtoFromClauseTerminal<>(dtoSelector);
+        } else {
+            return dtoSelector.select();
+        }
     }
 
     /**
      * Constructs a DTO-based FROM clause with a type override.
      *
-     * @param expressionSpecs    the expression specifications.
+     * @param node               the current query node.
      * @param dtoClass           the DTO class.
      * @param typeOverrideClass  the type override class.
      * @param relatedDtoStrategy the related DTO strategy.
      * @param <TypeOverride>      the type override.
      * @return the DTO from clause terminal.
      */
-    public <TypeOverride> DtoFromClauseTerminal<TypeOverride> from(final ExpressionSpec[] expressionSpecs, final Class<?> dtoClass, final Class<TypeOverride> typeOverrideClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        final DtoSelector<TypeOverride> dtoSelector = createDtoSelectorForType(typeOverrideClass, dtoClass, relatedDtoStrategy);
+    public <TypeOverride> DtoFromClauseTerminal<TypeOverride> from(final QueryNode node, final Class<?> dtoClass, final Class<TypeOverride> typeOverrideClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
+        final QueryNode fromNode = new FromNode(node, dtoClass, null, null, relatedDtoStrategy);
+        final DtoSelector<TypeOverride> dtoSelector = createDtoSelectorForType(typeOverrideClass, dtoClass, relatedDtoStrategy, fromNode);
 
-        if (expressionSpecs.length > 0) {
-            return dtoSelector.select(expressionSpecs);
+        if (hasExplicitSelect(node)) {
+            return new DtoFromClauseTerminal<>(dtoSelector);
         } else {
             return dtoSelector.select();
         }
     }
 
-    private <TypeOverride> DtoSelector<TypeOverride> createDtoSelectorForType(final Class<TypeOverride> typeOverride, final Class<?> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
+    private <TypeOverride> DtoSelector<TypeOverride> createDtoSelectorForType(final Class<TypeOverride> typeOverride, final Class<?> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy, final QueryNode node) {
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
         final LitebridgeContext litebridgeContext = createLitebridgeContext(relatedDtoStrategy);
 
-        return new DtoSelector<>(typeOverride, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, litebridgeContext);
+        return new DtoSelector<>(typeOverride, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, litebridgeContext.aliasGenerator(), litebridgeContext, node);
     }
 
     private LitebridgeContext createLitebridgeContext() {
@@ -131,20 +139,22 @@ public final class FromClauseEngine {
      */
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
         final OrmTable table = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
-        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, createLitebridgeContext())
+        final LitebridgeContext litebridgeContext = createLitebridgeContext();
+        final QueryNode fromNode = new FromNode(null, dtoClass, contextDtoClass, null, null); // Root from context
+        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, litebridgeContext.aliasGenerator(), litebridgeContext, fromNode)
                 .select();
     }
 
     /**
      * Constructs an SQL-based FROM clause.
      *
-     * @param expressionSpecs the expression specifications.
-     * @param table           the table name.
+     * @param node  the current query node.
+     * @param table the table name.
      * @return the SQL from clause terminal.
      */
-    public SqlFromClauseTerminal from(final ExpressionSpec[] expressionSpecs, final String table) {
-        return new SqlSelector(databaseProvider, tableRegistry, createLitebridgeContext()).select(expressionSpecs).from(table);
+    public SqlFromClauseTerminal from(final QueryNode node, final String table) {
+        final QueryNode fromNode = new FromNode(node, null, null, table, null);
+        return new SqlSelector(databaseProvider, tableRegistry, createLitebridgeContext(), fromNode).select().from(table);
     }
 
     private static <DTO> DtoFromClauseTerminal<DTO> select(final ExpressionSpec[] expressionSpecs, final DtoSelector<DTO> dtoSelector) {
@@ -153,5 +163,19 @@ public final class FromClauseEngine {
         } else {
             return dtoSelector.select();
         }
+    }
+    public AliasGenerator aliasGenerator() {
+        return contextSupplier.get().aliasGenerator();
+    }
+
+    private boolean hasExplicitSelect(final QueryNode node) {
+        QueryNode current = node;
+        while (current != null) {
+            if (current instanceof SelectNode selectNode && selectNode.expressions().length > 0) {
+                return true;
+            }
+            current = current.previous();
+        }
+        return false;
     }
 }

@@ -1,7 +1,8 @@
 package org.litebridge.orm.api.dto;
 
 import org.litebridge.orm.api.select.OrderByClause;
-import org.litebridge.orm.api.select.model.OrderBySpec;
+import org.litebridge.orm.api.select.ast.OrderByNode;
+import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
  * Represents an ORDER BY clause in a DTO-based query.
@@ -11,29 +12,35 @@ import org.litebridge.orm.api.select.model.OrderBySpec;
 public final class DtoOrderByClause<DTO>
         implements OrderByClause<DTO, DtoOrderByClause<DTO>, DtoOrderByClauseChain<DTO>> {
 
-    private final OrderBySpec orderBySpec;
+    private final ExpressionSpec[] expressions;
     private final DtoSelector<DTO> delegate;
 
     /**
      * Creates a new instance of {@code DtoOrderByClause}.
      *
-     * @param orderBySpec the order by specification
-     * @param delegate the selector delegate
+     * @param expressions the expressions to order by
+     * @param delegate    the selector delegate
      */
-    public DtoOrderByClause(final OrderBySpec orderBySpec, final DtoSelector<DTO> delegate) {
-        this.orderBySpec = orderBySpec;
+    public DtoOrderByClause(final ExpressionSpec[] expressions, final DtoSelector<DTO> delegate) {
+        this.expressions = expressions;
         this.delegate = delegate;
     }
 
     @Override
     public DtoOrderByClauseChain<DTO> asc() {
-        orderBySpec.setAsc(true);
-        return new DtoOrderByClauseChain<>(delegate);
+        DtoSelector<DTO> currentDelegate = delegate;
+        for (final ExpressionSpec expression : expressions) {
+            currentDelegate = currentDelegate.withNode(new OrderByNode(currentDelegate.node(), expression, true));
+        }
+        return new DtoOrderByClauseChain<>(currentDelegate);
     }
 
     @Override
     public DtoOrderByClauseChain<DTO> desc() {
-        orderBySpec.setAsc(false);
-        return new DtoOrderByClauseChain<>(delegate);
+        DtoSelector<DTO> currentDelegate = delegate;
+        for (final ExpressionSpec expression : expressions) {
+            currentDelegate = currentDelegate.withNode(new OrderByNode(currentDelegate.node(), expression, false));
+        }
+        return new DtoOrderByClauseChain<>(currentDelegate);
     }
 }

@@ -147,7 +147,7 @@ public class ConditionSpec {
             return new Condition(lhsSelectExpression, operator, selectReference);
         }
 
-        final LiteralExpression literalExpression = selectExpressionMapper.sqlFunctionRegistry().select().literal().create(value);
+        final LiteralExpression literalExpression = selectExpressionMapper.sqlFunctionRegistry().select().literal().create(value, true);
         return new Condition(lhsSelectExpression, operator, literalExpression);
     }
 

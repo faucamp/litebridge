@@ -6,6 +6,8 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.orm.api.select.ast.JoinNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -68,16 +70,19 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
                 // Inverse join
                 .map(mappedOneToMany -> {
                     joinSpec.setCollectionField(fieldAccessor);
-                    return joinOn(joinSpec.dtoTable(), mappedOneToMany.mappedByField().name());
+                    return joinOn(joinSpec.dtoTable(), joinSpec.table(), joinSpec.dtoTable().getColumnForFieldName(mappedOneToMany.mappedByField().name()), fieldAccessor.name());
                 })
-                .orElseGet(() -> table.getManyToManyMappingForField(fieldAccessor)
-                        // Many-to-many join
-                        .map(mappedManyToMany -> {
-                            joinSpec.setCollectionField(fieldAccessor);
-                            return manyToManyJoin(mappedManyToMany);
-                        })
-                        // Regular join
-                        .orElseGet(() -> joinOn(table, fieldAccessor.name())));
+                .map(terminal -> (DtoJoinConditionClauseTerminal<DTO>) terminal)
+                .orElseGet(() -> {
+                    final DtoJoinConditionClauseTerminal<DTO> terminal = table.getManyToManyMappingForField(fieldAccessor)
+                            // Many-to-many join
+                            .map(mappedManyToMany -> {
+                                joinSpec.setCollectionField(fieldAccessor);
+                                return manyToManyJoin(mappedManyToMany);
+                            })
+                            .orElseGet(() -> joinOn(table, fieldAccessor.name()));
+                    return terminal;
+                });
     }
 
     /**
@@ -106,6 +111,8 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
     }
 
     private DtoJoinConditionClauseTerminal<DTO> joinOn(final OrmTable rightOrmTable, final Table rightTable, final ColumnMetaData rightColumnMetaData, final @Nullable String field) {
+        final QueryNode joinNode = delegate.node();
+
         if (rightColumnMetaData.getJoinColumn() == null) {
             throw new IllegalStateException("No join column specified for column '%s' %s".formatted(rightColumnMetaData.name(), field != null ? "mapped to field '%s'".formatted(field) : "(no field)"));
         }
@@ -135,18 +142,20 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(leftColumn));
         final ColumnMetaData targetColumnMetaData = rightOrmTable.getColumnMetaData(rightColumnMetaData.getJoinColumn());
 
+        final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, DtoJoinConditionClauseTerminal<DTO>> recreator = n -> new DtoJoinConditionClauseTerminal<>(joinSpec, (DtoSelector<DTO>) delegate.withNode(n), aliasGenerator);
+
+        final DtoJoinConditionClause<DTO> conditionClause = new DtoJoinConditionClause<>(conditionSpec, delegate.litebridgeContext(), LogicOperator.NOOP, new SelectColumnSpec(leftColumn), joinNode, recreator)
+                .withRelationshipField(field);
+
         if (rightColumnMetaData.name().equals(targetColumnMetaData.name())) {
-            conditionSpec.setOperator(Operator.USING);
+            return conditionClause.using(targetColumnMetaData.name());
         } else {
             final Column targetColumn = joinFieldColumns.stream()
                     .map(SelectFieldSpec::getColumn)
                     .filter(c -> c.name().equals(targetColumnMetaData.name()))
                     .findFirst().orElseThrow(() -> new IllegalArgumentException("Target JOIN column not found"));
-            conditionSpec.setOperator(Operator.EQ);
-            conditionSpec.setValue(targetColumn);
+            return conditionClause.eq(targetColumn);
         }
-
-        return new DtoJoinConditionClauseTerminal<>(joinSpec, (DtoSelector<DTO>) delegate, aliasGenerator);
     }
 
     private DtoJoinConditionClauseTerminal<DTO> manyToManyJoin(MappedManyToMany mappedManyToMany) {

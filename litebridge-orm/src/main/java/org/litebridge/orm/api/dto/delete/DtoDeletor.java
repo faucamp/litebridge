@@ -58,7 +58,10 @@ public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implem
 
     DtoDeleteWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
         final ConditionSpec conditionSpec = deleteSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
-        return new DtoDeleteWhereConditionClause<>(conditionSpec, new DtoDeleteWhereConditionClauseTerminalImpl<>(this), litebridgeContext);
+
+        final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, DtoDeleteWhereConditionClauseTerminal<DTO>> recreator = n -> new DtoDeleteWhereConditionClauseTerminalImpl<>(this);
+
+        return new DtoDeleteWhereConditionClause<>(conditionSpec, litebridgeContext, logicOperator, expression, recreator);
     }
 
     DtoDeleteWhereConditionClauseTerminalImpl<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {

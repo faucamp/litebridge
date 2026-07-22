@@ -73,8 +73,24 @@ public abstract class SelectSpec {
         this.selectExpressionMapper = new SelectExpressionMapper(litebridgeContext.sqlFunctionRegistry(), protoExpressionResolver);
     }
 
+    public LitebridgeContext getLitebridgeContext() {
+        return litebridgeContext;
+    }
+
     public SelectExpressionMapper selectExpressionMapper() {
         return Objects.requireNonNull(selectExpressionMapper, "SelectExpressionMapper not set");
+    }
+
+    public boolean isTableSet() {
+        return table != null;
+    }
+
+    public boolean isSelectExpressionMapperSet() {
+        return selectExpressionMapper != null;
+    }
+
+    public SelectExpressionMapper getSelectExpressionMapper() {
+        return selectExpressionMapper;
     }
 
     public List<ExpressionSpec> getExpressions() {
@@ -95,6 +111,13 @@ public abstract class SelectSpec {
 
     public @Nullable List<JoinSpec> getJoins() {
         return joins;
+    }
+
+    public void addJoin(final JoinSpec join) {
+        if (joins == null) {
+            joins = new ArrayList<>();
+        }
+        joins.add(join);
     }
 
     public ConditionGroupSpec currentWhereConditionGroupSpec() {
@@ -131,6 +154,23 @@ public abstract class SelectSpec {
 
     public void popHavingConditionGroup() {
         havingConditionGroupStack.pop();
+    }
+
+    public void addWhereCondition(final ExpressionSpec condition) {
+        currentWhereConditionGroupSpec().newCondition(LogicOperator.NOOP, condition);
+    }
+
+    public void addHavingCondition(final ExpressionSpec condition) {
+        currentHavingConditionGroupSpec().newCondition(LogicOperator.NOOP, condition);
+    }
+
+    public void addOrderBy(final ExpressionSpec expression, final boolean ascending) {
+        final OrderBySpec orderBySpec = newOrderBy(expression);
+        orderBySpec.setAsc(ascending);
+    }
+
+    public void setGroupBy(final List<ExpressionSpec> expressions) {
+        this.groupBy = new GroupBySpec(expressions);
     }
 
     public @Nullable GroupBySpec getGroupBy() {

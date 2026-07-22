@@ -15,11 +15,11 @@ public final class SqlOrderByClauseChain
 
     @Override
     public SqlOrderByClause then(final String... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.createSelectColumnSpecs(columns)), (SqlSelector) delegate);
+        return new SqlOrderByClause(selectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new), (SqlSelector) delegate);
     }
 
     @Override
     public SqlOrderByClause then(final ExpressionSpec... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+        return new SqlOrderByClause(columns, (SqlSelector) delegate);
     }
 }

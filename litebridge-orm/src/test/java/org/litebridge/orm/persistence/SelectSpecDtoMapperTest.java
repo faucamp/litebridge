@@ -14,6 +14,7 @@ import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
@@ -57,7 +58,7 @@ class SelectSpecDtoMapperTest {
         aliasGenerator = new NoOpAliasGenerator();
 
         litebridgeConfig = new LitebridgeConfig();
-        litebridgeContext = new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry);
+        litebridgeContext = new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator());
     }
 
     @Test

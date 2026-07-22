@@ -2,10 +2,12 @@ package org.litebridge.orm.api.sql;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractGroupByClauseTerminal;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
+
+import java.util.function.Function;
 
 public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
         SqlHavingConditionClause,
@@ -20,21 +22,23 @@ public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
 
     @Override
     public SqlHavingConditionClause having(final ExpressionSpec expression) {
-        return havingImpl(LogicOperator.NOOP, expression);
+        final ConditionSpec conditionSpec = selectSpec.currentHavingConditionGroupSpec().newCondition(LogicOperator.NOOP, expression);
+
+        return new SqlHavingConditionClause(conditionSpec,
+                delegate.litebridgeContext(),
+                LogicOperator.NOOP,
+                expression,
+                delegate.node(),
+                node -> new SqlHavingConditionClauseTerminal((SqlSelector) delegate.withNode(node)));
     }
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.createSelectColumnSpecs(columns)), (SqlSelector) delegate);
+        return orderBy(selectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
-    }
-
-    private SqlHavingConditionClause havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = selectSpec.currentHavingConditionGroupSpec().newCondition(logicOperator, expression);
-        return new SqlHavingConditionClause(conditionSpec, new SqlHavingConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
+        return new SqlOrderByClause(columns, (SqlSelector) delegate);
     }
 }

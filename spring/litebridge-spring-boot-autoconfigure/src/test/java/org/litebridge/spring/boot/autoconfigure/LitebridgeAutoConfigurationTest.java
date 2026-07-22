@@ -13,6 +13,7 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.Insert;
@@ -222,6 +223,16 @@ class LitebridgeAutoConfigurationTest {
         @Override
         public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
             return List.of();
+        }
+
+        @Override
+        public List<Row> select(final Select select, final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+            return List.of();
+        }
+
+        @Override
+        public PreparedSql prepareSql(final Select select, final ConnectionProvider connectionProvider) {
+            return null;
         }
 
         @Override
