@@ -5,15 +5,15 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ast.GroupByNode;
+import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
-import org.litebridge.orm.api.select.model.GroupBySpec;
 import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
+
+import java.util.function.Function;
 
 public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionClauseTerminal<Row,
         SqlJoinConditionClause,
@@ -28,13 +28,13 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
         implements SqlJoinClauseTerminal {
 
-    public SqlJoinConditionClauseTerminal(final SqlJoinSpec joinSpec, final SqlSelector delegate) {
-        super(joinSpec, delegate);
+    public SqlJoinConditionClauseTerminal(final JoinNode joinNode, final SqlSelector delegate) {
+        super(joinNode, delegate);
     }
 
     @Override
     public SqlJoinConditionClause and(final String column) {
-        final Column spiColumn = new Column(joinSpec.table(), column);
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
         return and(new SelectColumnSpec(spiColumn));
     }
 
@@ -50,7 +50,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     @Override
     public SqlJoinConditionClause or(final String column) {
-        final Column spiColumn = new Column(joinSpec.table(), column);
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
         return or(new SelectColumnSpec(spiColumn));
     }
 
@@ -66,14 +66,20 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     @Override
     public SqlJoinClause join(final String table) {
-        final org.litebridge.orm.api.select.ast.JoinNode joinNode = new org.litebridge.orm.api.select.ast.JoinNode(delegate.node(), "INNER", null, table);
-        final SqlSelector newDelegate = (SqlSelector) delegate.withNode(joinNode);
-        return new SqlJoinClause(selectSpec.newJoinSpec(table), newDelegate);
+//        final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", null, table);
+//        delegate.withNode(joinNode);
+//        return new SqlJoinClause(joinNode, (SqlSelector) delegate);
+
+        return new SqlJoinClause((SqlSelector) delegate, node -> {
+            final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", null, table);
+            delegate.withNode(joinNode);
+            return new SqlJoinConditionClauseTerminal(joinNode, (SqlSelector) delegate);
+        });
     }
 
     @Override
     public SqlWhereConditionClause where(final String column) {
-        final Column spiColumn = new Column(selectSpec.getTable(), column);
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
         return where(new SelectColumnSpec(spiColumn));
     }
 
@@ -84,7 +90,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final String... columns) {
-        return groupBy(selectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
+        return groupBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override
@@ -95,7 +101,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return orderBy(selectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
+        return orderBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override
@@ -104,10 +110,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     }
 
     private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = selectSpec.currentWhereConditionGroupSpec().newCondition(logicOperator, expression);
-
-        return new SqlWhereConditionClause(conditionSpec,
-                delegate.litebridgeContext(),
+        return new SqlWhereConditionClause(delegate.litebridgeContext(),
                 logicOperator,
                 expression,
                 delegate.node(),
@@ -115,18 +118,17 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     }
 
     private SqlJoinConditionClause joinImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
-
-        final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, SqlJoinConditionClauseTerminal> recreator = n -> new SqlJoinConditionClauseTerminal(joinSpec, (SqlSelector) delegate.withNode(n));
-
-        return new SqlJoinConditionClause(conditionSpec, delegate.litebridgeContext(), logicOperator, expression, delegate.node(), recreator);
+        final Function<QueryNode, SqlJoinConditionClauseTerminal> recreator = n -> new SqlJoinConditionClauseTerminal(joinNode, (SqlSelector) delegate.withNode(n));
+        return new SqlJoinConditionClause(delegate.litebridgeContext(), logicOperator, expression, delegate.node(), recreator);
     }
 
     private SqlJoinConditionClauseTerminal joinImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-        final ConditionGroupSpec subgroup = joinSpec.pushConditionGroupSpec(logicOperator);
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, joinSpec.table(), delegate.litebridgeContext().fromClauseEngine());
-        query.apply(conditionClauseStart);
-        joinSpec.popConditionGroupSpec();
-        return this;
+//        final ConditionGroupSpec subgroup = joinSpec.pushConditionGroupSpec(logicOperator);
+//        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, joinSpec.table(), delegate.litebridgeContext().fromClauseEngine());
+//        query.apply(conditionClauseStart);
+//        joinSpec.popConditionGroupSpec();
+//        return this;
+        //TODO: reimplement
+        throw new UnsupportedOperationException("Need to reimplement");
     }
 }

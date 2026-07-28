@@ -15,7 +15,7 @@ public final class SqlOrderByClauseChain
 
     @Override
     public SqlOrderByClause then(final String... columns) {
-        return new SqlOrderByClause(selectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new), (SqlSelector) delegate);
+        return new SqlOrderByClause(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new), (SqlSelector) delegate);
     }
 
     @Override

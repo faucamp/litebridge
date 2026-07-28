@@ -7,6 +7,7 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.delete.impl.AbstractDeletor;
 import org.litebridge.orm.api.delete.model.DeleteSpec;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
@@ -15,6 +16,8 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+
+import java.util.function.Function;
 
 public final class SqlDeletor extends AbstractDeletor<DeleteSpec> implements SqlDeleteWhereClause {
 
@@ -43,18 +46,19 @@ public final class SqlDeletor extends AbstractDeletor<DeleteSpec> implements Sql
     }
 
     SqlDeleteWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        //TODO: fix
         final ConditionSpec conditionSpec = deleteSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
-
-        final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, SqlDeleteWhereConditionClauseTerminal> recreator = n -> new SqlDeleteWhereConditionClauseTerminalImpl(this);
-
-        return new SqlDeleteWhereConditionClause(conditionSpec, litebridgeContext, logicOperator, expression, recreator);
+        final Function<QueryNode, SqlDeleteWhereConditionClauseTerminal> recreator = n -> new SqlDeleteWhereConditionClauseTerminalImpl(this);
+        return new SqlDeleteWhereConditionClause(litebridgeContext, logicOperator, expression, recreator);
     }
 
     SqlDeleteWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-        final ConditionGroupSpec subgroup = deleteSpec.pushConditionGroupSpec(logicOperator);
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, deleteSpec.table(), litebridgeContext.fromClauseEngine());
-        query.apply(conditionClauseStart);
-        deleteSpec.popConditionGroupSpec();
-        return new SqlDeleteWhereConditionClauseTerminalImpl(this);
+//        final ConditionGroupSpec subgroup = deleteSpec.pushConditionGroupSpec(logicOperator);
+//        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, deleteSpec.table(), litebridgeContext.fromClauseEngine());
+//        query.apply(conditionClauseStart);
+//        deleteSpec.popConditionGroupSpec();
+//        return new SqlDeleteWhereConditionClauseTerminalImpl(this);
+        //TODO: reimplement
+        throw new UnsupportedOperationException("Need to reimplement");
     }
 }

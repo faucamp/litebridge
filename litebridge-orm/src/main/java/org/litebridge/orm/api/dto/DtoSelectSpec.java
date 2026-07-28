@@ -6,11 +6,10 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
-import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.DelegateExpressionSpec;
+import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
+import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.tracking.FieldAccessor;
@@ -27,31 +26,9 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
 
     private final Class<?> dtoClass;
     private final OrmTable dtoTable;
-    private final @Nullable Class<?> typeOverride;
 
     /**
      * Creates a new DtoSelectSpec.
-     *
-     * @param dtoClass          the DTO class
-     * @param dtoTable          the DTO table
-     * @param aliasGenerator    the alias generator
-     * @param litebridgeContext the litebridge context
-     * @param typeOverride      the type override
-     */
-    public DtoSelectSpec(final Class<?> dtoClass,
-                         final OrmTable dtoTable,
-                         final AliasGenerator aliasGenerator,
-                         final LitebridgeContext litebridgeContext,
-                         final @Nullable Class<?> typeOverride) {
-        super(litebridgeContext);
-        this.dtoClass = dtoClass;
-        this.dtoTable = dtoTable;
-        this.table = aliasGenerator.aliasTable(dtoTable);
-        this.typeOverride = typeOverride;
-    }
-
-    /**
-     * Creates a new DtoSelectSpec without type override.
      *
      * @param dtoClass          the DTO class
      * @param dtoTable          the DTO table
@@ -62,7 +39,18 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
                          final OrmTable dtoTable,
                          final AliasGenerator aliasGenerator,
                          final LitebridgeContext litebridgeContext) {
-        this(dtoClass, dtoTable, aliasGenerator, litebridgeContext, null);
+        super(litebridgeContext);
+
+        // Swap out the DTO class for a concrete class in case this is an allowed interface for the mapping
+        if (dtoClass != dtoTable.dtoClass()
+                && dtoTable.getDtoClassInterfaces().contains(dtoClass)) {
+            this.dtoClass = dtoTable.dtoClass();
+        } else {
+            this.dtoClass = dtoClass;
+        }
+
+        this.dtoTable = dtoTable;
+        this.table = aliasGenerator.aliasTable(dtoTable);
     }
 
     /**
@@ -77,15 +65,6 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
     @Override
     public OrmTable dtoTable() {
         return dtoTable;
-    }
-
-    /**
-     * Returns the type override.
-     *
-     * @return the type override, or null if none
-     */
-    public @Nullable Class<?> typeOverride() {
-        return typeOverride;
     }
 
     /**
@@ -135,12 +114,14 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
      * @param fields the field names
      * @return the list of expression specifications
      */
+    @Deprecated(forRemoval = true)
     public List<ExpressionSpec> createSelectFieldSpecs(final String[] fields) {
         return Arrays.stream(fields)
                 .map(this::createSelectFieldSpec)
                 .toList();
     }
 
+    @Deprecated(forRemoval = true)
     private ExpressionSpec createSelectFieldSpec(final String field) {
         final ColumnMetaData columnMetaData = dtoTable.getColumnForFieldName(field);
         final FieldAccessor fieldAccessor = dtoTable.getFieldForColumnName(columnMetaData.name());

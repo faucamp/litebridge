@@ -323,9 +323,10 @@ public class SelectSpecDtoMapper {
             } else if (plan.defaultConstructorUsed()) {
                 try {
                     dto = plan.constructor().invoke();
-                } catch (Throwable e) {
-                    throw new RuntimeException("Failed to instantiate DTO: " + plan.dtoClass(), e);
+                } catch (Throwable ex) {
+                    throw new IllegalStateException("Failed to instantiate DTO: " + plan.dtoClass(), ex);
                 }
+
                 for (final FieldAccessorValue fav : fieldValues) {
                     if (fav.value() != null) {
                         fav.field().set(dto, fav.value());
@@ -377,7 +378,7 @@ public class SelectSpecDtoMapper {
         for (final DtoConstructor.DtoDependency dependency : partialDto.dependencies()) {
             PartiallyConstructedDto relatedDto = dtoCache.get(dependency.targetDtoClass(), dependency.targetPrimaryKeyValue());
 
-            if (relatedDto == null && litebridgeContext.config().getRelatedDtoStrategy() == RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN) {
+            if (relatedDto == null && litebridgeContext.getRelatedDtoStrategy() == RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN) {
                 final Object partial = constructDto(dependency.targetDtoClass(), dependency.targetPrimaryKey(), dtoConstructor);
                 relatedDto = new PartiallyConstructedDto(partial, (List<Object>) dependency.targetPrimaryKeyValue(), Collections.emptyList(), tableRegistry.getTableOrThrow(dependency.targetDtoClass()));
                 dtoCache.put(relatedDto.primaryKey(), relatedDto);

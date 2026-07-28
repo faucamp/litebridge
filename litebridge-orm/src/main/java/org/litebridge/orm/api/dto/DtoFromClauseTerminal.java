@@ -4,15 +4,11 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.select.ast.GroupByNode;
-import org.litebridge.orm.api.select.ast.OrderByNode;
+import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
-import org.litebridge.orm.api.select.model.GroupBySpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
@@ -55,7 +51,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     public DtoFromClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);
         tableRegistry = delegate.tableRegistry();
-        ormTable = delegate.table();
+        ormTable = delegate.ormTable();
     }
 
     @Override
@@ -78,11 +74,13 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
      * @return the parent condition clause interface, allowing further chaining of conditions
      */
     public DtoWhereConditionClauseTerminal<DTO> where(final QueryConditionBuilder<DTO> query) {
-        final ConditionGroupSpec conditionGroupSpec = selectSpec.pushWhereConditionGroup(LogicOperator.NOOP);
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(conditionGroupSpec, ormTable, delegate.litebridgeContext().fromClauseEngine());
-        query.apply(conditionClauseStart);
-        selectSpec.popWhereConditionGroup();
-        return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate);
+//        final ConditionGroupSpec conditionGroupSpec = selectSpec.pushWhereConditionGroup(LogicOperator.NOOP);
+//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(conditionGroupSpec, ormTable, delegate.litebridgeContext().fromClauseEngine());
+//        query.apply(conditionClauseStart);
+//        selectSpec.popWhereConditionGroup();
+//        return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate);
+        //TODO: reimplement
+        throw new UnsupportedOperationException("Need to reimplement");
     }
 
     /**
@@ -142,15 +140,17 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
             joinTable = tableRegistry.getTableOrThrow(dtoClass);
         }
 
-        final org.litebridge.orm.api.select.ast.JoinNode joinNode = new org.litebridge.orm.api.select.ast.JoinNode(delegate.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
-        final DtoSelector<DTO> newDelegate = (DtoSelector<DTO>) delegate.withNode(joinNode);
 
-        return new DtoJoinClause<>(dtoClass, joinTable, newDelegate);
+        return new DtoJoinClause<>((DtoSelector<DTO>) delegate, node -> {
+            final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+            delegate.withNode(joinNode);
+            return new DtoJoinConditionClauseTerminal<>(joinNode, (DtoSelector<DTO>) delegate);
+        });
     }
 
     @Override
     public DtoGroupByClauseTerminal<DTO> groupBy(final String... fields) {
-        return groupBy(selectSpec.createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
+        return groupBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
     }
 
     @Override
@@ -161,7 +161,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return orderBy(selectSpec.createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
+        return orderBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
     }
 
     @Override
@@ -224,13 +224,10 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     }
 
     private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = selectSpec.currentWhereConditionGroupSpec().newCondition(logicOperator, expression);
-
-        return new DtoWhereConditionClause<>(conditionSpec,
-                delegate.litebridgeContext(),
+        return new DtoWhereConditionClause<>(delegate.litebridgeContext(),
                 logicOperator,
                 expression,
-                delegate.node(),
-                node -> new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(node)));
+                null,
+                node -> new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new WhereNode(delegate.node(), node))));
     }
 }

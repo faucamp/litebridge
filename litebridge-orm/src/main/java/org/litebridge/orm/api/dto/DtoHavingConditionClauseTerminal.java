@@ -5,11 +5,8 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
-import org.litebridge.orm.api.select.ast.HavingNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractHavingClauseTerminal;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
@@ -40,7 +37,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
      */
     public DtoHavingConditionClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);
-        ormTable = delegate.table();
+        ormTable = delegate.ormTable();
     }
 
     /**
@@ -84,7 +81,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return orderBy(selectSpec.createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
+        return orderBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
     }
 
     @Override
@@ -93,10 +90,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     }
 
     private DtoHavingConditionClause<DTO> havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression, final DtoSelector<DTO> newDelegate) {
-        final ConditionSpec conditionSpec = selectSpec.currentHavingConditionGroupSpec().newCondition(logicOperator, expression);
-
-        return new DtoHavingConditionClause<>(conditionSpec,
-                delegate.litebridgeContext(),
+        return new DtoHavingConditionClause<>(delegate.litebridgeContext(),
                 logicOperator,
                 expression,
                 delegate.node(),
@@ -104,10 +98,12 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     }
 
     private DtoHavingConditionClauseTerminal<DTO> havingImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        final ConditionGroupSpec subgroup = selectSpec.pushHavingConditionGroup(logicOperator);
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, ormTable, delegate.litebridgeContext().fromClauseEngine());
-        query.apply(conditionClauseStart);
-        selectSpec.popHavingConditionGroup();
-        return this;
+//        final ConditionGroupSpec subgroup = selectSpec.pushHavingConditionGroup(logicOperator);
+//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, ormTable, delegate.litebridgeContext().fromClauseEngine());
+//        query.apply(conditionClauseStart);
+//        selectSpec.popHavingConditionGroup();
+//        return this;
+        //TODO: reimplement
+        throw new UnsupportedOperationException("Need to reimplement");
     }
 }

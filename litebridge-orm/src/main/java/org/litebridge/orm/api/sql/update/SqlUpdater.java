@@ -5,6 +5,7 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
@@ -16,6 +17,8 @@ import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+
+import java.util.function.Function;
 
 public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements SqlUpdateStep {
 
@@ -52,18 +55,19 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
     }
 
     SqlUpdateWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        //TODO: fix
         final ConditionSpec conditionSpec = updateSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
-
-        final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, SqlUpdateWhereConditionClauseTerminal> recreator = n -> new SqlUpdateWhereConditionClauseTerminalImpl(this);
-
-        return new SqlUpdateWhereConditionClause(conditionSpec, litebridgeContext, logicOperator, expression, recreator);
+        final Function<QueryNode, SqlUpdateWhereConditionClauseTerminal> recreator = n -> new SqlUpdateWhereConditionClauseTerminalImpl(this);
+        return new SqlUpdateWhereConditionClause(litebridgeContext, logicOperator, expression, recreator);
     }
 
     SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-        final ConditionGroupSpec subgroup = updateSpec.pushConditionGroupSpec(logicOperator);
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, updateSpec.table(), litebridgeContext.fromClauseEngine());
-        query.apply(conditionClauseStart);
-        updateSpec.popConditionGroupSpec();
-        return new SqlUpdateWhereConditionClauseTerminalImpl(this);
+//        final ConditionGroupSpec subgroup = updateSpec.pushConditionGroupSpec(logicOperator);
+//        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, updateSpec.table(), litebridgeContext.fromClauseEngine());
+//        query.apply(conditionClauseStart);
+//        updateSpec.popConditionGroupSpec();
+//        return new SqlUpdateWhereConditionClauseTerminalImpl(this);
+        //TODO: reimplement
+        throw new UnsupportedOperationException("Need to reimplement");
     }
 }

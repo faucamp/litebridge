@@ -2,12 +2,14 @@ package org.litebridge.orm.engine;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Aliased;
+import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelector;
 import org.litebridge.orm.api.select.ast.FromNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.sql.SqlFromClauseTerminal;
+import org.litebridge.orm.api.sql.SqlSelectSpec;
 import org.litebridge.orm.api.sql.SqlSelector;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -19,6 +21,7 @@ import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridge.tracking.ChangeTracker;
 
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 /**
@@ -67,6 +70,10 @@ public final class FromClauseEngine {
         this.contextSupplier = contextSupplier;
     }
 
+    public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
+        return from(null, dtoClass, relatedDtoStrategy);
+    }
+
     /**
      * Constructs a DTO-based FROM clause.
      *
@@ -76,11 +83,11 @@ public final class FromClauseEngine {
      * @param <DTO>              the DTO type.
      * @return the DTO from clause terminal.
      */
-    public <DTO> DtoFromClauseTerminal<DTO> from(final QueryNode node, final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
+    public <DTO> DtoFromClauseTerminal<DTO> from(final @Nullable SelectNode node, final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
         final QueryNode fromNode = new FromNode(node, dtoClass, null, null, relatedDtoStrategy);
         final DtoSelector<DTO> dtoSelector = createDtoSelectorForType(dtoClass, dtoClass, relatedDtoStrategy, fromNode);
 
-        if (hasExplicitSelect(node)) {
+        if (node != null && node.expressions().length > 0) {
             return new DtoFromClauseTerminal<>(dtoSelector);
         } else {
             return dtoSelector.select();
@@ -123,7 +130,7 @@ public final class FromClauseEngine {
         final LitebridgeContext litebridgeContext = contextSupplier.get();
 
         if (relatedDtoStrategy != null) {
-            litebridgeContext.config().setRelatedDtoStrategy(relatedDtoStrategy);
+            litebridgeContext.setRelatedDtoStrategy(relatedDtoStrategy);
         }
 
         return litebridgeContext;
@@ -152,9 +159,13 @@ public final class FromClauseEngine {
      * @param table the table name.
      * @return the SQL from clause terminal.
      */
-    public SqlFromClauseTerminal from(final QueryNode node, final String table) {
+    public SqlFromClauseTerminal from(final SelectNode node, final String table) {
         final QueryNode fromNode = new FromNode(node, null, null, table, null);
-        return new SqlSelector(databaseProvider, tableRegistry, createLitebridgeContext(), fromNode).select().from(table);
+        final LitebridgeContext litebridgeContext = createLitebridgeContext();
+        final SqlSelectSpec selectSpec = new SqlSelectSpec(litebridgeContext);
+        selectSpec.addExpressions(Arrays.asList(node.expressions()));
+        litebridgeContext.setSelectSpec(selectSpec);
+        return new SqlSelector(new Table(table), databaseProvider, tableRegistry, litebridgeContext, fromNode).select().from(table);
     }
 
     private static <DTO> DtoFromClauseTerminal<DTO> select(final ExpressionSpec[] expressionSpecs, final DtoSelector<DTO> dtoSelector) {
@@ -170,12 +181,15 @@ public final class FromClauseEngine {
 
     private boolean hasExplicitSelect(final QueryNode node) {
         QueryNode current = node;
+
         while (current != null) {
             if (current instanceof SelectNode selectNode && selectNode.expressions().length > 0) {
                 return true;
             }
+
             current = current.previous();
         }
+
         return false;
     }
 }

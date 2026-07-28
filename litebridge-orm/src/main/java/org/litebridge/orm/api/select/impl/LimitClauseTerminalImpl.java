@@ -11,11 +11,8 @@ public class LimitClauseTerminalImpl<DTO, SSP extends SelectSpec>
         extends DelegatingSelector<DTO, SSP>
         implements LimitClauseTerminal<DTO> {
 
-    protected final SSP selectSpec;
-
     public LimitClauseTerminalImpl(final AbstractSelector<DTO, SSP> delegate) {
         super(delegate);
-        this.selectSpec = delegate.selectSpec();
     }
 
     @Override

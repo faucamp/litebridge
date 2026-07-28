@@ -38,7 +38,8 @@ public class SqlSelectSpec extends SelectSpec {
         return joinSpec;
     }
 
-    public List<ExpressionSpec> createSelectColumnSpecs(final String[] columns) {
+    //TODO: move to different class
+    public static List<ExpressionSpec> createSelectColumnSpecs(final String[] columns) {
         return Arrays.stream(columns)
                 .map(column -> (ExpressionSpec) new ProtoColumnExpressionSpec(SelectColumnSpec.class, column))
                 .toList();

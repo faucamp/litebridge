@@ -74,7 +74,8 @@ class SqlE2eTest extends AbstractE2eTest {
         final List<Row> result =
                 litebridge.select(tableMapper.transformColumnName("FIRST_NAME"),
                                 tableMapper.transformColumnName("SURNAME"),
-                                tableMapper.transformColumnName("AGE")).from(personTableName)
+                                tableMapper.transformColumnName("AGE"))
+                        .from(personTableName)
                         .where(tableMapper.transformColumnName("AGE")).gt(18)
                         .and(tableMapper.transformColumnName("AGE")).lt(25)
                         .list();

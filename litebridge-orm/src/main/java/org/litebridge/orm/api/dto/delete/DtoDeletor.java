@@ -5,6 +5,7 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.delete.impl.AbstractDeletor;
 import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
@@ -13,6 +14,8 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+
+import java.util.function.Function;
 
 /**
  * Executor for DTO delete operations.
@@ -57,18 +60,19 @@ public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implem
     }
 
     DtoDeleteWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        //TODO: fix
         final ConditionSpec conditionSpec = deleteSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
-
-        final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, DtoDeleteWhereConditionClauseTerminal<DTO>> recreator = n -> new DtoDeleteWhereConditionClauseTerminalImpl<>(this);
-
-        return new DtoDeleteWhereConditionClause<>(conditionSpec, litebridgeContext, logicOperator, expression, recreator);
+        final Function<QueryNode, DtoDeleteWhereConditionClauseTerminal<DTO>> recreator = n -> new DtoDeleteWhereConditionClauseTerminalImpl<>(this);
+        return new DtoDeleteWhereConditionClause<>(litebridgeContext, logicOperator, expression, recreator);
     }
 
     DtoDeleteWhereConditionClauseTerminalImpl<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        final ConditionGroupSpec subgroup = deleteSpec.pushConditionGroupSpec(logicOperator);
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, deleteSpec.dtoTable(), litebridgeContext.fromClauseEngine());
-        query.apply(conditionClauseStart);
-        deleteSpec.popConditionGroupSpec();
-        return new DtoDeleteWhereConditionClauseTerminalImpl<>(this);
+//        final ConditionGroupSpec subgroup = deleteSpec.pushConditionGroupSpec(logicOperator);
+//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, deleteSpec.dtoTable(), litebridgeContext.fromClauseEngine());
+//        query.apply(conditionClauseStart);
+//        deleteSpec.popConditionGroupSpec();
+//        return new DtoDeleteWhereConditionClauseTerminalImpl<>(this);
+        //TODO: reimplement
+        throw new UnsupportedOperationException("Need to reimplement");
     }
 }

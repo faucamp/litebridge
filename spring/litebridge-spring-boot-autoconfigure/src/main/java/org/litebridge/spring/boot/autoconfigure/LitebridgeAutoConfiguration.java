@@ -82,8 +82,7 @@ public class LitebridgeAutoConfiguration {
 
         LOGGER.trace("Creating Litebridge instance with DatabaseProvider: {} (transaction manager: {})", databaseProvider.getClass().getName(), transactionManager.getClass().getName());
 
-        final LitebridgeConfig litebridgeConfig = new LitebridgeConfig();
-        litebridgeConfig.setRelatedDtoStrategy(properties.getRelatedDtoStrategy());
+        final LitebridgeConfig litebridgeConfig = new LitebridgeConfig(properties.getRelatedDtoStrategy());
 
         final Litebridge litebridge = new Litebridge(databaseProvider, transactionManager, litebridgeConfig, MethodHandles.lookup());
         final @Nullable String[] scanBasePackages = properties.getScanBasePackage();

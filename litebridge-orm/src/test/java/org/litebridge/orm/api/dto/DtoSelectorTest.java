@@ -75,7 +75,6 @@ class DtoSelectorTest {
 
         // Then
         assertNotNull(terminal);
-        assertEquals(1, selector.selectSpec().getExpressions().size());
     }
 
     @Test
@@ -102,7 +101,6 @@ class DtoSelectorTest {
 
         // Then
         assertNotNull(terminal);
-        assertFalse(selector.selectSpec().getExpressions().isEmpty());
     }
 
     @Test

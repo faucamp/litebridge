@@ -4,12 +4,9 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.ast.GroupByNode;
+import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
-import org.litebridge.orm.api.select.model.GroupBySpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 
@@ -34,14 +31,21 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
 
     @Override
     public SqlJoinClause join(final String table) {
-        final org.litebridge.orm.api.select.ast.JoinNode joinNode = new org.litebridge.orm.api.select.ast.JoinNode(delegate.node(), "INNER", null, table);
-        final SqlSelector newDelegate = (SqlSelector) delegate.withNode(joinNode);
-        return new SqlJoinClause(selectSpec.newJoinSpec(table), newDelegate);
+//        final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", null, table);
+//        delegate.withNode(joinNode);
+//        return new SqlJoinClause(joinNode, (SqlSelector) delegate);
+
+
+        return new SqlJoinClause((SqlSelector) delegate, node -> {
+            final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", null, table);
+            delegate.withNode(joinNode);
+            return new SqlJoinConditionClauseTerminal(joinNode, (SqlSelector) delegate);
+        });
     }
 
     @Override
     public SqlWhereConditionClause where(final String column) {
-        final Column spiColumn = new Column(selectSpec.getTable(), column);
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
         return where(new SelectColumnSpec(spiColumn));
     }
 
@@ -52,7 +56,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final String... columns) {
-        return groupBy(selectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
+        return groupBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override
@@ -63,7 +67,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return orderBy(selectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
+        return orderBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override
@@ -72,10 +76,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     }
 
     private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = selectSpec.currentWhereConditionGroupSpec().newCondition(logicOperator, expression);
-
-        return new SqlWhereConditionClause(conditionSpec,
-                delegate.litebridgeContext(),
+        return new SqlWhereConditionClause(delegate.litebridgeContext(),
                 logicOperator,
                 expression,
                 delegate.node(),

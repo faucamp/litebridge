@@ -57,7 +57,7 @@ public abstract class SelectSpec {
     private final Deque<ConditionGroupSpec> whereConditionGroupStack = new ArrayDeque<>();
     private final Deque<ConditionGroupSpec> havingConditionGroupStack = new ArrayDeque<>();
 
-    public SelectSpec(final LitebridgeContext litebridgeContext) {
+    protected SelectSpec(final LitebridgeContext litebridgeContext) {
         this.litebridgeContext = litebridgeContext;
     }
 
@@ -129,7 +129,7 @@ public abstract class SelectSpec {
     }
 
     public ConditionGroupSpec pushWhereConditionGroup(final LogicOperator logicOperator) {
-        final ConditionGroupSpec subgroup = ensureWhereConditions().newSubgroup(logicOperator).conditionGroupSpec();
+        final ConditionGroupSpec subgroup = currentWhereConditionGroupSpec().newSubgroup(logicOperator).conditionGroupSpec();
         whereConditionGroupStack.push(subgroup);
         return subgroup;
     }

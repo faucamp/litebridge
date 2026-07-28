@@ -196,7 +196,7 @@ class LitebridgeAutoConfigurationTest {
                     final java.lang.reflect.Field configField = Litebridge.class.getDeclaredField("litebridgeConfig");
                     configField.setAccessible(true);
                     final LitebridgeConfig config = (LitebridgeConfig) configField.get(litebridge);
-                    assertThat(config.getRelatedDtoStrategy()).isEqualTo(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
+                    assertThat(config.relatedDtoStrategy()).isEqualTo(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
                 });
     }
 

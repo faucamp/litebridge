@@ -3,6 +3,7 @@ package org.litebridge.orm.api.condition;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.dto.condition.CbDtoConditionClauseTerminal;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.sql.condition.CbSqlConditionClauseTerminal;
@@ -21,25 +22,19 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
         permits CbDtoConditionClauseTerminal, CbSqlConditionClauseTerminal {
 
     /**
-     * The condition group specification.
-     */
-    protected final ConditionGroupSpec conditionGroupSpec;
-
-    /**
      * The engine used to process the FROM clause.
      */
     protected final FromClauseEngine fromClauseEngine;
+    protected QueryNode node;
 
     /**
      * Constructs a new {@code AbstractCbConditionClauseTerminal}.
      *
-     * @param conditionGroupSpec The condition group specification.
      * @param fromClauseEngine   The FROM clause engine.
      */
-    public AbstractCbConditionClauseTerminal(final ConditionGroupSpec conditionGroupSpec,
-                                             final FromClauseEngine fromClauseEngine) {
-        this.conditionGroupSpec = conditionGroupSpec;
+    public AbstractCbConditionClauseTerminal(final FromClauseEngine fromClauseEngine, final QueryNode node) {
         this.fromClauseEngine = fromClauseEngine;
+        this.node = node;
     }
 
     @Override
@@ -104,15 +99,27 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
      * @param expression    The expression specification.
      * @return A new {@link AbstractCbConditionClause} instance.
      */
-    protected final AbstractCbConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(logicOperator, expression);
-        return createCbConditionClause(conditionSpec);
-    }
+    protected abstract AbstractCbConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression);
+//    {
+//        final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(logicOperator, expression);
+//        return createCbConditionClause(conditionSpec);
+//        //TODO: reimplement
+//        throw new UnsupportedOperationException("Need to reimplement");
+//    }
 
-    private AbstractCbConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        final ConditionGroupSpec subgroup = conditionGroupSpec.newSubgroup(logicOperator).conditionGroupSpec();
-        final AbstractConditionClauseStart<DTO> conditionClauseStart = createConditionClauseStart(subgroup);
-        query.apply(conditionClauseStart);
-        return this;
+    protected abstract AbstractCbConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query);
+//    {
+//
+////        final ConditionGroupSpec subgroup = conditionGroupSpec.newSubgroup(logicOperator).conditionGroupSpec();
+////        final AbstractConditionClauseStart<DTO> conditionClauseStart = createConditionClauseStart(subgroup);
+////        query.apply(conditionClauseStart);
+////        return this;
+//        //TODO: reimplement
+//        //throw new UnsupportedOperationException("Need to reimplement");
+//        return this;
+//    }
+
+    public QueryNode node() {
+        return node;
     }
 }

@@ -4,15 +4,17 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.BindValue;
+import org.litebridge.db.spi.sql.ParameterExtractor;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryCompiler;
-import org.litebridge.db.spi.sql.ParameterExtractor;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
+import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,20 +28,17 @@ import java.util.stream.Stream;
 public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements SelectTerminal<DTO> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSelector.class);
-    protected final SSP selectSpec;
     protected final TransactionalDatabaseProvider databaseProvider;
     protected final TableRegistry tableRegistry;
     protected final Class<DTO> dtoClass;
-    protected final LitebridgeContext litebridgeContext;
-    protected final QueryNode node;
+    protected final LitebridgeContext<SSP> litebridgeContext;
+    protected QueryNode node;
 
-    protected AbstractSelector(final SSP selectSpec,
-                               final TransactionalDatabaseProvider databaseProvider,
+    protected AbstractSelector(final TransactionalDatabaseProvider databaseProvider,
                                final TableRegistry tableRegistry,
                                final Class<DTO> dtoClass,
-                               final LitebridgeContext litebridgeContext,
+                               final LitebridgeContext<SSP> litebridgeContext,
                                final QueryNode node) {
-        this.selectSpec = selectSpec;
         this.databaseProvider = databaseProvider;
         this.tableRegistry = tableRegistry;
         this.dtoClass = dtoClass;
@@ -48,7 +47,7 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
     }
 
     protected AbstractSelector(final AbstractSelector<DTO, SSP> delegate, final QueryNode node) {
-        this(delegate.selectSpec, delegate.databaseProvider, delegate.tableRegistry, delegate.dtoClass, delegate.litebridgeContext, node);
+        this(delegate.databaseProvider, delegate.tableRegistry, delegate.dtoClass, delegate.litebridgeContext, node);
     }
 
     @Override
@@ -111,7 +110,7 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
      * @return the compiled select specification
      */
     public SSP compile() {
-        final org.litebridge.orm.persistence.alias.AliasGenerator freshGenerator = new org.litebridge.orm.persistence.alias.DefaultAliasGenerator(databaseProvider.getAliasTransformer());
+        final AliasGenerator freshGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
         final SSP spec = createSelectSpec(freshGenerator);
         new QueryCompiler(tableRegistry, freshGenerator).compile(node, spec);
         return spec;
@@ -152,15 +151,6 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
     }
 
     /**
-     * Returns the select specification.
-     *
-     * @return the select specification
-     */
-    public SSP selectSpec() {
-        return selectSpec;
-    }
-
-    /**
      * Returns the current query node.
      *
      * @return the query node
@@ -170,12 +160,12 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
     }
 
     /**
-     * Returns a new selector with the specified query node.
+     * Sets the current node to the specified query node.
      *
      * @param node the new query node
-     * @return a new selector instance
+     * @return the selector instance
      */
-    public abstract AbstractSelector<DTO, SSP> withNode(QueryNode node);
+    public abstract AbstractSelector<DTO, SSP> withNode(final QueryNode node);
 
     public LitebridgeContext litebridgeContext() {
         return litebridgeContext;

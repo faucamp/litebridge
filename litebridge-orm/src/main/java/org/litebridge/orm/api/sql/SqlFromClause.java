@@ -31,8 +31,7 @@ public final class SqlFromClause implements FromClause<Row,
     @Override
     public SqlFromClauseTerminal from(final String table) {
         final Table spiTable = tableRegistry.getOrCreateSpiTable(table);
-        final SqlSelector newDelegate = (SqlSelector) delegate.withNode(new FromNode(delegate.node(), null, null, table, null));
-        newDelegate.selectSpec().setTable(spiTable);
-        return new SqlFromClauseTerminal(newDelegate);
+        delegate.withNode(new FromNode(delegate.node(), null, null, table, null));
+        return new SqlFromClauseTerminal(delegate);
     }
 }

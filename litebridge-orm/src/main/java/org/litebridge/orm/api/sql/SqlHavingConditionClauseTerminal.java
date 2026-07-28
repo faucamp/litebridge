@@ -5,11 +5,8 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
-import org.litebridge.orm.api.select.ast.HavingNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractHavingClauseTerminal;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
@@ -32,13 +29,13 @@ public final class SqlHavingConditionClauseTerminal
 
     @Override
     public SqlHavingConditionClause and(final String column) {
-        final Column spiColumn = new Column(selectSpec.getTable(), column);
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
         return and(new SelectColumnSpec(spiColumn));
     }
 
     @Override
     public SqlHavingConditionClause and(final ExpressionSpec expression) {
-        return havingImpl(LogicOperator.AND, expression, (SqlSelector) delegate);
+        return havingImpl(LogicOperator.AND, expression);
     }
 
     @Override
@@ -48,13 +45,13 @@ public final class SqlHavingConditionClauseTerminal
 
     @Override
     public SqlHavingConditionClause or(final String column) {
-        final Column spiColumn = new Column(selectSpec.getTable(), column);
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
         return or(new SelectColumnSpec(spiColumn));
     }
 
     @Override
     public SqlHavingConditionClause or(final ExpressionSpec expression) {
-        return havingImpl(LogicOperator.OR, expression, (SqlSelector) delegate);
+        return havingImpl(LogicOperator.OR, expression);
     }
 
     @Override
@@ -64,7 +61,7 @@ public final class SqlHavingConditionClauseTerminal
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return orderBy(selectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
+        return orderBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override
@@ -72,11 +69,8 @@ public final class SqlHavingConditionClauseTerminal
         return new SqlOrderByClause(columns, (SqlSelector) delegate);
     }
 
-    private SqlHavingConditionClause havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression, final SqlSelector newDelegate) {
-        final ConditionSpec conditionSpec = selectSpec.currentHavingConditionGroupSpec().newCondition(logicOperator, expression);
-
-        return new SqlHavingConditionClause(conditionSpec,
-                delegate.litebridgeContext(),
+    private SqlHavingConditionClause havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        return new SqlHavingConditionClause(delegate.litebridgeContext(),
                 logicOperator,
                 expression,
                 delegate.node(),
@@ -84,10 +78,12 @@ public final class SqlHavingConditionClauseTerminal
     }
 
     private SqlHavingConditionClauseTerminal havingImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-        final ConditionGroupSpec subgroup = selectSpec.pushHavingConditionGroup(logicOperator);
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, selectSpec.getTable(), delegate.litebridgeContext().fromClauseEngine());
-        query.apply(conditionClauseStart);
-        selectSpec.popHavingConditionGroup();
-        return this;
+//        final ConditionGroupSpec subgroup = selectSpec.pushHavingConditionGroup(logicOperator);
+//        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, selectSpec.getTable(), delegate.litebridgeContext().fromClauseEngine());
+//        query.apply(conditionClauseStart);
+//        selectSpec.popHavingConditionGroup();
+//        return this;
+        //TODO: reimplement
+        throw new UnsupportedOperationException("Need to reimplement");
     }
 }

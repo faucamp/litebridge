@@ -1,8 +1,21 @@
 package org.litebridge.orm.engine;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
-import org.litebridge.orm.api.select.ast.*;
+import org.litebridge.orm.api.select.ast.BeginGroupNode;
+import org.litebridge.orm.api.select.ast.ConditionGroupNode;
+import org.litebridge.orm.api.select.ast.ConditionNode;
+import org.litebridge.orm.api.select.ast.EndGroupNode;
+import org.litebridge.orm.api.select.ast.FromNode;
+import org.litebridge.orm.api.select.ast.GroupByNode;
+import org.litebridge.orm.api.select.ast.HavingNode;
+import org.litebridge.orm.api.select.ast.JoinNode;
+import org.litebridge.orm.api.select.ast.LimitNode;
+import org.litebridge.orm.api.select.ast.OrderByNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SelectNode;
+import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.JoinSpec;
@@ -15,6 +28,7 @@ import org.litebridge.orm.persistence.alias.AliasGenerator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Compiles a {@link QueryNode} chain into a {@link SelectSpec}.
@@ -37,23 +51,17 @@ public final class QueryCompiler {
      */
     public void compile(final QueryNode node, final SelectSpec selectSpec) {
         final List<QueryNode> nodes = flatten(node);
+
         for (final QueryNode n : nodes) {
             applyNode(n, selectSpec);
         }
     }
 
-    private List<QueryNode> flatten(final QueryNode node) {
-        final List<QueryNode> nodes = new ArrayList<>();
-        QueryNode current = node;
-        while (current != null) {
-            nodes.add(current);
-            current = current.previous();
-        }
-        Collections.reverse(nodes);
-        return nodes;
+    private void applyNode(final QueryNode node, final SelectSpec selectSpec) {
+        applyNode(node, null, selectSpec);
     }
 
-    private void applyNode(final QueryNode node, final SelectSpec selectSpec) {
+    private void applyNode(final QueryNode node, final @Nullable QueryNode parentNode, final SelectSpec selectSpec) {
         switch (node) {
             case SelectNode selectNode -> {
                 if (selectNode.expressions().length > 0) {
@@ -96,52 +104,96 @@ public final class QueryCompiler {
                     final org.litebridge.orm.api.sql.SqlJoinSpec joinSpec = sqlSelectSpec.newJoinSpec(joinNode.tableName());
                 }
             }
-            case JoinConditionNode condNode -> {
-                final List<JoinSpec> joins = selectSpec.getJoins();
-                if (joins != null && !joins.isEmpty()) {
-                    final JoinSpec lastJoin = joins.get(joins.size() - 1);
+            case ConditionGroupNode conditionGroupNode -> {
+                final QueryNode conditionGroupParentNode = Objects.requireNonNull(parentNode, "AST error: ConditionGroupNode outside of a parent context");
 
-                    if (condNode.relationshipField() != null && lastJoin instanceof org.litebridge.orm.api.dto.DtoJoinSpec djs) {
-                        // The source table is stored in the JoinNode
-                        final QueryNode previous = condNode.previous();
-                        if (previous instanceof JoinNode joinNode && joinNode.sourceDtoClass() != null) {
-                            final OrmTable sourceTable = tableRegistry.getTableOrThrow(joinNode.sourceDtoClass());
-                            sourceTable.fieldAcessorStream()
-                                    .filter(accessor -> accessor.name().equals(condNode.relationshipField()))
-                                    .findFirst()
-                                    .ifPresent(fieldAccessor -> {
-                                        djs.setCollectionField(fieldAccessor);
+                // Create a new condition group spec on the relevant stack
+                final ConditionGroupSpec conditionGroupSpec = switch (conditionGroupParentNode) {
+                    case WhereNode whereNode -> selectSpec.pushWhereConditionGroup(conditionGroupNode.logicOperator());
+                    case HavingNode havingNode -> selectSpec.pushHavingConditionGroup(conditionGroupNode.logicOperator());
+                    default -> throw new IllegalStateException("AST error: Invalid condition context parent node: " + parentNode.getClass().getName());
+                };
 
-                                        // Set reverse collection field if available
-                                        djs.dtoTable().getOneToManyMappings().stream()
-                                                .filter(m -> m.mappedByField().equals(fieldAccessor))
-                                                .findFirst()
-                                                .ifPresent(m -> djs.setReverseCollectionField(m.collection()));
-                                    });
+                final List<QueryNode> conditionGroupNodes = flatten(conditionGroupNode.lastChild());
+
+                for (QueryNode queryNode : conditionGroupNodes) {
+                    applyNode(queryNode, conditionGroupParentNode, selectSpec);
+                }
+
+                // Close the condition group spec on the relevant stack
+                switch (conditionGroupParentNode) {
+                    case WhereNode whereNode -> selectSpec.popWhereConditionGroup();
+                    case HavingNode havingNode -> selectSpec.popHavingConditionGroup();
+                    default -> throw new IllegalStateException("AST error: Invalid condition context parent node: " + parentNode.getClass().getName());
+                }
+            }
+            case ConditionNode conditionNode -> {
+                final QueryNode previous = conditionNode.previous();
+
+                if (previous instanceof JoinNode) {
+                    //TODO: rework JOINs to match Where/Having
+                    final List<JoinSpec> joins = selectSpec.getJoins();
+                    if (joins != null && !joins.isEmpty()) {
+                        final JoinSpec lastJoin = joins.get(joins.size() - 1);
+
+                        if (conditionNode.relationshipField() != null && lastJoin instanceof org.litebridge.orm.api.dto.DtoJoinSpec djs) {
+                            // The source table is stored in the JoinNode
+                            if (previous instanceof JoinNode joinNode && joinNode.sourceDtoClass() != null) {
+                                final OrmTable sourceTable = tableRegistry.getTableOrThrow(joinNode.sourceDtoClass());
+                                sourceTable.fieldAcessorStream()
+                                        .filter(accessor -> accessor.name().equals(conditionNode.relationshipField()))
+                                        .findFirst()
+                                        .ifPresent(fieldAccessor -> {
+                                            djs.setCollectionField(fieldAccessor);
+
+                                            // Set reverse collection field if available
+                                            djs.dtoTable().getOneToManyMappings().stream()
+                                                    .filter(m -> m.mappedByField().equals(fieldAccessor))
+                                                    .findFirst()
+                                                    .ifPresent(m -> djs.setReverseCollectionField(m.collection()));
+                                        });
+                            }
+                        }
+
+                        if (conditionNode.operator() == org.litebridge.db.spi.query.Operator.USING) {
+                            lastJoin.using(conditionNode.rhs().toString());
+                        } else {
+                            final ConditionSpec condition = lastJoin.currentConditionGroupSpec().newCondition(conditionNode.logicOperator(), conditionNode.lhs());
+                            condition.setOperator(conditionNode.operator());
+                            condition.setValue(conditionNode.rhs());
                         }
                     }
 
-                    if (condNode.operator() == org.litebridge.db.spi.query.Operator.USING) {
-                        lastJoin.using(condNode.rhs().toString());
-                    } else {
-                        final ConditionSpec condition = lastJoin.currentConditionGroupSpec().newCondition(condNode.logicOperator(), condNode.lhs());
-                        condition.setOperator(condNode.operator());
-                        condition.setValue(condNode.rhs());
-                    }
+                    return;
                 }
+
+                // Nested chains
+                final ConditionGroupSpec conditionGroupSpec = switch (Objects.requireNonNull(parentNode, "AST error: Condition node outside of a parent context")) {
+                    case WhereNode whereNode -> selectSpec.currentWhereConditionGroupSpec();
+                    case HavingNode havingNode -> selectSpec.currentHavingConditionGroupSpec();
+                    default -> throw new IllegalStateException("AST error: Invalid condition context parent node: " + parentNode.getClass().getName());
+                };
+
+                final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), conditionNode.lhs());
+                conditionSpec.setOperator(conditionNode.operator());
+                conditionSpec.setValue(conditionNode.rhs());
             }
             case WhereNode whereNode -> {
-                final ConditionSpec condition = selectSpec.currentWhereConditionGroupSpec().newCondition(whereNode.logicOperator(), whereNode.lhs());
-                condition.setOperator(whereNode.operator());
-                condition.setValue(whereNode.rhs());
+                final List<QueryNode> conditionNodes = flatten(whereNode.condition());
+
+                for (QueryNode queryNode : conditionNodes) {
+                    applyNode(queryNode, whereNode, selectSpec);
+                }
             }
             case BeginGroupNode beginGroup -> selectSpec.pushWhereConditionGroup(beginGroup.logicOperator());
             case EndGroupNode endGroup -> selectSpec.popWhereConditionGroup();
             case GroupByNode groupByNode -> selectSpec.setGroupBy(List.of(groupByNode.expressions()));
             case HavingNode havingNode -> {
-                final ConditionSpec condition = selectSpec.currentHavingConditionGroupSpec().newCondition(havingNode.logicOperator(), havingNode.lhs());
-                condition.setOperator(havingNode.operator());
-                condition.setValue(havingNode.rhs());
+                final List<QueryNode> conditionNodes = flatten(havingNode.condition());
+
+                for (QueryNode queryNode : conditionNodes) {
+                    applyNode(queryNode, havingNode, selectSpec);
+                }
             }
             case OrderByNode orderByNode -> selectSpec.addOrderBy(orderByNode.expression(), orderByNode.ascending());
             case LimitNode limitNode -> {
@@ -153,5 +205,18 @@ public final class QueryCompiler {
                 }
             }
         }
+    }
+
+    private static List<QueryNode> flatten(final QueryNode node) {
+        final List<QueryNode> nodes = new ArrayList<>();
+        QueryNode current = node;
+
+        while (current != null) {
+            nodes.add(current);
+            current = current.previous();
+        }
+
+        Collections.reverse(nodes);
+        return nodes;
     }
 }

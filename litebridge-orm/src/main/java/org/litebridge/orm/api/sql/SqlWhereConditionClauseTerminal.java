@@ -40,7 +40,7 @@ public final class SqlWhereConditionClauseTerminal
 
     @Override
     public SqlWhereConditionClause and(final String column) {
-        final Column spiColumn = new Column(selectSpec.getTable(), column);
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
         return and(new SelectColumnSpec(spiColumn));
     }
 
@@ -56,7 +56,7 @@ public final class SqlWhereConditionClauseTerminal
 
     @Override
     public SqlWhereConditionClause or(final String column) {
-        final Column spiColumn = new Column(selectSpec.getTable(), column);
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
         return or(new SelectColumnSpec(spiColumn));
     }
 
@@ -72,7 +72,7 @@ public final class SqlWhereConditionClauseTerminal
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final String... columns) {
-        return groupBy(selectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
+        return groupBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override
@@ -83,7 +83,7 @@ public final class SqlWhereConditionClauseTerminal
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return orderBy(selectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
+        return orderBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override
@@ -92,10 +92,7 @@ public final class SqlWhereConditionClauseTerminal
     }
 
     private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = selectSpec.currentWhereConditionGroupSpec().newCondition(logicOperator, expression);
-
-        return new SqlWhereConditionClause(conditionSpec,
-                delegate.litebridgeContext(),
+        return new SqlWhereConditionClause(delegate.litebridgeContext(),
                 logicOperator,
                 expression,
                 delegate.node(),
@@ -103,10 +100,12 @@ public final class SqlWhereConditionClauseTerminal
     }
 
     private SqlWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-        final ConditionGroupSpec subgroup = selectSpec.pushWhereConditionGroup(logicOperator);
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, selectSpec.getTable(), delegate.litebridgeContext().fromClauseEngine());
-        query.apply(conditionClauseStart);
-        selectSpec.popWhereConditionGroup();
-        return this;
+//        final ConditionGroupSpec subgroup = selectSpec.pushWhereConditionGroup(logicOperator);
+//        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, selectSpec.getTable(), delegate.litebridgeContext().fromClauseEngine());
+//        query.apply(conditionClauseStart);
+//        selectSpec.popWhereConditionGroup();
+//        return this;
+        //TODO: reimplement
+        throw new UnsupportedOperationException("Need to reimplement");
     }
 }

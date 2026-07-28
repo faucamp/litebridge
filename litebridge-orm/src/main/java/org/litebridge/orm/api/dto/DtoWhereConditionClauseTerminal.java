@@ -2,16 +2,17 @@ package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
-import org.litebridge.orm.api.select.model.GroupBySpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
@@ -47,7 +48,7 @@ public final class DtoWhereConditionClauseTerminal<DTO>
      */
     public DtoWhereConditionClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);
-        ormTable = delegate.table();
+        ormTable = delegate.ormTable();
     }
 
     @Override
@@ -83,8 +84,8 @@ public final class DtoWhereConditionClauseTerminal<DTO>
     }
 
     @Override
-    public DtoGroupByClauseTerminal<DTO> groupBy(final String... columns) {
-        return groupBy(selectSpec.createSelectFieldSpecs(columns).toArray(ExpressionSpec[]::new));
+    public DtoGroupByClauseTerminal<DTO> groupBy(final String... fields) {
+        return groupBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
     }
 
     @Override
@@ -95,7 +96,7 @@ public final class DtoWhereConditionClauseTerminal<DTO>
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return orderBy(selectSpec.createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
+        return orderBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
     }
 
     @Override
@@ -104,10 +105,7 @@ public final class DtoWhereConditionClauseTerminal<DTO>
     }
 
     private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = selectSpec.currentWhereConditionGroupSpec().newCondition(logicOperator, expression);
-
-        return new DtoWhereConditionClause<>(conditionSpec,
-                delegate.litebridgeContext(),
+        return new DtoWhereConditionClause<>(delegate.litebridgeContext(),
                 logicOperator,
                 expression,
                 delegate.node(),
@@ -115,10 +113,20 @@ public final class DtoWhereConditionClauseTerminal<DTO>
     }
 
     private DtoWhereConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        final ConditionGroupSpec conditionGroupSpec = selectSpec.pushWhereConditionGroup(logicOperator);
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(conditionGroupSpec, ormTable, delegate.litebridgeContext().fromClauseEngine());
-        query.apply(conditionClauseStart);
-        selectSpec.popWhereConditionGroup();
+//        final ConditionGroupSpec conditionGroupSpec = selectSpec.pushWhereConditionGroup(logicOperator);
+        if (!(delegate.node() instanceof WhereNode whereNode)) {
+            throw new IllegalArgumentException("AST error: Expected a WhereNode but got " + delegate.node());
+        }
+
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
+        AbstractCbConditionClauseTerminal terminal = query.apply(conditionClauseStart);
+//        selectSpec.popWhereConditionGroup();
+//        return this;
+
+
+        //TODO: reimplement
+//        throw new UnsupportedOperationException("Need to reimplement");
+        whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, terminal.node()));
         return this;
     }
 }

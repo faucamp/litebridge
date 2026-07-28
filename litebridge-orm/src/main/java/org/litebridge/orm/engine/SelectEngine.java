@@ -43,7 +43,7 @@ public class SelectEngine implements SelectApi {
 
     @Override
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        return new FromClauseStart(new SelectNode(null, new ExpressionSpec[0], null), fromClauseEngine).from(dtoClass, relatedDtoStrategy);
+        return fromClauseEngine.from(new SelectNode(null, new ExpressionSpec[0], null), dtoClass, relatedDtoStrategy);
     }
 
     @Override

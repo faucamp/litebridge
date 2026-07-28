@@ -139,19 +139,31 @@ public class BasicE2eTest extends AbstractE2eTest {
         person.setAge(20);
         person.setEyeColour("blue");
 
-        litebridge.save(person);
+        final Person person2 = new Person();
+        person2.setName("Alice");
+        person2.setSurname("Jones");
+        person2.setAge(35);
+        person2.setEyeColour("green");
+
+        final Person person3 = new Person();
+        person3.setName("Alice");
+        person3.setSurname("West");
+        person3.setAge(29);
+        person3.setEyeColour("green");
+
+        litebridge.save(person, person2, person3);
 
         // When
         final Person result = litebridge.select(Person.class)
                 .where("name").eq("Alice")
                 .and(q ->
                         q.where("surname").eq("Jones")
-                                .or("age").eq(20)
+                                .or("age").eq(21)
                                 .or(q2 -> q2.where("eyeColour").eq("green")
                                         .and("age").gt(35)))
                 .oneOrThrow();
 
-        assertEquals(person, result);
+        assertEquals(person2, result);
     }
 
     @TestTemplate

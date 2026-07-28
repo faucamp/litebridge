@@ -1,11 +1,14 @@
 package org.litebridge.orm.api.dto.update;
 
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.select.ast.ConditionContext;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
-import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.update.UpdateWhereConditionClause;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
+
+import java.util.function.Function;
 
 /**
  * Represents a where condition clause for a DTO update.
@@ -22,11 +25,10 @@ public class DtoUpdateWhereConditionClause<DTO>
         DtoUpdateWhereConditionClause<DTO>,
         DtoUpdateWhereConditionClauseTerminal<DTO>> {
 
-    public DtoUpdateWhereConditionClause(final ConditionSpec conditionSpec,
-                                         final LitebridgeContext litebridgeContext,
+    public DtoUpdateWhereConditionClause(final LitebridgeContext litebridgeContext,
                                          final LogicOperator logicOperator,
                                          final ExpressionSpec lhs,
-                                         final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, DtoUpdateWhereConditionClauseTerminal<DTO>> terminalRecreator) {
-        super(conditionSpec, litebridgeContext, logicOperator, lhs, null, terminalRecreator);
+                                         final Function<QueryNode, DtoUpdateWhereConditionClauseTerminal<DTO>> terminalRecreator) {
+        super(litebridgeContext, logicOperator, lhs, ConditionContext.WHERE, null, terminalRecreator);
     }
 }

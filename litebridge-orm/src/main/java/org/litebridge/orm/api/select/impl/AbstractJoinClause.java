@@ -15,10 +15,8 @@ public abstract class AbstractJoinClause<DTO,
         implements JoinClause<DTO, JCC, JCCT> {
 
     protected final AbstractSelector<DTO, SSP> delegate;
-    protected final JSP joinSpec;
 
-    public AbstractJoinClause(final JSP joinSpec, final AbstractSelector<DTO, SSP> delegate) {
-        this.joinSpec = joinSpec;
+    public AbstractJoinClause(final AbstractSelector<DTO, SSP> delegate) {
         this.delegate = delegate;
     }
 }

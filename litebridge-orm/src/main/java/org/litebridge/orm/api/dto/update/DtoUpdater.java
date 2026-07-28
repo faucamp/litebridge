@@ -4,6 +4,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
@@ -17,6 +18,8 @@ import org.litebridge.orm.meta.QFInspector;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+
+import java.util.function.Function;
 
 /**
  * Updater for DTOs.
@@ -76,18 +79,19 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
     }
 
     DtoUpdateWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        //TODO: fix
         final ConditionSpec conditionSpec = updateSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
-
-        final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, DtoUpdateWhereConditionClauseTerminal<DTO>> recreator = n -> new DtoUpdateWhereConditionClauseTerminalImpl<>(this);
-
-        return new DtoUpdateWhereConditionClause<>(conditionSpec, litebridgeContext, logicOperator, expression, recreator);
+        final Function<QueryNode, DtoUpdateWhereConditionClauseTerminal<DTO>> recreator = n -> new DtoUpdateWhereConditionClauseTerminalImpl<>(this);
+        return new DtoUpdateWhereConditionClause<>(litebridgeContext, logicOperator, expression, recreator);
     }
 
     DtoUpdateWhereConditionClauseTerminalImpl<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        final ConditionGroupSpec subgroup = updateSpec.pushConditionGroupSpec(logicOperator);
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, updateSpec.dtoTable(), litebridgeContext.fromClauseEngine());
-        query.apply(conditionClauseStart);
-        updateSpec.popConditionGroupSpec();
-        return new DtoUpdateWhereConditionClauseTerminalImpl<>(this);
+//        final ConditionGroupSpec subgroup = updateSpec.pushConditionGroupSpec(logicOperator);
+//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, updateSpec.dtoTable(), litebridgeContext.fromClauseEngine());
+//        query.apply(conditionClauseStart);
+//        updateSpec.popConditionGroupSpec();
+//        return new DtoUpdateWhereConditionClauseTerminalImpl<>(this);
+        //TODO: reimplement
+        throw new UnsupportedOperationException("Need to reimplement");
     }
 }

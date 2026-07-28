@@ -1,10 +1,7 @@
 package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.select.ast.HavingNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractGroupByClauseTerminal;
-import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
@@ -29,15 +26,12 @@ public class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal
      */
     public DtoGroupByClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);
-        this.ormTable = delegate.table();
+        this.ormTable = delegate.ormTable();
     }
 
     @Override
     public DtoHavingConditionClause<DTO> having(final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = selectSpec.currentHavingConditionGroupSpec().newCondition(LogicOperator.NOOP, expression);
-
-        return new DtoHavingConditionClause<>(conditionSpec,
-                delegate.litebridgeContext(),
+        return new DtoHavingConditionClause<>(delegate.litebridgeContext(),
                 LogicOperator.NOOP,
                 expression,
                 delegate.node(),
@@ -46,7 +40,7 @@ public class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return orderBy(selectSpec.createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
+        return orderBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
     }
 
     @Override

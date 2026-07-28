@@ -22,10 +22,7 @@ public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
 
     @Override
     public SqlHavingConditionClause having(final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = selectSpec.currentHavingConditionGroupSpec().newCondition(LogicOperator.NOOP, expression);
-
-        return new SqlHavingConditionClause(conditionSpec,
-                delegate.litebridgeContext(),
+        return new SqlHavingConditionClause(delegate.litebridgeContext(),
                 LogicOperator.NOOP,
                 expression,
                 delegate.node(),
@@ -34,7 +31,7 @@ public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return orderBy(selectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
+        return orderBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override

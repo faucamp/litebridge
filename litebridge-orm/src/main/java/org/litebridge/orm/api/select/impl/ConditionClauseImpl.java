@@ -8,10 +8,13 @@ import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.dto.DtoWhereConditionClause;
 import org.litebridge.orm.api.dto.DtoHavingConditionClause;
-import org.litebridge.orm.api.select.model.ConditionSpec;
+import org.litebridge.orm.api.select.ast.ConditionContext;
+import org.litebridge.orm.api.select.ast.HavingNode;
+import org.litebridge.orm.api.select.ast.ConditionNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.QueryCompiler;
 import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 
@@ -27,24 +30,25 @@ public class ConditionClauseImpl<DTO,
 
         implements ConditionClause<DTO, SELF, CCT> {
 
-    private final ConditionSpec conditionSpec;
     private final LitebridgeContext litebridgeContext;
-    private final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, CCT> terminalRecreator;
+    private final Function<QueryNode, CCT> terminalRecreator;
     private final LogicOperator logicOperator;
     private final ExpressionSpec lhs;
-    private final org.litebridge.orm.api.select.ast.QueryNode node;
+    private final ConditionContext conditionContext;
+    private final QueryNode node;
     private @Nullable String relationshipField;
 
-    public ConditionClauseImpl(final ConditionSpec conditionSpec,
-                               final LitebridgeContext litebridgeContext,
+
+    public ConditionClauseImpl(final LitebridgeContext litebridgeContext,
                                final LogicOperator logicOperator,
                                final ExpressionSpec lhs,
-                               final org.litebridge.orm.api.select.ast.QueryNode node,
-                               final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, CCT> terminalRecreator) {
-        this.conditionSpec = conditionSpec;
+                               final ConditionContext conditionContext,
+                               final QueryNode node,
+                               final Function<QueryNode, CCT> terminalRecreator) {
         this.litebridgeContext = litebridgeContext;
         this.logicOperator = logicOperator;
         this.lhs = lhs;
+        this.conditionContext = conditionContext;
         this.node = node;
         this.terminalRecreator = terminalRecreator;
     }
@@ -66,8 +70,7 @@ public class ConditionClauseImpl<DTO,
     }
 
     public CCT using(final String column) {
-        conditionSpec.setOperator(Operator.USING);
-        final org.litebridge.orm.api.select.ast.QueryNode newNode = new org.litebridge.orm.api.select.ast.JoinConditionNode(node, LogicOperator.NOOP, null, Operator.USING, column, relationshipField);
+        final QueryNode newNode = new ConditionNode(node, LogicOperator.NOOP, null, Operator.USING, column, relationshipField);
         return terminalRecreator.apply(newNode);
     }
 
@@ -275,7 +278,6 @@ public class ConditionClauseImpl<DTO,
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
     private CCT condition(final Operator operator, @Nullable final Object value) {
-        conditionSpec.setValue(value);
         final Operator translatedOperator;
 
         if (value == null) {
@@ -290,20 +292,21 @@ public class ConditionClauseImpl<DTO,
             translatedOperator = operator;
         }
 
-        conditionSpec.setOperator(translatedOperator);
+        final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value, relationshipField);
 
-        final org.litebridge.orm.api.select.ast.QueryNode newNode;
-        if (this instanceof DtoWhereConditionClause || this.getClass().getName().contains("Where")) {
-            newNode = new org.litebridge.orm.api.select.ast.WhereNode(node, logicOperator, lhs, translatedOperator, value);
-        } else if (this instanceof DtoHavingConditionClause || this.getClass().getName().contains("Having")) {
-            newNode = new org.litebridge.orm.api.select.ast.HavingNode(node, logicOperator, lhs, translatedOperator, value);
-        } else if (this.getClass().getName().contains("Join")) {
-            newNode = new org.litebridge.orm.api.select.ast.JoinConditionNode(node, logicOperator, lhs, translatedOperator, value, relationshipField);
-        } else {
-            newNode = node; // Fallback
-        }
+        //TODO: fix these checks, or move out the code
+//        if (this instanceof DtoWhereConditionClause|| this.getClass().getName().contains("Where")) {
+//            newNode = new WhereNode(node, logicOperator, lhs, translatedOperator, value);
+//        } else if (this instanceof DtoHavingConditionClause || this.getClass().getName().contains("Having")) {
+//            newNode = new HavingNode(node, logicOperator, lhs, translatedOperator, value);
+//        } else if (this.getClass().getName().contains("Join")) {
+//            newNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value, relationshipField);
+//        } else {
+//            // Fallback
+//            newNode = node;
+//        }
 
-        return terminalRecreator.apply(newNode);
+        return terminalRecreator.apply(conditionNode);
     }
 
     private SelectSpec createSelectSpec(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {

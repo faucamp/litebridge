@@ -3,6 +3,8 @@ package org.litebridge.orm.api.sql;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.Table;
+import org.litebridge.orm.api.select.ast.LimitNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
@@ -11,30 +13,22 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
 
     private final TableRegistry tableRegistry;
+    private final Table table;
 
-    public SqlSelector(final TransactionalDatabaseProvider databaseProvider,
+    public SqlSelector(final Table table,
+                       final TransactionalDatabaseProvider databaseProvider,
                        final TableRegistry tableRegistry,
-                       final LitebridgeContext litebridgeContext,
+                       final LitebridgeContext<SqlSelectSpec> litebridgeContext,
                        final QueryNode node) {
-        this(new SqlSelectSpec(litebridgeContext), databaseProvider, tableRegistry, litebridgeContext, node);
-    }
-
-    private SqlSelector(final SqlSelectSpec selectSpec,
-                        final TransactionalDatabaseProvider databaseProvider,
-                        final TableRegistry tableRegistry,
-                        final LitebridgeContext litebridgeContext,
-                        final QueryNode node) {
-        super(selectSpec, databaseProvider, tableRegistry, Row.class, litebridgeContext, node);
+        super(databaseProvider, tableRegistry, Row.class, litebridgeContext, node);
         this.tableRegistry = tableRegistry;
-        if (!selectSpec.isSelectExpressionMapperSet()) {
-            selectSpec.setProtoExpressionResolver(new SqlProtoExpressionResolver(selectSpec));
-        }
+        this.table = table;
     }
 
     @Override
@@ -58,7 +52,8 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
 
     @Override
     public SqlSelector withNode(final QueryNode node) {
-        return new SqlSelector(selectSpec, databaseProvider, tableRegistry, litebridgeContext, node);
+        this.node = node;
+        return this;
     }
 
     @Override
@@ -76,15 +71,11 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
         return executeQuery();
     }
 
-    @Override
-    protected List<Row> executeQuery() {
-        return executeQuery(selectSpec);
-    }
-
     private @Nullable Row fetchOneRecord(final boolean first) {
         final List<Row> resultList;
+
         if (first) {
-            resultList = ((SqlSelector) withNode(new org.litebridge.orm.api.select.ast.LimitNode(node, java.util.Optional.of(1), java.util.Optional.empty()))).executeQuery();
+            resultList = withNode(new LimitNode(node, Optional.of(1), Optional.empty())).executeQuery();
         } else {
             resultList = executeQuery();
         }
@@ -99,8 +90,8 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
 
         return resultList.getFirst();
     }
-    @Override
-    public SqlSelectSpec selectSpec() {
-        return (SqlSelectSpec) super.selectSpec();
+
+    Table table() {
+        return table;
     }
 }

@@ -3,6 +3,7 @@ package org.litebridge.orm.api.select;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -23,7 +24,7 @@ public final class FromClauseStartTypeOverride<TypeOverride> extends AbstractFro
      * @param fromClauseEngine the from clause engine.
      */
     public FromClauseStartTypeOverride(final Class<TypeOverride> typeOverride,
-                                       final QueryNode node,
+                                       final SelectNode node,
                                        final FromClauseEngine fromClauseEngine) {
         super(node, fromClauseEngine);
         this.typeOverride = typeOverride;

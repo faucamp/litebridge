@@ -2,16 +2,17 @@ package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.WhereConditionClause;
+import org.litebridge.orm.api.select.ast.ConditionContext;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
 /**
  * DTO where condition clause.
+ *
  * @param <DTO> the DTO type.
  */
 public final class DtoWhereConditionClause<DTO>
@@ -28,12 +29,11 @@ public final class DtoWhereConditionClause<DTO>
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 
-    public DtoWhereConditionClause(final ConditionSpec conditionSpec,
-                                   final LitebridgeContext litebridgeContext,
+    public DtoWhereConditionClause(final LitebridgeContext litebridgeContext,
                                    final LogicOperator logicOperator,
                                    final ExpressionSpec lhs,
                                    final QueryNode node,
                                    final Function<QueryNode, DtoWhereConditionClauseTerminal<DTO>> terminalRecreator) {
-        super(conditionSpec, litebridgeContext, logicOperator, lhs, node, terminalRecreator);
+        super(litebridgeContext, logicOperator, lhs, ConditionContext.WHERE, node, terminalRecreator);
     }
 }
