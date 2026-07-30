@@ -137,7 +137,7 @@ public class Table extends Aliased {
 
     @Override
     public int hashCode() {
-        return Objects.hash(catalog, schema, name());
+        return Objects.hash(catalog, schema, name(), alias());
     }
 
     @Override

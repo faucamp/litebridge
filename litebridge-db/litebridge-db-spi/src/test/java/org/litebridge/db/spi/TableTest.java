@@ -266,7 +266,7 @@ class TableTest {
     }
 
     @Test
-    void testHashCode_ignoresAlias() {
+    void testHashCode_includesAlias() {
         // Given
         final Table table1 = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", "aliasOne");
         final Table table2 = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", "aliasTwo");
@@ -276,6 +276,6 @@ class TableTest {
         final int result2 = table2.hashCode();
 
         // Then
-        assertEquals(result1, result2);
+        assertTrue(result1 != result2);
     }
 }

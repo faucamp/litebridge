@@ -3,8 +3,10 @@ package org.litebridge.orm.api.sql;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
@@ -92,20 +94,30 @@ public final class SqlWhereConditionClauseTerminal
     }
 
     private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        if (delegate.node() instanceof WhereNode whereNode) {
+            return new SqlWhereConditionClause(delegate.litebridgeContext(),
+                    logicOperator,
+                    expression,
+                    whereNode.condition(),
+                    node -> new SqlWhereConditionClauseTerminal((SqlSelector) delegate.withNode(whereNode.withCondition(node))));
+        }
+
         return new SqlWhereConditionClause(delegate.litebridgeContext(),
                 logicOperator,
                 expression,
-                delegate.node(),
-                node -> new SqlWhereConditionClauseTerminal((SqlSelector) delegate.withNode(node)));
+                null,
+                node -> new SqlWhereConditionClauseTerminal((SqlSelector) delegate.withNode(new WhereNode(delegate.node(), node))));
     }
 
     private SqlWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-//        final ConditionGroupSpec subgroup = selectSpec.pushWhereConditionGroup(logicOperator);
-//        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, selectSpec.getTable(), delegate.litebridgeContext().fromClauseEngine());
-//        query.apply(conditionClauseStart);
-//        selectSpec.popWhereConditionGroup();
-//        return this;
-        //TODO: reimplement
-        throw new UnsupportedOperationException("Need to reimplement");
+        if (!(delegate.node() instanceof WhereNode whereNode)) {
+            throw new IllegalArgumentException("AST error: Expected a WhereNode but got " + delegate.node());
+        }
+
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(((SqlSelector) delegate).table(), delegate.litebridgeContext().fromClauseEngine(), null);
+        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+
+        whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, terminal.node()));
+        return this;
     }
 }

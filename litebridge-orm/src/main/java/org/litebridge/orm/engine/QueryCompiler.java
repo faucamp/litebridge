@@ -46,6 +46,7 @@ public final class QueryCompiler {
     private final TableRegistry tableRegistry;
     private final AliasGenerator aliasGenerator;
     private final Map<Class<?>, List<Table>> aliasHistory = new HashMap<>();
+    private final Map<Table, OrmTable> tableToOrmTableMap = new HashMap<>();
 
     public QueryCompiler(final TableRegistry tableRegistry, final AliasGenerator aliasGenerator) {
         this.tableRegistry = tableRegistry;
@@ -60,6 +61,7 @@ public final class QueryCompiler {
      */
     public void compile(final QueryNode node, final SelectSpec selectSpec) {
         if (selectSpec instanceof DtoDataSpec dds) {
+            tableToOrmTableMap.put(selectSpec.getTable(), dds.dtoTable());
             aliasHistory.computeIfAbsent(dds.dtoTable().dtoClass(), k -> new ArrayList<>()).add(selectSpec.getTable());
         }
 
@@ -89,8 +91,16 @@ public final class QueryCompiler {
             }
             case JoinNode joinNode -> {
                 if (selectSpec instanceof DtoSelectSpec dtoSelectSpec && joinNode.dtoClass() != null) {
-                    final OrmTable joinOrmTable = tableRegistry.getTableOrThrow(joinNode.dtoClass());
+                    final OrmTable joinOrmTable;
+                    if (joinNode.sourceDtoClass() != null) {
+                        joinOrmTable = tableRegistry.getTableInContext(joinNode.dtoClass(), joinNode.sourceDtoClass())
+                                .orElseGet(() -> tableRegistry.getTableOrThrow(joinNode.dtoClass()));
+                    } else {
+                        joinOrmTable = tableRegistry.getTableOrThrow(joinNode.dtoClass());
+                    }
+
                     final Table joinTable = aliasGenerator.aliasTable(joinOrmTable);
+                    tableToOrmTableMap.put(joinTable, joinOrmTable);
 
                     if (joinNode.tableName() != null) {
                         // Intermediate join table (many-to-many)
@@ -290,7 +300,22 @@ public final class QueryCompiler {
         }
 
         if (value instanceof Column column) {
-            final OrmTable ormTable = tableRegistry.getTable(column.table());
+            OrmTable ormTable = tableRegistry.getTable(column.table());
+
+            if (ormTable == null && sourceAlias != null) {
+                final OrmTable sourceOrmTable = tableToOrmTableMap.get(sourceAlias);
+                if (sourceOrmTable != null) {
+                    ormTable = sourceOrmTable.getContextTableRegistry().getTable(column.table());
+                }
+            }
+
+            if (ormTable == null && targetAlias != null) {
+                final OrmTable targetOrmTable = tableToOrmTableMap.get(targetAlias);
+                if (targetOrmTable != null) {
+                    ormTable = targetOrmTable.getContextTableRegistry().getTable(column.table());
+                }
+            }
+
             if (ormTable != null) {
                 Table resolvedTable = null;
 
@@ -326,7 +351,7 @@ public final class QueryCompiler {
     }
 
     private @Nullable Class<?> getTableDtoClass(Table table) {
-        final OrmTable ormTable = tableRegistry.getTable(table);
+        final OrmTable ormTable = tableToOrmTableMap.getOrDefault(table, tableRegistry.getTable(table));
         return ormTable != null ? ormTable.dtoClass() : null;
     }
 }
