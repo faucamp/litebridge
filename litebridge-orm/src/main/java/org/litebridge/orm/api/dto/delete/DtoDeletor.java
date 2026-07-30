@@ -60,9 +60,14 @@ public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implem
     }
 
     DtoDeleteWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        //TODO: fix
         final ConditionSpec conditionSpec = deleteSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
-        final Function<QueryNode, DtoDeleteWhereConditionClauseTerminal<DTO>> recreator = n -> new DtoDeleteWhereConditionClauseTerminalImpl<>(this);
+        final Function<QueryNode, DtoDeleteWhereConditionClauseTerminal<DTO>> recreator = n -> {
+            if (n instanceof org.litebridge.orm.api.select.ast.ConditionNode cn) {
+                conditionSpec.setOperator(cn.operator());
+                conditionSpec.setValue(cn.rhs());
+            }
+            return new DtoDeleteWhereConditionClauseTerminalImpl<>(this);
+        };
         return new DtoDeleteWhereConditionClause<>(litebridgeContext, logicOperator, expression, recreator);
     }
 

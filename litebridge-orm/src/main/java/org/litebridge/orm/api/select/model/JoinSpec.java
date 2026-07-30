@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.model;
 
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.Join;
+import org.litebridge.db.spi.query.LogicOperator;
 
 /**
  * Specification for a database "JOIN" clause.
@@ -28,6 +29,19 @@ public interface JoinSpec {
      * @return the current condition group specification
      */
     ConditionGroupSpec currentConditionGroupSpec();
+
+    /**
+     * Pushes a new condition group specification.
+     *
+     * @param logicOperator the logic operator for the group
+     * @return the new condition group specification
+     */
+    ConditionGroupSpec pushConditionGroupSpec(LogicOperator logicOperator);
+
+    /**
+     * Pops the current condition group specification.
+     */
+    void popConditionGroupSpec();
 
     /**
      * Returns the SPI join object.

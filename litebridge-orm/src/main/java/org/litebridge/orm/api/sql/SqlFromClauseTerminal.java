@@ -6,6 +6,7 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
@@ -38,6 +39,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
 
         return new SqlJoinClause((SqlSelector) delegate, node -> {
             final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", null, table);
+            joinNode.withCondition(node);
             delegate.withNode(joinNode);
             return new SqlJoinConditionClauseTerminal(joinNode, (SqlSelector) delegate);
         });
@@ -79,7 +81,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
         return new SqlWhereConditionClause(delegate.litebridgeContext(),
                 logicOperator,
                 expression,
-                delegate.node(),
-                node -> new SqlWhereConditionClauseTerminal((SqlSelector) delegate.withNode(node)));
+                null,
+                node -> new SqlWhereConditionClauseTerminal((SqlSelector) delegate.withNode(new WhereNode(delegate.node(), node))));
     }
 }

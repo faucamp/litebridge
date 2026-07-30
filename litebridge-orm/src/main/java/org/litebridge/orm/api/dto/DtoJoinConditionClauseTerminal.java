@@ -11,6 +11,7 @@ import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -126,8 +127,9 @@ public final class DtoJoinConditionClauseTerminal<DTO>
             joinTable = tableRegistry.getTableOrThrow(dtoClass);
         }
 
-        return new DtoJoinClause<>((DtoSelector<DTO>) delegate, node -> {
+        return new DtoJoinClause<>((DtoSelector<DTO>) delegate, joinTable, node -> {
             final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+            joinNode.withCondition(node);
             delegate.withNode(joinNode);
             return new DtoJoinConditionClauseTerminal<>(joinNode, (DtoSelector<DTO>) delegate);
         });
@@ -155,24 +157,29 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     }
 
     private DtoJoinConditionClause<DTO> joinImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> recreator = n -> new DtoJoinConditionClauseTerminal<>(joinNode, (DtoSelector<DTO>) delegate.withNode(n));
-        return new DtoJoinConditionClause<>(delegate.litebridgeContext(), logicOperator, expression, delegate.node(), recreator);
+        final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> recreator = n -> {
+            joinNode.withCondition(n);
+            return this;
+        };
+        return new DtoJoinConditionClause<>(delegate.litebridgeContext(), logicOperator, expression, joinNode.condition(), recreator);
     }
 
     private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression, final DtoSelector<DTO> newDelegate) {
         return new DtoWhereConditionClause<>(delegate.litebridgeContext(),
                 logicOperator,
                 expression,
-                delegate.node(),
-                node -> new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(node)));
+                null,
+                node -> new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new WhereNode(delegate.node(), node))));
     }
 
     private DtoJoinConditionClauseTerminal<DTO> joinImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(joinSpec.dtoTable(), delegate.litebridgeContext().fromClauseEngine(), null);
-//        final AbstractCbConditionClauseTerminal<DTO> result = query.apply(conditionClauseStart);
-//        delegate.withNode(new ConditionGroupNode(delegate.node()));
-//        return this;
-        //TODO: reimplement
-        throw new UnsupportedOperationException("Need to reimplement");
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
+        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        final QueryNode conditionNode = terminal.node();
+
+        final ConditionGroupNode groupNode = new ConditionGroupNode(joinNode.condition(), logicOperator, conditionNode);
+        joinNode.withCondition(groupNode);
+
+        return this;
     }
 }

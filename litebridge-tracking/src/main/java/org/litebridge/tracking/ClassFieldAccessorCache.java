@@ -64,18 +64,31 @@ public class ClassFieldAccessorCache {
      * @throws IllegalArgumentException if the field cannot be found
      */
     public FieldAccessor fieldAccessorOrThrow(final Class<?> dtoClass, final String field) {
+        final FieldAccessor fieldAccessor = fieldAccessorOrNull(dtoClass, field);
+
+        if (fieldAccessor == null) {
+            throw new IllegalArgumentException("No field accessor found for field '" + field + "' in class " + dtoClass.getName());
+        }
+
+        return fieldAccessor;
+    }
+
+    /**
+     * Retrieves a {@link FieldAccessor} for the specified field path, or {@code null} if it doesn't exist.
+     *
+     * @param dtoClass the class containing the field
+     * @param field    the field path (can be dot-separated for nested fields)
+     * @return the field accessor, or {@code null} if not found
+     */
+    public @org.jspecify.annotations.Nullable FieldAccessor fieldAccessorOrNull(final Class<?> dtoClass, final String field) {
         if (field.indexOf('.') != -1) {
             final String[] subFieldAndRestOfPath = StringUtils.splitOnce(field, '.');
-            final FieldAccessor subFieldAccessor = fieldAccessor(dtoClass, subFieldAndRestOfPath[0]);
+            final Map<String, FieldAccessor> accessors = ensureFieldAccessors(dtoClass);
+            final FieldAccessor subFieldAccessor = accessors.get(subFieldAndRestOfPath[0]);
+            if (subFieldAccessor == null) return null;
             return chain(new FieldAccessorChain(subFieldAccessor, field, this), subFieldAndRestOfPath[1]);
         } else {
-            final FieldAccessor fieldAccessor = ensureFieldAccessors(dtoClass).get(field);
-
-            if (fieldAccessor == null) {
-                throw new IllegalArgumentException("No field accessor found for field '" + field + "' in class " + dtoClass.getName());
-            }
-
-            return fieldAccessor;
+            return ensureFieldAccessors(dtoClass).get(field);
         }
     }
 

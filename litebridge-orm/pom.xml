@@ -40,7 +40,7 @@
                     <argLine>
                         @{argLine}
                         -javaagent:${org.mockito:mockito-core:jar}
-                        --add-reads litebridge.orm=litebridge.db.spi.impl,litebridge.db.oracle
+                        --add-reads litebridge.orm=litebridge.db.spi.impl,litebridge.db.oracle,org.junit.jupiter.api
                         --add-opens litebridge.orm/org.litebridge.orm=litebridge.commons
                         --add-opens litebridge.orm/org.litebridge.orm=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridge.orm.api.dto=litebridge.commons
@@ -86,7 +86,7 @@
                     </includes>
                     <argLine>
                         @{argLine}
-                        --add-reads litebridge.orm=litebridge.db.spi.impl,litebridge.db.oracle
+                        --add-reads litebridge.orm=litebridge.db.spi.impl,litebridge.db.oracle,org.junit.jupiter.api
                         --add-opens litebridge.orm/org.litebridge.orm=litebridge.commons
                         --add-opens litebridge.orm/org.litebridge.orm=litebridge.tracking
                         --add-opens litebridge.orm/org.litebridge.orm.api.dto=litebridge.commons

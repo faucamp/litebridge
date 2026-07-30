@@ -79,9 +79,14 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
     }
 
     DtoUpdateWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        //TODO: fix
         final ConditionSpec conditionSpec = updateSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
-        final Function<QueryNode, DtoUpdateWhereConditionClauseTerminal<DTO>> recreator = n -> new DtoUpdateWhereConditionClauseTerminalImpl<>(this);
+        final Function<QueryNode, DtoUpdateWhereConditionClauseTerminal<DTO>> recreator = n -> {
+            if (n instanceof org.litebridge.orm.api.select.ast.ConditionNode cn) {
+                conditionSpec.setOperator(cn.operator());
+                conditionSpec.setValue(cn.rhs());
+            }
+            return new DtoUpdateWhereConditionClauseTerminalImpl<>(this);
+        };
         return new DtoUpdateWhereConditionClause<>(litebridgeContext, logicOperator, expression, recreator);
     }
 

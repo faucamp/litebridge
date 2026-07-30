@@ -141,8 +141,9 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         }
 
 
-        return new DtoJoinClause<>((DtoSelector<DTO>) delegate, node -> {
+        return new DtoJoinClause<>((DtoSelector<DTO>) delegate, joinTable, node -> {
             final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+            joinNode.withCondition(node);
             delegate.withNode(joinNode);
             return new DtoJoinConditionClauseTerminal<>(joinNode, (DtoSelector<DTO>) delegate);
         });

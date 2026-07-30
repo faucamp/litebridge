@@ -3,9 +3,12 @@ package org.litebridge.orm.api.dto;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
+import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -18,6 +21,7 @@ import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.meta.QFInspector;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.MappedManyToMany;
+import org.litebridge.orm.persistence.MappedOneToMany;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.tracking.ClassFieldAccessorCache;
@@ -38,6 +42,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         DtoJoinSpec> {
 
     private final OrmTable table;
+    private final OrmTable targetTable;
     private final AliasGenerator aliasGenerator;
     private final ClassFieldAccessorCache classFieldAccessorCache;
     private final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> terminalCreator;
@@ -47,9 +52,10 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
      *
      * @param delegate the selector delegate for further query building
      */
-    public DtoJoinClause(final DtoSelector<DTO> delegate, final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> terminalCreator) {
+    public DtoJoinClause(final DtoSelector<DTO> delegate, final OrmTable targetTable, final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> terminalCreator) {
         super(delegate);
         table = delegate.ormTable();
+        this.targetTable = targetTable;
         this.aliasGenerator = delegate.dtoAliasRegistry();
         this.classFieldAccessorCache = delegate.classFieldAccessorCache();
         this.terminalCreator = terminalCreator;
@@ -63,29 +69,21 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
      * @return an instance of the join condition clause to allow further configuration
      */
     public DtoJoinConditionClauseTerminal<DTO> on(final String field) {
-        // Check if this is an inverse join
-        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(table.dtoClass(), field);
+        // Try to find the field in the source table first (standard forward join or 1:N from source)
+        final FieldAccessor sourceFieldAccessor = classFieldAccessorCache.fieldAccessorOrNull(table.dtoClass(), field);
 
-//        return table.getOneToManyMappingForField(fieldAccessor)
-//                // Inverse join
-//                .map(mappedOneToMany -> {
-//                    final ConditionNode conditionNode = new ConditionNode(delegate.node(), LogicOperator.NOOP, )
-//                    joinSpec.setCollectionField(fieldAccessor);
-//                    return joinOn(joinSpec.dtoTable(), joinSpec.table(), joinSpec.dtoTable().getColumnForFieldName(mappedOneToMany.mappedByField().name()), fieldAccessor.name());
-//                })
-//                .map(terminal -> (DtoJoinConditionClauseTerminal<DTO>) terminal)
-//                .orElseGet(() -> {
-//                    final DtoJoinConditionClauseTerminal<DTO> terminal = table.getManyToManyMappingForField(fieldAccessor)
-//                            // Many-to-many join
-//                            .map(mappedManyToMany -> {
-//                                joinSpec.setCollectionField(fieldAccessor);
-//                                return manyToManyJoin(mappedManyToMany);
-//                            })
-//                            .orElseGet(() -> joinOn(table, fieldAccessor.name()));
-//                    return terminal;
-//                });
-        //TODO: reimplement
-        throw new UnsupportedOperationException("Need to reimplement");
+        if (sourceFieldAccessor != null) {
+            return table.getOneToManyMappingForField(sourceFieldAccessor)
+                    .map(m -> inverseJoin(m, field))
+                    .orElseGet(() -> table.getManyToManyMappingForField(sourceFieldAccessor)
+                            .map(m -> manyToManyJoin(m, field))
+                            .orElseGet(() -> joinOnForward(field, field))
+                    );
+        }
+
+        // Field not in source; try target table
+        final FieldAccessor targetFieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(targetTable.dtoClass(), field);
+        return joinOnInverse(targetFieldAccessor.name(), field);
     }
 
     /**
@@ -103,125 +101,70 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         };
     }
 
-    private DtoJoinConditionClauseTerminal<DTO> joinOn(final OrmTable ormTable, final String field) {
-//        final FieldAccessor sourceField = classFieldAccessorCache.fieldAccessorOrThrow(ormTable.dtoClass(), field);
-//        joinSpec.dtoTable().getOneToManyMappings().stream()
-//                .filter(m -> m.mappedByField().equals(sourceField))
-//                .findFirst()
-//                .ifPresent(m -> joinSpec.setReverseCollectionField(m.collection()));
-//
-//        return joinOn(joinSpec.dtoTable(), joinSpec.table(), ormTable.getColumnForFieldName(field), field);
-        //TODO: reimplement
-        throw new UnsupportedOperationException("Need to reimplement");
+    /**
+     * Adds a join ON condition based on a query condition builder.
+     *
+     * @param builder the builder for the join condition
+     * @return an instance of the join condition clause to allow further configuration
+     */
+    public DtoJoinConditionClauseTerminal<DTO> on(final QueryConditionBuilder<DTO> builder) {
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(targetTable, delegate.litebridgeContext().fromClauseEngine(), null);
+        final AbstractCbConditionClauseTerminal<DTO> terminal = builder.apply(conditionClauseStart);
+        final QueryNode conditionNode = terminal.node();
+
+        final ConditionGroupNode groupNode = new ConditionGroupNode(null, LogicOperator.NOOP, conditionNode);
+        return terminalCreator.apply(groupNode);
     }
 
-    private DtoJoinConditionClauseTerminal<DTO> joinOn(final OrmTable rightOrmTable, final Table rightTable, final ColumnMetaData rightColumnMetaData, final @Nullable String field) {
-        final QueryNode joinNode = delegate.node();
+    private DtoJoinConditionClauseTerminal<DTO> joinOnForward(final String lookupField, final String relationshipField) {
+        final ColumnMetaData sourceColumnMetaData = table.getColumnForFieldName(lookupField);
 
-        if (rightColumnMetaData.getJoinColumn() == null) {
-            throw new IllegalStateException("No join column specified for column '%s' %s".formatted(rightColumnMetaData.name(), field != null ? "mapped to field '%s'".formatted(field) : "(no field)"));
+        if (sourceColumnMetaData.getJoinColumn() == null) {
+            throw new IllegalStateException("No join column specified for column '%s' mapped to field '%s' in table '%s'".formatted(sourceColumnMetaData.name(), lookupField, table.getMetaData().name()));
         }
 
-        final List<SelectFieldSpec> joinFieldColumns = rightOrmTable.getMetaData().columns().stream()
-                .map(joinColumn -> {
-                    final FieldAccessor joinColumnField = rightOrmTable.getFieldForColumnName(joinColumn.name());
-                    final Column column = aliasGenerator.aliasColumn(rightTable, joinColumn);
-                    return new SelectFieldSpec(joinColumnField, column);
-                })
-                .toList();
+        final Column sourceColumn = sourceColumnMetaData.toColumn();
+        final ColumnMetaData targetColumnMetaData = targetTable.getColumnMetaData(sourceColumnMetaData.getJoinColumn());
+        final Column targetColumn = targetColumnMetaData.toColumn();
 
-        // Extend selects
-//        selectSpec.addExpressions(joinFieldColumns);
-//
-//        // Create JOIN clause
-//        joinSpec.setFieldColumns(joinFieldColumns.stream().map(selectField -> new DtoSelectSpec.FieldColumn(selectField.field(), selectField.getColumn())).toList());
-//        final Column rightColumn = rightColumnMetaData.toColumn();
-//
-//        final Column leftColumn = selectSpec.getExpressions().stream()
-//                .filter(expression -> expression instanceof SelectFieldSpec)
-//                .map(expression -> ((SelectFieldSpec) expression).getColumn())
-//                .filter(column -> column.table().equalsIgnoreAlias(rightColumnMetaData.table())
-//                        && column.equalsIgnoreAlias(rightColumn))
-//                .findFirst().orElseThrow(() -> new IllegalArgumentException("Left JOIN column not found"));
-//
-//        final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(leftColumn));
-//        final ColumnMetaData targetColumnMetaData = rightOrmTable.getColumnMetaData(rightColumnMetaData.getJoinColumn());
-//
-//        final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> recreator = n -> new DtoJoinConditionClauseTerminal<>(joinSpec, (DtoSelector<DTO>) delegate.withNode(n), aliasGenerator);
-//
-//        final DtoJoinConditionClause<DTO> conditionClause = new DtoJoinConditionClause<>(delegate.litebridgeContext(), LogicOperator.NOOP, new SelectColumnSpec(leftColumn), joinNode, recreator)
-//                .withRelationshipField(field);
-//
-//        if (rightColumnMetaData.name().equals(targetColumnMetaData.name())) {
-//            return conditionClause.using(targetColumnMetaData.name());
-//        } else {
-//            final Column targetColumn = joinFieldColumns.stream()
-//                    .map(SelectFieldSpec::getColumn)
-//                    .filter(c -> c.name().equals(targetColumnMetaData.name()))
-//                    .findFirst().orElseThrow(() -> new IllegalArgumentException("Target JOIN column not found"));
-//            return conditionClause.eq(targetColumn);
-//        }
-        //TODO: reimplement
-        throw new UnsupportedOperationException("Need to reimplement");
+        final ConditionNode conditionNode;
+        if (sourceColumnMetaData.name().equals(targetColumnMetaData.name())) {
+            conditionNode = new ConditionNode(null, LogicOperator.NOOP, new SelectColumnSpec(sourceColumn), Operator.USING, targetColumnMetaData.name(), relationshipField);
+        } else {
+            conditionNode = new ConditionNode(null, LogicOperator.NOOP, new SelectColumnSpec(sourceColumn), Operator.EQ, targetColumn, relationshipField);
+        }
+
+        return terminalCreator.apply(conditionNode);
     }
 
-    private DtoJoinConditionClauseTerminal<DTO> manyToManyJoin(MappedManyToMany mappedManyToMany) {
-        // Join with the intermediate join table
-        final DtoJoinSpec intermediateJoinSpec = createIntermediateJoinSpec(mappedManyToMany);
+    private DtoJoinConditionClauseTerminal<DTO> joinOnInverse(final String lookupField, final String relationshipField) {
+        final ColumnMetaData targetColumnMetaData = targetTable.getColumnForFieldName(lookupField);
 
-        // Join with the target table
-        final Table leftTable = intermediateJoinSpec.table();
-        final Column leftColumn = aliasGenerator.aliasColumn(leftTable, mappedManyToMany.joinTable().getColumnMetaData(mappedManyToMany.inverseJoinColumn()));
+        if (targetColumnMetaData.getJoinColumn() == null) {
+            throw new IllegalStateException("No join column specified for column '%s' mapped to field '%s' in joined table '%s'".formatted(targetColumnMetaData.name(), lookupField, targetTable.getMetaData().name()));
+        }
 
-        final OrmTable rightOrmTable = mappedManyToMany.targetTable().optional().orElseThrow();
-//        final Table rightTable = joinSpec.table();
-//
-//        final List<SelectFieldSpec> joinFieldColumns = rightOrmTable.mappedFieldTargets().stream()
-//                .filter(entry -> entry.getValue() instanceof ColumnMetaData)
-//                .map(entry -> {
-//                    final FieldAccessor field = entry.getKey();
-//                    final ColumnMetaData columnMetaData = (ColumnMetaData) entry.getValue();
-//                    final Column column = aliasGenerator.aliasColumn(rightTable, columnMetaData);
-//                    return new SelectFieldSpec(field, column);
-//                })
-//                .toList();
-//
-//        // Extend selects
-//        selectSpec.addExpressions(joinFieldColumns);
-//
-//        // Create JOIN clause
-//        joinSpec.setFieldColumns(joinFieldColumns.stream().map(selectField -> new DtoSelectSpec.FieldColumn(selectField.field(), selectField.getColumn())).toList());
-//
-//        final Column rightColumn = aliasGenerator.aliasColumn(rightTable, rightOrmTable.getColumnMetaData(mappedManyToMany.inverseJoinColumn()));
-//
-//        final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(leftColumn));
-//        conditionSpec.setOperator(Operator.EQ);
-//        conditionSpec.setValue(rightColumn);
-//
-//        return new DtoJoinConditionClauseTerminal<>(intermediateJoinSpec, (DtoSelector<DTO>) delegate, aliasGenerator);
-        //TODO: reimplement
-        throw new UnsupportedOperationException("Need to reimplement");
+        final Column targetColumn = targetColumnMetaData.toColumn();
+        final ColumnMetaData sourceColumnMetaData = table.getColumnMetaData(targetColumnMetaData.getJoinColumn());
+        final Column sourceColumn = sourceColumnMetaData.toColumn();
+
+        final ConditionNode conditionNode;
+        if (targetColumnMetaData.name().equals(sourceColumnMetaData.name())) {
+            conditionNode = new ConditionNode(null, LogicOperator.NOOP, new SelectColumnSpec(sourceColumn), Operator.USING, sourceColumnMetaData.name(), relationshipField);
+        } else {
+            conditionNode = new ConditionNode(null, LogicOperator.NOOP, new SelectColumnSpec(sourceColumn), Operator.EQ, targetColumn, relationshipField);
+        }
+
+        return terminalCreator.apply(conditionNode);
     }
 
-    private DtoJoinSpec createIntermediateJoinSpec(final MappedManyToMany mappedManyToMany) {
-        // Left table: source DTO table (main SELECT table)
-//        final OrmTable leftOrmTable = selectSpec.dtoTable();
-//        final Table leftTable = selectSpec.getTable();
-//        //TODO: support for composite PKs
-//        final Column leftColumn = aliasGenerator.aliasColumn(leftTable, leftOrmTable.getMetaData().primaryKey().getFirst());
-//
-//        // Right table: intermediate join table
-//        final OrmTable rightOrmTable = mappedManyToMany.joinTable();
-//        final Table rightTable = aliasGenerator.aliasTable(rightOrmTable);
-//        final Column rightColumn = aliasGenerator.aliasColumn(rightTable, rightOrmTable.getColumnMetaData(mappedManyToMany.joinColumn()));
-//
-//        final DtoJoinSpec intermediateJoinSpec = selectSpec.newJoinSpecBefore(joinSpec, selectSpec.dtoClass(), rightOrmTable, rightTable);
-//        final ConditionSpec intermediateJoinCondition = intermediateJoinSpec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(leftColumn));
-//        intermediateJoinCondition.setOperator(Operator.EQ);
-//        intermediateJoinCondition.setValue(rightColumn);
-//
-//        return intermediateJoinSpec;
-        //TODO: reimplement
-        throw new UnsupportedOperationException("Need to reimplement");
+    private DtoJoinConditionClauseTerminal<DTO> inverseJoin(MappedOneToMany mappedOneToMany, String relationshipField) {
+        final FieldAccessor mappedByField = mappedOneToMany.mappedByField();
+        return joinOnInverse(mappedByField.name(), relationshipField);
+    }
+
+    private DtoJoinConditionClauseTerminal<DTO> manyToManyJoin(MappedManyToMany mappedManyToMany, String relationshipField) {
+        // TODO: reimplement many-to-many join in AST mode
+        throw new UnsupportedOperationException("Many-to-many join not yet implemented in AST mode");
     }
 }

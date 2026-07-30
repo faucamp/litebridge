@@ -1,8 +1,15 @@
 package org.litebridge.orm.api.sql;
 
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
+import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
+import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 import java.util.function.Function;
 
@@ -12,7 +19,7 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
         SqlSelectSpec,
         SqlJoinSpec> {
 
-    private Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator;
+    private final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator;
 
     public SqlJoinClause(final SqlSelector delegate, final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator) {
         super(delegate);
@@ -27,14 +34,23 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
      * @return an instance of the join condition clause to allow further configuration
      */
     public SqlJoinConditionClause on(final String column) {
-//        final Column spiColumn = new Column(joinSpec.table(), column);
-//        final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(spiColumn));
-//
-//        final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, SqlJoinConditionClauseTerminal> recreator = n -> new SqlJoinConditionClauseTerminal(joinSpec, (SqlSelector) delegate.withNode(n));
-//
-//        return new SqlJoinConditionClause(conditionSpec, delegate.litebridgeContext(), LogicOperator.NOOP, new SelectColumnSpec(spiColumn), delegate.node(), recreator);
-        //TODO: reimplement
-        throw new UnsupportedOperationException("Need to reimplement");
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
+        return new SqlJoinConditionClause(delegate.litebridgeContext(), LogicOperator.NOOP, new SelectColumnSpec(spiColumn), null, terminalCreator);
+    }
+
+    /**
+     * Adds a join ON condition based on a query condition builder.
+     *
+     * @param builder the builder for the join condition
+     * @return an instance of the join condition clause to allow further configuration
+     */
+    public SqlJoinConditionClauseTerminal on(final QueryConditionBuilder<Row> builder) {
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(((SqlSelector) delegate).table(), delegate.litebridgeContext().fromClauseEngine(), null);
+        final AbstractCbConditionClauseTerminal<Row> terminal = builder.apply(conditionClauseStart);
+        final QueryNode conditionNode = terminal.node();
+
+        final ConditionGroupNode groupNode = new ConditionGroupNode(null, LogicOperator.NOOP, conditionNode);
+        return terminalCreator.apply(groupNode);
     }
 
     /**
@@ -46,12 +62,6 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
      * @return an instance of the terminal join condition clause to finalize the join conditions
      */
     public SqlJoinConditionClauseTerminal using(final String column) {
-//        final Column spiColumn = new Column(joinSpec.table(), column);
-//        final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(spiColumn));
-//        final java.util.function.Function<org.litebridge.orm.api.select.ast.QueryNode, SqlJoinConditionClauseTerminal> recreator = n -> new SqlJoinConditionClauseTerminal(joinSpec, (SqlSelector) delegate.withNode(n));
-//        final SqlJoinConditionClause conditionClause = new SqlJoinConditionClause(conditionSpec, delegate.litebridgeContext(), LogicOperator.NOOP, new SelectColumnSpec(spiColumn), delegate.node(), recreator);
-//        return conditionClause.using(column);
-        //TODO: reimplement
-        throw new UnsupportedOperationException("Need to reimplement");
+        return on(column).using(column);
     }
 }

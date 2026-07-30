@@ -105,11 +105,19 @@ public final class DtoWhereConditionClauseTerminal<DTO>
     }
 
     private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        if (delegate.node() instanceof WhereNode whereNode) {
+            return new DtoWhereConditionClause<>(delegate.litebridgeContext(),
+                    logicOperator,
+                    expression,
+                    whereNode.condition(),
+                    node -> new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(whereNode.withCondition(node))));
+        }
+
         return new DtoWhereConditionClause<>(delegate.litebridgeContext(),
                 logicOperator,
                 expression,
-                delegate.node(),
-                node -> new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(node)));
+                null,
+                node -> new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new WhereNode(delegate.node(), node))));
     }
 
     private DtoWhereConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {

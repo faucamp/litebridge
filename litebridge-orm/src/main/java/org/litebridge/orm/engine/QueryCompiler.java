@@ -103,6 +103,14 @@ public final class QueryCompiler {
                 } else if (selectSpec instanceof SqlSelectSpec sqlSelectSpec && joinNode.tableName() != null) {
                     final org.litebridge.orm.api.sql.SqlJoinSpec joinSpec = sqlSelectSpec.newJoinSpec(joinNode.tableName());
                 }
+
+                if (joinNode.condition() != null) {
+                    final List<QueryNode> conditionNodes = flatten(joinNode.condition());
+
+                    for (QueryNode queryNode : conditionNodes) {
+                        applyNode(queryNode, joinNode, selectSpec);
+                    }
+                }
             }
             case ConditionGroupNode conditionGroupNode -> {
                 final QueryNode conditionGroupParentNode = Objects.requireNonNull(parentNode, "AST error: ConditionGroupNode outside of a parent context");
@@ -111,6 +119,11 @@ public final class QueryCompiler {
                 final ConditionGroupSpec conditionGroupSpec = switch (conditionGroupParentNode) {
                     case WhereNode whereNode -> selectSpec.pushWhereConditionGroup(conditionGroupNode.logicOperator());
                     case HavingNode havingNode -> selectSpec.pushHavingConditionGroup(conditionGroupNode.logicOperator());
+                    case JoinNode joinNode -> {
+                        final List<JoinSpec> joins = Objects.requireNonNull(selectSpec.getJoins());
+                        final JoinSpec lastJoin = joins.get(joins.size() - 1);
+                        yield lastJoin.pushConditionGroupSpec(conditionGroupNode.logicOperator());
+                    }
                     default -> throw new IllegalStateException("AST error: Invalid condition context parent node: " + parentNode.getClass().getName());
                 };
 
@@ -124,21 +137,26 @@ public final class QueryCompiler {
                 switch (conditionGroupParentNode) {
                     case WhereNode whereNode -> selectSpec.popWhereConditionGroup();
                     case HavingNode havingNode -> selectSpec.popHavingConditionGroup();
+                    case JoinNode joinNode -> {
+                        final List<JoinSpec> joins = Objects.requireNonNull(selectSpec.getJoins());
+                        final JoinSpec lastJoin = joins.get(joins.size() - 1);
+                        lastJoin.popConditionGroupSpec();
+                    }
                     default -> throw new IllegalStateException("AST error: Invalid condition context parent node: " + parentNode.getClass().getName());
                 }
             }
             case ConditionNode conditionNode -> {
-                final QueryNode previous = conditionNode.previous();
-
-                if (previous instanceof JoinNode) {
-                    //TODO: rework JOINs to match Where/Having
-                    final List<JoinSpec> joins = selectSpec.getJoins();
-                    if (joins != null && !joins.isEmpty()) {
+                // Nested chains
+                final ConditionGroupSpec conditionGroupSpec = switch (Objects.requireNonNull(parentNode, "AST error: Condition node outside of a parent context")) {
+                    case WhereNode whereNode -> selectSpec.currentWhereConditionGroupSpec();
+                    case HavingNode havingNode -> selectSpec.currentHavingConditionGroupSpec();
+                    case JoinNode joinNode -> {
+                        final List<JoinSpec> joins = Objects.requireNonNull(selectSpec.getJoins());
                         final JoinSpec lastJoin = joins.get(joins.size() - 1);
 
                         if (conditionNode.relationshipField() != null && lastJoin instanceof org.litebridge.orm.api.dto.DtoJoinSpec djs) {
                             // The source table is stored in the JoinNode
-                            if (previous instanceof JoinNode joinNode && joinNode.sourceDtoClass() != null) {
+                            if (joinNode.sourceDtoClass() != null) {
                                 final OrmTable sourceTable = tableRegistry.getTableOrThrow(joinNode.sourceDtoClass());
                                 sourceTable.fieldAcessorStream()
                                         .filter(accessor -> accessor.name().equals(conditionNode.relationshipField()))
@@ -157,26 +175,18 @@ public final class QueryCompiler {
 
                         if (conditionNode.operator() == org.litebridge.db.spi.query.Operator.USING) {
                             lastJoin.using(conditionNode.rhs().toString());
-                        } else {
-                            final ConditionSpec condition = lastJoin.currentConditionGroupSpec().newCondition(conditionNode.logicOperator(), conditionNode.lhs());
-                            condition.setOperator(conditionNode.operator());
-                            condition.setValue(conditionNode.rhs());
                         }
+
+                        yield lastJoin.currentConditionGroupSpec();
                     }
-
-                    return;
-                }
-
-                // Nested chains
-                final ConditionGroupSpec conditionGroupSpec = switch (Objects.requireNonNull(parentNode, "AST error: Condition node outside of a parent context")) {
-                    case WhereNode whereNode -> selectSpec.currentWhereConditionGroupSpec();
-                    case HavingNode havingNode -> selectSpec.currentHavingConditionGroupSpec();
                     default -> throw new IllegalStateException("AST error: Invalid condition context parent node: " + parentNode.getClass().getName());
                 };
 
-                final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), conditionNode.lhs());
-                conditionSpec.setOperator(conditionNode.operator());
-                conditionSpec.setValue(conditionNode.rhs());
+                if (conditionNode.operator() != org.litebridge.db.spi.query.Operator.USING) {
+                    final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), conditionNode.lhs());
+                    conditionSpec.setOperator(conditionNode.operator());
+                    conditionSpec.setValue(conditionNode.rhs());
+                }
             }
             case WhereNode whereNode -> {
                 final List<QueryNode> conditionNodes = flatten(whereNode.condition());
