@@ -10,7 +10,9 @@ import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 
-import java.util.Collections;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public abstract class AbstractJoinSpec extends AbstractConditionBasedSpec implements JoinSpec {
 
@@ -27,7 +29,9 @@ public abstract class AbstractJoinSpec extends AbstractConditionBasedSpec implem
     }
 
     @Override
-    public Join toJoin() {
-        return new Join(table, conditions.toConditionGroup(selectExpressionMapper, Collections.singleton(table)));
+    public Join toJoin(final Collection<Table> availableTables) {
+        final Set<Table> resolutionTables = new HashSet<>(availableTables);
+        resolutionTables.add(table);
+        return new Join(table, conditions.toConditionGroup(selectExpressionMapper, resolutionTables));
     }
 }

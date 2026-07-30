@@ -7,6 +7,7 @@ import org.litebridge.db.spi.query.Join;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.persistence.OrmTable;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -66,7 +67,7 @@ class DtoJoinSpecTest {
     @Test
     void toJoin() {
         // When
-        final Join result = dtoJoinSpec.toJoin();
+        final Join result = dtoJoinSpec.toJoin(Collections.emptyList());
 
         // Then
         assertNotNull(result);

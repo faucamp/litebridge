@@ -240,9 +240,16 @@ public abstract class SelectSpec {
                 .collect(Collectors.toSet());
 
         // JOIN
-        final List<Join> joinClause = joins != null ? joins.stream()
-                .map(JoinSpec::toJoin)
-                .toList() : Collections.emptyList();
+        final List<Join> joinClause = new ArrayList<>();
+        final List<Table> currentTables = new ArrayList<>();
+        currentTables.add(table);
+
+        if (joins != null) {
+            for (final JoinSpec joinSpec : joins) {
+                joinClause.add(joinSpec.toJoin(currentTables));
+                currentTables.add(joinSpec.table());
+            }
+        }
 
         final Set<Table> selectedTables = Stream.concat(selectedColumns.stream().map(Column::table),
                         joinClause.stream().map(join -> join.table()))

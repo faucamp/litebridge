@@ -4,6 +4,8 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 
+import java.util.Collection;
+
 /**
  * Specification for a database "JOIN" clause.
  */
@@ -46,7 +48,8 @@ public interface JoinSpec {
     /**
      * Returns the SPI join object.
      *
+     * @param availableTables the collection of tables currently available in the query context for alias resolution
      * @return the SPI join object.
      */
-    Join toJoin();
+    Join toJoin(Collection<Table> availableTables);
 }

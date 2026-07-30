@@ -1,7 +1,10 @@
 package org.litebridge.orm.engine;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.query.Operator;
+import org.litebridge.orm.api.dto.DtoDataSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.api.select.ast.BeginGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
@@ -21,13 +24,17 @@ import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.api.sql.SqlSelectSpec;
+import org.litebridge.orm.expression.ColumnExpressionSpec;
+import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -37,6 +44,7 @@ public final class QueryCompiler {
 
     private final TableRegistry tableRegistry;
     private final AliasGenerator aliasGenerator;
+    private final Map<Class<?>, List<Table>> aliasHistory = new HashMap<>();
 
     public QueryCompiler(final TableRegistry tableRegistry, final AliasGenerator aliasGenerator) {
         this.tableRegistry = tableRegistry;
@@ -50,6 +58,10 @@ public final class QueryCompiler {
      * @param selectSpec the select specification to populate
      */
     public void compile(final QueryNode node, final SelectSpec selectSpec) {
+        if (selectSpec instanceof DtoDataSpec dds) {
+            aliasHistory.computeIfAbsent(dds.dtoTable().dtoClass(), k -> new ArrayList<>()).add(selectSpec.getTable());
+        }
+
         final List<QueryNode> nodes = flatten(node);
 
         for (final QueryNode n : nodes) {
@@ -110,6 +122,11 @@ public final class QueryCompiler {
                     for (QueryNode queryNode : conditionNodes) {
                         applyNode(queryNode, joinNode, selectSpec);
                     }
+                }
+
+                if (selectSpec instanceof DtoSelectSpec && joinNode.dtoClass() != null) {
+                    final Table joinTable = Objects.requireNonNull(selectSpec.getJoins()).get(selectSpec.getJoins().size() - 1).table();
+                    aliasHistory.computeIfAbsent(joinNode.dtoClass(), k -> new ArrayList<>()).add(joinTable);
                 }
             }
             case ConditionGroupNode conditionGroupNode -> {
@@ -173,7 +190,7 @@ public final class QueryCompiler {
                             }
                         }
 
-                        if (conditionNode.operator() == org.litebridge.db.spi.query.Operator.USING) {
+                        if (conditionNode.operator() == Operator.USING) {
                             lastJoin.using(conditionNode.rhs().toString());
                         }
 
@@ -182,10 +199,27 @@ public final class QueryCompiler {
                     default -> throw new IllegalStateException("AST error: Invalid condition context parent node: " + parentNode.getClass().getName());
                 };
 
-                if (conditionNode.operator() != org.litebridge.db.spi.query.Operator.USING) {
-                    final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), conditionNode.lhs());
+                if (conditionNode.operator() != Operator.USING) {
+                    final Table sourceAlias;
+                    final Table targetAlias;
+
+                    if (parentNode instanceof JoinNode jn && jn.dtoClass() != null) {
+                        final List<Table> history = aliasHistory.get(jn.sourceDtoClass());
+                        sourceAlias = history != null && !history.isEmpty() ? history.get(history.size() - 1) : null;
+
+                        final List<JoinSpec> joins = Objects.requireNonNull(selectSpec.getJoins());
+                        targetAlias = joins.get(joins.size() - 1).table();
+                    } else {
+                        sourceAlias = null;
+                        targetAlias = null;
+                    }
+
+                    final ExpressionSpec lhs = (ExpressionSpec) resolveAliases(conditionNode.lhs(), sourceAlias, targetAlias, true);
+                    final Object rhs = resolveAliases(conditionNode.rhs(), sourceAlias, targetAlias, false);
+
+                    final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), lhs);
                     conditionSpec.setOperator(conditionNode.operator());
-                    conditionSpec.setValue(conditionNode.rhs());
+                    conditionSpec.setValue(rhs);
                 }
             }
             case WhereNode whereNode -> {
@@ -228,5 +262,51 @@ public final class QueryCompiler {
 
         Collections.reverse(nodes);
         return nodes;
+    }
+
+    private @Nullable Object resolveAliases(final @Nullable Object value, final @Nullable Table sourceAlias, final @Nullable Table targetAlias, boolean preferSource) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof Column column) {
+            final OrmTable ormTable = tableRegistry.getTable(column.table());
+            if (ormTable != null) {
+                Table resolvedTable = null;
+
+                // If we have explicit source/target aliases for this join context, use them
+                if (sourceAlias != null && ormTable.dtoClass().equals(getTableDtoClass(sourceAlias))) {
+                    if (targetAlias != null && ormTable.dtoClass().equals(getTableDtoClass(targetAlias))) {
+                        // Ambiguous (self-join); use preference
+                        resolvedTable = preferSource ? sourceAlias : targetAlias;
+                    } else {
+                        resolvedTable = sourceAlias;
+                    }
+                } else if (targetAlias != null && ormTable.dtoClass().equals(getTableDtoClass(targetAlias))) {
+                    resolvedTable = targetAlias;
+                }
+
+                if (resolvedTable == null) {
+                    // Fallback to most recent alias in history
+                    final List<Table> history = aliasHistory.get(ormTable.dtoClass());
+                    if (history != null && !history.isEmpty()) {
+                        resolvedTable = history.get(history.size() - 1);
+                    }
+                }
+
+                if (resolvedTable != null) {
+                    return new Column(resolvedTable, column.name(), column.alias());
+                }
+            }
+        } else if (value instanceof ColumnExpressionSpec ces) {
+            ces.setColumn((Column) resolveAliases(ces.getColumn(), sourceAlias, targetAlias, preferSource));
+            return ces;
+        }
+        return value;
+    }
+
+    private @Nullable Class<?> getTableDtoClass(Table table) {
+        final OrmTable ormTable = tableRegistry.getTable(table);
+        return ormTable != null ? ormTable.dtoClass() : null;
     }
 }

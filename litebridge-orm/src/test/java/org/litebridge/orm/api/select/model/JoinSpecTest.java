@@ -17,6 +17,7 @@ import org.litebridge.orm.expression.TestColumnExpressionFactory;
 import org.litebridge.orm.expression.TestSelectReferenceExpressionFactory;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -75,7 +76,7 @@ class JoinSpecTest {
 
         // When
         final ConditionSpec conditionSpec = joinSpec.using("TEST_COLUMN");
-        final LogicCondition result = joinSpec.toJoin().conditions().conditions().getFirst();
+        final LogicCondition result = joinSpec.toJoin(Collections.emptyList()).conditions().conditions().getFirst();
 
         // Then
         assertNotNull(result);
@@ -101,7 +102,7 @@ class JoinSpecTest {
         conditionSpec.setValue(123);
 
         // When
-        final Join result = joinSpec.toJoin();
+        final Join result = joinSpec.toJoin(java.util.Collections.emptyList());
 
         // Then
         assertNotNull(result);
