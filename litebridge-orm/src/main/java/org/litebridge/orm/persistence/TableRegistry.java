@@ -130,7 +130,7 @@ public final class TableRegistry {
      * @return the {@link OrmTable} associated with the specified table, or {@code null} if not found
      */
     public @Nullable OrmTable getTable(final Table table) {
-        return getTable(Objects.requireNonNull(table.schema(), "Table schema is null"), table.name());
+        return getTable(StringUtils.blankIfNull(table.schema()), table.name());
     }
 
     /**

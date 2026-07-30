@@ -164,7 +164,54 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
     }
 
     private DtoJoinConditionClauseTerminal<DTO> manyToManyJoin(MappedManyToMany mappedManyToMany, String relationshipField) {
-        // TODO: reimplement many-to-many join in AST mode
-        throw new UnsupportedOperationException("Many-to-many join not yet implemented in AST mode");
+        final OrmTable joinOrmTable = mappedManyToMany.joinTable();
+
+        // Create intermediate JoinNode (raw join on the join table)
+        final JoinNode intermediateJoinNode = new JoinNode(
+                delegate.node(),
+                "INNER",
+                joinOrmTable.dtoClass(),
+                table.dtoClass(),
+                joinOrmTable.getMetaData().name()
+        );
+
+        // Set ON condition for intermediate join: sourceTable.pk == joinTable.joinColumn
+        final List<ColumnMetaData> sourcePkColumns = table.getMetaData().primaryKey();
+        if (sourcePkColumns.size() != 1) {
+            throw new UnsupportedOperationException("Many-to-many joins currently only support single-column primary keys");
+        }
+        final Column sourcePkColumn = sourcePkColumns.getFirst().toColumn();
+        final Column joinTableJoinColumn = joinOrmTable.getColumnMetaData(mappedManyToMany.joinColumn()).toColumn();
+
+        final ConditionNode intermediateCondition = new ConditionNode(null, LogicOperator.NOOP, new SelectColumnSpec(sourcePkColumn), Operator.EQ, joinTableJoinColumn, null);
+        intermediateJoinNode.withCondition(intermediateCondition);
+
+        // Create target JoinNode (standard join on the target DTO)
+        // Note: we set sourceDtoClass to the original table (not the proxy) so QueryCompiler/SelectSpecDtoMapper can find the collection field
+        final JoinNode targetJoinNode = new JoinNode(
+                intermediateJoinNode,
+                "INNER",
+                targetTable.dtoClass(),
+                table.dtoClass(),
+                null
+        );
+
+        // Set ON condition for target join: joinTable.inverseJoinColumn == targetTable.pk
+        final List<ColumnMetaData> targetPkColumns = targetTable.getMetaData().primaryKey();
+
+        if (targetPkColumns.size() != 1) {
+            throw new UnsupportedOperationException("Many-to-many joins currently only support single-column primary keys");
+        }
+
+        final Column targetPkColumn = targetPkColumns.getFirst().toColumn();
+        final Column joinTableInverseJoinColumn = joinOrmTable.getColumnMetaData(mappedManyToMany.inverseJoinColumn()).toColumn();
+
+        final ConditionNode targetCondition = new ConditionNode(null, LogicOperator.NOOP, new SelectColumnSpec(joinTableInverseJoinColumn), Operator.EQ, targetPkColumn, relationshipField);
+        targetJoinNode.withCondition(targetCondition);
+
+        // Update delegate with the chain of nodes
+        delegate.withNode(targetJoinNode);
+
+        return new DtoJoinConditionClauseTerminal<>(targetJoinNode, (DtoSelector<DTO>) delegate);
     }
 }

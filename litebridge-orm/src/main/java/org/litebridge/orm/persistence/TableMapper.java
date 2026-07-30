@@ -292,6 +292,7 @@ public final class TableMapper {
         } else {
             final MappedTable mappedJoinTable = mapManyToManyJoinTable(manyToMany, lookup);
             manyToOneDependencies.addAll(mappedJoinTable.manyToOneDependencies());
+            tableRegistry.addTable(mappedJoinTable.ormTable().dtoClass(), mappedJoinTable.ormTable());
             return mappedJoinTable.ormTable();
         }
     }

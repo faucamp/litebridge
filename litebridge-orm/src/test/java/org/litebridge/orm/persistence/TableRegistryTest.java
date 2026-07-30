@@ -194,15 +194,6 @@ class TableRegistryTest {
     }
 
     @Test
-    void getTable_table_nullSchema() {
-        // Given
-        final TableRegistry tableRegistry = new TableRegistry();
-
-        // When/Then
-        assertThrows(NullPointerException.class, () -> tableRegistry.getTable(new Table("", null, "test_table")));
-    }
-
-    @Test
     void containsTable() {
         // Given
         final TableRegistry tableRegistry = new TableRegistry();

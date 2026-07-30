@@ -23,6 +23,7 @@ import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.api.sql.SqlJoinSpec;
 import org.litebridge.orm.api.sql.SqlSelectSpec;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -90,30 +91,44 @@ public final class QueryCompiler {
                 if (selectSpec instanceof DtoSelectSpec dtoSelectSpec && joinNode.dtoClass() != null) {
                     final OrmTable joinOrmTable = tableRegistry.getTableOrThrow(joinNode.dtoClass());
                     final Table joinTable = aliasGenerator.aliasTable(joinOrmTable);
-                    final org.litebridge.orm.api.dto.DtoJoinSpec joinSpec = new org.litebridge.orm.api.dto.DtoJoinSpec(
-                            joinNode.dtoClass(),
-                            joinOrmTable,
-                            joinTable,
-                            dtoSelectSpec.getSelectExpressionMapper());
-                    joinSpec.setSourceDtoClass(joinNode.sourceDtoClass());
 
-                    // Extend selects with joined table columns
-                    final List<org.litebridge.orm.expression.select.SelectFieldSpec> joinFieldColumns = joinOrmTable.getMetaData().columns().stream()
-                            .map(joinColumn -> {
-                                final org.litebridge.tracking.FieldAccessor joinColumnField = joinOrmTable.getFieldForColumnName(joinColumn.name());
-                                final org.litebridge.db.spi.Column column = aliasGenerator.aliasColumn(joinTable, joinColumn);
-                                return new org.litebridge.orm.expression.select.SelectFieldSpec(joinColumnField, column);
-                            })
-                            .toList();
+                    if (joinNode.tableName() != null) {
+                        // Intermediate join table (many-to-many)
+                        final SqlJoinSpec joinSpec = new SqlJoinSpec(joinTable, dtoSelectSpec.selectExpressionMapper());
+                        dtoSelectSpec.addJoin(joinSpec);
+                    } else {
+                        // Standard DTO join
+                        final org.litebridge.orm.api.dto.DtoJoinSpec joinSpec = new org.litebridge.orm.api.dto.DtoJoinSpec(
+                                joinNode.dtoClass(),
+                                joinOrmTable,
+                                joinTable,
+                                dtoSelectSpec.getSelectExpressionMapper());
+                        joinSpec.setSourceDtoClass(joinNode.sourceDtoClass());
 
-                    dtoSelectSpec.addExpressions(joinFieldColumns);
-                    joinSpec.setFieldColumns(joinFieldColumns.stream()
-                            .map(selectField -> new DtoSelectSpec.FieldColumn(selectField.field(), selectField.getColumn()))
-                            .toList());
+                        // Extend selects with joined table columns
+                        final List<org.litebridge.orm.expression.select.SelectFieldSpec> joinFieldColumns = joinOrmTable.getMetaData().columns().stream()
+                                .map(joinColumn -> {
+                                    final org.litebridge.tracking.FieldAccessor joinColumnField = joinOrmTable.fieldForColumnNameOrNull(joinColumn.name());
 
-                    dtoSelectSpec.addJoin(joinSpec);
+                                    if (joinColumnField == null) {
+                                        return null;
+                                    }
+
+                                    final org.litebridge.db.spi.Column column = aliasGenerator.aliasColumn(joinTable, joinColumn);
+                                    return new org.litebridge.orm.expression.select.SelectFieldSpec(joinColumnField, column);
+                                })
+                                .filter(Objects::nonNull)
+                                .toList();
+
+                        dtoSelectSpec.addExpressions(joinFieldColumns);
+                        joinSpec.setFieldColumns(joinFieldColumns.stream()
+                                .map(selectField -> new DtoSelectSpec.FieldColumn(selectField.field(), selectField.getColumn()))
+                                .toList());
+
+                        dtoSelectSpec.addJoin(joinSpec);
+                    }
                 } else if (selectSpec instanceof SqlSelectSpec sqlSelectSpec && joinNode.tableName() != null) {
-                    final org.litebridge.orm.api.sql.SqlJoinSpec joinSpec = sqlSelectSpec.newJoinSpec(joinNode.tableName());
+                    final SqlJoinSpec joinSpec = sqlSelectSpec.newJoinSpec(joinNode.tableName());
                 }
 
                 if (joinNode.condition() != null) {
@@ -184,6 +199,11 @@ public final class QueryCompiler {
                                             // Set reverse collection field if available
                                             djs.dtoTable().getOneToManyMappings().stream()
                                                     .filter(m -> m.mappedByField().equals(fieldAccessor))
+                                                    .findFirst()
+                                                    .ifPresent(m -> djs.setReverseCollectionField(m.collection()));
+
+                                            djs.dtoTable().getManyToManyMappings().stream()
+                                                    .filter(m -> m.joinTable().getMetaData().name().equals(sourceTable.getMetaData().name()))
                                                     .findFirst()
                                                     .ifPresent(m -> djs.setReverseCollectionField(m.collection()));
                                         });
