@@ -5,6 +5,9 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.ConditionGroupNode;
+import org.litebridge.orm.api.select.ast.HavingNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractHavingClauseTerminal;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -90,20 +93,35 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     }
 
     private DtoHavingConditionClause<DTO> havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression, final DtoSelector<DTO> newDelegate) {
+        if (delegate.node() instanceof HavingNode havingNode) {
+            return new DtoHavingConditionClause<>(delegate.litebridgeContext(),
+                    logicOperator,
+                    expression,
+                    havingNode.condition(),
+                    node -> new DtoHavingConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(havingNode.withCondition(node))));
+        }
+
         return new DtoHavingConditionClause<>(delegate.litebridgeContext(),
                 logicOperator,
                 expression,
-                delegate.node(),
-                node -> new DtoHavingConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(node)));
+                null,
+                node -> new DtoHavingConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new HavingNode(delegate.node(), node))));
     }
 
     private DtoHavingConditionClauseTerminal<DTO> havingImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-//        final ConditionGroupSpec subgroup = selectSpec.pushHavingConditionGroup(logicOperator);
-//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, ormTable, delegate.litebridgeContext().fromClauseEngine());
-//        query.apply(conditionClauseStart);
-//        selectSpec.popHavingConditionGroup();
-//        return this;
-        //TODO: reimplement
-        throw new UnsupportedOperationException("Need to reimplement");
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
+        final org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        final QueryNode conditionNode = terminal.node();
+
+        if (delegate.node() instanceof HavingNode havingNode) {
+            final ConditionGroupNode groupNode = new ConditionGroupNode(havingNode.condition(), logicOperator, conditionNode);
+            havingNode.withCondition(groupNode);
+            return this;
+        }
+
+        final ConditionGroupNode groupNode = new ConditionGroupNode(null, logicOperator, conditionNode);
+        delegate.withNode(new HavingNode(delegate.node(), groupNode));
+
+        return this;
     }
 }

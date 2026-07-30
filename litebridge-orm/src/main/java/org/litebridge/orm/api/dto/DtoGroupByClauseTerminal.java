@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.select.ast.HavingNode;
 import org.litebridge.orm.api.select.impl.AbstractGroupByClauseTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
@@ -34,8 +35,8 @@ public class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal
         return new DtoHavingConditionClause<>(delegate.litebridgeContext(),
                 LogicOperator.NOOP,
                 expression,
-                delegate.node(),
-                node -> new DtoHavingConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(node)));
+                null,
+                node -> new DtoHavingConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new HavingNode(delegate.node(), node))));
     }
 
     @Override

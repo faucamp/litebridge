@@ -2,7 +2,6 @@ package org.litebridge.orm.e2e.lob;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
-import org.junit.platform.commons.util.ReflectionUtils;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.lob.entity.BlobTestEntity;
 import org.litebridge.orm.e2e.lob.entity.ClobTestEntity;
@@ -31,7 +30,7 @@ public class LobE2eTest extends AbstractE2eTest {
         litebridge.register(blobTestEntityClass);
 
         final byte[] data = "Hello World!".getBytes();
-        final BlobTestEntity blobTestEntity = ReflectionUtils.newInstance(blobTestEntityClass);
+        final BlobTestEntity blobTestEntity = blobTestEntityClass.getDeclaredConstructor().newInstance();
         blobTestEntity.setId(1L);
         blobTestEntity.setData(data);
 
@@ -47,7 +46,7 @@ public class LobE2eTest extends AbstractE2eTest {
         final Class<? extends ClobTestEntity> clobTestEntityClass = clobTestEntityClassForDbEnv();
         litebridge.register(clobTestEntityClass);
 
-        final ClobTestEntity clobTestEntity = ReflectionUtils.newInstance(clobTestEntityClass);
+        final ClobTestEntity clobTestEntity = clobTestEntityClass.getDeclaredConstructor().newInstance();
         clobTestEntity.setId(1L);
         clobTestEntity.setData("Hello World!");
 

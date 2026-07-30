@@ -2,6 +2,7 @@ package org.litebridge.orm.api.sql;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.select.ast.HavingNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractGroupByClauseTerminal;
 import org.litebridge.orm.api.select.model.ConditionSpec;
@@ -25,8 +26,8 @@ public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
         return new SqlHavingConditionClause(delegate.litebridgeContext(),
                 LogicOperator.NOOP,
                 expression,
-                delegate.node(),
-                node -> new SqlHavingConditionClauseTerminal((SqlSelector) delegate.withNode(node)));
+                null,
+                node -> new SqlHavingConditionClauseTerminal((SqlSelector) delegate.withNode(new HavingNode(delegate.node(), node))));
     }
 
     @Override
