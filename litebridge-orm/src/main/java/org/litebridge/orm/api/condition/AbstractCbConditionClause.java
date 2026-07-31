@@ -11,6 +11,7 @@ import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.impl.DelegatingSelector;
+import org.litebridge.orm.api.select.impl.DelegatingSelectorInspector;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.SelectEngine;
@@ -306,7 +307,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
 
     private SelectSpec getSelectSpec(final SelectTerminal<?> selectTerminal) {
         final AbstractSelector<?, ?> selector = switch (selectTerminal) {
-            case DelegatingSelector<?, ?> delegating -> delegating.delegate();
+            case DelegatingSelector<?, ?> delegating -> DelegatingSelectorInspector.getDelegate(delegating);
             case AbstractSelector<?, ?> s -> s;
             default ->
                     throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());

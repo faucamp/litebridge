@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class QFInspectorTest {
+class QueryFieldInspectorTest {
 
     @Test
     void testGetFieldName() {
@@ -17,7 +17,7 @@ class QFInspectorTest {
         final QueryField field = new QueryField(TestDto.class, "name");
 
         // Then
-        assertEquals("name", QFInspector.getFieldName(field));
+        assertEquals("name", QueryFieldInspector.getFieldName(field));
     }
 
     @Test
@@ -26,18 +26,18 @@ class QFInspectorTest {
         final QueryField field = new QueryField(TestDto.class, "name");
 
         // Then
-        assertEquals(TestDto.class, QFInspector.getDtoClass(field));
+        assertEquals(TestDto.class, QueryFieldInspector.getDtoClass(field));
     }
 
     @Test
     void testPrivateConstructor() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         // Given
-        final Constructor<QFInspector> constructor = QFInspector.class.getDeclaredConstructor();
+        final Constructor<QueryFieldInspector> constructor = QueryFieldInspector.class.getDeclaredConstructor();
         assertTrue(java.lang.reflect.Modifier.isPrivate(constructor.getModifiers()));
 
         // When
         constructor.setAccessible(true);
-        final QFInspector instance = constructor.newInstance();
+        final QueryFieldInspector instance = constructor.newInstance();
 
         // Then
         assertNotNull(instance);

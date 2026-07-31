@@ -11,7 +11,7 @@ import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
 import org.litebridge.orm.expression.Resolvable;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
-import org.litebridge.orm.meta.QFInspector;
+import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -76,9 +76,9 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     @Override
     protected ColumnExpressionSpec resolveSelectField(final QueryField queryField, final ClauseType clause) {
         // Map the input DTO field names to database column names
-        final String fieldName = QFInspector.getFieldName(queryField);
-        final Column column = getColumn(QFInspector.getDtoClass(queryField), fieldName, clause);
-        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(QFInspector.getDtoClass(queryField), fieldName);
+        final String fieldName = QueryFieldInspector.getFieldName(queryField);
+        final Column column = getColumn(QueryFieldInspector.getDtoClass(queryField), fieldName, clause);
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(QueryFieldInspector.getDtoClass(queryField), fieldName);
         return new SelectFieldSpec(fieldAccessor, column);
     }
 

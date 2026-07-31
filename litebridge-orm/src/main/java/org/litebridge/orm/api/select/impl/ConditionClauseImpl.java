@@ -49,12 +49,6 @@ public class ConditionClauseImpl<DTO,
         this.terminalRecreator = terminalRecreator;
     }
 
-    @SuppressWarnings("unchecked")
-    public SELF withRelationshipField(final @Nullable String relationshipField) {
-        this.relationshipField = relationshipField;
-        return (SELF) this;
-    }
-
     /**
      * Equals
      *

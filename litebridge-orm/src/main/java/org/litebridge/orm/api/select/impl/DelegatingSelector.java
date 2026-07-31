@@ -19,10 +19,6 @@ public class DelegatingSelector<DTO, SSP extends SelectSpec> implements SelectTe
         this.delegate = delegate;
     }
 
-    public AbstractSelector<DTO, SSP> delegate() {
-        return delegate;
-    }
-
     @Override
     public Optional<DTO> one() {
         return delegate.one();
@@ -76,5 +72,14 @@ public class DelegatingSelector<DTO, SSP extends SelectSpec> implements SelectTe
     @Override
     public String toSql() {
         return delegate.toSql();
+    }
+
+    /**
+     * Retrieves the delegate {@link AbstractSelector} instance that this class wraps.
+     *
+     * @return the underlying {@link AbstractSelector} instance used for delegating operations
+     */
+    AbstractSelector<DTO, SSP> delegate() {
+        return delegate;
     }
 }

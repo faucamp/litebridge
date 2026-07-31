@@ -25,6 +25,7 @@ import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractConditionBasedSpec;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.impl.DelegatingSelector;
+import org.litebridge.orm.api.select.impl.DelegatingSelectorInspector;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.JoinSpec;
@@ -455,7 +456,7 @@ public final class QueryCompiler {
 
     private SelectSpec createSelectSpec(final SelectTerminal<?> selectTerminal) {
         final AbstractSelector<?, ?> selector = switch (selectTerminal) {
-            case DelegatingSelector<?, ?> delegating -> delegating.delegate();
+            case DelegatingSelector<?, ?> delegating -> DelegatingSelectorInspector.getDelegate(delegating);
             case AbstractSelector<?, ?> s -> s;
             default ->
                     throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
