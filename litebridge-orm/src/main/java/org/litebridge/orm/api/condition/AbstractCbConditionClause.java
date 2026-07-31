@@ -6,7 +6,6 @@ import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.ConditionClause;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.ast.ConditionContext;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
@@ -36,7 +35,6 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     protected final FromClauseEngine fromClauseEngine;
     private final LogicOperator logicOperator;
     private final ExpressionSpec lhs;
-    private final ConditionContext conditionContext;
     private final QueryNode node;
     private final Function<QueryNode, AbstractCbConditionClauseTerminal<DTO>> terminalCreator;
 
@@ -48,13 +46,11 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     public AbstractCbConditionClause(final FromClauseEngine fromClauseEngine,
                                      final LogicOperator logicOperator,
                                      final ExpressionSpec lhs,
-                                     final ConditionContext conditionContext,
                                      final QueryNode node,
                                      final Function<QueryNode, AbstractCbConditionClauseTerminal<DTO>> terminalCreator) {
         this.logicOperator = logicOperator;
         this.lhs = lhs;
         this.fromClauseEngine = fromClauseEngine;
-        this.conditionContext = conditionContext;
         this.node = node;
         this.terminalCreator = terminalCreator;
     }

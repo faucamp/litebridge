@@ -9,7 +9,6 @@ import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClause;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.ast.ConditionContext;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.FromClauseEngine;
@@ -35,7 +34,7 @@ class AbstractCbConditionClauseTest {
     void setUp() {
         fromClauseEngine = mock(FromClauseEngine.class);
         ExpressionSpec lhs = new SelectColumnSpec(new Column(new Table("TEST"), "COL"));
-        clause = new AbstractCbConditionClause<Object>(fromClauseEngine, LogicOperator.NOOP, lhs, ConditionContext.WHERE, null, n -> {
+        clause = new AbstractCbConditionClause<Object>(fromClauseEngine, LogicOperator.NOOP, lhs, null, n -> {
             capturedNode[0] = n;
             return null;
         }) {

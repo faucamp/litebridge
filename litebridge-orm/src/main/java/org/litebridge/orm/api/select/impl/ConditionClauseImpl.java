@@ -6,7 +6,6 @@ import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.ConditionClause;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.ast.ConditionContext;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
@@ -30,21 +29,16 @@ public class ConditionClauseImpl<DTO,
     private final Function<QueryNode, CCT> terminalRecreator;
     private final LogicOperator logicOperator;
     private final ExpressionSpec lhs;
-    private final ConditionContext conditionContext;
-    private final QueryNode node;
-    private @Nullable String relationshipField;
-
+    private final @Nullable QueryNode node;
 
     public ConditionClauseImpl(final LitebridgeContext litebridgeContext,
                                final LogicOperator logicOperator,
                                final ExpressionSpec lhs,
-                               final ConditionContext conditionContext,
-                               final QueryNode node,
+                               final @Nullable QueryNode node,
                                final Function<QueryNode, CCT> terminalRecreator) {
         this.litebridgeContext = litebridgeContext;
         this.logicOperator = logicOperator;
         this.lhs = lhs;
-        this.conditionContext = conditionContext;
         this.node = node;
         this.terminalRecreator = terminalRecreator;
     }
@@ -60,7 +54,7 @@ public class ConditionClauseImpl<DTO,
     }
 
     public CCT using(final String column) {
-        final QueryNode newNode = new ConditionNode(node, LogicOperator.NOOP, null, Operator.USING, column, relationshipField);
+        final QueryNode newNode = new ConditionNode(node, LogicOperator.NOOP, null, Operator.USING, column, null);
         return terminalRecreator.apply(newNode);
     }
 
@@ -282,7 +276,7 @@ public class ConditionClauseImpl<DTO,
             translatedOperator = operator;
         }
 
-        final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value, relationshipField);
+        final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value, null);
 
         return terminalRecreator.apply(conditionNode);
     }

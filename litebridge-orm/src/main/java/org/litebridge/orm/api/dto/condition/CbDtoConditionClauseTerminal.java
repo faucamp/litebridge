@@ -5,7 +5,6 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
-import org.litebridge.orm.api.select.ast.ConditionContext;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.FromClauseEngine;
@@ -46,7 +45,6 @@ public final class CbDtoConditionClauseTerminal<DTO> extends AbstractCbCondition
                 fromClauseEngine,
                 logicOperator,
                 expression,
-                ConditionContext.WHERE,
                 node,
                 conditionNode -> new CbDtoConditionClauseTerminal<>(ormTable, fromClauseEngine, conditionNode));
     }

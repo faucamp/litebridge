@@ -6,7 +6,6 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClause;
 import org.litebridge.orm.api.condition.AbstractConditionClauseStart;
-import org.litebridge.orm.api.select.ast.ConditionContext;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -34,6 +33,6 @@ public class SqlConditionClauseStart extends AbstractConditionClauseStart<Row> {
 
     @Override
     public AbstractCbConditionClause<Row> where(final ExpressionSpec expression) {
-        return new CbSqlConditionClause(table, fromClauseEngine, LogicOperator.NOOP, expression, ConditionContext.WHERE, node, conditionNode -> new CbSqlConditionClauseTerminal(table, fromClauseEngine, conditionNode));
+        return new CbSqlConditionClause(table, fromClauseEngine, LogicOperator.NOOP, expression, node, conditionNode -> new CbSqlConditionClauseTerminal(table, fromClauseEngine, conditionNode));
     }
 }

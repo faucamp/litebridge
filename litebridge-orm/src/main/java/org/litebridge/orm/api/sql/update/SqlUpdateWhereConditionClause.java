@@ -2,7 +2,6 @@ package org.litebridge.orm.api.sql.update;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.select.ast.ConditionContext;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.api.update.UpdateWhereConditionClause;
@@ -25,6 +24,6 @@ public class SqlUpdateWhereConditionClause
                                          final LogicOperator logicOperator,
                                          final ExpressionSpec lhs,
                                          final Function<QueryNode, SqlUpdateWhereConditionClauseTerminal> terminalRecreator) {
-        super(litebridgeContext, logicOperator, lhs, ConditionContext.WHERE, null, terminalRecreator);
+        super(litebridgeContext, logicOperator, lhs, null, terminalRecreator);
     }
 }

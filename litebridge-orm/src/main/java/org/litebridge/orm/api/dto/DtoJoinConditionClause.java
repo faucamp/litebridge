@@ -2,7 +2,6 @@ package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.JoinConditionClause;
-import org.litebridge.orm.api.select.ast.ConditionContext;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -27,6 +26,6 @@ public final class DtoJoinConditionClause<DTO> extends ConditionClauseImpl<DTO,
                                   final ExpressionSpec lhs,
                                   final QueryNode node,
                                   final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> terminalRecreator) {
-        super(litebridgeContext, logicOperator, lhs, ConditionContext.JOIN, node, terminalRecreator);
+        super(litebridgeContext, logicOperator, lhs, node, terminalRecreator);
     }
 }

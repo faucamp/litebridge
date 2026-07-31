@@ -1,7 +1,6 @@
 package org.litebridge.orm.api.dto.update;
 
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.select.ast.ConditionContext;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.api.update.UpdateWhereConditionClause;
@@ -29,6 +28,6 @@ public class DtoUpdateWhereConditionClause<DTO>
                                          final LogicOperator logicOperator,
                                          final ExpressionSpec lhs,
                                          final Function<QueryNode, DtoUpdateWhereConditionClauseTerminal<DTO>> terminalRecreator) {
-        super(litebridgeContext, logicOperator, lhs, ConditionContext.WHERE, null, terminalRecreator);
+        super(litebridgeContext, logicOperator, lhs, null, terminalRecreator);
     }
 }

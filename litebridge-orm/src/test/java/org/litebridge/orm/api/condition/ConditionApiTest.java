@@ -3,7 +3,6 @@ package org.litebridge.orm.api.condition;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.select.ast.ConditionContext;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.FromClauseEngine;
@@ -25,7 +24,7 @@ class ConditionApiTest {
 
         // Using a custom creator to capture the node
         final QueryNode[] capturedNode = new QueryNode[1];
-        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(engine, LogicOperator.NOOP, lhs, ConditionContext.WHERE, null, n -> {
+        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(engine, LogicOperator.NOOP, lhs, null, n -> {
             capturedNode[0] = n;
             return null;
         }) {
@@ -71,7 +70,7 @@ class ConditionApiTest {
         final FromClauseEngine engine = mock(FromClauseEngine.class);
         final ExpressionSpec lhs = new org.litebridge.orm.expression.select.SelectColumnSpec(new org.litebridge.db.spi.Column(new org.litebridge.db.spi.Table("TEST"), "COL"));
         final QueryNode[] capturedNode = new QueryNode[1];
-        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(engine, LogicOperator.NOOP, lhs, ConditionContext.WHERE, null, n -> {
+        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(engine, LogicOperator.NOOP, lhs, null, n -> {
             capturedNode[0] = n;
             return null;
         }) {
@@ -99,7 +98,7 @@ class ConditionApiTest {
         final FromClauseEngine engine = mock(FromClauseEngine.class);
         final ExpressionSpec lhs = new org.litebridge.orm.expression.select.SelectColumnSpec(new org.litebridge.db.spi.Column(new org.litebridge.db.spi.Table("TEST"), "COL"));
         final QueryNode[] capturedNode = new QueryNode[1];
-        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(engine, LogicOperator.NOOP, lhs, ConditionContext.WHERE, null, n -> {
+        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(engine, LogicOperator.NOOP, lhs, null, n -> {
             capturedNode[0] = n;
             return null;
         }) {

@@ -6,6 +6,7 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.orm.api.dto.condition.CbDtoConditionClauseTerminal;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
+import org.litebridge.orm.api.select.impl.DelegatingSelectorInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.OrmTable;
@@ -51,8 +52,8 @@ class DtoWhereConditionClauseTerminalTest {
 
         // Then
         assertNotNull(result);
-        assertInstanceOf(WhereNode.class, result.delegate().node());
-        assertInstanceOf(ConditionGroupNode.class, ((WhereNode) result.delegate().node()).condition());
+        assertInstanceOf(WhereNode.class, DelegatingSelectorInspector.getDelegate(result).node());
+        assertInstanceOf(ConditionGroupNode.class, ((WhereNode) DelegatingSelectorInspector.getDelegate(result).node()).condition());
     }
 
     @Test
@@ -85,7 +86,7 @@ class DtoWhereConditionClauseTerminalTest {
 
         // Then
         assertNotNull(result);
-        assertInstanceOf(WhereNode.class, result.delegate().node());
-        assertInstanceOf(ConditionGroupNode.class, ((WhereNode) result.delegate().node()).condition());
+        assertInstanceOf(WhereNode.class, DelegatingSelectorInspector.getDelegate(result).node());
+        assertInstanceOf(ConditionGroupNode.class, ((WhereNode) DelegatingSelectorInspector.getDelegate(result).node()).condition());
     }
 }

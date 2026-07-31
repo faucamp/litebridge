@@ -6,7 +6,6 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.ast.ConditionContext;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
@@ -36,7 +35,7 @@ class ConditionClauseImplTest {
         final org.litebridge.orm.engine.FromClauseEngine fromClauseEngine = mock(org.litebridge.orm.engine.FromClauseEngine.class);
         when(context.fromClauseEngine()).thenReturn(fromClauseEngine);
 
-        clause = new ConditionClauseImpl<>(context, LogicOperator.NOOP, new SelectColumnSpec(mock(org.litebridge.db.spi.Column.class)), ConditionContext.WHERE, null, n -> {
+        clause = new ConditionClauseImpl<>(context, LogicOperator.NOOP, new SelectColumnSpec(mock(org.litebridge.db.spi.Column.class)), null, n -> {
             capturedNode[0] = n;
             return mock(TestConditionClauseTerminal.class);
         });
