@@ -5,11 +5,9 @@ import org.litebridge.db.spi.Aliased;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelector;
-import org.litebridge.orm.api.select.ast.FromNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.sql.SqlFromClauseTerminal;
-import org.litebridge.orm.api.sql.SqlSelectSpec;
 import org.litebridge.orm.api.sql.SqlSelector;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.persistence.DtoConstructor;
@@ -19,7 +17,6 @@ import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.tracking.ChangeTracker;
 
-import java.util.Arrays;
 import java.util.function.Supplier;
 
 /**
@@ -82,8 +79,7 @@ public final class FromClauseEngine {
      * @return the DTO from clause terminal.
      */
     public <DTO> DtoFromClauseTerminal<DTO> from(final @Nullable SelectNode node, final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        final QueryNode fromNode = new FromNode(node, dtoClass, null, null, relatedDtoStrategy);
-        final DtoSelector<DTO> dtoSelector = createDtoSelectorForType(dtoClass, dtoClass, relatedDtoStrategy, fromNode);
+        final DtoSelector<DTO> dtoSelector = createDtoSelectorForType(node, dtoClass, dtoClass, relatedDtoStrategy);
 
         if (node != null && node.expressions().length > 0) {
             return new DtoFromClauseTerminal<>(dtoSelector);
@@ -103,8 +99,7 @@ public final class FromClauseEngine {
      * @return the DTO from clause terminal.
      */
     public <TypeOverride> DtoFromClauseTerminal<TypeOverride> from(final QueryNode node, final Class<?> dtoClass, final Class<TypeOverride> typeOverrideClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        final QueryNode fromNode = new FromNode(node, dtoClass, null, null, relatedDtoStrategy);
-        final DtoSelector<TypeOverride> dtoSelector = createDtoSelectorForType(typeOverrideClass, dtoClass, relatedDtoStrategy, fromNode);
+        final DtoSelector<TypeOverride> dtoSelector = createDtoSelectorForType(node, typeOverrideClass, dtoClass, relatedDtoStrategy);
 
         if (hasExplicitSelect(node)) {
             return new DtoFromClauseTerminal<>(dtoSelector);
@@ -113,7 +108,7 @@ public final class FromClauseEngine {
         }
     }
 
-    private <TypeOverride> DtoSelector<TypeOverride> createDtoSelectorForType(final Class<TypeOverride> typeOverride, final Class<?> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy, final QueryNode node) {
+    private <TypeOverride> DtoSelector<TypeOverride> createDtoSelectorForType(final @Nullable QueryNode node, final Class<TypeOverride> typeOverride, final Class<?> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
         final LitebridgeContext litebridgeContext = createLitebridgeContext(relatedDtoStrategy);
 
@@ -145,8 +140,7 @@ public final class FromClauseEngine {
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
         final OrmTable table = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
         final LitebridgeContext litebridgeContext = createLitebridgeContext();
-        final QueryNode fromNode = new FromNode(null, dtoClass, contextDtoClass, null, null); // Root from context
-        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, litebridgeContext.aliasGenerator(), litebridgeContext, fromNode)
+        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, litebridgeContext.aliasGenerator(), litebridgeContext, null)
                 .select();
     }
 
@@ -158,11 +152,8 @@ public final class FromClauseEngine {
      * @return the SQL from clause terminal.
      */
     public SqlFromClauseTerminal from(final SelectNode node, final String table) {
-        final QueryNode fromNode = new FromNode(node, null, null, table, null);
         final LitebridgeContext litebridgeContext = createLitebridgeContext();
-        final SqlSelectSpec selectSpec = new SqlSelectSpec(litebridgeContext);
-        selectSpec.addExpressions(Arrays.asList(node.expressions()));
-        return new SqlSelector(new Table(table), databaseProvider, tableRegistry, litebridgeContext, fromNode).select().from(table);
+        return new SqlSelector(new Table(table), databaseProvider, tableRegistry, litebridgeContext, node).select().from(table);
     }
 
     public TableRegistry tableRegistry() {

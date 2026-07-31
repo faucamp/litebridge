@@ -20,4 +20,9 @@ public final class NoOpAliasGenerator implements AliasGenerator {
     public Column aliasColumn(final Table ormTable, final ColumnMetaData columnMetaData) {
         return columnMetaData.toColumn();
     }
+
+    @Override
+    public Column aliasColumn(final Table ormTable, final Column column) {
+        return column;
+    }
 }

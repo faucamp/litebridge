@@ -32,7 +32,7 @@ class SelectImplTest {
 
     @BeforeEach
     void setUp() {
-        selectSpec = new SqlSelectSpec(mock(LitebridgeContext.class));
+        selectSpec = new SqlSelectSpec(mock(LitebridgeContext.class), mock(Table.class));
         selectSpec.setProtoExpressionResolver(new SqlProtoExpressionResolver(selectSpec));
         selectSpec.setTable(new Table("CATALOG", "SCHEMA", "TABLE"));
         databaseProvider = mock(TransactionalDatabaseProvider.class);

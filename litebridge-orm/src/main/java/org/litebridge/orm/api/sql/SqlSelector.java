@@ -34,21 +34,14 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
 
     @Override
     protected SqlSelectSpec createSelectSpec(final AliasGenerator aliasGenerator) {
-        final LitebridgeContext freshContext = new LitebridgeContext(
-                litebridgeContext.config(),
-                litebridgeContext.fromClauseEngine(),
-                litebridgeContext.sqlFunctionRegistry(),
-                litebridgeContext.queryPlanCache(),
-                aliasGenerator
-        );
-        final SqlSelectSpec selectSpec = new SqlSelectSpec(freshContext);
+        final SqlSelectSpec selectSpec = new SqlSelectSpec(litebridgeContext, table);
         selectSpec.setProtoExpressionResolver(new SqlProtoExpressionResolver(selectSpec));
         return selectSpec;
     }
 
     public SqlFromClause select(final ExpressionSpec... expressionSpecs) {
         final QueryNode selectNode = new SelectNode(node, expressionSpecs, null);
-        return new SqlFromClause(tableRegistry, withNode(selectNode));
+        return new SqlFromClause(withNode(selectNode));
     }
 
     @Override

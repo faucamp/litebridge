@@ -12,7 +12,6 @@ import org.litebridge.orm.api.select.ast.BeginGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.EndGroupNode;
-import org.litebridge.orm.api.select.ast.FromNode;
 import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.HavingNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
@@ -116,13 +115,19 @@ public final class QueryCompiler {
         switch (node) {
             case SelectNode selectNode -> {
                 if (selectNode.expressions().length > 0) {
+
+                    if (selectSpec instanceof DtoSelectSpec) {
+                        // Alias the selected columns for DTO field mapping
+                        for (ExpressionSpec expressionSpec : selectNode.expressions()) {
+                            if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
+                                final Column aliasedColumn = aliasGenerator.aliasColumn(selectSpec.getTable(), columnExpressionSpec.getColumn());
+                                aliasedColumn.setTable(selectSpec.getTable());
+                                columnExpressionSpec.setColumn(aliasedColumn);
+                            }
+                        }
+                    }
+
                     selectSpec.setExpressions(List.of(selectNode.expressions()));
-                }
-            }
-            case FromNode fromNode -> {
-                if (selectSpec instanceof SqlSelectSpec sqlSelectSpec && fromNode.tableName() != null) {
-                    final Table spiTable = tableRegistry.getOrCreateSpiTable(fromNode.tableName());
-                    sqlSelectSpec.setTable(spiTable);
                 }
             }
             case JoinNode joinNode -> {

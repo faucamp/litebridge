@@ -1,7 +1,6 @@
 package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
@@ -13,12 +12,10 @@ import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
 
 import java.util.function.Function;
 
@@ -54,25 +51,23 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         DtoJoinClassTerminal<DTO> {
 
     private final OrmTable ormTable;
-    private final AliasGenerator aliasGenerator;
     private final TableRegistry tableRegistry;
 
     /**
      * Creates a new instance of {@code DtoJoinConditionClauseTerminal}.
      *
      * @param joinNode
-     * @param delegate       the selector delegate
+     * @param delegate the selector delegate
      */
     public DtoJoinConditionClauseTerminal(final JoinNode joinNode, final DtoSelector<DTO> delegate) {
         super(joinNode, delegate);
         this.ormTable = delegate.ormTable();
-        this.aliasGenerator = delegate.dtoAliasRegistry();
         this.tableRegistry = delegate.tableRegistry();
     }
 
     @Override
     public DtoJoinConditionClause<DTO> and(final String field) {
-        final Column column = aliasGenerator.aliasColumn(((DtoSelector<DTO>) delegate).table(), ormTable.getColumnForFieldName(field));
+        final Column column = ormTable.getColumnForFieldName(field).toColumn();
         return and(new SelectColumnSpec(column));
     }
 
@@ -88,7 +83,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoJoinConditionClause<DTO> or(final String field) {
-        final Column column = aliasGenerator.aliasColumn(((DtoSelector<DTO>) delegate).table(), ormTable.getColumnForFieldName(field));
+        final Column column = ormTable.getColumnForFieldName(field).toColumn();
         return or(new SelectColumnSpec(column));
     }
 
@@ -104,7 +99,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoWhereConditionClause<DTO> where(final String field) {
-        final Column column = aliasGenerator.aliasColumn(((DtoSelector<DTO>) delegate).table(), ormTable.getColumnForFieldName(field));
+        final Column column = ormTable.getColumnForFieldName(field).toColumn();
         return where(new SelectColumnSpec(column));
     }
 

@@ -6,6 +6,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
+import org.litebridge.orm.api.select.ast.LimitNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
@@ -24,6 +25,7 @@ import org.litebridge.tracking.FieldAccessor;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Selector for DTOs.
@@ -59,14 +61,14 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
                        final TransactionalDatabaseProvider databaseProvider,
                        final AliasGenerator aliasGenerator,
                        final LitebridgeContext litebridgeContext,
-                       final QueryNode node) {
+                       final @Nullable QueryNode node) {
         super(databaseProvider,
                 tableRegistry,
                 typeOverride,
                 litebridgeContext,
                 node);
         this.ormTable = ormTable;
-        this.table = aliasGenerator.aliasTable(ormTable);
+        this.table = ormTable.getMetaData().toTable();
         this.tableRegistry = tableRegistry;
         this.classFieldAccessorCache = classFieldAccessorCache;
         this.dtoConstructor = dtoConstructor;
@@ -107,7 +109,7 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
                 .filter(entry -> entry.getValue() instanceof ColumnMetaData)
                 .map(entry -> (ColumnMetaData) entry.getValue())
                 .map(columnMetaData -> {
-                    final Column column = aliasGenerator.aliasColumn(table, columnMetaData);
+                    final Column column = columnMetaData.toColumn();
                     final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(column.name());
                     return (ExpressionSpec) new SelectFieldSpec(fieldAccessor, column);
                 })
@@ -196,7 +198,7 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
         final List<TypeOverride> result;
         if (first) {
             // Use a new selector with a LIMIT node
-            result = withNode(new org.litebridge.orm.api.select.ast.LimitNode(node, java.util.Optional.of(1), java.util.Optional.empty())).list();
+            result = withNode(new LimitNode(node, Optional.of(1), Optional.empty())).list();
         } else {
             result = list();
         }

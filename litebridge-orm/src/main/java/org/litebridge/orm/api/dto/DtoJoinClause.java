@@ -16,12 +16,11 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
-import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.meta.QueryField;
+import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.MappedManyToMany;
 import org.litebridge.orm.persistence.MappedOneToMany;
 import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 
@@ -41,7 +40,6 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
 
     private final OrmTable table;
     private final OrmTable targetTable;
-    private final AliasGenerator aliasGenerator;
     private final ClassFieldAccessorCache classFieldAccessorCache;
     private final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> terminalCreator;
 
@@ -54,7 +52,6 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         super(delegate);
         table = delegate.ormTable();
         this.targetTable = targetTable;
-        this.aliasGenerator = delegate.dtoAliasRegistry();
         this.classFieldAccessorCache = delegate.classFieldAccessorCache();
         this.terminalCreator = terminalCreator;
     }

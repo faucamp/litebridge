@@ -108,6 +108,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
         // Map the input DTO field names to database column names
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
         final Table table;
+
         if (selectSpec != null) {
             if (ormTable.equals(selectSpec.dtoTable())) {
                 table = selectSpec.getTable();

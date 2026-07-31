@@ -32,13 +32,13 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
     protected final TableRegistry tableRegistry;
     protected final Class<DTO> dtoClass;
     protected final LitebridgeContext litebridgeContext;
-    protected QueryNode node;
+    protected @Nullable QueryNode node;
 
     protected AbstractSelector(final TransactionalDatabaseProvider databaseProvider,
                                final TableRegistry tableRegistry,
                                final Class<DTO> dtoClass,
                                final LitebridgeContext litebridgeContext,
-                               final QueryNode node) {
+                               final @Nullable QueryNode node) {
         this.databaseProvider = databaseProvider;
         this.tableRegistry = tableRegistry;
         this.dtoClass = dtoClass;
@@ -110,9 +110,11 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
      * @return the compiled select specification
      */
     public SSP compile() {
-        final AliasGenerator freshGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
-        final SSP spec = createSelectSpec(freshGenerator);
-        new QueryCompiler(tableRegistry, freshGenerator).compile(node, spec);
+        //final AliasGenerator freshGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
+        final DefaultAliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
+
+        final SSP spec = createSelectSpec(aliasGenerator);
+        new QueryCompiler(tableRegistry, aliasGenerator).compile(node, spec);
         return spec;
     }
 

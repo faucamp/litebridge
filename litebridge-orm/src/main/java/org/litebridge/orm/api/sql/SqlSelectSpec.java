@@ -20,8 +20,9 @@ import java.util.Objects;
  */
 public class SqlSelectSpec extends SelectSpec {
 
-    public SqlSelectSpec(final LitebridgeContext litebridgeContext) {
+    public SqlSelectSpec(final LitebridgeContext litebridgeContext, final Table table) {
         super(litebridgeContext);
+        this.table = table;
     }
 
     public SqlJoinSpec newJoinSpec(final String table) {
