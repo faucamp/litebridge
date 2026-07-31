@@ -8,10 +8,8 @@ import org.litebridge.orm.api.delete.model.DeleteSpec;
 import org.litebridge.orm.api.dto.DtoDataSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.ast.BeginGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
-import org.litebridge.orm.api.select.ast.EndGroupNode;
 import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.HavingNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
@@ -311,8 +309,6 @@ public final class QueryCompiler {
                     applyNode(queryNode, whereNode, selectSpec);
                 }
             }
-            case BeginGroupNode beginGroup -> selectSpec.pushWhereConditionGroup(beginGroup.logicOperator());
-            case EndGroupNode endGroup -> selectSpec.popWhereConditionGroup();
             case GroupByNode groupByNode -> selectSpec.setGroupBy(List.of(groupByNode.expressions()));
             case HavingNode havingNode -> {
                 final List<QueryNode> conditionNodes = flatten(havingNode.condition());
@@ -377,8 +373,6 @@ public final class QueryCompiler {
                 conditionSpec.setOperator(conditionNode.operator());
                 conditionSpec.setValue(rhs);
             }
-            case BeginGroupNode beginGroup -> spec.pushConditionGroupSpec(beginGroup.logicOperator());
-            case EndGroupNode endGroup -> spec.popConditionGroupSpec();
             default -> {
                 // Ignore
             }
