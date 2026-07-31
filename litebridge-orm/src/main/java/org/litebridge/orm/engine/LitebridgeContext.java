@@ -1,7 +1,6 @@
 package org.litebridge.orm.engine;
 
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
-import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
@@ -12,7 +11,7 @@ import org.litebridge.orm.persistence.alias.AliasGenerator;
  * This record provides the core configuration and utility components required for
  * query generation, function resolution, and execution.
  */
-public final class LitebridgeContext<SSP extends SelectSpec> {
+public final class LitebridgeContext {
 
     private final LitebridgeConfig config;
     private final FromClauseEngine fromClauseEngine;
@@ -20,7 +19,6 @@ public final class LitebridgeContext<SSP extends SelectSpec> {
     private final QueryPlanCache queryPlanCache;
     private final AliasGenerator aliasGenerator;
     private RelatedDtoStrategy relatedDtoStrategy;
-    private SSP selectSpec;
 
     /**
      * Create a new Litebridge context with the specified components.
@@ -70,14 +68,6 @@ public final class LitebridgeContext<SSP extends SelectSpec> {
 
     public void setRelatedDtoStrategy(final RelatedDtoStrategy relatedDtoStrategy) {
         this.relatedDtoStrategy = relatedDtoStrategy;
-    }
-
-    public SSP getSelectSpec() {
-        return selectSpec;
-    }
-
-    public void setSelectSpec(final SSP selectSpec) {
-        this.selectSpec = selectSpec;
     }
 
     public QueryCompiler createQueryCompiler() {

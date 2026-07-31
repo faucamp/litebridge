@@ -18,7 +18,6 @@ import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
-import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridge.tracking.ChangeTracker;
 
 import java.util.Arrays;
@@ -101,7 +100,7 @@ public final class FromClauseEngine {
      * @param dtoClass           the DTO class.
      * @param typeOverrideClass  the type override class.
      * @param relatedDtoStrategy the related DTO strategy.
-     * @param <TypeOverride>      the type override.
+     * @param <TypeOverride>     the type override.
      * @return the DTO from clause terminal.
      */
     public <TypeOverride> DtoFromClauseTerminal<TypeOverride> from(final QueryNode node, final Class<?> dtoClass, final Class<TypeOverride> typeOverrideClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
@@ -164,7 +163,6 @@ public final class FromClauseEngine {
         final LitebridgeContext litebridgeContext = createLitebridgeContext();
         final SqlSelectSpec selectSpec = new SqlSelectSpec(litebridgeContext);
         selectSpec.addExpressions(Arrays.asList(node.expressions()));
-        litebridgeContext.setSelectSpec(selectSpec);
         return new SqlSelector(new Table(table), databaseProvider, tableRegistry, litebridgeContext, fromNode).select().from(table);
     }
 
