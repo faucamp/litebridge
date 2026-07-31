@@ -41,7 +41,6 @@ public class CbDtoConditionClause<DTO> extends AbstractCbConditionClause<DTO> {
 
     @Override
     protected AbstractCbConditionClauseTerminal<DTO> createCbConditionClauseTerminal(final QueryNode conditionNode) {
-        //TODO: verify condition node
         return new CbDtoConditionClauseTerminal<>(ormTable, fromClauseEngine, conditionNode);
     }
 }

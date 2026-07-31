@@ -6,7 +6,6 @@ import org.litebridge.orm.api.condition.AbstractCbConditionClause;
 import org.litebridge.orm.api.condition.AbstractConditionClauseStart;
 import org.litebridge.orm.api.select.ast.ConditionContext;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
@@ -44,7 +43,6 @@ public class DtoConditionClauseStart<DTO> extends AbstractConditionClauseStart<D
 
     @Override
     public AbstractCbConditionClause<DTO> where(final ExpressionSpec expression) {
-        //TODO: check logical operator and condition context, and node
         return new CbDtoConditionClause<>(ormTable, fromClauseEngine, LogicOperator.NOOP, expression, ConditionContext.WHERE, node, node -> new CbDtoConditionClauseTerminal<>(ormTable, fromClauseEngine, node));
     }
 }

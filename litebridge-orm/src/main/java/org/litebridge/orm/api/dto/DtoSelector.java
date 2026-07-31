@@ -107,7 +107,6 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
                 .filter(entry -> entry.getValue() instanceof ColumnMetaData)
                 .map(entry -> (ColumnMetaData) entry.getValue())
                 .map(columnMetaData -> {
-                    //TODO: verify table alias here; used to be selectSpec.getTable(), implying something set that
                     final Column column = aliasGenerator.aliasColumn(table, columnMetaData);
                     final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(column.name());
                     return (ExpressionSpec) new SelectFieldSpec(fieldAccessor, column);
