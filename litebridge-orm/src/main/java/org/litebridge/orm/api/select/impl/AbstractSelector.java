@@ -31,13 +31,13 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
     protected final TransactionalDatabaseProvider databaseProvider;
     protected final TableRegistry tableRegistry;
     protected final Class<DTO> dtoClass;
-    protected final LitebridgeContext<SSP> litebridgeContext;
+    protected final LitebridgeContext litebridgeContext;
     protected QueryNode node;
 
     protected AbstractSelector(final TransactionalDatabaseProvider databaseProvider,
                                final TableRegistry tableRegistry,
                                final Class<DTO> dtoClass,
-                               final LitebridgeContext<SSP> litebridgeContext,
+                               final LitebridgeContext litebridgeContext,
                                final QueryNode node) {
         this.databaseProvider = databaseProvider;
         this.tableRegistry = tableRegistry;

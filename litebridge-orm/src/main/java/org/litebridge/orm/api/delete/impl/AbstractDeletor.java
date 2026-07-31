@@ -16,12 +16,12 @@ permits DtoDeletor, SqlDeletor {
 
     protected final DS deleteSpec;
     protected final TransactionalDatabaseProvider databaseProvider;
-    protected final LitebridgeContext<?> litebridgeContext;
+    protected final LitebridgeContext litebridgeContext;
     protected QueryNode node;
 
     protected AbstractDeletor(final DS deleteSpec,
                               final TransactionalDatabaseProvider databaseProvider,
-                              final LitebridgeContext<?> litebridgeContext,
+                              final LitebridgeContext litebridgeContext,
                               final QueryNode node) {
         this.deleteSpec = deleteSpec;
         this.databaseProvider = databaseProvider;

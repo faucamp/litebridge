@@ -24,7 +24,7 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
     public SqlSelector(final Table table,
                        final TransactionalDatabaseProvider databaseProvider,
                        final TableRegistry tableRegistry,
-                       final LitebridgeContext<SqlSelectSpec> litebridgeContext,
+                       final LitebridgeContext litebridgeContext,
                        final QueryNode node) {
         super(databaseProvider, tableRegistry, Row.class, litebridgeContext, node);
         this.tableRegistry = tableRegistry;

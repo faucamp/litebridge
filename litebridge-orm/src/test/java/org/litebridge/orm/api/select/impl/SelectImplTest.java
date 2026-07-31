@@ -102,7 +102,7 @@ class SelectImplTest {
         private List<Object> resultList;
 
         protected TestSelector(SqlSelectSpec selectSpec, TransactionalDatabaseProvider databaseProvider, LitebridgeContext context, QueryNode node) {
-            super(databaseProvider, mock(TableRegistry.class), Object.class, (LitebridgeContext<SqlSelectSpec>) context, node);
+            super(databaseProvider, mock(TableRegistry.class), Object.class, (LitebridgeContext) context, node);
             this.selectSpec = selectSpec;
         }
 
