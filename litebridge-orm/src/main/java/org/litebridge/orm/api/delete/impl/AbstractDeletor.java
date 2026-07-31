@@ -6,6 +6,8 @@ import org.litebridge.orm.api.delete.model.DeleteSpec;
 import org.litebridge.orm.api.dto.delete.DtoDeletor;
 import org.litebridge.orm.api.sql.delete.SqlDeletor;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.api.select.ast.QueryNode;
 
 import java.sql.SQLException;
 
@@ -14,15 +16,22 @@ permits DtoDeletor, SqlDeletor {
 
     protected final DS deleteSpec;
     protected final TransactionalDatabaseProvider databaseProvider;
+    protected final LitebridgeContext<?> litebridgeContext;
+    protected QueryNode node;
 
     protected AbstractDeletor(final DS deleteSpec,
-                              final TransactionalDatabaseProvider databaseProvider) {
+                              final TransactionalDatabaseProvider databaseProvider,
+                              final LitebridgeContext<?> litebridgeContext,
+                              final QueryNode node) {
         this.deleteSpec = deleteSpec;
         this.databaseProvider = databaseProvider;
+        this.litebridgeContext = litebridgeContext;
+        this.node = node;
     }
 
     @Override
     public UpdateResult execute() {
+        litebridgeContext.createQueryCompiler().compile(node, deleteSpec);
         return execute(deleteSpec);
     }
 

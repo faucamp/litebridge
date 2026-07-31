@@ -6,13 +6,9 @@ import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.ConditionClause;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.dto.DtoWhereConditionClause;
-import org.litebridge.orm.api.dto.DtoHavingConditionClause;
 import org.litebridge.orm.api.select.ast.ConditionContext;
-import org.litebridge.orm.api.select.ast.HavingNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngine;
@@ -294,18 +290,6 @@ public class ConditionClauseImpl<DTO,
 
         final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value, relationshipField);
 
-        //TODO: fix these checks, or move out the code
-//        if (this instanceof DtoWhereConditionClause|| this.getClass().getName().contains("Where")) {
-//            newNode = new WhereNode(node, logicOperator, lhs, translatedOperator, value);
-//        } else if (this instanceof DtoHavingConditionClause || this.getClass().getName().contains("Having")) {
-//            newNode = new HavingNode(node, logicOperator, lhs, translatedOperator, value);
-//        } else if (this.getClass().getName().contains("Join")) {
-//            newNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value, relationshipField);
-//        } else {
-//            // Fallback
-//            newNode = node;
-//        }
-
         return terminalRecreator.apply(conditionNode);
     }
 
@@ -319,7 +303,8 @@ public class ConditionClauseImpl<DTO,
         final AbstractSelector<?, ?> selector = switch (selectTerminal) {
             case DelegatingSelector<?, ?> delegating -> delegating.delegate();
             case AbstractSelector<?, ?> s -> s;
-            default -> throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
+            default ->
+                    throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
         };
 
         return selector.compile();

@@ -3,14 +3,13 @@ package org.litebridge.orm.api.update;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.math.MathOperation;
-import org.litebridge.orm.api.dto.update.DtoUpdateSpec;
 import org.litebridge.orm.api.dto.update.DtoUpdater;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 class UpdateSetStepTest {
 
@@ -18,25 +17,21 @@ class UpdateSetStepTest {
     void to() {
         // Given
         DtoUpdater<?> mockUpdater = mock(DtoUpdater.class);
-        DtoUpdateSpec mockSpec = mock(DtoUpdateSpec.class);
-        when(mockUpdater.updateSpec()).thenReturn(mockSpec);
         Column column = mock(Column.class);
         UpdateSetStep<DtoUpdater<?>> step = new UpdateSetStep<>(column, mockUpdater);
 
         // When
-        DtoUpdater<?> result = step.to("column");
+        DtoUpdater<?> result = step.to("value");
 
         // Then
         assertEquals(mockUpdater, result);
-        verify(mockSpec).addColumnValue(argThat(cv -> cv.column().equals(column) && cv.value().equals("column")));
+        verify(mockUpdater).addSetNode(eq(column), eq("value"));
     }
 
     @Test
     void increment() {
         // Given
         DtoUpdater<?> mockUpdater = mock(DtoUpdater.class);
-        DtoUpdateSpec mockSpec = mock(DtoUpdateSpec.class);
-        when(mockUpdater.updateSpec()).thenReturn(mockSpec);
         Column column = mock(Column.class);
         UpdateSetStep<DtoUpdater<?>> step = new UpdateSetStep<>(column, mockUpdater);
 
@@ -45,19 +40,13 @@ class UpdateSetStepTest {
 
         // Then
         assertEquals(mockUpdater, result);
-        verify(mockSpec).addColumnValue(argThat(cv -> {
-            if (!cv.column().equals(column)) return false;
-            if (!(cv.value() instanceof MathOperation op)) return false;
-            return op.operator() == MathOperation.Operator.ADD && op.value().equals(1);
-        }));
+        verify(mockUpdater).addSetNode(eq(column), argThat(v -> v instanceof MathOperation op && op.operator() == MathOperation.Operator.ADD && op.value().equals(1)));
     }
 
     @Test
     void add() {
         // Given
         DtoUpdater<?> mockUpdater = mock(DtoUpdater.class);
-        DtoUpdateSpec mockSpec = mock(DtoUpdateSpec.class);
-        when(mockUpdater.updateSpec()).thenReturn(mockSpec);
         Column column = mock(Column.class);
         UpdateSetStep<DtoUpdater<?>> step = new UpdateSetStep<>(column, mockUpdater);
 
@@ -66,19 +55,13 @@ class UpdateSetStepTest {
 
         // Then
         assertEquals(mockUpdater, result);
-        verify(mockSpec).addColumnValue(argThat(cv -> {
-            if (!cv.column().equals(column)) return false;
-            if (!(cv.value() instanceof MathOperation op)) return false;
-            return op.operator() == MathOperation.Operator.ADD && op.value().equals(10);
-        }));
+        verify(mockUpdater).addSetNode(eq(column), argThat(v -> v instanceof MathOperation op && op.operator() == MathOperation.Operator.ADD && op.value().equals(10)));
     }
 
     @Test
     void minus() {
         // Given
         DtoUpdater<?> mockUpdater = mock(DtoUpdater.class);
-        DtoUpdateSpec mockSpec = mock(DtoUpdateSpec.class);
-        when(mockUpdater.updateSpec()).thenReturn(mockSpec);
         Column column = mock(Column.class);
         UpdateSetStep<DtoUpdater<?>> step = new UpdateSetStep<>(column, mockUpdater);
 
@@ -87,19 +70,13 @@ class UpdateSetStepTest {
 
         // Then
         assertEquals(mockUpdater, result);
-        verify(mockSpec).addColumnValue(argThat(cv -> {
-            if (!cv.column().equals(column)) return false;
-            if (!(cv.value() instanceof MathOperation op)) return false;
-            return op.operator() == MathOperation.Operator.SUBTRACT && op.value().equals(5);
-        }));
+        verify(mockUpdater).addSetNode(eq(column), argThat(v -> v instanceof MathOperation op && op.operator() == MathOperation.Operator.SUBTRACT && op.value().equals(5)));
     }
 
     @Test
     void multiply() {
         // Given
         DtoUpdater<?> mockUpdater = mock(DtoUpdater.class);
-        DtoUpdateSpec mockSpec = mock(DtoUpdateSpec.class);
-        when(mockUpdater.updateSpec()).thenReturn(mockSpec);
         Column column = mock(Column.class);
         UpdateSetStep<DtoUpdater<?>> step = new UpdateSetStep<>(column, mockUpdater);
 
@@ -108,19 +85,13 @@ class UpdateSetStepTest {
 
         // Then
         assertEquals(mockUpdater, result);
-        verify(mockSpec).addColumnValue(argThat(cv -> {
-            if (!cv.column().equals(column)) return false;
-            if (!(cv.value() instanceof MathOperation op)) return false;
-            return op.operator() == MathOperation.Operator.MULTIPLY && op.value().equals(2);
-        }));
+        verify(mockUpdater).addSetNode(eq(column), argThat(v -> v instanceof MathOperation op && op.operator() == MathOperation.Operator.MULTIPLY && op.value().equals(2)));
     }
 
     @Test
     void divide() {
         // Given
         DtoUpdater<?> mockUpdater = mock(DtoUpdater.class);
-        DtoUpdateSpec mockSpec = mock(DtoUpdateSpec.class);
-        when(mockUpdater.updateSpec()).thenReturn(mockSpec);
         Column column = mock(Column.class);
         UpdateSetStep<DtoUpdater<?>> step = new UpdateSetStep<>(column, mockUpdater);
 
@@ -129,19 +100,13 @@ class UpdateSetStepTest {
 
         // Then
         assertEquals(mockUpdater, result);
-        verify(mockSpec).addColumnValue(argThat(cv -> {
-            if (!cv.column().equals(column)) return false;
-            if (!(cv.value() instanceof MathOperation op)) return false;
-            return op.operator() == MathOperation.Operator.DIVIDE && op.value().equals(2);
-        }));
+        verify(mockUpdater).addSetNode(eq(column), argThat(v -> v instanceof MathOperation op && op.operator() == MathOperation.Operator.DIVIDE && op.value().equals(2)));
     }
 
     @Test
     void mod() {
         // Given
         DtoUpdater<?> mockUpdater = mock(DtoUpdater.class);
-        DtoUpdateSpec mockSpec = mock(DtoUpdateSpec.class);
-        when(mockUpdater.updateSpec()).thenReturn(mockSpec);
         Column column = mock(Column.class);
         UpdateSetStep<DtoUpdater<?>> step = new UpdateSetStep<>(column, mockUpdater);
 
@@ -150,10 +115,6 @@ class UpdateSetStepTest {
 
         // Then
         assertEquals(mockUpdater, result);
-        verify(mockSpec).addColumnValue(argThat(cv -> {
-            if (!cv.column().equals(column)) return false;
-            if (!(cv.value() instanceof MathOperation op)) return false;
-            return op.operator() == MathOperation.Operator.MOD && op.value().equals(3);
-        }));
+        verify(mockUpdater).addSetNode(eq(column), argThat(v -> v instanceof MathOperation op && op.operator() == MathOperation.Operator.MOD && op.value().equals(3)));
     }
 }

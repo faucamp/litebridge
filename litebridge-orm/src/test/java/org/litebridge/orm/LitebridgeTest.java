@@ -388,32 +388,34 @@ class LitebridgeTest {
         assertNotNull(result);
     }
 
-//    @Test
-//    void select_aliased() throws Exception {
-//        // Given
-//        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-//        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
-//        when(sqlFunctionRegistry.selectColumnFactory()).thenReturn(new TestColumnExpressionFactory());
-//        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-//        final DataSource dataSource = mock(DataSource.class);
-//        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
-//        final FieldSpec fieldSpec = new FieldSpec("myVar", false);
-//        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
-//        final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
-//        final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
-//        final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
-//        final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
-//        when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(new TableMetaData(tableSpec, List.of("MY_VAR"), List.of(columnMetaData)));
-//        litebridge.register(dtoTableSpec);
-//
-//        final Aliased aliased = new Aliased("TEST_COLUMN", "testAlias");
-//
-//        // When
-//        final FromClauseStart result = litebridge.select(aliased);
-//
-//        // Then
-//        assertNotNull(result);
-//    }
+    @Test
+    void select_aliased() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        final SqlFunctionRegistry.Select select = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(select);
+        when(select.column()).thenReturn(new org.litebridge.orm.expression.TestColumnExpressionFactory());
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        final DataSource dataSource = mock(DataSource.class);
+        final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
+        final FieldSpec fieldSpec = new FieldSpec("myVar", false);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
+        final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
+        final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
+        final ColumnMetaData columnMetaData = new ColumnMetaData(tableSpec, "MY_VAR", false, Types.VARCHAR, 10);
+        final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
+        when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(new TableMetaData(tableSpec, List.of("MY_VAR"), List.of(columnMetaData)));
+        litebridge.register(dtoTableSpec);
+
+        final org.litebridge.orm.expression.ExpressionSpec aliased = new org.litebridge.orm.expression.ProtoColumnExpressionSpec(org.litebridge.orm.expression.select.SelectFieldSpec.class, "TEST_COLUMN", "testAlias");
+
+        // When
+        final FromClauseStart result = litebridge.select(aliased);
+
+        // Then
+        assertNotNull(result);
+    }
 
     @Test
     void toDto() throws Exception {
@@ -790,7 +792,7 @@ class LitebridgeTest {
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
         final Row row = new Row(); // Empty row
-        
+
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> litebridge.toDto(row, TestDto.class));
     }
@@ -808,14 +810,14 @@ class LitebridgeTest {
         // Then
         assertNotNull(mapper);
     }
-    
+
     @Test
     void update_lambda() throws Exception {
         // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
-        
+
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
         final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
@@ -874,7 +876,7 @@ class LitebridgeTest {
 
         litebridge.update("MY_TABLE", q -> q.set("COL").to("VAL").where("ID").eq(1));
 
-        verify(databaseProvider).update(any(), any());
+        verify(databaseProvider).update(any(), any(ConnectionProvider.class));
     }
 
     private static void setFieldValue(final Object obj, final String fieldName, final Object value) throws Exception {

@@ -79,4 +79,8 @@ public final class LitebridgeContext<SSP extends SelectSpec> {
     public void setSelectSpec(final SSP selectSpec) {
         this.selectSpec = selectSpec;
     }
+
+    public QueryCompiler createQueryCompiler() {
+        return new QueryCompiler(fromClauseEngine.tableRegistry(), aliasGenerator);
+    }
 }

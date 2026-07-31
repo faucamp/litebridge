@@ -1,131 +1,121 @@
-//package org.litebridge.orm.api.condition;
-//
-//import org.junit.jupiter.api.Test;
-//import org.litebridge.db.spi.query.Operator;
-//import org.litebridge.orm.api.dto.condition.CbDtoConditionClauseTerminal;
-//import org.litebridge.orm.api.select.SelectTerminal;
-//import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-//import org.litebridge.orm.api.select.model.ConditionSpec;
-//import org.litebridge.orm.api.select.model.SelectSpec;
-//import org.litebridge.orm.engine.FromClauseEngine;
-//import org.litebridge.orm.engine.SelectEngine;
-//import org.mockito.MockedStatic;
-//
-//import java.util.List;
-//import java.util.function.Function;
-//
-//import static org.junit.jupiter.api.Assertions.assertEquals;
-//import static org.junit.jupiter.api.Assertions.assertThrows;
-//import static org.mockito.Mockito.mock;
-//import static org.mockito.Mockito.mockStatic;
-//
-//class ConditionApiTest {
-//
-//    @Test
-//    @SuppressWarnings("unchecked")
-//    void testBasicOperators() {
-//        final ConditionSpec spec = new ConditionSpec();
-//        final ConditionGroupSpec group = mock(ConditionGroupSpec.class);
-//        final FromClauseEngine engine = mock(FromClauseEngine.class);
-//
-//        final AbstractCbConditionClause<Object> clause = new AbstractCbConditionClause<>(spec, group, engine) {
-//            @Override
-//            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal() {
-//                return mock(CbDtoConditionClauseTerminal.class);
-//            }
-//        };
-//
-//        clause.eq("val");
-//        assertEquals(Operator.EQ, spec.getOperator());
-//        assertEquals("val", spec.getValue());
-//
-//        clause.neq("val");
-//        assertEquals(Operator.NEQ, spec.getOperator());
-//
-//        clause.lt(10);
-//        assertEquals(Operator.LT, spec.getOperator());
-//
-//        clause.lte(10);
-//        assertEquals(Operator.LTE, spec.getOperator());
-//
-//        clause.gt(10);
-//        assertEquals(Operator.GT, spec.getOperator());
-//
-//        clause.gte(10);
-//        assertEquals(Operator.GTE, spec.getOperator());
-//
-//        clause.like("%val%");
-//        assertEquals(Operator.LIKE, spec.getOperator());
-//
-//        clause.isNull();
-//        assertEquals(Operator.IS_NULL, spec.getOperator());
-//
-//        clause.isNotNull();
-//        assertEquals(Operator.IS_NOT_NULL, spec.getOperator());
-//    }
-//
-//    @Test
-//    @SuppressWarnings("unchecked")
-//    void testInOperators() {
-//        final ConditionSpec spec = new ConditionSpec();
-//        final AbstractCbConditionClause<Object> clause = new AbstractCbConditionClause<>(spec, null, null) {
-//            @Override
-//            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal() {
-//                return mock(CbDtoConditionClauseTerminal.class);
-//            }
-//        };
-//
-//        clause.in(1, 2, 3);
-//        assertEquals(Operator.IN, spec.getOperator());
-//        assertEquals(List.of(1, 2, 3), spec.getValue());
-//
-//        clause.in(List.of(4, 5));
-//        assertEquals(List.of(4, 5), spec.getValue());
-//
-//        clause.notIn(1, 2);
-//        assertEquals(Operator.NOT_IN, spec.getOperator());
-//    }
-//
-//    @Test
-//    @SuppressWarnings("unchecked")
-//    void testNullHandling() {
-//        final ConditionSpec spec = new ConditionSpec();
-//        final AbstractCbConditionClause<Object> clause = new AbstractCbConditionClause<>(spec, null, null) {
-//            @Override
-//            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal() {
-//                return mock(CbDtoConditionClauseTerminal.class);
-//            }
-//        };
-//
-//        clause.eq(null);
-//        assertEquals(Operator.IS_NULL, spec.getOperator());
-//
-//        clause.neq(null);
-//        assertEquals(Operator.IS_NOT_NULL, spec.getOperator());
-//
-//        assertThrows(IllegalArgumentException.class, () -> clause.gt((Object) null));
-//    }
-//
-//    @Test
-//    @SuppressWarnings("unchecked")
-//    void testSubselectNull() {
-//        final AbstractCbConditionClause<Object> clause = new AbstractCbConditionClause<>(new ConditionSpec(), null, null) {
-//            @Override
-//            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal() {
-//                return mock(CbDtoConditionClauseTerminal.class);
-//            }
-//        };
-//
-//        // eq/neq allow null subselect (though it just sets value to null)
-//        clause.eq((Function<SelectEngine, SelectTerminal<?>>) null);
-//        clause.neq((Function<SelectEngine, SelectTerminal<?>>) null);
-//
-//        // Others should throw NPE
-//        assertThrows(NullPointerException.class, () -> clause.lt((Function<SelectEngine, SelectTerminal<?>>) null));
-//        assertThrows(NullPointerException.class, () -> clause.lte((Function<SelectEngine, SelectTerminal<?>>) null));
-//        assertThrows(NullPointerException.class, () -> clause.gt((Function<SelectEngine, SelectTerminal<?>>) null));
-//        assertThrows(NullPointerException.class, () -> clause.gte((Function<SelectEngine, SelectTerminal<?>>) null));
-//        assertThrows(NullPointerException.class, () -> clause.in((Function<SelectEngine, SelectTerminal<?>>) null));
-//        assertThrows(NullPointerException.class, () -> clause.notIn((Function<SelectEngine, SelectTerminal<?>>) null));
-//    }
-//}
+package org.litebridge.orm.api.condition;
+
+import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.db.spi.query.Operator;
+import org.litebridge.orm.api.select.ast.ConditionContext;
+import org.litebridge.orm.api.select.ast.ConditionNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.FromClauseEngine;
+import org.litebridge.orm.expression.ExpressionSpec;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+
+class ConditionApiTest {
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testBasicOperators() {
+        final FromClauseEngine engine = mock(FromClauseEngine.class);
+        final ExpressionSpec lhs = new org.litebridge.orm.expression.select.SelectColumnSpec(new org.litebridge.db.spi.Column(new org.litebridge.db.spi.Table("TEST"), "COL"));
+
+        // Using a custom creator to capture the node
+        final QueryNode[] capturedNode = new QueryNode[1];
+        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(engine, LogicOperator.NOOP, lhs, ConditionContext.WHERE, null, n -> {
+            capturedNode[0] = n;
+            return null;
+        }) {
+            @Override
+            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(QueryNode conditionNode) {
+                capturedNode[0] = conditionNode;
+                return null;
+            }
+        };
+
+        capturingClause.eq("val");
+        assertEquals(Operator.EQ, ((ConditionNode) capturedNode[0]).operator());
+        assertEquals("val", ((ConditionNode) capturedNode[0]).rhs());
+
+        capturingClause.neq("val");
+        assertEquals(Operator.NEQ, ((ConditionNode) capturedNode[0]).operator());
+
+        capturingClause.lt(10);
+        assertEquals(Operator.LT, ((ConditionNode) capturedNode[0]).operator());
+
+        capturingClause.lte(10);
+        assertEquals(Operator.LTE, ((ConditionNode) capturedNode[0]).operator());
+
+        capturingClause.gt(10);
+        assertEquals(Operator.GT, ((ConditionNode) capturedNode[0]).operator());
+
+        capturingClause.gte(10);
+        assertEquals(Operator.GTE, ((ConditionNode) capturedNode[0]).operator());
+
+        capturingClause.like("%val%");
+        assertEquals(Operator.LIKE, ((ConditionNode) capturedNode[0]).operator());
+
+        capturingClause.isNull();
+        assertEquals(Operator.IS_NULL, ((ConditionNode) capturedNode[0]).operator());
+
+        capturingClause.isNotNull();
+        assertEquals(Operator.IS_NOT_NULL, ((ConditionNode) capturedNode[0]).operator());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testInOperators() {
+        final FromClauseEngine engine = mock(FromClauseEngine.class);
+        final ExpressionSpec lhs = new org.litebridge.orm.expression.select.SelectColumnSpec(new org.litebridge.db.spi.Column(new org.litebridge.db.spi.Table("TEST"), "COL"));
+        final QueryNode[] capturedNode = new QueryNode[1];
+        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(engine, LogicOperator.NOOP, lhs, ConditionContext.WHERE, null, n -> {
+            capturedNode[0] = n;
+            return null;
+        }) {
+            @Override
+            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(QueryNode conditionNode) {
+                capturedNode[0] = conditionNode;
+                return null;
+            }
+        };
+
+        capturingClause.in(1, 2, 3);
+        assertEquals(Operator.IN, ((ConditionNode) capturedNode[0]).operator());
+        assertEquals(List.of(1, 2, 3), ((ConditionNode) capturedNode[0]).rhs());
+
+        capturingClause.in(List.of(4, 5));
+        assertEquals(List.of(4, 5), ((ConditionNode) capturedNode[0]).rhs());
+
+        capturingClause.notIn(1, 2);
+        assertEquals(Operator.NOT_IN, ((ConditionNode) capturedNode[0]).operator());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testNullHandling() {
+        final FromClauseEngine engine = mock(FromClauseEngine.class);
+        final ExpressionSpec lhs = new org.litebridge.orm.expression.select.SelectColumnSpec(new org.litebridge.db.spi.Column(new org.litebridge.db.spi.Table("TEST"), "COL"));
+        final QueryNode[] capturedNode = new QueryNode[1];
+        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(engine, LogicOperator.NOOP, lhs, ConditionContext.WHERE, null, n -> {
+            capturedNode[0] = n;
+            return null;
+        }) {
+            @Override
+            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(QueryNode conditionNode) {
+                capturedNode[0] = conditionNode;
+                return null;
+            }
+        };
+
+        capturingClause.eq(null);
+        assertEquals(Operator.IS_NULL, ((ConditionNode) capturedNode[0]).operator());
+
+        capturingClause.neq(null);
+        assertEquals(Operator.IS_NOT_NULL, ((ConditionNode) capturedNode[0]).operator());
+
+        assertThrows(IllegalArgumentException.class, () -> capturingClause.gt((Object) null));
+    }
+}

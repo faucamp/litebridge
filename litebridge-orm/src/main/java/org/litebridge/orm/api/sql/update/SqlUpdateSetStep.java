@@ -2,7 +2,6 @@ package org.litebridge.orm.api.sql.update;
 
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.math.MathOperation;
-import org.litebridge.db.spi.update.ColumnValue;
 
 public class SqlUpdateSetStep {
 
@@ -15,7 +14,7 @@ public class SqlUpdateSetStep {
     }
 
     public SqlUpdateStep to(final Object value) {
-        delegate.updateSpec().addColumnValue(new ColumnValue(column, value));
+        delegate.addSetNode(column, value);
         return delegate;
     }
 
@@ -24,27 +23,27 @@ public class SqlUpdateSetStep {
     }
 
     public SqlUpdateStep add(final Object value) {
-        delegate.updateSpec().addColumnValue(new ColumnValue(column, new MathOperation(MathOperation.Operator.ADD, value)));
+        delegate.addSetNode(column, new MathOperation(MathOperation.Operator.ADD, value));
         return delegate;
     }
 
     public SqlUpdateStep minus(final Object value) {
-        delegate.updateSpec().addColumnValue(new ColumnValue(column, new MathOperation(MathOperation.Operator.SUBTRACT, value)));
+        delegate.addSetNode(column, new MathOperation(MathOperation.Operator.SUBTRACT, value));
         return delegate;
     }
 
     public SqlUpdateStep multiply(final Object value) {
-        delegate.updateSpec().addColumnValue(new ColumnValue(column, new MathOperation(MathOperation.Operator.MULTIPLY, value)));
+        delegate.addSetNode(column, new MathOperation(MathOperation.Operator.MULTIPLY, value));
         return delegate;
     }
 
     public SqlUpdateStep divide(final Object value) {
-        delegate.updateSpec().addColumnValue(new ColumnValue(column, new MathOperation(MathOperation.Operator.DIVIDE, value)));
+        delegate.addSetNode(column, new MathOperation(MathOperation.Operator.DIVIDE, value));
         return delegate;
     }
 
     public SqlUpdateStep mod(final Object value) {
-        delegate.updateSpec().addColumnValue(new ColumnValue(column, new MathOperation(MathOperation.Operator.MOD, value)));
+        delegate.addSetNode(column, new MathOperation(MathOperation.Operator.MOD, value));
         return delegate;
     }
 }

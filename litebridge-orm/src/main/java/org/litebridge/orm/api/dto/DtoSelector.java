@@ -88,7 +88,7 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
      */
     public DtoFromClauseTerminal<TypeOverride> select(final ExpressionSpec... expressionSpecs) {
         final QueryNode selectNode = new SelectNode(node, expressionSpecs, dtoClass);
-        return new DtoFromClauseTerminal<>(this);
+        return new DtoFromClauseTerminal<>(withNode(selectNode));
     }
 
     /**

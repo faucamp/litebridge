@@ -11,14 +11,13 @@ import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
 /**
  * DTO where condition clause terminal.
+ *
  * @param <DTO> the DTO type.
  */
 public final class DtoWhereConditionClauseTerminal<DTO>
@@ -121,20 +120,17 @@ public final class DtoWhereConditionClauseTerminal<DTO>
     }
 
     private DtoWhereConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-//        final ConditionGroupSpec conditionGroupSpec = selectSpec.pushWhereConditionGroup(logicOperator);
         if (!(delegate.node() instanceof WhereNode whereNode)) {
             throw new IllegalArgumentException("AST error: Expected a WhereNode but got " + delegate.node());
         }
 
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
-        AbstractCbConditionClauseTerminal terminal = query.apply(conditionClauseStart);
-//        selectSpec.popWhereConditionGroup();
-//        return this;
+        final org.litebridge.orm.api.select.ConditionClauseTerminal<DTO, ?, ?> terminal = query.apply(conditionClauseStart);
 
+        if (terminal instanceof AbstractCbConditionClauseTerminal<?> act) {
+            whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, act.node()));
+        }
 
-        //TODO: reimplement
-//        throw new UnsupportedOperationException("Need to reimplement");
-        whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, terminal.node()));
         return this;
     }
 }

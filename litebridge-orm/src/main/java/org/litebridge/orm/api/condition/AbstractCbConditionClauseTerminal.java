@@ -4,8 +4,6 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.dto.condition.CbDtoConditionClauseTerminal;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.sql.condition.CbSqlConditionClauseTerminal;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -30,7 +28,7 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
     /**
      * Constructs a new {@code AbstractCbConditionClauseTerminal}.
      *
-     * @param fromClauseEngine   The FROM clause engine.
+     * @param fromClauseEngine The FROM clause engine.
      */
     public AbstractCbConditionClauseTerminal(final FromClauseEngine fromClauseEngine, final QueryNode node) {
         this.fromClauseEngine = fromClauseEngine;
@@ -77,22 +75,6 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
     protected abstract AbstractCbConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final String column);
 
     /**
-     * Creates a new condition clause instance.
-     *
-     * @param conditionSpec The condition specification.
-     * @return A new {@link AbstractCbConditionClause} instance.
-     */
-    protected abstract AbstractCbConditionClause<DTO> createCbConditionClause(final ConditionSpec conditionSpec);
-
-    /**
-     * Creates a new condition clause start instance for a subgroup.
-     *
-     * @param subgroup The condition group specification for the subgroup.
-     * @return A new {@link AbstractConditionClauseStart} instance.
-     */
-    protected abstract AbstractConditionClauseStart<DTO> createConditionClauseStart(final ConditionGroupSpec subgroup);
-
-    /**
      * Internal implementation of the WHERE clause for expressions.
      *
      * @param logicOperator The logical operator (AND/OR).
@@ -100,24 +82,15 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
      * @return A new {@link AbstractCbConditionClause} instance.
      */
     protected abstract AbstractCbConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression);
-//    {
-//        final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(logicOperator, expression);
-//        return createCbConditionClause(conditionSpec);
-//        //TODO: reimplement
-//        throw new UnsupportedOperationException("Need to reimplement");
-//    }
 
+    /**
+     * Internal implementation of the WHERE clause for sub-conditions in queries.
+     *
+     * @param logicOperator The logical operator (AND/OR).
+     * @param query         The sub-condition builder
+     * @return A new {@link AbstractCbConditionClause} instance.
+     */
     protected abstract AbstractCbConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query);
-//    {
-//
-////        final ConditionGroupSpec subgroup = conditionGroupSpec.newSubgroup(logicOperator).conditionGroupSpec();
-////        final AbstractConditionClauseStart<DTO> conditionClauseStart = createConditionClauseStart(subgroup);
-////        query.apply(conditionClauseStart);
-////        return this;
-//        //TODO: reimplement
-//        //throw new UnsupportedOperationException("Need to reimplement");
-//        return this;
-//    }
 
     public QueryNode node() {
         return node;

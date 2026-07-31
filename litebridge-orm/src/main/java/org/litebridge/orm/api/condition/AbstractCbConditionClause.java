@@ -9,6 +9,8 @@ import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.ConditionContext;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.impl.AbstractSelector;
+import org.litebridge.orm.api.select.impl.DelegatingSelector;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.SelectEngine;
@@ -284,20 +286,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
             translatedOperator = operator;
         }
 
-        //TODO: null is wrong for previous node here
         final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value, null);
-
-        //TODO: fix these checks, or move out the code
-//        if (this instanceof DtoWhereConditionClause|| this.getClass().getName().contains("Where")) {
-//            newNode = new WhereNode(node, logicOperator, lhs, translatedOperator, value);
-//        } else if (this instanceof DtoHavingConditionClause || this.getClass().getName().contains("Having")) {
-//            newNode = new HavingNode(node, logicOperator, lhs, translatedOperator, value);
-//        } else if (this.getClass().getName().contains("Join")) {
-//            newNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value, relationshipField);
-//        } else {
-//            // Fallback
-//            newNode = node;
-//        }
 
         return createCbConditionClauseTerminal(conditionNode);
     }
@@ -310,10 +299,19 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     protected abstract AbstractCbConditionClauseTerminal<DTO> createCbConditionClauseTerminal(final QueryNode conditionNode);
 
     private SelectSpec createSelectSpec(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
-//        final SelectTerminal<?> selectTerminal = Objects.requireNonNull(subselect, "Subselect cannot be null")
-//                .apply(new SelectEngine(fromClauseEngine));
-//        return SelectorInspector.getSelectSpec(selectTerminal);
-        //TODO: reimplement
-        throw new UnsupportedOperationException("Need to re-implement");
+        final SelectTerminal<?> selectTerminal = Objects.requireNonNull(subselect, "Subselect cannot be null")
+                .apply(new SelectEngine(fromClauseEngine));
+        return getSelectSpec(selectTerminal);
+    }
+
+    private SelectSpec getSelectSpec(final SelectTerminal<?> selectTerminal) {
+        final AbstractSelector<?, ?> selector = switch (selectTerminal) {
+            case DelegatingSelector<?, ?> delegating -> delegating.delegate();
+            case AbstractSelector<?, ?> s -> s;
+            default ->
+                    throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
+        };
+
+        return selector.compile();
     }
 }

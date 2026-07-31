@@ -4,8 +4,10 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.orm.api.delete.model.DeleteSpec;
 import org.litebridge.orm.api.dto.DtoDataSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
+import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.BeginGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
@@ -18,13 +20,18 @@ import org.litebridge.orm.api.select.ast.LimitNode;
 import org.litebridge.orm.api.select.ast.OrderByNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
+import org.litebridge.orm.api.select.ast.SetNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
+import org.litebridge.orm.api.select.impl.AbstractConditionBasedSpec;
+import org.litebridge.orm.api.select.impl.AbstractSelector;
+import org.litebridge.orm.api.select.impl.DelegatingSelector;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.api.sql.SqlJoinSpec;
 import org.litebridge.orm.api.sql.SqlSelectSpec;
+import org.litebridge.orm.api.update.model.UpdateSpec;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
@@ -69,6 +76,34 @@ public final class QueryCompiler {
 
         for (final QueryNode n : nodes) {
             applyNode(n, selectSpec);
+        }
+    }
+
+    /**
+     * Compiles the given {@link QueryNode} chain into the provided {@link DeleteSpec}.
+     *
+     * @param node       the end of the query node chain
+     * @param deleteSpec the delete specification to populate
+     */
+    public void compile(final QueryNode node, final DeleteSpec deleteSpec) {
+        final List<QueryNode> nodes = flatten(node);
+
+        for (final QueryNode n : nodes) {
+            applyNode(n, null, deleteSpec);
+        }
+    }
+
+    /**
+     * Compiles the given {@link QueryNode} chain into the provided {@link UpdateSpec}.
+     *
+     * @param node       the end of the query node chain
+     * @param updateSpec the update specification to populate
+     */
+    public void compile(final QueryNode node, final UpdateSpec updateSpec) {
+        final List<QueryNode> nodes = flatten(node);
+
+        for (final QueryNode n : nodes) {
+            applyNode(n, null, updateSpec);
         }
     }
 
@@ -160,13 +195,15 @@ public final class QueryCompiler {
                 // Create a new condition group spec on the relevant stack
                 final ConditionGroupSpec conditionGroupSpec = switch (conditionGroupParentNode) {
                     case WhereNode whereNode -> selectSpec.pushWhereConditionGroup(conditionGroupNode.logicOperator());
-                    case HavingNode havingNode -> selectSpec.pushHavingConditionGroup(conditionGroupNode.logicOperator());
+                    case HavingNode havingNode ->
+                            selectSpec.pushHavingConditionGroup(conditionGroupNode.logicOperator());
                     case JoinNode joinNode -> {
                         final List<JoinSpec> joins = Objects.requireNonNull(selectSpec.getJoins());
                         final JoinSpec lastJoin = joins.get(joins.size() - 1);
                         yield lastJoin.pushConditionGroupSpec(conditionGroupNode.logicOperator());
                     }
-                    default -> throw new IllegalStateException("AST error: Invalid condition context parent node: " + parentNode.getClass().getName());
+                    default ->
+                            throw new IllegalStateException("AST error: Invalid condition context parent node: " + parentNode.getClass().getName());
                 };
 
                 final List<QueryNode> conditionGroupNodes = flatten(conditionGroupNode.lastChild());
@@ -184,7 +221,8 @@ public final class QueryCompiler {
                         final JoinSpec lastJoin = joins.get(joins.size() - 1);
                         lastJoin.popConditionGroupSpec();
                     }
-                    default -> throw new IllegalStateException("AST error: Invalid condition context parent node: " + parentNode.getClass().getName());
+                    default ->
+                            throw new IllegalStateException("AST error: Invalid condition context parent node: " + parentNode.getClass().getName());
                 }
             }
             case ConditionNode conditionNode -> {
@@ -226,7 +264,8 @@ public final class QueryCompiler {
 
                         yield lastJoin.currentConditionGroupSpec();
                     }
-                    default -> throw new IllegalStateException("AST error: Invalid condition context parent node: " + parentNode.getClass().getName());
+                    default ->
+                            throw new IllegalStateException("AST error: Invalid condition context parent node: " + parentNode.getClass().getName());
                 };
 
                 if (conditionNode.operator() != Operator.USING) {
@@ -245,7 +284,14 @@ public final class QueryCompiler {
                     }
 
                     final ExpressionSpec lhs = (ExpressionSpec) resolveAliases(conditionNode.lhs(), sourceAlias, targetAlias, true);
-                    final Object rhs = resolveAliases(conditionNode.rhs(), sourceAlias, targetAlias, false);
+                    final Object rhsValue = resolveAliases(conditionNode.rhs(), sourceAlias, targetAlias, false);
+                    final Object rhs;
+
+                    if (rhsValue instanceof SelectTerminal<?> st) {
+                        rhs = createSelectSpec(st);
+                    } else {
+                        rhs = rhsValue;
+                    }
 
                     final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), lhs);
                     conditionSpec.setOperator(conditionNode.operator());
@@ -277,6 +323,58 @@ public final class QueryCompiler {
                 if (limitNode.offset().isPresent()) {
                     selectSpec.ensureLimit().setOffset(limitNode.offset().get());
                 }
+            }
+            default -> {
+                // Ignore
+            }
+        }
+    }
+
+    private void applyNode(final QueryNode node, final @Nullable QueryNode parentNode, final AbstractConditionBasedSpec spec) {
+        switch (node) {
+            case SetNode setNode -> {
+                if (spec instanceof UpdateSpec updateSpec) {
+                    updateSpec.addColumnValue(new org.litebridge.db.spi.update.ColumnValue(setNode.column(), setNode.value()));
+                }
+            }
+            case WhereNode whereNode -> {
+                final List<QueryNode> conditionNodes = flatten(whereNode.condition());
+
+                for (QueryNode queryNode : conditionNodes) {
+                    applyNode(queryNode, whereNode, spec);
+                }
+            }
+            case ConditionGroupNode conditionGroupNode -> {
+                spec.pushConditionGroupSpec(conditionGroupNode.logicOperator());
+                final List<QueryNode> conditionGroupNodes = flatten(conditionGroupNode.lastChild());
+
+                for (QueryNode queryNode : conditionGroupNodes) {
+                    applyNode(queryNode, conditionGroupNode, spec);
+                }
+
+                spec.popConditionGroupSpec();
+            }
+            case ConditionNode conditionNode -> {
+                final ConditionGroupSpec conditionGroupSpec = spec.currentConditionGroupSpec();
+
+                final ExpressionSpec lhs = (ExpressionSpec) resolveAliases(conditionNode.lhs(), null, null, true);
+                final Object rhsValue = resolveAliases(conditionNode.rhs(), null, null, false);
+                final Object rhs;
+
+                if (rhsValue instanceof org.litebridge.orm.api.select.SelectTerminal<?> st) {
+                    rhs = createSelectSpec(st);
+                } else {
+                    rhs = rhsValue;
+                }
+
+                final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), lhs);
+                conditionSpec.setOperator(conditionNode.operator());
+                conditionSpec.setValue(rhs);
+            }
+            case BeginGroupNode beginGroup -> spec.pushConditionGroupSpec(beginGroup.logicOperator());
+            case EndGroupNode endGroup -> spec.popConditionGroupSpec();
+            default -> {
+                // Ignore
             }
         }
     }
@@ -353,5 +451,16 @@ public final class QueryCompiler {
     private @Nullable Class<?> getTableDtoClass(Table table) {
         final OrmTable ormTable = tableToOrmTableMap.getOrDefault(table, tableRegistry.getTable(table));
         return ormTable != null ? ormTable.dtoClass() : null;
+    }
+
+    private SelectSpec createSelectSpec(final SelectTerminal<?> selectTerminal) {
+        final AbstractSelector<?, ?> selector = switch (selectTerminal) {
+            case DelegatingSelector<?, ?> delegating -> delegating.delegate();
+            case AbstractSelector<?, ?> s -> s;
+            default ->
+                    throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
+        };
+
+        return selector.compile();
     }
 }

@@ -3,7 +3,10 @@ package org.litebridge.orm.api.dto;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
+import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -74,13 +77,14 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
      * @return the parent condition clause interface, allowing further chaining of conditions
      */
     public DtoWhereConditionClauseTerminal<DTO> where(final QueryConditionBuilder<DTO> query) {
-//        final ConditionGroupSpec conditionGroupSpec = selectSpec.pushWhereConditionGroup(LogicOperator.NOOP);
-//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(conditionGroupSpec, ormTable, delegate.litebridgeContext().fromClauseEngine());
-//        query.apply(conditionClauseStart);
-//        selectSpec.popWhereConditionGroup();
-//        return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate);
-        //TODO: reimplement
-        throw new UnsupportedOperationException("Need to reimplement");
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
+        final ConditionClauseTerminal<DTO, ?, ?> terminal = query.apply(conditionClauseStart);
+
+        if (terminal instanceof AbstractCbConditionClauseTerminal<?> act) {
+            return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new WhereNode(delegate.node(), act.node())));
+        }
+
+        return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate);
     }
 
     /**

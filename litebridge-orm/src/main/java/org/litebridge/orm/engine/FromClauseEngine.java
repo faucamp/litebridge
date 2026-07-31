@@ -175,6 +175,11 @@ public final class FromClauseEngine {
             return dtoSelector.select();
         }
     }
+
+    public TableRegistry tableRegistry() {
+        return tableRegistry;
+    }
+
     public AliasGenerator aliasGenerator() {
         return contextSupplier.get().aliasGenerator();
     }
