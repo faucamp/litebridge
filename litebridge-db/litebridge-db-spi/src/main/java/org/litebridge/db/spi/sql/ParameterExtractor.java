@@ -52,6 +52,7 @@ public final class ParameterExtractor {
         for (final LogicCondition logicCondition : group.conditions()) {
             extractFromCondition(logicCondition.condition(), bindValues, operation);
         }
+
         for (final LogicConditionGroup logicGroup : group.subgroups()) {
             extractFromConditionGroup(logicGroup.conditionGroup(), bindValues, operation);
         }

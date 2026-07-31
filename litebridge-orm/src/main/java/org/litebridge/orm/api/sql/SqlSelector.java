@@ -12,6 +12,7 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +33,7 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
     }
 
     @Override
-    protected SqlSelectSpec createSelectSpec(final org.litebridge.orm.persistence.alias.AliasGenerator aliasGenerator) {
+    protected SqlSelectSpec createSelectSpec(final AliasGenerator aliasGenerator) {
         final LitebridgeContext freshContext = new LitebridgeContext(
                 litebridgeContext.config(),
                 litebridgeContext.fromClauseEngine(),

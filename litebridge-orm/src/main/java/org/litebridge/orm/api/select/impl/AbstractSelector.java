@@ -116,7 +116,7 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
         return spec;
     }
 
-    protected abstract SSP createSelectSpec(org.litebridge.orm.persistence.alias.AliasGenerator aliasGenerator);
+    protected abstract SSP createSelectSpec(final AliasGenerator aliasGenerator);
 
     protected List<Row> executeQuery(final SSP selectSpec) {
         // Execute SQL query
