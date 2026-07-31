@@ -12,7 +12,6 @@ import org.litebridge.orm.api.sql.SqlFromClauseTerminal;
 import org.litebridge.orm.api.sql.SqlSelectSpec;
 import org.litebridge.orm.api.sql.SqlSelector;
 import org.litebridge.orm.config.RelatedDtoStrategy;
-import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -164,14 +163,6 @@ public final class FromClauseEngine {
         final SqlSelectSpec selectSpec = new SqlSelectSpec(litebridgeContext);
         selectSpec.addExpressions(Arrays.asList(node.expressions()));
         return new SqlSelector(new Table(table), databaseProvider, tableRegistry, litebridgeContext, fromNode).select().from(table);
-    }
-
-    private static <DTO> DtoFromClauseTerminal<DTO> select(final ExpressionSpec[] expressionSpecs, final DtoSelector<DTO> dtoSelector) {
-        if (expressionSpecs.length > 0) {
-            return dtoSelector.select(expressionSpecs);
-        } else {
-            return dtoSelector.select();
-        }
     }
 
     public TableRegistry tableRegistry() {
