@@ -5,6 +5,8 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+import java.util.Objects;
+
 /**
  * Represents a condition within a JOIN, WHERE or HAVING clause in the query AST.
  *
@@ -27,5 +29,16 @@ public record ConditionNode(@Nullable QueryNode previous,
                          Operator operator,
                          @Nullable Object rhs) {
         this(previous, logicOperator, lhs, operator, rhs, null);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (!(o instanceof final ConditionNode that)) return false;
+        return operator == that.operator && Objects.equals(previous, that.previous) && Objects.equals(lhs, that.lhs) && Objects.equals(relationshipField, that.relationshipField) && logicOperator == that.logicOperator;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(previous, logicOperator, lhs, operator, relationshipField);
     }
 }

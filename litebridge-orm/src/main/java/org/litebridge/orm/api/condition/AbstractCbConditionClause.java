@@ -283,7 +283,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
             translatedOperator = operator;
         }
 
-        final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value, null);
+        final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value);
 
         return createCbConditionClauseTerminal(conditionNode);
     }

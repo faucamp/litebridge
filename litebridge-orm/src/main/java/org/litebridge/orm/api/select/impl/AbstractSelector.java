@@ -11,6 +11,7 @@ import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryCompiler;
+import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -101,7 +103,14 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
     }
 
     protected List<Row> executeQuery() {
-        return executeQuery(compile());
+        final int nodeHash = Objects.requireNonNull(node).hashCode();
+        final QueryPlanCache.CachedOperation cachedOperation = litebridgeContext.queryPlanCache().get(nodeHash);
+
+        if (cachedOperation != null) {
+            return executeQuery((Select) cachedOperation.operation(), cachedOperation.preparedSql());
+        } else {
+            return executeQuery(compile(), nodeHash);
+        }
     }
 
     /**
@@ -120,24 +129,21 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
 
     protected abstract SSP createSelectSpec(final AliasGenerator aliasGenerator);
 
-    protected List<Row> executeQuery(final SSP selectSpec) {
+    protected List<Row> executeQuery(final SSP selectSpec, final int astCacheKey) {
         // Execute SQL query
         final Select select = selectSpec.toSelect();
-
-        // Check cache for prepared SQL (structural fingerprint)
-        PreparedSql preparedSql = litebridgeContext.queryPlanCache().get(select);
-
-        if (preparedSql == null) {
-            preparedSql = databaseProvider.prepareSql(select, databaseProvider.transactionManager());
-            litebridgeContext.queryPlanCache().put(select, preparedSql);
-        }
+        final PreparedSql preparedSql = databaseProvider.prepareSql(select, databaseProvider.transactionManager());
+        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(preparedSql, select, selectSpec));
 
         // Extract parameters from CURRENT select record (with actual values)
         final List<BindValue> bindValues = new ParameterExtractor().extractParameters(select);
 
         // Create execution SQL using cached string and current bind values
         final PreparedSql executionSql = new PreparedSql(preparedSql.sql(), bindValues);
+        return executeQuery(select, executionSql);
+    }
 
+    protected List<Row> executeQuery(final Select select, final PreparedSql executionSql) {
         final List<Row> rows;
 
         try {

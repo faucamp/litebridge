@@ -2,6 +2,8 @@ package org.litebridge.orm.api.select.ast;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.Objects;
+
 /**
  * A node in a lightweight AST representing a step in a fluent query chain.
  */

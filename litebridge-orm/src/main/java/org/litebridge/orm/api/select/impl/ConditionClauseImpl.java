@@ -54,7 +54,7 @@ public class ConditionClauseImpl<DTO,
     }
 
     public CCT using(final String column) {
-        final QueryNode newNode = new ConditionNode(node, LogicOperator.NOOP, null, Operator.USING, column, null);
+        final QueryNode newNode = new ConditionNode(node, LogicOperator.NOOP, null, Operator.USING, column);
         return terminalRecreator.apply(newNode);
     }
 
@@ -276,7 +276,7 @@ public class ConditionClauseImpl<DTO,
             translatedOperator = operator;
         }
 
-        final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value, null);
+        final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value);
 
         return terminalRecreator.apply(conditionNode);
     }

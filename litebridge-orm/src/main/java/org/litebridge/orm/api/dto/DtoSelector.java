@@ -6,11 +6,13 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.query.Select;
 import org.litebridge.orm.api.select.ast.LimitNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.persistence.DtoConstructor;
@@ -146,9 +148,19 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
 
     @Override
     public List<TypeOverride> list() {
-        final DtoSelectSpec compiledSpec = compile();
+        final int nodeHash = Objects.requireNonNull(node).hashCode();
+        final QueryPlanCache.CachedOperation cachedOperation = litebridgeContext.queryPlanCache().get(nodeHash);
+        final List<Row> rows;
+        final DtoSelectSpec compiledSpec;
 
-        final List<Row> rows = executeQuery(compiledSpec);
+        if (cachedOperation != null) {
+            rows = executeQuery((Select) cachedOperation.operation(), cachedOperation.preparedSql());
+            compiledSpec = (DtoSelectSpec) Objects.requireNonNull(cachedOperation.selectSpec());
+        } else {
+            compiledSpec = compile();
+            rows = executeQuery(compiledSpec, nodeHash);
+        }
+
         final OrmTable ormTable = compiledSpec.dtoTable();
 
         if (dtoClass == ormTable.dtoClass()
