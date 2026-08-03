@@ -32,11 +32,6 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
 
     @Override
     public SqlJoinClause join(final String table) {
-//        final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", null, table);
-//        delegate.withNode(joinNode);
-//        return new SqlJoinClause(joinNode, (SqlSelector) delegate);
-
-
         return new SqlJoinClause((SqlSelector) delegate, node -> {
             final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", null, table);
             joinNode.withCondition(node);

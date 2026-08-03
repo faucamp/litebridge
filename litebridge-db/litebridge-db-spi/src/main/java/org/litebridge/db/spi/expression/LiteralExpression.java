@@ -2,7 +2,6 @@ package org.litebridge.db.spi.expression;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Operation;
-import org.litebridge.db.spi.PreparedOperation;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -61,16 +60,6 @@ public class LiteralExpression implements SelectExpression {
         }
         if (value == null) {
             return "NULL";
-//        } else if (value.getClass().isArray()) {
-//            final Object[] array = (Object[]) value;
-//
-//            final StringJoiner joiner = new StringJoiner(", ");
-//
-//            for (final Object element : array) {
-//                joiner.add(element.toString());
-//            }
-//
-//            return joiner.toString();
         } else if (value instanceof Collection collection) {
             final StringJoiner joiner = new StringJoiner(", ");
 
@@ -93,17 +82,6 @@ public class LiteralExpression implements SelectExpression {
     public String toBindValueSql(final Operation operation) {
         if (value == null) {
             return "?";
-//        } else if (value.getClass().isArray()) {
-//            final Object[] array = (Object[]) value;
-//
-//            final StringJoiner joiner = new StringJoiner(", ");
-//
-//            for (final Object element : array) {
-//                joiner.add("?");
-//            }
-//
-//
-//            return joiner.toString();
         } else if (value instanceof Collection collection) {
             final StringJoiner joiner = new StringJoiner(", ");
 
