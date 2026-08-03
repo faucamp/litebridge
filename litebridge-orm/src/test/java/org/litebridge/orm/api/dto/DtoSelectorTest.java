@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.dto;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Row;
@@ -19,6 +20,7 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.OrmTable;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
@@ -50,7 +52,7 @@ class DtoSelectorTest {
         when(select.column()).thenReturn(mock(ColumnExpressionFactory.class));
         when(select.reference()).thenReturn(mock(SelectReferenceExpressionFactory.class));
         when(select.literal()).thenReturn(mock(LiteralExpressionFactory.class));
-        return new LitebridgeContext(config, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator());
+        return new LitebridgeContext(config, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), mock(TableMetaDataCache.class));
     }
 
     @Test
@@ -139,8 +141,8 @@ class DtoSelectorTest {
         final DtoSelector<Integer> selector = new DtoSelector<>(Integer.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), databaseProvider, new NoOpAliasGenerator(), createMockContext(), null);
         final org.litebridge.orm.api.dto.DtoFromClauseTerminal<Integer> terminal = selector.select();
 
-        final Row row = new Row().withColumn(new org.litebridge.db.spi.Column(table, "COL"), "123");
-        when(databaseProvider.prepareSql(any(), any())).thenReturn(new org.litebridge.db.spi.sql.PreparedSql("SELECT 1", List.of()));
+        final Row row = new Row().withColumn(new Column(table, "COL"), "123");
+        when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
         when(databaseProvider.select(any(), any(), any())).thenReturn(List.of(row));
 
         // When
@@ -194,7 +196,7 @@ class DtoSelectorTest {
         // Return 2 rows with different PK values to trigger error in oneOrNull
         final Row row1 = new Row().withColumn(pkCol.toColumn(), 1L).withColumn(col1.toColumn(), "1");
         final Row row2 = new Row().withColumn(pkCol.toColumn(), 2L).withColumn(col1.toColumn(), "2");
-        when(databaseProvider.prepareSql(any(), any())).thenReturn(new org.litebridge.db.spi.sql.PreparedSql("SELECT 1", List.of()));
+        when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
         when(databaseProvider.select(any(), any(), any())).thenReturn(List.of(row1, row2));
 
         // When / Then
@@ -234,7 +236,7 @@ class DtoSelectorTest {
         final org.litebridge.orm.api.dto.DtoFromClauseTerminal<String> terminal = selector.select(new SelectFieldSpec(field1, col1.toColumn()));
 
         final Row row1 = new Row().withColumn(col1.toColumn(), "1");
-        when(databaseProvider.prepareSql(any(), any())).thenReturn(new org.litebridge.db.spi.sql.PreparedSql("SELECT 1", List.of()));
+        when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
         when(databaseProvider.select(any(), any(), any())).thenReturn(List.of(row1));
 
         // When
@@ -262,11 +264,11 @@ class DtoSelectorTest {
         when(ormTable.getDtoClassInterfaces()).thenReturn(Set.of());
 
         final QueryPlanCache cache = new QueryPlanCache();
-        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), cache, new org.litebridge.orm.persistence.alias.NoOpAliasGenerator());
+        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), cache, new NoOpAliasGenerator(), mock(TableMetaDataCache.class));
 
-        final DtoSelector<String> selector = new DtoSelector<>(String.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), databaseProvider, new org.litebridge.orm.persistence.alias.NoOpAliasGenerator(), context, null);
+        final DtoSelector<String> selector = new DtoSelector<>(String.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), databaseProvider, new NoOpAliasGenerator(), context, null);
 
-        when(databaseProvider.prepareSql(any(), any())).thenReturn(new PreparedSql("SELECT * FROM TEST WHERE ID = ?", List.of()));
+        when(databaseProvider.toSql(any(), any())).thenReturn("SELECT * FROM TEST WHERE ID = ?");
         when(databaseProvider.select(any(), any(), any())).thenReturn(List.of());
 
         // When
@@ -274,7 +276,7 @@ class DtoSelectorTest {
         selector.list(); // Second call (same structure)
 
         // Then
-        verify(databaseProvider, times(1)).prepareSql(any(), any());
+        verify(databaseProvider, times(1)).toSql(any(), any());
         verify(databaseProvider, times(2)).select(any(), any(), any());
     }
 }

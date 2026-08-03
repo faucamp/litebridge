@@ -4,10 +4,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.orm.Litebridge;
 
@@ -56,14 +56,14 @@ class PersistenceFacadeCascadingTest {
         child.name = "child";
         parent.child = child;
 
-        when(databaseProvider.insert(any(Insert.class), any(ConnectionProvider.class)))
+        when(databaseProvider.insert(any(PreparedOperation.class), any(ConnectionProvider.class)))
                 .thenReturn(new InsertResult(1, Collections.emptyMap()));
 
         // When
         litebridge.save(parent);
 
         // Then
-        verify(databaseProvider, times(2)).insert(any(Insert.class), any(ConnectionProvider.class));
+        verify(databaseProvider, times(2)).insert(any(PreparedOperation.class), any(ConnectionProvider.class));
     }
 
     private void registerOneToOne() throws SQLException {
@@ -109,7 +109,7 @@ class PersistenceFacadeCascadingTest {
 
         parent.children = new ArrayList<>(List.of(child1, child2));
 
-        when(databaseProvider.insert(any(Insert.class), any(ConnectionProvider.class)))
+        when(databaseProvider.insert(any(PreparedOperation.class), any(ConnectionProvider.class)))
                 .thenReturn(new InsertResult(1, Collections.emptyMap()));
 
         // When
@@ -117,7 +117,7 @@ class PersistenceFacadeCascadingTest {
 
         // Then
         // 1 for parent, 2 for children
-        verify(databaseProvider, times(3)).insert(any(Insert.class), any(ConnectionProvider.class));
+        verify(databaseProvider, times(3)).insert(any(PreparedOperation.class), any(ConnectionProvider.class));
     }
 
     private void registerOneToMany() throws SQLException {
@@ -183,7 +183,7 @@ class PersistenceFacadeCascadingTest {
 
         group.users = new ArrayList<>(List.of(user1));
 
-        when(databaseProvider.insert(any(Insert.class), any(ConnectionProvider.class)))
+        when(databaseProvider.insert(any(PreparedOperation.class), any(ConnectionProvider.class)))
                 .thenReturn(new InsertResult(1, Collections.emptyMap()));
 
         // When
@@ -191,7 +191,7 @@ class PersistenceFacadeCascadingTest {
 
         // Then
         // 1 for group, 1 for user, 1 for junction table
-        verify(databaseProvider, times(3)).insert(any(Insert.class), any(ConnectionProvider.class));
+        verify(databaseProvider, times(3)).insert(any(PreparedOperation.class), any(ConnectionProvider.class));
     }
 
     private void registerManyToMany() throws SQLException {

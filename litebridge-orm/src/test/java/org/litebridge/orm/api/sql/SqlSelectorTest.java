@@ -11,6 +11,7 @@ import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
@@ -38,7 +39,8 @@ class SqlSelectorTest {
 
     @BeforeEach
     void setUp() {
-        litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator());
+        final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
+        litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache);
         lenient().when(tableRegistry.getOrCreateSpiTable(any())).thenAnswer(invocation -> new Table((String) invocation.getArgument(0)));
         sqlSelector = new SqlSelector(new Table("dummy"), databaseProvider, tableRegistry, litebridgeContext, new SelectNode(null, new ExpressionSpec[0], null));
     }

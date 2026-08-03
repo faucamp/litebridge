@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -15,10 +16,8 @@ import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.config.LitebridgeConfig;
@@ -216,12 +215,12 @@ class LitebridgeAutoConfigurationTest {
         }
 
         @Override
-        public UpdateResult update(final Update update, final ConnectionProvider connectionProvider) throws SQLException {
+        public UpdateResult update(final PreparedOperation update, final ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 
         @Override
-        public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
+        public List<Row> select(final PreparedOperation select, final ConnectionProvider connectionProvider) throws SQLException {
             return List.of();
         }
 
@@ -231,12 +230,7 @@ class LitebridgeAutoConfigurationTest {
         }
 
         @Override
-        public PreparedSql prepareSql(final Select select, final ConnectionProvider connectionProvider) {
-            return null;
-        }
-
-        @Override
-        public UpdateResult delete(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
+        public UpdateResult delete(final PreparedOperation delete, final ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 

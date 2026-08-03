@@ -3,7 +3,9 @@ package org.litebridge.orm.api.select.model;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.DelegateExpression;
@@ -13,19 +15,19 @@ import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.intent.ExpressionSpecArray;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -70,7 +72,7 @@ public abstract class SelectSpec {
     }
 
     public void setProtoExpressionResolver(final ProtoExpressionResolver protoExpressionResolver) {
-        this.selectExpressionMapper = new SelectExpressionMapper(litebridgeContext.sqlFunctionRegistry(), protoExpressionResolver);
+        this.selectExpressionMapper = new SelectExpressionMapper(litebridgeContext.sqlFunctionRegistry(), protoExpressionResolver, litebridgeContext.tableMetaDataCache(), litebridgeContext.fromClauseEngine().databaseProvider().getTypeConverter());
     }
 
     public LitebridgeContext getLitebridgeContext() {
@@ -212,10 +214,12 @@ public abstract class SelectSpec {
         return limit;
     }
 
-    public Select toSelect() {
+    public PreparedOperation toSelect(final TableMetaDataCache tableMetaDataCache, final TypeConverter typeConverter) {
         if (table == null) {
             throw new IllegalStateException("Table not specified");
         }
+
+        final List<@Nullable BindValue> bindValues = new ArrayList<>();
 
         // SELECT
         this.expressionSpecs = Objects.requireNonNull(selectExpressionMapper).resolveProtoExpressions(expressionSpecs, ClauseType.SELECT);
@@ -246,7 +250,7 @@ public abstract class SelectSpec {
 
         if (joins != null) {
             for (final JoinSpec joinSpec : joins) {
-                joinClause.add(joinSpec.toJoin(currentTables));
+                joinClause.add(joinSpec.toJoin(currentTables, bindValues, tableMetaDataCache, typeConverter));
                 currentTables.add(joinSpec.table());
             }
         }
@@ -256,7 +260,7 @@ public abstract class SelectSpec {
                 .collect(Collectors.toSet());
 
         // WHERE
-        final Optional<ConditionGroup> whereClause = whereConditions != null ? Optional.of(whereConditions.toConditionGroup(selectExpressionMapper, selectedTables)) : Optional.empty();
+        final Optional<ConditionGroup> whereClause = whereConditions != null ? Optional.of(whereConditions.toConditionGroup(selectExpressionMapper, selectedTables, bindValues, tableMetaDataCache, typeConverter)) : Optional.empty();
 
         // GROUP BY
         final List<SelectExpression> groupByClause;
@@ -276,7 +280,7 @@ public abstract class SelectSpec {
             groupByClause = Collections.emptyList();
         }
 
-        final Optional<ConditionGroup> havingClause = havingConditions != null ? Optional.of(havingConditions.toConditionGroup(selectExpressionMapper, selectedTables)) : Optional.empty();
+        final Optional<ConditionGroup> havingClause = havingConditions != null ? Optional.of(havingConditions.toConditionGroup(selectExpressionMapper, selectedTables, bindValues, tableMetaDataCache, typeConverter)) : Optional.empty();
 
         final List<OrderBy> orderByClause;
 
@@ -291,7 +295,7 @@ public abstract class SelectSpec {
             orderByClause = Collections.emptyList();
         }
 
-        return new Select(table,
+        final Select select = new Select(table,
                 selectExpressions,
                 joinClause,
                 whereClause,
@@ -299,6 +303,7 @@ public abstract class SelectSpec {
                 havingClause,
                 orderByClause,
                 limit != null ? limit.toLimit() : Optional.empty());
+        return new PreparedOperation(select, bindValues);
     }
 
     private List<SelectExpression> convertToSelectExpressions(final List<ExpressionSpec> expressionSpecs, final boolean useSelectReferences) {
@@ -366,4 +371,28 @@ public abstract class SelectSpec {
 
         return havingConditions;
     }
+
+//    /**
+//     * Creates a bind value for a column and raw value.
+//     *
+//     * @param column             The column.
+//     * @param rawValue           The raw value.
+//     * @param connectionProvider The connection provider.
+//     * @return The bind value.
+//     */
+//    private BindValue createBindValue(final @Nullable Column column, final @Nullable Object rawValue, final ConnectionProvider connectionProvider) {
+//        final BindValue bindValue;
+//
+//        if (column != null) {
+//            final ColumnMetaData columnMetaData = ensureTableMetaData(column.table(), connectionProvider).column(column.name());
+//            final Object convertedValue = typeConverter.convert(rawValue, columnMetaData.getDataType());
+//            bindValue = new BindValue(convertedValue, columnMetaData.getDataType());
+//        } else if (rawValue != null) {
+//            bindValue = new BindValue(rawValue, typeConverter.getSqlDataType(rawValue.getClass()));
+//        } else {
+//            bindValue = new BindValue(null, Types.NULL);
+//        }
+//
+//        return bindValue;
+//    }
 }

@@ -9,6 +9,7 @@ import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ConnectionProviderExpression;
@@ -28,8 +29,6 @@ import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
 import java.sql.Types;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -80,7 +79,7 @@ public abstract class AbstractSqlGenerator {
      * @param connectionProvider the connection provider
      * @return a {@link PreparedSql} representing the constructed SQL condition fragment
      */
-    protected PreparedSql createCondition(final Condition condition, final Operation operation, final ConnectionProvider connectionProvider) {
+    protected String createCondition(final Condition condition, final Operation operation, final ConnectionProvider connectionProvider) {
         final String lhs = condition.lhs().toSql(operation, ClauseType.WHERE);
         final Column column;
 
@@ -97,35 +96,16 @@ public abstract class AbstractSqlGenerator {
         } else if (condition.operator() == Operator.IN || condition.operator() == Operator.NOT_IN) {
             if (condition.rhs() instanceof LiteralExpression literalExpression) {
                 sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), literalExpression.toBindValueSql(operation));
-                final Object rawValue = literalExpression.value();
-                final List<BindValue> bindValues;
-
-                if (rawValue == null) {
-                    bindValues = List.of(createBindValue(column, null, connectionProvider));
-                } else if (rawValue instanceof Collection<?> collection) {
-                    bindValues = collection.stream()
-                            .map(item -> createBindValue(column, item, connectionProvider))
-                            .toList();
-                } else {
-                    bindValues = List.of(createBindValue(column, rawValue, connectionProvider));
-                }
-
-                return new PreparedSql(sql, bindValues);
             } else {
                 final String sqlFragment;
-                final List<@Nullable BindValue> bindValues;
 
                 if (condition.rhs() instanceof ConnectionProviderExpression connectionProviderExpression) {
-                    PreparedSql fragmentPreparedSql = connectionProviderExpression.toSql(operation, connectionProvider);
-                    sqlFragment = fragmentPreparedSql.sql();
-                    bindValues = fragmentPreparedSql.bindValues();
+                    sqlFragment = connectionProviderExpression.toSql(operation, connectionProvider);
                 } else {
                     sqlFragment = Objects.requireNonNull(condition.rhs()).toSql(operation, ClauseType.WHERE);
-                    bindValues = Collections.emptyList();
                 }
 
                 sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), sqlFragment);
-                return new PreparedSql(sql, bindValues);
             }
         } else if (condition.operator() == Operator.USING) {
             sql = "%s (%s)".formatted(mapOperator(condition.operator()),
@@ -133,21 +113,17 @@ public abstract class AbstractSqlGenerator {
                             .name());
         } else {
             if (condition.rhs() instanceof SubselectExpression subselectExpression) {
-                final PreparedSql subselectSql = subselectExpression.toSql(operation, connectionProvider);
-                sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), subselectSql.sql());
-                return new PreparedSql(sql, subselectSql.bindValues());
+                final String subselectSql = subselectExpression.toSql(operation, connectionProvider);
+                sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), subselectSql);
             } else if (condition.rhs() instanceof SelectReference selectReference) {
                 final Column referencedColumn = selectReference.column();
                 sql = "%s %s %s.%s".formatted(lhs, mapOperator(condition.operator()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.table().aliasOrName()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.name()));
             } else {
-                final Object rawValue = getExpressionValue(Objects.requireNonNull(condition.rhs()));
-                final BindValue bindValue = createBindValue(column, rawValue, connectionProvider);
                 sql = "%s %s ?".formatted(lhs, mapOperator(condition.operator()));
-                return new PreparedSql(sql, List.of(bindValue));
             }
         }
 
-        return new PreparedSql(sql);
+        return sql;
     }
 
     /**
@@ -207,10 +183,13 @@ public abstract class AbstractSqlGenerator {
      * Extracts the value from a select expression.
      *
      * @param selectExpression The select expression.
+     * @param bindValues       The bind values.
      * @return The extracted value.
      */
-    protected @Nullable Object getExpressionValue(final SelectExpression selectExpression) {
-        if (selectExpression instanceof LiteralExpression literalExpression) {
+    protected @Nullable Object getExpressionValue(final SelectExpression selectExpression, final List<@Nullable Object> bindValues) {
+        if (selectExpression instanceof BindValueExpression bindValueExpression) {
+            return bindValues.get(bindValueExpression.index());
+        } else if (selectExpression instanceof LiteralExpression literalExpression) {
             return literalExpression.value();
         } else {
             throw new UnsupportedOperationException("Unsupported select expression for RHS: " + selectExpression);
@@ -268,13 +247,11 @@ public abstract class AbstractSqlGenerator {
      *
      * @param sql                The SQL builder.
      * @param conditionGroup     The condition group.
-     * @param bindValues         The list of bind values to populate.
      * @param operation          The current database operation.
      * @param connectionProvider The connection provider.
      */
     protected void appendConditionsAndSubgroups(final StringBuilder sql,
                                                 final ConditionGroup conditionGroup,
-                                                final List<@Nullable BindValue> bindValues,
                                                 final Operation operation,
                                                 final ConnectionProvider connectionProvider) {
 
@@ -283,9 +260,8 @@ public abstract class AbstractSqlGenerator {
                 sql.append(' ').append(logicCondition.logicOperator()).append(' ');
             }
 
-            final PreparedSql conditionSql = createCondition(logicCondition.condition(), operation, connectionProvider);
-            sql.append(conditionSql.sql());
-            bindValues.addAll(conditionSql.bindValues());
+            final String conditionSql = createCondition(logicCondition.condition(), operation, connectionProvider);
+            sql.append(conditionSql);
         }
 
         for (LogicConditionGroup logicConditionGroup : conditionGroup.subgroups()) {
@@ -294,7 +270,7 @@ public abstract class AbstractSqlGenerator {
             }
 
             sql.append(" (");
-            appendConditionsAndSubgroups(sql, logicConditionGroup.conditionGroup(), bindValues, operation, connectionProvider);
+            appendConditionsAndSubgroups(sql, logicConditionGroup.conditionGroup(), operation, connectionProvider);
             sql.append(')');
         }
     }

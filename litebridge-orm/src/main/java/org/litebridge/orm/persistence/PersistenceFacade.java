@@ -7,12 +7,16 @@ import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
+import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Delete;
@@ -224,7 +228,7 @@ public class PersistenceFacade {
         final StatementChain statementChain = statementBuilder.statementChain();
         final List<ColumnValue> columnValues = new ArrayList<>();
         final boolean isInsert = statementBuilder instanceof InsertBuilder;
-
+        final TypeConverter typeConverter = databaseProvider.getTypeConverter();
 
         for (Map.Entry<FieldAccessor, MappedFieldTarget> entry : table.mappedFieldTargets()) {
             final FieldAccessor fieldAccessor = entry.getKey();
@@ -251,8 +255,9 @@ public class PersistenceFacade {
 
             if (changedField == null) {
                 if (isInsert && columnMetaData.getGenerator() != null) {
-                    basicType = true;
-                    value = null;
+                    // Generate value using a DB sequence; don't add a bind value
+                    columnValues.add(new ColumnValue(columnMetaData.toColumn(), null));
+                    continue;
                 } else {
                     continue;
                 }
@@ -264,6 +269,7 @@ public class PersistenceFacade {
 
             if (basicType) {
                 columnValues.add(new ColumnValue(columnMetaData.toColumn(), value));
+                statementBuilder.bindValues().add(createBindValue(value, columnMetaData, typeConverter));
             } else {
                 // Dealing with an embedded DTO - add the context to the table provider
                 tableProvider.pushContext(table.getContextTableRegistry());
@@ -291,7 +297,10 @@ public class PersistenceFacade {
                                     if (updateResult instanceof InsertResult insertResult
                                             && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
 
-                                        insertResult.generatedKeys().forEach((pkColumn, pkValue) -> columnValues.add(new ColumnValue(pkColumn.toColumn(), pkValue)));
+                                        insertResult.generatedKeys().forEach((pkColumn, pkValue) -> {
+                                            columnValues.add(new ColumnValue(pkColumn.toColumn(), pkValue));
+                                            statementBuilder.bindValues().add(createBindValue(pkValue, columnMetaData, typeConverter));
+                                        });
                                         updateDtoPrimaryKey(value, insertResult.generatedKeys());
                                     }
                                 });
@@ -305,6 +314,7 @@ public class PersistenceFacade {
 
                                     if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
                                         columnValues.add(new ColumnValue(columnMetaData.toColumn(), embeddedDtoPkValue));
+                                        statementBuilder.bindValues().add(createBindValue(embeddedDtoPkValue, columnMetaData, typeConverter));
                                     }
                                 });
 
@@ -320,6 +330,7 @@ public class PersistenceFacade {
 
                                         insertResult.generatedKeys().forEach((pkColumn, pkValue) -> {
                                             columnValues.add(new ColumnValue(pkColumn.toColumn(), pkValue));
+                                            statementBuilder.bindValues().add(createBindValue(pkValue, columnMetaData, typeConverter));
                                         });
 
                                         updateDtoPrimaryKey(value, insertResult.generatedKeys());
@@ -333,6 +344,7 @@ public class PersistenceFacade {
                                     final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                                     final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
                                     columnValues.add(new ColumnValue(pkColumn.toColumn(), embeddedDtoPkValue));
+                                    statementBuilder.bindValues().add(createBindValue(embeddedDtoPkValue, columnMetaData, typeConverter));
                                 });
 
                                 statementChain.addDependency(value, new PipedStatement(new NoOpStatementBuilder(), value));
@@ -348,6 +360,7 @@ public class PersistenceFacade {
                         final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
                         final Column joinColumn = table.getColumnForFieldName(fieldAccessor.name()).toColumn();
                         columnValues.add(new ColumnValue(joinColumn, embeddedDtoPkValue));
+                        statementBuilder.bindValues().add(createBindValue(embeddedDtoPkValue, columnMetaData, typeConverter));
                     });
                 }
             }
@@ -583,11 +596,11 @@ public class PersistenceFacade {
         }
 
         if (updateStatement instanceof Insert insert) {
-            dtoUpdateResult.setUpdateResult(databaseProvider.insert(insert, transactionManager));
+            dtoUpdateResult.setUpdateResult(databaseProvider.insert(new PreparedOperation(insert, statementBuilder.bindValues()), transactionManager));
         } else if (updateStatement instanceof Update update) {
-            dtoUpdateResult.setUpdateResult(databaseProvider.update(update, transactionManager));
+            dtoUpdateResult.setUpdateResult(databaseProvider.update(new PreparedOperation(update, statementBuilder.bindValues()), transactionManager));
         } else if (updateStatement instanceof Delete delete) {
-            dtoUpdateResult.setUpdateResult(databaseProvider.delete(delete, transactionManager));
+            dtoUpdateResult.setUpdateResult(databaseProvider.delete(new PreparedOperation(delete, statementBuilder.bindValues()), transactionManager));
         } else if (statementBuilder instanceof InsertBuilder) {
             dtoUpdateResult.setUpdateResult(new InsertResult(0));
         } else {
@@ -678,7 +691,8 @@ public class PersistenceFacade {
                     final Condition condition;
 
                     if (pkValue != null) {
-                        condition = new Condition(pkColumnExpression, Operator.EQ, this.databaseProvider.getSqlFunctionRegistry().select().literal().create(pkValue));
+                        condition = new Condition(pkColumnExpression, Operator.EQ, createBindValueExpression(pkValue, statementBuilder.bindValues().size()));
+                        statementBuilder.bindValues().add(createBindValue(pkValue, columnMetaData, databaseProvider.getTypeConverter()));
                     } else {
                         condition = new Condition(pkColumnExpression, Operator.IS_NULL);
                     }
@@ -708,5 +722,22 @@ public class PersistenceFacade {
         } else {
             throw new IllegalStateException("Unsupported statement builder type: " + statementBuilder.getClass().getName());
         }
+    }
+
+    private BindValue createBindValue(final @Nullable Object rawValue, final ColumnMetaData columnMetaData, final TypeConverter typeConverter) {
+        final Object convertedValue = typeConverter.convert(rawValue, columnMetaData.getDataType());
+        return new BindValue(convertedValue, columnMetaData.getDataType());
+    }
+
+    private static BindValueExpression createBindValueExpression(final @Nullable Object value, final int index) {
+        final int valueSize;
+
+        if (value instanceof Collection<?> collection) {
+            valueSize = collection.size();
+        } else {
+            valueSize = 1;
+        }
+
+        return new BindValueExpression(index, valueSize);
     }
 }

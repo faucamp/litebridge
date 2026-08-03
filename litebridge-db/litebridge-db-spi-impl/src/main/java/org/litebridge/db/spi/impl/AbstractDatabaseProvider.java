@@ -8,6 +8,7 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -47,6 +48,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,23 +130,32 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public InsertResult insert(final Insert insert, final ConnectionProvider connectionProvider) throws SQLException {
-        final PreparedSql preparedSql = insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider);
+    public InsertResult insert(final PreparedOperation preparedOperation, final ConnectionProvider connectionProvider) throws SQLException {
+        final Insert insert = (Insert) preparedOperation.operation();
+        final String sql = insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider);
         final TableMetaData tableMetaData = ensureTableMetaData(insert.table(), connectionProvider);
-        return executeSqlInsert(preparedSql, tableMetaData, insert.returnGeneratedKeys(), connectionProvider);
+        return executeSqlInsert(new PreparedSql(sql, preparedOperation.bindValues()), tableMetaData, insert.returnGeneratedKeys(), connectionProvider);
     }
 
     @Override
-    public UpdateResult update(final Update update, final ConnectionProvider connectionProvider) throws SQLException {
-        final PreparedSql preparedSql = updateSqlGenerator.orThrow().prepareSql(update, connectionProvider);
-        final TableMetaData tableMetaData = ensureTableMetaData(update.table(), connectionProvider);
-        return executeSqlUpdate(preparedSql, tableMetaData, connectionProvider);
+    public UpdateResult update(final PreparedOperation update, final ConnectionProvider connectionProvider) throws SQLException {
+        final String sql = updateSqlGenerator.orThrow().prepareSql((Update) update.operation(), connectionProvider);
+        final TableMetaData tableMetaData = ensureTableMetaData(update.operation().table(), connectionProvider);
+        return executeSqlUpdate(new PreparedSql(sql, update.bindValues()), tableMetaData, connectionProvider);
     }
 
     @Override
-    public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
-        final PreparedSql preparedSql = prepareSql(select, connectionProvider);
-        return select(select, preparedSql, connectionProvider);
+    public UpdateResult delete(final PreparedOperation delete, final ConnectionProvider connectionProvider) throws SQLException {
+        final String sql = deleteSqlGenerator.orThrow().prepareSql((Delete) delete.operation(), connectionProvider);
+        final TableMetaData tableMetaData = ensureTableMetaData(delete.operation().table(), connectionProvider);
+        return executeSqlUpdate(new PreparedSql(sql, delete.bindValues()), tableMetaData, connectionProvider);
+    }
+
+    @Override
+    public List<Row> select(final PreparedOperation preparedOperation, final ConnectionProvider connectionProvider) throws SQLException {
+        final Select select = (Select) preparedOperation.operation();
+        final String sql = toSql(preparedOperation.operation(), connectionProvider);
+        return select(select, new PreparedSql(sql, preparedOperation.bindValues()), connectionProvider);
     }
 
     @Override
@@ -227,18 +238,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public PreparedSql prepareSql(final Select select, final ConnectionProvider connectionProvider) {
-        return selectSqlGenerator.orThrow().prepareSql(select, connectionProvider);
-    }
-
-    @Override
-    public UpdateResult delete(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
-        final PreparedSql preparedSql = deleteSqlGenerator.orThrow().prepareSql(delete, connectionProvider);
-        final TableMetaData tableMetaData = ensureTableMetaData(delete.table(), connectionProvider);
-        return executeSqlUpdate(preparedSql, tableMetaData, connectionProvider);
-    }
-
-    @Override
     public TypeConverter getTypeConverter() {
         return typeConverter;
     }
@@ -251,10 +250,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     @Override
     public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
         return switch (operation) {
-            case Select select -> selectSqlGenerator.orThrow().prepareSql(select, connectionProvider).sql();
-            case Insert insert -> insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider).sql();
-            case Update update -> updateSqlGenerator.orThrow().prepareSql(update, connectionProvider).sql();
-            case Delete delete -> deleteSqlGenerator.orThrow().prepareSql(delete, connectionProvider).sql();
+            case Select select -> selectSqlGenerator.orThrow().prepareSql(select, connectionProvider);
+            case Insert insert -> insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider);
+            case Update update -> updateSqlGenerator.orThrow().prepareSql(update, connectionProvider);
+            case Delete delete -> deleteSqlGenerator.orThrow().prepareSql(delete, connectionProvider);
         };
     }
 

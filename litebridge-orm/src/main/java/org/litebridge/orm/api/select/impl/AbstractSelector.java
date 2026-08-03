@@ -1,15 +1,16 @@
 package org.litebridge.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.db.spi.sql.ParameterExtractor;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryBindValueExtractor;
 import org.litebridge.orm.engine.QueryCompiler;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -97,9 +98,11 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
     public abstract List<DTO> list();
 
     @Override
-    public String toSql() {
+    public PreparedSql toSql() {
         final SSP selectSpec = compile();
-        return databaseProvider.toSql(selectSpec.toSelect(), databaseProvider.transactionManager());
+        final PreparedOperation preparedOperation = selectSpec.toSelect(litebridgeContext.tableMetaDataCache(), databaseProvider.getTypeConverter());
+        final String sql = databaseProvider.toSql(preparedOperation.operation(), databaseProvider.transactionManager());
+        return new PreparedSql(sql, preparedOperation.bindValues());
     }
 
     protected List<Row> executeQuery() {
@@ -107,8 +110,11 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
         final QueryPlanCache.CachedOperation cachedOperation = litebridgeContext.queryPlanCache().get(nodeHash);
 
         if (cachedOperation != null) {
-            return executeQuery((Select) cachedOperation.operation(), cachedOperation.preparedSql());
+            // Extract bind values and executed cached query
+            final List<@Nullable Object> rawBindValues = QueryBindValueExtractor.extractBindValues(node);
+            return executeQuery((Select) cachedOperation.operation(), cachedOperation.preparedSql(rawBindValues));
         } else {
+            // Compile and execute query (it will be cached as part of this process)
             return executeQuery(compile(), nodeHash);
         }
     }
@@ -130,16 +136,18 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
     protected abstract SSP createSelectSpec(final AliasGenerator aliasGenerator);
 
     protected List<Row> executeQuery(final SSP selectSpec, final int astCacheKey) {
+        // Compile/prepare SQL query
+        final PreparedOperation preparedOperation = selectSpec.toSelect(litebridgeContext.tableMetaDataCache(), databaseProvider.getTypeConverter());
+        final Select select = (Select) preparedOperation.operation();
+        // Generate SQL string
+        final String sql = databaseProvider.toSql(preparedOperation.operation(), databaseProvider.transactionManager());
+        // Cache compiled SQL for this AST
+        final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
+                .map(BindValue::sqlDataType)
+                .toList();
+        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, select, bindValueSqlTypes, selectSpec));
         // Execute SQL query
-        final Select select = selectSpec.toSelect();
-        final PreparedSql preparedSql = databaseProvider.prepareSql(select, databaseProvider.transactionManager());
-        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(preparedSql, select, selectSpec));
-
-        // Extract parameters from CURRENT select record (with actual values)
-        final List<BindValue> bindValues = new ParameterExtractor().extractParameters(select);
-
-        // Create execution SQL using cached string and current bind values
-        final PreparedSql executionSql = new PreparedSql(preparedSql.sql(), bindValues);
+        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues());
         return executeQuery(select, executionSql);
     }
 

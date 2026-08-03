@@ -2,6 +2,7 @@ package org.litebridge.db.spi.expression;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.PreparedOperation;
 
 import java.util.Collection;
 import java.util.Objects;

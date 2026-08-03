@@ -1,12 +1,21 @@
 package org.litebridge.orm.api.update.model;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.math.MathOperation;
+import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.orm.api.select.impl.AbstractConditionBasedSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,9 +34,32 @@ public class UpdateSpec extends AbstractConditionBasedSpec {
         columnValues.add(columnValue);
     }
 
-    public Update toUpdate() {
-        return new Update(table,
+    public PreparedOperation toUpdate(final TableMetaDataCache tableMetaDataCache, final TypeConverter typeConverter) {
+        final List<BindValue> bindValues = new ArrayList<>();
+
+        for (ColumnValue columnValue : columnValues) {
+            if (!(columnValue.value() instanceof MathOperation)) {
+                bindValues.addAll(createBindValues(columnValue.column(), columnValue.value(), tableMetaDataCache, typeConverter));
+            }
+        }
+
+        final Update update = new Update(table,
                 columnValues,
-                conditions.toConditionGroup(selectExpressionMapper, Collections.singleton(table)));
+                conditions.toConditionGroup(selectExpressionMapper, Collections.singleton(table), bindValues, tableMetaDataCache, typeConverter));
+        return new PreparedOperation(update, bindValues);
+    }
+
+    private List<BindValue> createBindValues(final Column column, final @Nullable Object rawValue, final TableMetaDataCache tableMetaDataCache, final TypeConverter typeConverter) {
+        final ColumnMetaData columnMetaData = tableMetaDataCache.ensureTableMetaData(column.table()).column(column.name());
+
+        if (rawValue instanceof Collection<?> collection) {
+            return collection.stream()
+                    .map(value -> typeConverter.convert(value, columnMetaData.getDataType()))
+                    .map(convertedValue -> new BindValue(convertedValue, columnMetaData.getDataType()))
+                    .toList();
+        } else {
+            final Object convertedValue = typeConverter.convert(rawValue, columnMetaData.getDataType());
+            return Collections.singletonList(new BindValue(convertedValue, columnMetaData.getDataType()));
+        }
     }
 }

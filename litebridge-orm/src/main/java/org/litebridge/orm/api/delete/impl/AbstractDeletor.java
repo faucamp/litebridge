@@ -40,7 +40,7 @@ permits DtoDeletor, SqlDeletor {
         final UpdateResult updateResult;
 
         try {
-            updateResult = databaseProvider.delete(deleteSpec.toDelete(), databaseProvider.transactionManager());
+            updateResult = databaseProvider.delete(deleteSpec.toDelete(litebridgeContext.tableMetaDataCache(), databaseProvider.getTypeConverter()), databaseProvider.transactionManager());
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute select query", ex);
         }

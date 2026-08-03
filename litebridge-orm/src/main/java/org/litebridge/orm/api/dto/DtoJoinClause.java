@@ -178,7 +178,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         final Column sourcePkColumn = sourcePkColumns.getFirst().toColumn();
         final Column joinTableJoinColumn = joinOrmTable.getColumnMetaData(mappedManyToMany.joinColumn()).toColumn();
 
-        final ConditionNode intermediateCondition = new ConditionNode(null, LogicOperator.NOOP, new SelectColumnSpec(sourcePkColumn), Operator.EQ, joinTableJoinColumn, null);
+        final ConditionNode intermediateCondition = new ConditionNode(null, LogicOperator.NOOP, new SelectColumnSpec(sourcePkColumn), Operator.EQ, joinTableJoinColumn);
         intermediateJoinNode.withCondition(intermediateCondition);
 
         // Create target JoinNode (standard join on the target DTO)

@@ -1,7 +1,9 @@
 package org.litebridge.orm.api.update.model;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.LiteralExpression;
@@ -18,6 +20,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
 import org.litebridge.orm.expression.TestSelectReferenceExpressionFactory;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.stream.Stream;
 
@@ -40,7 +43,7 @@ class UpdateSpecTest {
         final ProtoExpressionResolver protoExpressionResolver = mock(ProtoExpressionResolver.class);
         when(protoExpressionResolver.resolveExpression(any(ExpressionSpec.class), any(ClauseType.class))).thenAnswer(i -> Stream.of((ExpressionSpec) i.getArgument(0)));
         final Table table = new Table("cat", "sch", "tab");
-        final UpdateSpec spec = new UpdateSpec(table, new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver));
+        final UpdateSpec spec = new UpdateSpec(table, new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver, mock(TableMetaDataCache.class), new DefaultTypeConverter()));
 
         final Column col = new Column(table, "col");
         spec.addColumnValue(new ColumnValue(col, "val"));
@@ -48,7 +51,8 @@ class UpdateSpecTest {
         conditionSpec.setOperator(Operator.EQ);
         conditionSpec.setValue("test");
 
-        final Update update = spec.toUpdate();
+        final PreparedOperation preparedOperation = spec.toUpdate(mock(TableMetaDataCache.class), new DefaultTypeConverter());
+        final Update update = (Update) preparedOperation.operation();
         assertEquals(table, update.table());
         assertEquals(1, update.columnValues().size());
         assertEquals(1, update.where().conditions().size());

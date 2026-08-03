@@ -2,28 +2,26 @@ package org.litebridge.db.oracle;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.oracle.function.OracleSqlFunctionRegistryFactory;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.function.SqlFunctionRegistryFactory;
-
-import org.litebridge.convert.DefaultTypeConverter;
-import org.litebridge.db.spi.expression.ClauseType;
-import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import java.util.Collections;
-import java.util.Optional;
-import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;

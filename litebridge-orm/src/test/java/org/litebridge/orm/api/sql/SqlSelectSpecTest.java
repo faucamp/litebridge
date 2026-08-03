@@ -2,12 +2,16 @@ package org.litebridge.orm.api.sql;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.JoinSpec;
@@ -20,6 +24,7 @@ import org.litebridge.orm.expression.TestColumnExpression;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
 import org.litebridge.orm.expression.TestSelectReferenceExpressionFactory;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.List;
 
@@ -226,15 +231,17 @@ class SqlSelectSpecTest {
         limitSpec.setLimit(200);
 
         // When
-        final Select result = sqlSelectSpec.toSelect();
+        final PreparedOperation result = sqlSelectSpec.toSelect(mock(TableMetaDataCache.class), mock(TypeConverter.class));
 
         // Then
         assertNotNull(result);
-        assertEquals(table, result.table());
-        assertNotNull(result.expressions());
-        assertEquals(1, result.expressions().size());
-        assertInstanceOf(TestColumnExpression.class, result.expressions().getFirst());
-        assertEquals(column, ((TestColumnExpression) result.expressions().getFirst()).column());
+        final Select select = (Select) result.operation();
+        assertNotNull(select);
+        assertEquals(table, select.table());
+        assertNotNull(select.expressions());
+        assertEquals(1, select.expressions().size());
+        assertInstanceOf(TestColumnExpression.class, select.expressions().getFirst());
+        assertEquals(column, ((TestColumnExpression) select.expressions().getFirst()).column());
     }
 
     @Test
@@ -246,12 +253,13 @@ class SqlSelectSpecTest {
         sqlSelectSpec.setTable(table);
 
         // When
-        final Select result = sqlSelectSpec.toSelect();
+        final PreparedOperation result = sqlSelectSpec.toSelect(mock(TableMetaDataCache.class), mock(TypeConverter.class));
 
         // Then
         assertNotNull(result);
-        assertEquals(table, result.table());
-        assertNotNull(result.expressions());
-        assertTrue(result.expressions().isEmpty());
+        final Select select = (Select) result.operation();
+        assertEquals(table, select.table());
+        assertNotNull(select.expressions());
+        assertTrue(select.expressions().isEmpty());
     }
 }

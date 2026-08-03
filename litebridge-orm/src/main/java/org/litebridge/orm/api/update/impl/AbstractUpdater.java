@@ -46,7 +46,7 @@ public abstract sealed class AbstractUpdater<US extends UpdateSpec> implements U
         final UpdateResult updateResult;
 
         try {
-            updateResult = databaseProvider.update(updateSpec.toUpdate(), databaseProvider.transactionManager());
+            updateResult = databaseProvider.update(updateSpec.toUpdate(litebridgeContext.tableMetaDataCache(), databaseProvider.getTypeConverter()), databaseProvider.transactionManager());
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute update", ex);
         }

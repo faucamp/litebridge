@@ -9,6 +9,7 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
+import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.api.dto.DtoJoinSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.config.LitebridgeConfig;
@@ -45,6 +46,7 @@ class SelectSpecDtoMapperTest {
     private FromClauseEngine fromClauseEngine;
     private TransactionalDatabaseProvider databaseProvider;
     private AliasGenerator aliasGenerator;
+    private TransactionManager transactionManager;
 
     @BeforeEach
     void setUp() {
@@ -56,9 +58,10 @@ class SelectSpecDtoMapperTest {
         databaseProvider = mock(TransactionalDatabaseProvider.class);
         fromClauseEngine = new FromClauseEngine(databaseProvider, tableRegistry, new ChangeTracker(), dtoConstructor, () -> litebridgeContext);
         aliasGenerator = new NoOpAliasGenerator();
+        transactionManager = mock(TransactionManager.class);
 
         litebridgeConfig = new LitebridgeConfig();
-        litebridgeContext = new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator());
+        litebridgeContext = new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), new TableMetaDataCache(databaseProvider, transactionManager));
     }
 
     @Test

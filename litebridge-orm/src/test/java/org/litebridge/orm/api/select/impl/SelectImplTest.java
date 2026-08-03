@@ -9,8 +9,10 @@ import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.sql.SqlProtoExpressionResolver;
 import org.litebridge.orm.api.sql.SqlSelectSpec;
+import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryPlanCache;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
@@ -74,7 +76,8 @@ class SelectImplTest {
         SelectTerminal<Object> resultTerminal = limitClause.offset(10);
 
         // Use a real context for compilation
-        final LitebridgeContext context = new LitebridgeContext(new org.litebridge.orm.config.LitebridgeConfig(), null, null, new QueryPlanCache(), new NoOpAliasGenerator());
+        final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
+        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), null, null, new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache);
         final TestSelector finalSelector = (TestSelector) resultTerminal;
         final TestSelector compiledSelector = new TestSelector(selectSpec, databaseProvider, context, finalSelector.node());
 
@@ -88,7 +91,8 @@ class SelectImplTest {
         LimitClauseTerminal<Object> resultTerminal = orderByClause.limit(20);
 
         // Use a real context for compilation
-        final LitebridgeContext context = new LitebridgeContext(new org.litebridge.orm.config.LitebridgeConfig(), null, null, new QueryPlanCache(), new NoOpAliasGenerator());
+        final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
+        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), null, null, new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache);
         final TestSelector finalSelector = (TestSelector) ((DelegatingSelector) resultTerminal).delegate();
         final TestSelector compiledSelector = new TestSelector(selectSpec, databaseProvider, context, finalSelector.node());
 

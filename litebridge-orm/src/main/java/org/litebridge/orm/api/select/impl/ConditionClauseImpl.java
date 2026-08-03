@@ -295,6 +295,7 @@ public class ConditionClauseImpl<DTO,
                     throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
         };
 
+        //TODO: this compiles the subselect inside the AST buildup; this needs to be moved to the QueryCompiler
         return selector.compile();
     }
 }

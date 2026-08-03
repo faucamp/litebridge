@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.exception.NonUniqueResultException;
 
 import java.util.List;
@@ -115,5 +116,5 @@ public interface SelectTerminal<DTO> {
      */
     List<DTO> list();
 
-    String toSql();
+    PreparedSql toSql();
 }

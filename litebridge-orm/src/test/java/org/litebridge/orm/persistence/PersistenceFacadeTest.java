@@ -9,6 +9,8 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.function.SelectColumn;
 import org.litebridge.db.spi.tx.TransactionManager;
+import org.litebridge.db.spi.update.Delete;
+import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
@@ -21,7 +23,6 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -304,8 +305,8 @@ class PersistenceFacadeTest {
         facade.save(order);
 
         // Then
-        verify(databaseProvider).insert(argThat(i -> i.table().name().equals("customers")), any());
-        verify(databaseProvider).insert(argThat(i -> i.table().name().equals("orders")), any());
+        verify(databaseProvider).insert(argThat(i -> i.operation().table().name().equals("customers")), any());
+        verify(databaseProvider).insert(argThat(i -> i.operation().table().name().equals("orders")), any());
     }
 
     @Test
@@ -344,8 +345,8 @@ class PersistenceFacadeTest {
         facade.save(category);
 
         // Then
-        verify(databaseProvider).insert(argThat(i -> i.table().name().equals("categories")), any());
-        verify(databaseProvider).insert(argThat(i -> i.table().name().equals("products")), any());
+        verify(databaseProvider).insert(argThat(i -> i.operation().table().name().equals("categories")), any());
+        verify(databaseProvider).insert(argThat(i -> i.operation().table().name().equals("products")), any());
     }
 
     @Test
@@ -454,7 +455,8 @@ class PersistenceFacadeTest {
         facade.delete(dto);
 
         // Then
-        verify(databaseProvider).delete(argThat(d -> {
+        verify(databaseProvider).delete(argThat(po -> {
+            final Delete d = (Delete) po.operation();
             return d.where().conditions().get(0).condition().operator() == org.litebridge.db.spi.query.Operator.IS_NULL;
         }), any());
     }
@@ -508,7 +510,7 @@ class PersistenceFacadeTest {
         facade.insert(dto);
 
         // Then
-        verify(databaseProvider).insert(argThat(i -> !((org.litebridge.db.spi.update.Insert)i).returnGeneratedKeys()), any());
+        verify(databaseProvider).insert(argThat(i -> !((Insert) i.operation()).returnGeneratedKeys()), any());
     }
 
     @Test
@@ -539,7 +541,7 @@ class PersistenceFacadeTest {
         facade.save(dto);
 
         // Then
-        verify(databaseProvider).insert(argThat(i -> i.rows().get(0).columns().size() == 1), any());
+        verify(databaseProvider).insert(argThat(i -> ((Insert) i.operation()).rows().get(0).columns().size() == 1), any());
     }
 
     private void setupMockSqlFunctions(TransactionalDatabaseProvider databaseProvider) {
@@ -622,7 +624,8 @@ class PersistenceFacadeTest {
         private Long tag_id;
     }
 
-    public record PersonRecord(Long id, String name) {}
+    public record PersonRecord(Long id, String name) {
+    }
 
     private record TestCol(String name, int type) {
     }

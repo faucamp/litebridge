@@ -1,6 +1,9 @@
 package org.litebridge.orm.persistence;
 
+import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.UpdateStatement;
+
+import java.util.List;
 
 /**
  * Interface for building SQL statements.
@@ -15,6 +18,8 @@ public sealed interface StatementBuilder<US extends UpdateStatement> permits Abs
      * @return The statement chain.
      */
     StatementChain statementChain();
+
+    List<BindValue> bindValues();
 
     /**
      * Builds the final SQL statement.

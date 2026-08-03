@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.sql.delete;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.update.Delete;
@@ -10,6 +11,7 @@ import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryPlanCache;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 
@@ -27,7 +29,7 @@ import static org.mockito.Mockito.when;
 class SqlDeletorTest {
 
     private LitebridgeContext createRealContext() {
-        return new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator());
+        return new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), mock(TableMetaDataCache.class));
     }
 
     @Test
@@ -44,7 +46,7 @@ class SqlDeletorTest {
 
         // Then
         assertEquals(expectedResult, result);
-        verify(databaseProvider).delete(argThat((Delete d) -> d.table().equals(table)), any());
+        verify(databaseProvider).delete(argThat((PreparedOperation po) -> po.operation().table().equals(table)), any());
     }
 
     @Test

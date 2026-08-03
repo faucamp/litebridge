@@ -1,5 +1,6 @@
 package org.litebridge.db.spi.impl.sql;
 
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
@@ -38,15 +39,14 @@ public class DeleteSqlGenerator extends AbstractSqlGenerator {
      * @param connectionProvider the provider for database connections
      * @return the prepared SQL statement with bind values
      */
-    public PreparedSql prepareSql(final Delete delete, final ConnectionProvider connectionProvider) {
+    public String prepareSql(final Delete delete, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = appendTable(new StringBuilder("DELETE FROM "), delete.table());
-        final List<BindValue> bindValues = new ArrayList<>();
 
         if (!delete.where().isEmpty()) {
             sql.append(" WHERE ");
-            appendConditionsAndSubgroups(sql, delete.where(), bindValues, delete, connectionProvider);
+            appendConditionsAndSubgroups(sql, delete.where(), delete, connectionProvider);
         }
 
-        return new PreparedSql(sql.toString(), bindValues);
+        return sql.toString();
     }
 }

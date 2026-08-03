@@ -3,9 +3,11 @@ package org.litebridge.orm.api.dto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.persistence.OrmTable;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.Collections;
 import java.util.List;
@@ -67,7 +69,7 @@ class DtoJoinSpecTest {
     @Test
     void toJoin() {
         // When
-        final Join result = dtoJoinSpec.toJoin(Collections.emptyList());
+        final Join result = dtoJoinSpec.toJoin(Collections.emptyList(), Collections.emptyList(), mock(TableMetaDataCache.class), mock(TypeConverter.class));
 
         // Then
         assertNotNull(result);

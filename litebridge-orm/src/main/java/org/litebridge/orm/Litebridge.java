@@ -55,6 +55,7 @@ import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.orm.persistence.SelectSpecDtoMapper;
 import org.litebridge.orm.persistence.TableMapper;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
@@ -106,6 +107,7 @@ public final class Litebridge implements SelectApi {
     private final FromClauseEngine fromClauseEngine;
     private final QueryPlanCache queryPlanCache = new QueryPlanCache();
     private final LitebridgeConfig litebridgeConfig;
+    private final TableMetaDataCache tableMetaDataCache;
 
     /**
      * Constructs a Litebridge instance with the specified database provider and data source.
@@ -222,6 +224,7 @@ public final class Litebridge implements SelectApi {
         this.nativeSqlContext = new NativeSqlContext(this.databaseProvider);
         this.litebridgeConfig = litebridgeConfig != null ? litebridgeConfig : new LitebridgeConfig();
         this.changeTracker = new ChangeTracker(lookup);
+        this.tableMetaDataCache = new TableMetaDataCache(databaseProvider, transactionManager);
         this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor);
         final TableMapper tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker);
         this.registrationEngine = new RegistrationEngine(this.databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
@@ -576,7 +579,7 @@ public final class Litebridge implements SelectApi {
     private LitebridgeContext createLitebridgeContext() {
         final SqlFunctionRegistry sqlFunctionRegistry = databaseProvider.getSqlFunctionRegistry();
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
-        return new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, queryPlanCache, aliasGenerator);
+        return new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, queryPlanCache, aliasGenerator, tableMetaDataCache);
     }
 
     private SelectExpressionMapper createSelectExpressionMapper(final boolean dto) {
@@ -590,6 +593,6 @@ public final class Litebridge implements SelectApi {
             protoExpressionResolver = new SqlProtoExpressionResolver();
         }
 
-        return new SelectExpressionMapper(databaseProvider.getSqlFunctionRegistry(), protoExpressionResolver);
+        return new SelectExpressionMapper(databaseProvider.getSqlFunctionRegistry(), protoExpressionResolver, tableMetaDataCache, databaseProvider.getTypeConverter());
     }
 }

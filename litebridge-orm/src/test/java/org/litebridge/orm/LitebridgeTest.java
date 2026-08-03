@@ -5,6 +5,7 @@ import org.litebridge.commons.ObjectUtils;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.DefaultAliasTransformer;
@@ -140,7 +141,7 @@ class LitebridgeTest {
         final TableMetaData tableMetaData = new TableMetaData(tableSpec, List.of("MY_ID"), List.of(columnMetaDataMyId, columnMetaDataMyVar));
         final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
         when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(tableMetaData);
-        when(databaseProvider.insert(any(Insert.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Collections.emptyMap()));
+        when(databaseProvider.insert(any(PreparedOperation.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Collections.emptyMap()));
 
         litebridge.register(dtoTableSpec);
         final TestDto testDto = new TestDto();
@@ -152,10 +153,10 @@ class LitebridgeTest {
 
         // Then
         verify(databaseProvider).tableMetaData(eq(tableSpec), any(ConnectionProvider.class));
-        final ArgumentCaptor<Insert> insertArgumentCaptor = ArgumentCaptor.forClass(Insert.class);
+        final ArgumentCaptor<PreparedOperation> insertArgumentCaptor = ArgumentCaptor.forClass(PreparedOperation.class);
         verify(databaseProvider).insert(insertArgumentCaptor.capture(), any(ConnectionProvider.class));
 
-        final Insert insert = insertArgumentCaptor.getValue();
+        final Insert insert = (Insert) insertArgumentCaptor.getValue().operation();
         assertEquals(tableMetaData.toTable(), insert.table());
         assertEquals(2, insert.columns().size());
         assertEquals("MY_ID", insert.columns().getFirst().name());
@@ -221,7 +222,7 @@ class LitebridgeTest {
         final TableMetaData tableMetaData = new TableMetaData(tableSpec, List.of("MY_ID"), List.of(columnMetaDataMyId, columnMetaDataMyVar));
         final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
         when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(tableMetaData);
-        when(databaseProvider.insert(any(Insert.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Map.of(columnMetaDataMyId, 123L)));
+        when(databaseProvider.insert(any(PreparedOperation.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Map.of(columnMetaDataMyId, 123L)));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
         litebridge.register(dtoTableSpec);
@@ -233,10 +234,10 @@ class LitebridgeTest {
 
         // Then
         verify(databaseProvider).tableMetaData(eq(tableSpec), any(ConnectionProvider.class));
-        final ArgumentCaptor<Insert> insertArgumentCaptor = ArgumentCaptor.forClass(Insert.class);
+        final ArgumentCaptor<PreparedOperation> insertArgumentCaptor = ArgumentCaptor.forClass(PreparedOperation.class);
         verify(databaseProvider).insert(insertArgumentCaptor.capture(), any(ConnectionProvider.class));
 
-        final Insert insert = insertArgumentCaptor.getValue();
+        final Insert insert = (Insert) insertArgumentCaptor.getValue().operation();
         assertEquals(tableMetaData.toTable(), insert.table());
         assertEquals(2, insert.columns().size());
         assertEquals("MY_ID", insert.columns().getFirst().name());
@@ -289,10 +290,11 @@ class LitebridgeTest {
 
         // Then
         verify(databaseProvider).tableMetaData(eq(tableSpec), any(ConnectionProvider.class));
-        final ArgumentCaptor<Update> updateArgumentCaptor = ArgumentCaptor.forClass(Update.class);
+        final ArgumentCaptor<PreparedOperation> updateArgumentCaptor = ArgumentCaptor.forClass(PreparedOperation.class);
         verify(databaseProvider).update(updateArgumentCaptor.capture(), any(ConnectionProvider.class));
 
-        final Update update = updateArgumentCaptor.getValue();
+        final PreparedOperation preparedOperation = updateArgumentCaptor.getValue();
+        final Update update = (Update) preparedOperation.operation();
         assertEquals(tableMetaData.toTable(), update.table());
         assertEquals(1, update.columnValues().size());
         assertEquals("MY_VAR", update.columnValues().getFirst().column().name());

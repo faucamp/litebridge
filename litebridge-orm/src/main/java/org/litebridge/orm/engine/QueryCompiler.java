@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.orm.api.delete.model.DeleteSpec;
 import org.litebridge.orm.api.dto.DtoDataSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
@@ -336,7 +337,7 @@ public final class QueryCompiler {
         switch (node) {
             case SetNode setNode -> {
                 if (spec instanceof UpdateSpec updateSpec) {
-                    updateSpec.addColumnValue(new org.litebridge.db.spi.update.ColumnValue(setNode.column(), setNode.value()));
+                    updateSpec.addColumnValue(new ColumnValue(setNode.column(), setNode.value()));
                 }
             }
             case WhereNode whereNode -> {

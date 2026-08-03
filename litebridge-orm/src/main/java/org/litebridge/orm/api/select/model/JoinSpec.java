@@ -1,10 +1,14 @@
 package org.litebridge.orm.api.select.model;
 
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.db.spi.sql.BindValue;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Specification for a database "JOIN" clause.
@@ -49,7 +53,8 @@ public interface JoinSpec {
      * Returns the SPI join object.
      *
      * @param availableTables the collection of tables currently available in the query context for alias resolution
+     * @param bindValues
      * @return the SPI join object.
      */
-    Join toJoin(Collection<Table> availableTables);
+    Join toJoin(Collection<Table> availableTables, final List<BindValue> bindValues, final TableMetaDataCache tableMetaDataCache, final TypeConverter typeConverter);
 }

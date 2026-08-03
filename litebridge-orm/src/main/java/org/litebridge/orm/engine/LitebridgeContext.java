@@ -3,6 +3,7 @@ package org.litebridge.orm.engine;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 
 /**
@@ -18,6 +19,7 @@ public final class LitebridgeContext {
     private final SqlFunctionRegistry sqlFunctionRegistry;
     private final QueryPlanCache queryPlanCache;
     private final AliasGenerator aliasGenerator;
+    private final TableMetaDataCache tableMetaDataCache;
     private RelatedDtoStrategy relatedDtoStrategy;
 
     /**
@@ -33,13 +35,15 @@ public final class LitebridgeContext {
                              FromClauseEngine fromClauseEngine,
                              SqlFunctionRegistry sqlFunctionRegistry,
                              QueryPlanCache queryPlanCache,
-                             AliasGenerator aliasGenerator) {
+                             AliasGenerator aliasGenerator,
+                             TableMetaDataCache tableMetaDataCache) {
         this.config = config;
         this.fromClauseEngine = fromClauseEngine;
         this.sqlFunctionRegistry = sqlFunctionRegistry;
         this.queryPlanCache = queryPlanCache;
         this.aliasGenerator = aliasGenerator;
         this.relatedDtoStrategy = config.relatedDtoStrategy();
+        this.tableMetaDataCache = tableMetaDataCache;
     }
 
     public LitebridgeConfig config() {
@@ -60,6 +64,10 @@ public final class LitebridgeContext {
 
     public AliasGenerator aliasGenerator() {
         return aliasGenerator;
+    }
+
+    public TableMetaDataCache tableMetaDataCache() {
+        return tableMetaDataCache;
     }
 
     public RelatedDtoStrategy getRelatedDtoStrategy() {

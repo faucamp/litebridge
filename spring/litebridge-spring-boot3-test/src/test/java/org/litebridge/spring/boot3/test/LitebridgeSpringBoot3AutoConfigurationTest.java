@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -197,12 +198,12 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         }
 
         @Override
-        public UpdateResult update(final Update update, final ConnectionProvider connectionProvider) throws SQLException {
+        public UpdateResult update(final PreparedOperation update, final ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 
         @Override
-        public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
+        public List<Row> select(final PreparedOperation select, final ConnectionProvider connectionProvider) throws SQLException {
             return List.of();
         }
 
@@ -212,12 +213,12 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         }
 
         @Override
-        public PreparedSql prepareSql(final Select select, final ConnectionProvider connectionProvider) {
+        public PreparedSql prepareSql(final PreparedOperation select, final ConnectionProvider connectionProvider) {
             return null;
         }
 
         @Override
-        public UpdateResult delete(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
+        public UpdateResult delete(final PreparedOperation delete, final ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 

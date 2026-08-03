@@ -2,6 +2,7 @@ package org.litebridge.orm.engine;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Aliased;
+import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelector;
@@ -162,6 +163,10 @@ public final class FromClauseEngine {
 
     public AliasGenerator aliasGenerator() {
         return contextSupplier.get().aliasGenerator();
+    }
+
+    public DatabaseProvider databaseProvider() {
+        return databaseProvider;
     }
 
     private boolean hasExplicitSelect(final QueryNode node) {

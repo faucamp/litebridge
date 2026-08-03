@@ -3,10 +3,13 @@ package org.litebridge.orm.engine;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -55,6 +58,23 @@ public final class QueryPlanCache {
         cache.put(nodeHash, cachedOperation);
     }
 
-    public record CachedOperation(PreparedSql preparedSql, Operation operation, @Nullable SelectSpec selectSpec) {
+    public record CachedOperation(String sql,
+                                  Operation operation,
+                                  List<Integer> bindValueSqlTypes,
+                                  @Nullable SelectSpec selectSpec) {
+
+        public PreparedSql preparedSql(final List<@Nullable Object> rawBindValues) {
+            if (rawBindValues.size() != bindValueSqlTypes.size()) {
+                throw new IllegalArgumentException("Number of bind values does not match number of bind value SQL types; expected " + bindValueSqlTypes().size() + ", got " + rawBindValues.size());
+            }
+
+            final List<BindValue> bindValues = new ArrayList<>(bindValueSqlTypes.size());
+
+            for (int i = 0; i < bindValueSqlTypes.size(); i++) {
+                bindValues.add(new BindValue(rawBindValues.get(i), bindValueSqlTypes.get(i)));
+            }
+
+            return new PreparedSql(sql, bindValues);
+        }
     }
 }

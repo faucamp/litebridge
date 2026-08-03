@@ -1,8 +1,10 @@
 package org.litebridge.orm.api.select.model;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.LiteralExpressionFactory;
@@ -16,6 +18,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
 import org.litebridge.orm.expression.TestSelectReferenceExpressionFactory;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.Collections;
 import java.util.List;
@@ -76,7 +79,7 @@ class JoinSpecTest {
 
         // When
         final ConditionSpec conditionSpec = joinSpec.using("TEST_COLUMN");
-        final LogicCondition result = joinSpec.toJoin(Collections.emptyList()).conditions().conditions().getFirst();
+        final LogicCondition result = joinSpec.toJoin(Collections.emptyList(), Collections.emptyList(), mock(TableMetaDataCache.class), mock(TypeConverter.class)).conditions().conditions().getFirst();
 
         // Then
         assertNotNull(result);
@@ -95,14 +98,14 @@ class JoinSpecTest {
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         final ProtoExpressionResolver protoExpressionResolver = mock(ProtoExpressionResolver.class);
         when(protoExpressionResolver.resolveExpression(any(ExpressionSpec.class), any(ClauseType.class))).thenAnswer(i -> Stream.of((ExpressionSpec) i.getArgument(0)));
-        final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("TEST_SCHEMA", "TEST_TABLE"), new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver));
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("TEST_SCHEMA", "TEST_TABLE"), new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver, mock(TableMetaDataCache.class), new DefaultTypeConverter()));
         final Table table = joinSpec.table();
         final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(new Column(table, "TEST_COLUMN")));
         conditionSpec.setOperator(Operator.LT);
         conditionSpec.setValue(123);
 
         // When
-        final Join result = joinSpec.toJoin(java.util.Collections.emptyList());
+        final Join result = joinSpec.toJoin(Collections.emptyList(), Collections.emptyList(), mock(TableMetaDataCache.class), new DefaultTypeConverter());
 
         // Then
         assertNotNull(result);

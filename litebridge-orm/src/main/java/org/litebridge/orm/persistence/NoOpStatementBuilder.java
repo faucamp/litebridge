@@ -1,6 +1,10 @@
 package org.litebridge.orm.persistence;
 
+import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.Update;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * A no-operation implementation of the {@link StatementBuilder} interface.
@@ -29,6 +33,11 @@ public final class NoOpStatementBuilder implements StatementBuilder<Update> {
     @Override
     public StatementChain statementChain() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<BindValue> bindValues() {
+        return Collections.emptyList();
     }
 
     /**

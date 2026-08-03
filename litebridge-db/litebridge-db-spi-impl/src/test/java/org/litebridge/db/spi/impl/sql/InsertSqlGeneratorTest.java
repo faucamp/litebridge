@@ -9,7 +9,6 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.ColumnValue;
@@ -70,12 +69,11 @@ class InsertSqlGeneratorTest {
         when(typeConverter.convert(anyString(), anyInt())).then(i -> i.getArgument(0));
 
         // When
-        final PreparedSql result = insertSqlGenerator.prepareSql(insert, mock(TransactionManager.class));
+        final String result = insertSqlGenerator.prepareSql(insert, mock(TransactionManager.class));
 
         // Then
         assertNotNull(result);
-        assertTrue(result.sql().contains("VALUES"));
-        assertEquals(2, result.bindValues().size());
+        assertTrue(result.contains("VALUES"));
     }
 
     @Test

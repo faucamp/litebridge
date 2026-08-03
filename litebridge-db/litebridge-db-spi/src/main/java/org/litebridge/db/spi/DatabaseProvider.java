@@ -44,7 +44,7 @@ public interface DatabaseProvider {
      * @return an {@link InsertResult} containing the number of rows affected and any generated keys.
      * @throws SQLException if any SQL error occurs during the execution of the insert operation.
      */
-    InsertResult insert(Insert insert, ConnectionProvider connectionProvider) throws SQLException;
+    InsertResult insert(PreparedOperation insert, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
      * Execute an UPDATE operation in the database using the provided {@link Update} statement.
@@ -54,7 +54,7 @@ public interface DatabaseProvider {
      * @return an {@link UpdateResult} containing the number of rows affected.
      * @throws SQLException if any SQL error occurs during the execution of the update operation.
      */
-    UpdateResult update(Update update, ConnectionProvider connectionProvider) throws SQLException;
+    UpdateResult update(PreparedOperation update, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
      * Execute a SELECT operation in the database using the provided {@link Select} statement.
@@ -65,7 +65,7 @@ public interface DatabaseProvider {
      * @return a {@link List} of {@link Row} objects representing the results of the SELECT operation.
      * @throws SQLException if any SQL error occurs during the execution of the SELECT operation.
      */
-    List<Row> select(Select select, ConnectionProvider connectionProvider) throws SQLException;
+    List<Row> select(PreparedOperation select, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
      * Executes a SELECT operation in the database using the provided {@link Select} statement
@@ -80,15 +80,6 @@ public interface DatabaseProvider {
     List<Row> select(Select select, PreparedSql preparedSql, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
-     * Prepares a SQL SELECT statement along with its bind values for execution.
-     *
-     * @param select             the select operation to prepare.
-     * @param connectionProvider the connection provider.
-     * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values.
-     */
-    PreparedSql prepareSql(Select select, ConnectionProvider connectionProvider);
-
-    /**
      * Execute a DELETE operation in the database using the provided {@link Delete} statement.
      *
      * @param delete             the {@link Delete} statement containing the table and rows to delete.
@@ -96,7 +87,7 @@ public interface DatabaseProvider {
      * @return an {@link UpdateResult} containing the number of rows affected.
      * @throws SQLException if any SQL error occurs during the execution of the delete operation.
      */
-    UpdateResult delete(Delete delete, ConnectionProvider connectionProvider) throws SQLException;
+    UpdateResult delete(PreparedOperation delete, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
      * Converts the given {@link Operation} into its corresponding SQL representation.
@@ -109,7 +100,7 @@ public interface DatabaseProvider {
      *                           or information required for SQL generation, such as metadata or dialect.
      * @return a {@link String} containing the SQL representation of the given {@link Operation}.
      */
-    String toSql(Operation operation, ConnectionProvider connectionProvider);
+    String toSql(final Operation operation, final ConnectionProvider connectionProvider);
 
     /**
      * Executes a SQL query with the given SQL string and a list of positional bind parameters.

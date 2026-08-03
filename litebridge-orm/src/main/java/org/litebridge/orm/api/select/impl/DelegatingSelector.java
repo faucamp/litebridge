@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.exception.NonUniqueResultException;
@@ -70,7 +71,7 @@ public class DelegatingSelector<DTO, SSP extends SelectSpec> implements SelectTe
     }
 
     @Override
-    public String toSql() {
+    public PreparedSql toSql() {
         return delegate.toSql();
     }
 

@@ -12,6 +12,7 @@ import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryBindValueExtractor;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
@@ -154,9 +155,12 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
         final DtoSelectSpec compiledSpec;
 
         if (cachedOperation != null) {
-            rows = executeQuery((Select) cachedOperation.operation(), cachedOperation.preparedSql());
+            // Extract bind values and executed cached query
+            final List<@Nullable Object> rawBindValues = QueryBindValueExtractor.extractBindValues(node);
+            rows = executeQuery((Select) cachedOperation.operation(), cachedOperation.preparedSql(rawBindValues));
             compiledSpec = (DtoSelectSpec) Objects.requireNonNull(cachedOperation.selectSpec());
         } else {
+            // Compile and execute query (it will be cached as part of this process)
             compiledSpec = compile();
             rows = executeQuery(compiledSpec, nodeHash);
         }
