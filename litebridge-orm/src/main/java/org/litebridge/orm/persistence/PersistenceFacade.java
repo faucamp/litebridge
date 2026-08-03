@@ -436,8 +436,20 @@ public class PersistenceFacade {
                             }
 
                             // Add join table entry
-                            final List<ColumnValue> joinTableColumnValues = new ArrayList<>(dtoPrimaryKeyColumnValues(dto));
-                            joinTableColumnValues.addAll(dtoPrimaryKeyColumnValues(value));
+                            final List<ColumnValue> joinTableColumnValues = new ArrayList<>();
+                            final TypeConverter typeConverter = databaseProvider.getTypeConverter();
+
+                            dtoPrimaryKeyColumnValues(dto).forEach(cv -> {
+                                joinTableColumnValues.add(cv);
+                                final ColumnMetaData pkColumn = table.getMetaData().column(cv.column().name());
+                                joinTableInsertBuilder.bindValues().add(createBindValue(cv.value(), pkColumn, typeConverter));
+                            });
+                            dtoPrimaryKeyColumnValues(value).forEach(cv -> {
+                                joinTableColumnValues.add(cv);
+                                final ColumnMetaData pkColumn = collectionDtoTable.getMetaData().column(cv.column().name());
+                                joinTableInsertBuilder.bindValues().add(createBindValue(cv.value(), pkColumn, typeConverter));
+                            });
+
                             joinTableInsertBuilder.add(new DtoRowValue(mappedManyToMany.joinTable().dtoClass(), new RowValue(joinTableColumnValues)));
                         }));
                     }

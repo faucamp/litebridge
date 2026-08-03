@@ -99,6 +99,11 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
                                            final List<BindValue> bindValues,
                                            final TableMetaDataCache tableMetaDataCache,
                                            final TypeConverter typeConverter) {
+        final List<LogicCondition> resolvedConditions = conditions.stream()
+                .map(spec -> new LogicCondition(spec.logicOperator(),
+                        spec.conditionSpec().toCondition(selectExpressionMapper, selectedTables, bindValues, tableMetaDataCache, typeConverter)))
+                .toList();
+
         final List<LogicConditionGroup> subConditionGroups = subgroups.stream()
                 .map(subgroup -> {
                     final ConditionGroup conditionGroup = subgroup.conditionGroupSpec().toConditionGroup(selectExpressionMapper, selectedTables, bindValues, tableMetaDataCache, typeConverter);
@@ -106,10 +111,6 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
                 })
                 .toList();
 
-        return new ConditionGroup(conditions.stream()
-                .map(spec -> new LogicCondition(spec.logicOperator(),
-                        spec.conditionSpec().toCondition(selectExpressionMapper, selectedTables, bindValues, tableMetaDataCache, typeConverter)))
-                .toList(),
-                subConditionGroups);
+        return new ConditionGroup(resolvedConditions, subConditionGroups);
     }
 }

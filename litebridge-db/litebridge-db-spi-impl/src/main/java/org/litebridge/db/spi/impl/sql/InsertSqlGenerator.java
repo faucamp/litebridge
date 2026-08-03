@@ -54,14 +54,14 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
         boolean first = true;
 
         for (RowValue row : insert.rows()) {
-            final PreparedRow preparedRow = prepareRow(row, connectionProvider);
-            sql.append('(').append(String.join(", ", preparedRow.valueSpecifiers())).append(')');
-
-            if (first) {
-                first = false;
-            } else {
+            if (!first) {
                 sql.append(", ");
             }
+
+            first = false;
+
+            final PreparedRow preparedRow = prepareRow(row, connectionProvider);
+            sql.append('(').append(String.join(", ", preparedRow.valueSpecifiers())).append(')');
         }
 
         return sql.toString();
