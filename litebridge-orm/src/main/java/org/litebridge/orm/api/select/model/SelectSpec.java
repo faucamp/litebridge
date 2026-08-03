@@ -72,7 +72,7 @@ public abstract class SelectSpec {
     }
 
     public void setProtoExpressionResolver(final ProtoExpressionResolver protoExpressionResolver) {
-        this.selectExpressionMapper = new SelectExpressionMapper(litebridgeContext.sqlFunctionRegistry(), protoExpressionResolver, litebridgeContext.tableMetaDataCache(), litebridgeContext.fromClauseEngine().databaseProvider().getTypeConverter());
+        this.selectExpressionMapper = new SelectExpressionMapper(litebridgeContext.sqlFunctionRegistry(), protoExpressionResolver, litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter());
     }
 
     public LitebridgeContext getLitebridgeContext() {

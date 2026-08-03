@@ -34,8 +34,7 @@ class QueryPlanCacheTest {
         assertSame(cachedOperation, cache.get(node));
 
         // Structural match
-        final Select select2 = new Select(table, List.of(), List.of(), java.util.Optional.empty(), List.of(), java.util.Optional.empty(), List.of(), java.util.Optional.empty());
-        //TODO: test likely broken
-        assertSame(sql, cache.get(node));
+        assertNotNull(cache.get(node));
+        assertSame(sql, cache.get(node).sql());
     }
 }

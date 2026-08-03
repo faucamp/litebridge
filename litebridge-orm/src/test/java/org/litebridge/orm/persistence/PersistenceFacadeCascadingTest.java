@@ -2,6 +2,7 @@ package org.litebridge.orm.persistence;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.PreparedOperation;
@@ -56,6 +57,7 @@ class PersistenceFacadeCascadingTest {
         child.name = "child";
         parent.child = child;
 
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.insert(any(PreparedOperation.class), any(ConnectionProvider.class)))
                 .thenReturn(new InsertResult(1, Collections.emptyMap()));
 
@@ -109,6 +111,7 @@ class PersistenceFacadeCascadingTest {
 
         parent.children = new ArrayList<>(List.of(child1, child2));
 
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.insert(any(PreparedOperation.class), any(ConnectionProvider.class)))
                 .thenReturn(new InsertResult(1, Collections.emptyMap()));
 
@@ -183,6 +186,7 @@ class PersistenceFacadeCascadingTest {
 
         group.users = new ArrayList<>(List.of(user1));
 
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.insert(any(PreparedOperation.class), any(ConnectionProvider.class)))
                 .thenReturn(new InsertResult(1, Collections.emptyMap()));
 

@@ -2,7 +2,6 @@ package org.litebridge.orm.engine;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Aliased;
-import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelector;
@@ -15,7 +14,6 @@ import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.tracking.ChangeTracker;
 
 import java.util.function.Supplier;
@@ -159,14 +157,6 @@ public final class FromClauseEngine {
 
     public TableRegistry tableRegistry() {
         return tableRegistry;
-    }
-
-    public AliasGenerator aliasGenerator() {
-        return contextSupplier.get().aliasGenerator();
-    }
-
-    public DatabaseProvider databaseProvider() {
-        return databaseProvider;
     }
 
     private boolean hasExplicitSelect(final QueryNode node) {

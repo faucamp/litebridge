@@ -2,6 +2,7 @@ package org.litebridge.orm.persistence;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
@@ -61,7 +62,7 @@ class SelectSpecDtoMapperTest {
         transactionManager = mock(TransactionManager.class);
 
         litebridgeConfig = new LitebridgeConfig();
-        litebridgeContext = new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), new TableMetaDataCache(databaseProvider, transactionManager));
+        litebridgeContext = new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), new TableMetaDataCache(databaseProvider, transactionManager), new DefaultTypeConverter());
     }
 
     @Test

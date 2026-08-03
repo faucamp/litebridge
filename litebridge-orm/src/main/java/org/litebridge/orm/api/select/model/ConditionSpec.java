@@ -9,6 +9,7 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
+import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SelectReference;
 import org.litebridge.db.spi.expression.SubselectExpression;
@@ -162,9 +163,17 @@ public class ConditionSpec {
         }
 
         // Setup bind value creators
-        final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size());
-        bindValues.addAll(createBindValues(lhsSelectExpression, value, tableMetaDataCache, typeConverter));
-        return new Condition(lhsSelectExpression, operator, bindValueExpression);
+        switch (operator) {
+            case USING -> {
+                final LiteralExpression literalExpression = selectExpressionMapper.sqlFunctionRegistry().select().literal().create(value, true);
+                return new Condition(lhsSelectExpression, operator, literalExpression);
+            }
+            default -> {
+                final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size());
+                bindValues.addAll(createBindValues(lhsSelectExpression, value, tableMetaDataCache, typeConverter));
+                return new Condition(lhsSelectExpression, operator, bindValueExpression);
+            }
+        }
     }
 
     @Override

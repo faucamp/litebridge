@@ -1,5 +1,6 @@
 package org.litebridge.orm.engine;
 
+import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
@@ -20,6 +21,7 @@ public final class LitebridgeContext {
     private final QueryPlanCache queryPlanCache;
     private final AliasGenerator aliasGenerator;
     private final TableMetaDataCache tableMetaDataCache;
+    private final TypeConverter typeConverter;
     private RelatedDtoStrategy relatedDtoStrategy;
 
     /**
@@ -30,13 +32,15 @@ public final class LitebridgeContext {
      * @param sqlFunctionRegistry A registry for resolving SQL functions used in expressions.
      * @param queryPlanCache      A cache for storing execution plans based on query structure.
      * @param aliasGenerator      An alias generator for creating unique table and column aliases.
+     * @param typeConverter       A converter for converting between Java types and database types.
      */
-    public LitebridgeContext(LitebridgeConfig config,
-                             FromClauseEngine fromClauseEngine,
-                             SqlFunctionRegistry sqlFunctionRegistry,
-                             QueryPlanCache queryPlanCache,
-                             AliasGenerator aliasGenerator,
-                             TableMetaDataCache tableMetaDataCache) {
+    public LitebridgeContext(final LitebridgeConfig config,
+                             final FromClauseEngine fromClauseEngine,
+                             final SqlFunctionRegistry sqlFunctionRegistry,
+                             final QueryPlanCache queryPlanCache,
+                             final AliasGenerator aliasGenerator,
+                             final TableMetaDataCache tableMetaDataCache,
+                             final TypeConverter typeConverter) {
         this.config = config;
         this.fromClauseEngine = fromClauseEngine;
         this.sqlFunctionRegistry = sqlFunctionRegistry;
@@ -44,6 +48,7 @@ public final class LitebridgeContext {
         this.aliasGenerator = aliasGenerator;
         this.relatedDtoStrategy = config.relatedDtoStrategy();
         this.tableMetaDataCache = tableMetaDataCache;
+        this.typeConverter = typeConverter;
     }
 
     public LitebridgeConfig config() {
@@ -68,6 +73,10 @@ public final class LitebridgeContext {
 
     public TableMetaDataCache tableMetaDataCache() {
         return tableMetaDataCache;
+    }
+
+    public TypeConverter typeConverter() {
+        return typeConverter;
     }
 
     public RelatedDtoStrategy getRelatedDtoStrategy() {

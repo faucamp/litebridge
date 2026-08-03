@@ -2,7 +2,6 @@ package org.litebridge.orm;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
@@ -13,7 +12,6 @@ import org.litebridge.orm.api.delete.DeleteTerminal;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoProtoExpressionResolver;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
-import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.dto.delete.DtoDeleteWhereClause;
 import org.litebridge.orm.engine.QueryPlanCache;
@@ -59,7 +57,6 @@ import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
-import org.litebridge.orm.persistence.alias.AliasGeneratorFactory;
 import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridge.orm.tx.DefaultTransactionManager;
@@ -579,7 +576,7 @@ public final class Litebridge implements SelectApi {
     private LitebridgeContext createLitebridgeContext() {
         final SqlFunctionRegistry sqlFunctionRegistry = databaseProvider.getSqlFunctionRegistry();
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
-        return new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, queryPlanCache, aliasGenerator, tableMetaDataCache);
+        return new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, queryPlanCache, aliasGenerator, tableMetaDataCache, databaseProvider.getTypeConverter());
     }
 
     private SelectExpressionMapper createSelectExpressionMapper(final boolean dto) {

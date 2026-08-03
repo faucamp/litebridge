@@ -115,7 +115,11 @@ public class Table extends Aliased {
      * @return the qualified table name
      */
     public String qualifiedName() {
-        return schema + "." + name();
+        if (schema != null) {
+            return schema + "." + name();
+        } else {
+            return name();
+        }
     }
 
     @Override

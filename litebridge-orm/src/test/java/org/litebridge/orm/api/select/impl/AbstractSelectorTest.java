@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
+import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.convert.TypeConverter;
@@ -89,12 +90,23 @@ class AbstractSelectorTest {
         // Given
         final SelectSpec selectSpec = mock(SelectSpec.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        final TypeConverter typeConverter = new DefaultTypeConverter();
+        when(databaseProvider.getTypeConverter()).thenReturn(typeConverter);
+        when(databaseProvider.getAliasTransformer()).thenReturn(alias -> alias);
+
+        final QueryPlanCache cache = mock(QueryPlanCache.class);
+        final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+        when(litebridgeContext.tableMetaDataCache()).thenReturn(tableMetaDataCache);
+        when(litebridgeContext.queryPlanCache()).thenReturn(cache);
+
         final QueryNode node = new SelectNode(null, new org.litebridge.orm.expression.ExpressionSpec[0], null);
         final Select select = mock(Select.class);
         final PreparedOperation preparedOperation = new PreparedOperation(select, Collections.emptyList());
-        when(selectSpec.toSelect(any(TableMetaDataCache.class), any(TypeConverter.class))).thenReturn(preparedOperation);
-        when(databaseProvider.toSql(any(), any())).thenReturn("SELECT * FROM TEST");
+
+        when(selectSpec.toSelect(tableMetaDataCache, typeConverter)).thenReturn(preparedOperation);
+        when(databaseProvider.toSql(select, databaseProvider.transactionManager())).thenReturn("SELECT * FROM TEST");
+
         final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext, node);
 
         // When
@@ -111,7 +123,7 @@ class AbstractSelectorTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final QueryPlanCache cache = mock(QueryPlanCache.class);
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
-        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), null, null, cache, new NoOpAliasGenerator(), tableMetaDataCache);
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), null, null, cache, new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter());
         final QueryNode node = new SelectNode(null, new org.litebridge.orm.expression.ExpressionSpec[0], null);
         when(selectSpec.toSelect(any(), any())).thenReturn(mock(PreparedOperation.class));
         when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");

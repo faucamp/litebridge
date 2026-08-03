@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.sql;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.config.LitebridgeConfig;
@@ -17,7 +18,7 @@ class SqlJoinConditionClauseTest {
 
     @Test
     void constructor() {
-        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), mock(TableMetaDataCache.class));
+        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter());
         // When
         final SqlJoinConditionClause result = new SqlJoinConditionClause(
                 context,

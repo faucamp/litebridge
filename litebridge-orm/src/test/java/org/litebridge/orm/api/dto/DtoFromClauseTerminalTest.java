@@ -50,7 +50,7 @@ class DtoFromClauseTerminalTest {
         when(select.column()).thenReturn(mock(ColumnExpressionFactory.class));
         when(select.reference()).thenReturn(mock(SelectReferenceExpressionFactory.class));
         when(select.literal()).thenReturn(mock(LiteralExpressionFactory.class));
-        return new LitebridgeContext(config, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), mock(TableMetaDataCache.class));
+        return new LitebridgeContext(config, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter());
     }
 
     @Test

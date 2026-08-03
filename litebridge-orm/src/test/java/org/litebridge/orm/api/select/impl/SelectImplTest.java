@@ -3,6 +3,7 @@ package org.litebridge.orm.api.select.impl;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.LimitClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
@@ -67,7 +68,7 @@ class SelectImplTest {
         assertEquals(2, delegating.list().size());
 
         when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
-        assertEquals("SELECT 1", delegating.toSql());
+        assertEquals("SELECT 1", delegating.toSql().sql());
     }
 
     @Test
@@ -77,7 +78,7 @@ class SelectImplTest {
 
         // Use a real context for compilation
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
-        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), null, null, new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache);
+        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), null, null, new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter());
         final TestSelector finalSelector = (TestSelector) resultTerminal;
         final TestSelector compiledSelector = new TestSelector(selectSpec, databaseProvider, context, finalSelector.node());
 
@@ -92,7 +93,7 @@ class SelectImplTest {
 
         // Use a real context for compilation
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
-        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), null, null, new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache);
+        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), null, null, new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter());
         final TestSelector finalSelector = (TestSelector) ((DelegatingSelector) resultTerminal).delegate();
         final TestSelector compiledSelector = new TestSelector(selectSpec, databaseProvider, context, finalSelector.node());
 

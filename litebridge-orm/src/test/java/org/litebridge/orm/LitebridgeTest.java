@@ -9,6 +9,7 @@ import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.DefaultAliasTransformer;
+import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
@@ -62,7 +63,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -142,6 +145,7 @@ class LitebridgeTest {
         final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
         when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(tableMetaData);
         when(databaseProvider.insert(any(PreparedOperation.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Collections.emptyMap()));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
         litebridge.register(dtoTableSpec);
         final TestDto testDto = new TestDto();
@@ -262,6 +266,7 @@ class LitebridgeTest {
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpecMyId = new FieldSpec("myId", false);
@@ -302,7 +307,8 @@ class LitebridgeTest {
         assertEquals(1, update.where().conditions().size());
         assertInstanceOf(ColumnExpression.class, update.where().conditions().getFirst().condition().lhs());
         assertEquals("MY_ID", ((ColumnExpression) update.where().conditions().getFirst().condition().lhs()).column().name());
-        assertEquals(123L, ((LiteralExpression) update.where().conditions().getFirst().condition().rhs()).value());
+        assertEquals(1, ((BindValueExpression) update.where().conditions().getFirst().condition().rhs()).index());
+        assertEquals(1, ((BindValueExpression) update.where().conditions().getFirst().condition().rhs()).size());
     }
 
     @Test
@@ -455,6 +461,7 @@ class LitebridgeTest {
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myId", false);
@@ -836,6 +843,7 @@ class LitebridgeTest {
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.getAliasTransformer()).thenReturn(new DefaultAliasTransformer());
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
 
         // When
         litebridge.update(TestDto.class, u -> u.set("myVar").to("newVal"));
@@ -846,6 +854,7 @@ class LitebridgeTest {
 
     @Test
     void delete_overloads() throws Exception {
+        // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
@@ -854,17 +863,28 @@ class LitebridgeTest {
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        final TableMetaData tableMetaData = mock(TableMetaData.class);
+        final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
+        when(databaseProvider.tableMetaData(any(org.litebridge.db.spi.Table.class), any(TransactionManager.class))).thenReturn(tableMetaData);
+        when(tableMetaData.column(anyString())).thenReturn(columnMetaData);
+        when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
+
+
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
+        // When
         litebridge.delete("MY_TABLE");
         litebridge.delete("MY_TABLE", q -> q.where("COL").eq("VAL"));
 
-        verify(databaseProvider, org.mockito.Mockito.atLeastOnce()).delete(any(), any());
+        // Then
+        verify(databaseProvider, atLeastOnce()).delete(any(), any());
     }
 
     @Test
     void update_overloads() throws Exception {
+        // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
@@ -873,11 +893,19 @@ class LitebridgeTest {
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        final TableMetaData tableMetaData = mock(TableMetaData.class);
+        final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
+        when(databaseProvider.tableMetaData(any(org.litebridge.db.spi.Table.class), any(TransactionManager.class))).thenReturn(tableMetaData);
+        when(tableMetaData.column(anyString())).thenReturn(columnMetaData);
+        when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
+        // When
         litebridge.update("MY_TABLE", q -> q.set("COL").to("VAL").where("ID").eq(1));
 
+        // Then
         verify(databaseProvider).update(any(), any(ConnectionProvider.class));
     }
 
