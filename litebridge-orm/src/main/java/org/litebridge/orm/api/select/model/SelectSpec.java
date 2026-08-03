@@ -371,28 +371,4 @@ public abstract class SelectSpec {
 
         return havingConditions;
     }
-
-//    /**
-//     * Creates a bind value for a column and raw value.
-//     *
-//     * @param column             The column.
-//     * @param rawValue           The raw value.
-//     * @param connectionProvider The connection provider.
-//     * @return The bind value.
-//     */
-//    private BindValue createBindValue(final @Nullable Column column, final @Nullable Object rawValue, final ConnectionProvider connectionProvider) {
-//        final BindValue bindValue;
-//
-//        if (column != null) {
-//            final ColumnMetaData columnMetaData = ensureTableMetaData(column.table(), connectionProvider).column(column.name());
-//            final Object convertedValue = typeConverter.convert(rawValue, columnMetaData.getDataType());
-//            bindValue = new BindValue(convertedValue, columnMetaData.getDataType());
-//        } else if (rawValue != null) {
-//            bindValue = new BindValue(rawValue, typeConverter.getSqlDataType(rawValue.getClass()));
-//        } else {
-//            bindValue = new BindValue(null, Types.NULL);
-//        }
-//
-//        return bindValue;
-//    }
 }
