@@ -8,7 +8,6 @@ import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.api.sql.SqlSelector;
 import org.litebridge.orm.api.sql.SqlWhereConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -156,11 +155,6 @@ class ConditionClauseImplTest {
         assertSubselectCondition(subselect -> clause.gte(subselect), Operator.GTE);
     }
 
-    @Test
-    void subselect_unsupported_terminal() {
-        assertThrows(IllegalArgumentException.class, () -> clause.eq(subselect -> mock(SelectTerminal.class)));
-    }
-
     private void assertSubselectCondition(final SubselectConditionInvoker invoker, final Operator expectedOperator) {
         final SqlSelector selector = mock(SqlSelector.class);
         final org.litebridge.orm.api.sql.SqlSelectSpec spec = mock(org.litebridge.orm.api.sql.SqlSelectSpec.class);
@@ -172,7 +166,7 @@ class ConditionClauseImplTest {
 
         ConditionNode node = (ConditionNode) capturedNode[0];
         assertEquals(expectedOperator, node.operator());
-        assertInstanceOf(SelectSpec.class, node.rhs());
+        assertInstanceOf(SelectTerminal.class, node.rhs());
     }
 
     @FunctionalInterface

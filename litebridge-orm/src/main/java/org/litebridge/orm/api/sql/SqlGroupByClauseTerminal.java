@@ -10,7 +10,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
-public class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
+public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
         SqlOrderByClause,

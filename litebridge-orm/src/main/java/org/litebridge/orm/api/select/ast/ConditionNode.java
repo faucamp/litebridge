@@ -3,7 +3,8 @@ package org.litebridge.orm.api.select.ast;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.api.select.SelectTerminal;
+import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Collection;
@@ -41,21 +42,21 @@ public record ConditionNode(@Nullable QueryNode previous,
                 && Objects.equals(lhs, that.lhs)
                 && Objects.equals(relationshipField, that.relationshipField)
                 && logicOperator == that.logicOperator
-                && rhsArgumentCount() == that.rhsArgumentCount();
+                && Objects.equals(rhsStructuralKey(), that.rhsStructuralKey());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(previous, logicOperator, lhs, operator, relationshipField, rhsArgumentCount());
+        return Objects.hash(previous, logicOperator, lhs, operator, relationshipField, rhsStructuralKey());
     }
 
-    private int rhsArgumentCount() {
+    private Object rhsStructuralKey() {
         if (rhs instanceof Collection<?> collection) {
             return collection.size();
-        } else if (rhs instanceof SelectSpec selectSpec) {
-            //TODO: this is broken since SelectSpec should not be compiled as part of the AST buildup.
-            //The current -1 value is just a plug; it will cause query plan cache conflicts with differening subselects
-            return -1;
+        } else if (rhs instanceof QueryNode queryNode) {
+            return queryNode;
+        } else if (rhs instanceof SelectTerminal<?> st) {
+            return SelectTerminalInspector.getNode(st);
         } else {
             return 1;
         }

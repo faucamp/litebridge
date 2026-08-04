@@ -3,7 +3,7 @@ package org.litebridge.orm.api.sql;
 import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.JoinClauseTerminal;
 
-public interface SqlJoinClauseTerminal extends JoinClauseTerminal<Row,
+public sealed interface SqlJoinClauseTerminal extends JoinClauseTerminal<Row,
         SqlJoinClause,
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal,
@@ -13,7 +13,9 @@ public interface SqlJoinClauseTerminal extends JoinClauseTerminal<Row,
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
         SqlOrderByClause,
-        SqlOrderByClauseChain> {
+        SqlOrderByClauseChain>
+
+        permits SqlFromClauseTerminal, SqlJoinConditionClauseTerminal {
 
     SqlJoinClause join(final String table);
 }

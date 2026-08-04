@@ -11,7 +11,7 @@ import org.litebridge.orm.persistence.OrmTable;
  *
  * @param <DTO> the type of the DTO
  */
-public class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal<DTO,
+public final class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal<DTO,
         DtoHavingConditionClause<DTO>,
         DtoHavingConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,

@@ -9,12 +9,14 @@ import org.litebridge.orm.api.select.ast.HavingNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
+import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public final class QueryBindValueExtractor {
 
@@ -67,7 +69,17 @@ public final class QueryBindValueExtractor {
         for (ConditionNode conditionNode : conditions) {
             final Object rhs = conditionNode.rhs();
 
-            if (rhs instanceof Column || rhs instanceof ExpressionSpec || rhs instanceof SelectTerminal || rhs instanceof QueryNode) {
+            if (rhs instanceof SelectTerminal<?> st) {
+                extractBindValues(Objects.requireNonNull(SelectTerminalInspector.getNode(st)), bindValues);
+                continue;
+            }
+
+            if (rhs instanceof QueryNode qn) {
+                extractBindValues(qn, bindValues);
+                continue;
+            }
+
+            if (rhs instanceof Column || rhs instanceof ExpressionSpec) {
                 continue;
             }
 

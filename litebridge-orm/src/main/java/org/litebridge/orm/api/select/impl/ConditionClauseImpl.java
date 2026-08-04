@@ -8,7 +8,6 @@ import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -251,7 +250,8 @@ public class ConditionClauseImpl<DTO,
             throw new NullPointerException("Operator " + operator + " requires a non-NULL RHS value");
         }
 
-        return condition(operator, createSelectSpec(subselect));
+        final SelectTerminal<?> selectTerminal = subselect.apply(new SelectEngine(litebridgeContext.fromClauseEngine()));
+        return condition(operator, selectTerminal);
     }
 
     /**
@@ -279,23 +279,5 @@ public class ConditionClauseImpl<DTO,
         final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value);
 
         return terminalRecreator.apply(conditionNode);
-    }
-
-    private SelectSpec createSelectSpec(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
-        final SelectTerminal<?> selectTerminal = Objects.requireNonNull(subselect, "Subselect cannot be null")
-                .apply(new SelectEngine(litebridgeContext.fromClauseEngine()));
-        return getSelectSpec(selectTerminal);
-    }
-
-    private SelectSpec getSelectSpec(final SelectTerminal<?> selectTerminal) {
-        final AbstractSelector<?, ?> selector = switch (selectTerminal) {
-            case DelegatingSelector<?, ?> delegating -> delegating.delegate();
-            case AbstractSelector<?, ?> s -> s;
-            default ->
-                    throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
-        };
-
-        //TODO: this compiles the subselect inside the AST buildup; this needs to be moved to the QueryCompiler
-        return selector.compile();
     }
 }
