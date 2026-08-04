@@ -16,10 +16,7 @@ import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.Delete;
-import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.spring.LitebridgeTransactionManager;
@@ -193,7 +190,7 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         }
 
         @Override
-        public InsertResult insert(final Insert insert, final ConnectionProvider connectionProvider) throws SQLException {
+        public InsertResult insert(final PreparedOperation insert, final ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 
@@ -210,11 +207,6 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         @Override
         public List<Row> select(final Select select, final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
             return List.of();
-        }
-
-        @Override
-        public PreparedSql prepareSql(final PreparedOperation select, final ConnectionProvider connectionProvider) {
-            return null;
         }
 
         @Override

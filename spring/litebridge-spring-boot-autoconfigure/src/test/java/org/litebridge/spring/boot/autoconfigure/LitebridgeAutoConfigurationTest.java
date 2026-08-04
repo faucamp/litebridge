@@ -210,7 +210,7 @@ class LitebridgeAutoConfigurationTest {
         }
 
         @Override
-        public InsertResult insert(final Insert insert, final ConnectionProvider connectionProvider) throws SQLException {
+        public InsertResult insert(final PreparedOperation insert, final ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 
