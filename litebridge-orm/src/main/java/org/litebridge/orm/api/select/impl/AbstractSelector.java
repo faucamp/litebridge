@@ -1,10 +1,18 @@
 package org.litebridge.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.TypeConversionMetaData;
 import org.litebridge.db.spi.sql.BindValue;
+import org.litebridge.db.spi.expression.ColumnExpression;
+import org.litebridge.db.spi.expression.ConvertExpression;
+import org.litebridge.db.spi.expression.DelegateExpression;
+import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -21,7 +29,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -112,7 +123,7 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
         if (cachedOperation != null) {
             // Extract bind values and executed cached query
             final List<@Nullable Object> rawBindValues = QueryBindValueExtractor.extractBindValues(node);
-            return executeQuery((Select) cachedOperation.operation(), cachedOperation.preparedSql(rawBindValues));
+            return executeQuery(cachedOperation.preparedSql(rawBindValues));
         } else {
             // Compile and execute query (it will be cached as part of this process)
             return executeQuery(compile(), nodeHash);
@@ -139,29 +150,34 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
         // Compile/prepare SQL query
         final PreparedOperation preparedOperation = selectSpec.toSelect(litebridgeContext.tableMetaDataCache(), databaseProvider.getTypeConverter());
         final Select select = (Select) preparedOperation.operation();
-        // Generate SQL string
+        // Generate SQL and create type conversion metadata
         final String sql = databaseProvider.toSql(preparedOperation.operation(), databaseProvider.transactionManager());
+        final TypeConversionMetaData typeConversionMetaData = createTypeConversionMetaData(select);
         // Cache compiled SQL for this AST
         final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
                 .map(BindValue::sqlDataType)
                 .toList();
-        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, select, bindValueSqlTypes, selectSpec));
+        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, typeConversionMetaData, selectSpec));
         // Execute SQL query
-        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues());
-        return executeQuery(select, executionSql);
+        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), typeConversionMetaData);
+        return executeQuery(executionSql);
     }
 
-    protected List<Row> executeQuery(final Select select, final PreparedSql executionSql) {
+    protected List<Row> executeQuery(final PreparedSql preparedSql) {
         final List<Row> rows;
 
         try {
-            rows = databaseProvider.select(select, executionSql, databaseProvider.transactionManager());
+            rows = databaseProvider.select(preparedSql, databaseProvider.transactionManager());
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute select query", ex);
         }
 
         LOGGER.debug("Row count: {}", rows.size());
         LOGGER.trace("Query result: {}", rows);
+
+        if (rows.isEmpty()) {
+            return rows;
+        }
 
         return rows;
     }
@@ -185,5 +201,30 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
 
     public LitebridgeContext litebridgeContext() {
         return litebridgeContext;
+    }
+
+    private TypeConversionMetaData createTypeConversionMetaData(final Select select) {
+        final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.expressions().size());
+        final Class<?>[] typeOverrides = new Class<?>[select.expressions().size()];
+
+        for (int i = 0; i < select.expressions().size(); i++) {
+            SelectExpression expression = select.expressions().get(i);
+
+            if (expression instanceof ConvertExpression convertExpression) {
+                typeOverrides[i] = convertExpression.typeOverride();
+                // Process the nested expression (in case it targets a column)
+                expression = convertExpression.target();
+            }
+
+            if (expression instanceof ColumnExpression columnExpression) {
+                final Column column = columnExpression.column();
+                final String key = Objects.requireNonNull(databaseProvider.getAliasTransformer().transformAlias(column.alias() != null ? column.alias() : column.name()));
+                final TableMetaData table = litebridgeContext.tableMetaDataCache().ensureTableMetaData(column.table());
+                final ColumnMetaData columnMetaData = table.column(column.name());
+                columnLabelsToColumnMetaData.put(key, columnMetaData);
+            }
+        }
+
+        return new TypeConversionMetaData(columnLabelsToColumnMetaData, typeOverrides);
     }
 }

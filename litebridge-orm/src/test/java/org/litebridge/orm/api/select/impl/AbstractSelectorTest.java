@@ -125,9 +125,11 @@ class AbstractSelectorTest {
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
         final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), null, null, cache, new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter());
         final QueryNode node = new SelectNode(null, new org.litebridge.orm.expression.ExpressionSpec[0], null);
-        when(selectSpec.toSelect(any(), any())).thenReturn(mock(PreparedOperation.class));
+        final PreparedOperation preparedOperation = mock(PreparedOperation.class);
+        when(preparedOperation.operation()).thenReturn(mock(Select.class));
+        when(selectSpec.toSelect(any(), any())).thenReturn(preparedOperation);
         when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
-        when(databaseProvider.select(any(), any(), any())).thenThrow(new SQLException("DB Error"));
+        when(databaseProvider.select(any(), any())).thenThrow(new SQLException("DB Error"));
         final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext, node);
 
         // When / Then

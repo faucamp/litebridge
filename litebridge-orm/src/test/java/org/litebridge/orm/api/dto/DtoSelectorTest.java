@@ -146,7 +146,7 @@ class DtoSelectorTest {
 
         final Row row = new Row().withColumn(new Column(table, "COL"), "123");
         when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
-        when(databaseProvider.select(any(), any(), any())).thenReturn(List.of(row));
+        when(databaseProvider.select(any(), any())).thenReturn(List.of(row));
 
         // When
         final List<Integer> results = terminal.list();
@@ -200,7 +200,7 @@ class DtoSelectorTest {
         final Row row1 = new Row().withColumn(pkCol.toColumn(), 1L).withColumn(col1.toColumn(), "1");
         final Row row2 = new Row().withColumn(pkCol.toColumn(), 2L).withColumn(col1.toColumn(), "2");
         when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
-        when(databaseProvider.select(any(), any(), any())).thenReturn(List.of(row1, row2));
+        when(databaseProvider.select(any(), any())).thenReturn(List.of(row1, row2));
 
         // When / Then
         assertThrows(IllegalStateException.class, selector::oneOrNull);
@@ -240,7 +240,7 @@ class DtoSelectorTest {
 
         final Row row1 = new Row().withColumn(col1.toColumn(), "1");
         when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
-        when(databaseProvider.select(any(), any(), any())).thenReturn(List.of(row1));
+        when(databaseProvider.select(any(), any())).thenReturn(List.of(row1));
 
         // When
         final String result = terminal.firstOrNull();
@@ -273,7 +273,7 @@ class DtoSelectorTest {
         final DtoSelector<String> selector = new DtoSelector<>(String.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), databaseProvider, new NoOpAliasGenerator(), context, node);
 
         when(databaseProvider.toSql(any(), any())).thenReturn("SELECT * FROM TEST WHERE ID = ?");
-        when(databaseProvider.select(any(), any(), any())).thenReturn(List.of());
+        when(databaseProvider.select(any(), any())).thenReturn(List.of());
 
         // When
         selector.list(); // First call
@@ -281,6 +281,6 @@ class DtoSelectorTest {
 
         // Then
         verify(databaseProvider, times(1)).toSql(any(), any());
-        verify(databaseProvider, times(2)).select(any(), any(), any());
+        verify(databaseProvider, times(2)).select(any(), any());
     }
 }

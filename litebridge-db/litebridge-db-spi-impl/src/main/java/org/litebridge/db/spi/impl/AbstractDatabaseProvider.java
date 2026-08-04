@@ -14,9 +14,6 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
-import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.expression.ConvertExpression;
-import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
@@ -152,38 +149,19 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public List<Row> select(final PreparedOperation preparedOperation, final ConnectionProvider connectionProvider) throws SQLException {
-        final Select select = (Select) preparedOperation.operation();
-        final String sql = toSql(preparedOperation.operation(), connectionProvider);
-        return select(select, new PreparedSql(sql, preparedOperation.bindValues()), connectionProvider);
-    }
+    public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        final Map<String, ColumnMetaData> columnLabelsToColumnMetaData;
+        final Class<?>[] typeOverrides;
 
-    @Override
-    public List<Row> select(final Select select, final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
-        final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.expressions().size());
-        final Class<?>[] typeOverrides = new Class<?>[select.expressions().size()];
-
-        for (int i = 0; i < select.expressions().size(); i++) {
-            SelectExpression expression = select.expressions().get(i);
-
-            if (expression instanceof ConvertExpression convertExpression) {
-                typeOverrides[i] = convertExpression.typeOverride();
-                // Process the nested expression (in case it targets a column)
-                expression = convertExpression.target();
-            }
-
-            if (expression instanceof ColumnExpression columnExpression) {
-                final Column column = columnExpression.column();
-                final String key = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(column.alias() != null ? column.alias() : column.name()));
-                final TableMetaData table = ensureTableMetaData(column.table(), connectionProvider);
-                final ColumnMetaData columnMetaData = table.column(column.name());
-                columnLabelsToColumnMetaData.put(key, columnMetaData);
-            }
+        if (preparedSql.typeConversionMetaData() != null) {
+            columnLabelsToColumnMetaData = preparedSql.typeConversionMetaData().columnLabelsToColumnMetaData();
+            typeOverrides = preparedSql.typeConversionMetaData().typeOverrides();
+        } else {
+            columnLabelsToColumnMetaData = Collections.emptyMap();
+            typeOverrides = new Class<?>[0];
         }
 
-        final TableMetaData fromTable = ensureTableMetaData(select.table(), connectionProvider);
-
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false, fromTable, connectionProvider)) {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false, null, connectionProvider)) {
             // Execute SQL query
             final ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -273,8 +251,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 for (int i = 1; i <= columnCount; i++) {
                     final String schemaName = resultSet.getMetaData().getSchemaName(i);
                     final String tableName = resultSet.getMetaData().getTableName(i);
-                    final String columnName = resultSet.getMetaData().getColumnName(i);
-                    final String columnAlias = resultSet.getMetaData().getColumnLabel(i);
+                    final String columnName = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(resultSet.getMetaData().getColumnName(i)));
+                    final String columnAlias = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(resultSet.getMetaData().getColumnLabel(i)));
                     final int columnSqlType = resultSet.getMetaData().getColumnType(i);
 
                     final Table table = new Table(null, schemaName, tableName);

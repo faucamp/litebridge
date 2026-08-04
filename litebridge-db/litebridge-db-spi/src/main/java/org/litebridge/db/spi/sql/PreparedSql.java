@@ -1,6 +1,7 @@
 package org.litebridge.db.spi.sql;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.query.TypeConversionMetaData;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,13 +15,27 @@ import java.util.List;
  * Instances of this record are immutable and can be used to safely pass
  * SQL queries and their bindings within the application.
  *
- * @param sql        The SQL query string that may contain placeholders for
- *                   parameterized values.
- * @param bindValues The list of bind values corresponding to the placeholders
- *                   in the SQL query. Each value can be nullable, represented
- *                   by the {@link BindValue} type.
+ * @param sql                    The SQL query string that may contain placeholders for
+ *                               parameterized values.
+ * @param bindValues             The list of bind values corresponding to the placeholders
+ *                               in the SQL query. Each value can be nullable, represented
+ *                               by the {@link BindValue} type.
+ * @param typeConversionMetaData The metadata for type conversion, which may be null.
  */
-public record PreparedSql(String sql, List<@Nullable BindValue> bindValues) {
+public record PreparedSql(String sql,
+                          List<@Nullable BindValue> bindValues,
+                          @Nullable TypeConversionMetaData typeConversionMetaData) {
+
+    /**
+     * Constructs a new instance of {@code PreparedSql} with the provided SQL
+     * query string and list of bind values.
+     *
+     * @param sql The SQL query string.
+     */
+    public PreparedSql(String sql,
+                       List<@Nullable BindValue> bindValues) {
+        this(sql, bindValues, null);
+    }
 
     /**
      * Constructs a new instance of {@code PreparedSql} with the provided SQL
@@ -29,6 +44,6 @@ public record PreparedSql(String sql, List<@Nullable BindValue> bindValues) {
      * @param sql The SQL query string.
      */
     public PreparedSql(final String sql) {
-        this(sql, Collections.emptyList());
+        this(sql, Collections.emptyList(), null);
     }
 }

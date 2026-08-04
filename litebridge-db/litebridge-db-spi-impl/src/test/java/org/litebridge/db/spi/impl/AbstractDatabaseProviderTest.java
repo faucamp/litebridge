@@ -429,6 +429,7 @@ class AbstractDatabaseProviderTest {
         final ResultSetMetaData resultSetMetaData = mock(ResultSetMetaData.class);
         when(resultSetMetaData.getColumnCount()).thenReturn(1);
         when(resultSetMetaData.getColumnLabel(1)).thenReturn(column.name());
+        when(resultSetMetaData.getColumnType(1)).thenReturn(Types.VARCHAR);
         when(resultSet.getMetaData()).thenReturn(resultSetMetaData);
         when(resultSet.getObject(1)).thenReturn("dbValue");
 
@@ -437,7 +438,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
 
         // When
-        List<Row> result = databaseProvider.select(new PreparedOperation(select, Collections.emptyList()), transactionManager);
+        List<Row> result = databaseProvider.select(new PreparedSql("SELECT *", Collections.emptyList()), transactionManager);
 
         // Then
         assertNotNull(result);
@@ -470,7 +471,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
 
         // When
-        final List<Row> result = databaseProvider.select(new PreparedOperation(select, Collections.emptyList()), transactionManager);
+        final List<Row> result = databaseProvider.select(new PreparedSql("SELECT *", Collections.emptyList()), transactionManager);
 
         // Then
         assertNotNull(result);
@@ -1010,9 +1011,13 @@ class AbstractDatabaseProviderTest {
         when(resultSetMetaData.getColumnCount()).thenReturn(2);
         when(resultSetMetaData.getColumnLabel(1)).thenReturn(column.name());
         when(resultSetMetaData.getColumnLabel(2)).thenReturn("UNKNOWN_COLUMN");
+        when(resultSetMetaData.getSchemaName(1)).thenReturn(null);
         when(resultSetMetaData.getSchemaName(2)).thenReturn("TEST_SCHEMA");
+        when(resultSetMetaData.getTableName(1)).thenReturn(null);
         when(resultSetMetaData.getTableName(2)).thenReturn("TEST_TABLE");
+        when(resultSetMetaData.getColumnName(1)).thenReturn(null);
         when(resultSetMetaData.getColumnName(2)).thenReturn("UNKNOWN_COLUMN");
+        when(resultSetMetaData.getColumnType(1)).thenReturn(Types.VARCHAR);
         when(resultSetMetaData.getColumnType(2)).thenReturn(Types.VARCHAR);
         when(resultSet.getMetaData()).thenReturn(resultSetMetaData);
         when(resultSet.getObject(1)).thenReturn("dbValue1");
@@ -1024,7 +1029,7 @@ class AbstractDatabaseProviderTest {
         when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
 
         // When
-        final List<Row> result = databaseProvider.select(new PreparedOperation(select, Collections.emptyList()), transactionManager);
+        final List<Row> result = databaseProvider.select(new PreparedSql("SELECT *", Collections.emptyList()), transactionManager);
 
         // Then
         assertNotNull(result);
@@ -1219,39 +1224,12 @@ class AbstractDatabaseProviderTest {
                 Optional.empty()
         );
 
-        final DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
-        when(connection.getMetaData()).thenReturn(databaseMetaData);
-
-        final ResultSet schemaResultSet = mock(ResultSet.class);
-        when(schemaResultSet.next()).thenReturn(true);
-        when(schemaResultSet.getString("TABLE_SCHEM")).thenReturn(table.schema());
-        when(databaseMetaData.getSchemas(table.catalog(), table.schema())).thenReturn(schemaResultSet);
-
-        final ResultSet tableResultSet = mock(ResultSet.class);
-        when(tableResultSet.next()).thenReturn(true);
-        when(tableResultSet.getString("TABLE_NAME")).thenReturn(table.name());
-        when(databaseMetaData.getTables(table.catalog(), table.schema(), table.name(), AbstractDatabaseProvider.TYPES_TABLE)).thenReturn(tableResultSet);
-
-        final ResultSet pkResultSet = mock(ResultSet.class);
-        when(pkResultSet.next()).thenReturn(false);
-        when(databaseMetaData.getPrimaryKeys(table.catalog(), table.schema(), table.name())).thenReturn(pkResultSet);
-        when(databaseMetaData.getImportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(mock(ResultSet.class));
-        when(databaseMetaData.getExportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(mock(ResultSet.class));
-
-        final ResultSet columnResultSet = mock(ResultSet.class);
-        when(columnResultSet.next()).thenReturn(true).thenReturn(false);
-        when(columnResultSet.getString("COLUMN_NAME")).thenReturn("COL");
-        when(columnResultSet.getBoolean("IS_NULLABLE")).thenReturn(false);
-        when(columnResultSet.getInt("DATA_TYPE")).thenReturn(Types.INTEGER);
-        when(columnResultSet.getInt("COLUMN_SIZE")).thenReturn(10);
-        when(databaseMetaData.getColumns(table.catalog(), table.schema(), table.name(), null)).thenReturn(columnResultSet);
-
         final PreparedStatement ps = mock(PreparedStatement.class);
         when(connection.prepareStatement(anyString())).thenReturn(ps);
         when(ps.executeQuery()).thenThrow(new SQLException("boom"));
 
         // When & Then
-        assertThrows(SQLException.class, () -> databaseProvider.select(new PreparedOperation(select, Collections.emptyList()), transactionManager));
+        assertThrows(SQLException.class, () -> databaseProvider.select(new PreparedSql("SELECT *", Collections.emptyList()), transactionManager));
     }
 
     @Test
@@ -1444,16 +1422,18 @@ class AbstractDatabaseProviderTest {
         when(resultSet.next()).thenReturn(true).thenReturn(false);
         final ResultSetMetaData rsmd = mock(ResultSetMetaData.class);
         when(rsmd.getColumnCount()).thenReturn(1);
+        when(rsmd.getColumnName(1)).thenReturn(column.name());
         when(rsmd.getColumnLabel(1)).thenReturn(column.name());
+        when(rsmd.getColumnType(1)).thenReturn(Types.VARCHAR);
         when(resultSet.getMetaData()).thenReturn(rsmd);
         when(resultSet.getObject(1)).thenReturn("123");
 
-        when(typeConverter.convert("123", Integer.class)).thenReturn(123);
+        when(typeConverter.convert("123", Types.VARCHAR)).thenReturn(123);
         when(preparedStatement.executeQuery()).thenReturn(resultSet);
         when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
 
         // When
-        final List<Row> result = databaseProvider.select(new PreparedOperation(select, Collections.emptyList()), transactionManager);
+        final List<Row> result = databaseProvider.select(new PreparedSql("SELECT *", Collections.emptyList()), transactionManager);
 
         // Then
         assertEquals(1, result.size());

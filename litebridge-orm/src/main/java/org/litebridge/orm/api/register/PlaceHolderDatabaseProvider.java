@@ -48,12 +48,7 @@ final class PlaceHolderDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public List<Row> select(final PreparedOperation select, final ConnectionProvider connectionProvider) throws SQLException {
-        throw new UnsupportedOperationException("N/A");
-    }
-
-    @Override
-    public List<Row> select(final Select select, final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+    public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
         throw new UnsupportedOperationException("N/A");
     }
 

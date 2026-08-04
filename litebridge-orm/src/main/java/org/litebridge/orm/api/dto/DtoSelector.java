@@ -6,7 +6,6 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.query.Select;
 import org.litebridge.orm.api.select.ast.LimitNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
@@ -157,7 +156,7 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
         if (cachedOperation != null) {
             // Extract bind values and executed cached query
             final List<@Nullable Object> rawBindValues = QueryBindValueExtractor.extractBindValues(node);
-            rows = executeQuery((Select) cachedOperation.operation(), cachedOperation.preparedSql(rawBindValues));
+            rows = executeQuery(cachedOperation.preparedSql(rawBindValues));
             compiledSpec = (DtoSelectSpec) Objects.requireNonNull(cachedOperation.selectSpec());
         } else {
             // Compile and execute query (it will be cached as part of this process)

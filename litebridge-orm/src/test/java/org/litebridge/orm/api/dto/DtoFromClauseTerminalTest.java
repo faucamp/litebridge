@@ -81,7 +81,7 @@ class DtoFromClauseTerminalTest {
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.getAliasTransformer()).thenReturn(new DefaultAliasTransformer());
         when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
-        when(databaseProvider.select(any(), any(), any())).thenReturn(List.of(new Row().withColumn(pkCol.toColumn(), 1L)));
+        when(databaseProvider.select(any(), any())).thenReturn(List.of(new Row().withColumn(pkCol.toColumn(), 1L)));
 
         final DtoConstructor constructor = mock(DtoConstructor.class);
         when(constructor.newInstance(any(), any())).thenReturn(new DtoConstructor.ConstructionResult<>(new TestDto(), true));
@@ -133,7 +133,7 @@ class DtoFromClauseTerminalTest {
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.getAliasTransformer()).thenReturn(new DefaultAliasTransformer());
         when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
-        when(databaseProvider.select(any(), any(), any())).thenReturn(List.of(new Row().withColumn(pk1.toColumn(), 1L).withColumn(pk2.toColumn(), 2L)));
+        when(databaseProvider.select(any(), any())).thenReturn(List.of(new Row().withColumn(pk1.toColumn(), 1L).withColumn(pk2.toColumn(), 2L)));
 
         final DtoConstructor constructor = mock(DtoConstructor.class);
         when(constructor.newInstance(any(), any())).thenReturn(new DtoConstructor.ConstructionResult<>(new TestDto(), true));

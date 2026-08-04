@@ -200,12 +200,7 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         }
 
         @Override
-        public List<Row> select(final PreparedOperation select, final ConnectionProvider connectionProvider) throws SQLException {
-            return List.of();
-        }
-
-        @Override
-        public List<Row> select(final Select select, final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
             return List.of();
         }
 

@@ -100,13 +100,8 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public List<Row> select(final PreparedOperation select, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeAndCleanupIfNeeded(() -> databaseProvider.select(select, transactionManager));
-    }
-
-    @Override
-    public List<Row> select(final Select select, final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeAndCleanupIfNeeded(() -> databaseProvider.select(select, preparedSql, transactionManager));
+    public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeAndCleanupIfNeeded(() -> databaseProvider.select(preparedSql, transactionManager));
     }
 
     @Override

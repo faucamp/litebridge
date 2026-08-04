@@ -3,6 +3,7 @@ package org.litebridge.orm.engine;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.TypeConversionMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -59,8 +60,8 @@ public final class QueryPlanCache {
     }
 
     public record CachedOperation(String sql,
-                                  Operation operation,
                                   List<Integer> bindValueSqlTypes,
+                                  @Nullable TypeConversionMetaData typeConversionMetaData,
                                   @Nullable SelectSpec selectSpec) {
 
         public PreparedSql preparedSql(final List<@Nullable Object> rawBindValues) {
@@ -74,7 +75,7 @@ public final class QueryPlanCache {
                 bindValues.add(new BindValue(rawBindValues.get(i), bindValueSqlTypes.get(i)));
             }
 
-            return new PreparedSql(sql, bindValues);
+            return new PreparedSql(sql, bindValues, typeConversionMetaData);
         }
     }
 }

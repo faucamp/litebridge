@@ -57,27 +57,14 @@ public interface DatabaseProvider {
     UpdateResult update(PreparedOperation update, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
-     * Execute a SELECT operation in the database using the provided {@link Select} statement.
+     * Executes a SELECT operation in the database using a pre-prepared {@link PreparedSql} object.
      *
-     * @param select             the {@link Select} statement containing information about the table, expressions,
-     *                           joins, conditions, ordering, and optional limits for the query.
-     * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
-     * @return a {@link List} of {@link Row} objects representing the results of the SELECT operation.
-     * @throws SQLException if any SQL error occurs during the execution of the SELECT operation.
-     */
-    List<Row> select(PreparedOperation select, ConnectionProvider connectionProvider) throws SQLException;
-
-    /**
-     * Executes a SELECT operation in the database using the provided {@link Select} statement
-     * and a pre-prepared {@link PreparedSql} object.
-     *
-     * @param select             the {@link Select} statement containing structural information.
      * @param preparedSql        the {@link PreparedSql} object containing the SQL query string and bind values.
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
      * @return a {@link List} of {@link Row} objects representing the results of the SELECT operation.
      * @throws SQLException if any SQL error occurs during the execution of the SELECT operation.
      */
-    List<Row> select(Select select, PreparedSql preparedSql, ConnectionProvider connectionProvider) throws SQLException;
+    List<Row> select(PreparedSql preparedSql, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
      * Execute a DELETE operation in the database using the provided {@link Delete} statement.
