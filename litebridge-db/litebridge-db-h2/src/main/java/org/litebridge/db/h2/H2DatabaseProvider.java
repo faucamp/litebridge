@@ -3,6 +3,7 @@ package org.litebridge.db.h2;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
+import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ManagedConnection;
 import org.slf4j.Logger;
@@ -31,10 +32,14 @@ public final class H2DatabaseProvider extends AbstractDatabaseProvider {
 
     @Override
     protected PreparedStatement createPreparedStatementUsingConnection(final PreparedSql preparedSql,
-                                                                       final boolean returnGeneratedKeys,
-                                                                       final TableMetaData tableMetaData,
                                                                        final ManagedConnection connection) throws SQLException {
-        if (returnGeneratedKeys) {
+        final UpdateMetaData updateMetaData = preparedSql.updateMetaData();
+
+        if (updateMetaData == null) {
+            return connection.prepareStatement(preparedSql.sql());
+        }
+
+        if (updateMetaData.returnGeneratedKeys()) {
             return connection.prepareStatement(preparedSql.sql(), Statement.RETURN_GENERATED_KEYS);
         } else {
             return connection.prepareStatement(preparedSql.sql());

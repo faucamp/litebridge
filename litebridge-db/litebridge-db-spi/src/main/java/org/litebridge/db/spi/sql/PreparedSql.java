@@ -2,6 +2,7 @@ package org.litebridge.db.spi.sql;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.TypeConversionMetaData;
+import org.litebridge.db.spi.query.UpdateMetaData;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +25,8 @@ import java.util.List;
  */
 public record PreparedSql(String sql,
                           List<@Nullable BindValue> bindValues,
-                          @Nullable TypeConversionMetaData typeConversionMetaData) {
+                          @Nullable TypeConversionMetaData typeConversionMetaData,
+                          @Nullable UpdateMetaData updateMetaData) {
 
     /**
      * Constructs a new instance of {@code PreparedSql} with the provided SQL
@@ -34,7 +36,7 @@ public record PreparedSql(String sql,
      */
     public PreparedSql(String sql,
                        List<@Nullable BindValue> bindValues) {
-        this(sql, bindValues, null);
+        this(sql, bindValues, null, null);
     }
 
     /**
@@ -44,6 +46,6 @@ public record PreparedSql(String sql,
      * @param sql The SQL query string.
      */
     public PreparedSql(final String sql) {
-        this(sql, Collections.emptyList(), null);
+        this(sql, Collections.emptyList(), null, null);
     }
 }

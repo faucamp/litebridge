@@ -157,9 +157,9 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
         final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
                 .map(BindValue::sqlDataType)
                 .toList();
-        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, typeConversionMetaData, selectSpec));
+        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, typeConversionMetaData, null, selectSpec));
         // Execute SQL query
-        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), typeConversionMetaData);
+        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), typeConversionMetaData, null);
         return executeQuery(executionSql);
     }
 

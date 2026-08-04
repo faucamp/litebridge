@@ -33,7 +33,7 @@ class PreparedSqlTest {
         final TypeConversionMetaData typeConversionMetaData = new TypeConversionMetaData(Collections.emptyMap(), new Class<?>[0]);
 
         // When
-        final PreparedSql result = new PreparedSql(sql, bindValues, typeConversionMetaData);
+        final PreparedSql result = new PreparedSql(sql, bindValues, typeConversionMetaData, null);
 
         // Then
         assertEquals(sql, result.sql());

@@ -5,7 +5,6 @@ import org.litebridge.db.oracle.function.OracleSqlFunctionRegistryFactory;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.function.SqlFunctionRegistryFactory;
@@ -55,9 +54,6 @@ class OracleDatabaseProviderTest {
         final Table table = new Table("TEST_TABLE", null);
         final ColumnMetaData idColumn = new ColumnMetaData(table, "ID", false, Types.INTEGER);
         final ColumnMetaData otherIdColumn = new ColumnMetaData(table, "OTHER_ID", false, Types.INTEGER);
-        final TableMetaData tableMetaData = new TableMetaData(table,
-                List.of("ID", "OTHER_ID"),
-                List.of(idColumn, otherIdColumn));
 
         when(preparedStatement.getGeneratedKeys()).thenReturn(resultSet);
         when(resultSet.next()).thenReturn(true);
@@ -65,7 +61,7 @@ class OracleDatabaseProviderTest {
         when(resultSet.getObject(2)).thenReturn(2);
 
         // When
-        Map<ColumnMetaData, Object> result = provider.extractGeneratedKeys(tableMetaData, preparedStatement);
+        Map<ColumnMetaData, Object> result = provider.extractGeneratedKeys(List.of(idColumn, otherIdColumn), preparedStatement);
 
         // Then
         assertEquals(2, result.size());
@@ -82,13 +78,12 @@ class OracleDatabaseProviderTest {
         final ResultSet resultSet = mock(ResultSet.class);
         final Table table = new Table("TEST_TABLE", null);
         final ColumnMetaData idColumn = new ColumnMetaData(table, "ID", false, Types.INTEGER);
-        final TableMetaData tableMetaData = new TableMetaData(table, List.of("ID"), List.of(idColumn));
 
         when(preparedStatement.getGeneratedKeys()).thenReturn(resultSet);
         when(resultSet.next()).thenReturn(false);
 
         // When
-        Map<ColumnMetaData, Object> result = provider.extractGeneratedKeys(tableMetaData, preparedStatement);
+        Map<ColumnMetaData, Object> result = provider.extractGeneratedKeys(List.of(idColumn), preparedStatement);
 
         // Then
         assertTrue(result.isEmpty());
@@ -157,13 +152,12 @@ class OracleDatabaseProviderTest {
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         final Table table = new Table("TEST_TABLE", null);
         final ColumnMetaData idColumn = new ColumnMetaData(table, "ID", false, Types.INTEGER);
-        final TableMetaData tableMetaData = new TableMetaData(table, List.of("ID"), List.of(idColumn));
 
         when(preparedStatement.getGeneratedKeys()).thenReturn(null);
 
         // When & Then
         try {
-            provider.extractGeneratedKeys(tableMetaData, preparedStatement);
+            provider.extractGeneratedKeys(List.of(idColumn), preparedStatement);
         } catch (NullPointerException e) {
             // Expected if JDBC driver returns null and we call .next() on it
         }

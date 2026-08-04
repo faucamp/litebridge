@@ -38,12 +38,12 @@ final class PlaceHolderDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public InsertResult insert(final PreparedOperation insert, final ConnectionProvider connectionProvider) throws SQLException {
+    public InsertResult insert(final PreparedSql insert, final ConnectionProvider connectionProvider) throws SQLException {
         throw new UnsupportedOperationException("N/A");
     }
 
     @Override
-    public UpdateResult update(final PreparedOperation update, final ConnectionProvider connectionProvider) throws SQLException {
+    public UpdateResult update(final PreparedSql update, final ConnectionProvider connectionProvider) throws SQLException {
         throw new UnsupportedOperationException("N/A");
     }
 
@@ -58,7 +58,7 @@ final class PlaceHolderDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public UpdateResult delete(final PreparedOperation delete, final ConnectionProvider connectionProvider) throws SQLException {
+    public UpdateResult delete(final PreparedSql delete, final ConnectionProvider connectionProvider) throws SQLException {
         throw new UnsupportedOperationException("N/A");
     }
 

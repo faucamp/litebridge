@@ -23,6 +23,7 @@ import org.litebridge.db.spi.impl.sql.InsertSqlGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.impl.sql.UpdateSqlGenerator;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
@@ -127,25 +128,18 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public InsertResult insert(final PreparedOperation preparedOperation, final ConnectionProvider connectionProvider) throws SQLException {
-        final Insert insert = (Insert) preparedOperation.operation();
-        final String sql = insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider);
-        final TableMetaData tableMetaData = ensureTableMetaData(insert.table(), connectionProvider);
-        return executeSqlInsert(new PreparedSql(sql, preparedOperation.bindValues()), tableMetaData, insert.returnGeneratedKeys(), connectionProvider);
+    public InsertResult insert(final PreparedSql insert, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeSqlInsert(insert, connectionProvider);
     }
 
     @Override
-    public UpdateResult update(final PreparedOperation update, final ConnectionProvider connectionProvider) throws SQLException {
-        final String sql = updateSqlGenerator.orThrow().prepareSql((Update) update.operation(), connectionProvider);
-        final TableMetaData tableMetaData = ensureTableMetaData(update.operation().table(), connectionProvider);
-        return executeSqlUpdate(new PreparedSql(sql, update.bindValues()), tableMetaData, connectionProvider);
+    public UpdateResult update(final PreparedSql update, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeSqlUpdate(update, connectionProvider);
     }
 
     @Override
-    public UpdateResult delete(final PreparedOperation delete, final ConnectionProvider connectionProvider) throws SQLException {
-        final String sql = deleteSqlGenerator.orThrow().prepareSql((Delete) delete.operation(), connectionProvider);
-        final TableMetaData tableMetaData = ensureTableMetaData(delete.operation().table(), connectionProvider);
-        return executeSqlUpdate(new PreparedSql(sql, delete.bindValues()), tableMetaData, connectionProvider);
+    public UpdateResult delete(final PreparedSql delete, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeSqlUpdate(delete, connectionProvider);
     }
 
     @Override
@@ -161,7 +155,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             typeOverrides = new Class<?>[0];
         }
 
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false, null, connectionProvider)) {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, connectionProvider)) {
             // Execute SQL query
             final ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -302,12 +296,13 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * @return an {@link InsertResult} object encapsulating the number of affected rows and a list of generated keys (if any)
      * @throws SQLException if an error occurs while executing the SQL insert or retrieving the generated keys
      */
-    protected InsertResult executeSqlInsert(final PreparedSql preparedSql, final TableMetaData tableMetaData, final boolean returnGeneratedKeys, final ConnectionProvider connectionProvider) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, returnGeneratedKeys, tableMetaData, connectionProvider)) {
+    protected InsertResult executeSqlInsert(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, connectionProvider)) {
             final int affectedRows = preparedStatement.executeUpdate();
+            final UpdateMetaData updateMetaData = Objects.requireNonNull(preparedSql.updateMetaData());
 
-            if (returnGeneratedKeys && affectedRows > 0) {
-                final Map<ColumnMetaData, Object> generatedKeys = extractGeneratedKeys(tableMetaData, preparedStatement);
+            if (updateMetaData.returnGeneratedKeys() && affectedRows > 0) {
+                final Map<ColumnMetaData, Object> generatedKeys = extractGeneratedKeys(updateMetaData.generatedKeys(), preparedStatement);
                 return new InsertResult(affectedRows, generatedKeys);
             } else {
                 return new InsertResult(affectedRows);
@@ -316,29 +311,15 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     /**
-     * Get the primary key columns for which the database generates values.
-     *
-     * @param tableMetaData the {@link TableMetaData} object containing the metadata of the target table
-     * @return a list of {@link ColumnMetaData} objects representing the generated primary key columns
-     */
-    protected List<ColumnMetaData> getGeneratedPrimaryKeyColumns(final TableMetaData tableMetaData) {
-        return tableMetaData.primaryKey().stream()
-                .filter(columnMetadata -> columnMetadata.isAutoIncrement()
-                        || (columnMetadata.getGenerator() != null && SequenceColumnValueGenerator.class.isAssignableFrom(columnMetadata.getGenerator().getClass())))
-                .toList();
-    }
-
-    /**
      * Extract the generated primary key values from the provided prepared statement.
      *
-     * @param tableMetaData     the {@link TableMetaData} object containing the metadata of the target table
-     * @param preparedStatement the executed {@link PreparedStatement} containing any generated keys
+     * @param generatedPrimaryKeys the list of {@link ColumnMetaData} objects representing the generated primary key columns
+     * @param preparedStatement    the executed {@link PreparedStatement} containing any generated keys
      * @return a map of {@link ColumnMetaData} to the generated key value
      * @throws SQLException if an error occurs while retrieving the generated keys
      */
-    protected Map<ColumnMetaData, Object> extractGeneratedKeys(final TableMetaData tableMetaData, final PreparedStatement preparedStatement) throws SQLException {
-        final List<ColumnMetaData> generatedPrimaryKeys = getGeneratedPrimaryKeyColumns(tableMetaData);
-        final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(tableMetaData.primaryKey().size());
+    protected Map<ColumnMetaData, Object> extractGeneratedKeys(final List<ColumnMetaData> generatedPrimaryKeys, final PreparedStatement preparedStatement) throws SQLException {
+        final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(generatedPrimaryKeys.size());
 
         try (final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys()) {
             while (generatedKeysResultSet.next()) {
@@ -360,13 +341,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * of affected rows in an {@link UpdateResult} object.
      *
      * @param preparedSql        the {@link PreparedSql} object containing the SQL query string and bind values to be executed
-     * @param tableMetaData      the {@link TableMetaData} object containing the metadata of the target table
      * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
      * @return an {@link UpdateResult} object encapsulating the number of rows affected by the update operation
      * @throws SQLException if an error occurs while executing the SQL update
      */
-    protected UpdateResult executeSqlUpdate(final PreparedSql preparedSql, final TableMetaData tableMetaData, final ConnectionProvider connectionProvider) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false, tableMetaData, connectionProvider)) {
+    protected UpdateResult executeSqlUpdate(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, connectionProvider)) {
             final int affectedRows = preparedStatement.executeUpdate();
             return new UpdateResult(affectedRows);
         }
@@ -474,18 +454,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * <p>
      * Optionally, the statement can be configured to return generated keys.
      *
-     * @param preparedSql         the {@link PreparedSql} object containing the SQL query and associated bind values.
-     * @param returnGeneratedKeys a boolean indicating whether the statement should return generated keys.
-     *                            Pass {@code true} to configure the statement to return generated keys,
-     *                            or {@code false} otherwise.
-     * @param tableMetaData       Meta-data for the current table
-     * @param connectionProvider  the {@link ConnectionProvider} used to obtain a database connection.
+     * @param preparedSql        the {@link PreparedSql} object containing the SQL query and associated bind values.
+     * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
      * @return a {@link PreparedStatement} that is ready to be executed based on the provided SQL and bind values.
      * @throws SQLException if a database access error occurs or the preparation of the SQL statement fails.
      */
     protected PreparedStatement prepareStatement(final PreparedSql preparedSql,
-                                                 final boolean returnGeneratedKeys,
-                                                 final @Nullable TableMetaData tableMetaData,
                                                  final ConnectionProvider connectionProvider) throws SQLException {
         if (getLogger().isTraceEnabled() && !CollectionUtils.isEmpty(preparedSql.bindValues())) {
             getLogger().trace("Generated SQL: {} with bind parameters: {}", preparedSql.sql(), preparedSql.bindValues().stream()
@@ -497,7 +471,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
 
         final ManagedConnection connection = connectionProvider.connection();
-        final PreparedStatement preparedStatement = createPreparedStatementUsingConnection(preparedSql, returnGeneratedKeys, tableMetaData, connection);
+        final PreparedStatement preparedStatement = createPreparedStatementUsingConnection(preparedSql, connection);
 
         final int[] ordinal = {1};
 
@@ -594,19 +568,21 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     /**
      * Creates a {@link PreparedStatement} using the provided connection and prepared SQL.
      *
-     * @param preparedSql         the SQL and bind values to use
-     * @param returnGeneratedKeys whether to return generated keys
-     * @param tableMetaData       the metadata for the table, required if returnGeneratedKeys is true
-     * @param connection          the connection to use for preparing the statement
+     * @param preparedSql the SQL and bind values to use
+     * @param connection  the connection to use for preparing the statement
      * @return the created prepared statement
      * @throws SQLException if a database access error occurs
      */
     protected PreparedStatement createPreparedStatementUsingConnection(final PreparedSql preparedSql,
-                                                                       final boolean returnGeneratedKeys,
-                                                                       final @Nullable TableMetaData tableMetaData,
                                                                        final ManagedConnection connection) throws SQLException {
-        if (returnGeneratedKeys) {
-            final String[] generatedKeyNames = getGeneratedPrimaryKeyColumns(Objects.requireNonNull(tableMetaData, "No table metadata provided")).stream()
+        final UpdateMetaData updateMetaData = preparedSql.updateMetaData();
+
+        if (updateMetaData == null) {
+            return connection.prepareStatement(preparedSql.sql());
+        }
+
+        if (updateMetaData.returnGeneratedKeys()) {
+            final String[] generatedKeyNames = updateMetaData.generatedKeys().stream()
                     .map(ColumnMetaData::name)
                     .toArray(String[]::new);
 

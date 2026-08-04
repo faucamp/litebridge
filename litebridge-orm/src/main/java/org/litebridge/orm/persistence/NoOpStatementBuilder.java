@@ -1,5 +1,6 @@
 package org.litebridge.orm.persistence;
 
+import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.Update;
 
@@ -38,6 +39,17 @@ public final class NoOpStatementBuilder implements StatementBuilder<Update> {
     @Override
     public List<BindValue> bindValues() {
         return Collections.emptyList();
+    }
+
+    /**
+     * Invoking this method will throw an {@link UnsupportedOperationException}.
+     *
+     * @return Not supported
+     * @throws UnsupportedOperationException Always thrown as this operation is not supported in the {@code NoOpStatementBuilder} implementation.
+     */
+    @Override
+    public UpdateMetaData createUpdateMetaData() {
+        throw new UnsupportedOperationException();
     }
 
     /**

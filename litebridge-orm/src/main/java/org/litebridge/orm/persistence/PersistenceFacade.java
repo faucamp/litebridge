@@ -8,15 +8,19 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.expression.ColumnExpression;
+import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Delete;
@@ -608,11 +612,14 @@ public class PersistenceFacade {
         }
 
         if (updateStatement instanceof Insert insert) {
-            dtoUpdateResult.setUpdateResult(databaseProvider.insert(new PreparedOperation(insert, statementBuilder.bindValues()), transactionManager));
+            final PreparedSql preparedSql = prepareSql(statementBuilder, insert);
+            dtoUpdateResult.setUpdateResult(databaseProvider.insert(preparedSql, transactionManager));
         } else if (updateStatement instanceof Update update) {
-            dtoUpdateResult.setUpdateResult(databaseProvider.update(new PreparedOperation(update, statementBuilder.bindValues()), transactionManager));
+            final PreparedSql preparedSql = prepareSql(statementBuilder, update);
+            dtoUpdateResult.setUpdateResult(databaseProvider.update(preparedSql, transactionManager));
         } else if (updateStatement instanceof Delete delete) {
-            dtoUpdateResult.setUpdateResult(databaseProvider.delete(new PreparedOperation(delete, statementBuilder.bindValues()), transactionManager));
+            final PreparedSql preparedSql = prepareSql(statementBuilder, delete);
+            dtoUpdateResult.setUpdateResult(databaseProvider.delete(preparedSql, transactionManager));
         } else if (statementBuilder instanceof InsertBuilder) {
             dtoUpdateResult.setUpdateResult(new InsertResult(0));
         } else {
@@ -629,6 +636,13 @@ public class PersistenceFacade {
         }
 
         return result;
+    }
+
+    private PreparedSql prepareSql(final StatementBuilder<?> statementBuilder, final @Nullable UpdateStatement updateStatement) {
+        final String sql = databaseProvider.toSql(updateStatement, transactionManager);
+        final UpdateMetaData updateMetaData = statementBuilder.createUpdateMetaData();
+        final PreparedSql preparedSql = new PreparedSql(sql, statementBuilder.bindValues(), null, updateMetaData);
+        return preparedSql;
     }
 
     private static class TableProvider {

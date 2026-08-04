@@ -1,5 +1,6 @@
 package org.litebridge.orm.persistence;
 
+import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.UpdateStatement;
 
@@ -20,6 +21,8 @@ public sealed interface StatementBuilder<US extends UpdateStatement> permits Abs
     StatementChain statementChain();
 
     List<BindValue> bindValues();
+
+    UpdateMetaData createUpdateMetaData();
 
     /**
      * Builds the final SQL statement.

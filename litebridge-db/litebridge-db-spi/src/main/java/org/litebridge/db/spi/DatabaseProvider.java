@@ -5,7 +5,6 @@ import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
-import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Delete;
@@ -39,42 +38,42 @@ public interface DatabaseProvider {
     /**
      * Execute an INSERT operation in the database using the provided {@link Insert} statement.
      *
-     * @param insert             the {@link Insert} statement containing the table, columns, and rows to insert.
+     * @param insert             the {@link PreparedSql} for the statement.
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
      * @return an {@link InsertResult} containing the number of rows affected and any generated keys.
      * @throws SQLException if any SQL error occurs during the execution of the insert operation.
      */
-    InsertResult insert(PreparedOperation insert, ConnectionProvider connectionProvider) throws SQLException;
+    InsertResult insert(PreparedSql insert, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
      * Execute an UPDATE operation in the database using the provided {@link Update} statement.
      *
-     * @param update             the {@link Update} statement containing the table, columns, and rows to update.
+     * @param update             the {@link PreparedSql} for the statement.
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
      * @return an {@link UpdateResult} containing the number of rows affected.
      * @throws SQLException if any SQL error occurs during the execution of the update operation.
      */
-    UpdateResult update(PreparedOperation update, ConnectionProvider connectionProvider) throws SQLException;
-
-    /**
-     * Executes a SELECT operation in the database using a pre-prepared {@link PreparedSql} object.
-     *
-     * @param preparedSql        the {@link PreparedSql} object containing the SQL query string and bind values.
-     * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
-     * @return a {@link List} of {@link Row} objects representing the results of the SELECT operation.
-     * @throws SQLException if any SQL error occurs during the execution of the SELECT operation.
-     */
-    List<Row> select(PreparedSql preparedSql, ConnectionProvider connectionProvider) throws SQLException;
+    UpdateResult update(PreparedSql update, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
      * Execute a DELETE operation in the database using the provided {@link Delete} statement.
      *
-     * @param delete             the {@link Delete} statement containing the table and rows to delete.
+     * @param delete             the {@link PreparedSql} for the statement.
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
      * @return an {@link UpdateResult} containing the number of rows affected.
      * @throws SQLException if any SQL error occurs during the execution of the delete operation.
      */
-    UpdateResult delete(PreparedOperation delete, ConnectionProvider connectionProvider) throws SQLException;
+    UpdateResult delete(PreparedSql delete, ConnectionProvider connectionProvider) throws SQLException;
+
+    /**
+     * Executes a SELECT operation in the database using a pre-prepared {@link PreparedSql} object.
+     *
+     * @param select             the {@link PreparedSql} object containing the SQL query string and bind values.
+     * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
+     * @return a {@link List} of {@link Row} objects representing the results of the SELECT operation.
+     * @throws SQLException if any SQL error occurs during the execution of the SELECT operation.
+     */
+    List<Row> select(PreparedSql select, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
      * Converts the given {@link Operation} into its corresponding SQL representation.

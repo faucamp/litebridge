@@ -19,7 +19,7 @@ class QueryPlanCacheTest {
         final QueryPlanCache cache = new QueryPlanCache();
         final String sql = "SELECT 1";
         final QueryNode node = new SelectNode(null, new ExpressionSpec[0], Object.class);
-        final QueryPlanCache.CachedOperation cachedOperation = new QueryPlanCache.CachedOperation(sql, Collections.emptyList(), null, null);
+        final QueryPlanCache.CachedOperation cachedOperation = new QueryPlanCache.CachedOperation(sql, Collections.emptyList(), null, null, null);
 
         // When / Then
         assertNull(cache.get(node));

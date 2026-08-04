@@ -36,14 +36,12 @@ class SQLiteDatabaseProviderTest {
         final ManagedConnection mockConnection = Mockito.mock(ManagedConnection.class);
         final PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
         final PreparedSql mockPreparedSql = new PreparedSql("SELECT * FROM test", null);
-        final TableMetaData mockTableMetaData = mock(TableMetaData.class);
 
         when(mockConnection.prepareStatement(mockPreparedSql.sql(), PreparedStatement.RETURN_GENERATED_KEYS))
                 .thenReturn(mockPreparedStatement);
 
         // When
-        final PreparedStatement result = provider.createPreparedStatementUsingConnection(
-                mockPreparedSql, true, mockTableMetaData, mockConnection);
+        final PreparedStatement result = provider.createPreparedStatementUsingConnection(mockPreparedSql, mockConnection);
 
         // Then
         assertNotNull(result);
@@ -58,13 +56,11 @@ class SQLiteDatabaseProviderTest {
         final ManagedConnection mockConnection = Mockito.mock(ManagedConnection.class);
         final PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
         final PreparedSql mockPreparedSql = new PreparedSql("SELECT * FROM test", null);
-        final TableMetaData mockTableMetaData = mock(TableMetaData.class);
 
         when(mockConnection.prepareStatement(mockPreparedSql.sql())).thenReturn(mockPreparedStatement);
 
         // When
-        final PreparedStatement result = provider.createPreparedStatementUsingConnection(
-                mockPreparedSql, false, mockTableMetaData, mockConnection);
+        final PreparedStatement result = provider.createPreparedStatementUsingConnection(mockPreparedSql, mockConnection);
 
         // Then
         assertNotNull(result);
@@ -76,7 +72,6 @@ class SQLiteDatabaseProviderTest {
     void extractGeneratedKeys() throws SQLException {
         // Given
         final SQLiteDatabaseProvider provider = new SQLiteDatabaseProvider();
-        final TableMetaData mockTableMetaData = mock(TableMetaData.class);
         final PreparedStatement mockPreparedStatement = mock(PreparedStatement.class);
         final ResultSet mockResultSet = mock(ResultSet.class);
         final ColumnMetaData mockColumnMetaData = mock(ColumnMetaData.class);
@@ -84,12 +79,11 @@ class SQLiteDatabaseProviderTest {
         when(mockPreparedStatement.getGeneratedKeys()).thenReturn(mockResultSet);
         when(mockResultSet.next()).thenReturn(true);
         when(mockResultSet.getObject(1)).thenReturn(123L);
-        when(mockTableMetaData.primaryKey()).thenReturn(List.of(mockColumnMetaData));
         when(mockColumnMetaData.isAutoIncrement()).thenReturn(true);
         when(mockColumnMetaData.name()).thenReturn("id");
 
         // When
-        final Map<ColumnMetaData, Object> result = provider.extractGeneratedKeys(mockTableMetaData, mockPreparedStatement);
+        final Map<ColumnMetaData, Object> result = provider.extractGeneratedKeys(List.of(mockColumnMetaData), mockPreparedStatement);
 
         // Then
         assertNotNull(result);
@@ -101,17 +95,15 @@ class SQLiteDatabaseProviderTest {
     void extractGeneratedKeys_whenNoGeneratedKeysRow_returnsEmptyMap() throws SQLException {
         // Given
         final SQLiteDatabaseProvider provider = new SQLiteDatabaseProvider();
-        final TableMetaData mockTableMetaData = mock(TableMetaData.class);
         final PreparedStatement mockPreparedStatement = mock(PreparedStatement.class);
         final ResultSet mockResultSet = mock(ResultSet.class);
         final ColumnMetaData mockColumnMetaData = mock(ColumnMetaData.class);
 
         when(mockPreparedStatement.getGeneratedKeys()).thenReturn(mockResultSet);
         when(mockResultSet.next()).thenReturn(false);
-        when(mockTableMetaData.primaryKey()).thenReturn(List.of(mockColumnMetaData));
 
         // When
-        final Map<ColumnMetaData, Object> result = provider.extractGeneratedKeys(mockTableMetaData, mockPreparedStatement);
+        final Map<ColumnMetaData, Object> result = provider.extractGeneratedKeys(List.of(mockColumnMetaData), mockPreparedStatement);
 
         // Then
         assertNotNull(result);
