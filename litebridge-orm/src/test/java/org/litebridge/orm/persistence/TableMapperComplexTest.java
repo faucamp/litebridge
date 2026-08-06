@@ -5,6 +5,7 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.api.register.DtoTableSpecBuilder;
 import org.litebridge.orm.api.register.RegistrationContext;
 import org.litebridge.orm.api.register.RegistrationContextTerminal;
@@ -33,7 +34,8 @@ class TableMapperComplexTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker);
+        final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(TransactionManager.class));
+        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
 
         // Register Order first
         final Table orderTable = new Table("", "public", "orders");
@@ -74,7 +76,8 @@ class TableMapperComplexTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker);
+        final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(TransactionManager.class));
+        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
 
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), String.class, mock(TableSpec.class), Collections.emptySet()));
@@ -96,7 +99,8 @@ class TableMapperComplexTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker);
+        final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(TransactionManager.class));
+        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
 
         // Customer
         final Table customerTable = new Table("", "public", "customers");

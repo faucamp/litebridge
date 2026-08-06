@@ -26,16 +26,14 @@ class PostgresDatabaseProviderTest {
         final PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
         final PreparedSql mockPreparedSql = new PreparedSql("SELECT * FROM test", null);
 
-        when(mockConnection.prepareStatement(mockPreparedSql.sql(), Statement.RETURN_GENERATED_KEYS))
-                .thenReturn(mockPreparedStatement);
+        when(mockConnection.prepareStatement(mockPreparedSql.sql())).thenReturn(mockPreparedStatement);
 
         // When
         final PreparedStatement result = provider.createPreparedStatementUsingConnection(mockPreparedSql, mockConnection);
 
         // Then
         assertNotNull(result);
-        verify(mockConnection, times(1))
-                .prepareStatement(mockPreparedSql.sql(), Statement.RETURN_GENERATED_KEYS);
+        verify(mockConnection, times(1)).prepareStatement(mockPreparedSql.sql());
     }
 
     @Test
