@@ -221,7 +221,7 @@ public final class Litebridge implements SelectApi {
         this.nativeSqlContext = new NativeSqlContext(this.databaseProvider);
         this.litebridgeConfig = litebridgeConfig != null ? litebridgeConfig : new LitebridgeConfig();
         this.changeTracker = new ChangeTracker(lookup);
-        this.tableMetaDataCache = new TableMetaDataCache(databaseProvider, transactionManager);
+        this.tableMetaDataCache = new TableMetaDataCache(this.databaseProvider, transactionManager);
         this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor);
         final TableMapper tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
         this.registrationEngine = new RegistrationEngine(this.databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
