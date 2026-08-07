@@ -3,7 +3,16 @@
 ## [Unreleased]
 
 ### Added
+- ORM:
+  - New internal Abstract Syntax Tree (AST) for query representation (`QueryNode`, `SelectNode`, etc.), providing a robust foundation for query compilation and execution.
+  - `QueryCompiler` for translating the AST into executable database specifications.
+  - `QueryPlanCache` to cache and reuse compiled query plans, significantly improving performance for repeated queries.
+  - Centralised alias management via `AliasGenerator` and `AliasGeneratorFactory`.
+  - Robust support for nested conditions and complex `HAVING` clauses through `ConditionGroupNode` and `HavingNode`.
+  - Introduced `TableMetaDataCache` for efficient retrieval and caching of database metadata.
 - Database Provider SPI:
+  - Introduced `PreparedOperation` to represent generic executable database operations.
+  - Introduced `BindValueExpression` to represent bind parameters within the expression API.
   - `ColumnMetaData` now contains the default value of a column.
   - `Row` now supports index-based value retrieval for improved performance.
 - Maven plugin: 
@@ -14,6 +23,9 @@
 
 ### Changed
 - ORM:
+  - Refactored `select()`, `update()`, `delete()`, and `insert()` fluent APIs to use the new AST-based engine.
+  - Re-engineered `PersistenceFacade` to integrate with the query plan cache and compilation pipeline.
+  - Optimised relationship path resolution and implicit join generation during query compilation.
   - Significantly optimised DTO mapping performance in `SelectSpecDtoMapper` through a multi-layered approach:
     - Introduced a "compiled" `MappingPlan` to pre-calculate mapping logic, enabling index-based row access ($O(1)$ column lookups).
     - Transitioned to `MethodHandle`-based DTO construction and field population to bypass standard reflection overhead.
@@ -23,6 +35,8 @@
   - Refactor `ReverseEngineerMojo` to improve performance
   - Initialise default values for fields representing columns with a default value defined in the database.
   - Use `joinUsing` instead of `joinOn` annotation parameter if applicable.
+- Database Provider SPI:
+  - Standardised `DatabaseProvider` methods to use `PreparedSql` for statement execution.
 - Type converter:
   - Boolean converter now supports strings "1" and "0" as valid boolean values.
 
@@ -32,6 +46,8 @@
 
 ### Fixed
 - ORM:
+  - Fix database connection leak in the newly introduced `TableMetaDataCache`.
+  - Correct behavior of nested conditions and `HAVING` clauses within the AST engine.
   - Fix setting generated PK value not being set if the target field is a primitive type.
 - Commons:
   - Improve detection of basic Java types in `ClassUtils`.
