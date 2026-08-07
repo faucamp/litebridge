@@ -2,11 +2,22 @@ package org.litebridge.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
+import org.litebridge.convert.DefaultTypeConverter;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.sql.PreparedSql;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryPlanCache;
+import org.litebridge.orm.persistence.TableMetaDataCache;
+import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -15,7 +26,6 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,7 +41,8 @@ class AbstractSelectorTest {
         final SelectSpec selectSpec = mock(SelectSpec.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
-        final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext);
+        final QueryNode node = new SelectNode(null, new org.litebridge.orm.expression.ExpressionSpec[0], null);
+        final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext, node);
         selector.setResult(List.of("result"));
 
         // When
@@ -48,7 +59,8 @@ class AbstractSelectorTest {
         final SelectSpec selectSpec = mock(SelectSpec.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
-        final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext);
+        final QueryNode node = new SelectNode(null, new org.litebridge.orm.expression.ExpressionSpec[0], null);
+        final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext, node);
         selector.setResult(Collections.emptyList());
 
         // When / Then
@@ -61,7 +73,8 @@ class AbstractSelectorTest {
         final SelectSpec selectSpec = mock(SelectSpec.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
-        final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext);
+        final QueryNode node = new SelectNode(null, new org.litebridge.orm.expression.ExpressionSpec[0], null);
+        final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext, node);
         selector.setResult(List.of("result1", "result2"));
 
         // When
@@ -77,17 +90,30 @@ class AbstractSelectorTest {
         // Given
         final SelectSpec selectSpec = mock(SelectSpec.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        final TypeConverter typeConverter = new DefaultTypeConverter();
+        when(databaseProvider.getTypeConverter()).thenReturn(typeConverter);
+        when(databaseProvider.getAliasTransformer()).thenReturn(alias -> alias);
+
+        final QueryPlanCache cache = mock(QueryPlanCache.class);
+        final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+        when(litebridgeContext.tableMetaDataCache()).thenReturn(tableMetaDataCache);
+        when(litebridgeContext.queryPlanCache()).thenReturn(cache);
+
+        final QueryNode node = new SelectNode(null, new org.litebridge.orm.expression.ExpressionSpec[0], null);
         final Select select = mock(Select.class);
-        when(selectSpec.toSelect()).thenReturn(select);
-        when(databaseProvider.toSql(any(), any())).thenReturn("SELECT * FROM TEST");
-        final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext);
+        final PreparedOperation preparedOperation = new PreparedOperation(select, Collections.emptyList());
+
+        when(selectSpec.toSelect(tableMetaDataCache, typeConverter)).thenReturn(preparedOperation);
+        when(databaseProvider.toSql(select, databaseProvider.transactionManager())).thenReturn("SELECT * FROM TEST");
+
+        final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext, node);
 
         // When
-        final String sql = selector.toSql();
+        final PreparedSql sql = selector.toSql();
 
         // Then
-        assertEquals("SELECT * FROM TEST", sql);
+        assertEquals("SELECT * FROM TEST", sql.sql());
     }
 
     @Test
@@ -95,22 +121,29 @@ class AbstractSelectorTest {
         // Given
         final SelectSpec selectSpec = mock(SelectSpec.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
-        when(selectSpec.toSelect()).thenReturn(mock(Select.class));
+        final QueryPlanCache cache = mock(QueryPlanCache.class);
+        final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), null, null, cache, new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter());
+        final QueryNode node = new SelectNode(null, new org.litebridge.orm.expression.ExpressionSpec[0], null);
+        final PreparedOperation preparedOperation = mock(PreparedOperation.class);
+        when(preparedOperation.operation()).thenReturn(mock(Select.class));
+        when(selectSpec.toSelect(any(), any())).thenReturn(preparedOperation);
+        when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
         when(databaseProvider.select(any(), any())).thenThrow(new SQLException("DB Error"));
-        final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext);
+        final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext, node);
 
         // When / Then
         assertThrows(IllegalStateException.class, selector::executeQuery);
     }
-    
+
     @Test
     void selectSpecGetter() {
         // Given
         final SelectSpec selectSpec = mock(SelectSpec.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
-        final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext);
+        final QueryNode node = new SelectNode(null, new org.litebridge.orm.expression.ExpressionSpec[0], null);
+        final TestSelector selector = new TestSelector(selectSpec, databaseProvider, String.class, litebridgeContext, node);
 
         // When
         final SelectSpec result = selector.selectSpec();
@@ -121,9 +154,25 @@ class AbstractSelectorTest {
 
     private static class TestSelector extends AbstractSelector<String, SelectSpec> {
         private List<String> result = Collections.emptyList();
+        private final SelectSpec selectSpec;
 
-        protected TestSelector(SelectSpec selectSpec, TransactionalDatabaseProvider databaseProvider, Class<String> dtoClass, LitebridgeContext litebridgeContext) {
-            super(selectSpec, databaseProvider, dtoClass, litebridgeContext);
+        protected TestSelector(SelectSpec selectSpec, TransactionalDatabaseProvider databaseProvider, Class<String> dtoClass, LitebridgeContext litebridgeContext, QueryNode node) {
+            super(databaseProvider, mock(TableRegistry.class), dtoClass, litebridgeContext, node);
+            this.selectSpec = selectSpec;
+        }
+
+        @Override
+        public TestSelector withNode(QueryNode node) {
+            return new TestSelector(selectSpec, databaseProvider, dtoClass, litebridgeContext, node);
+        }
+
+        public SelectSpec selectSpec() {
+            return selectSpec;
+        }
+
+        @Override
+        protected SelectSpec createSelectSpec(org.litebridge.orm.persistence.alias.AliasGenerator aliasGenerator) {
+            return selectSpec;
         }
 
         public void setResult(List<String> result) {

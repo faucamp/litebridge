@@ -2,15 +2,12 @@ package org.litebridge.orm.api.dto;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.ClassUtils;
-import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.DefaultAliasTransformer;
-import org.litebridge.orm.api.select.model.ProtoExpressionResolver;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
-import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.OrmTable;
@@ -60,14 +57,9 @@ class DtoJoinConditionClauseTerminalTest {
     void where() {
         // Given
         final TestContext<TestDto> context = testContext();
-        final SelectSpec selectSpec = ObjectUtils.getFieldValue(context.dtoSelector(), "selectSpec", SelectSpec.class);
-        final Table aliasedTable = context.aliasGenerator().aliasTable(context.ormTable());
-        selectSpec.setTable(aliasedTable);
 
-        final DtoJoinConditionClauseTerminal<TestDto> terminal = new DtoJoinConditionClauseTerminal<>(
-                new DtoJoinSpec(TestDto.class, context.ormTable(), aliasedTable, mock(SelectExpressionMapper.class)),
-                context.dtoSelector(),
-                context.aliasGenerator());
+        final JoinNode joinNode = new JoinNode(context.dtoSelector().node(), "INNER", TestDto.class, TestDto.class, null);
+        final DtoJoinConditionClauseTerminal<TestDto> terminal = new DtoJoinConditionClauseTerminal<>(joinNode, context.dtoSelector());
 
         // When
         assertNotNull(terminal.where("myVar"));
@@ -85,22 +77,20 @@ class DtoJoinConditionClauseTerminalTest {
         when(joinedTable.getMetaData()).thenReturn(metaData);
         when(joinedTable.dtoClass()).thenReturn((Class) String.class);
         when(tableRegistry.getTableOrThrow(String.class)).thenReturn(joinedTable);
-        
-        final DtoSelector<TestDto> selector = new DtoSelector<>(
-                        TestDto.class,
-                        context.ormTable(),
-                        tableRegistry,
-                        mock(ClassFieldAccessorCache.class),
-                        mock(DtoConstructor.class),
-                        mock(TransactionalDatabaseProvider.class),
-                        context.aliasGenerator(),
-                        mock(LitebridgeContext.class));
-        selector.selectSpec().setProtoExpressionResolver(mock(ProtoExpressionResolver.class));
 
-        final DtoJoinConditionClauseTerminal<TestDto> terminal = new DtoJoinConditionClauseTerminal<>(
-                ObjectUtils.getFieldValue(context.terminal(), "joinSpec", DtoJoinSpec.class),
-                selector,
-                context.aliasGenerator());
+        final DtoSelector<TestDto> selector = new DtoSelector<>(
+                TestDto.class,
+                context.ormTable(),
+                tableRegistry,
+                mock(ClassFieldAccessorCache.class),
+                mock(DtoConstructor.class),
+                mock(TransactionalDatabaseProvider.class),
+                context.aliasGenerator(),
+                mock(LitebridgeContext.class),
+                null);
+
+        final JoinNode joinNode = new JoinNode(selector.node(), "INNER", TestDto.class, TestDto.class, null);
+        final DtoJoinConditionClauseTerminal<TestDto> terminal = new DtoJoinConditionClauseTerminal<>(joinNode, selector);
 
         // When
         assertNotNull(terminal.join(String.class));
@@ -154,12 +144,12 @@ class DtoJoinConditionClauseTerminalTest {
                 dtoConstructor,
                 databaseProvider,
                 aliasGenerator,
-                mock(LitebridgeContext.class));
-        final DtoJoinSpec joinSpec = new DtoJoinSpec(TestDto.class, ormTable, aliasGenerator.aliasTable(ormTable), mock(SelectExpressionMapper.class));
+                mock(LitebridgeContext.class),
+                null);
+        final JoinNode joinNode = new JoinNode(dtoSelector.node(), "INNER", TestDto.class, TestDto.class, null);
         final DtoJoinConditionClauseTerminal<TestDto> terminal = new DtoJoinConditionClauseTerminal<>(
-                joinSpec,
-                dtoSelector,
-                aliasGenerator);
+                joinNode,
+                dtoSelector);
 
         return new TestContext<>(ormTable, aliasGenerator, dtoSelector, terminal);
     }

@@ -20,8 +20,9 @@ import java.util.Objects;
  */
 public class SqlSelectSpec extends SelectSpec {
 
-    public SqlSelectSpec(final LitebridgeContext litebridgeContext) {
+    public SqlSelectSpec(final LitebridgeContext litebridgeContext, final Table table) {
         super(litebridgeContext);
+        this.table = table;
     }
 
     public SqlJoinSpec newJoinSpec(final String table) {
@@ -38,7 +39,8 @@ public class SqlSelectSpec extends SelectSpec {
         return joinSpec;
     }
 
-    public List<ExpressionSpec> createSelectColumnSpecs(final String[] columns) {
+    //TODO: move to different class
+    public static List<ExpressionSpec> createSelectColumnSpecs(final String[] columns) {
         return Arrays.stream(columns)
                 .map(column -> (ExpressionSpec) new ProtoColumnExpressionSpec(SelectColumnSpec.class, column))
                 .toList();

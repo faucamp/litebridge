@@ -3,12 +3,14 @@ package org.litebridge.orm.api.sql;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.ConditionGroupNode;
+import org.litebridge.orm.api.select.ast.GroupByNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
-import org.litebridge.orm.api.select.model.GroupBySpec;
 import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
@@ -37,7 +39,7 @@ public final class SqlWhereConditionClauseTerminal
 
     @Override
     public SqlWhereConditionClause and(final String column) {
-        final Column spiColumn = new Column(selectSpec.getTable(), column);
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
         return and(new SelectColumnSpec(spiColumn));
     }
 
@@ -53,7 +55,7 @@ public final class SqlWhereConditionClauseTerminal
 
     @Override
     public SqlWhereConditionClause or(final String column) {
-        final Column spiColumn = new Column(selectSpec.getTable(), column);
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
         return or(new SelectColumnSpec(spiColumn));
     }
 
@@ -69,36 +71,50 @@ public final class SqlWhereConditionClauseTerminal
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final String... columns) {
-        selectSpec.setGroupBy(new GroupBySpec(selectSpec.createSelectColumnSpecs(columns)));
-        return new SqlGroupByClauseTerminal((SqlSelector) delegate);
+        return groupBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final ExpressionSpec... columns) {
-        selectSpec.setGroupBy(new GroupBySpec(columns));
-        return new SqlGroupByClauseTerminal((SqlSelector) delegate);
+        final QueryNode groupByNode = new GroupByNode(delegate.node(), columns);
+        return new SqlGroupByClauseTerminal((SqlSelector) delegate.withNode(groupByNode));
     }
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.createSelectColumnSpecs(columns)), (SqlSelector) delegate);
+        return orderBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+        return new SqlOrderByClause(columns, (SqlSelector) delegate);
     }
 
     private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = selectSpec.currentWhereConditionGroupSpec().newCondition(logicOperator, expression);
-        return new SqlWhereConditionClause(conditionSpec, new SqlWhereConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
+        if (delegate.node() instanceof WhereNode whereNode) {
+            return new SqlWhereConditionClause(delegate.litebridgeContext(),
+                    logicOperator,
+                    expression,
+                    whereNode.condition(),
+                    node -> new SqlWhereConditionClauseTerminal((SqlSelector) delegate.withNode(whereNode.withCondition(node))));
+        }
+
+        return new SqlWhereConditionClause(delegate.litebridgeContext(),
+                logicOperator,
+                expression,
+                null,
+                node -> new SqlWhereConditionClauseTerminal((SqlSelector) delegate.withNode(new WhereNode(delegate.node(), node))));
     }
 
     private SqlWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-        final ConditionGroupSpec subgroup = selectSpec.pushWhereConditionGroup(logicOperator);
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, selectSpec.getTable(), delegate.litebridgeContext().fromClauseEngine());
-        query.apply(conditionClauseStart);
-        selectSpec.popWhereConditionGroup();
+        if (!(delegate.node() instanceof WhereNode whereNode)) {
+            throw new IllegalArgumentException("AST error: Expected a WhereNode but got " + delegate.node());
+        }
+
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(((SqlSelector) delegate).table(), delegate.litebridgeContext().fromClauseEngine(), null);
+        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+
+        whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, terminal.node()));
         return this;
     }
 }

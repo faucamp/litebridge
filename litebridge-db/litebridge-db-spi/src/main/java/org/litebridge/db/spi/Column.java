@@ -13,7 +13,7 @@ import java.util.StringJoiner;
  */
 public class Column extends Aliased {
 
-    private final Table table;
+    private Table table;
 
     /**
      * Construct a new {@code Column} instance associated with the specified table and column name.
@@ -45,6 +45,15 @@ public class Column extends Aliased {
      */
     public Table table() {
         return table;
+    }
+
+    /**
+     * Sets the table associated with this column.
+     *
+     * @param table the table to set
+     */
+    public void setTable(final Table table) {
+        this.table = table;
     }
 
     /**

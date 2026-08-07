@@ -23,16 +23,16 @@ public final class DtoOrderByClauseChain<DTO>
      */
     public DtoOrderByClauseChain(final DtoSelector<DTO> delegate) {
         super(delegate);
-        table = delegate.table();
+        table = delegate.ormTable();
     }
 
     @Override
     public DtoOrderByClause<DTO> then(final String... fields) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(selectSpec.createSelectFieldSpecs(fields)), (DtoSelector<DTO>) delegate);
+        return new DtoOrderByClause<>(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new), (DtoSelector<DTO>) delegate);
     }
 
     @Override
     public DtoOrderByClause<DTO> then(final ExpressionSpec... fields) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(fields), (DtoSelector<DTO>) delegate);
+        return new DtoOrderByClause<>(fields, (DtoSelector<DTO>) delegate);
     }
 }

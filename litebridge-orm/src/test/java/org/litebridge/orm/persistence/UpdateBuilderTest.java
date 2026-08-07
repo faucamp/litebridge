@@ -1,12 +1,19 @@
 package org.litebridge.orm.persistence;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.query.ConditionGroup;
-import org.litebridge.db.spi.update.ColumnValue;
+import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.update.Update;
+import org.litebridge.orm.api.select.ast.ConditionNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryCompiler;
+import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 
@@ -16,102 +23,50 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class UpdateBuilderTest {
 
     @Test
-    void getColumnValues_empty() {
-        // Given
-        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable());
-
-        // When
-        final List<ColumnValue> result = updateBuilder.getColumnValues();
-
-        // Then
-        assertEquals(List.of(), result);
-    }
-
-    @Test
-    void setColumnValues() {
-        // Given
-        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable());
-        final ColumnValue columnValue = new ColumnValue(column("test_table", "name", Types.VARCHAR).toColumn(), "test");
-
-        // When
-        final UpdateBuilder result = updateBuilder.setColumnValues(List.of(columnValue));
-
-        // Then
-        assertSame(updateBuilder, result);
-        assertEquals(List.of(columnValue), updateBuilder.getColumnValues());
-    }
-
-    @Test
     void where() {
         // Given
-        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable());
-        final ColumnValue columnValue = new ColumnValue(column("test_table", "name", Types.VARCHAR).toColumn(), "test");
-        final ConditionGroup conditionGroup = mock(ConditionGroup.class);
-        updateBuilder.setColumnValues(List.of(columnValue));
+        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable(), mock(LitebridgeContext.class));
+        final QueryNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, null, Operator.IS_NULL, null);
 
         // When
-        final UpdateBuilder result = updateBuilder.where(conditionGroup);
+        final AbstractStatementBuilder result = updateBuilder.where(conditionNode);
 
         // Then
         assertSame(updateBuilder, result);
-        assertEquals(List.of(columnValue), updateBuilder.getColumnValues());
     }
 
     @Test
     void build() {
         // Given
         final OrmTable ormTable = ormTable();
-        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+        final QueryCompiler queryCompiler = mock(QueryCompiler.class);
+        when(litebridgeContext.createQueryCompiler()).thenReturn(queryCompiler);
+        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable, litebridgeContext);
 
-        final ColumnValue columnValue = new ColumnValue(column("test_table", "name", Types.VARCHAR).toColumn(), "test");
-        final ConditionGroup conditionGroup = mock(ConditionGroup.class);
-
-        updateBuilder.setColumnValues(List.of(columnValue));
-        updateBuilder.where(conditionGroup);
+        final Column column = new Column(new Table("TEST_TABLE"), "TEST_COLUMN");
+        final ConditionNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, new SelectColumnSpec(column), Operator.EQ, "test");
 
         // When
-        final Update result = updateBuilder.build();
+        updateBuilder.where(conditionNode);
+
+        // When
+        final PreparedOperation result = updateBuilder.build();
 
         // Then
-        assertEquals(ormTable.getMetaData().toTable(), result.table());
-        assertEquals(List.of(columnValue), result.columnValues());
-        assertEquals(conditionGroup, result.where());
-    }
-
-    @Test
-    void build_noColumnValues() {
-        // Given
-        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable());
-
-        // When/Then
-        assertThrows(IllegalArgumentException.class, updateBuilder::build);
-    }
-
-    @Test
-    void build_emptyColumnValues() {
-        // Given
-        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable());
-        updateBuilder.setColumnValues(List.of());
-
-        // When/Then
-        assertThrows(IllegalArgumentException.class, updateBuilder::build);
-    }
-
-    @Test
-    void build_noConditions() {
-        // Given
-        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable());
-        updateBuilder.setColumnValues(List.of(new ColumnValue(column("test_table", "name", Types.VARCHAR).toColumn(), "test")));
-
-        // When/Then
-        assertThrows(NullPointerException.class, updateBuilder::build);
+        assertNotNull(result);
+        assertInstanceOf(Update.class, result.operation());
+        final Update update = (Update) result.operation();
+        assertEquals(ormTable.getMetaData().toTable(), update.table());
     }
 
     private static OrmTable ormTable() {

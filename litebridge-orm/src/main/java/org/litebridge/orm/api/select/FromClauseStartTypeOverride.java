@@ -2,6 +2,8 @@ package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -18,23 +20,13 @@ public final class FromClauseStartTypeOverride<TypeOverride> extends AbstractFro
      * Constructs a new {@code FromClauseStartTypeOverride}.
      *
      * @param typeOverride     the type override class.
-     * @param fromClauseEngine the from clause engine.
-     */
-    public FromClauseStartTypeOverride(final Class<TypeOverride> typeOverride, FromClauseEngine fromClauseEngine) {
-        this(typeOverride, new ExpressionSpec[0], fromClauseEngine);
-    }
-
-    /**
-     * Constructs a new {@code FromClauseStartTypeOverride} with expression specifications.
-     *
-     * @param typeOverride     the type override class.
-     * @param expressionSpecs  the expression specifications.
+     * @param node             the current query node.
      * @param fromClauseEngine the from clause engine.
      */
     public FromClauseStartTypeOverride(final Class<TypeOverride> typeOverride,
-                                       final ExpressionSpec[] expressionSpecs,
+                                       final SelectNode node,
                                        final FromClauseEngine fromClauseEngine) {
-        super(expressionSpecs, fromClauseEngine);
+        super(node, fromClauseEngine);
         this.typeOverride = typeOverride;
     }
 
@@ -45,7 +37,7 @@ public final class FromClauseStartTypeOverride<TypeOverride> extends AbstractFro
      * @return the DTO from clause terminal.
      */
     public DtoFromClauseTerminal<TypeOverride> from(final Class<?> dtoClass) {
-        return fromClauseEngine.from(expressionSpecs, dtoClass, typeOverride, (RelatedDtoStrategy) null);
+        return fromClauseEngine.from(node, dtoClass, typeOverride, (RelatedDtoStrategy) null);
     }
 
     /**
@@ -69,6 +61,6 @@ public final class FromClauseStartTypeOverride<TypeOverride> extends AbstractFro
      * @return the DTO from clause terminal.
      */
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        return fromClauseEngine.from(expressionSpecs, dtoClass, relatedDtoStrategy);
+        return fromClauseEngine.from(node, dtoClass, relatedDtoStrategy);
     }
 }

@@ -29,7 +29,7 @@ public class Subselect extends SubselectExpression {
     }
 
     @Override
-    public PreparedSql toSql(final Operation operation, final ConnectionProvider connectionProvider) {
+    public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
         return selectSqlGenerator.prepareSql(subselect, connectionProvider);
     }
 }

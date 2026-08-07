@@ -30,7 +30,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -59,9 +58,10 @@ class DtoJoinClauseTest {
         final ClassFieldAccessorCache cache = mock(ClassFieldAccessorCache.class);
         final FieldAccessor field1Accessor = mock(FieldAccessor.class);
         when(field1Accessor.name()).thenReturn("field1");
-        when(cache.fieldAccessorOrThrow(any(), eq("field1"))).thenReturn(field1Accessor);
+        // Standard forward join: field1 is in source table
+        when(cache.fieldAccessorOrNull(eq(Object.class), eq("field1"))).thenReturn(field1Accessor);
 
-        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context);
+        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context, null);
         selector.select();
 
         final OrmTable joinTable = mock(OrmTable.class);
@@ -72,7 +72,7 @@ class DtoJoinClauseTest {
         when(joinTable.dtoClass()).thenReturn((Class) String.class);
 
         final ColumnMetaData joinColMetaData = new ColumnMetaData(table, "JOIN_COL", true, Types.VARCHAR);
-        joinColMetaData.setJoinColumn("ID"); // Points to ID in main table
+        joinColMetaData.setJoinColumn("ID"); // Points to ID in target table
         when(ormTable.getColumnForFieldName("field1")).thenReturn(joinColMetaData);
 
         final ColumnMetaData targetColMetaData = new ColumnMetaData(joinSpiTable, "ID", false, Types.BIGINT);
@@ -84,7 +84,12 @@ class DtoJoinClauseTest {
         final org.litebridge.db.spi.Column leftColumn = new org.litebridge.db.spi.Column(table, "JOIN_COL");
         selector.select(new SelectFieldSpec(mock(FieldAccessor.class), leftColumn));
 
-        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(String.class, joinTable, selector);
+        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(selector, joinTable, conditionNode -> {
+            final org.litebridge.orm.api.select.ast.JoinNode joinNode = new org.litebridge.orm.api.select.ast.JoinNode(selector.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+            joinNode.withCondition(conditionNode);
+            selector.withNode(joinNode);
+            return new DtoJoinConditionClauseTerminal<>(joinNode, selector);
+        });
 
         final DtoJoinConditionClauseTerminal<Object> terminal = joinClause.on("field1");
         assertNotNull(terminal);
@@ -111,7 +116,7 @@ class DtoJoinClauseTest {
         final ClassFieldAccessorCache cache = mock(ClassFieldAccessorCache.class);
         final FieldAccessor field1Accessor = mock(FieldAccessor.class);
         when(field1Accessor.name()).thenReturn("field1");
-        when(cache.fieldAccessorOrThrow(any(), eq("field1"))).thenReturn(field1Accessor);
+        when(cache.fieldAccessorOrNull(eq(Object.class), eq("field1"))).thenReturn(field1Accessor);
 
         final MappedOneToMany oneToMany = mock(MappedOneToMany.class);
         final FieldAccessor mappedByField = mock(FieldAccessor.class);
@@ -119,7 +124,10 @@ class DtoJoinClauseTest {
         when(oneToMany.mappedByField()).thenReturn(mappedByField);
         when(ormTable.getOneToManyMappingForField(field1Accessor)).thenReturn(Optional.of(oneToMany));
 
-        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context);
+        final ColumnMetaData sourceIdCol = new ColumnMetaData(table, "ID", false, Types.BIGINT);
+        when(ormTable.getColumnMetaData("ID")).thenReturn(sourceIdCol);
+
+        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context, null);
         selector.select();
 
         final OrmTable joinTable = mock(OrmTable.class);
@@ -143,7 +151,12 @@ class DtoJoinClauseTest {
         final Column leftColumn = new Column(joinSpiTable, "OWNER_ID");
         selector.select(new SelectFieldSpec(mock(FieldAccessor.class), leftColumn));
 
-        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(String.class, joinTable, selector);
+        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(selector, joinTable, conditionNode -> {
+            final org.litebridge.orm.api.select.ast.JoinNode joinNode = new org.litebridge.orm.api.select.ast.JoinNode(selector.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+            joinNode.withCondition(conditionNode);
+            selector.withNode(joinNode);
+            return new DtoJoinConditionClauseTerminal<>(joinNode, selector);
+        });
         assertNotNull(joinClause.on("field1"));
     }
 
@@ -169,9 +182,9 @@ class DtoJoinClauseTest {
         final ClassFieldAccessorCache cache = mock(ClassFieldAccessorCache.class);
         final FieldAccessor field1Accessor = mock(FieldAccessor.class);
         when(field1Accessor.name()).thenReturn("field1");
-        when(cache.fieldAccessorOrThrow(any(), eq("field1"))).thenReturn(field1Accessor);
+        when(cache.fieldAccessorOrNull(eq(Object.class), eq("field1"))).thenReturn(field1Accessor);
 
-        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context);
+        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context, null);
         selector.select();
 
         final OrmTable joinTable = mock(OrmTable.class);
@@ -194,7 +207,12 @@ class DtoJoinClauseTest {
         final Column leftColumn = new Column(table, "JOIN_COL");
         selector.select(new SelectFieldSpec(mock(FieldAccessor.class), leftColumn));
 
-        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(String.class, joinTable, selector);
+        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(selector, joinTable, conditionNode -> {
+            final org.litebridge.orm.api.select.ast.JoinNode joinNode = new org.litebridge.orm.api.select.ast.JoinNode(selector.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+            joinNode.withCondition(conditionNode);
+            selector.withNode(joinNode);
+            return new DtoJoinConditionClauseTerminal<>(joinNode, selector);
+        });
 
         // QueryField
         final QueryField qf = new QueryField(Object.class, "field1");

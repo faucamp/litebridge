@@ -1,5 +1,6 @@
 package org.litebridge.example.common;
 
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.example.common.dto.Account;
 import org.litebridge.example.common.dto.Person;
 import org.litebridge.orm.Litebridge;
@@ -86,7 +87,7 @@ public class QueryExample extends AbstractExample {
                 .forEach(a -> LOGGER.info("Account with owner ID '{}': {}", alice.getId(), a));
 
         LOGGER.info("[EXAMPLE] Generate SQL without executing the query");
-        final String sql = litebridge.select(Account.class)
+        final PreparedSql sql = litebridge.select(Account.class)
                 .where("owner").isNotNull()
                 .toSql();
         LOGGER.info("Generated SQL: {}", sql);

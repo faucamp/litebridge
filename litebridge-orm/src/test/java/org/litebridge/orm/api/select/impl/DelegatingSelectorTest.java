@@ -1,8 +1,10 @@
 package org.litebridge.orm.api.select.impl;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.api.select.model.SelectSpec;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,13 +25,13 @@ class DelegatingSelectorTest {
 
         when(delegate.one()).thenReturn(Optional.of("result"));
         when(delegate.list()).thenReturn(List.of("result"));
-        when(delegate.toSql()).thenReturn("SELECT *");
+        when(delegate.toSql()).thenReturn(new PreparedSql("SELECT *", Collections.emptyList()));
 
         // When / Then
         assertTrue(selector.one().isPresent());
         assertEquals("result", selector.one().get());
         assertEquals(List.of("result"), selector.list());
-        assertEquals("SELECT *", selector.toSql());
+        assertEquals("SELECT *", selector.toSql().sql());
 
         selector.oneOrNull();
         verify(delegate).oneOrNull();

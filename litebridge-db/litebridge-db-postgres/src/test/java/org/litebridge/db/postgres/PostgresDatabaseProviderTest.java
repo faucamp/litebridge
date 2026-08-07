@@ -1,7 +1,6 @@
 package org.litebridge.db.postgres;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ManagedConnection;
@@ -13,7 +12,6 @@ import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -27,19 +25,15 @@ class PostgresDatabaseProviderTest {
         final ManagedConnection mockConnection = Mockito.mock(ManagedConnection.class);
         final PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
         final PreparedSql mockPreparedSql = new PreparedSql("SELECT * FROM test", null);
-        final TableMetaData mockTableMetaData = mock(TableMetaData.class);
 
-        when(mockConnection.prepareStatement(mockPreparedSql.sql(), Statement.RETURN_GENERATED_KEYS))
-                .thenReturn(mockPreparedStatement);
+        when(mockConnection.prepareStatement(mockPreparedSql.sql())).thenReturn(mockPreparedStatement);
 
         // When
-        final PreparedStatement result = provider.createPreparedStatementUsingConnection(
-                mockPreparedSql, true, mockTableMetaData, mockConnection);
+        final PreparedStatement result = provider.createPreparedStatementUsingConnection(mockPreparedSql, mockConnection);
 
         // Then
         assertNotNull(result);
-        verify(mockConnection, times(1))
-                .prepareStatement(mockPreparedSql.sql(), Statement.RETURN_GENERATED_KEYS);
+        verify(mockConnection, times(1)).prepareStatement(mockPreparedSql.sql());
     }
 
     @Test
@@ -49,13 +43,11 @@ class PostgresDatabaseProviderTest {
         final ManagedConnection mockConnection = Mockito.mock(ManagedConnection.class);
         final PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
         final PreparedSql mockPreparedSql = new PreparedSql("SELECT * FROM test", null);
-        final TableMetaData mockTableMetaData = mock(TableMetaData.class);
 
         when(mockConnection.prepareStatement(mockPreparedSql.sql())).thenReturn(mockPreparedStatement);
 
         // When
-        final PreparedStatement result = provider.createPreparedStatementUsingConnection(
-                mockPreparedSql, false, mockTableMetaData, mockConnection);
+        final PreparedStatement result = provider.createPreparedStatementUsingConnection(mockPreparedSql, mockConnection);
 
         // Then
         assertNotNull(result);

@@ -1,14 +1,16 @@
 package org.litebridge.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.ConditionClause;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.model.ConditionSpec;
-import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.api.select.ast.ConditionNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngine;
+import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,14 +24,22 @@ public class ConditionClauseImpl<DTO,
 
         implements ConditionClause<DTO, SELF, CCT> {
 
-    private final ConditionSpec conditionSpec;
-    private final CCT conditionTerminal;
     private final LitebridgeContext litebridgeContext;
+    private final Function<QueryNode, CCT> terminalRecreator;
+    private final LogicOperator logicOperator;
+    private final ExpressionSpec lhs;
+    private final @Nullable QueryNode node;
 
-    public ConditionClauseImpl(final ConditionSpec conditionSpec, final CCT conditionTerminal, final LitebridgeContext litebridgeContext) {
-        this.conditionSpec = conditionSpec;
-        this.conditionTerminal = conditionTerminal;
+    public ConditionClauseImpl(final LitebridgeContext litebridgeContext,
+                               final LogicOperator logicOperator,
+                               final ExpressionSpec lhs,
+                               final @Nullable QueryNode node,
+                               final Function<QueryNode, CCT> terminalRecreator) {
         this.litebridgeContext = litebridgeContext;
+        this.logicOperator = logicOperator;
+        this.lhs = lhs;
+        this.node = node;
+        this.terminalRecreator = terminalRecreator;
     }
 
     /**
@@ -40,6 +50,11 @@ public class ConditionClauseImpl<DTO,
      */
     public CCT eq(final @Nullable Object value) {
         return condition(Operator.EQ, value);
+    }
+
+    public CCT using(final String column) {
+        final QueryNode newNode = new ConditionNode(node, LogicOperator.NOOP, null, Operator.USING, column);
+        return terminalRecreator.apply(newNode);
     }
 
     /**
@@ -235,7 +250,8 @@ public class ConditionClauseImpl<DTO,
             throw new NullPointerException("Operator " + operator + " requires a non-NULL RHS value");
         }
 
-        return condition(operator, createSelectSpec(subselect));
+        final SelectTerminal<?> selectTerminal = subselect.apply(new SelectEngine(litebridgeContext.fromClauseEngine()));
+        return condition(operator, selectTerminal);
     }
 
     /**
@@ -246,7 +262,6 @@ public class ConditionClauseImpl<DTO,
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
     private CCT condition(final Operator operator, @Nullable final Object value) {
-        conditionSpec.setValue(value);
         final Operator translatedOperator;
 
         if (value == null) {
@@ -261,21 +276,8 @@ public class ConditionClauseImpl<DTO,
             translatedOperator = operator;
         }
 
-        conditionSpec.setOperator(translatedOperator);
-        return conditionTerminal;
-    }
+        final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value);
 
-    private SelectSpec createSelectSpec(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
-        final SelectTerminal<?> selectTerminal = Objects.requireNonNull(subselect, "Subselect cannot be null")
-                .apply(new SelectEngine(litebridgeContext.fromClauseEngine()));
-        return getSelectSpec(selectTerminal);
-    }
-
-    private SelectSpec getSelectSpec(final SelectTerminal<?> selectTerminal) {
-        if (selectTerminal instanceof AbstractWhereClauseTerminal<?, ?, ?, ?, ?, ?, ?> terminal) {
-            return terminal.delegate.selectSpec();
-        } else {
-            throw new IllegalArgumentException("Unsupported terminal: " + selectTerminal);
-        }
+        return terminalRecreator.apply(conditionNode);
     }
 }

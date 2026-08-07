@@ -5,6 +5,8 @@ import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.select.FromClauseStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridge.orm.api.select.SelectApi;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.expression.ExpressionModifier;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -41,25 +43,25 @@ public class SelectEngine implements SelectApi {
 
     @Override
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        return new FromClauseStart(fromClauseEngine).from(dtoClass, relatedDtoStrategy);
+        return fromClauseEngine.from(new SelectNode(null, new ExpressionSpec[0], null), dtoClass, relatedDtoStrategy);
     }
 
     @Override
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
-        return new FromClauseStart(fromClauseEngine).from(dtoClass, contextDtoClass);
+        return new FromClauseStart(new SelectNode(null, new ExpressionSpec[0], null), fromClauseEngine).from(dtoClass, contextDtoClass);
     }
 
     @Override
     public FromClauseStart select(final String... fieldsOrColumns) {
-        return new FromClauseStart(Arrays.stream(fieldsOrColumns)
+        final ExpressionSpec[] expressionSpecs = Arrays.stream(fieldsOrColumns)
                 .map(fieldOrColumn -> new ProtoColumnExpressionSpec(SelectFieldSpec.class, fieldOrColumn, null))
-                .toArray(ProtoColumnExpressionSpec[]::new),
-                fromClauseEngine);
+                .toArray(ProtoColumnExpressionSpec[]::new);
+        return new FromClauseStart(new SelectNode(null, expressionSpecs, null), fromClauseEngine);
     }
 
     @Override
     public FromClauseStart select(final ExpressionSpec... expressions) {
-        return new FromClauseStart(expressions, fromClauseEngine);
+        return new FromClauseStart(new SelectNode(null, expressions, null), fromClauseEngine);
     }
 
     @Override
@@ -69,11 +71,11 @@ public class SelectEngine implements SelectApi {
             case ExpressionModifier expressionModifier -> expressionModifier.toExpression();
         }};
 
-        return new FromClauseStartTypeOverride<>(expression.returnType(), expressionSpecs, fromClauseEngine);
+        return new FromClauseStartTypeOverride<>(expression.returnType(), new SelectNode(null, expressionSpecs, expression.returnType()), fromClauseEngine);
     }
 
     @Override
     public FromClauseStart select() {
-        return new FromClauseStart(fromClauseEngine);
+        return new FromClauseStart(new SelectNode(null, new ExpressionSpec[0], null), fromClauseEngine);
     }
 }

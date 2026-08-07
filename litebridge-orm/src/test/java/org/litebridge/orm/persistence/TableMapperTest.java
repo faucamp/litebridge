@@ -10,6 +10,7 @@ import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.tracking.ChangeTracker;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
@@ -38,8 +39,9 @@ class TableMapperTest {
         TableRegistry tableRegistry = (TableRegistry) org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "tableRegistry", TableRegistry.class);
         ChangeTracker changeTracker = (ChangeTracker) org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "changeTracker", ChangeTracker.class);
         TransactionalDatabaseProvider transactionalDatabaseProvider = (TransactionalDatabaseProvider) org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "databaseProvider", TransactionalDatabaseProvider.class);
+        TableMetaDataCache tableMetaDataCache = (TableMetaDataCache) org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "tableMetaDataCache", TableMetaDataCache.class);
 
-        tableMapper = new TableMapper(transactionalDatabaseProvider, tableRegistry, changeTracker);
+        tableMapper = new TableMapper(transactionalDatabaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
     }
 
     @Test

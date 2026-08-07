@@ -4,7 +4,6 @@ import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.oracle.function.OracleSqlFunctionRegistryFactory;
 import org.litebridge.db.oracle.sql.OracleSelectSqlGenerator;
 import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
@@ -17,6 +16,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -60,14 +60,14 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider {
     }
 
     @Override
-    protected Map<ColumnMetaData, Object> extractGeneratedKeys(final TableMetaData tableMetaData, final PreparedStatement preparedStatement) throws SQLException {
-        final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(tableMetaData.primaryKey().size());
+    protected Map<ColumnMetaData, Object> extractGeneratedKeys(final List<ColumnMetaData> generatedPrimaryKeys, final PreparedStatement preparedStatement) throws SQLException {
+        final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(generatedPrimaryKeys.size());
         final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
 
         if (generatedKeysResultSet.next()) {
             int generatedKeyIndex = 1;
 
-            for (ColumnMetaData pkColumn : tableMetaData.primaryKey()) {
+            for (ColumnMetaData pkColumn : generatedPrimaryKeys) {
                 final Object generatedId = generatedKeysResultSet.getObject(generatedKeyIndex++);
                 getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
                 generatedKeys.put(pkColumn, generatedId);

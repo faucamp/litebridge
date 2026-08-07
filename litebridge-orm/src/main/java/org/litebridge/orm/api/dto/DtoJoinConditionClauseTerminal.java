@@ -2,18 +2,22 @@ package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.select.JoinClauseTerminal;
+import org.litebridge.orm.api.select.ast.ConditionGroupNode;
+import org.litebridge.orm.api.select.ast.GroupByNode;
+import org.litebridge.orm.api.select.ast.JoinNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
-import org.litebridge.orm.api.select.model.GroupBySpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
+
+import java.util.function.Function;
 
 /**
  * Represents the terminal part of a JOIN condition clause in a DTO-based query.
@@ -47,26 +51,23 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         DtoJoinClassTerminal<DTO> {
 
     private final OrmTable ormTable;
-    private final AliasGenerator aliasGenerator;
     private final TableRegistry tableRegistry;
 
     /**
      * Creates a new instance of {@code DtoJoinConditionClauseTerminal}.
      *
-     * @param joinSpec the join specification
+     * @param joinNode
      * @param delegate the selector delegate
-     * @param aliasGenerator the alias generator
      */
-    public DtoJoinConditionClauseTerminal(final DtoJoinSpec joinSpec, final DtoSelector<DTO> delegate, final AliasGenerator aliasGenerator) {
-        super(joinSpec, delegate);
-        this.ormTable = delegate.table();
-        this.aliasGenerator = aliasGenerator;
+    public DtoJoinConditionClauseTerminal(final JoinNode joinNode, final DtoSelector<DTO> delegate) {
+        super(joinNode, delegate);
+        this.ormTable = delegate.ormTable();
         this.tableRegistry = delegate.tableRegistry();
     }
 
     @Override
     public DtoJoinConditionClause<DTO> and(final String field) {
-        final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), ormTable.getColumnForFieldName(field));
+        final Column column = ormTable.getColumnForFieldName(field).toColumn();
         return and(new SelectColumnSpec(column));
     }
 
@@ -82,7 +83,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoJoinConditionClause<DTO> or(final String field) {
-        final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), ormTable.getColumnForFieldName(field));
+        final Column column = ormTable.getColumnForFieldName(field).toColumn();
         return or(new SelectColumnSpec(column));
     }
 
@@ -98,13 +99,13 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoWhereConditionClause<DTO> where(final String field) {
-        final Column column = aliasGenerator.aliasColumn(selectSpec.getTable(), ormTable.getColumnForFieldName(field));
+        final Column column = ormTable.getColumnForFieldName(field).toColumn();
         return where(new SelectColumnSpec(column));
     }
 
     @Override
     public DtoWhereConditionClause<DTO> where(final ExpressionSpec expression) {
-        return whereImpl(LogicOperator.NOOP, expression);
+        return whereImpl(LogicOperator.NOOP, expression, (DtoSelector<DTO>) delegate);
     }
 
 
@@ -121,46 +122,59 @@ public final class DtoJoinConditionClauseTerminal<DTO>
             joinTable = tableRegistry.getTableOrThrow(dtoClass);
         }
 
-        return new DtoJoinClause<>(dtoClass, joinTable, (DtoSelector<DTO>) delegate);
+        return new DtoJoinClause<>((DtoSelector<DTO>) delegate, joinTable, node -> {
+            final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+            joinNode.withCondition(node);
+            delegate.withNode(joinNode);
+            return new DtoJoinConditionClauseTerminal<>(joinNode, (DtoSelector<DTO>) delegate);
+        });
     }
 
     @Override
     public DtoGroupByClauseTerminal<DTO> groupBy(final String... fields) {
-        selectSpec.setGroupBy(new GroupBySpec(selectSpec.createSelectFieldSpecs(fields)));
-        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate);
+        return groupBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
     }
 
     @Override
     public DtoGroupByClauseTerminal<DTO> groupBy(final ExpressionSpec... fields) {
-        selectSpec.setGroupBy(new GroupBySpec(fields));
-        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate);
+        final QueryNode groupByNode = new GroupByNode(delegate.node(), fields);
+        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(groupByNode));
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(selectSpec.createSelectFieldSpecs(fields)), (DtoSelector<DTO>) delegate);
+        return orderBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(fields), (DtoSelector<DTO>) delegate);
+        return new DtoOrderByClause<>(fields, (DtoSelector<DTO>) delegate);
     }
 
     private DtoJoinConditionClause<DTO> joinImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
-        return new DtoJoinConditionClause<>(conditionSpec, this, delegate.litebridgeContext());
+        final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> recreator = n -> {
+            joinNode.withCondition(n);
+            return this;
+        };
+        return new DtoJoinConditionClause<>(delegate.litebridgeContext(), logicOperator, expression, joinNode.condition(), recreator);
     }
 
-    private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = selectSpec.currentWhereConditionGroupSpec().newCondition(logicOperator, expression);
-        return new DtoWhereConditionClause<>(conditionSpec, new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate), delegate.litebridgeContext());
+    private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression, final DtoSelector<DTO> newDelegate) {
+        return new DtoWhereConditionClause<>(delegate.litebridgeContext(),
+                logicOperator,
+                expression,
+                null,
+                node -> new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new WhereNode(delegate.node(), node))));
     }
 
     private DtoJoinConditionClauseTerminal<DTO> joinImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        final ConditionGroupSpec subgroup = joinSpec.pushConditionGroupSpec(logicOperator);
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, joinSpec.dtoTable(), delegate.litebridgeContext().fromClauseEngine());
-        query.apply(conditionClauseStart);
-        joinSpec.popConditionGroupSpec();
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
+        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        final QueryNode conditionNode = terminal.node();
+
+        final ConditionGroupNode groupNode = new ConditionGroupNode(joinNode.condition(), logicOperator, conditionNode);
+        joinNode.withCondition(groupNode);
+
         return this;
     }
 }

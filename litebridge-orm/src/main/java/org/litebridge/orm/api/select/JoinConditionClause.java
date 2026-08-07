@@ -17,4 +17,11 @@ public interface JoinConditionClause<DTO,
 
         extends ConditionClause<DTO, SELF, JCCT> {
 
+    /**
+     * Join using a specific column.
+     *
+     * @param column the column name
+     * @return the join condition clause terminal
+     */
+    JCCT using(String column);
 }

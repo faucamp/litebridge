@@ -3,6 +3,7 @@ package org.litebridge.orm.expression;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.expression.SelectReference;

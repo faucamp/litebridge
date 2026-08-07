@@ -5,6 +5,7 @@ import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.e2e.AbstractE2eTest;
+import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.basic.dto.Person;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.expression.Fn;
@@ -74,7 +75,8 @@ class SqlE2eTest extends AbstractE2eTest {
         final List<Row> result =
                 litebridge.select(tableMapper.transformColumnName("FIRST_NAME"),
                                 tableMapper.transformColumnName("SURNAME"),
-                                tableMapper.transformColumnName("AGE")).from(personTableName)
+                                tableMapper.transformColumnName("AGE"))
+                        .from(personTableName)
                         .where(tableMapper.transformColumnName("AGE")).gt(18)
                         .and(tableMapper.transformColumnName("AGE")).lt(25)
                         .list();

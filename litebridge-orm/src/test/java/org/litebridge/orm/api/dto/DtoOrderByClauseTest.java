@@ -46,11 +46,10 @@ class DtoOrderByClauseTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class));
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class), null);
         final SelectFieldSpec selectFieldSpec = new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn());
-        final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectFieldSpec));
 
-        final DtoOrderByClause<TestDto> dtoDtoOrderByClause = new DtoOrderByClause<>(orderBySpec, dtoSelector);
+        final DtoOrderByClause<TestDto> dtoDtoOrderByClause = new DtoOrderByClause<>(new SelectFieldSpec[]{selectFieldSpec}, dtoSelector);
 
         // When
         final DtoOrderByClauseChain<TestDto> result = dtoDtoOrderByClause.asc();
@@ -74,11 +73,10 @@ class DtoOrderByClauseTest {
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class));
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class), null);
         final SelectFieldSpec selectFieldSpec = new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn());
-        final OrderBySpec orderBySpec = new OrderBySpec(List.of(selectFieldSpec));
 
-        final DtoOrderByClause<TestDto> dtoDtoOrderByClause = new DtoOrderByClause<>(orderBySpec, dtoSelector);
+        final DtoOrderByClause<TestDto> dtoDtoOrderByClause = new DtoOrderByClause<>(new SelectFieldSpec[]{selectFieldSpec}, dtoSelector);
 
         // When
         final DtoOrderByClauseChain<TestDto> result = dtoDtoOrderByClause.desc();

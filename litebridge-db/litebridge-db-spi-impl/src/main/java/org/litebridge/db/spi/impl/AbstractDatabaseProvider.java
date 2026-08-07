@@ -8,14 +8,12 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
-import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.expression.ConvertExpression;
-import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
@@ -25,6 +23,7 @@ import org.litebridge.db.spi.impl.sql.InsertSqlGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.impl.sql.UpdateSqlGenerator;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
@@ -47,6 +46,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,222 +128,34 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public InsertResult insert(final Insert insert, final ConnectionProvider connectionProvider) throws SQLException {
-        final PreparedSql preparedSql = insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider);
-        final TableMetaData tableMetaData = ensureTableMetaData(insert.table(), connectionProvider);
-        return executeSqlInsert(preparedSql, tableMetaData, insert.returnGeneratedKeys(), connectionProvider);
+    public InsertResult insert(final PreparedSql insert, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeSqlInsert(insert, connectionProvider);
     }
 
     @Override
-    public UpdateResult update(final Update update, final ConnectionProvider connectionProvider) throws SQLException {
-        final PreparedSql preparedSql = updateSqlGenerator.orThrow().prepareSql(update, connectionProvider);
-        final TableMetaData tableMetaData = ensureTableMetaData(update.table(), connectionProvider);
-        return executeSqlUpdate(preparedSql, tableMetaData, connectionProvider);
+    public UpdateResult update(final PreparedSql update, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeSqlUpdate(update, connectionProvider);
     }
 
     @Override
-    public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeSqlQuery(select, connectionProvider);
+    public UpdateResult delete(final PreparedSql delete, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeSqlUpdate(delete, connectionProvider);
     }
 
     @Override
-    public UpdateResult delete(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
-        final PreparedSql preparedSql = deleteSqlGenerator.orThrow().prepareSql(delete, connectionProvider);
-        final TableMetaData tableMetaData = ensureTableMetaData(delete.table(), connectionProvider);
-        return executeSqlUpdate(preparedSql, tableMetaData, connectionProvider);
-    }
+    public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        final Map<String, ColumnMetaData> columnLabelsToColumnMetaData;
+        final Class<?>[] typeOverrides;
 
-    @Override
-    public TypeConverter getTypeConverter() {
-        return typeConverter;
-    }
-
-    @Override
-    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
-        return new DefaultSequenceColumnValueGenerator(sequence);
-    }
-
-    @Override
-    public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
-        return switch (operation) {
-            case Select select -> selectSqlGenerator.orThrow().prepareSql(select, connectionProvider).sql();
-            case Insert insert -> insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider).sql();
-            case Update update -> updateSqlGenerator.orThrow().prepareSql(update, connectionProvider).sql();
-            case Delete delete -> deleteSqlGenerator.orThrow().prepareSql(delete, connectionProvider).sql();
-        };
-    }
-
-    @Override
-    public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, ConnectionProvider connectionProvider) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareNativeStatement(sql, bindParameters, false, connectionProvider)) {
-            // Execute SQL query
-            final ResultSet resultSet = preparedStatement.executeQuery();
-
-            // Parse results
-            final List<Row> rows = new ArrayList<>();
-
-            while (resultSet.next()) {
-                final Row row = new Row();
-                final int columnCount = resultSet.getMetaData().getColumnCount();
-
-                for (int i = 1; i <= columnCount; i++) {
-                    final String schemaName = resultSet.getMetaData().getSchemaName(i);
-                    final String tableName = resultSet.getMetaData().getTableName(i);
-                    final String columnName = resultSet.getMetaData().getColumnName(i);
-                    final String columnAlias = resultSet.getMetaData().getColumnLabel(i);
-                    final int columnSqlType = resultSet.getMetaData().getColumnType(i);
-
-                    final Table table = new Table(null, schemaName, tableName);
-                    final Column column = new Column(table, columnName, columnAlias);
-
-                    final Object value = typeConverter.convert(resultSet.getObject(i), columnSqlType);
-                    row.withColumn(column, value);
-                }
-
-                rows.add(row);
-            }
-
-            return rows;
-        }
-    }
-
-    @Override
-    public UpdateResult nativeSqlUpdate(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareNativeStatement(sql, bindParameters, false, connectionProvider)) {
-            final int updateCount = preparedStatement.executeUpdate();
-            return new UpdateResult(updateCount);
-        }
-    }
-
-    @Override
-    public SqlFunctionRegistry getSqlFunctionRegistry() {
-        return sqlFunctionRegistry.orThrow();
-    }
-
-    @Override
-    public AliasTransformer getAliasTransformer() {
-        return aliasTransformer.orThrow();
-    }
-
-    /**
-     * Execute a SQL INSERT operation using the provided prepared SQL statement and table metadata.
-     * <p>
-     * This method executes the prepared statement, retrieves any generated primary key values,
-     * and wraps the results in an {@link InsertResult} object.
-     *
-     * @param preparedSql         the {@link PreparedSql} object containing the SQL query string and bind values to be executed
-     * @param tableMetaData       the {@link TableMetaData} object containing the metadata of the target table, including primary key information
-     * @param returnGeneratedKeys a boolean indicating whether the statement should return generated keys.
-     *                            Pass {@code true} to configure the statement to return generated keys,
-     *                            or {@code false} otherwise.
-     * @param connectionProvider  the {@link ConnectionProvider} used to obtain a database connection.
-     * @return an {@link InsertResult} object encapsulating the number of affected rows and a list of generated keys (if any)
-     * @throws SQLException if an error occurs while executing the SQL insert or retrieving the generated keys
-     */
-    protected InsertResult executeSqlInsert(final PreparedSql preparedSql, final TableMetaData tableMetaData, final boolean returnGeneratedKeys, final ConnectionProvider connectionProvider) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, returnGeneratedKeys, tableMetaData, connectionProvider)) {
-            final int affectedRows = preparedStatement.executeUpdate();
-
-            if (returnGeneratedKeys && affectedRows > 0) {
-                final Map<ColumnMetaData, Object> generatedKeys = extractGeneratedKeys(tableMetaData, preparedStatement);
-                return new InsertResult(affectedRows, generatedKeys);
-            } else {
-                return new InsertResult(affectedRows);
-            }
-        }
-    }
-
-    /**
-     * Get the primary key columns for which the database generates values.
-     *
-     * @param tableMetaData the {@link TableMetaData} object containing the metadata of the target table
-     * @return a list of {@link ColumnMetaData} objects representing the generated primary key columns
-     */
-    protected List<ColumnMetaData> getGeneratedPrimaryKeyColumns(final TableMetaData tableMetaData) {
-        return tableMetaData.primaryKey().stream()
-                .filter(columnMetadata -> columnMetadata.isAutoIncrement()
-                        || (columnMetadata.getGenerator() != null && SequenceColumnValueGenerator.class.isAssignableFrom(columnMetadata.getGenerator().getClass())))
-                .toList();
-    }
-
-    /**
-     * Extract the generated primary key values from the provided prepared statement.
-     *
-     * @param tableMetaData     the {@link TableMetaData} object containing the metadata of the target table
-     * @param preparedStatement the executed {@link PreparedStatement} containing any generated keys
-     * @return a map of {@link ColumnMetaData} to the generated key value
-     * @throws SQLException if an error occurs while retrieving the generated keys
-     */
-    protected Map<ColumnMetaData, Object> extractGeneratedKeys(final TableMetaData tableMetaData, final PreparedStatement preparedStatement) throws SQLException {
-        final List<ColumnMetaData> generatedPrimaryKeys = getGeneratedPrimaryKeyColumns(tableMetaData);
-        final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(tableMetaData.primaryKey().size());
-
-        try (final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys()) {
-            while (generatedKeysResultSet.next()) {
-                for (ColumnMetaData pkColumn : generatedPrimaryKeys) {
-                    final Object generatedId = generatedKeysResultSet.getObject(pkColumn.name());
-                    getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
-                    generatedKeys.put(pkColumn, generatedId);
-                }
-            }
-
-            return generatedKeys;
-        }
-    }
-
-    /**
-     * Execute a SQL UPDATE operation using the provided prepared SQL statement and table metadata.
-     * <p>
-     * This method performs the execution of a prepared update statement and wraps the number
-     * of affected rows in an {@link UpdateResult} object.
-     *
-     * @param preparedSql        the {@link PreparedSql} object containing the SQL query string and bind values to be executed
-     * @param tableMetaData      the {@link TableMetaData} object containing the metadata of the target table
-     * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
-     * @return an {@link UpdateResult} object encapsulating the number of rows affected by the update operation
-     * @throws SQLException if an error occurs while executing the SQL update
-     */
-    protected UpdateResult executeSqlUpdate(final PreparedSql preparedSql, final TableMetaData tableMetaData, final ConnectionProvider connectionProvider) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false, tableMetaData, connectionProvider)) {
-            final int affectedRows = preparedStatement.executeUpdate();
-            return new UpdateResult(affectedRows);
-        }
-    }
-
-    /**
-     * Execute the given SQL query with specified expressions, conditions, and table, and returns the result as a list of rows.
-     *
-     * @param select             the SQL select query to be executed
-     * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
-     * @return a list of {@code Row} objects representing the query results
-     * @throws SQLException if an SQL error occurs while executing the query
-     */
-    private List<Row> executeSqlQuery(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
-        final PreparedSql preparedSql = selectSqlGenerator.orThrow().prepareSql(select, connectionProvider);
-        final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.expressions().size());
-        final Class<?>[] typeOverrides = new Class<?>[select.expressions().size()];
-
-        for (int i = 0; i < select.expressions().size(); i++) {
-            SelectExpression expression = select.expressions().get(i);
-
-            if (expression instanceof ConvertExpression convertExpression) {
-                typeOverrides[i] = convertExpression.typeOverride();
-                // Process the nested expression (in case it targets a column)
-                expression = convertExpression.target();
-            }
-
-            if (expression instanceof ColumnExpression columnExpression) {
-                final Column column = columnExpression.column();
-                final String key = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(column.alias() != null ? column.alias() : column.name()));
-                final TableMetaData table = ensureTableMetaData(column.table(), connectionProvider);
-                final ColumnMetaData columnMetaData = table.column(column.name());
-                columnLabelsToColumnMetaData.put(key, columnMetaData);
-            }
+        if (preparedSql.typeConversionMetaData() != null) {
+            columnLabelsToColumnMetaData = preparedSql.typeConversionMetaData().columnLabelsToColumnMetaData();
+            typeOverrides = preparedSql.typeConversionMetaData().typeOverrides();
+        } else {
+            columnLabelsToColumnMetaData = Collections.emptyMap();
+            typeOverrides = new Class<?>[0];
         }
 
-        final TableMetaData fromTable = ensureTableMetaData(select.table(), connectionProvider);
-
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, false, fromTable, connectionProvider)) {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, connectionProvider)) {
             // Execute SQL query
             final ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -396,6 +208,146 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             return rows;
         }
     }
+
+    @Override
+    public TypeConverter getTypeConverter() {
+        return typeConverter;
+    }
+
+    @Override
+    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
+        return new DefaultSequenceColumnValueGenerator(sequence);
+    }
+
+    @Override
+    public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
+        return switch (operation) {
+            case Select select -> selectSqlGenerator.orThrow().prepareSql(select, connectionProvider);
+            case Insert insert -> insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider);
+            case Update update -> updateSqlGenerator.orThrow().prepareSql(update, connectionProvider);
+            case Delete delete -> deleteSqlGenerator.orThrow().prepareSql(delete, connectionProvider);
+        };
+    }
+
+    @Override
+    public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, ConnectionProvider connectionProvider) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareNativeStatement(sql, bindParameters, false, connectionProvider)) {
+            // Execute SQL query
+            final ResultSet resultSet = preparedStatement.executeQuery();
+
+            // Parse results
+            final List<Row> rows = new ArrayList<>();
+
+            while (resultSet.next()) {
+                final Row row = new Row();
+                final int columnCount = resultSet.getMetaData().getColumnCount();
+
+                for (int i = 1; i <= columnCount; i++) {
+                    final String schemaName = resultSet.getMetaData().getSchemaName(i);
+                    final String tableName = resultSet.getMetaData().getTableName(i);
+                    final String columnName = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(resultSet.getMetaData().getColumnName(i)));
+                    final String columnAlias = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(resultSet.getMetaData().getColumnLabel(i)));
+                    final int columnSqlType = resultSet.getMetaData().getColumnType(i);
+
+                    final Table table = new Table(null, schemaName, tableName);
+                    final Column column = new Column(table, columnName, columnAlias);
+
+                    final Object value = typeConverter.convert(resultSet.getObject(i), columnSqlType);
+                    row.withColumn(column, value);
+                }
+
+                rows.add(row);
+            }
+
+            return rows;
+        }
+    }
+
+    @Override
+    public UpdateResult nativeSqlUpdate(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareNativeStatement(sql, bindParameters, false, connectionProvider)) {
+            final int updateCount = preparedStatement.executeUpdate();
+            return new UpdateResult(updateCount);
+        }
+    }
+
+    @Override
+    public SqlFunctionRegistry getSqlFunctionRegistry() {
+        return sqlFunctionRegistry.orThrow();
+    }
+
+    @Override
+    public AliasTransformer getAliasTransformer() {
+        return aliasTransformer.orThrow();
+    }
+
+    /**
+     * Execute a SQL INSERT operation using the provided prepared SQL statement and table metadata.
+     * <p>
+     * This method executes the prepared statement, retrieves any generated primary key values,
+     * and wraps the results in an {@link InsertResult} object.
+     *
+     * @param preparedSql         the {@link PreparedSql} object containing the SQL query string and bind values to be executed
+     * @param connectionProvider  the {@link ConnectionProvider} used to obtain a database connection.
+     * @return an {@link InsertResult} object encapsulating the number of affected rows and a list of generated keys (if any)
+     * @throws SQLException if an error occurs while executing the SQL insert or retrieving the generated keys
+     */
+    protected InsertResult executeSqlInsert(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, connectionProvider)) {
+            final int affectedRows = preparedStatement.executeUpdate();
+            final UpdateMetaData updateMetaData = Objects.requireNonNull(preparedSql.updateMetaData());
+
+            if (updateMetaData.returnGeneratedKeys() && affectedRows > 0) {
+                final Map<ColumnMetaData, Object> generatedKeys = extractGeneratedKeys(updateMetaData.generatedKeys(), preparedStatement);
+                return new InsertResult(affectedRows, generatedKeys);
+            } else {
+                return new InsertResult(affectedRows);
+            }
+        }
+    }
+
+    /**
+     * Extract the generated primary key values from the provided prepared statement.
+     *
+     * @param generatedPrimaryKeys the list of {@link ColumnMetaData} objects representing the generated primary key columns
+     * @param preparedStatement    the executed {@link PreparedStatement} containing any generated keys
+     * @return a map of {@link ColumnMetaData} to the generated key value
+     * @throws SQLException if an error occurs while retrieving the generated keys
+     */
+    protected Map<ColumnMetaData, Object> extractGeneratedKeys(final List<ColumnMetaData> generatedPrimaryKeys, final PreparedStatement preparedStatement) throws SQLException {
+        final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(generatedPrimaryKeys.size());
+
+        try (final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys()) {
+            while (generatedKeysResultSet.next()) {
+                for (ColumnMetaData pkColumn : generatedPrimaryKeys) {
+                    final Object generatedId = generatedKeysResultSet.getObject(pkColumn.name());
+                    getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
+                    generatedKeys.put(pkColumn, generatedId);
+                }
+            }
+
+            return generatedKeys;
+        }
+    }
+
+    /**
+     * Execute a SQL UPDATE operation using the provided prepared SQL statement and table metadata.
+     * <p>
+     * This method performs the execution of a prepared update statement and wraps the number
+     * of affected rows in an {@link UpdateResult} object.
+     *
+     * @param preparedSql        the {@link PreparedSql} object containing the SQL query string and bind values to be executed
+     * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
+     * @return an {@link UpdateResult} object encapsulating the number of rows affected by the update operation
+     * @throws SQLException if an error occurs while executing the SQL update
+     */
+    protected UpdateResult executeSqlUpdate(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, connectionProvider)) {
+            final int affectedRows = preparedStatement.executeUpdate();
+            return new UpdateResult(affectedRows);
+        }
+    }
+
 
     /**
      * Retrieve column metadata for the specified table.
@@ -498,18 +450,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * <p>
      * Optionally, the statement can be configured to return generated keys.
      *
-     * @param preparedSql         the {@link PreparedSql} object containing the SQL query and associated bind values.
-     * @param returnGeneratedKeys a boolean indicating whether the statement should return generated keys.
-     *                            Pass {@code true} to configure the statement to return generated keys,
-     *                            or {@code false} otherwise.
-     * @param tableMetaData       Meta-data for the current table
-     * @param connectionProvider  the {@link ConnectionProvider} used to obtain a database connection.
+     * @param preparedSql        the {@link PreparedSql} object containing the SQL query and associated bind values.
+     * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
      * @return a {@link PreparedStatement} that is ready to be executed based on the provided SQL and bind values.
      * @throws SQLException if a database access error occurs or the preparation of the SQL statement fails.
      */
     protected PreparedStatement prepareStatement(final PreparedSql preparedSql,
-                                                 final boolean returnGeneratedKeys,
-                                                 final @Nullable TableMetaData tableMetaData,
                                                  final ConnectionProvider connectionProvider) throws SQLException {
         if (getLogger().isTraceEnabled() && !CollectionUtils.isEmpty(preparedSql.bindValues())) {
             getLogger().trace("Generated SQL: {} with bind parameters: {}", preparedSql.sql(), preparedSql.bindValues().stream()
@@ -521,7 +467,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         }
 
         final ManagedConnection connection = connectionProvider.connection();
-        final PreparedStatement preparedStatement = createPreparedStatementUsingConnection(preparedSql, returnGeneratedKeys, tableMetaData, connection);
+        final PreparedStatement preparedStatement = createPreparedStatementUsingConnection(preparedSql, connection);
 
         final int[] ordinal = {1};
 
@@ -618,19 +564,21 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     /**
      * Creates a {@link PreparedStatement} using the provided connection and prepared SQL.
      *
-     * @param preparedSql         the SQL and bind values to use
-     * @param returnGeneratedKeys whether to return generated keys
-     * @param tableMetaData       the metadata for the table, required if returnGeneratedKeys is true
-     * @param connection          the connection to use for preparing the statement
+     * @param preparedSql the SQL and bind values to use
+     * @param connection  the connection to use for preparing the statement
      * @return the created prepared statement
      * @throws SQLException if a database access error occurs
      */
     protected PreparedStatement createPreparedStatementUsingConnection(final PreparedSql preparedSql,
-                                                                       final boolean returnGeneratedKeys,
-                                                                       final @Nullable TableMetaData tableMetaData,
                                                                        final ManagedConnection connection) throws SQLException {
-        if (returnGeneratedKeys) {
-            final String[] generatedKeyNames = getGeneratedPrimaryKeyColumns(Objects.requireNonNull(tableMetaData, "No table metadata provided")).stream()
+        final UpdateMetaData updateMetaData = preparedSql.updateMetaData();
+
+        if (updateMetaData == null) {
+            return connection.prepareStatement(preparedSql.sql());
+        }
+
+        if (updateMetaData.returnGeneratedKeys()) {
+            final String[] generatedKeyNames = updateMetaData.generatedKeys().stream()
                     .map(ColumnMetaData::name)
                     .toArray(String[]::new);
 

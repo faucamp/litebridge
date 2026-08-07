@@ -22,5 +22,4 @@ public abstract class AbstractWhereClauseTerminal<DTO,
     public AbstractWhereClauseTerminal(final AbstractSelector<DTO, SSP> delegate) {
         super(delegate);
     }
-
 }

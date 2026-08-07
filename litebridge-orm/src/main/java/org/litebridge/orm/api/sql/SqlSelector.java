@@ -3,29 +3,51 @@ package org.litebridge.orm.api.sql;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.Table;
+import org.litebridge.orm.api.select.ast.LimitNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
 
     private final TableRegistry tableRegistry;
+    private final Table table;
 
-    public SqlSelector(final TransactionalDatabaseProvider databaseProvider,
+    public SqlSelector(final Table table,
+                       final TransactionalDatabaseProvider databaseProvider,
                        final TableRegistry tableRegistry,
-                       final LitebridgeContext litebridgeContext) {
-        super(new SqlSelectSpec(litebridgeContext), databaseProvider, Row.class, litebridgeContext);
+                       final LitebridgeContext litebridgeContext,
+                       final QueryNode node) {
+        super(databaseProvider, tableRegistry, Row.class, litebridgeContext, node);
         this.tableRegistry = tableRegistry;
+        this.table = table;
+    }
+
+    @Override
+    protected SqlSelectSpec createSelectSpec(final AliasGenerator aliasGenerator) {
+        final SqlSelectSpec selectSpec = new SqlSelectSpec(litebridgeContext, table);
+        selectSpec.setProtoExpressionResolver(new SqlProtoExpressionResolver(selectSpec));
+        return selectSpec;
     }
 
     public SqlFromClause select(final ExpressionSpec... expressionSpecs) {
-        selectSpec.addExpressions(Arrays.asList(expressionSpecs));
-        return new SqlFromClause(selectSpec, tableRegistry, this);
+        final QueryNode selectNode = new SelectNode(node, expressionSpecs, null);
+        return new SqlFromClause(withNode(selectNode));
+    }
+
+    @Override
+    public SqlSelector withNode(final QueryNode node) {
+        this.node = node;
+        return this;
     }
 
     @Override
@@ -43,18 +65,14 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
         return executeQuery();
     }
 
-    @Override
-    protected List<Row> executeQuery() {
-        return executeQuery(selectSpec);
-    }
-
     private @Nullable Row fetchOneRecord(final boolean first) {
-        if (first) {
-            // Set LIMIT since we are only interested in the first record
-            selectSpec.ensureLimit().setLimit(1);
-        }
+        final List<Row> resultList;
 
-        final List<Row> resultList = executeQuery();
+        if (first) {
+            resultList = withNode(new LimitNode(node, Optional.of(1), Optional.empty())).executeQuery();
+        } else {
+            resultList = executeQuery();
+        }
 
         if (CollectionUtils.isEmpty(resultList)) {
             return null;
@@ -65,5 +83,9 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
         }
 
         return resultList.getFirst();
+    }
+
+    Table table() {
+        return table;
     }
 }

@@ -2,17 +2,23 @@ package org.litebridge.orm.api.dto.delete;
 
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.delete.impl.AbstractDeletor;
 import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
+import org.litebridge.orm.api.select.ConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.ConditionGroupNode;
+import org.litebridge.orm.api.select.ast.DeleteNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+
+import java.util.function.Function;
 
 /**
  * Executor for DTO delete operations.
@@ -26,18 +32,18 @@ public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implem
     /**
      * Creates a new DtoDeletor.
      *
-     * @param dtoClass                the DTO class
-     * @param dtoTable                the DTO table
-     * @param databaseProvider        the database provider
+     * @param dtoClass               the DTO class
+     * @param dtoTable               the DTO table
+     * @param databaseProvider       the database provider
      * @param selectExpressionMapper the select expression mapper
-     * @param litebridgeContext       the Litebridge context
+     * @param litebridgeContext      the Litebridge context
      */
     public DtoDeletor(final Class<DTO> dtoClass,
                       final OrmTable dtoTable,
                       final TransactionalDatabaseProvider databaseProvider,
                       final SelectExpressionMapper selectExpressionMapper,
                       final LitebridgeContext litebridgeContext) {
-        super(new DtoDeleteSpec(dtoClass, dtoTable, selectExpressionMapper), databaseProvider);
+        super(new DtoDeleteSpec(dtoClass, dtoTable, selectExpressionMapper), databaseProvider, litebridgeContext, new DeleteNode(null, dtoTable.getMetaData().toTable()));
         this.litebridgeContext = litebridgeContext;
     }
 
@@ -57,15 +63,21 @@ public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implem
     }
 
     DtoDeleteWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = deleteSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
-        return new DtoDeleteWhereConditionClause<>(conditionSpec, new DtoDeleteWhereConditionClauseTerminalImpl<>(this), litebridgeContext);
+        final Function<QueryNode, DtoDeleteWhereConditionClauseTerminal<DTO>> recreator = n -> {
+            this.node = new WhereNode(this.node, n);
+            return new DtoDeleteWhereConditionClauseTerminalImpl<>(this);
+        };
+        return new DtoDeleteWhereConditionClause<>(litebridgeContext, logicOperator, expression, recreator);
     }
 
     DtoDeleteWhereConditionClauseTerminalImpl<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        final ConditionGroupSpec subgroup = deleteSpec.pushConditionGroupSpec(logicOperator);
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(subgroup, deleteSpec.dtoTable(), litebridgeContext.fromClauseEngine());
-        query.apply(conditionClauseStart);
-        deleteSpec.popConditionGroupSpec();
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(deleteSpec.dtoTable(), litebridgeContext.fromClauseEngine(), null);
+        final ConditionClauseTerminal<DTO, ?, ?> terminal = query.apply(conditionClauseStart);
+
+        if (terminal instanceof AbstractCbConditionClauseTerminal<?> act) {
+            this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, act.node()));
+        }
+
         return new DtoDeleteWhereConditionClauseTerminalImpl<>(this);
     }
 }

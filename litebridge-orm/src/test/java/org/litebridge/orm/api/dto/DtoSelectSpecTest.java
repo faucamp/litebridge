@@ -14,7 +14,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,26 +37,6 @@ class DtoSelectSpecTest {
         assertEquals(dtoClass, spec.dtoClass());
         assertEquals(ormTable, spec.dtoTable());
         assertEquals(table, spec.getTable());
-        assertNull(spec.typeOverride());
-    }
-
-    @Test
-    void constructorWithTypeOverride() {
-        // Given
-        final Class<?> dtoClass = TestDto.class;
-        final Class<?> typeOverride = String.class;
-        final OrmTable ormTable = mock(OrmTable.class);
-        final AliasGenerator aliasGenerator = new NoOpAliasGenerator();
-        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
-        final Table table = new Table("TEST_TABLE");
-        when(ormTable.dtoClass()).thenReturn((Class) dtoClass);
-        when(ormTable.getMetaData()).thenReturn(new org.litebridge.db.spi.TableMetaData(table, List.of(), List.of()));
-
-        // When
-        final DtoSelectSpec spec = new DtoSelectSpec(dtoClass, ormTable, aliasGenerator, litebridgeContext, typeOverride);
-
-        // Then
-        assertEquals(typeOverride, spec.typeOverride());
     }
 
     @Test
@@ -112,6 +91,9 @@ class DtoSelectSpecTest {
         assertEquals(1, fieldSpecs.size());
     }
 
-    private static class TestDto {}
-    private static class AnotherDto {}
+    private static class TestDto {
+    }
+
+    private static class AnotherDto {
+    }
 }

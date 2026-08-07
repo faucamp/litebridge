@@ -1,8 +1,8 @@
 package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.select.ast.HavingNode;
 import org.litebridge.orm.api.select.impl.AbstractGroupByClauseTerminal;
-import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
@@ -11,7 +11,7 @@ import org.litebridge.orm.persistence.OrmTable;
  *
  * @param <DTO> the type of the DTO
  */
-public class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal<DTO,
+public final class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal<DTO,
         DtoHavingConditionClause<DTO>,
         DtoHavingConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
@@ -27,24 +27,25 @@ public class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal
      */
     public DtoGroupByClauseTerminal(final DtoSelector<DTO> delegate) {
         super(delegate);
-        this.ormTable = delegate.table();
+        this.ormTable = delegate.ormTable();
     }
 
     @Override
     public DtoHavingConditionClause<DTO> having(final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = selectSpec.currentHavingConditionGroupSpec().newCondition(LogicOperator.NOOP, expression);
-        return new DtoHavingConditionClause<>(conditionSpec,
-                new DtoHavingConditionClauseTerminal<>((DtoSelector<DTO>) delegate),
-                delegate.litebridgeContext());
+        return new DtoHavingConditionClause<>(delegate.litebridgeContext(),
+                LogicOperator.NOOP,
+                expression,
+                null,
+                node -> new DtoHavingConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new HavingNode(delegate.node(), node))));
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(selectSpec.createSelectFieldSpecs(fields)), (DtoSelector<DTO>) delegate);
+        return orderBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
-        return new DtoOrderByClause<>(selectSpec.newOrderBy(fields), (DtoSelector<DTO>) delegate);
+        return new DtoOrderByClause<>(fields, (DtoSelector<DTO>) delegate);
     }
 }

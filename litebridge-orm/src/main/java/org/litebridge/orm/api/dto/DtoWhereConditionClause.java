@@ -1,12 +1,17 @@
 package org.litebridge.orm.api.dto;
 
+import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.WhereConditionClause;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.api.select.model.ConditionSpec;
+import org.litebridge.orm.expression.ExpressionSpec;
+
+import java.util.function.Function;
 
 /**
  * DTO where condition clause.
+ *
  * @param <DTO> the DTO type.
  */
 public final class DtoWhereConditionClause<DTO>
@@ -23,14 +28,11 @@ public final class DtoWhereConditionClause<DTO>
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 
-    /**
-     * Constructs a new {@code DtoWhereConditionClause}.
-     *
-     * @param conditionSpec     the condition specification.
-     * @param conditionTerminal the condition terminal.
-     * @param litebridgeContext the context.
-     */
-    public DtoWhereConditionClause(final ConditionSpec conditionSpec, final DtoWhereConditionClauseTerminal<DTO> conditionTerminal, final LitebridgeContext litebridgeContext) {
-        super(conditionSpec, conditionTerminal, litebridgeContext);
+    public DtoWhereConditionClause(final LitebridgeContext litebridgeContext,
+                                   final LogicOperator logicOperator,
+                                   final ExpressionSpec lhs,
+                                   final QueryNode node,
+                                   final Function<QueryNode, DtoWhereConditionClauseTerminal<DTO>> terminalRecreator) {
+        super(litebridgeContext, logicOperator, lhs, node, terminalRecreator);
     }
 }

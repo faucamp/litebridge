@@ -2,11 +2,14 @@ package org.litebridge.orm.api.select.model;
 
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ConvertExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
+import org.litebridge.db.spi.query.Select;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.DelegateExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -26,6 +29,7 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.expression.select.SubselectSpec;
 import org.litebridge.orm.meta.QueryField;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.List;
 
@@ -33,10 +37,17 @@ public final class SelectExpressionMapper {
 
     private final SqlFunctionRegistry sqlFunctionRegistry;
     private final ProtoExpressionResolver protoExpressionResolver;
+    private final TableMetaDataCache tableMetaDataCache;
+    private final TypeConverter typeConverter;
 
-    public SelectExpressionMapper(final SqlFunctionRegistry sqlFunctionRegistry, final ProtoExpressionResolver protoExpressionResolver) {
+    public SelectExpressionMapper(final SqlFunctionRegistry sqlFunctionRegistry,
+                                  final ProtoExpressionResolver protoExpressionResolver,
+                                  final TableMetaDataCache tableMetaDataCache,
+                                  final TypeConverter typeConverter) {
         this.sqlFunctionRegistry = sqlFunctionRegistry;
         this.protoExpressionResolver = protoExpressionResolver;
+        this.tableMetaDataCache = tableMetaDataCache;
+        this.typeConverter = typeConverter;
     }
 
     SqlFunctionRegistry sqlFunctionRegistry() {
@@ -56,8 +67,11 @@ public final class SelectExpressionMapper {
             // Select targets
             case SelectFieldSpec selectFieldSpec -> toSelectColumn(selectFieldSpec, useSelectReferences);
             case SelectColumnSpec selectColumnSpec -> toSelectColumn(selectColumnSpec, useSelectReferences);
-            case SubselectSpec subselectSpec ->
-                    sqlFunctionRegistry.select().subselect().create(subselectSpec.selectSpec().toSelect());
+            case SubselectSpec subselectSpec -> {
+                //TODO: sort out bind values
+                final PreparedOperation preparedOperation = subselectSpec.selectSpec().toSelect(tableMetaDataCache, typeConverter);
+                yield sqlFunctionRegistry.select().subselect().create((Select) preparedOperation.operation());
+            }
             case ConvertSpec<?> convertSpec ->
                     new ConvertExpression(toSelectExpression(convertSpec.target(), useSelectReferences), convertSpec.returnType());
             case ExpressionSpecArray expressionSpecArray ->

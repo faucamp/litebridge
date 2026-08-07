@@ -10,13 +10,10 @@ import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
-import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.TransactionManager;
-import org.litebridge.db.spi.update.Delete;
-import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
 
 import java.sql.SQLException;
@@ -86,23 +83,23 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public InsertResult insert(final Insert insert, final ConnectionProvider connectionProvider) throws SQLException {
+    public InsertResult insert(final PreparedSql insert, final ConnectionProvider connectionProvider) throws SQLException {
         return executeAndCleanupIfNeeded(() -> databaseProvider.insert(insert, transactionManager));
     }
 
     @Override
-    public UpdateResult update(final Update update, final ConnectionProvider connectionProvider) throws SQLException {
+    public UpdateResult update(final PreparedSql update, final ConnectionProvider connectionProvider) throws SQLException {
         return executeAndCleanupIfNeeded(() -> databaseProvider.update(update, transactionManager));
     }
 
     @Override
-    public UpdateResult delete(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
+    public UpdateResult delete(final PreparedSql delete, final ConnectionProvider connectionProvider) throws SQLException {
         return executeAndCleanupIfNeeded(() -> databaseProvider.delete(delete, transactionManager));
     }
 
     @Override
-    public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeAndCleanupIfNeeded(() -> databaseProvider.select(select, transactionManager));
+    public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeAndCleanupIfNeeded(() -> databaseProvider.select(preparedSql, transactionManager));
     }
 
     @Override

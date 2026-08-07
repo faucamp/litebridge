@@ -3,6 +3,7 @@ package org.litebridge.orm.e2e.basic;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.db.spi.Row;
+import org.litebridge.orm.LitebridgeInspector;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Account;
@@ -15,10 +16,12 @@ import org.litebridge.orm.expression.Fn;
 import org.litebridge.orm.persistence.DtoEntityMapping;
 import org.litebridge.orm.persistence.EntityDtoMapper;
 import org.litebridge.orm.tx.Transaction;
+import org.litebridge.orm.engine.QueryPlanCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -139,19 +142,31 @@ public class BasicE2eTest extends AbstractE2eTest {
         person.setAge(20);
         person.setEyeColour("blue");
 
-        litebridge.save(person);
+        final Person person2 = new Person();
+        person2.setName("Alice");
+        person2.setSurname("Jones");
+        person2.setAge(35);
+        person2.setEyeColour("green");
+
+        final Person person3 = new Person();
+        person3.setName("Alice");
+        person3.setSurname("West");
+        person3.setAge(29);
+        person3.setEyeColour("green");
+
+        litebridge.save(person, person2, person3);
 
         // When
         final Person result = litebridge.select(Person.class)
                 .where("name").eq("Alice")
                 .and(q ->
                         q.where("surname").eq("Jones")
-                                .or("age").eq(20)
+                                .or("age").eq(21)
                                 .or(q2 -> q2.where("eyeColour").eq("green")
                                         .and("age").gt(35)))
                 .oneOrThrow();
 
-        assertEquals(person, result);
+        assertEquals(person2, result);
     }
 
     @TestTemplate
@@ -370,7 +385,7 @@ public class BasicE2eTest extends AbstractE2eTest {
                                 ))));
 
         // Split the multi-table DTO into two single-table DTOs and save them separately
-        entityDtoMapper.entities(personAccount).forEach(litebridge::save);
+        litebridge.save(entityDtoMapper.entities(personAccount));
 
         // Load the indidual entities and reconstruct the composite DTO
         final Person person = litebridge.select(Person.class).where("id").eq(personAccount.getId()).oneOrThrow();
@@ -772,6 +787,85 @@ public class BasicE2eTest extends AbstractE2eTest {
                 .list();
 
         assertEquals(2, results8.size());
+    }
+
+    @TestTemplate
+    @DisplayName("Verify QueryPlanCache hits for DTO operations")
+    void cacheHits_dtoOperations(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+
+        final QueryPlanCache cache = LitebridgeInspector.getQueryPlanCache(litebridge);
+        cache.clear();
+
+        // 1. Insert
+        final Person person1 = new Person();
+        person1.setName("Alice");
+        person1.setSurname("Smith");
+        litebridge.insert(person1);
+        final int sizeAfterInsert = cache.size();
+        assertTrue(sizeAfterInsert > 0, "Cache should not be empty after insert");
+
+        final Person person2 = new Person();
+        person2.setName("Bob");
+        person2.setSurname("Doe");
+        litebridge.insert(person2);
+        assertEquals(sizeAfterInsert, cache.size(), "Cache size should not increase for second similar insert");
+
+        // 2. Update
+        person1.setName("Alice Updated");
+        litebridge.update(person1);
+        final int sizeAfterUpdate = cache.size();
+        assertTrue(sizeAfterUpdate > sizeAfterInsert, "Cache size should increase after first update");
+
+        person2.setName("Bob Updated");
+        litebridge.update(person2);
+        assertEquals(sizeAfterUpdate, cache.size(), "Cache size should not increase for second similar update");
+
+        // 3. Delete
+        litebridge.delete(person1);
+        final int sizeAfterDelete = cache.size();
+        assertTrue(sizeAfterDelete > sizeAfterUpdate, "Cache size should increase after first delete");
+
+        litebridge.delete(person2);
+        assertEquals(sizeAfterDelete, cache.size(), "Cache size should not increase for second similar delete");
+    }
+
+    @TestTemplate
+    @DisplayName("Verify QueryPlanCache hits for cascade operations")
+    void cacheHits_cascadeOperations(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+
+        final QueryPlanCache cache = LitebridgeInspector.getQueryPlanCache(litebridge);
+        cache.clear();
+
+        // Create Person with Account (Cascade Save)
+        final Person person = new Person();
+        person.setName("Alice");
+        person.setSurname("Smith");
+        final Account account = new Account();
+        account.setName("Account 1");
+        account.setBalance(BigInteger.valueOf(1000));
+        account.setOwner(person);
+        person.setAccounts(new ArrayList<>(List.of(account)));
+
+        litebridge.save(person);
+        final int sizeAfterSave = cache.size();
+        // Should contain entries for Person (Insert) and Account (Insert)
+        assertTrue(sizeAfterSave >= 2, "Cache should contain at least 2 entries after cascade save");
+
+        final Person person2 = new Person();
+        person2.setName("Bob");
+        person2.setSurname("Doe");
+        final Account account2 = new Account();
+        account2.setName("Account 2");
+        account2.setBalance(BigInteger.valueOf(2000));
+        account2.setOwner(person2);
+        person2.setAccounts(new ArrayList<>(List.of(account2)));
+
+        litebridge.save(person2);
+        assertEquals(sizeAfterSave, cache.size(), "Cache size should not increase for second similar cascade save");
     }
 
     @TestTemplate

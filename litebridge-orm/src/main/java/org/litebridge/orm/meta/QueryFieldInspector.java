@@ -3,9 +3,9 @@ package org.litebridge.orm.meta;
 /**
  * Inspector for {@link QueryField} instances, providing access to their internal state.
  */
-public final class QFInspector {
+public final class QueryFieldInspector {
 
-    private QFInspector() {
+    private QueryFieldInspector() {
     }
 
     /**

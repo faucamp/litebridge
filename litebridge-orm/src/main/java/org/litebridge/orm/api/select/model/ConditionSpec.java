@@ -2,21 +2,29 @@ package org.litebridge.orm.api.select.model;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.expression.ClauseType;
+import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SelectReference;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.query.Condition;
-import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 
+import java.sql.Types;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -102,9 +110,16 @@ public class ConditionSpec {
      *
      * @param selectExpressionMapper the mapper to use for expressions
      * @param selectedTables         the collection of tables included in the query
+     * @param bindValues             the list of bind values for the query
+     * @param tableMetaDataCache     the cache for table metadata
+     * @param typeConverter          the type converter to use
      * @return the resulting {@link Condition}
      */
-    public Condition toCondition(final SelectExpressionMapper selectExpressionMapper, final Collection<Table> selectedTables) {
+    public Condition toCondition(final SelectExpressionMapper selectExpressionMapper,
+                                 final Collection<Table> selectedTables,
+                                 final List<BindValue> bindValues,
+                                 final TableMetaDataCache tableMetaDataCache,
+                                 final TypeConverter typeConverter) {
         final List<ExpressionSpec> lhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(lhs, ClauseType.WHERE).stream()
                 .peek(expressionSpec -> {
                     if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
@@ -130,8 +145,9 @@ public class ConditionSpec {
         final SelectExpression lhsSelectExpression = selectExpressionMapper.toSelectExpression(lhsResolvedExpressionSpecs.getFirst(), true);
 
         if (value instanceof SelectSpec selectSpec) {
-            final Select select = selectSpec.toSelect();
-            final SubselectExpression subselectExpression = selectExpressionMapper.sqlFunctionRegistry().select().subselect().create(select);
+            final PreparedOperation subselect = selectSpec.toSelect(tableMetaDataCache, typeConverter);
+            bindValues.addAll(subselect.bindValues());
+            final SubselectExpression subselectExpression = selectExpressionMapper.sqlFunctionRegistry().select().subselect().create((Select) subselect.operation());
             return new Condition(lhsSelectExpression, operator, subselectExpression);
         } else if (value instanceof ExpressionSpec expressionSpec) {
             final List<ExpressionSpec> rhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(expressionSpec, ClauseType.WHERE);
@@ -147,8 +163,18 @@ public class ConditionSpec {
             return new Condition(lhsSelectExpression, operator, selectReference);
         }
 
-        final LiteralExpression literalExpression = selectExpressionMapper.sqlFunctionRegistry().select().literal().create(value);
-        return new Condition(lhsSelectExpression, operator, literalExpression);
+        // Setup bind value creators
+        switch (operator) {
+            case USING -> {
+                final LiteralExpression literalExpression = selectExpressionMapper.sqlFunctionRegistry().select().literal().create(value, true);
+                return new Condition(lhsSelectExpression, operator, literalExpression);
+            }
+            default -> {
+                final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size());
+                bindValues.addAll(createBindValues(lhsSelectExpression, value, tableMetaDataCache, typeConverter));
+                return new Condition(lhsSelectExpression, operator, bindValueExpression);
+            }
+        }
     }
 
     @Override
@@ -158,5 +184,53 @@ public class ConditionSpec {
                 .add("operator=" + operator)
                 .add("value=" + value)
                 .toString();
+    }
+
+    /**
+     * Creates a bind value for a column and raw value.
+     *
+     * @param lhsSelectExpression LHS select expression for the condition.
+     * @param rawValue            The raw value.
+     * @param tableMetaDataCache  Table metadata cache.
+     * @return The bind value.
+     */
+    private List<BindValue> createBindValues(final SelectExpression lhsSelectExpression, final @Nullable Object rawValue, final TableMetaDataCache tableMetaDataCache, final TypeConverter typeConverter) {
+        final Column column;
+
+        if (lhsSelectExpression instanceof ColumnExpression columnExpression) {
+            column = columnExpression.column();
+        } else {
+            column = null;
+        }
+
+        if (column != null) {
+            final ColumnMetaData columnMetaData = tableMetaDataCache.ensureTableMetaData(column.table()).column(column.name());
+
+            if (rawValue instanceof Collection<?> collection) {
+                return collection.stream()
+                        .map(value -> typeConverter.convert(value, columnMetaData.getDataType()))
+                        .map(convertedValue -> new BindValue(convertedValue, columnMetaData.getDataType()))
+                        .toList();
+            } else {
+                final Object convertedValue = typeConverter.convert(rawValue, columnMetaData.getDataType());
+                return Collections.singletonList(new BindValue(convertedValue, columnMetaData.getDataType()));
+            }
+        } else if (rawValue != null) {
+            return Collections.singletonList(new BindValue(rawValue, typeConverter.getSqlDataType(rawValue.getClass())));
+        } else {
+            return Collections.singletonList(new BindValue(null, Types.NULL));
+        }
+    }
+
+    private static BindValueExpression createBindValueExpression(final @Nullable Object value, final int index) {
+        final int valueSize;
+
+        if (value instanceof Collection<?> collection) {
+            valueSize = collection.size();
+        } else {
+            valueSize = 1;
+        }
+
+        return new BindValueExpression(index, valueSize);
     }
 }

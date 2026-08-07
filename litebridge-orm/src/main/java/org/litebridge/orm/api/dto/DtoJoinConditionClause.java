@@ -1,9 +1,13 @@
 package org.litebridge.orm.api.dto;
 
+import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.JoinConditionClause;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.api.select.model.ConditionSpec;
+import org.litebridge.orm.expression.ExpressionSpec;
+
+import java.util.function.Function;
 
 /**
  * Represents a condition within a JOIN clause in a DTO-based query.
@@ -17,14 +21,11 @@ public final class DtoJoinConditionClause<DTO> extends ConditionClauseImpl<DTO,
         implements JoinConditionClause<DTO, DtoJoinConditionClause<DTO>,
         DtoJoinConditionClauseTerminal<DTO>> {
 
-    /**
-     * Creates a new instance of {@code DtoJoinConditionClause}.
-     *
-     * @param condition the condition specification
-     * @param conditionTerminal the terminal clause for this condition
-     * @param litebridgeContext the ORM context
-     */
-    public DtoJoinConditionClause(final ConditionSpec condition, final DtoJoinConditionClauseTerminal<DTO> conditionTerminal, final LitebridgeContext litebridgeContext) {
-        super(condition, conditionTerminal, litebridgeContext);
+    public DtoJoinConditionClause(final LitebridgeContext litebridgeContext,
+                                  final LogicOperator logicOperator,
+                                  final ExpressionSpec lhs,
+                                  final QueryNode node,
+                                  final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> terminalRecreator) {
+        super(litebridgeContext, logicOperator, lhs, node, terminalRecreator);
     }
 }

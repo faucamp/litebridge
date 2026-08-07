@@ -5,9 +5,11 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.ConditionGroupNode;
+import org.litebridge.orm.api.select.ast.HavingNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractHavingClauseTerminal;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
@@ -30,7 +32,7 @@ public final class SqlHavingConditionClauseTerminal
 
     @Override
     public SqlHavingConditionClause and(final String column) {
-        final Column spiColumn = new Column(selectSpec.getTable(), column);
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
         return and(new SelectColumnSpec(spiColumn));
     }
 
@@ -46,7 +48,7 @@ public final class SqlHavingConditionClauseTerminal
 
     @Override
     public SqlHavingConditionClause or(final String column) {
-        final Column spiColumn = new Column(selectSpec.getTable(), column);
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
         return or(new SelectColumnSpec(spiColumn));
     }
 
@@ -62,24 +64,44 @@ public final class SqlHavingConditionClauseTerminal
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(selectSpec.createSelectColumnSpecs(columns)), (SqlSelector) delegate);
+        return orderBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
     }
 
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
-        return new SqlOrderByClause(selectSpec.newOrderBy(columns), (SqlSelector) delegate);
+        return new SqlOrderByClause(columns, (SqlSelector) delegate);
     }
 
     private SqlHavingConditionClause havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = selectSpec.currentHavingConditionGroupSpec().newCondition(logicOperator, expression);
-        return new SqlHavingConditionClause(conditionSpec, new SqlHavingConditionClauseTerminal((SqlSelector) delegate), delegate.litebridgeContext());
+        if (delegate.node() instanceof HavingNode havingNode) {
+            return new SqlHavingConditionClause(delegate.litebridgeContext(),
+                    logicOperator,
+                    expression,
+                    havingNode.condition(),
+                    node -> new SqlHavingConditionClauseTerminal((SqlSelector) delegate.withNode(havingNode.withCondition(node))));
+        }
+
+        return new SqlHavingConditionClause(delegate.litebridgeContext(),
+                logicOperator,
+                expression,
+                null,
+                node -> new SqlHavingConditionClauseTerminal((SqlSelector) delegate.withNode(new HavingNode(delegate.node(), node))));
     }
 
     private SqlHavingConditionClauseTerminal havingImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-        final ConditionGroupSpec subgroup = selectSpec.pushHavingConditionGroup(logicOperator);
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, selectSpec.getTable(), delegate.litebridgeContext().fromClauseEngine());
-        query.apply(conditionClauseStart);
-        selectSpec.popHavingConditionGroup();
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(((SqlSelector) delegate).table(), delegate.litebridgeContext().fromClauseEngine(), null);
+        final org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+        final QueryNode conditionNode = terminal.node();
+
+        if (delegate.node() instanceof HavingNode havingNode) {
+            final ConditionGroupNode groupNode = new ConditionGroupNode(havingNode.condition(), logicOperator, conditionNode);
+            havingNode.withCondition(groupNode);
+            return this;
+        }
+
+        final ConditionGroupNode groupNode = new ConditionGroupNode(null, logicOperator, conditionNode);
+        delegate.withNode(new HavingNode(delegate.node(), groupNode));
+
         return this;
     }
 }

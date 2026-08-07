@@ -3,6 +3,7 @@ package org.litebridge.orm.api.register;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -13,10 +14,8 @@ import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
 
 import java.sql.SQLException;
@@ -39,27 +38,27 @@ final class PlaceHolderDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public InsertResult insert(final Insert insert, final ConnectionProvider connectionProvider) throws SQLException {
+    public InsertResult insert(final PreparedSql insert, final ConnectionProvider connectionProvider) throws SQLException {
         throw new UnsupportedOperationException("N/A");
     }
 
     @Override
-    public UpdateResult update(final Update update, final ConnectionProvider connectionProvider) throws SQLException {
+    public UpdateResult update(final PreparedSql update, final ConnectionProvider connectionProvider) throws SQLException {
         throw new UnsupportedOperationException("N/A");
     }
 
     @Override
-    public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
-        throw new UnsupportedOperationException("N/A");
-    }
-
-    @Override
-    public UpdateResult delete(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
+    public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
         throw new UnsupportedOperationException("N/A");
     }
 
     @Override
     public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
+        throw new UnsupportedOperationException("N/A");
+    }
+
+    @Override
+    public UpdateResult delete(final PreparedSql delete, final ConnectionProvider connectionProvider) throws SQLException {
         throw new UnsupportedOperationException("N/A");
     }
 

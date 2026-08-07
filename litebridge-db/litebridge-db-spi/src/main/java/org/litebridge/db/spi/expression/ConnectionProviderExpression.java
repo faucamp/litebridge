@@ -2,6 +2,7 @@ package org.litebridge.db.spi.expression;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
@@ -17,7 +18,7 @@ public interface ConnectionProviderExpression extends SelectExpression {
      * @param connectionProvider the connection provider to use to generate SQL
      * @return the SQL representation of the expression
      */
-    PreparedSql toSql(final Operation operation, final ConnectionProvider connectionProvider);
+    String toSql(final Operation operation, final ConnectionProvider connectionProvider);
 
     /**
      * Not supported.

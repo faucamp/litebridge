@@ -2,27 +2,34 @@ package org.litebridge.orm.api.sql;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.OrderByClause;
-import org.litebridge.orm.api.select.model.OrderBySpec;
+import org.litebridge.orm.api.select.ast.OrderByNode;
+import org.litebridge.orm.expression.ExpressionSpec;
 
 public final class SqlOrderByClause implements OrderByClause<Row, SqlOrderByClause, SqlOrderByClauseChain> {
 
-    private final OrderBySpec orderBySpec;
+    private final ExpressionSpec[] expressions;
     private final SqlSelector delegate;
 
-    public SqlOrderByClause(final OrderBySpec orderBySpec, final SqlSelector delegate) {
-        this.orderBySpec = orderBySpec;
+    public SqlOrderByClause(final ExpressionSpec[] expressions, final SqlSelector delegate) {
+        this.expressions = expressions;
         this.delegate = delegate;
     }
 
     @Override
     public SqlOrderByClauseChain asc() {
-        orderBySpec.setAsc(true);
-        return new SqlOrderByClauseChain(delegate);
+        SqlSelector currentDelegate = delegate;
+        for (final ExpressionSpec expression : expressions) {
+            currentDelegate = currentDelegate.withNode(new OrderByNode(currentDelegate.node(), expression, true));
+        }
+        return new SqlOrderByClauseChain(currentDelegate);
     }
 
     @Override
     public SqlOrderByClauseChain desc() {
-        orderBySpec.setAsc(false);
-        return new SqlOrderByClauseChain(delegate);
+        SqlSelector currentDelegate = delegate;
+        for (final ExpressionSpec expression : expressions) {
+            currentDelegate = currentDelegate.withNode(new OrderByNode(currentDelegate.node(), expression, false));
+        }
+        return new SqlOrderByClauseChain(currentDelegate);
     }
 }

@@ -34,6 +34,11 @@ public final class DefaultAliasGenerator implements AliasGenerator {
      */
     private final Map<String, Integer> aliasCount = new HashMap<>();
 
+
+    public void clear() {
+        aliasMap.clear();
+        aliasCount.clear();
+    }
     /**
      * Constructs a {@code DefaultAliasGenerator} with the specified {@link AliasTransformer}.
      *
@@ -55,6 +60,18 @@ public final class DefaultAliasGenerator implements AliasGenerator {
         // Create a new alias
         final String columnAlias = ormTable.alias() + newAlias(columnMetaData.name());
         return new Column(ormTable, columnMetaData.name(), columnAlias);
+    }
+
+    @Override
+    public Column aliasColumn(final Table ormTable, final Column column) {
+        if (column.alias() != null) {
+            return column;
+        }
+
+        // Create a new alias
+        final String columnAlias = ormTable.alias() + newAlias(column.name());
+        column.setAlias(columnAlias);
+        return column;
     }
 
     private String newAlias(final String name) {

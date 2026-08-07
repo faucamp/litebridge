@@ -7,6 +7,7 @@ import org.litebridge.orm.api.select.JoinConditionClause;
 import org.litebridge.orm.api.select.JoinConditionClauseTerminal;
 import org.litebridge.orm.api.select.OrderByClause;
 import org.litebridge.orm.api.select.OrderByClauseChain;
+import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
 
@@ -24,10 +25,10 @@ public abstract class AbstractJoinConditionClauseTerminal<DTO,
         extends AbstractWhereClauseTerminal<DTO, GBCT, HCC, HCCT, OBC, OBCC, SSP>
         implements JoinConditionClauseTerminal<DTO, JCC, SELF> {
 
-    protected final JSP joinSpec;
+    protected final JoinNode joinNode;
 
-    public AbstractJoinConditionClauseTerminal(final JSP joinSpec, final AbstractSelector<DTO, SSP> delegate) {
+    public AbstractJoinConditionClauseTerminal(final JoinNode joinNode, final AbstractSelector<DTO, SSP> delegate) {
         super(delegate);
-        this.joinSpec = joinSpec;
+        this.joinNode = joinNode;
     }
 }

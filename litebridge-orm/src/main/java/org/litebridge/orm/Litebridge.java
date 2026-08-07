@@ -2,7 +2,6 @@ package org.litebridge.orm;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
@@ -22,6 +21,7 @@ import org.litebridge.orm.api.register.RegistrationContextTerminal;
 import org.litebridge.orm.api.select.FromClauseStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridge.orm.api.select.SelectApi;
+import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.api.spec.DtoTableSpec;
@@ -37,6 +37,7 @@ import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.engine.RegistrationEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
@@ -52,8 +53,10 @@ import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.orm.persistence.SelectSpecDtoMapper;
 import org.litebridge.orm.persistence.TableMapper;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridge.orm.tx.DefaultTransactionManager;
@@ -99,7 +102,9 @@ public final class Litebridge implements SelectApi {
     private final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
     private final RegistrationEngine registrationEngine;
     private final FromClauseEngine fromClauseEngine;
+    private final QueryPlanCache queryPlanCache = new QueryPlanCache();
     private final LitebridgeConfig litebridgeConfig;
+    private final TableMetaDataCache tableMetaDataCache;
 
     /**
      * Constructs a Litebridge instance with the specified database provider and data source.
@@ -216,10 +221,15 @@ public final class Litebridge implements SelectApi {
         this.nativeSqlContext = new NativeSqlContext(this.databaseProvider);
         this.litebridgeConfig = litebridgeConfig != null ? litebridgeConfig : new LitebridgeConfig();
         this.changeTracker = new ChangeTracker(lookup);
-        this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor);
-        final TableMapper tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker);
+        this.tableMetaDataCache = new TableMetaDataCache(this.databaseProvider, transactionManager);
+        final TableMapper tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
         this.registrationEngine = new RegistrationEngine(this.databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
         this.fromClauseEngine = new FromClauseEngine(this.databaseProvider, tableRegistry, changeTracker, dtoConstructor, this::createLitebridgeContext);
+        this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor, createLitebridgeContext());
+
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Litebridge initialised with databaseProvider: {}, config: {}", databaseProvider.getClass().getName(), litebridgeConfig);
+        }
     }
 
     /**
@@ -396,25 +406,25 @@ public final class Litebridge implements SelectApi {
 
     @Override
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        return new FromClauseStart(fromClauseEngine).from(dtoClass, relatedDtoStrategy);
+        return fromClauseEngine.from(dtoClass, relatedDtoStrategy);
     }
 
     @Override
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
-        return new FromClauseStart(fromClauseEngine).from(dtoClass, contextDtoClass);
+        return new FromClauseStart(new SelectNode(null, new ExpressionSpec[0], null), fromClauseEngine).from(dtoClass, contextDtoClass);
     }
 
     @Override
     public FromClauseStart select(final String... fieldsOrColumns) {
-        return new FromClauseStart(Arrays.stream(fieldsOrColumns)
+        final ExpressionSpec[] expressionSpecs = Arrays.stream(fieldsOrColumns)
                 .map(fieldOrColumn -> new ProtoColumnExpressionSpec(SelectFieldSpec.class, fieldOrColumn, null))
-                .toArray(ProtoColumnExpressionSpec[]::new),
-                fromClauseEngine);
+                .toArray(ProtoColumnExpressionSpec[]::new);
+        return new FromClauseStart(new SelectNode(null, expressionSpecs, null), fromClauseEngine);
     }
 
     @Override
     public FromClauseStart select(final ExpressionSpec... expressions) {
-        return new FromClauseStart(expressions, fromClauseEngine);
+        return new FromClauseStart(new SelectNode(null, expressions, null), fromClauseEngine);
     }
 
     @Override
@@ -424,12 +434,12 @@ public final class Litebridge implements SelectApi {
             case ConvertIntent<T> convertIntent -> convertIntent.target();
         };
 
-        return new FromClauseStartTypeOverride<>(expression.returnType(), expressionSpecs, fromClauseEngine);
+        return new FromClauseStartTypeOverride<>(expression.returnType(), new SelectNode(null, expressionSpecs, expression.returnType()), fromClauseEngine);
     }
 
     @Override
     public FromClauseStart select() {
-        return new FromClauseStart(fromClauseEngine);
+        return new FromClauseStart(new SelectNode(null, new ExpressionSpec[0], null), fromClauseEngine);
     }
 
     /**
@@ -567,9 +577,14 @@ public final class Litebridge implements SelectApi {
         return transactionContext;
     }
 
+    QueryPlanCache queryPlanCache() {
+        return queryPlanCache;
+    }
+
     private LitebridgeContext createLitebridgeContext() {
         final SqlFunctionRegistry sqlFunctionRegistry = databaseProvider.getSqlFunctionRegistry();
-        return new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry);
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
+        return new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, queryPlanCache, aliasGenerator, tableMetaDataCache, databaseProvider.getTypeConverter(), createSelectExpressionMapper(true));
     }
 
     private SelectExpressionMapper createSelectExpressionMapper(final boolean dto) {
@@ -583,6 +598,6 @@ public final class Litebridge implements SelectApi {
             protoExpressionResolver = new SqlProtoExpressionResolver();
         }
 
-        return new SelectExpressionMapper(databaseProvider.getSqlFunctionRegistry(), protoExpressionResolver);
+        return new SelectExpressionMapper(databaseProvider.getSqlFunctionRegistry(), protoExpressionResolver, tableMetaDataCache, databaseProvider.getTypeConverter());
     }
 }

@@ -1,10 +1,14 @@
 package org.litebridge.orm.api.sql.delete;
 
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.delete.DeleteWhereConditionClause;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.api.select.model.ConditionSpec;
+import org.litebridge.orm.expression.ExpressionSpec;
+
+import java.util.function.Function;
 
 public class SqlDeleteWhereConditionClause
 
@@ -16,7 +20,10 @@ public class SqlDeleteWhereConditionClause
         SqlDeleteWhereConditionClause,
         SqlDeleteWhereConditionClauseTerminal> {
 
-    public SqlDeleteWhereConditionClause(final ConditionSpec conditionSpec, final SqlDeleteWhereConditionClauseTerminal conditionTerminal, LitebridgeContext litebridgeContext) {
-        super(conditionSpec, conditionTerminal, litebridgeContext);
+    public SqlDeleteWhereConditionClause(final LitebridgeContext litebridgeContext,
+                                         final LogicOperator logicOperator,
+                                         final ExpressionSpec lhs,
+                                         final Function<QueryNode, SqlDeleteWhereConditionClauseTerminal> terminalRecreator) {
+        super(litebridgeContext, logicOperator, lhs, null, terminalRecreator);
     }
 }

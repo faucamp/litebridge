@@ -3,9 +3,15 @@ package org.litebridge.orm.api.sql;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.select.ast.ConditionGroupNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
-import org.litebridge.orm.api.select.model.ConditionSpec;
+import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
+
+import java.util.function.Function;
 
 public final class SqlJoinClause extends AbstractJoinClause<Row,
         SqlJoinConditionClause,
@@ -13,8 +19,11 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
         SqlSelectSpec,
         SqlJoinSpec> {
 
-    public SqlJoinClause(final SqlJoinSpec joinSpec, final SqlSelector delegate) {
-        super(joinSpec, delegate);
+    private final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator;
+
+    public SqlJoinClause(final SqlSelector delegate, final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator) {
+        super(delegate);
+        this.terminalCreator = terminalCreator;
     }
 
     /**
@@ -25,10 +34,23 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
      * @return an instance of the join condition clause to allow further configuration
      */
     public SqlJoinConditionClause on(final String column) {
-        final Column spiColumn = new Column(joinSpec.table(), column);
-        final SqlJoinConditionClauseTerminal joinConditionClauseTerminal = new SqlJoinConditionClauseTerminal(joinSpec, (SqlSelector) delegate);
-        final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(spiColumn));
-        return new SqlJoinConditionClause(conditionSpec, joinConditionClauseTerminal, delegate.litebridgeContext());
+        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
+        return new SqlJoinConditionClause(delegate.litebridgeContext(), LogicOperator.NOOP, new SelectColumnSpec(spiColumn), null, terminalCreator);
+    }
+
+    /**
+     * Adds a join ON condition based on a query condition builder.
+     *
+     * @param builder the builder for the join condition
+     * @return an instance of the join condition clause to allow further configuration
+     */
+    public SqlJoinConditionClauseTerminal on(final QueryConditionBuilder<Row> builder) {
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(((SqlSelector) delegate).table(), delegate.litebridgeContext().fromClauseEngine(), null);
+        final AbstractCbConditionClauseTerminal<Row> terminal = builder.apply(conditionClauseStart);
+        final QueryNode conditionNode = terminal.node();
+
+        final ConditionGroupNode groupNode = new ConditionGroupNode(null, LogicOperator.NOOP, conditionNode);
+        return terminalCreator.apply(groupNode);
     }
 
     /**
@@ -40,7 +62,6 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
      * @return an instance of the terminal join condition clause to finalize the join conditions
      */
     public SqlJoinConditionClauseTerminal using(final String column) {
-        joinSpec.using(column);
-        return new SqlJoinConditionClauseTerminal(joinSpec, (SqlSelector) delegate);
+        return on(column).using(column);
     }
 }

@@ -1,16 +1,20 @@
 package org.litebridge.orm.api.condition;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.ConditionClause;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.impl.SelectorInspector;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
+import org.litebridge.orm.api.select.ast.ConditionNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.impl.AbstractSelector;
+import org.litebridge.orm.api.select.impl.DelegatingSelector;
+import org.litebridge.orm.api.select.impl.DelegatingSelectorInspector;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.SelectEngine;
+import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,33 +30,33 @@ import java.util.stream.Stream;
 public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<DTO, AbstractCbConditionClause<DTO>, AbstractCbConditionClauseTerminal<DTO>> {
 
     /**
-     * The condition specification being built.
-     */
-    protected final ConditionSpec conditionSpec;
-
-    /**
-     * The condition group specification.
-     */
-    protected final ConditionGroupSpec conditionGroupSpec;
-
-    /**
      * The engine used to process the FROM clause.
      */
     protected final FromClauseEngine fromClauseEngine;
+    private final LogicOperator logicOperator;
+    private final ExpressionSpec lhs;
+    private final QueryNode node;
+    private final Function<QueryNode, AbstractCbConditionClauseTerminal<DTO>> terminalCreator;
 
     /**
      * Constructs a new {@code AbstractCbConditionClause}.
      *
-     * @param conditionSpec      The condition specification.
-     * @param conditionGroupSpec The condition group specification.
-     * @param fromClauseEngine   The FROM clause engine.
+     * @param fromClauseEngine The FROM clause engine.
+     * @param logicOperator    The logic operator (AND/OR).
+     * @param lhs              The left-hand side expression.
+     * @param node             The previous node in the chain.
+     * @param terminalCreator  The function to create the terminal clause.
      */
-    public AbstractCbConditionClause(final ConditionSpec conditionSpec,
-                                     final ConditionGroupSpec conditionGroupSpec,
-                                     final FromClauseEngine fromClauseEngine) {
-        this.conditionSpec = conditionSpec;
-        this.conditionGroupSpec = conditionGroupSpec;
+    public AbstractCbConditionClause(final FromClauseEngine fromClauseEngine,
+                                     final LogicOperator logicOperator,
+                                     final ExpressionSpec lhs,
+                                     final QueryNode node,
+                                     final Function<QueryNode, AbstractCbConditionClauseTerminal<DTO>> terminalCreator) {
+        this.logicOperator = logicOperator;
+        this.lhs = lhs;
         this.fromClauseEngine = fromClauseEngine;
+        this.node = node;
+        this.terminalCreator = terminalCreator;
     }
 
     /**
@@ -269,7 +273,6 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
     private AbstractCbConditionClauseTerminal<DTO> condition(final Operator operator, @Nullable final Object value) {
-        conditionSpec.setValue(value);
         final Operator translatedOperator;
 
         if (value == null) {
@@ -284,20 +287,33 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
             translatedOperator = operator;
         }
 
-        conditionSpec.setOperator(translatedOperator);
-        return createCbConditionClauseTerminal();
+        final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value);
+
+        return createCbConditionClauseTerminal(conditionNode);
     }
 
     /**
      * Creates a new terminal condition clause instance.
      *
+     * @param conditionNode the condition node to wrap in a terminal clause
      * @return A new {@link AbstractCbConditionClauseTerminal} instance.
      */
-    protected abstract AbstractCbConditionClauseTerminal<DTO> createCbConditionClauseTerminal();
+    protected abstract AbstractCbConditionClauseTerminal<DTO> createCbConditionClauseTerminal(final QueryNode conditionNode);
 
     private SelectSpec createSelectSpec(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
         final SelectTerminal<?> selectTerminal = Objects.requireNonNull(subselect, "Subselect cannot be null")
                 .apply(new SelectEngine(fromClauseEngine));
-        return SelectorInspector.getSelectSpec(selectTerminal);
+        return getSelectSpec(selectTerminal);
+    }
+
+    private SelectSpec getSelectSpec(final SelectTerminal<?> selectTerminal) {
+        final AbstractSelector<?, ?> selector = switch (selectTerminal) {
+            case DelegatingSelector<?, ?> delegating -> DelegatingSelectorInspector.getDelegate(delegating);
+            case AbstractSelector<?, ?> s -> s;
+            default ->
+                    throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
+        };
+
+        return selector.compile();
     }
 }

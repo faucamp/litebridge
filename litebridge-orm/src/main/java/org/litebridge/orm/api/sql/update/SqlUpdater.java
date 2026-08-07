@@ -4,9 +4,14 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
+import org.litebridge.orm.api.select.ConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.ConditionGroupNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SetNode;
+import org.litebridge.orm.api.select.ast.UpdateNode;
+import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.api.update.impl.AbstractUpdater;
@@ -17,13 +22,15 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 
+import java.util.function.Function;
+
 public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements SqlUpdateStep {
 
     public SqlUpdater(final Table table,
                       final TransactionalDatabaseProvider databaseProvider,
                       final SelectExpressionMapper selectExpressionMapper,
                       final LitebridgeContext litebridgeContext) {
-        super(new UpdateSpec(table, selectExpressionMapper), databaseProvider, litebridgeContext);
+        super(new UpdateSpec(table, selectExpressionMapper), databaseProvider, litebridgeContext, new UpdateNode(null, table));
     }
 
     @Override
@@ -52,15 +59,26 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
     }
 
     SqlUpdateWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = updateSpec.currentConditionGroupSpec().newCondition(logicOperator, expression);
-        return new SqlUpdateWhereConditionClause(conditionSpec, new SqlUpdateWhereConditionClauseTerminalImpl(this), litebridgeContext);
+        final Function<QueryNode, SqlUpdateWhereConditionClauseTerminal> recreator = n -> {
+            this.node = new WhereNode(this.node, n);
+            return new SqlUpdateWhereConditionClauseTerminalImpl(this);
+        };
+        return new SqlUpdateWhereConditionClause(litebridgeContext, logicOperator, expression, recreator);
     }
 
     SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-        final ConditionGroupSpec subgroup = updateSpec.pushConditionGroupSpec(logicOperator);
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(subgroup, updateSpec.table(), litebridgeContext.fromClauseEngine());
-        query.apply(conditionClauseStart);
-        updateSpec.popConditionGroupSpec();
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(updateSpec.table(), litebridgeContext.fromClauseEngine(), null);
+        final ConditionClauseTerminal<Row, ?, ?> terminal = query.apply(conditionClauseStart);
+
+        if (terminal instanceof AbstractCbConditionClauseTerminal<?> act) {
+            this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, act.node()));
+        }
+
         return new SqlUpdateWhereConditionClauseTerminalImpl(this);
+    }
+
+    @Override
+    public void addSetNode(final Column column, final Object value) {
+        this.node = new SetNode(this.node, column, value);
     }
 }

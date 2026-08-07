@@ -6,6 +6,7 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
+import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.ManagedConnection;
@@ -37,10 +38,14 @@ public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
 
     @Override
     protected PreparedStatement createPreparedStatementUsingConnection(final PreparedSql preparedSql,
-                                                                       final boolean returnGeneratedKeys,
-                                                                       final TableMetaData tableMetaData,
                                                                        final ManagedConnection connection) throws SQLException {
-        if (returnGeneratedKeys) {
+        final UpdateMetaData updateMetaData = preparedSql.updateMetaData();
+
+        if (updateMetaData == null) {
+            return connection.prepareStatement(preparedSql.sql());
+        }
+
+        if (updateMetaData.returnGeneratedKeys()) {
             return connection.prepareStatement(preparedSql.sql(), Statement.RETURN_GENERATED_KEYS);
         } else {
             return connection.prepareStatement(preparedSql.sql());
@@ -48,13 +53,13 @@ public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
     }
 
     @Override
-    protected Map<ColumnMetaData, Object> extractGeneratedKeys(final TableMetaData tableMetaData, final PreparedStatement preparedStatement) throws SQLException {
-        final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(tableMetaData.primaryKey().size());
+    protected Map<ColumnMetaData, Object> extractGeneratedKeys(final List<ColumnMetaData> generatedPrimaryKeys, final PreparedStatement preparedStatement) throws SQLException {
+        final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(generatedPrimaryKeys.size());
         try (final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys()) {
             if (generatedKeysResultSet.next()) {
                 // SQLite usually returns one generated key (rowid)
                 int generatedKeyIndex = 1;
-                for (ColumnMetaData pkColumn : getGeneratedPrimaryKeyColumns(tableMetaData)) {
+                for (ColumnMetaData pkColumn : generatedPrimaryKeys) {
                     final Object generatedId = generatedKeysResultSet.getObject(generatedKeyIndex++);
                     getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
                     generatedKeys.put(pkColumn, generatedId);

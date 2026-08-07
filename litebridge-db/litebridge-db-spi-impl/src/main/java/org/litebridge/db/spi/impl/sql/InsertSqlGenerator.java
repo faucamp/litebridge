@@ -6,7 +6,6 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Insert;
@@ -39,13 +38,12 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
      * <p>
      * This method constructs the SQL query string based on the provided {@link Insert} object,
      * which contains the table's metadata, expressions, and rows to be inserted.
-     * The bind values are derived from the rows and included in the returned {@link  PreparedSql}.
      *
      * @param insert             the {@link Insert} object containing the table metadata, expressions, and rows for the SQL INSERT operation
      * @param connectionProvider the connection provider
-     * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values
+     * @return the generated SQL query string
      */
-    public PreparedSql prepareSql(final Insert insert, final ConnectionProvider connectionProvider) {
+    public String prepareSql(final Insert insert, final ConnectionProvider connectionProvider) {
         final List<String> columnNames = insert.columns().stream().map(Column::name).toList();
 
         final StringBuilder sql = appendTable(new StringBuilder("INSERT INTO "), insert.table())
@@ -53,23 +51,20 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
                 .append(String.join(", ", columnNames.stream().map(columnIdentifierGenerator::quoteIdentifier).toList()))
                 .append(") VALUES ");
 
-        final List<org.litebridge.db.spi.sql.BindValue> bindValues = new ArrayList<>(insert.rows().size() * columnNames.size());
-
         boolean first = true;
 
         for (RowValue row : insert.rows()) {
-            final PreparedRow preparedRow = prepareRow(row, connectionProvider);
-            sql.append('(').append(String.join(", ", preparedRow.valueSpecifiers())).append(')');
-            bindValues.addAll(preparedRow.bindValues());
-
-            if (first) {
-                first = false;
-            } else {
+            if (!first) {
                 sql.append(", ");
             }
+
+            first = false;
+
+            final PreparedRow preparedRow = prepareRow(row, connectionProvider);
+            sql.append('(').append(String.join(", ", preparedRow.valueSpecifiers())).append(')');
         }
 
-        return new PreparedSql(sql.toString(), bindValues);
+        return sql.toString();
     }
 
     /**

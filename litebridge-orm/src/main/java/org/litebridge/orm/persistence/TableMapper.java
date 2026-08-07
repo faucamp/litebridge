@@ -51,14 +51,17 @@ public final class TableMapper {
     private final TableRegistry tableRegistry;
     private final ChangeTracker changeTracker;
     private final ClassFieldAccessorCache classFieldAccessorCache;
+    private final TableMetaDataCache tableMetaDataCache;
 
     public TableMapper(final TransactionalDatabaseProvider databaseProvider,
                        final TableRegistry tableRegistry,
-                       final ChangeTracker changeTracker) {
+                       final ChangeTracker changeTracker,
+                       final TableMetaDataCache tableMetaDataCache) {
         this.databaseProvider = databaseProvider;
         this.tableRegistry = tableRegistry;
         this.changeTracker = changeTracker;
         this.classFieldAccessorCache = changeTracker.classFieldAccessorCache();
+        this.tableMetaDataCache = tableMetaDataCache;
     }
 
     /**
@@ -93,12 +96,7 @@ public final class TableMapper {
         }
 
         // Read the table metadata
-        final TableMetaData tableMetaData;
-        try {
-            tableMetaData = ObjectUtils.requireNonNull(databaseProvider.tableMetaData(tableSpec, databaseProvider.transactionManager()), () -> new IllegalStateException("Database provider returned null table metadata for table: " + tableSpec.name()));
-        } catch (final SQLException ex) {
-            throw new IllegalStateException("Failed to read table metadata for table:" + tableSpec, ex);
-        }
+        final TableMetaData tableMetaData = tableMetaDataCache.ensureTableMetaData(tableSpec);
 
         final MappedDto mappedDto = mapFields(lookup, dtoClass, tableMetaData, tableSpec.fieldColumnMap(), allDtoClasses);
         final OrmTable ormTable = new OrmTable(dtoClass, tableMetaData, mappedDto.mappedFields(), changeTracker, classFieldAccessorCache);
@@ -292,6 +290,7 @@ public final class TableMapper {
         } else {
             final MappedTable mappedJoinTable = mapManyToManyJoinTable(manyToMany, lookup);
             manyToOneDependencies.addAll(mappedJoinTable.manyToOneDependencies());
+            tableRegistry.addTable(mappedJoinTable.ormTable().dtoClass(), mappedJoinTable.ormTable());
             return mappedJoinTable.ormTable();
         }
     }

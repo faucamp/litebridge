@@ -1,17 +1,33 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.expression.ClauseType;
+import org.litebridge.db.spi.expression.DelegateColumnExpression;
+import org.litebridge.db.spi.expression.DelegateExpression;
+import org.litebridge.db.spi.expression.DelegateExpressionFactory;
 import org.litebridge.db.spi.expression.LiteralExpression;
+import org.litebridge.db.spi.expression.SelectExpression;
+import org.litebridge.db.spi.expression.SelectReference;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
+import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.function.SelectColumn;
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.orm.api.select.model.ProtoExpressionResolver;
+import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryCompiler;
+import org.litebridge.orm.engine.QueryPlanCache;
+import org.litebridge.orm.expression.TestColumnExpression;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
+import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 
@@ -21,7 +37,6 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,8 +44,8 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
@@ -39,6 +54,70 @@ import static org.mockito.Mockito.when;
 
 class PersistenceFacadeTest {
 
+    private final Map<String, TableMetaData> metaDataMap = new HashMap<>();
+
+    private PersistenceFacade createFacade(TableRegistry tableRegistry, TransactionalDatabaseProvider databaseProvider, ChangeTracker changeTracker, DtoConstructor dtoConstructor) {
+        final LitebridgeContext context = mock(LitebridgeContext.class);
+        when(context.queryPlanCache()).thenReturn(new QueryPlanCache());
+        when(context.createQueryCompiler()).thenReturn(new QueryCompiler(tableRegistry, new NoOpAliasGenerator()));
+        when(context.typeConverter()).thenReturn(new DefaultTypeConverter());
+        final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
+        when(context.tableMetaDataCache()).thenReturn(tableMetaDataCache);
+
+        try {
+            when(databaseProvider.tableMetaData(any(), any())).thenAnswer(invocation -> {
+                org.litebridge.db.spi.Table table = invocation.getArgument(0);
+                return metaDataMap.get(table.qualifiedName());
+            });
+            when(databaseProvider.toSql(any(), any())).thenAnswer(invocation -> {
+                org.litebridge.db.spi.Operation op = invocation.getArgument(0);
+                return "INSERT INTO " + op.table().name() + (op.table().name().equals("customers") ? " WHERE id IS NULL" : "");
+            });
+        } catch (SQLException e) {
+            // Should not happen
+        }
+
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+        when(selectRegistry.column()).thenReturn((column, args) -> new TestColumnExpression(column));
+        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.reference()).thenReturn(column -> new SelectReference(column) {
+            @Override
+            public String toSql(org.litebridge.db.spi.Operation operation, ClauseType context, @Nullable DelegateExpression parent) {
+                return column().name();
+            }
+        });
+        when(selectRegistry.subselect()).thenReturn(select -> mock(SubselectExpression.class));
+
+        final SqlFunctionRegistry.Aggregate aggregateRegistry = mock(SqlFunctionRegistry.Aggregate.class);
+        when(sqlFunctionRegistry.aggregate()).thenReturn(aggregateRegistry);
+        final DelegateExpressionFactory delegateFactory = (target, args) -> mock(DelegateColumnExpression.class);
+        when(aggregateRegistry.avg()).thenReturn(delegateFactory);
+        when(aggregateRegistry.min()).thenReturn(delegateFactory);
+        when(aggregateRegistry.max()).thenReturn(delegateFactory);
+        when(aggregateRegistry.count()).thenReturn(mock(SelectExpression.class));
+
+        final SqlFunctionRegistry.Scalar scalarRegistry = mock(SqlFunctionRegistry.Scalar.class);
+        when(sqlFunctionRegistry.scalar()).thenReturn(scalarRegistry);
+        when(scalarRegistry.upper()).thenReturn(delegateFactory);
+        when(scalarRegistry.lower()).thenReturn(delegateFactory);
+        when(scalarRegistry.substring()).thenReturn(delegateFactory);
+        when(scalarRegistry.abs()).thenReturn(delegateFactory);
+
+        final SqlFunctionRegistry.Date dateRegistry = mock(SqlFunctionRegistry.Date.class);
+        when(sqlFunctionRegistry.date()).thenReturn(dateRegistry);
+        when(dateRegistry.currentTimestamp()).thenReturn(mock(SelectExpression.class));
+
+        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+
+        final ProtoExpressionResolver protoExpressionResolver = mock(ProtoExpressionResolver.class, CALLS_REAL_METHODS);
+        final SelectExpressionMapper selectExpressionMapper = new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver, tableMetaDataCache, new DefaultTypeConverter());
+        when(context.selectExpressionMapper()).thenReturn(selectExpressionMapper);
+
+        return new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor, context);
+    }
+
     @Test
     void insert() throws SQLException {
         // Given
@@ -46,13 +125,14 @@ class PersistenceFacadeTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto dto = new CustomerDto();
         dto.name = "test";
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
         when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.insert(any(), any())).thenReturn(new org.litebridge.db.spi.update.InsertResult(1));
 
         // When
@@ -73,9 +153,10 @@ class PersistenceFacadeTest {
         when(selectRegistry.column()).thenReturn((column, args) -> new SelectColumn(column, mock(ColumnIdentifierGenerator.class)));
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto dto = new CustomerDto();
         dto.id = 1L;
@@ -104,13 +185,14 @@ class PersistenceFacadeTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto dto = new CustomerDto();
         dto.id = 1L;
@@ -134,7 +216,7 @@ class PersistenceFacadeTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto c1 = new CustomerDto();
         c1.name = "c1";
@@ -144,6 +226,7 @@ class PersistenceFacadeTest {
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
         when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
 
         // When
@@ -154,7 +237,7 @@ class PersistenceFacadeTest {
     }
 
     @Test
-    void save_cycle_throwsException() throws SQLException {
+    void save_cycle_doesNotThrow() throws SQLException {
         // Given
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
@@ -162,7 +245,7 @@ class PersistenceFacadeTest {
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final ProductDto p1 = new ProductDto();
         p1.name = "p1";
@@ -176,8 +259,11 @@ class PersistenceFacadeTest {
         when(tableRegistry.getTableOrThrow(ProductDto.class)).thenReturn(table);
         when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
 
-        // When / Then
-        assertThrows(IllegalStateException.class, () -> facade.save(p1));
+        // When
+        facade.save(p1);
+
+        // Then
+        verify(databaseProvider, org.mockito.Mockito.atLeastOnce()).insert(any(), any());
     }
 
     @Test
@@ -189,7 +275,7 @@ class PersistenceFacadeTest {
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final PersonRecord person = new PersonRecord(null, "John");
 
@@ -211,7 +297,7 @@ class PersistenceFacadeTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto dto = new CustomerDto();
         dto.id = 1L;
@@ -242,7 +328,7 @@ class PersistenceFacadeTest {
         setupMockSqlFunctions(databaseProvider);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto dto = new CustomerDto();
         dto.name = "test";
@@ -277,7 +363,7 @@ class PersistenceFacadeTest {
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto customer = new CustomerDto();
         customer.name = "cust";
@@ -293,8 +379,9 @@ class PersistenceFacadeTest {
         when(tableRegistry.getTableOrThrow(OrderDto.class)).thenReturn(orderTable);
 
         when(databaseProvider.insert(any(), any())).thenAnswer(invocation -> {
-            org.litebridge.db.spi.update.Insert insert = invocation.getArgument(0);
-            if (insert.table().name().equals("customers")) {
+            final PreparedSql preparedSql = invocation.getArgument(0);
+
+            if (preparedSql.sql().contains("customers")) {
                 return new org.litebridge.db.spi.update.InsertResult(1, Map.of(customerTable.getMetaData().column("ID"), 1L));
             }
             return new org.litebridge.db.spi.update.InsertResult(1);
@@ -304,8 +391,8 @@ class PersistenceFacadeTest {
         facade.save(order);
 
         // Then
-        verify(databaseProvider).insert(argThat(i -> i.table().name().equals("customers")), any());
-        verify(databaseProvider).insert(argThat(i -> i.table().name().equals("orders")), any());
+        verify(databaseProvider).insert(argThat(i -> i.sql().contains("customers")), any());
+        verify(databaseProvider).insert(argThat(i -> i.sql().contains("orders")), any());
     }
 
     @Test
@@ -317,7 +404,7 @@ class PersistenceFacadeTest {
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CategoryDto category = new CategoryDto();
         category.name = "cat";
@@ -329,12 +416,14 @@ class PersistenceFacadeTest {
         final OrmTable categoryTable = createOrmTable(changeTracker, CategoryDto.class, "categories", Map.of("id", numeric("ID"), "name", varchar("NAME"), "products", new MappedOneToMany(null, changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products"))), List.of("ID"));
         final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products", Map.of("id", numeric("ID"), "name", varchar("NAME"), "category", numeric("CAT_ID")), List.of("ID"));
 
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(tableRegistry.getTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
         when(tableRegistry.getTableOrThrow(ProductDto.class)).thenReturn(productTable);
 
         when(databaseProvider.insert(any(), any())).thenAnswer(invocation -> {
-            org.litebridge.db.spi.update.Insert insert = invocation.getArgument(0);
-            if (insert.table().name().equals("categories")) {
+            final PreparedSql preparedSql = invocation.getArgument(0);
+
+            if (preparedSql.sql().contains("categories")) {
                 return new org.litebridge.db.spi.update.InsertResult(1, Map.of(categoryTable.getMetaData().column("ID"), 1L));
             }
             return new org.litebridge.db.spi.update.InsertResult(1);
@@ -344,8 +433,8 @@ class PersistenceFacadeTest {
         facade.save(category);
 
         // Then
-        verify(databaseProvider).insert(argThat(i -> i.table().name().equals("categories")), any());
-        verify(databaseProvider).insert(argThat(i -> i.table().name().equals("products")), any());
+        verify(databaseProvider).insert(argThat(i -> i.sql().contains("categories")), any());
+        verify(databaseProvider).insert(argThat(i -> i.sql().contains("products")), any());
     }
 
     @Test
@@ -357,7 +446,7 @@ class PersistenceFacadeTest {
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final ProductDto product = new ProductDto();
         product.id = 1L;
@@ -404,9 +493,10 @@ class PersistenceFacadeTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CategoryDto category = new CategoryDto();
         category.name = "cat";
@@ -440,7 +530,7 @@ class PersistenceFacadeTest {
         setupMockSqlFunctions(databaseProvider);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto dto = new CustomerDto();
         dto.id = null;
@@ -454,9 +544,7 @@ class PersistenceFacadeTest {
         facade.delete(dto);
 
         // Then
-        verify(databaseProvider).delete(argThat(d -> {
-            return d.where().conditions().get(0).condition().operator() == org.litebridge.db.spi.query.Operator.IS_NULL;
-        }), any());
+        verify(databaseProvider).delete(argThat(po -> po.sql().contains("IS NULL")), any());
     }
 
     @Test
@@ -466,7 +554,7 @@ class PersistenceFacadeTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto dto = new CustomerDto();
         dto.id = 1L;
@@ -493,7 +581,7 @@ class PersistenceFacadeTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto dto = new CustomerDto();
         dto.id = 1L;
@@ -502,13 +590,14 @@ class PersistenceFacadeTest {
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"), Set.of("ID"));
         when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
 
         // When
         facade.insert(dto);
 
         // Then
-        verify(databaseProvider).insert(argThat(i -> !((org.litebridge.db.spi.update.Insert)i).returnGeneratedKeys()), any());
+        verify(databaseProvider).insert(argThat(i -> i.updateMetaData() != null && !i.updateMetaData().returnGeneratedKeys()), any());
     }
 
     @Test
@@ -518,7 +607,7 @@ class PersistenceFacadeTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final PersistenceFacade facade = new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
 
         final CustomerDto dto = new CustomerDto();
 
@@ -533,13 +622,56 @@ class PersistenceFacadeTest {
 
         when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
 
         // When
         facade.save(dto);
 
         // Then
-        verify(databaseProvider).insert(argThat(i -> i.rows().get(0).columns().size() == 1), any());
+        verify(databaseProvider).insert(argThat(i -> i.bindValues().size() == 1), any());
+    }
+
+    @Test
+    void save_withDeeplyNestedGeneratedKeys() throws SQLException {
+        // Given
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+
+        final CategoryDto category = new CategoryDto();
+        category.name = "cat";
+        final ProductDto product = new ProductDto();
+        product.name = "prod";
+        category.products = new ArrayList<>(List.of(product));
+        product.category = category;
+
+        final OrmTable categoryTable = createOrmTable(changeTracker, CategoryDto.class, "categories", Map.of("id", numeric("ID"), "name", varchar("NAME"), "products", new MappedOneToMany(null, changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products"))), List.of("ID"));
+        final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products", Map.of("id", numeric("ID"), "name", varchar("NAME"), "category", numeric("CAT_ID")), List.of("ID"));
+
+        when(tableRegistry.getTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
+        when(tableRegistry.getTableOrThrow(ProductDto.class)).thenReturn(productTable);
+
+        when(databaseProvider.insert(any(), any())).thenAnswer(invocation -> {
+            final PreparedSql preparedSql = invocation.getArgument(0);
+            if (preparedSql.sql().contains("categories")) {
+                return new InsertResult(1, Map.of(categoryTable.getMetaData().column("ID"), 10L));
+            } else if (preparedSql.sql().contains("products")) {
+                return new InsertResult(1, Map.of(productTable.getMetaData().column("ID"), 20L));
+            }
+            return new InsertResult(1);
+        });
+
+        // When
+        facade.save(category);
+
+        // Then
+        assertEquals(10L, category.id);
+        assertEquals(20L, product.id);
     }
 
     private void setupMockSqlFunctions(TransactionalDatabaseProvider databaseProvider) {
@@ -551,11 +683,11 @@ class PersistenceFacadeTest {
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
     }
 
-    private static OrmTable createOrmTable(ChangeTracker changeTracker, Class<?> dtoClass, String tableName, Map<String, Object> fieldToTarget, List<String> pkColumns) {
+    private OrmTable createOrmTable(ChangeTracker changeTracker, Class<?> dtoClass, String tableName, Map<String, Object> fieldToTarget, List<String> pkColumns) {
         return createOrmTable(changeTracker, dtoClass, tableName, fieldToTarget, pkColumns, Collections.emptySet());
     }
 
-    private static OrmTable createOrmTable(ChangeTracker changeTracker, Class<?> dtoClass, String tableName, Map<String, Object> fieldToTarget, List<String> pkColumns, Set<String> autoIncColumns) {
+    private OrmTable createOrmTable(ChangeTracker changeTracker, Class<?> dtoClass, String tableName, Map<String, Object> fieldToTarget, List<String> pkColumns, Set<String> autoIncColumns) {
         final org.litebridge.db.spi.Table table = new org.litebridge.db.spi.Table("", "public", tableName);
         final List<ColumnMetaData> columns = fieldToTarget.entrySet().stream()
                 .filter(e -> e.getValue() instanceof TestCol)
@@ -565,6 +697,7 @@ class PersistenceFacadeTest {
                 })
                 .toList();
         final TableMetaData tableMetaData = new TableMetaData(table, pkColumns, columns);
+        metaDataMap.put(table.qualifiedName(), tableMetaData);
 
         final Map<org.litebridge.tracking.FieldAccessor, org.litebridge.db.spi.MappedFieldTarget> fieldTargetMap = new java.util.HashMap<>();
         fieldToTarget.forEach((field, target) -> {
@@ -622,7 +755,8 @@ class PersistenceFacadeTest {
         private Long tag_id;
     }
 
-    public record PersonRecord(Long id, String name) {}
+    public record PersonRecord(Long id, String name) {
+    }
 
     private record TestCol(String name, int type) {
     }

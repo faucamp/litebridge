@@ -1,11 +1,13 @@
 package org.litebridge.orm.api.dto;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.alias.DefaultAliasTransformer;
 import org.litebridge.db.spi.expression.ColumnExpressionFactory;
 import org.litebridge.db.spi.expression.LiteralExpressionFactory;
 import org.litebridge.db.spi.expression.SelectReferenceExpressionFactory;
@@ -13,8 +15,10 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.OrmTable;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
@@ -46,7 +50,7 @@ class DtoFromClauseTerminalTest {
         when(select.column()).thenReturn(mock(ColumnExpressionFactory.class));
         when(select.reference()).thenReturn(mock(SelectReferenceExpressionFactory.class));
         when(select.literal()).thenReturn(mock(LiteralExpressionFactory.class));
-        return new LitebridgeContext(config, fromClauseEngine, sqlFunctionRegistry);
+        return new LitebridgeContext(config, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter());
     }
 
     @Test
@@ -74,13 +78,15 @@ class DtoFromClauseTerminalTest {
         when(ormTable.mappedFieldTargets()).thenReturn(List.of(Map.entry(pkField, (MappedFieldTarget) pkCol)));
 
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        when(databaseProvider.getTypeConverter()).thenReturn(new org.litebridge.convert.DefaultTypeConverter());
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.getAliasTransformer()).thenReturn(new DefaultAliasTransformer());
+        when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
         when(databaseProvider.select(any(), any())).thenReturn(List.of(new Row().withColumn(pkCol.toColumn(), 1L)));
 
         final DtoConstructor constructor = mock(DtoConstructor.class);
         when(constructor.newInstance(any(), any())).thenReturn(new DtoConstructor.ConstructionResult<>(new TestDto(), true));
 
-        final DtoSelector<TestDto> selector = new DtoSelector<>(TestDto.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), constructor, databaseProvider, new NoOpAliasGenerator(), createMockContext());
+        final DtoSelector<TestDto> selector = new DtoSelector<>(TestDto.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), constructor, databaseProvider, new NoOpAliasGenerator(), createMockContext(), null);
         final DtoFromClauseTerminal<TestDto> terminal = selector.select();
 
         // When
@@ -121,16 +127,18 @@ class DtoFromClauseTerminalTest {
         when(ormTable.getColumnForFieldName("id2")).thenReturn(pk2);
         when(ormTable.getColumnMetaData("ID1")).thenReturn(pk1);
         when(ormTable.getColumnMetaData("ID2")).thenReturn(pk2);
-        when(ormTable.mappedFieldTargets()).thenReturn(List.of(Map.entry(f1, (MappedFieldTarget) pk1), Map.entry(f2, (MappedFieldTarget) pk2)));
+        when(ormTable.mappedFieldTargets()).thenReturn(List.of(Map.entry(f1, pk1), Map.entry(f2, pk2)));
 
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
-        when(databaseProvider.getTypeConverter()).thenReturn(new org.litebridge.convert.DefaultTypeConverter());
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.getAliasTransformer()).thenReturn(new DefaultAliasTransformer());
+        when(databaseProvider.toSql(any(), any())).thenReturn("SELECT 1");
         when(databaseProvider.select(any(), any())).thenReturn(List.of(new Row().withColumn(pk1.toColumn(), 1L).withColumn(pk2.toColumn(), 2L)));
 
         final DtoConstructor constructor = mock(DtoConstructor.class);
         when(constructor.newInstance(any(), any())).thenReturn(new DtoConstructor.ConstructionResult<>(new TestDto(), true));
 
-        final DtoSelector<TestDto> selector = new DtoSelector<>(TestDto.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), constructor, databaseProvider, new NoOpAliasGenerator(), createMockContext());
+        final DtoSelector<TestDto> selector = new DtoSelector<>(TestDto.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), constructor, databaseProvider, new NoOpAliasGenerator(), createMockContext(), null);
         final DtoFromClauseTerminal<TestDto> terminal = selector.select();
 
         // When / Then
@@ -159,7 +167,7 @@ class DtoFromClauseTerminalTest {
         when(ormTable.getColumnForFieldName("field1")).thenReturn(col1);
         when(ormTable.getContextTableRegistry()).thenReturn(mock(TableRegistry.class));
 
-        final DtoSelector<TestDto> selector = new DtoSelector<>(TestDto.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), createMockContext());
+        final DtoSelector<TestDto> selector = new DtoSelector<>(TestDto.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), createMockContext(), null);
         final DtoFromClauseTerminal<TestDto> terminal = selector.select();
 
         assertNotNull(terminal.where("field1"));
@@ -171,9 +179,9 @@ class DtoFromClauseTerminalTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getTableOrThrow(String.class)).thenReturn(joinTable);
         // Ensure SelectExpressionMapper is set by calling select()
-        final DtoSelector<TestDto> selectorWithRegistry = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), createMockContext());
+        final DtoSelector<TestDto> selectorWithRegistry = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), createMockContext(), null);
         final DtoFromClauseTerminal<TestDto> terminalWithRegistry = selectorWithRegistry.select();
-        
+
         assertNotNull(terminalWithRegistry.join(String.class));
 
         assertNotNull(terminal.groupBy("field1"));

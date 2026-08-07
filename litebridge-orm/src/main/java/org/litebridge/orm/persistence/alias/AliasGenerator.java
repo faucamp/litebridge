@@ -26,4 +26,13 @@ public sealed interface AliasGenerator permits DefaultAliasGenerator, NoOpAliasG
      * @return The aliased column.
      */
     Column aliasColumn(Table table, ColumnMetaData columnMetaData);
+
+    /**
+     * Generates an aliased column for the specified table and column.
+     *
+     * @param table  the table
+     * @param column the column
+     * @return the aliased column
+     */
+    Column aliasColumn(Table table, Column column);
 }

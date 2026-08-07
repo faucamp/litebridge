@@ -6,13 +6,10 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.math.MathOperation;
-import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Update;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BiFunction;
 
 /**
@@ -39,18 +36,15 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
      * This method constructs the SQL query string based on the provided {@link Update} object,
      * which contains the table's metadata, column-value pairs, and conditions for the WHERE clause.
      * It ensures proper formatting of the SQL query and converts values as needed using a type converter.
-     * The resulting SQL query and its associated bind values are encapsulated in a {@link PreparedSql} object.
      *
      * @param update             the {@link Update} object containing table metadata, column-value pairs for the SET clause,
      *                           and conditions for the WHERE clause to specify target rows.
      * @param connectionProvider the connection provider
-     * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values.
+     * @return the generated SQL query string.
      */
-    public PreparedSql prepareSql(final Update update, final ConnectionProvider connectionProvider) {
+    public String prepareSql(final Update update, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = appendTable(new StringBuilder("UPDATE "), update.table())
                 .append(" SET ");
-
-        final List<org.litebridge.db.spi.sql.BindValue> bindValues = new ArrayList<>(update.columnValues().size());
 
         boolean first = true;
 
@@ -68,17 +62,15 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
                 sql.append(createMathOperation(columnMetaData, mathOperation));
             } else {
                 sql.append('?');
-                final Object convertedValue = typeConverter.convert(columnValue.value(), columnMetaData.getDataType());
-                bindValues.add(new org.litebridge.db.spi.sql.BindValue(convertedValue, columnMetaData.getDataType()));
             }
         }
 
         if (!update.where().isEmpty()) {
             sql.append(" WHERE ");
-            appendConditionsAndSubgroups(sql, update.where(), bindValues, update, connectionProvider);
+            appendConditionsAndSubgroups(sql, update.where(), update, connectionProvider);
         }
 
-        return new PreparedSql(sql.toString(), bindValues);
+        return sql.toString();
     }
 
     /**

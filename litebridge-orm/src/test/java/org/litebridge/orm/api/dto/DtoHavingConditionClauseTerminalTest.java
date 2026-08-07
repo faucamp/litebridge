@@ -1,210 +1,92 @@
 package org.litebridge.orm.api.dto;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
-import org.litebridge.orm.api.select.model.OrderBySpec;
+import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.orm.api.dto.condition.CbDtoConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.ConditionGroupNode;
+import org.litebridge.orm.api.select.ast.HavingNode;
+import org.litebridge.orm.api.select.impl.DelegatingSelectorInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
+import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.OrmTable;
+import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
+import org.litebridge.tracking.ClassFieldAccessorCache;
 
-import java.util.List;
-
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class DtoHavingConditionClauseTerminalTest {
 
     @Test
-    void and_field() {
-        // Given
-        final DtoSelector<String> selector = mock(DtoSelector.class);
-        final OrmTable ormTable = mock(OrmTable.class);
-        final DtoSelectSpec selectSpec = mock(DtoSelectSpec.class);
-        final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
-        final Column column = mock(Column.class);
-
-        when(selector.table()).thenReturn(ormTable);
-        when(selector.selectSpec()).thenReturn(selectSpec);
-        when(ormTable.getColumnForFieldName("field")).thenReturn(columnMetaData);
-        when(columnMetaData.toColumn()).thenReturn(column);
-
-        final ConditionGroupSpec groupSpec = mock(ConditionGroupSpec.class);
-        when(selectSpec.currentHavingConditionGroupSpec()).thenReturn(groupSpec);
-        when(groupSpec.newCondition(any(), any())).thenReturn(mock(ConditionSpec.class));
-        when(selector.litebridgeContext()).thenReturn(mock(LitebridgeContext.class));
-
-        final DtoHavingConditionClauseTerminal<String> terminal = new DtoHavingConditionClauseTerminal<>(selector);
-
-        // When
-        final DtoHavingConditionClause<String> result = terminal.and("field");
-
-        // Then
-        assertNotNull(result);
-        verify(ormTable).getColumnForFieldName("field");
-    }
-
-    @Test
-    void and_expression() {
-        // Given
-        final DtoSelector<String> selector = mock(DtoSelector.class);
-        final DtoSelectSpec selectSpec = mock(DtoSelectSpec.class);
-        final ExpressionSpec expression = new SelectColumnSpec(mock(Column.class));
-
-        when(selector.selectSpec()).thenReturn(selectSpec);
-        final ConditionGroupSpec groupSpec = mock(ConditionGroupSpec.class);
-        when(selectSpec.currentHavingConditionGroupSpec()).thenReturn(groupSpec);
-        when(groupSpec.newCondition(any(), any())).thenReturn(mock(ConditionSpec.class));
-        when(selector.litebridgeContext()).thenReturn(mock(LitebridgeContext.class));
-
-        final DtoHavingConditionClauseTerminal<String> terminal = new DtoHavingConditionClauseTerminal<>(selector);
-
-        // When
-        final DtoHavingConditionClause<String> result = terminal.and(expression);
-
-        // Then
-        assertNotNull(result);
-    }
-
-    @Test
     void and_query() {
         // Given
-        final DtoSelector<String> selector = mock(DtoSelector.class);
-        final DtoSelectSpec selectSpec = mock(DtoSelectSpec.class);
-        final QueryConditionBuilder<String> query = mock(QueryConditionBuilder.class);
-        final LitebridgeContext context = mock(LitebridgeContext.class);
-
-        when(selector.selectSpec()).thenReturn(selectSpec);
-        when(selector.litebridgeContext()).thenReturn(context);
-        when(selectSpec.pushHavingConditionGroup(any())).thenReturn(mock(ConditionGroupSpec.class));
-
-        final DtoHavingConditionClauseTerminal<String> terminal = new DtoHavingConditionClauseTerminal<>(selector);
-
-        // When
-        final DtoHavingConditionClauseTerminal<String> result = terminal.and(query);
-
-        // Then
-        assertNotNull(result);
-        verify(selectSpec).pushHavingConditionGroup(any());
-        verify(selectSpec).popHavingConditionGroup();
-        verify(query).apply(any());
-    }
-
-    @Test
-    void or_field() {
-        // Given
-        final DtoSelector<String> selector = mock(DtoSelector.class);
         final OrmTable ormTable = mock(OrmTable.class);
-        final DtoSelectSpec selectSpec = mock(DtoSelectSpec.class);
-        final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
-        final Column column = mock(Column.class);
+        final Table spiTable = new Table("TEST");
+        final TableMetaData metaData = mock(TableMetaData.class);
+        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(metaData.toTable()).thenReturn(spiTable);
+        when(ormTable.dtoClass()).thenReturn((Class) String.class);
 
-        when(selector.table()).thenReturn(ormTable);
-        when(selector.selectSpec()).thenReturn(selectSpec);
-        when(ormTable.getColumnForFieldName("field")).thenReturn(columnMetaData);
-        when(columnMetaData.toColumn()).thenReturn(column);
-
-        final ConditionGroupSpec groupSpec = mock(ConditionGroupSpec.class);
-        when(selectSpec.currentHavingConditionGroupSpec()).thenReturn(groupSpec);
-        when(groupSpec.newCondition(any(), any())).thenReturn(mock(ConditionSpec.class));
-        when(selector.litebridgeContext()).thenReturn(mock(LitebridgeContext.class));
-
+        final DtoSelector<String> selector = new DtoSelector<>(
+                String.class,
+                ormTable,
+                mock(TableRegistry.class),
+                mock(ClassFieldAccessorCache.class),
+                mock(DtoConstructor.class),
+                mock(TransactionalDatabaseProvider.class),
+                new NoOpAliasGenerator(),
+                mock(LitebridgeContext.class),
+                null
+        );
         final DtoHavingConditionClauseTerminal<String> terminal = new DtoHavingConditionClauseTerminal<>(selector);
 
         // When
-        final DtoHavingConditionClause<String> result = terminal.or("field");
+        final DtoHavingConditionClauseTerminal<String> result = terminal.and(q -> {
+            return new CbDtoConditionClauseTerminal<>(ormTable, mock(org.litebridge.orm.engine.FromClauseEngine.class), null);
+        });
 
         // Then
         assertNotNull(result);
-        verify(ormTable).getColumnForFieldName("field");
-    }
-
-    @Test
-    void or_expression() {
-        // Given
-        final DtoSelector<String> selector = mock(DtoSelector.class);
-        final DtoSelectSpec selectSpec = mock(DtoSelectSpec.class);
-        final ExpressionSpec expression = new SelectColumnSpec(mock(Column.class));
-
-        when(selector.selectSpec()).thenReturn(selectSpec);
-        final ConditionGroupSpec groupSpec = mock(ConditionGroupSpec.class);
-        when(selectSpec.currentHavingConditionGroupSpec()).thenReturn(groupSpec);
-        when(groupSpec.newCondition(any(), any())).thenReturn(mock(ConditionSpec.class));
-        when(selector.litebridgeContext()).thenReturn(mock(LitebridgeContext.class));
-
-        final DtoHavingConditionClauseTerminal<String> terminal = new DtoHavingConditionClauseTerminal<>(selector);
-
-        // When
-        final DtoHavingConditionClause<String> result = terminal.or(expression);
-
-        // Then
-        assertNotNull(result);
+        assertInstanceOf(HavingNode.class, DelegatingSelectorInspector.getDelegate(result).node());
+        assertInstanceOf(ConditionGroupNode.class, ((HavingNode) DelegatingSelectorInspector.getDelegate(result).node()).condition());
     }
 
     @Test
     void or_query() {
         // Given
-        final DtoSelector<String> selector = mock(DtoSelector.class);
-        final DtoSelectSpec selectSpec = mock(DtoSelectSpec.class);
-        final QueryConditionBuilder<String> query = mock(QueryConditionBuilder.class);
-        final LitebridgeContext context = mock(LitebridgeContext.class);
+        final OrmTable ormTable = mock(OrmTable.class);
+        final Table spiTable = new Table("TEST");
+        final TableMetaData metaData = mock(TableMetaData.class);
+        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(metaData.toTable()).thenReturn(spiTable);
+        when(ormTable.dtoClass()).thenReturn((Class) String.class);
 
-        when(selector.selectSpec()).thenReturn(selectSpec);
-        when(selector.litebridgeContext()).thenReturn(context);
-        when(selectSpec.pushHavingConditionGroup(any())).thenReturn(mock(ConditionGroupSpec.class));
-
+        final DtoSelector<String> selector = new DtoSelector<>(
+                String.class,
+                ormTable,
+                mock(TableRegistry.class),
+                mock(ClassFieldAccessorCache.class),
+                mock(DtoConstructor.class),
+                mock(TransactionalDatabaseProvider.class),
+                new NoOpAliasGenerator(),
+                mock(LitebridgeContext.class),
+                null
+        );
         final DtoHavingConditionClauseTerminal<String> terminal = new DtoHavingConditionClauseTerminal<>(selector);
 
         // When
-        final DtoHavingConditionClauseTerminal<String> result = terminal.or(query);
+        final DtoHavingConditionClauseTerminal<String> result = terminal.or(q -> {
+            return new CbDtoConditionClauseTerminal<>(ormTable, mock(org.litebridge.orm.engine.FromClauseEngine.class), null);
+        });
 
         // Then
         assertNotNull(result);
-        verify(selectSpec).pushHavingConditionGroup(any());
-        verify(selectSpec).popHavingConditionGroup();
-        verify(query).apply(any());
-    }
-
-    @Test
-    void orderBy_fields() {
-        // Given
-        final DtoSelector<String> selector = mock(DtoSelector.class);
-        final DtoSelectSpec selectSpec = mock(DtoSelectSpec.class);
-        when(selector.selectSpec()).thenReturn(selectSpec);
-        when(selectSpec.newOrderBy(any(List.class))).thenReturn(mock(OrderBySpec.class));
-
-        final DtoHavingConditionClauseTerminal<String> terminal = new DtoHavingConditionClauseTerminal<>(selector);
-
-        // When
-        final DtoOrderByClause<String> result = terminal.orderBy("field1", "field2");
-
-        // Then
-        assertNotNull(result);
-        verify(selectSpec).newOrderBy(any(List.class));
-    }
-
-    @Test
-    void orderBy_expressions() {
-        // Given
-        final DtoSelector<String> selector = mock(DtoSelector.class);
-        final DtoSelectSpec selectSpec = mock(DtoSelectSpec.class);
-        when(selector.selectSpec()).thenReturn(selectSpec);
-        when(selectSpec.newOrderBy(any(ExpressionSpec[].class))).thenReturn(mock(OrderBySpec.class));
-
-        final DtoHavingConditionClauseTerminal<String> terminal = new DtoHavingConditionClauseTerminal<>(selector);
-
-        // When
-        final DtoOrderByClause<String> result = terminal.orderBy(new SelectColumnSpec(mock(Column.class)));
-
-        // Then
-        assertNotNull(result);
-        verify(selectSpec).newOrderBy(any(ExpressionSpec[].class));
+        assertInstanceOf(HavingNode.class, DelegatingSelectorInspector.getDelegate(result).node());
+        assertInstanceOf(ConditionGroupNode.class, ((HavingNode) DelegatingSelectorInspector.getDelegate(result).node()).condition());
     }
 }

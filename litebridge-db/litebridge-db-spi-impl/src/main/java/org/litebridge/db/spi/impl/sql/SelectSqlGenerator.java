@@ -14,12 +14,9 @@ import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
-import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
@@ -48,20 +45,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
      * @param connectionProvider the connection provider
      * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values
      */
-    public PreparedSql prepareSql(final Select select, final ConnectionProvider connectionProvider) {
-        return prepareSql(select, connectionProvider, null);
-    }
-
-    /**
-     * Prepares a SQL SELECT statement along with its bind values for execution.
-     *
-     * @param select             the select operation
-     * @param connectionProvider the connection provider
-     * @param parentOperation    the parent operation, if any
-     * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values
-     */
-    public PreparedSql prepareSql(final Select select, final ConnectionProvider connectionProvider, final @Nullable Operation parentOperation) {
-        final List<BindValue> bindValues = new ArrayList<>();
+    public String prepareSql(final Select select, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = new StringBuilder("SELECT ");
 
         boolean first = true;
@@ -94,16 +78,14 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         // Joins
         if (!CollectionUtils.isEmpty(select.joins())) {
             for (Join join : select.joins()) {
-                final PreparedSql joinSql = createJoin(join, select, connectionProvider);
-                sql.append(joinSql.sql());
-                bindValues.addAll(joinSql.bindValues());
+                sql.append(createJoin(join, select, connectionProvider));
             }
         }
 
         // Where
         if (select.where().isPresent()) {
             sql.append(" WHERE ");
-            appendConditionsAndSubgroups(sql, select.where().get(), bindValues, select, connectionProvider);
+            appendConditionsAndSubgroups(sql, select.where().get(), select, connectionProvider);
         }
 
         // Group by
@@ -123,7 +105,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
 
             if (select.having().isPresent()) {
                 sql.append(" HAVING ");
-                appendConditionsAndSubgroups(sql, select.having().get(), bindValues, select, connectionProvider);
+                appendConditionsAndSubgroups(sql, select.having().get(), select, connectionProvider);
             }
         }
 
@@ -148,7 +130,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
             appendLimitClause(limit, sql);
         });
 
-        return new PreparedSql(sql.toString(), bindValues);
+        return sql.toString();
     }
 
     /**
@@ -164,9 +146,8 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
      * @param connectionProvider the connection provider
      * @return Prepared SQL join clause
      */
-    protected PreparedSql createJoin(final Join join, final Select operation, final ConnectionProvider connectionProvider) {
+    protected String createJoin(final Join join, final Select operation, final ConnectionProvider connectionProvider) {
         final StringBuilder sb = appendTable(new StringBuilder(" JOIN "), join.table());
-        final List<@Nullable BindValue> bindValues = new ArrayList<>();
 
         if (join.table().alias() != null) {
             sb.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(join.table().alias())));
@@ -180,8 +161,8 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
             sb.append(" ON ");
         }
 
-        appendConditionsAndSubgroups(sb, join.conditions(), bindValues, operation, connectionProvider);
-        return new PreparedSql(sb.toString(), bindValues);
+        appendConditionsAndSubgroups(sb, join.conditions(), operation, connectionProvider);
+        return sb.toString();
     }
 
     /**

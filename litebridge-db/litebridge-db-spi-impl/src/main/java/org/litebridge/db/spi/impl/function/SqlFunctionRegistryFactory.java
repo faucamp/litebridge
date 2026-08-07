@@ -2,6 +2,7 @@ package org.litebridge.db.spi.impl.function;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.DelegateColumnExpression;
@@ -110,7 +111,18 @@ public class SqlFunctionRegistryFactory {
      * @return the literal expression
      */
     protected LiteralExpression createLiteral(final @Nullable Object value) {
-        return new LiteralExpression(value);
+        return createLiteral(value, false);
+    }
+
+    /**
+     * Creates a literal expression.
+     *
+     * @param value     the literal value
+     * @param parameter whether this literal should be treated as a bind parameter
+     * @return the literal expression
+     */
+    protected LiteralExpression createLiteral(final @Nullable Object value, final boolean parameter) {
+        return new LiteralExpression(value, parameter);
     }
 
     /**

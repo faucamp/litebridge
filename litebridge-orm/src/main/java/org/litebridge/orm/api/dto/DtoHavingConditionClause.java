@@ -1,9 +1,13 @@
 package org.litebridge.orm.api.dto;
 
+import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.HavingConditionClause;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.api.select.model.ConditionSpec;
+import org.litebridge.orm.expression.ExpressionSpec;
+
+import java.util.function.Function;
 
 /**
  * Represents a HAVING condition clause for DTO queries.
@@ -21,14 +25,11 @@ public final class DtoHavingConditionClause<DTO>
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 
-    /**
-     * Creates a new DtoHavingConditionClause.
-     *
-     * @param conditionSpec     the condition specification
-     * @param conditionTerminal the terminal clause
-     * @param litebridgeContext the Litebridge context
-     */
-    public DtoHavingConditionClause(final ConditionSpec conditionSpec, final DtoHavingConditionClauseTerminal<DTO> conditionTerminal, final LitebridgeContext litebridgeContext) {
-        super(conditionSpec, conditionTerminal, litebridgeContext);
+    public DtoHavingConditionClause(final LitebridgeContext litebridgeContext,
+                                    final LogicOperator logicOperator,
+                                    final ExpressionSpec lhs,
+                                    final QueryNode node,
+                                    final Function<QueryNode, DtoHavingConditionClauseTerminal<DTO>> terminalRecreator) {
+        super(litebridgeContext, logicOperator, lhs, node, terminalRecreator);
     }
 }

@@ -10,7 +10,7 @@ import org.litebridge.db.spi.update.UpdateResult;
  * This class encapsulates information about the updated DTO, the outcome
  * of the update operation, and optionally, a parent result if nested updates occurred.
  */
-public class DtoUpdateResult {
+public final class DtoUpdateResult {
 
     private Object dto;
     @Nullable

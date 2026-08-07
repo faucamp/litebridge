@@ -3,8 +3,7 @@ package org.litebridge.orm.api.condition;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.dto.condition.CbDtoConditionClauseTerminal;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.sql.condition.CbSqlConditionClauseTerminal;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -21,25 +20,24 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
         permits CbDtoConditionClauseTerminal, CbSqlConditionClauseTerminal {
 
     /**
-     * The condition group specification.
-     */
-    protected final ConditionGroupSpec conditionGroupSpec;
-
-    /**
      * The engine used to process the FROM clause.
      */
     protected final FromClauseEngine fromClauseEngine;
 
     /**
+     * The current query node in the AST.
+     */
+    protected QueryNode node;
+
+    /**
      * Constructs a new {@code AbstractCbConditionClauseTerminal}.
      *
-     * @param conditionGroupSpec The condition group specification.
-     * @param fromClauseEngine   The FROM clause engine.
+     * @param fromClauseEngine The FROM clause engine.
+     * @param node             The current query node.
      */
-    public AbstractCbConditionClauseTerminal(final ConditionGroupSpec conditionGroupSpec,
-                                             final FromClauseEngine fromClauseEngine) {
-        this.conditionGroupSpec = conditionGroupSpec;
+    public AbstractCbConditionClauseTerminal(final FromClauseEngine fromClauseEngine, final QueryNode node) {
         this.fromClauseEngine = fromClauseEngine;
+        this.node = node;
     }
 
     @Override
@@ -82,37 +80,29 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
     protected abstract AbstractCbConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final String column);
 
     /**
-     * Creates a new condition clause instance.
-     *
-     * @param conditionSpec The condition specification.
-     * @return A new {@link AbstractCbConditionClause} instance.
-     */
-    protected abstract AbstractCbConditionClause<DTO> createCbConditionClause(final ConditionSpec conditionSpec);
-
-    /**
-     * Creates a new condition clause start instance for a subgroup.
-     *
-     * @param subgroup The condition group specification for the subgroup.
-     * @return A new {@link AbstractConditionClauseStart} instance.
-     */
-    protected abstract AbstractConditionClauseStart<DTO> createConditionClauseStart(final ConditionGroupSpec subgroup);
-
-    /**
      * Internal implementation of the WHERE clause for expressions.
      *
      * @param logicOperator The logical operator (AND/OR).
      * @param expression    The expression specification.
      * @return A new {@link AbstractCbConditionClause} instance.
      */
-    protected final AbstractCbConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(logicOperator, expression);
-        return createCbConditionClause(conditionSpec);
-    }
+    protected abstract AbstractCbConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression);
 
-    private AbstractCbConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        final ConditionGroupSpec subgroup = conditionGroupSpec.newSubgroup(logicOperator).conditionGroupSpec();
-        final AbstractConditionClauseStart<DTO> conditionClauseStart = createConditionClauseStart(subgroup);
-        query.apply(conditionClauseStart);
-        return this;
+    /**
+     * Internal implementation of the WHERE clause for sub-conditions in queries.
+     *
+     * @param logicOperator The logical operator (AND/OR).
+     * @param query         The sub-condition builder
+     * @return A new {@link AbstractCbConditionClause} instance.
+     */
+    protected abstract AbstractCbConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query);
+
+    /**
+     * Returns the current query node.
+     *
+     * @return the query node
+     */
+    public QueryNode node() {
+        return node;
     }
 }

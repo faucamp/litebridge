@@ -12,12 +12,9 @@ import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
-import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.Delete;
-import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.config.LitebridgeConfig;
@@ -195,7 +192,7 @@ class LitebridgeAutoConfigurationTest {
                     final java.lang.reflect.Field configField = Litebridge.class.getDeclaredField("litebridgeConfig");
                     configField.setAccessible(true);
                     final LitebridgeConfig config = (LitebridgeConfig) configField.get(litebridge);
-                    assertThat(config.getRelatedDtoStrategy()).isEqualTo(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
+                    assertThat(config.relatedDtoStrategy()).isEqualTo(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
                 });
     }
 
@@ -210,22 +207,22 @@ class LitebridgeAutoConfigurationTest {
         }
 
         @Override
-        public InsertResult insert(final Insert insert, final ConnectionProvider connectionProvider) throws SQLException {
+        public InsertResult insert(final PreparedSql insert, final ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 
         @Override
-        public UpdateResult update(final Update update, final ConnectionProvider connectionProvider) throws SQLException {
+        public UpdateResult update(final PreparedSql update, final ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 
         @Override
-        public List<Row> select(final Select select, final ConnectionProvider connectionProvider) throws SQLException {
+        public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
             return List.of();
         }
 
         @Override
-        public UpdateResult delete(final Delete delete, final ConnectionProvider connectionProvider) throws SQLException {
+        public UpdateResult delete(final PreparedSql delete, final ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 

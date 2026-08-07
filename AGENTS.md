@@ -59,24 +59,46 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 
 - The `Litebridge` class exposes various methods for querying and updating data.
 - There are two main "modes" of operation: DTO/entity-based, and SQL-based. 
-In DTO mode, the API refers to class fields in expressions and returns a mapped DTO (or other type, dependent on the query). 
-In SQL-mode, "raw" row data is returned. The API changes this based on what is provided as input for the various steps in the API chain, notably the `from()` part.
-- The API has evolved from simple column-based access to query expressions. Query power what SQL is generated in different clauses. The API is designed to support simple string-based parameter specification and query expressions.
-- Query expressions are the the primary component of the query API. They represent SQL functions, columns, literal expressions and specialised Java-side conversions. They are typically created using static methods in the `org.litebridge.orm.expression.Fn` utility class, or through metamodel fields. 
-- There are 3 mains phases of query expressions:
-  - Proto-query expressions: in the first few steps of the fluent API, there is potentially not enough information to determine e.g. a target table
-  - Expression specifications: Non-ambigous expression of intent (e.g. selecting a specific column in a specific table)
-  - Select Expressions: The final expression as provided by the database provider. Capable of rendering SQL and used in generation of SQL statements.
-- Metatmodels of entities/DTOs provided static query expressions with the same name as the entity/DTO's fields, and enable type-safe queries. They can be created via the Maven plugin or hand-crafted.
+  - In **DTO mode**, the API refers to class fields in expressions and returns a mapped DTO (or other type, dependent on the query). 
+  - In **SQL-mode**, "raw" row data is returned. The API changes this based on what is provided as input for the various steps in the API chain, notably the `from()` part.
+- The fluent API separates user-facing query construction from the internal representation (AST) and execution specifications.
 
-### 3. Database Support
+#### Query Expressions
+- Query expressions are the primary component of the query API. They represent SQL functions, columns, literal expressions, and specialized Java-side conversions. They are typically created using static methods in the `org.litebridge.orm.expression.Fn` utility class, or through metamodel fields. 
+- There are 3 main phases of query expressions:
+  - **Proto-query expressions**: Used in the initial fluent API steps before a target table or context is fully known.
+  - **Expression specifications**: A non-ambiguous representation of intent (e.g., a specific column in a specific table).
+  - **Select Expressions**: The final expression provided by the database provider, capable of rendering SQL.
+
+#### Internal Query Representation (AST)
+- Litebridge uses a lightweight Abstract Syntax Tree (AST) to represent queries. Each step in the fluent API (e.g., `where()`, `join()`, `set()`) adds a `QueryNode` to a linked list chain.
+- The `QueryNode` sealed interface (implemented by `SelectNode`, `DeleteNode`, `UpdateNode`, `WhereNode`, `JoinNode`, `SetNode`, etc.) captures the query structure independently of the database provider or the final SQL.
+- **Nested Conditions**: Complex logic is supported via `QueryConditionBuilder`, which allows building sub-trees of conditions (e.g., `q -> q.where(...).and(...)`) that are represented as `ConditionGroupNode` instances.
+
+#### Query Compilation
+- When a terminal method like `list()` or `execute()` is called, the `QueryCompiler` flattens the `QueryNode` chain and populates a specification object (`SelectSpec`, `DeleteSpec`, or `UpdateSpec`).
+- The `QueryCompiler` handles tasks like:
+  - Resolving column aliases and table references across the query.
+  - Mapping DTO fields to database columns based on registered mappings.
+  - Resolving implicit joins and many-to-many relationship paths.
+  - Compiling subqueries in conditions into their own `SelectSpec`.
+- The resulting specification is then passed to the `DatabaseProvider` to be converted into dialect-specific SQL and executed.
+
+#### Terminal Recreator Pattern
+- Condition clauses use a "terminal recreator" pattern (`Function<QueryNode, T>`) to return to the correct fluent API step after a condition is added to the AST. 
+- This ensures that the fluent chain remains type-safe and consistent, even as the underlying AST is extended.
+
+#### Metamodels
+- Metamodels of entities/DTOs provide static query expressions with the same name as the entity/DTO's fields, enabling type-safe queries. They can be created via the Maven plugin or hand-crafted.
+
+### 4. Database Support
 
 - Database-specific logic (SQL dialect, metadata handling) must reside in `DatabaseProvider` implementations.
 - New database support should be added as a new module in the `litebridge-db` directory.
 - The `AbstractDatabaseProvider` class in module `litebridge-db-spi-impl provides a starting point for implementing the
   SPI, but is not strictly required. It can also be modified to accommodate specific database requirements if needed.
 
-### 4. Testing
+### 5. Testing
 
 - **E2E Tests**: Found in `litebridge-orm/src/test/java/.../e2e/`. Use these for verifying full feature integration. 
 They are bound to Maven's `integration-test` phase and thus executed using `mvn verify` by default.
@@ -98,6 +120,9 @@ They are bound to Maven's `integration-test` phase and thus executed using `mvn 
 
 - `org.litebridge.orm.Litebridge`: The main entry point for `save`, `select`, `update`, `delete`.
 - `org.litebridge.db.spi.DatabaseProvider`: The SPI that must be implemented for each supported database.
+- `org.litebridge.orm.persistence.TransactionalDatabaseProvider`: A wrapper around `DatabaseProvider` that handles transactions and provides access to the `TransactionManager`.
+- `org.litebridge.orm.engine.LitebridgeContext`: A shared context object containing configuration, table registry, and engine instances.
+- `org.litebridge.orm.engine.QueryCompiler`: The centralized compiler that translates the fluent API's AST into executable specifications.
 
 ## Common Agent Tasks
 
@@ -105,4 +130,4 @@ They are bound to Maven's `integration-test` phase and thus executed using `mvn 
   directory. Ensure that all relevant pages are updated when adding/extending a specific topic.
 - **Adding a DB Provider**: Implement the `DatabaseProvider` SPI in a new module and ensure it passes the SPI TCK/common
   tests. Update relevant documentation to reflect the new provider. Add unit tests and E2E tests for the new provider.
-- **Creating tests**: Implement unit tests for new features or bug fixes. Follow the style detailed under section 4, "Testing".
+- **Creating tests**: Implement unit tests for new features or bug fixes. Follow the style detailed under section 5, "Testing".

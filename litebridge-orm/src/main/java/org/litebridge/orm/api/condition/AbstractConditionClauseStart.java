@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.condition;
 
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.dto.condition.CbDtoConditionClause;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.engine.FromClauseEngine;
@@ -14,11 +15,6 @@ import org.litebridge.orm.expression.ExpressionSpec;
 public abstract class AbstractConditionClauseStart<DTO> {
 
     /**
-     * The condition group specification.
-     */
-    protected final ConditionGroupSpec conditionGroupSpec;
-
-    /**
      * The engine used to process the FROM clause.
      */
     protected final FromClauseEngine fromClauseEngine;
@@ -26,12 +22,9 @@ public abstract class AbstractConditionClauseStart<DTO> {
     /**
      * Constructs a new {@code AbstractConditionClauseStart}.
      *
-     * @param conditionGroupSpec The condition group specification.
      * @param fromClauseEngine   The FROM clause engine.
      */
-    public AbstractConditionClauseStart(final ConditionGroupSpec conditionGroupSpec,
-                                        final FromClauseEngine fromClauseEngine) {
-        this.conditionGroupSpec = conditionGroupSpec;
+    public AbstractConditionClauseStart(final FromClauseEngine fromClauseEngine) {
         this.fromClauseEngine = fromClauseEngine;
     }
 
@@ -49,16 +42,5 @@ public abstract class AbstractConditionClauseStart<DTO> {
      * @param expression The expression specification.
      * @return A new {@link AbstractCbConditionClause} instance.
      */
-    public final AbstractCbConditionClause<DTO> where(final ExpressionSpec expression) {
-        final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(LogicOperator.NOOP, expression);
-        return createCbConditionClause(conditionSpec);
-    }
-
-    /**
-     * Creates a new condition clause instance.
-     *
-     * @param conditionSpec The condition specification.
-     * @return A new {@link AbstractCbConditionClause} instance.
-     */
-    protected abstract AbstractCbConditionClause<DTO> createCbConditionClause(final ConditionSpec conditionSpec);
+    public abstract AbstractCbConditionClause<DTO> where(final ExpressionSpec expression);
 }

@@ -44,7 +44,7 @@ class DtoOrderByClauseChainTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
-        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class));
+        final DtoSelector<TestDto> dtoSelector = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, aliasGenerator, mock(LitebridgeContext.class), null);
 
         final DtoOrderByClauseChain<TestDto> dtoDtoOrderByClauseChain = new DtoOrderByClauseChain<>(dtoSelector);
 

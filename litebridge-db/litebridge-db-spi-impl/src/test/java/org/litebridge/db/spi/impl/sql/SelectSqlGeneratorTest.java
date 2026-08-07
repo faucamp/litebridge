@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -23,12 +22,10 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
-import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,9 +35,6 @@ import java.util.function.BiFunction;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.litebridge.db.spi.impl.sql.TestUtil.createTestColumn;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -63,13 +57,6 @@ class SelectSqlGeneratorTest {
         // Given
         final Column column = createTestColumn();
         final Table table = column.table();
-
-        final TableMetaData tableMetaData = mock(TableMetaData.class);
-        when(ensureTableMetaData.apply(eq(table), any(ConnectionProvider.class))).thenReturn(tableMetaData);
-        final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
-        when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
-        when(tableMetaData.column("TEST_COLUMN")).thenReturn(columnMetaData);
-        when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
         final ColumnExpression columnExpression = new SelectColumn(column, selectSqlGenerator.columnIdentifierGenerator);
 
         final LogicCondition condition = new LogicCondition(columnExpression, Operator.EQ, "testValue");
@@ -78,12 +65,10 @@ class SelectSqlGeneratorTest {
         final Join join = new Join(table, conditionGroup);
 
         // When
-        final PreparedSql result = selectSqlGenerator.createJoin(join, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = selectSqlGenerator.createJoin(join, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
-        assertEquals(" JOIN TEST_SCHEMA.TEST_TABLE ON TEST_TABLE.TEST_COLUMN = ?", result.sql());
-        assertEquals(1, result.bindValues().size());
-        assertEquals("testValue", result.bindValues().getFirst().value());
+        assertEquals(" JOIN TEST_SCHEMA.TEST_TABLE ON TEST_TABLE.TEST_COLUMN = ?", result);
     }
 
     @Test
@@ -99,29 +84,13 @@ class SelectSqlGeneratorTest {
         final LogicCondition condition2 = new LogicCondition(LogicOperator.AND, new Condition(columnExression2, Operator.NEQ, "value2"));
         final ConditionGroup conditionGroup = new ConditionGroup(List.of(condition1, condition2));
 
-        final TableMetaData tableMetaData = mock(TableMetaData.class);
-        when(ensureTableMetaData.apply(eq(table), any(ConnectionProvider.class))).thenReturn(tableMetaData);
-
-        final ColumnMetaData pkColumnMetaData = mock(ColumnMetaData.class);
-        when(pkColumnMetaData.getDataType()).thenReturn(Types.VARCHAR);
-        when(tableMetaData.column("TEST_PK")).thenReturn(pkColumnMetaData);
-
-        final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
-        when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
-        when(tableMetaData.column("TEST_COLUMN")).thenReturn(columnMetaData);
-
-        when(typeConverter.convert(anyString(), eq(Types.VARCHAR))).then(i -> i.getArgument(0));
-
         final Join join = new Join(table, conditionGroup);
 
         // When
-        final PreparedSql result = selectSqlGenerator.createJoin(join, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = selectSqlGenerator.createJoin(join, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
-        assertEquals(" JOIN TEST_SCHEMA.TEST_TABLE AS t2 ON t2.TEST_PK = ? AND t2.TEST_COLUMN <> ?", result.sql());
-        assertEquals(2, result.bindValues().size());
-        assertEquals("value1", result.bindValues().get(0).value());
-        assertEquals("value2", result.bindValues().get(1).value());
+        assertEquals(" JOIN TEST_SCHEMA.TEST_TABLE AS t2 ON t2.TEST_PK = ? AND t2.TEST_COLUMN <> ?", result);
     }
 
     @Test
@@ -199,23 +168,14 @@ class SelectSqlGeneratorTest {
                 Optional.of(limit)
         );
 
-        final TableMetaData tableMetaData = mock(TableMetaData.class);
-        when(ensureTableMetaData.apply(any(), any())).thenReturn(tableMetaData);
-        final ColumnMetaData cmd = mock(ColumnMetaData.class);
-        when(cmd.getDataType()).thenReturn(Types.VARCHAR);
-        when(tableMetaData.column(anyString())).thenReturn(cmd);
-        when(typeConverter.convert(any(), anyInt())).then(i -> i.getArgument(0));
-        // when(typeConverter.getDbDataType(any())).thenReturn(Types.INTEGER);
-
         // Mock the non-AliasedColumnExpression
         when(select.expressions().get(1).toSql(any(Operation.class), any(ClauseType.class))).thenReturn("1");
 
         // When
-        final PreparedSql result = selectSqlGenerator.prepareSql(select, mock(ConnectionProvider.class));
+        final String result = selectSqlGenerator.prepareSql(select, mock(ConnectionProvider.class));
 
         // Then
-        assertEquals("SELECT t1.COL1, 1 FROM TEST_TABLE AS t1 JOIN JOIN_TABLE AS j1 ON j1.JCOL = ? WHERE t1.COL2 > ? GROUP BY t1.COL1 HAVING t1.COL1 <> ? ORDER BY t1.COL1 DESC LIMIT 10 OFFSET 5", result.sql());
-        assertEquals(3, result.bindValues().size());
+        assertEquals("SELECT t1.COL1, 1 FROM TEST_TABLE AS t1 JOIN JOIN_TABLE AS j1 ON j1.JCOL = ? WHERE t1.COL2 > ? GROUP BY t1.COL1 HAVING t1.COL1 <> ? ORDER BY t1.COL1 DESC LIMIT 10 OFFSET 5", result);
     }
 
     @Test
@@ -234,10 +194,10 @@ class SelectSqlGeneratorTest {
         );
 
         // When
-        final PreparedSql result = selectSqlGenerator.prepareSql(select, mock(ConnectionProvider.class));
+        final String result = selectSqlGenerator.prepareSql(select, mock(ConnectionProvider.class));
 
         // Then
-        assertEquals("SELECT * FROM TEST_TABLE", result.sql());
+        assertEquals("SELECT * FROM TEST_TABLE", result);
     }
 
     @Test
@@ -249,9 +209,9 @@ class SelectSqlGeneratorTest {
         final Join join = new Join(table, new ConditionGroup(conditions));
 
         // When
-        final PreparedSql result = selectSqlGenerator.createJoin(join, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = selectSqlGenerator.createJoin(join, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
-        assertEquals(" JOIN JOIN_TABLE USING (COL1)", result.sql());
+        assertEquals(" JOIN JOIN_TABLE USING (COL1)", result);
     }
 }

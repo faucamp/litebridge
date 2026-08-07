@@ -122,6 +122,11 @@ public final class ColumnMetaData implements MappedFieldTarget {
         return nullable;
     }
 
+    /**
+     * Gets the default value of the column as a string.
+     *
+     * @return the default value, or {@code null} if none
+     */
     public @Nullable String getDefaultValue() {
         return defaultValue;
     }

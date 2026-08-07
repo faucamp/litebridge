@@ -2,7 +2,10 @@ package org.litebridge.orm.api.select.impl;
 
 import org.litebridge.orm.api.select.LimitClauseTerminal;
 import org.litebridge.orm.api.select.OrderByClauseTerminal;
+import org.litebridge.orm.api.select.ast.LimitNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
+
+import java.util.Optional;
 
 public class OrderByClauseTerminalImpl<DTO, SSP extends SelectSpec>
         extends LimitClauseTerminalImpl<DTO, SSP>
@@ -14,7 +17,6 @@ public class OrderByClauseTerminalImpl<DTO, SSP extends SelectSpec>
 
     @Override
     public LimitClauseTerminal<DTO> limit(final int limit) {
-        selectSpec.ensureLimit().setLimit(limit);
-        return new LimitClauseTerminalImpl<>(delegate);
+        return new LimitClauseTerminalImpl<>(delegate.withNode(new LimitNode(delegate.node(), Optional.of(limit), Optional.empty())));
     }
 }
