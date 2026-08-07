@@ -175,10 +175,6 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
         LOGGER.debug("Row count: {}", rows.size());
         LOGGER.trace("Query result: {}", rows);
 
-        if (rows.isEmpty()) {
-            return rows;
-        }
-
         return rows;
     }
 

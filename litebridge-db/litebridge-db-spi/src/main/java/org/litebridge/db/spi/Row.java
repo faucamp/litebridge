@@ -95,8 +95,10 @@ public final class Row implements Result {
      * @return the index of the column if found, or -1 otherwise
      */
     public int getColumnIndex(final Column column) {
-        if (column.alias() != null) {
-            return getColumnIndexForAlias(column.alias());
+        final String alias = column.alias();
+
+        if (alias != null) {
+            return getColumnIndexForAlias(alias);
         } else {
             return getColumnIndex(column.name());
         }

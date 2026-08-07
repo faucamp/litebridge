@@ -283,10 +283,9 @@ public class PersistenceFacade {
                     final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), null);
                     columnValues.add(columnValue);
                     statementBuilder.addSetNode(columnValue.column(), null, false);
-                    continue;
-                } else {
-                    continue;
                 }
+
+                continue;
             } else {
                 final Object changedFieldValue = changedField.value();
                 basicType = changedFieldValue != null && ClassUtils.isBasicType(changedFieldValue.getClass());
@@ -482,18 +481,14 @@ public class PersistenceFacade {
                                 }
 
                                 // Add join table entry
-                                final List<ColumnValue> joinTableColumnValues = new ArrayList<>();
-                                final TypeConverter typeConverter = databaseProvider.getTypeConverter();
                                 final Table joinTable = mappedManyToMany.joinTable().getMetaData().toTable();
 
                                 dtoPrimaryKeyColumnValues(dto).forEach(cv -> {
                                     final ColumnValue joinCv = new ColumnValue(new Column(joinTable, mappedManyToMany.joinColumn()), cv.value());
-                                    joinTableColumnValues.add(joinCv);
                                     joinTableInsertBuilder.addColumn(joinCv);
                                 });
                                 dtoPrimaryKeyColumnValues(value).forEach(cv -> {
                                     final ColumnValue joinCv = new ColumnValue(new Column(joinTable, mappedManyToMany.inverseJoinColumn()), cv.value());
-                                    joinTableColumnValues.add(joinCv);
                                     joinTableInsertBuilder.addColumn(joinCv);
                                 });
                             }));

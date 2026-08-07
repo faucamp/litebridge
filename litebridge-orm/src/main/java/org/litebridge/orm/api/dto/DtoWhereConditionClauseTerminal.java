@@ -5,6 +5,7 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
+import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.GroupByNode;
@@ -125,7 +126,7 @@ public final class DtoWhereConditionClauseTerminal<DTO>
         }
 
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
-        final org.litebridge.orm.api.select.ConditionClauseTerminal<DTO, ?, ?> terminal = query.apply(conditionClauseStart);
+        final ConditionClauseTerminal<DTO, ?, ?> terminal = query.apply(conditionClauseStart);
 
         if (terminal instanceof AbstractCbConditionClauseTerminal<?> act) {
             whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, act.node()));

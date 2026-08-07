@@ -82,6 +82,7 @@ public final class DtoConstructor {
      * boolean indicating whether the default constructor was used.
      * @throws IllegalArgumentException If no suitable constructor is found for the given DTO class.
      */
+    @SuppressWarnings("unchecked")
     public <DTO> ConstructionResult<DTO> newInstance(final Class<DTO> dtoClass, final List<FieldAccessorValue> fieldAccessorValues) {
         cacheConstructors(dtoClass, null);
         return defaultConstructor(dtoClass)

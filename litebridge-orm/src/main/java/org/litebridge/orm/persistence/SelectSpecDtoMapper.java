@@ -566,7 +566,6 @@ public class SelectSpecDtoMapper {
 
     private static final class PartiallyConstructedDtoCache {
         private final Map<Class<?>, Map<List<Object>, SelectSpecDtoMapper.PartiallyConstructedDto>> cache = new IdentityHashMap<>();
-        private final Map<Class<?>, List<Object>> listCache = new IdentityHashMap<>();
         private final Map<Object, Map<FieldAccessor, Set<Object>>> links = new IdentityHashMap<>();
 
         public @Nullable PartiallyConstructedDto get(final Class<?> dtoClass, final List<Object> id) {
@@ -589,7 +588,6 @@ public class SelectSpecDtoMapper {
         private void put(final List<Object> id, final SelectSpecDtoMapper.PartiallyConstructedDto dto) {
             cache.computeIfAbsent(dto.ormTable().dtoClass(), cls -> new HashMap<>())
                     .put(id, dto);
-            listCache.clear();
         }
 
         private void addLink(final Object source, final FieldAccessor collection, final Object target) {

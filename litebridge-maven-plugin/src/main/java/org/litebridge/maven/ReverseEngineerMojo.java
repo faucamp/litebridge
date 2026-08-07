@@ -145,8 +145,9 @@ public final class ReverseEngineerMojo extends AbstractMojo {
         // Remove input tables that were collapsed into many-to-many mappings
         manyToManyMappingResult.collapsedTables()
                 .forEach(collapsedTable -> {
-                    if (output.isResolveRelationships())
-                    input.getTables().remove(collapsedTable);
+                    if (output.isResolveRelationships()) {
+                        input.getTables().remove(collapsedTable);
+                    }
                 });
 
         // Generate entities
