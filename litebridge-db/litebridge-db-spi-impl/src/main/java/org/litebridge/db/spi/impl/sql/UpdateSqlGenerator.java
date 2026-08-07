@@ -10,8 +10,6 @@ import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Update;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BiFunction;
 
 /**
@@ -48,8 +46,6 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
         final StringBuilder sql = appendTable(new StringBuilder("UPDATE "), update.table())
                 .append(" SET ");
 
-        final List<org.litebridge.db.spi.sql.BindValue> bindValues = new ArrayList<>(update.columnValues().size());
-
         boolean first = true;
 
         for (ColumnValue columnValue : update.columnValues()) {
@@ -66,8 +62,6 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
                 sql.append(createMathOperation(columnMetaData, mathOperation));
             } else {
                 sql.append('?');
-                final Object convertedValue = typeConverter.convert(columnValue.value(), columnMetaData.getDataType());
-                bindValues.add(new org.litebridge.db.spi.sql.BindValue(convertedValue, columnMetaData.getDataType()));
             }
         }
 

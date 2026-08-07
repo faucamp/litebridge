@@ -24,27 +24,34 @@ import java.util.List;
  */
 public class UpdateSpec extends AbstractConditionBasedSpec {
 
-    protected final List<ColumnValue> columnValues = new ArrayList<>();
+    private record BoundColumnValue(ColumnValue columnValue, boolean bind) {}
+    protected final List<BoundColumnValue> columnValues = new ArrayList<>();
 
     public UpdateSpec(final Table table, final SelectExpressionMapper selectExpressionMapper) {
         super(table, selectExpressionMapper);
     }
 
     public void addColumnValue(final ColumnValue columnValue) {
-        columnValues.add(columnValue);
+        addColumnValue(columnValue, true);
+    }
+
+    public void addColumnValue(final ColumnValue columnValue, final boolean bind) {
+        columnValues.add(new BoundColumnValue(columnValue, bind));
     }
 
     public PreparedOperation toUpdate(final TableMetaDataCache tableMetaDataCache, final TypeConverter typeConverter) {
         final List<BindValue> bindValues = new ArrayList<>();
 
-        for (ColumnValue columnValue : columnValues) {
-            if (!(columnValue.value() instanceof MathOperation)) {
+        for (BoundColumnValue boundColumnValue : columnValues) {
+            final ColumnValue columnValue = boundColumnValue.columnValue();
+            if (boundColumnValue.bind() && !(columnValue.value() instanceof MathOperation)) {
                 bindValues.addAll(createBindValues(columnValue.column(), columnValue.value(), tableMetaDataCache, typeConverter));
             }
         }
 
+        final List<ColumnValue> updateColumnValues = columnValues.stream().map(BoundColumnValue::columnValue).toList();
         final Update update = new Update(table,
-                columnValues,
+                updateColumnValues,
                 conditions.toConditionGroup(selectExpressionMapper, Collections.singleton(table), bindValues, tableMetaDataCache, typeConverter));
         return new PreparedOperation(update, bindValues);
     }

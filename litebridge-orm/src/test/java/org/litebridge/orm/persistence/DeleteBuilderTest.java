@@ -1,43 +1,46 @@
 package org.litebridge.orm.persistence;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.update.Delete;
+import org.litebridge.orm.api.select.ast.DeleteNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryCompiler;
 
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class DeleteBuilderTest {
 
     @Test
-    void testBuild() {
-        final OrmTable table = mock(OrmTable.class);
-        final TableMetaData metaData = new TableMetaData("catalog", "schema", "table", Collections.emptyList(), Collections.emptyList());
-        when(table.getMetaData()).thenReturn(metaData);
+    void build() {
+        // Given
+        final OrmTable ormTable = mock(OrmTable.class);
+        final TableMetaData tableMetaData = new TableMetaData("catalog", "schema", "table", Collections.emptyList(), Collections.emptyList());
+        when(ormTable.getMetaData()).thenReturn(tableMetaData);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+        final QueryCompiler queryCompiler = mock(QueryCompiler.class);
+        when(litebridgeContext.createQueryCompiler()).thenReturn(queryCompiler);
 
-        final DeleteBuilder builder = new DeleteBuilder(table);
-        final ConditionGroup conditions = mock(ConditionGroup.class);
-        builder.where(conditions);
+        final DeleteBuilder builder = new DeleteBuilder(ormTable, litebridgeContext);
+        final QueryNode queryNode = new DeleteNode(null, new Table("catalog", "schema", "table"));
+        builder.where(queryNode);
 
-        final Delete delete = builder.build();
-        assertNotNull(delete);
-        assertEquals("table", delete.table().name());
-        assertEquals("schema", delete.table().schema());
-        assertEquals("catalog", delete.table().catalog());
-        assertEquals(conditions, delete.where());
-    }
+        // When
+        final PreparedOperation result = builder.build();
 
-    @Test
-    void testBuildWithoutConditions() {
-        final OrmTable table = mock(OrmTable.class);
-        final DeleteBuilder builder = new DeleteBuilder(table);
-
-        assertThrows(NullPointerException.class, builder::build);
+        // Then
+        assertNotNull(result);
+        assertInstanceOf(Delete.class, result.operation());
+        final Delete delete = (Delete) result.operation();
+        assertEquals(tableMetaData.toTable(), delete.table());
     }
 }

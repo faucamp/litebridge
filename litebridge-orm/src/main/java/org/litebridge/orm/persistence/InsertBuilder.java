@@ -1,13 +1,10 @@
 package org.litebridge.orm.persistence;
 
-import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.update.Insert;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import org.litebridge.orm.api.insert.model.InsertSpec;
+import org.litebridge.orm.api.select.ast.InsertNode;
+import org.litebridge.orm.engine.LitebridgeContext;
 
 /**
  * A builder class for constructing SQL INSERT statements.
@@ -17,39 +14,17 @@ import java.util.stream.Collectors;
  * <p>
  * Instances of this class support method chaining for a fluent API style.
  */
-final class InsertBuilder extends AbstractStatementBuilder<Insert> {
+final class InsertBuilder extends AbstractStatementBuilder {
 
-    private final List<DtoRowValue> rows = new ArrayList<>();
-
-    public InsertBuilder(final OrmTable table) {
-        super(table);
-    }
-
-    public InsertBuilder add(final DtoRowValue dtoRowValue) {
-        rows.add(dtoRowValue);
-        return this;
+    public InsertBuilder(final OrmTable table, final LitebridgeContext litebridgeContext) {
+        super(table, litebridgeContext);
+        this.node = new InsertNode(null, ormTable.getMetaData().toTable());
     }
 
     @Override
-    public Insert build() {
-        return new Insert(ormTable.getMetaData().toTable(), rows.stream().map(DtoRowValue::rowValue).toList(), returnGeneratedKeys());
-    }
-
-    private boolean returnGeneratedKeys() {
-        final Set<String> autoIncrementingPks = ormTable.getMetaData().primaryKey().stream()
-                .filter(columnMetadata -> columnMetadata.isAutoIncrement()
-                        || (columnMetadata.getGenerator() != null && SequenceColumnValueGenerator.class.isAssignableFrom(columnMetadata.getGenerator().getClass())))
-                .map(ColumnMetaData::name)
-                .collect(Collectors.toSet());
-
-        if (autoIncrementingPks.isEmpty()) {
-            return false;
-        }
-
-        return rows.stream()
-                .flatMap(dtoRowValue -> dtoRowValue.rowValue().columns().stream())
-                // Check if a value for the auto-incrementing PK was specified
-                .noneMatch(columnValue -> autoIncrementingPks.contains(columnValue.column().name())
-                        && columnValue.value() != null);
+    public PreparedOperation build() {
+        final InsertSpec insertSpec = new InsertSpec(ormTable.getMetaData().toTable(), litebridgeContext.selectExpressionMapper());
+        litebridgeContext.createQueryCompiler().compile(node, insertSpec);
+        return insertSpec.toInsert(litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter());
     }
 }

@@ -1,11 +1,18 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.db.spi.update.UpdateStatement;
+import org.litebridge.db.spi.update.ColumnValue;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SetNode;
+import org.litebridge.orm.api.select.ast.WhereNode;
+import org.litebridge.orm.engine.LitebridgeContext;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,26 +20,42 @@ import java.util.List;
 
 /**
  * Abstract base class for building SQL statements.
- *
- * @param <US> The type of update statement being built.
  */
-public abstract sealed class AbstractStatementBuilder<US extends UpdateStatement> implements StatementBuilder<US>
-        permits InsertBuilder, UpdateBuilder, DeleteBuilder {
+public abstract sealed class AbstractStatementBuilder implements StatementBuilder
+        permits AbstractConditionalStatementBuilder, InsertBuilder {
 
     /**
      * The ORM table associated with the statement.
      */
     protected final OrmTable ormTable;
     private final StatementChain statementChain = new StatementChain();
-    private final List<BindValue> bindValues = new ArrayList<>();
+    protected final LitebridgeContext litebridgeContext;
+    protected QueryNode node;
 
     /**
      * Constructs a new {@code AbstractStatementBuilder}.
      *
-     * @param ormTable The ORM table.
+     * @param ormTable          The ORM table.
+     * @param litebridgeContext
      */
-    protected AbstractStatementBuilder(final OrmTable ormTable) {
+    protected AbstractStatementBuilder(final OrmTable ormTable,
+                                       final LitebridgeContext litebridgeContext) {
         this.ormTable = ormTable;
+        this.litebridgeContext = litebridgeContext;
+    }
+
+    @Override
+    public QueryNode node() {
+        return node;
+    }
+
+    @Override
+    public void addSetNode(final Column column, final @Nullable Object value, final boolean bindValue) {
+        this.node = new SetNode(this.node, column, value, bindValue);
+    }
+
+    public void addColumn(final ColumnValue columnValue) {
+        addSetNode(columnValue.column(), columnValue.value(), true);
     }
 
     @Override
@@ -41,12 +64,7 @@ public abstract sealed class AbstractStatementBuilder<US extends UpdateStatement
     }
 
     @Override
-    public List<BindValue> bindValues() {
-        return bindValues;
-    }
-
-    @Override
-    public abstract US build();
+    public abstract PreparedOperation build();
 
     @Override
     public UpdateMetaData createUpdateMetaData() {

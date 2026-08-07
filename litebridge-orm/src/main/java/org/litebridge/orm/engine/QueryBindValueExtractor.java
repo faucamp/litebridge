@@ -2,12 +2,16 @@ package org.litebridge.orm.engine;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.math.MathOperation;
+import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.HavingNode;
+import org.litebridge.orm.api.select.ast.InsertNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SetNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -44,6 +48,18 @@ public final class QueryBindValueExtractor {
             }
             case WhereNode whereNode -> extractBindValuesAtLevel(whereNode.condition(), bindValues);
             case HavingNode havingNode -> extractBindValuesAtLevel(havingNode.condition(), bindValues);
+            case SetNode setNode -> {
+                //TODO: improve
+                if (setNode.bindValue()) {
+                    final Object value = setNode.value();
+                    if (!(value instanceof Column) && !(value instanceof ExpressionSpec) && !(value instanceof MathOperation)) {
+                        bindValues.add(value);
+                    }
+                }
+            }
+            case InsertNode insertNode -> {
+                // InsertNode itself doesn't have bind values, but we might have SetNodes following it
+            }
             default -> {
                 // Ignore other node types in main chain
             }
@@ -67,6 +83,11 @@ public final class QueryBindValueExtractor {
 
         // Process conditions first
         for (ConditionNode conditionNode : conditions) {
+            final Operator operator = conditionNode.operator();
+            if (operator == Operator.IS_NULL || operator == Operator.IS_NOT_NULL || operator == Operator.USING) {
+                continue;
+            }
+
             final Object rhs = conditionNode.rhs();
 
             if (rhs instanceof SelectTerminal<?> st) {

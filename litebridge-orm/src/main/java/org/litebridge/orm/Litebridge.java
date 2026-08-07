@@ -12,9 +12,7 @@ import org.litebridge.orm.api.delete.DeleteTerminal;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoProtoExpressionResolver;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
-import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.dto.delete.DtoDeleteWhereClause;
-import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.api.dto.delete.DtoDeletor;
 import org.litebridge.orm.api.dto.update.DtoUpdateStart;
 import org.litebridge.orm.api.dto.update.DtoUpdater;
@@ -23,6 +21,7 @@ import org.litebridge.orm.api.register.RegistrationContextTerminal;
 import org.litebridge.orm.api.select.FromClauseStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridge.orm.api.select.SelectApi;
+import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.api.spec.DtoTableSpec;
@@ -38,6 +37,7 @@ import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.engine.RegistrationEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
@@ -222,10 +222,14 @@ public final class Litebridge implements SelectApi {
         this.litebridgeConfig = litebridgeConfig != null ? litebridgeConfig : new LitebridgeConfig();
         this.changeTracker = new ChangeTracker(lookup);
         this.tableMetaDataCache = new TableMetaDataCache(this.databaseProvider, transactionManager);
-        this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor);
         final TableMapper tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
         this.registrationEngine = new RegistrationEngine(this.databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
         this.fromClauseEngine = new FromClauseEngine(this.databaseProvider, tableRegistry, changeTracker, dtoConstructor, this::createLitebridgeContext);
+        this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor, createLitebridgeContext());
+
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Litebridge initialised with databaseProvider: {}, config: {}", databaseProvider.getClass().getName(), litebridgeConfig);
+        }
     }
 
     /**
@@ -573,10 +577,14 @@ public final class Litebridge implements SelectApi {
         return transactionContext;
     }
 
+    QueryPlanCache queryPlanCache() {
+        return queryPlanCache;
+    }
+
     private LitebridgeContext createLitebridgeContext() {
         final SqlFunctionRegistry sqlFunctionRegistry = databaseProvider.getSqlFunctionRegistry();
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
-        return new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, queryPlanCache, aliasGenerator, tableMetaDataCache, databaseProvider.getTypeConverter());
+        return new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, queryPlanCache, aliasGenerator, tableMetaDataCache, databaseProvider.getTypeConverter(), createSelectExpressionMapper(true));
     }
 
     private SelectExpressionMapper createSelectExpressionMapper(final boolean dto) {

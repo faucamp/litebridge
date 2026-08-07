@@ -1,11 +1,9 @@
 package org.litebridge.orm.persistence;
 
-import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.query.ConditionGroup;
-import org.litebridge.db.spi.update.Delete;
-
-import java.util.Objects;
+import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.orm.api.delete.model.DeleteSpec;
+import org.litebridge.orm.api.select.ast.DeleteNode;
+import org.litebridge.orm.engine.LitebridgeContext;
 
 /**
  * A builder class for constructing SQL DELETE statements.
@@ -13,32 +11,22 @@ import java.util.Objects;
  * This class provides an API to facilitate the creation of DELETE statements
  * targeting a specific table with optional conditions.
  */
-public final class DeleteBuilder extends AbstractStatementBuilder<Delete> {
-
-    private @Nullable ConditionGroup conditions;
+public final class DeleteBuilder extends AbstractConditionalStatementBuilder {
 
     /**
      * Constructs a {@code DeleteBuilder} for the specified ORM table.
      *
      * @param table the table to delete from
      */
-    public DeleteBuilder(final OrmTable table) {
-        super(table);
-    }
-
-    /**
-     * Sets the conditions for the DELETE statement.
-     *
-     * @param conditionGroup the group of conditions to apply
-     * @return this builder instance
-     */
-    public DeleteBuilder where(final ConditionGroup conditionGroup) {
-        this.conditions = conditionGroup;
-        return this;
+    public DeleteBuilder(final OrmTable table, final LitebridgeContext litebridgeContext) {
+        super(table, litebridgeContext);
+        this.node = new DeleteNode(null, table.getMetaData().toTable());
     }
 
     @Override
-    public Delete build() {
-        return new Delete(new Table(ormTable.getMetaData().catalog(), ormTable.getMetaData().schema(), ormTable.getMetaData().name()), Objects.requireNonNull(conditions));
+    public PreparedOperation build() {
+        final DeleteSpec deleteSpec = new DeleteSpec(ormTable.getMetaData().toTable(), litebridgeContext.selectExpressionMapper());
+        litebridgeContext.createQueryCompiler().compile(node, deleteSpec);
+        return deleteSpec.toDelete(litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter());
     }
 }

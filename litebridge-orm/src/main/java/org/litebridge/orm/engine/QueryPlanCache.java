@@ -59,6 +59,22 @@ public final class QueryPlanCache {
         cache.put(nodeHash, cachedOperation);
     }
 
+    /**
+     * Returns the current cache size.
+     *
+     * @return the current cache size.
+     */
+    public int size() {
+        return cache.size();
+    }
+
+    /**
+     * Clears the cache.
+     */
+    public void clear() {
+        cache.clear();
+    }
+
     public record CachedOperation(String sql,
                                   List<Integer> bindValueSqlTypes,
                                   @Nullable TypeConversionMetaData typeConversionMetaData,

@@ -3,16 +3,13 @@ package org.litebridge.orm.persistence;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
-import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
+import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.BindValueExpression;
-import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.query.Condition;
-import org.litebridge.db.spi.query.ConditionGroup;
-import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.UpdateMetaData;
@@ -23,10 +20,14 @@ import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.RowValue;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
-import org.litebridge.db.spi.update.UpdateStatement;
+import org.litebridge.orm.api.select.ast.ConditionNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.QueryBindValueExtractor;
+import org.litebridge.orm.engine.QueryPlanCache;
+import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.manytomany.NoOpFieldAccessor;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.ChangedCollectionField;
@@ -42,7 +43,6 @@ import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,31 +67,38 @@ import java.util.StringJoiner;
 public class PersistenceFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PersistenceFacade.class);
+    private static final UpdateResult EMPTY_UPDATE_RESULT = new UpdateResult(0);
+    private static final NoOpStatementBuilder NO_OP_STATEMENT_BUILDER = new NoOpStatementBuilder();
+
     private final TableProvider tableProvider;
     private final TransactionalDatabaseProvider databaseProvider;
     private final TransactionManager transactionManager;
     private final ChangeTracker changeTracker;
     private final ClassFieldAccessorCache classFieldAccessorCache;
     private final DtoConstructor dtoConstructor;
+    private final LitebridgeContext litebridgeContext;
 
     /**
      * Constructs a new {@code PersistenceFacade} instance.
      *
-     * @param tableRegistry    the registry of ORM tables
-     * @param databaseProvider the database provider
-     * @param changeTracker    the change tracker
-     * @param dtoConstructor   the DTO constructor
+     * @param tableRegistry     the registry of ORM tables
+     * @param databaseProvider  the database provider
+     * @param changeTracker     the change tracker
+     * @param dtoConstructor    the DTO constructor
+     * @param litebridgeContext the Litebridge context
      */
     public PersistenceFacade(final TableRegistry tableRegistry,
                              final TransactionalDatabaseProvider databaseProvider,
                              final ChangeTracker changeTracker,
-                             final DtoConstructor dtoConstructor) {
+                             final DtoConstructor dtoConstructor,
+                             final LitebridgeContext litebridgeContext) {
         this.tableProvider = new TableProvider(tableRegistry);
         this.databaseProvider = databaseProvider;
         this.transactionManager = databaseProvider.transactionManager();
         this.changeTracker = changeTracker;
         this.classFieldAccessorCache = changeTracker.classFieldAccessorCache();
         this.dtoConstructor = dtoConstructor;
+        this.litebridgeContext = litebridgeContext;
     }
 
     /**
@@ -123,8 +130,9 @@ public class PersistenceFacade {
      * @throws SQLException if a database access error occurs during the save operation.
      */
     public <DTO> void save(DTO dto) throws SQLException {
-        final AbstractStatementBuilder<?> statementBuilder = createStatementBuilder(dto, new HashSet<>());
-        final CompositeUpdateResult compositeUpdateResult = executeUpdateStatement(dto, null, statementBuilder);
+        final StatementBuilder statementBuilder = createStatementBuilder(dto, new HashSet<>());
+        final CompositeUpdateResult compositeUpdateResult = new CompositeUpdateResult();
+        executeUpdateStatement(dto, null, statementBuilder, compositeUpdateResult);
 
         compositeUpdateResult.results().forEach(dtoUpdateResult -> {
             updateOneToManyReverseMappings(dtoUpdateResult, compositeUpdateResult);
@@ -149,8 +157,9 @@ public class PersistenceFacade {
      * @throws SQLException if a database access error occurs during the insertion process.
      */
     public void insert(final Object dto) throws SQLException {
-        final InsertBuilder statementBuilder = createInsertBuilder(dto, tableProvider.getTableOrThrow(dto.getClass()), new HashSet<>());
-        final CompositeUpdateResult compositeUpdateResult = executeUpdateStatement(dto, null, statementBuilder);
+        final StatementBuilder statementBuilder = createInsertBuilder(dto, tableProvider.getTableOrThrow(dto.getClass()), new HashSet<>());
+        final CompositeUpdateResult compositeUpdateResult = new CompositeUpdateResult();
+        executeUpdateStatement(dto, null, statementBuilder, compositeUpdateResult);
 
         compositeUpdateResult.results().forEach(dtoUpdateResult -> {
             updateOneToManyReverseMappings(dtoUpdateResult, compositeUpdateResult);
@@ -177,8 +186,8 @@ public class PersistenceFacade {
      * @throws SQLException if a database access error occurs during the update process.
      */
     public void update(final Object dto) throws SQLException {
-        final UpdateBuilder statementBuilder = createUpdateBuilder(dto, tableProvider.getTableOrThrow(dto.getClass()), new HashSet<>());
-        executeUpdateStatement(dto, null, statementBuilder);
+        final StatementBuilder statementBuilder = createUpdateBuilder(dto, tableProvider.getTableOrThrow(dto.getClass()), new HashSet<>());
+        executeUpdateStatement(dto, null, statementBuilder, new CompositeUpdateResult());
     }
 
     /**
@@ -188,37 +197,52 @@ public class PersistenceFacade {
      * @throws SQLException if a database access error occurs during the delete process
      */
     public void delete(final Object dto) throws SQLException {
-        final DeleteBuilder statementBuilder = createDeleteBuilder(dto, tableProvider.getTableOrThrow(dto.getClass()), new HashSet<>());
-        executeUpdateStatement(dto, null, statementBuilder);
+        final StatementBuilder statementBuilder = createDeleteBuilder(dto, tableProvider.getTableOrThrow(dto.getClass()), new HashSet<>());
+        executeUpdateStatement(dto, null, statementBuilder, new CompositeUpdateResult());
     }
 
-    private InsertBuilder createInsertBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos) {
-        final InsertBuilder insertBuilder = new InsertBuilder(table);
-        prepareUpdateStatement(dto, table, insertBuilder, inProgressDtos);
+    private StatementBuilder createInsertBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos) {
+        final InsertBuilder insertBuilder = new InsertBuilder(table, litebridgeContext);
+
+        if (prepareUpdateStatement(dto, table, insertBuilder, inProgressDtos) == null) {
+            return NO_OP_STATEMENT_BUILDER;
+        }
         return insertBuilder;
     }
 
-    private UpdateBuilder createUpdateBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos) {
-        final UpdateBuilder updateBuilder = new UpdateBuilder(table);
-        prepareUpdateStatement(dto, table, updateBuilder, inProgressDtos);
+    private StatementBuilder createUpdateBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos) {
+        final UpdateBuilder updateBuilder = new UpdateBuilder(table, litebridgeContext);
+
+        if (prepareUpdateStatement(dto, table, updateBuilder, inProgressDtos) == null) {
+            return NO_OP_STATEMENT_BUILDER;
+        }
+
         return updateBuilder;
     }
 
-    private DeleteBuilder createDeleteBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos) {
-        final DeleteBuilder deleteBuilder = new DeleteBuilder(table);
+    private StatementBuilder createDeleteBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos) {
+        final DeleteBuilder deleteBuilder = new DeleteBuilder(table, litebridgeContext);
         prepareDeleteStatement(dto, table, deleteBuilder, inProgressDtos);
         return deleteBuilder;
     }
 
-    private <DTO> @Nullable StatementChain prepareUpdateStatement(final DTO dto, final OrmTable table, final AbstractStatementBuilder<?> statementBuilder, final Set<Object> inProgressDtos) {
+    private <DTO> @Nullable StatementChain prepareUpdateStatement(final DTO dto, final OrmTable table, final AbstractStatementBuilder statementBuilder, final Set<Object> inProgressDtos) {
         inProgressDtos.add(dto);
-        final TrackedDto<?> trackedDto = table.ensureTrackedDto(dto);
-        final ChangedFields changedFields = trackedDto.changedFields();
 
-        if (changedFields.isEmpty()) {
-            LOGGER.debug("No changed fields found for DTO: {}", dto);
-            return null;
+        final boolean isInsert = statementBuilder instanceof InsertBuilder;
+        TrackedDto<?> trackedDto = changeTracker.getTrackedDtoOrNull(dto);
+
+        if (trackedDto == null) {
+            if (isInsert) {
+                // If it's an insert, we want all fields to be considered changed
+                changeTracker.trackDtoFields(dto, new HashSet<>(classFieldAccessorCache.fieldAccessors(dto.getClass())), true);
+                trackedDto = changeTracker.getTrackedDto(dto);
+            } else {
+                trackedDto = table.ensureTrackedDto(dto);
+            }
         }
+
+        final ChangedFields changedFields = trackedDto.changedFields();
 
         if (LOGGER.isTraceEnabled()) {
             final StringJoiner sj = new StringJoiner(", ", "[", "]");
@@ -228,8 +252,7 @@ public class PersistenceFacade {
 
         final StatementChain statementChain = statementBuilder.statementChain();
         final List<ColumnValue> columnValues = new ArrayList<>();
-        final boolean isInsert = statementBuilder instanceof InsertBuilder;
-        final TypeConverter typeConverter = databaseProvider.getTypeConverter();
+        boolean columnsAdded = false;
 
         for (Map.Entry<FieldAccessor, MappedFieldTarget> entry : table.mappedFieldTargets()) {
             final FieldAccessor fieldAccessor = entry.getKey();
@@ -257,7 +280,9 @@ public class PersistenceFacade {
             if (changedField == null) {
                 if (isInsert && columnMetaData.getGenerator() != null) {
                     // Generate value using a DB sequence; don't add a bind value
-                    columnValues.add(new ColumnValue(columnMetaData.toColumn(), null));
+                    final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), null);
+                    columnValues.add(columnValue);
+                    statementBuilder.addSetNode(columnValue.column(), null, false);
                     continue;
                 } else {
                     continue;
@@ -269,8 +294,10 @@ public class PersistenceFacade {
             }
 
             if (basicType) {
-                columnValues.add(new ColumnValue(columnMetaData.toColumn(), value));
-                statementBuilder.bindValues().add(createBindValue(value, columnMetaData, typeConverter));
+                final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), value);
+                columnValues.add(columnValue);
+                statementBuilder.addColumn(columnValue);
+                columnsAdded = true;
             } else {
                 // Dealing with an embedded DTO - add the context to the table provider
                 tableProvider.pushContext(table.getContextTableRegistry());
@@ -292,7 +319,7 @@ public class PersistenceFacade {
 
                             if (!inProgressDtos.contains(value)) {
                                 // First time we're encountering this nested DTO; create an insert/update statement for it
-                                final AbstractStatementBuilder<?> dependencyStatementBuilder = createStatementBuilder(value, inProgressDtos);
+                                final StatementBuilder dependencyStatementBuilder = createStatementBuilder(value, inProgressDtos);
 
                                 if (!dtoPkSet) {
                                     // PK not yet set - pipe the generated key back to the parent DTO
@@ -301,8 +328,11 @@ public class PersistenceFacade {
                                                 && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
 
                                             insertResult.generatedKeys().forEach((pkColumn, pkValue) -> {
-                                                columnValues.add(new ColumnValue(pkColumn.toColumn(), pkValue));
-                                                statementBuilder.bindValues().add(createBindValue(pkValue, columnMetaData, typeConverter));
+                                                if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
+                                                    final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), pkValue);
+                                                    columnValues.add(columnValue);
+                                                    statementBuilder.addColumn(columnValue);
+                                                }
                                             });
                                             updateDtoPrimaryKey(value, insertResult.generatedKeys());
                                         }
@@ -316,8 +346,9 @@ public class PersistenceFacade {
                                         final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
 
                                         if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
-                                            columnValues.add(new ColumnValue(columnMetaData.toColumn(), embeddedDtoPkValue));
-                                            statementBuilder.bindValues().add(createBindValue(embeddedDtoPkValue, columnMetaData, typeConverter));
+                                            final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), embeddedDtoPkValue);
+                                            columnValues.add(columnValue);
+                                            statementBuilder.addColumn(columnValue);
                                         }
                                     });
 
@@ -327,13 +358,16 @@ public class PersistenceFacade {
                                 // Statement for the nested DTO is under construction - pipe its PK to this field when available
                                 if (!dtoPkSet) {
                                     // PK not yet set - pipe the generated key back to the parent DTO
-                                    final PipedStatement dependencyPipe = new PipedStatement(new NoOpStatementBuilder(), value, updateResult -> {
+                                    final PipedStatement dependencyPipe = new PipedStatement(NO_OP_STATEMENT_BUILDER, value, updateResult -> {
                                         if (updateResult instanceof InsertResult insertResult
                                                 && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
 
                                             insertResult.generatedKeys().forEach((pkColumn, pkValue) -> {
-                                                columnValues.add(new ColumnValue(pkColumn.toColumn(), pkValue));
-                                                statementBuilder.bindValues().add(createBindValue(pkValue, columnMetaData, typeConverter));
+                                                if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
+                                                    final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), pkValue);
+                                                    columnValues.add(columnValue);
+                                                    statementBuilder.addColumn(columnValue);
+                                                }
                                             });
 
                                             updateDtoPrimaryKey(value, insertResult.generatedKeys());
@@ -346,11 +380,14 @@ public class PersistenceFacade {
                                     nestedDtoTable.getMetaData().primaryKey().stream().forEach(pkColumn -> {
                                         final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                                         final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
-                                        columnValues.add(new ColumnValue(pkColumn.toColumn(), embeddedDtoPkValue));
-                                        statementBuilder.bindValues().add(createBindValue(embeddedDtoPkValue, columnMetaData, typeConverter));
+                                        if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
+                                            final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), embeddedDtoPkValue);
+                                            columnValues.add(columnValue);
+                                            statementBuilder.addColumn(columnValue);
+                                        }
                                     });
 
-                                    statementChain.addDependency(value, new PipedStatement(new NoOpStatementBuilder(), value));
+                                    statementChain.addDependency(value, new PipedStatement(NO_OP_STATEMENT_BUILDER, value));
                                 }
                             }
                         }
@@ -360,8 +397,9 @@ public class PersistenceFacade {
                             final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                             final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
                             final Column joinColumn = table.getColumnForFieldName(fieldAccessor.name()).toColumn();
-                            columnValues.add(new ColumnValue(joinColumn, embeddedDtoPkValue));
-                            statementBuilder.bindValues().add(createBindValue(embeddedDtoPkValue, columnMetaData, typeConverter));
+                            final ColumnValue columnValue = new ColumnValue(joinColumn, embeddedDtoPkValue);
+                            columnValues.add(columnValue);
+                            statementBuilder.addColumn(columnValue);
                         });
                     }
                 } finally {
@@ -369,13 +407,13 @@ public class PersistenceFacade {
                 }
             }
         }
-
-        if (statementBuilder instanceof InsertBuilder insertBuilder) {
-            insertBuilder.add(new DtoRowValue(dto, new RowValue(columnValues)));
-        } else {
+        if (!(statementBuilder instanceof InsertBuilder)) {
             final UpdateBuilder updateBuilder = (UpdateBuilder) statementBuilder;
-            updateBuilder.setColumnValues(columnValues);
             addPrimaryKeyConditions(dto, table, updateBuilder);
+        }
+
+        if (!isInsert && !columnsAdded && statementChain.getDependencies().isEmpty() && statementChain.getDependants().isEmpty()) {
+            return null;
         }
 
         return statementChain;
@@ -403,7 +441,7 @@ public class PersistenceFacade {
                         final PipedStatement existingStatement = statementChain.getDependency(value);
 
                         if (existingStatement == null) {
-                            final AbstractStatementBuilder<?> dependantStatementBuilder = createStatementBuilder(value, inProgressDtos);
+                            final StatementBuilder dependantStatementBuilder = createStatementBuilder(value, inProgressDtos);
                             statementChain.addDependant(value, new PipedStatement(dependantStatementBuilder, value));
                         }
                     }
@@ -429,14 +467,14 @@ public class PersistenceFacade {
                 for (Object value : updatedValues) {
                     if (!inProgressDtos.contains(value)) {
                         // Prepare join table entry
-                        final InsertBuilder joinTableInsertBuilder = new InsertBuilder(mappedManyToMany.joinTable());
+                        final InsertBuilder joinTableInsertBuilder = new InsertBuilder(mappedManyToMany.joinTable(), litebridgeContext);
                         statementChain.addDependant(joinTableInsertBuilder, new PipedStatement(joinTableInsertBuilder, value));
 
                         // Cascade save to the nested DTO
                         final PipedStatement existingStatement = statementChain.getDependency(value);
 
                         if (existingStatement == null) {
-                            final AbstractStatementBuilder<?> dependantStatementBuilder = createStatementBuilder(value, inProgressDtos);
+                            final StatementBuilder dependantStatementBuilder = createStatementBuilder(value, inProgressDtos);
                             statementChain.addDependency(value, new PipedStatement(dependantStatementBuilder, value, updateResult -> {
                                 if (updateResult instanceof InsertResult insertResult
                                         && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
@@ -446,19 +484,18 @@ public class PersistenceFacade {
                                 // Add join table entry
                                 final List<ColumnValue> joinTableColumnValues = new ArrayList<>();
                                 final TypeConverter typeConverter = databaseProvider.getTypeConverter();
+                                final Table joinTable = mappedManyToMany.joinTable().getMetaData().toTable();
 
                                 dtoPrimaryKeyColumnValues(dto).forEach(cv -> {
-                                    joinTableColumnValues.add(cv);
-                                    final ColumnMetaData pkColumn = table.getMetaData().column(cv.column().name());
-                                    joinTableInsertBuilder.bindValues().add(createBindValue(cv.value(), pkColumn, typeConverter));
+                                    final ColumnValue joinCv = new ColumnValue(new Column(joinTable, mappedManyToMany.joinColumn()), cv.value());
+                                    joinTableColumnValues.add(joinCv);
+                                    joinTableInsertBuilder.addColumn(joinCv);
                                 });
                                 dtoPrimaryKeyColumnValues(value).forEach(cv -> {
-                                    joinTableColumnValues.add(cv);
-                                    final ColumnMetaData pkColumn = collectionDtoTable.getMetaData().column(cv.column().name());
-                                    joinTableInsertBuilder.bindValues().add(createBindValue(cv.value(), pkColumn, typeConverter));
+                                    final ColumnValue joinCv = new ColumnValue(new Column(joinTable, mappedManyToMany.inverseJoinColumn()), cv.value());
+                                    joinTableColumnValues.add(joinCv);
+                                    joinTableInsertBuilder.addColumn(joinCv);
                                 });
-
-                                joinTableInsertBuilder.add(new DtoRowValue(mappedManyToMany.joinTable().dtoClass(), new RowValue(joinTableColumnValues)));
                             }));
                         }
                     }
@@ -563,7 +600,7 @@ public class PersistenceFacade {
         }
     }
 
-    private AbstractStatementBuilder<?> createStatementBuilder(final Object dto, final Set<Object> inProgressDtos) {
+    private StatementBuilder createStatementBuilder(final Object dto, final Set<Object> inProgressDtos) {
         if (inProgressDtos.contains(dto)) {
             throw new IllegalStateException("DTO already in progress: %s".formatted(dto));
         }
@@ -592,46 +629,79 @@ public class PersistenceFacade {
      */
     private CompositeUpdateResult executeUpdateStatement(final Object dto,
                                                          final @Nullable DtoUpdateResult parentResult,
-                                                         final StatementBuilder<?> statementBuilder) throws SQLException {
-        final CompositeUpdateResult result = new CompositeUpdateResult();
+                                                         final StatementBuilder statementBuilder,
+                                                         final CompositeUpdateResult result) throws SQLException {
         final DtoUpdateResult dtoUpdateResult = new DtoUpdateResult(dto, parentResult);
+
+        if (statementBuilder instanceof NoOpStatementBuilder) {
+            dtoUpdateResult.setUpdateResult(EMPTY_UPDATE_RESULT);
+            result.add(dtoUpdateResult);
+            return result;
+        }
 
         for (Map.Entry<Object, PipedStatement> entry : statementBuilder.statementChain().getDependencies().entrySet()) {
             final PipedStatement pipedStatement = entry.getValue();
 
             if (pipedStatement.statementBuilder() instanceof NoOpStatementBuilder) {
-                LOGGER.trace("Resolving piped statement directly: {}", pipedStatement);
-                pipedStatement.valuePipe().accept(ObjectUtils.requireNonNull(parentResult, () -> new IllegalStateException("NoOpStatementBuilder without parent result")).getUpdateResult());
-                continue;
+                final DtoUpdateResult existing = result.getDtoUpdateResult(pipedStatement.dto());
+
+                if (existing != null) {
+                    pipedStatement.valuePipe().accept(existing.getUpdateResult());
+                    continue;
+                }
             }
 
-            final CompositeUpdateResult dependencyResult = executeUpdateStatement(pipedStatement.dto(), dtoUpdateResult, pipedStatement.statementBuilder());
-            result.merge(dependencyResult);
-            pipedStatement.valuePipe().accept(dependencyResult.primary().getUpdateResult());
+            executeUpdateStatement(pipedStatement.dto(), dtoUpdateResult, pipedStatement.statementBuilder(), result);
+            final DtoUpdateResult dependencyResult = result.getDtoUpdateResult(pipedStatement.dto());
+
+            if (dependencyResult != null) {
+                pipedStatement.valuePipe().accept(dependencyResult.getUpdateResult());
+            }
         }
 
-        UpdateStatement updateStatement;
+        final QueryNode node = statementBuilder.node();
+        final int nodeHash = node.hashCode();
+        final QueryPlanCache.CachedOperation cachedOperation = litebridgeContext.queryPlanCache().get(nodeHash);
 
-        try {
-            updateStatement = statementBuilder.build();
-        } catch (final IllegalArgumentException ex) {
-            // No expressions to update
-            updateStatement = null;
-        }
+        if (cachedOperation != null) {
+            final List<@Nullable Object> rawBindValues = QueryBindValueExtractor.extractBindValues(node);
+            final PreparedSql preparedSql = cachedOperation.preparedSql(rawBindValues);
 
-        if (updateStatement instanceof Insert insert) {
-            final PreparedSql preparedSql = prepareSql(statementBuilder, insert);
-            dtoUpdateResult.setUpdateResult(databaseProvider.insert(preparedSql, transactionManager));
-        } else if (updateStatement instanceof Update update) {
-            final PreparedSql preparedSql = prepareSql(statementBuilder, update);
-            dtoUpdateResult.setUpdateResult(databaseProvider.update(preparedSql, transactionManager));
-        } else if (updateStatement instanceof Delete delete) {
-            final PreparedSql preparedSql = prepareSql(statementBuilder, delete);
-            dtoUpdateResult.setUpdateResult(databaseProvider.delete(preparedSql, transactionManager));
-        } else if (statementBuilder instanceof InsertBuilder) {
-            dtoUpdateResult.setUpdateResult(new InsertResult(0));
+            if (statementBuilder instanceof InsertBuilder) {
+                dtoUpdateResult.setUpdateResult(databaseProvider.insert(preparedSql, transactionManager));
+            } else if (statementBuilder instanceof UpdateBuilder) {
+                dtoUpdateResult.setUpdateResult(databaseProvider.update(preparedSql, transactionManager));
+            } else if (statementBuilder instanceof DeleteBuilder) {
+                dtoUpdateResult.setUpdateResult(databaseProvider.delete(preparedSql, transactionManager));
+            }
         } else {
-            dtoUpdateResult.setUpdateResult(new UpdateResult(0));
+            final PreparedOperation preparedOperation = statementBuilder.build();
+
+            if (preparedOperation.operation() instanceof Update update && update.columnValues().isEmpty()) {
+                dtoUpdateResult.setUpdateResult(new UpdateResult(0));
+            } else {
+                // Generate SQL and create type conversion metadata
+                final String sql = databaseProvider.toSql(preparedOperation.operation(), databaseProvider.transactionManager());
+                final UpdateMetaData updateMetaData = statementBuilder.createUpdateMetaData();
+                // Cache compiled SQL for this AST
+                final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
+                        .map(BindValue::sqlDataType)
+                        .toList();
+                litebridgeContext.queryPlanCache().put(nodeHash, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, updateMetaData, null));
+
+                // Execute SQL query
+                final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), null, updateMetaData);
+
+                final UpdateResult updateResult = switch (preparedOperation.operation()) {
+                    case Insert insert -> databaseProvider.insert(executionSql, transactionManager);
+                    case Update update -> databaseProvider.update(executionSql, transactionManager);
+                    case Delete delete -> databaseProvider.delete(executionSql, transactionManager);
+                    default ->
+                            throw new IllegalStateException("Unexpected operation type: " + preparedOperation.operation());
+                };
+
+                dtoUpdateResult.setUpdateResult(updateResult);
+            }
         }
 
         result.add(dtoUpdateResult);
@@ -639,18 +709,10 @@ public class PersistenceFacade {
         for (Map.Entry<Object, PipedStatement> entry : statementBuilder.statementChain().getDependants().entrySet()) {
             final PipedStatement pipedStatement = entry.getValue();
             pipedStatement.valuePipe().accept(dtoUpdateResult.getUpdateResult());
-            final CompositeUpdateResult dependantResult = executeUpdateStatement(pipedStatement.dto(), dtoUpdateResult, pipedStatement.statementBuilder());
-            result.merge(dependantResult);
+            executeUpdateStatement(pipedStatement.dto(), dtoUpdateResult, pipedStatement.statementBuilder(), result);
         }
 
         return result;
-    }
-
-    private PreparedSql prepareSql(final StatementBuilder<?> statementBuilder, final @Nullable UpdateStatement updateStatement) {
-        final String sql = databaseProvider.toSql(updateStatement, transactionManager);
-        final UpdateMetaData updateMetaData = statementBuilder.createUpdateMetaData();
-        final PreparedSql preparedSql = new PreparedSql(sql, statementBuilder.bindValues(), null, updateMetaData);
-        return preparedSql;
     }
 
     private static class TableProvider {
@@ -715,46 +777,29 @@ public class PersistenceFacade {
      * @param statementBuilder the statement builder to add conditions to. Must be an {@link UpdateBuilder} or {@link DeleteBuilder}.
      * @param <DTO>            class of the DTO
      */
-    private <DTO> void addPrimaryKeyConditions(final DTO dto, final OrmTable table, final AbstractStatementBuilder<?> statementBuilder) {
-        final List<Condition> conditions = table.getMetaData().primaryKey().stream()
-                .map(columnMetaData -> {
-                    final Column pkColumn = columnMetaData.toColumn();
-                    final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
-                    final Object pkValue = field.get(dto);
-                    final ColumnExpression pkColumnExpression = databaseProvider.getSqlFunctionRegistry().select().column().create(pkColumn);
-                    final Condition condition;
-
-                    if (pkValue != null) {
-                        condition = new Condition(pkColumnExpression, Operator.EQ, createBindValueExpression(pkValue, statementBuilder.bindValues().size()));
-                        statementBuilder.bindValues().add(createBindValue(pkValue, columnMetaData, databaseProvider.getTypeConverter()));
-                    } else {
-                        condition = new Condition(pkColumnExpression, Operator.IS_NULL);
-                    }
-
-                    return condition;
-                })
-                .toList();
-
-        final List<LogicCondition> logicConditions = new ArrayList<>(conditions.size());
+    private <DTO> void addPrimaryKeyConditions(final DTO dto, final OrmTable table, final AbstractConditionalStatementBuilder statementBuilder) {
+        QueryNode conditionNode = null;
         boolean first = true;
 
-        for (Condition condition : conditions) {
-            if (first) {
-                first = false;
-                logicConditions.add(new LogicCondition(LogicOperator.NOOP, condition));
+        for (ColumnMetaData columnMetaData : table.getMetaData().primaryKey()) {
+            final Column pkColumn = columnMetaData.toColumn();
+            final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
+            final Object pkValue = field.get(dto);
+            final SelectColumnSpec pkColumnSpec = new SelectColumnSpec(pkColumn);
+
+            final LogicOperator logicOperator = first ? LogicOperator.NOOP : LogicOperator.AND;
+
+            if (pkValue != null) {
+                conditionNode = new ConditionNode(conditionNode, logicOperator, pkColumnSpec, Operator.EQ, pkValue);
             } else {
-                logicConditions.add(new LogicCondition(LogicOperator.AND, condition));
+                conditionNode = new ConditionNode(conditionNode, logicOperator, pkColumnSpec, Operator.IS_NULL, null);
             }
+
+            first = false;
         }
 
-        final ConditionGroup conditionGroup = new ConditionGroup(logicConditions, Collections.emptyList());
-
-        if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-            updateBuilder.where(conditionGroup);
-        } else if (statementBuilder instanceof DeleteBuilder deleteBuilder) {
-            deleteBuilder.where(conditionGroup);
-        } else {
-            throw new IllegalStateException("Unsupported statement builder type: " + statementBuilder.getClass().getName());
+        if (conditionNode != null) {
+            statementBuilder.where(conditionNode);
         }
     }
 

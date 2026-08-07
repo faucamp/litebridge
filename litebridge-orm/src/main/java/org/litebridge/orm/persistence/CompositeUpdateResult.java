@@ -1,9 +1,12 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents the result of a composite update operation, aggregating multiple {@link DtoUpdateResult} objects
@@ -15,6 +18,7 @@ import java.util.List;
 public final class CompositeUpdateResult {
 
     private final List<DtoUpdateResult> dtoUpdateResults = new ArrayList<>();
+    private final Map<Object, DtoUpdateResult> resultsByDto = new IdentityHashMap<>();
 
     /**
      * Adds a {@link DtoUpdateResult} to the composite update result.
@@ -24,17 +28,7 @@ public final class CompositeUpdateResult {
      */
     public CompositeUpdateResult add(final DtoUpdateResult dtoUpdateResult) {
         dtoUpdateResults.add(dtoUpdateResult);
-        return this;
-    }
-
-    /**
-     * Merges another {@link CompositeUpdateResult} into this one, adding all its {@link DtoUpdateResult} objects.
-     *
-     * @param compositeUpdateResult The {@link CompositeUpdateResult} to merge.
-     * @return This {@link CompositeUpdateResult} instance, allowing for method chaining.
-     */
-    public CompositeUpdateResult merge(final CompositeUpdateResult compositeUpdateResult) {
-        dtoUpdateResults.addAll(compositeUpdateResult.dtoUpdateResults);
+        resultsByDto.put(dtoUpdateResult.getDto(), dtoUpdateResult);
         return this;
     }
 
@@ -55,5 +49,15 @@ public final class CompositeUpdateResult {
      */
     public DtoUpdateResult primary() {
         return CollectionUtils.requireNonEmpty(dtoUpdateResults, "Update results not set").getFirst();
+    }
+
+    /**
+     * Returns the {@link DtoUpdateResult} for the given DTO.
+     *
+     * @param dto The DTO to look up.
+     * @return The {@link DtoUpdateResult} for the DTO, or null if not found.
+     */
+    public @Nullable DtoUpdateResult getDtoUpdateResult(final Object dto) {
+        return resultsByDto.get(dto);
     }
 }

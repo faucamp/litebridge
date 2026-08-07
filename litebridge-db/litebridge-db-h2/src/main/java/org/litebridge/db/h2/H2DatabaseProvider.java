@@ -1,12 +1,12 @@
 package org.litebridge.db.h2;
 
 import org.litebridge.convert.DefaultTypeConverter;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ManagedConnection;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -21,7 +21,7 @@ import java.sql.Statement;
  */
 public final class H2DatabaseProvider extends AbstractDatabaseProvider {
 
-    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(H2DatabaseProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(H2DatabaseProvider.class);
 
     /**
      * Creates a new {@code H2DatabaseProvider}.

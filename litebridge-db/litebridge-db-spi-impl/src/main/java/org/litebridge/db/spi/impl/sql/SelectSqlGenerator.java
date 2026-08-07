@@ -46,18 +46,6 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
      * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values
      */
     public String prepareSql(final Select select, final ConnectionProvider connectionProvider) {
-        return prepareSql(select, connectionProvider, null);
-    }
-
-    /**
-     * Prepares a SQL SELECT statement along with its bind values for execution.
-     *
-     * @param select             the select operation
-     * @param connectionProvider the connection provider
-     * @param parentOperation    the parent operation, if any
-     * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values
-     */
-    public String prepareSql(final Select select, final ConnectionProvider connectionProvider, final @Nullable Operation parentOperation) {
         final StringBuilder sql = new StringBuilder("SELECT ");
 
         boolean first = true;

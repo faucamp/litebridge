@@ -8,6 +8,7 @@ import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.orm.api.delete.model.DeleteSpec;
 import org.litebridge.orm.api.dto.DtoDataSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
+import org.litebridge.orm.api.insert.model.InsertSpec;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
@@ -103,6 +104,20 @@ public final class QueryCompiler {
 
         for (final QueryNode n : nodes) {
             applyNode(n, null, updateSpec);
+        }
+    }
+
+    /**
+     * Compiles the given {@link QueryNode} chain into the provided {@link InsertSpec}.
+     *
+     * @param node       the end of the query node chain
+     * @param insertSpec the insert specification to populate
+     */
+    public void compile(final QueryNode node, final InsertSpec insertSpec) {
+        final List<QueryNode> nodes = flatten(node);
+
+        for (final QueryNode n : nodes) {
+            applyNode(n, null, insertSpec);
         }
     }
 
@@ -336,8 +351,11 @@ public final class QueryCompiler {
     private void applyNode(final QueryNode node, final @Nullable QueryNode parentNode, final AbstractConditionBasedSpec spec) {
         switch (node) {
             case SetNode setNode -> {
+                //TODO: improve
                 if (spec instanceof UpdateSpec updateSpec) {
-                    updateSpec.addColumnValue(new ColumnValue(setNode.column(), setNode.value()));
+                    updateSpec.addColumnValue(new ColumnValue(setNode.column(), setNode.value()), setNode.bindValue());
+                } else if (spec instanceof InsertSpec insertSpec) {
+                    insertSpec.addColumnValue(new ColumnValue(setNode.column(), setNode.value()), setNode.bindValue());
                 }
             }
             case WhereNode whereNode -> {

@@ -32,16 +32,13 @@ class PersistenceFacadeCascadingTest {
 
     private DatabaseProvider databaseProvider;
     private Litebridge litebridge;
-    private PersistenceFacade persistenceFacade;
 
     @BeforeEach
     void setUp() throws SQLException {
         databaseProvider = mock(DatabaseProvider.class);
-        DataSource dataSource = mock(DataSource.class);
+        final DataSource dataSource = mock(DataSource.class);
+        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         litebridge = new Litebridge(databaseProvider, dataSource);
-
-        // Use reflection to get persistenceFacade or just use litebridgedb.save()
-        // Actually litebridgedb.save() calls persistenceFacade.save()
     }
 
     @Test
@@ -58,7 +55,6 @@ class PersistenceFacadeCascadingTest {
         child.name = "child";
         parent.child = child;
 
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.insert(any(PreparedSql.class), any(ConnectionProvider.class)))
                 .thenReturn(new InsertResult(1, Collections.emptyMap()));
 

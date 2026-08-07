@@ -2,6 +2,7 @@ package org.litebridge.orm.engine;
 
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
+import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.persistence.TableMetaDataCache;
@@ -22,7 +23,18 @@ public final class LitebridgeContext {
     private final AliasGenerator aliasGenerator;
     private final TableMetaDataCache tableMetaDataCache;
     private final TypeConverter typeConverter;
+    private final SelectExpressionMapper selectExpressionMapper;
     private RelatedDtoStrategy relatedDtoStrategy;
+
+    public LitebridgeContext(final LitebridgeConfig config,
+                             final FromClauseEngine fromClauseEngine,
+                             final SqlFunctionRegistry sqlFunctionRegistry,
+                             final QueryPlanCache queryPlanCache,
+                             final AliasGenerator aliasGenerator,
+                             final TableMetaDataCache tableMetaDataCache,
+                             final TypeConverter typeConverter) {
+        this(config, fromClauseEngine, sqlFunctionRegistry, queryPlanCache, aliasGenerator, tableMetaDataCache, typeConverter, null);
+    }
 
     /**
      * Create a new Litebridge context with the specified components.
@@ -33,6 +45,7 @@ public final class LitebridgeContext {
      * @param queryPlanCache      A cache for storing execution plans based on query structure.
      * @param aliasGenerator      An alias generator for creating unique table and column aliases.
      * @param typeConverter       A converter for converting between Java types and database types.
+     * @param selectExpressionMapper A mapper for resolving query expressions.
      */
     public LitebridgeContext(final LitebridgeConfig config,
                              final FromClauseEngine fromClauseEngine,
@@ -40,7 +53,8 @@ public final class LitebridgeContext {
                              final QueryPlanCache queryPlanCache,
                              final AliasGenerator aliasGenerator,
                              final TableMetaDataCache tableMetaDataCache,
-                             final TypeConverter typeConverter) {
+                             final TypeConverter typeConverter,
+                             final SelectExpressionMapper selectExpressionMapper) {
         this.config = config;
         this.fromClauseEngine = fromClauseEngine;
         this.sqlFunctionRegistry = sqlFunctionRegistry;
@@ -49,6 +63,7 @@ public final class LitebridgeContext {
         this.relatedDtoStrategy = config.relatedDtoStrategy();
         this.tableMetaDataCache = tableMetaDataCache;
         this.typeConverter = typeConverter;
+        this.selectExpressionMapper = selectExpressionMapper;
     }
 
     public LitebridgeConfig config() {
@@ -77,6 +92,10 @@ public final class LitebridgeContext {
 
     public TypeConverter typeConverter() {
         return typeConverter;
+    }
+
+    public SelectExpressionMapper selectExpressionMapper() {
+        return selectExpressionMapper;
     }
 
     public RelatedDtoStrategy getRelatedDtoStrategy() {
