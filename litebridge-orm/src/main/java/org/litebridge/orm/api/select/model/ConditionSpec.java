@@ -110,8 +110,9 @@ public class ConditionSpec {
      *
      * @param selectExpressionMapper the mapper to use for expressions
      * @param selectedTables         the collection of tables included in the query
-     * @param bindValues
-     * @param tableMetaDataCache
+     * @param bindValues             the list of bind values for the query
+     * @param tableMetaDataCache     the cache for table metadata
+     * @param typeConverter          the type converter to use
      * @return the resulting {@link Condition}
      */
     public Condition toCondition(final SelectExpressionMapper selectExpressionMapper,

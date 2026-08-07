@@ -14,6 +14,15 @@ public final class JoinNode implements QueryNode {
     private final @Nullable String tableName;
     private @Nullable QueryNode condition;
 
+    /**
+     * Constructs a new {@code JoinNode}.
+     *
+     * @param previous       the previous node in the chain
+     * @param type           the type of join (e.g., INNER, LEFT)
+     * @param dtoClass       the DTO class being joined
+     * @param sourceDtoClass the source DTO class
+     * @param tableName      the name of the table being joined
+     */
     public JoinNode(@Nullable QueryNode previous,
                     String type,
                     @Nullable Class<?> dtoClass,
@@ -26,6 +35,14 @@ public final class JoinNode implements QueryNode {
         this.tableName = tableName;
     }
 
+    /**
+     * Constructs a new {@code JoinNode} without a source DTO class.
+     *
+     * @param previous  the previous node in the chain
+     * @param type      the type of join
+     * @param dtoClass  the DTO class being joined
+     * @param tableName the name of the table being joined
+     */
     public JoinNode(@Nullable QueryNode previous,
                     String type,
                     @Nullable Class<?> dtoClass,
@@ -38,26 +55,57 @@ public final class JoinNode implements QueryNode {
         return previous;
     }
 
+    /**
+     * Returns the type of join.
+     *
+     * @return the join type
+     */
     public String type() {
         return type;
     }
 
+    /**
+     * Returns the DTO class being joined.
+     *
+     * @return the DTO class
+     */
     public @Nullable Class<?> dtoClass() {
         return dtoClass;
     }
 
+    /**
+     * Returns the source DTO class.
+     *
+     * @return the source DTO class
+     */
     public @Nullable Class<?> sourceDtoClass() {
         return sourceDtoClass;
     }
 
+    /**
+     * Returns the name of the table being joined.
+     *
+     * @return the table name
+     */
     public @Nullable String tableName() {
         return tableName;
     }
 
+    /**
+     * Returns the join condition node.
+     *
+     * @return the condition node
+     */
     public @Nullable QueryNode condition() {
         return condition;
     }
 
+    /**
+     * Sets the join condition node.
+     *
+     * @param condition the condition node to set
+     * @return this join node instance
+     */
     public JoinNode withCondition(@Nullable QueryNode condition) {
         this.condition = condition;
         return this;

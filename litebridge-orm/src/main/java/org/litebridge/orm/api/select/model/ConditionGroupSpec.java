@@ -91,7 +91,9 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
      *
      * @param selectExpressionMapper the mapper to use for expressions
      * @param selectedTables         the set of tables included in the query
-     * @param tableMetaDataCache
+     * @param bindValues             the list of bind values for the query
+     * @param tableMetaDataCache     the cache for table metadata
+     * @param typeConverter          the type converter to use
      * @return the resulting {@link ConditionGroup}
      */
     public ConditionGroup toConditionGroup(final SelectExpressionMapper selectExpressionMapper,

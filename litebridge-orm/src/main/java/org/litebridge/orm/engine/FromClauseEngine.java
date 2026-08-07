@@ -64,6 +64,14 @@ public final class FromClauseEngine {
         this.contextSupplier = contextSupplier;
     }
 
+    /**
+     * Constructs a DTO-based FROM clause.
+     *
+     * @param dtoClass           the DTO class to query
+     * @param relatedDtoStrategy the strategy for fetching related DTOs
+     * @param <DTO>              the type of the DTO
+     * @return a DTO from clause terminal
+     */
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
         return from(null, dtoClass, relatedDtoStrategy);
     }
@@ -155,6 +163,11 @@ public final class FromClauseEngine {
         return new SqlSelector(new Table(table), databaseProvider, tableRegistry, litebridgeContext, node).select().from(table);
     }
 
+    /**
+     * Returns the table registry used by this engine.
+     *
+     * @return the table registry
+     */
     public TableRegistry tableRegistry() {
         return tableRegistry;
     }

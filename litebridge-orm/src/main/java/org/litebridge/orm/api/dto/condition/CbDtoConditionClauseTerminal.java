@@ -26,6 +26,7 @@ public final class CbDtoConditionClauseTerminal<DTO> extends AbstractCbCondition
      *
      * @param ormTable         The ORM table metadata.
      * @param fromClauseEngine The FROM clause engine.
+     * @param node             The current query node.
      */
     public CbDtoConditionClauseTerminal(final OrmTable ormTable, final FromClauseEngine fromClauseEngine, final QueryNode node) {
         super(fromClauseEngine, node);

@@ -25,6 +25,7 @@ public class DtoConditionClauseStart<DTO> extends AbstractConditionClauseStart<D
      *
      * @param ormTable         the ORM table metadata
      * @param fromClauseEngine the from clause engine
+     * @param node             the current query node
      */
     public DtoConditionClauseStart(final OrmTable ormTable,
                                    final FromClauseEngine fromClauseEngine,

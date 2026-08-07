@@ -14,8 +14,20 @@ import java.util.List;
  */
 public sealed interface StatementBuilder permits AbstractStatementBuilder, NoOpStatementBuilder {
 
+    /**
+     * Returns the current query node.
+     *
+     * @return the query node
+     */
     QueryNode node();
 
+    /**
+     * Adds a set node to the statement.
+     *
+     * @param column    the column to set
+     * @param value     the value to set
+     * @param bindValue whether to bind the value as a parameter
+     */
     void addSetNode(Column column, @Nullable Object value, boolean bindValue);
 
     /**
@@ -25,6 +37,11 @@ public sealed interface StatementBuilder permits AbstractStatementBuilder, NoOpS
      */
     StatementChain statementChain();
 
+    /**
+     * Creates the update metadata for the statement.
+     *
+     * @return the update metadata
+     */
     UpdateMetaData createUpdateMetaData();
 
     /**

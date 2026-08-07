@@ -23,12 +23,17 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
      * The engine used to process the FROM clause.
      */
     protected final FromClauseEngine fromClauseEngine;
+
+    /**
+     * The current query node in the AST.
+     */
     protected QueryNode node;
 
     /**
      * Constructs a new {@code AbstractCbConditionClauseTerminal}.
      *
      * @param fromClauseEngine The FROM clause engine.
+     * @param node             The current query node.
      */
     public AbstractCbConditionClauseTerminal(final FromClauseEngine fromClauseEngine, final QueryNode node) {
         this.fromClauseEngine = fromClauseEngine;
@@ -92,6 +97,11 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
      */
     protected abstract AbstractCbConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query);
 
+    /**
+     * Returns the current query node.
+     *
+     * @return the query node
+     */
     public QueryNode node() {
         return node;
     }

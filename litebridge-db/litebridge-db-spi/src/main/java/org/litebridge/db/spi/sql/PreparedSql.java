@@ -22,6 +22,7 @@ import java.util.List;
  *                               in the SQL query. Each value can be nullable, represented
  *                               by the {@link BindValue} type.
  * @param typeConversionMetaData The metadata for type conversion, which may be null.
+ * @param updateMetaData         The metadata for update operations, which may be null.
  */
 public record PreparedSql(String sql,
                           List<@Nullable BindValue> bindValues,

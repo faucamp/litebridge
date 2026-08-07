@@ -52,8 +52,10 @@ public interface JoinSpec {
     /**
      * Returns the SPI join object.
      *
-     * @param availableTables the collection of tables currently available in the query context for alias resolution
-     * @param bindValues
+     * @param availableTables    the collection of tables currently available in the query context for alias resolution
+     * @param bindValues         the list of bind values for the query
+     * @param tableMetaDataCache the cache for table metadata
+     * @param typeConverter      the type converter to use
      * @return the SPI join object.
      */
     Join toJoin(Collection<Table> availableTables, final List<BindValue> bindValues, final TableMetaDataCache tableMetaDataCache, final TypeConverter typeConverter);

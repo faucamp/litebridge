@@ -288,10 +288,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * and wraps the results in an {@link InsertResult} object.
      *
      * @param preparedSql         the {@link PreparedSql} object containing the SQL query string and bind values to be executed
-     * @param tableMetaData       the {@link TableMetaData} object containing the metadata of the target table, including primary key information
-     * @param returnGeneratedKeys a boolean indicating whether the statement should return generated keys.
-     *                            Pass {@code true} to configure the statement to return generated keys,
-     *                            or {@code false} otherwise.
      * @param connectionProvider  the {@link ConnectionProvider} used to obtain a database connection.
      * @return an {@link InsertResult} object encapsulating the number of affected rows and a list of generated keys (if any)
      * @throws SQLException if an error occurs while executing the SQL insert or retrieving the generated keys

@@ -16,8 +16,9 @@ import java.util.Objects;
  * @param previous      the previous node in the chain
  * @param logicOperator the logic operator (AND/OR)
  * @param lhs           the left-hand side expression
- * @param operator      the operator (EQ, USING, etc.)
- * @param rhs           the right-hand side value
+ * @param operator          the operator (EQ, USING, etc.)
+ * @param rhs               the right-hand side value
+ * @param relationshipField the field name of the relationship (if any)
  */
 public record ConditionNode(@Nullable QueryNode previous,
                             LogicOperator logicOperator,

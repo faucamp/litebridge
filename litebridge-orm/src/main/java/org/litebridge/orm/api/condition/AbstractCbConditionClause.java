@@ -42,6 +42,10 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * Constructs a new {@code AbstractCbConditionClause}.
      *
      * @param fromClauseEngine The FROM clause engine.
+     * @param logicOperator    The logic operator (AND/OR).
+     * @param lhs              The left-hand side expression.
+     * @param node             The previous node in the chain.
+     * @param terminalCreator  The function to create the terminal clause.
      */
     public AbstractCbConditionClause(final FromClauseEngine fromClauseEngine,
                                      final LogicOperator logicOperator,
@@ -291,6 +295,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     /**
      * Creates a new terminal condition clause instance.
      *
+     * @param conditionNode the condition node to wrap in a terminal clause
      * @return A new {@link AbstractCbConditionClauseTerminal} instance.
      */
     protected abstract AbstractCbConditionClauseTerminal<DTO> createCbConditionClauseTerminal(final QueryNode conditionNode);

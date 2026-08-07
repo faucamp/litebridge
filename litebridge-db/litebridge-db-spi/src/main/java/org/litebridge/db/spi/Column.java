@@ -47,6 +47,11 @@ public class Column extends Aliased {
         return table;
     }
 
+    /**
+     * Sets the table associated with this column.
+     *
+     * @param table the table to set
+     */
     public void setTable(final Table table) {
         this.table = table;
     }

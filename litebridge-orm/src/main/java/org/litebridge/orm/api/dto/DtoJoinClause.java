@@ -46,7 +46,9 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
     /**
      * Creates a new instance of {@code DtoJoinClause}.
      *
-     * @param delegate the selector delegate for further query building
+     * @param delegate        the selector delegate for further query building
+     * @param targetTable     the ORM table to join with
+     * @param terminalCreator the function to create the terminal clause
      */
     public DtoJoinClause(final DtoSelector<DTO> delegate, final OrmTable targetTable, final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> terminalCreator) {
         super(delegate);

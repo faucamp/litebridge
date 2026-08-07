@@ -8,6 +8,9 @@ import java.util.StringJoiner;
 
 /**
  * An encapsulated literal value in a query expression.
+ *
+ * @param index the index of the bind value
+ * @param size the size of the bind value (e.g. for collection expressions)
  */
 public record BindValueExpression(int index, int size) implements SelectExpression {
 

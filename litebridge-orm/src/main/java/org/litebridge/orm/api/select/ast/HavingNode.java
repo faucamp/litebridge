@@ -25,6 +25,11 @@ public final class HavingNode implements QueryNode {
         return previous;
     }
 
+    /**
+     * Returns the HAVING condition node.
+     *
+     * @return the condition node
+     */
     public QueryNode condition() {
         return condition;
     }
@@ -50,6 +55,12 @@ public final class HavingNode implements QueryNode {
                 "condition=" + condition + ']';
     }
 
+    /**
+     * Sets the HAVING condition node.
+     *
+     * @param condition the condition node to set
+     * @return this having node instance
+     */
     public HavingNode withCondition(QueryNode condition) {
         this.condition = condition;
         return this;

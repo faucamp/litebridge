@@ -54,6 +54,7 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
      * @param databaseProvider        the database provider
      * @param aliasGenerator          the alias generator
      * @param litebridgeContext       the litebridge context
+     * @param node                    the current query node
      */
     public DtoSelector(final Class<TypeOverride> typeOverride,
                        final OrmTable ormTable,
@@ -187,6 +188,11 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
         return classFieldAccessorCache;
     }
 
+    /**
+     * Returns the table associated with this selector.
+     *
+     * @return the table
+     */
     public Table table() {
         return table;
     }

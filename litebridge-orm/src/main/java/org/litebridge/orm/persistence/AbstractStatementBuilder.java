@@ -29,14 +29,22 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
      */
     protected final OrmTable ormTable;
     private final StatementChain statementChain = new StatementChain();
+
+    /**
+     * The ORM context.
+     */
     protected final LitebridgeContext litebridgeContext;
+
+    /**
+     * The current query node.
+     */
     protected QueryNode node;
 
     /**
      * Constructs a new {@code AbstractStatementBuilder}.
      *
      * @param ormTable          The ORM table.
-     * @param litebridgeContext
+     * @param litebridgeContext The ORM context.
      */
     protected AbstractStatementBuilder(final OrmTable ormTable,
                                        final LitebridgeContext litebridgeContext) {
@@ -54,6 +62,11 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
         this.node = new SetNode(this.node, column, value, bindValue);
     }
 
+    /**
+     * Adds a column value to the statement.
+     *
+     * @param columnValue the column value to add
+     */
     public void addColumn(final ColumnValue columnValue) {
         addSetNode(columnValue.column(), columnValue.value(), true);
     }

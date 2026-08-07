@@ -25,6 +25,10 @@ public class CbDtoConditionClause<DTO> extends AbstractCbConditionClause<DTO> {
      *
      * @param ormTable         The ORM table metadata.
      * @param fromClauseEngine The FROM clause engine.
+     * @param logicOperator    The logical operator (AND/OR).
+     * @param lhs              The left-hand side expression.
+     * @param node             The previous node in the chain.
+     * @param terminalCreator  The function to create the terminal clause.
      */
     public CbDtoConditionClause(final OrmTable ormTable,
                                 final FromClauseEngine fromClauseEngine,
