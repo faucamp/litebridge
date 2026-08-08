@@ -276,7 +276,7 @@ public class SelectSpecDtoMapper {
     }
 
     private @Nullable PartiallyConstructedDto toDto(final MappingPlan plan, final Row row, final boolean isJoin) {
-        final List<Object> pk = new ArrayList<>(plan.primaryKeyIndices().length);
+        final List<@Nullable Object> pk = new ArrayList<>(plan.primaryKeyIndices().length);
         boolean pkNull = true;
         boolean allPkIndicesMissing = true;
 
@@ -470,13 +470,13 @@ public class SelectSpecDtoMapper {
                 fav.field().set(dto, fav.value());
             }
         } else {
-            final Map<FieldAccessor, Object> valuesByField = new HashMap<>();
+            final Map<FieldAccessor, @Nullable Object> valuesByField = new HashMap<>();
 
             for (final FieldAccessorValue fav : fieldValues) {
                 valuesByField.put(fav.field(), fav.value());
             }
 
-            final Object[] args = new Object[mappingInfo.canonicalConstructorFieldAccessors().size()];
+            final @Nullable Object[] args = new Object[mappingInfo.canonicalConstructorFieldAccessors().size()];
 
             for (int i = 0; i < args.length; i++) {
                 args[i] = valuesByField.get(mappingInfo.canonicalConstructorFieldAccessors().get(i));
