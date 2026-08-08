@@ -6,7 +6,6 @@ import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.delete.impl.AbstractDeletor;
 import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
-import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.DeleteNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -72,12 +71,8 @@ public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implem
 
     DtoDeleteWhereConditionClauseTerminalImpl<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(deleteSpec.dtoTable(), litebridgeContext.fromClauseEngine(), null);
-        final ConditionClauseTerminal<DTO, ?, ?> terminal = query.apply(conditionClauseStart);
-
-        if (terminal instanceof AbstractCbConditionClauseTerminal<?> act) {
-            this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, act.node()));
-        }
-
+        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, terminal.node()));
         return new DtoDeleteWhereConditionClauseTerminalImpl<>(this);
     }
 }

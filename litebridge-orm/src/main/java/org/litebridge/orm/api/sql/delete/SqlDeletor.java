@@ -8,7 +8,6 @@ import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.delete.impl.AbstractDeletor;
 import org.litebridge.orm.api.delete.model.DeleteSpec;
-import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.DeleteNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -58,12 +57,8 @@ public final class SqlDeletor extends AbstractDeletor<DeleteSpec> implements Sql
 
     SqlDeleteWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(deleteSpec.table(), litebridgeContext.fromClauseEngine(), null);
-        final ConditionClauseTerminal<Row, ?, ?> terminal = query.apply(conditionClauseStart);
-
-        if (terminal instanceof AbstractCbConditionClauseTerminal<?> act) {
-            this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, act.node()));
-        }
-
+        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+        this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, terminal.node()));
         return new SqlDeleteWhereConditionClauseTerminalImpl(this);
     }
 }

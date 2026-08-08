@@ -13,6 +13,7 @@ import java.util.StringJoiner;
 public class Person {
 
     @Column(value = "PERSON_ID", generateUsingSequence = "LB.PERSON_SEQ")
+    @Nullable
     private Long id;
     @Column("FIRST_NAME")
     private String name;
@@ -25,7 +26,7 @@ public class Person {
     @OneToMany(mappedByField = "owner")
     private @Nullable List<Account> accounts;
 
-    public Long getId() {
+    public @Nullable Long getId() {
         return id;
     }
 

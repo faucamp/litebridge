@@ -126,12 +126,8 @@ public final class DtoWhereConditionClauseTerminal<DTO>
         }
 
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
-        final ConditionClauseTerminal<DTO, ?, ?> terminal = query.apply(conditionClauseStart);
-
-        if (terminal instanceof AbstractCbConditionClauseTerminal<?> act) {
-            whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, act.node()));
-        }
-
+        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, terminal.node()));
         return this;
     }
 }

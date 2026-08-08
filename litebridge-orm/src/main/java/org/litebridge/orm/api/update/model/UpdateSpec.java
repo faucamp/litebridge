@@ -10,6 +10,7 @@ import org.litebridge.db.spi.math.MathOperation;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Update;
+import org.litebridge.orm.api.dto.update.DtoUpdateSpec;
 import org.litebridge.orm.api.select.impl.AbstractConditionBasedSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.persistence.TableMetaDataCache;
@@ -22,10 +23,9 @@ import java.util.List;
 /**
  * Base specification for constructing a SQL UPDATE statement.
  */
-public class UpdateSpec extends AbstractConditionBasedSpec {
+public sealed class UpdateSpec extends AbstractConditionBasedSpec permits DtoUpdateSpec {
 
-    private record BoundColumnValue(ColumnValue columnValue, boolean bind) {}
-    protected final List<BoundColumnValue> columnValues = new ArrayList<>();
+    private final List<BoundColumnValue> columnValues = new ArrayList<>();
 
     public UpdateSpec(final Table table, final SelectExpressionMapper selectExpressionMapper) {
         super(table, selectExpressionMapper);
@@ -44,6 +44,7 @@ public class UpdateSpec extends AbstractConditionBasedSpec {
 
         for (BoundColumnValue boundColumnValue : columnValues) {
             final ColumnValue columnValue = boundColumnValue.columnValue();
+
             if (boundColumnValue.bind() && !(columnValue.value() instanceof MathOperation)) {
                 bindValues.addAll(createBindValues(columnValue.column(), columnValue.value(), tableMetaDataCache, typeConverter));
             }
@@ -68,5 +69,8 @@ public class UpdateSpec extends AbstractConditionBasedSpec {
             final Object convertedValue = typeConverter.convert(rawValue, columnMetaData.getDataType());
             return Collections.singletonList(new BindValue(convertedValue, columnMetaData.getDataType()));
         }
+    }
+
+    private record BoundColumnValue(ColumnValue columnValue, boolean bind) {
     }
 }

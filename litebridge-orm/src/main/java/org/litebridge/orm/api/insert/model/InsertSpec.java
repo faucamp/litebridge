@@ -1,8 +1,8 @@
 package org.litebridge.orm.api.insert.model;
 
-import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.ColumnValue;
@@ -16,17 +16,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class InsertSpec extends AbstractConditionBasedSpec {
+public final class InsertSpec extends AbstractConditionBasedSpec {
 
-    private record BoundColumnValue(ColumnValue columnValue, boolean bind) {}
     private final List<BoundColumnValue> columnValues = new ArrayList<>();
 
     public InsertSpec(final Table table, final SelectExpressionMapper selectExpressionMapper) {
         super(table, selectExpressionMapper);
-    }
-
-    public void addColumnValue(final ColumnValue columnValue) {
-        addColumnValue(columnValue, true);
     }
 
     public void addColumnValue(final ColumnValue columnValue, final boolean bind) {
@@ -54,7 +49,6 @@ public class InsertSpec extends AbstractConditionBasedSpec {
         return new PreparedOperation(insert, bindValues);
     }
 
-    public List<ColumnValue> columnValues() {
-        return columnValues.stream().map(BoundColumnValue::columnValue).toList();
+    private record BoundColumnValue(ColumnValue columnValue, boolean bind) {
     }
 }

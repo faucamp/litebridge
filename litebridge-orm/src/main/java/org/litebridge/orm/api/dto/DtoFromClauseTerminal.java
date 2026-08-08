@@ -6,7 +6,6 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
-import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -78,13 +77,8 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
      */
     public DtoWhereConditionClauseTerminal<DTO> where(final QueryConditionBuilder<DTO> query) {
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
-        final ConditionClauseTerminal<DTO, ?, ?> terminal = query.apply(conditionClauseStart);
-
-        if (terminal instanceof AbstractCbConditionClauseTerminal<?> act) {
-            return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new WhereNode(delegate.node(), act.node())));
-        }
-
-        return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate);
+        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new WhereNode(delegate.node(), terminal.node())));
     }
 
     /**

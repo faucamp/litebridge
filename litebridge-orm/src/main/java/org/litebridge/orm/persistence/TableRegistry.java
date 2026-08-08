@@ -3,7 +3,6 @@ package org.litebridge.orm.persistence;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
 
 import java.util.Collections;
 import java.util.Map;

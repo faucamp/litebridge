@@ -6,7 +6,6 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SetNode;
@@ -68,12 +67,8 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
 
     SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(updateSpec.table(), litebridgeContext.fromClauseEngine(), null);
-        final ConditionClauseTerminal<Row, ?, ?> terminal = query.apply(conditionClauseStart);
-
-        if (terminal instanceof AbstractCbConditionClauseTerminal<?> act) {
-            this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, act.node()));
-        }
-
+        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+        this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, terminal.node()));
         return new SqlUpdateWhereConditionClauseTerminalImpl(this);
     }
 

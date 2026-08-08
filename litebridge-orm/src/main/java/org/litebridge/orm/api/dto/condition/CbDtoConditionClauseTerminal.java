@@ -4,7 +4,6 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.FromClauseEngine;
@@ -53,12 +52,7 @@ public final class CbDtoConditionClauseTerminal<DTO> extends AbstractCbCondition
     @Override
     protected AbstractCbConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, fromClauseEngine, null);
-        final ConditionClauseTerminal<DTO, ?, ?> terminal = query.apply(conditionClauseStart);
-
-        if (terminal instanceof AbstractCbConditionClauseTerminal<?> act) {
-            return new CbDtoConditionClauseTerminal<>(ormTable, fromClauseEngine, new ConditionGroupNode(node, logicOperator, act.node()));
-        }
-
-        return this;
+        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        return new CbDtoConditionClauseTerminal<>(ormTable, fromClauseEngine, new ConditionGroupNode(node, logicOperator, terminal.node()));
     }
 }
