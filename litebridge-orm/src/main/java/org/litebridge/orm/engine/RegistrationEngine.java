@@ -148,7 +148,7 @@ public class RegistrationEngine {
 
             // Process/pend this table's dependants)
             mappedTable.manyToOneDependencies().forEach(fieldAccessor -> {
-                final OrmTable targetOrmTable = tableRegistry.getTable(fieldAccessor.genericType());
+                final OrmTable targetOrmTable = tableRegistry.getOrmTable(fieldAccessor.genericType());
 
                 if (targetOrmTable != null) {
                     targetOrmTable.addOneToManyReverseMapping(fieldAccessor);

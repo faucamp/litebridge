@@ -3,7 +3,6 @@ package org.litebridge.orm.persistence;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ModuleUtils;
-import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
@@ -25,7 +24,6 @@ import org.litebridge.tracking.FieldAccessor;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Proxy;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -283,7 +281,7 @@ public final class TableMapper {
     }
 
     private OrmTable ensureManyToManyJoinTable(final ManyToMany manyToMany, final MethodHandles.Lookup lookup, final List<FieldAccessor> manyToOneDependencies) {
-        final OrmTable joinTable = tableRegistry.getTable(manyToMany.joinTable());
+        final OrmTable joinTable = tableRegistry.getOrmTable(manyToMany.joinTable());
 
         if (joinTable != null) {
             return joinTable;

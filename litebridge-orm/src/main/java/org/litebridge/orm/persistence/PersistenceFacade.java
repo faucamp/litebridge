@@ -749,7 +749,7 @@ public class PersistenceFacade {
                 final OrmTable table;
 
                 if (iterator.hasNext()) {
-                    table = tableRegistry.getTable(dtoClass);
+                    table = tableRegistry.getOrmTable(dtoClass);
                 } else {
                     // Root table registry - if not found, throw an exception
                     table = tableRegistry.getTableOrThrow(dtoClass);

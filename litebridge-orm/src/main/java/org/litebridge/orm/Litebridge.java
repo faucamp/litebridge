@@ -283,7 +283,7 @@ public final class Litebridge implements SelectApi {
      * @throws IllegalArgumentException if the DTO is null or if its class is not registered.
      */
     public <T> T track(final T dto) {
-        final OrmTable table = tableRegistry.getTable(Objects.requireNonNull(dto, "DTO cannot be null").getClass());
+        final OrmTable table = tableRegistry.getOrmTable(Objects.requireNonNull(dto, "DTO cannot be null").getClass());
 
         if (table == null) {
             throw new IllegalArgumentException("DTO class not registered: '%s'".formatted(dto.getClass().getName()));

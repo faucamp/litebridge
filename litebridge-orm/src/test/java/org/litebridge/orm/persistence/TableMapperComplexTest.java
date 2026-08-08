@@ -50,7 +50,7 @@ class TableMapperComplexTest {
         final DtoTableSpec orderSpec = new DtoTableSpecBuilder(context).build();
 
         final TableMapper.MappedTable mappedOrder = mapper.mapToTable(MethodHandles.lookup(), OrderDto.class, orderSpec.tableSpec(), Set.of(OrderDto.class));
-        when(tableRegistry.getTable(OrderDto.class)).thenReturn(mappedOrder.ormTable());
+        when(tableRegistry.getOrmTable(OrderDto.class)).thenReturn(mappedOrder.ormTable());
 
         // Now register Customer with OneToMany to Order
         final Table customerTable = new Table("", "public", "customers");
@@ -131,7 +131,7 @@ class TableMapperComplexTest {
                 .with(spec -> spec.mapField("id").toColumn("ID")))
                 .build();
         final TableMapper.MappedTable mappedTag = mapper.mapToTable(MethodHandles.lookup(), TagDto.class, tagSpec.tableSpec(), Set.of(TagDto.class));
-        when(tableRegistry.getTable(TagDto.class)).thenReturn(mappedTag.ormTable());
+        when(tableRegistry.getOrmTable(TagDto.class)).thenReturn(mappedTag.ormTable());
 
         // Register Customer with ManyToMany to Tag
         final DtoTableSpec custSpec = new DtoTableSpecBuilder(new RegistrationContext(CustomerDto.class, mock(DatabaseProvider.class)).mapToTable("customers")

@@ -249,7 +249,7 @@ class OrmTableTest {
         // Then
         assertSame(nestedColumn, ormTable.getColumnForFieldName("nested"));
         assertSame(nestedField, ormTable.getFieldForColumnName("nested_id"));
-        assertSame(inlineTable, ormTable.getContextTableRegistry().getTable(InlineNestedDto.class));
+        assertSame(inlineTable, ormTable.getContextTableRegistry().getOrmTable(InlineNestedDto.class));
         assertSame(nestedField, ormTable.mappedFieldTargets().getFirst().getKey());
         assertSame(nestedColumn, ormTable.mappedFieldTargets().getFirst().getValue());
     }

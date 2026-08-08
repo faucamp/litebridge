@@ -114,7 +114,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         final OrmTable joinTable;
 
         // First check for inline/contextually-registered tables
-        final OrmTable contextScopedTable = ormTable.getContextTableRegistry().getTable(dtoClass);
+        final OrmTable contextScopedTable = ormTable.getContextTableRegistry().getOrmTable(dtoClass);
 
         if (contextScopedTable != null) {
             joinTable = contextScopedTable;

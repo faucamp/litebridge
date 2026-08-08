@@ -417,19 +417,19 @@ public final class QueryCompiler {
         }
 
         if (value instanceof Column column) {
-            OrmTable ormTable = tableRegistry.getTable(column.table());
+            OrmTable ormTable = tableRegistry.getOrmTable(column.table());
 
             if (ormTable == null && sourceAlias != null) {
                 final OrmTable sourceOrmTable = tableToOrmTableMap.get(sourceAlias);
                 if (sourceOrmTable != null) {
-                    ormTable = sourceOrmTable.getContextTableRegistry().getTable(column.table());
+                    ormTable = sourceOrmTable.getContextTableRegistry().getOrmTable(column.table());
                 }
             }
 
             if (ormTable == null && targetAlias != null) {
                 final OrmTable targetOrmTable = tableToOrmTableMap.get(targetAlias);
                 if (targetOrmTable != null) {
-                    ormTable = targetOrmTable.getContextTableRegistry().getTable(column.table());
+                    ormTable = targetOrmTable.getContextTableRegistry().getOrmTable(column.table());
                 }
             }
 
@@ -467,8 +467,9 @@ public final class QueryCompiler {
         return value;
     }
 
-    private @Nullable Class<?> getTableDtoClass(Table table) {
-        final OrmTable ormTable = tableToOrmTableMap.getOrDefault(table, tableRegistry.getTable(table));
+    @SuppressWarnings("ConstantConditions")
+    private Class<?> getTableDtoClass(Table table) {
+        final OrmTable ormTable = tableToOrmTableMap.getOrDefault(table, tableRegistry.getOrmTable(table));
         return ormTable != null ? ormTable.dtoClass() : null;
     }
 

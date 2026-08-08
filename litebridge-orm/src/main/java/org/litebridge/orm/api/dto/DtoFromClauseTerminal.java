@@ -130,7 +130,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         final OrmTable joinTable;
 
         // First check for inline/contextually-registered tables
-        final OrmTable contextScopedTable = ormTable.getContextTableRegistry().getTable(dtoClass);
+        final OrmTable contextScopedTable = ormTable.getContextTableRegistry().getOrmTable(dtoClass);
 
         if (contextScopedTable != null) {
             joinTable = contextScopedTable;

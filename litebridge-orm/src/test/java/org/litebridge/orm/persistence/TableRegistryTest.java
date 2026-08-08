@@ -30,7 +30,7 @@ class TableRegistryTest {
         tableRegistry.addTable(TestDto.class, ormTable);
 
         // When
-        final OrmTable result = tableRegistry.getTable(TestDto.class);
+        final OrmTable result = tableRegistry.getOrmTable(TestDto.class);
 
         // Then
         assertSame(ormTable, result);
@@ -42,7 +42,7 @@ class TableRegistryTest {
         final TableRegistry tableRegistry = new TableRegistry();
 
         // When
-        final OrmTable result = tableRegistry.getTable(TestDto.class);
+        final OrmTable result = tableRegistry.getOrmTable(TestDto.class);
 
         // Then
         assertNull(result);
@@ -54,7 +54,7 @@ class TableRegistryTest {
         final TableRegistry tableRegistry = new TableRegistry();
 
         // When/Then
-        assertThrows(NullPointerException.class, () -> tableRegistry.getTable((Class<?>) null));
+        assertThrows(NullPointerException.class, () -> tableRegistry.getOrmTable((Class<?>) null));
     }
 
     @Test
@@ -147,7 +147,7 @@ class TableRegistryTest {
         tableRegistry.addTable(TestDto.class, ormTable);
 
         // When
-        final OrmTable result = tableRegistry.getTable("public.test_table");
+        final OrmTable result = tableRegistry.getOrmTable("public.test_table");
 
         // Then
         assertSame(ormTable, result);
@@ -161,7 +161,7 @@ class TableRegistryTest {
         tableRegistry.addTable(TestDto.class, ormTable);
 
         // When
-        final OrmTable result = tableRegistry.getTable("public", "test_table");
+        final OrmTable result = tableRegistry.getOrmTable("public", "test_table");
 
         // Then
         assertSame(ormTable, result);
@@ -173,7 +173,7 @@ class TableRegistryTest {
         final TableRegistry tableRegistry = new TableRegistry();
 
         // When
-        final OrmTable result = tableRegistry.getTable("public", "test_table");
+        final OrmTable result = tableRegistry.getOrmTable("public", "test_table");
 
         // Then
         assertNull(result);
@@ -187,7 +187,7 @@ class TableRegistryTest {
         tableRegistry.addTable(TestDto.class, ormTable);
 
         // When
-        final OrmTable result = tableRegistry.getTable(new Table("", "public", "test_table"));
+        final OrmTable result = tableRegistry.getOrmTable(new Table("", "public", "test_table"));
 
         // Then
         assertSame(ormTable, result);
