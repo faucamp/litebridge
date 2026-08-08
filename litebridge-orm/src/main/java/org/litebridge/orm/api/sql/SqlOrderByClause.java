@@ -17,19 +17,18 @@ public final class SqlOrderByClause implements OrderByClause<Row, SqlOrderByClau
 
     @Override
     public SqlOrderByClauseChain asc() {
-        SqlSelector currentDelegate = delegate;
         for (final ExpressionSpec expression : expressions) {
-            currentDelegate = currentDelegate.withNode(new OrderByNode(currentDelegate.node(), expression, true));
+            delegate.withNode(new OrderByNode(delegate.node(), expression, true));
         }
-        return new SqlOrderByClauseChain(currentDelegate);
+
+        return new SqlOrderByClauseChain(delegate);
     }
 
     @Override
     public SqlOrderByClauseChain desc() {
-        SqlSelector currentDelegate = delegate;
         for (final ExpressionSpec expression : expressions) {
-            currentDelegate = currentDelegate.withNode(new OrderByNode(currentDelegate.node(), expression, false));
+            delegate.withNode(new OrderByNode(delegate.node(), expression, false));
         }
-        return new SqlOrderByClauseChain(currentDelegate);
+        return new SqlOrderByClauseChain(delegate);
     }
 }

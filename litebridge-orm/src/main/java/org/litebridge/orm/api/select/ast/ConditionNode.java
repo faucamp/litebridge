@@ -13,9 +13,9 @@ import java.util.Objects;
 /**
  * Represents a condition within a JOIN, WHERE or HAVING clause in the query AST.
  *
- * @param previous      the previous node in the chain
- * @param logicOperator the logic operator (AND/OR)
- * @param lhs           the left-hand side expression
+ * @param previous          the previous node in the chain
+ * @param logicOperator     the logic operator (AND/OR)
+ * @param lhs               the left-hand side expression
  * @param operator          the operator (EQ, USING, etc.)
  * @param rhs               the right-hand side value
  * @param relationshipField the field name of the relationship (if any)
@@ -51,15 +51,12 @@ public record ConditionNode(@Nullable QueryNode previous,
         return Objects.hash(previous, logicOperator, lhs, operator, relationshipField, rhsStructuralKey());
     }
 
-    private Object rhsStructuralKey() {
-        if (rhs instanceof Collection<?> collection) {
-            return collection.size();
-        } else if (rhs instanceof QueryNode queryNode) {
-            return queryNode;
-        } else if (rhs instanceof SelectTerminal<?> st) {
-            return SelectTerminalInspector.getNode(st);
-        } else {
-            return 1;
-        }
+    private @Nullable Object rhsStructuralKey() {
+        return switch (rhs) {
+            case Collection<?> collection -> collection.size();
+            case QueryNode queryNode -> queryNode;
+            case SelectTerminal<?> st -> SelectTerminalInspector.getNode(st);
+            case null, default -> 1;
+        };
     }
 }

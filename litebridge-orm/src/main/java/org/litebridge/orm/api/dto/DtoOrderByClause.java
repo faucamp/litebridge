@@ -28,23 +28,19 @@ public final class DtoOrderByClause<DTO>
 
     @Override
     public DtoOrderByClauseChain<DTO> asc() {
-        DtoSelector<DTO> currentDelegate = delegate;
-
         for (final ExpressionSpec expression : expressions) {
-            currentDelegate = currentDelegate.withNode(new OrderByNode(currentDelegate.node(), expression, true));
+            delegate.withNode(new OrderByNode(delegate.node(), expression, true));
         }
 
-        return new DtoOrderByClauseChain<>(currentDelegate);
+        return new DtoOrderByClauseChain<>(delegate);
     }
 
     @Override
     public DtoOrderByClauseChain<DTO> desc() {
-        DtoSelector<DTO> currentDelegate = delegate;
-
         for (final ExpressionSpec expression : expressions) {
-            currentDelegate = currentDelegate.withNode(new OrderByNode(currentDelegate.node(), expression, false));
+            delegate.withNode(new OrderByNode(delegate.node(), expression, false));
         }
 
-        return new DtoOrderByClauseChain<>(currentDelegate);
+        return new DtoOrderByClauseChain<>(delegate);
     }
 }

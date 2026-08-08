@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.sql;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.WhereConditionClause;
@@ -27,7 +28,7 @@ public final class SqlWhereConditionClause
     public SqlWhereConditionClause(final LitebridgeContext litebridgeContext,
                                    final LogicOperator logicOperator,
                                    final ExpressionSpec lhs,
-                                   final QueryNode node,
+                                   final @Nullable QueryNode node,
                                    final Function<QueryNode, SqlWhereConditionClauseTerminal> terminalRecreator) {
         super(litebridgeContext, logicOperator, lhs, node, terminalRecreator);
     }

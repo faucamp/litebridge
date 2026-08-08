@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.dto;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.WhereConditionClause;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -31,7 +32,7 @@ public final class DtoWhereConditionClause<DTO>
     public DtoWhereConditionClause(final LitebridgeContext litebridgeContext,
                                    final LogicOperator logicOperator,
                                    final ExpressionSpec lhs,
-                                   final QueryNode node,
+                                   final @Nullable QueryNode node,
                                    final Function<QueryNode, DtoWhereConditionClauseTerminal<DTO>> terminalRecreator) {
         super(litebridgeContext, logicOperator, lhs, node, terminalRecreator);
     }
