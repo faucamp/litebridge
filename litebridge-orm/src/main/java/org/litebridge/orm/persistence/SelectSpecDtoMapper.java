@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -57,7 +58,14 @@ public class SelectSpecDtoMapper {
         this.litebridgeContext = litebridgeContext;
     }
 
-    private Object safeConvert(final @Nullable Object value, final Class<?> targetType) {
+    /**
+     * Safely converts a given value to a specified target type using a type conversion mechanism.
+     *
+     * @param value      The input value to be converted. Can be {@code null}.
+     * @param targetType The target class type to convert the value into. Must not be {@code null}.
+     * @return The converted value if conversion is applicable and successful; otherwise, the original value.
+     */
+    private @Nullable Object safeConvert(final @Nullable Object value, final Class<?> targetType) {
         if (value == null || targetType == Object.class || targetType.isInstance(value)) {
             return value;
         }
@@ -80,6 +88,7 @@ public class SelectSpecDtoMapper {
                         final Object value = row.getValue(0);
                         return dtoClass.cast(safeConvert(value, dtoClass));
                     })
+                    .filter(Objects::nonNull)
                     .toList();
         }
 
