@@ -140,7 +140,7 @@ public class SelectSpecDtoMapper {
         for (int i = 0; i < pkColumns.size(); i++) {
             final ColumnMetaData pkCol = pkColumns.get(i);
             final FieldAccessor field = ormTable.getFieldForColumnName(pkCol.name());
-            pkTypes[i] = (field != null && ClassUtils.isBasicType(field.type())) ? field.type() : Object.class;
+            pkTypes[i] = ClassUtils.isBasicType(field.type()) ? field.type() : Object.class;
             int index = -1;
 
             for (final DtoSelectSpec.FieldColumn fc : fieldColumns) {

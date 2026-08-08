@@ -82,6 +82,7 @@ class SelectSpecDtoMapperTest {
         when(columnMetaData2.name()).thenReturn(column2.name());
         when(columnMetaData2.toColumn()).thenReturn(column2);
         when(ormTable.getColumnMetaData(column2.name())).thenReturn(columnMetaData2);
+        when(ormTable.getFieldForColumnName(column1.name())).thenReturn(accessorCache.fieldAccessor(SimpleDto.class, "id"));
 
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         when(tableMetaData.primaryKey()).thenReturn(List.of(columnMetaData1));
@@ -130,6 +131,7 @@ class SelectSpecDtoMapperTest {
         when(columnMetaData2.name()).thenReturn(column2.name());
         when(columnMetaData2.toColumn()).thenReturn(column2);
         when(ormTable.getColumnMetaData(column2.name())).thenReturn(columnMetaData2);
+        when(ormTable.getFieldForColumnName(column1.name())).thenReturn(accessorCache.fieldAccessor(SimpleRecord.class, "id"));
 
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         when(tableMetaData.primaryKey()).thenReturn(List.of(columnMetaData1));
@@ -172,6 +174,7 @@ class SelectSpecDtoMapperTest {
         when(columnMetaData1.name()).thenReturn(column1.name());
         when(columnMetaData1.toColumn()).thenReturn(column1);
         when(ormTable.getColumnMetaData(column1.name())).thenReturn(columnMetaData1);
+        when(ormTable.getFieldForColumnName(column1.name())).thenReturn(accessorCache.fieldAccessor(SimpleDto.class, "id"));
 
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         when(tableMetaData.primaryKey()).thenReturn(List.of(columnMetaData1));
@@ -253,6 +256,7 @@ class SelectSpecDtoMapperTest {
         when(childRefMD.getJoinColumn()).thenReturn("ID");
         when(parentOrmTable.getColumnMetaData("CHILD_ID")).thenReturn(childRefMD);
         when(parentOrmTable.getColumnForFieldName("child")).thenReturn(childRefMD);
+        when(parentOrmTable.getFieldForColumnName("ID")).thenReturn(accessorCache.fieldAccessor(ParentDto.class, "id"));
 
         final TableMetaData parentTMD = mock(TableMetaData.class);
         when(parentTMD.primaryKey()).thenReturn(List.of(parentPkMD));
@@ -326,6 +330,7 @@ class SelectSpecDtoMapperTest {
         when(parentPkMD.name()).thenReturn("ID");
         when(parentPkMD.toColumn()).thenReturn(parentPkCol);
         when(parentOrmTable.getColumnMetaData("ID")).thenReturn(parentPkMD);
+        when(parentOrmTable.getFieldForColumnName("ID")).thenReturn(accessorCache.fieldAccessor(ParentWithCollectionsDto.class, "id"));
 
         final TableMetaData parentTMD = mock(TableMetaData.class);
         when(parentTMD.primaryKey()).thenReturn(List.of(parentPkMD));
@@ -377,6 +382,7 @@ class SelectSpecDtoMapperTest {
         when(columnMetaData1.name()).thenReturn(column1.name());
         when(columnMetaData1.toColumn()).thenReturn(column1);
         when(ormTable.getColumnMetaData(column1.name())).thenReturn(columnMetaData1);
+        when(ormTable.getFieldForColumnName(column1.name())).thenReturn(accessorCache.fieldAccessor(SimpleDto.class, "id"));
 
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         when(tableMetaData.primaryKey()).thenReturn(List.of(columnMetaData1));
