@@ -17,6 +17,7 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -156,7 +157,8 @@ public final class DtoJoinConditionClauseTerminal<DTO>
             joinNode.withCondition(n);
             return this;
         };
-        return new DtoJoinConditionClause<>(delegate.litebridgeContext(), logicOperator, expression, joinNode.condition(), recreator);
+
+        return new DtoJoinConditionClause<>(delegate.litebridgeContext(), logicOperator, expression, Objects.requireNonNull(joinNode).condition(), recreator);
     }
 
     private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression, final DtoSelector<DTO> newDelegate) {

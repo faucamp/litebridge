@@ -8,11 +8,13 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.LimitClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.sql.SqlProtoExpressionResolver;
 import org.litebridge.orm.api.sql.SqlSelectSpec;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryPlanCache;
+import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
@@ -112,7 +114,7 @@ class SelectImplTest {
         }
 
         protected TestSelector(SqlSelectSpec selectSpec, TransactionalDatabaseProvider databaseProvider) {
-            this(selectSpec, databaseProvider, mock(LitebridgeContext.class), null);
+            this(selectSpec, databaseProvider, mock(LitebridgeContext.class), new SelectNode(null, new ExpressionSpec[0], null));
         }
 
         @Override

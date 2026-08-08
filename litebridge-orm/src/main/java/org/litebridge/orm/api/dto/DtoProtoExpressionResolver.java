@@ -11,8 +11,8 @@ import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
 import org.litebridge.orm.expression.Resolvable;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
-import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.meta.QueryField;
+import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
@@ -34,10 +34,10 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     /**
      * Creates a new instance of {@code DtoProtoExpressionResolver}.
      *
-     * @param selectSpec the select specification
-     * @param aliasGenerator the alias generator
+     * @param selectSpec              the select specification
+     * @param aliasGenerator          the alias generator
      * @param classFieldAccessorCache the field accessor cache
-     * @param tableRegistry the table registry
+     * @param tableRegistry           the table registry
      */
     public DtoProtoExpressionResolver(final DtoSelectSpec selectSpec,
                                       final AliasGenerator aliasGenerator,
@@ -52,9 +52,9 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     /**
      * Creates a new instance of {@code DtoProtoExpressionResolver} without a select specification.
      *
-     * @param aliasGenerator the alias generator
+     * @param aliasGenerator          the alias generator
      * @param classFieldAccessorCache the field accessor cache
-     * @param tableRegistry the table registry
+     * @param tableRegistry           the table registry
      */
     public DtoProtoExpressionResolver(final AliasGenerator aliasGenerator,
                                       final ClassFieldAccessorCache classFieldAccessorCache,
@@ -113,7 +113,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
             if (ormTable.equals(selectSpec.dtoTable())) {
                 table = selectSpec.getTable();
             } else {
-                table = selectSpec.getJoins().stream()
+                table = Objects.requireNonNull(selectSpec.getJoins()).stream()
                         .filter(DtoJoinSpec.class::isInstance)
                         .map(DtoJoinSpec.class::cast)
                         .filter(join -> join.dtoTable().equals(ormTable))

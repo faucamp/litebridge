@@ -134,11 +134,10 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
      * @return the compiled select specification
      */
     public SSP compile() {
-        //final AliasGenerator freshGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
         final DefaultAliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
 
         final SSP spec = createSelectSpec(aliasGenerator);
-        new QueryCompiler(tableRegistry, aliasGenerator).compile(node, spec);
+        new QueryCompiler(tableRegistry, aliasGenerator).compile(Objects.requireNonNull(node), spec);
         return spec;
     }
 
@@ -181,7 +180,7 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
      *
      * @return the query node
      */
-    public QueryNode node() {
+    public @Nullable QueryNode node() {
         return node;
     }
 
