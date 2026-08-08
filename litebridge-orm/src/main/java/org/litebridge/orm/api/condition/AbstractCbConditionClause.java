@@ -35,8 +35,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     protected final FromClauseEngine fromClauseEngine;
     private final LogicOperator logicOperator;
     private final ExpressionSpec lhs;
-    private final QueryNode node;
-    private final Function<QueryNode, AbstractCbConditionClauseTerminal<DTO>> terminalCreator;
+    private final @Nullable QueryNode node;
 
     /**
      * Constructs a new {@code AbstractCbConditionClause}.
@@ -50,13 +49,12 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     public AbstractCbConditionClause(final FromClauseEngine fromClauseEngine,
                                      final LogicOperator logicOperator,
                                      final ExpressionSpec lhs,
-                                     final QueryNode node,
+                                     final @Nullable QueryNode node,
                                      final Function<QueryNode, AbstractCbConditionClauseTerminal<DTO>> terminalCreator) {
         this.logicOperator = logicOperator;
         this.lhs = lhs;
         this.fromClauseEngine = fromClauseEngine;
         this.node = node;
-        this.terminalCreator = terminalCreator;
     }
 
     /**

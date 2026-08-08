@@ -918,26 +918,27 @@ public final class EntityGenerator {
     }
 
     private @Nullable String getDefaultValueString(final ColumnMetaData columnMetaData, final Class<?> fieldClass, final String fieldName) throws MojoExecutionException {
+        final String rawDefaultValue = Objects.requireNonNull(columnMetaData.getDefaultValue());
         final String defaultValue;
 
         if (fieldClass == Long.class || fieldClass == long.class) {
-            defaultValue = "%sL".formatted(columnMetaData.getDefaultValue());
+            defaultValue = "%sL".formatted(rawDefaultValue);
         } else if (fieldClass == Short.class || fieldClass == short.class) {
-            defaultValue = "%sS".formatted(columnMetaData.getDefaultValue());
+            defaultValue = "%sS".formatted(rawDefaultValue);
         } else if (fieldClass == Double.class || fieldClass == double.class) {
-            defaultValue = "%sD".formatted(columnMetaData.getDefaultValue());
+            defaultValue = "%sD".formatted(rawDefaultValue);
         } else if (fieldClass == Float.class || fieldClass == float.class) {
-            defaultValue = "%sF".formatted(columnMetaData.getDefaultValue());
+            defaultValue = "%sF".formatted(rawDefaultValue);
         } else if (CharSequence.class.isAssignableFrom(fieldClass)) {
-            defaultValue = "\"%s\"".formatted(columnMetaData.getDefaultValue());
+            defaultValue = "\"%s\"".formatted(rawDefaultValue);
         } else if (fieldClass == Character.class || fieldClass == char.class) {
-            if (columnMetaData.getDefaultValue().length() != 1) {
+            if (rawDefaultValue.length() != 1) {
                 throw new MojoExecutionException("Default value for char field '%s' must be a single character, but is: %s", fieldName, columnMetaData.getDefaultValue());
             }
 
-            defaultValue = "'%s'".formatted(columnMetaData.getDefaultValue());
+            defaultValue = "'%s'".formatted(rawDefaultValue);
         } else {
-            final Object convertedDefaultValue = typeConverter.convert(columnMetaData.getDefaultValue(), fieldClass);
+            final Object convertedDefaultValue = typeConverter.convert(rawDefaultValue, fieldClass);
             defaultValue = convertedDefaultValue != null ? convertedDefaultValue.toString() : null;
         }
 

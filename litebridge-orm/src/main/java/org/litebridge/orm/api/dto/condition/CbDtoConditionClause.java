@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.dto.condition;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClause;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
@@ -34,7 +35,7 @@ public class CbDtoConditionClause<DTO> extends AbstractCbConditionClause<DTO> {
                                 final FromClauseEngine fromClauseEngine,
                                 final LogicOperator logicOperator,
                                 final ExpressionSpec lhs,
-                                final QueryNode node,
+                                final @Nullable QueryNode node,
                                 final Function<QueryNode, AbstractCbConditionClauseTerminal<DTO>> terminalCreator) {
         super(fromClauseEngine, logicOperator, lhs, node, terminalCreator);
         this.ormTable = ormTable;

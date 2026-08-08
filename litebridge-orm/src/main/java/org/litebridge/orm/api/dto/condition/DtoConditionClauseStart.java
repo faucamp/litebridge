@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.dto.condition;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClause;
@@ -18,7 +19,7 @@ import org.litebridge.orm.persistence.OrmTable;
 public class DtoConditionClauseStart<DTO> extends AbstractConditionClauseStart<DTO> {
 
     private final OrmTable ormTable;
-    private final QueryNode node;
+    private final @Nullable QueryNode node;
 
     /**
      * Creates a new DTO condition clause start.
@@ -29,7 +30,7 @@ public class DtoConditionClauseStart<DTO> extends AbstractConditionClauseStart<D
      */
     public DtoConditionClauseStart(final OrmTable ormTable,
                                    final FromClauseEngine fromClauseEngine,
-                                   final QueryNode node) {
+                                   final @Nullable QueryNode node) {
         super(fromClauseEngine);
         this.ormTable = ormTable;
         this.node = node;
