@@ -7,6 +7,7 @@ import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.orm.api.delete.model.DeleteSpec;
 import org.litebridge.orm.api.dto.DtoDataSpec;
+import org.litebridge.orm.api.dto.DtoJoinSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.api.insert.model.InsertSpec;
 import org.litebridge.orm.api.select.SelectTerminal;
@@ -163,7 +164,7 @@ public final class QueryCompiler {
                         dtoSelectSpec.addJoin(joinSpec);
                     } else {
                         // Standard DTO join
-                        final org.litebridge.orm.api.dto.DtoJoinSpec joinSpec = new org.litebridge.orm.api.dto.DtoJoinSpec(
+                        final DtoJoinSpec joinSpec = new DtoJoinSpec(
                                 joinNode.dtoClass(),
                                 joinOrmTable,
                                 joinTable,

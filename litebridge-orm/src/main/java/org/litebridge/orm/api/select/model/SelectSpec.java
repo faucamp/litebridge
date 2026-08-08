@@ -83,16 +83,8 @@ public abstract class SelectSpec {
         return Objects.requireNonNull(selectExpressionMapper, "SelectExpressionMapper not set");
     }
 
-    public boolean isTableSet() {
-        return table != null;
-    }
-
-    public boolean isSelectExpressionMapperSet() {
-        return selectExpressionMapper != null;
-    }
-
     public SelectExpressionMapper getSelectExpressionMapper() {
-        return selectExpressionMapper;
+        return Objects.requireNonNull(selectExpressionMapper);
     }
 
     public List<ExpressionSpec> getExpressions() {
