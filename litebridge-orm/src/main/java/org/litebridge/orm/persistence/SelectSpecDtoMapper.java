@@ -132,7 +132,7 @@ public class SelectSpecDtoMapper {
     }
 
     private MappingPlan compileMappingPlan(final Class<?> dtoClass, final OrmTable ormTable, final Table table, final List<DtoSelectSpec.FieldColumn> fieldColumns, final @Nullable List<JoinSpec> joins, final Row referenceRow) {
-        // 1. Primary Key Indices and Types
+        // Primary Key Indices and Types
         final List<ColumnMetaData> pkColumns = ormTable.getMetaData().primaryKey();
         final int[] pkIndices = new int[pkColumns.size()];
         final Class<?>[] pkTypes = new Class<?>[pkColumns.size()];
@@ -153,7 +153,7 @@ public class SelectSpecDtoMapper {
             pkIndices[i] = index;
         }
 
-        // 2. Field Mappings and Nested Plans
+        // Field Mappings and Nested Plans
         final List<MappingPlan.FieldMapping> mappings = new ArrayList<>();
         final Map<FieldAccessor, MappingPlan> nestedPlans = new HashMap<>();
 
@@ -202,7 +202,7 @@ public class SelectSpecDtoMapper {
                 isRelatedDto = true;
                 final ColumnMetaData columnMetaData = ormTable.getColumnForFieldName(accessor.name());
 
-                if (columnMetaData != null && columnMetaData.getJoinColumn() != null) {
+                if (columnMetaData.getJoinColumn() != null) {
                     final OrmTable relatedOrmTable = tableRegistry.getTableInContext(accessor.type(), dtoClass)
                             .orElseGet(() -> tableRegistry.getTableOrThrow(accessor.type()));
                     relatedPkAccessor = relatedOrmTable.getFieldForColumnName(columnMetaData.getJoinColumn());
@@ -214,11 +214,7 @@ public class SelectSpecDtoMapper {
             mappings.add(new MappingPlan.FieldMapping(index, accessor, fieldType, isRelatedDto, isNestedDto, relatedPkAccessor));
         }
 
-        DtoConstructor.MappingInfo mappingInfo = dtoConstructor.getMappingInfo(dtoClass);
-        if (mappingInfo == null) {
-            mappingInfo = new DtoConstructor.MappingInfo(null, true, Collections.emptyList());
-        }
-
+        final DtoConstructor.MappingInfo mappingInfo = dtoConstructor.getMappingInfo(dtoClass);
         final Map<DtoJoinSpec, MappingPlan> joinPlans = new HashMap<>();
 
         if (joins != null) {
@@ -305,14 +301,17 @@ public class SelectSpecDtoMapper {
                 if (mapping.isNestedDto()) {
                     final MappingPlan nestedPlan = plan.nestedPlans().get(mapping.accessor());
                     final PartiallyConstructedDto nestedDto = toDto(nestedPlan, row, false);
+
                     if (nestedDto != null) {
                         fieldValues.add(new FieldAccessorValue(mapping.accessor(), nestedDto.dto()));
                     }
                 } else {
                     final Object value = mapping.index() != -1 ? row.getValue(mapping.index()) : null;
+
                     if (mapping.isRelatedDto()) {
                         if (mapping.relatedPkAccessor() != null) {
                             final Object relatedPkValue = safeConvert(value, mapping.relatedPkAccessor().type());
+
                             if (relatedPkValue != null) {
                                 final List<FieldAccessorValue> pkValues = Collections.singletonList(new FieldAccessorValue(mapping.relatedPkAccessor(), relatedPkValue));
                                 final DtoConstructor.DtoDependency dependency = new DtoConstructor.DtoDependency(mapping.accessor(), mapping.fieldType(), pkValues);
@@ -344,13 +343,17 @@ public class SelectSpecDtoMapper {
                 }
             } else {
                 final Map<FieldAccessor, Object> valuesByField = new HashMap<>(fieldValues.size());
+
                 for (final FieldAccessorValue fav : fieldValues) {
                     valuesByField.put(fav.field(), fav.value());
                 }
+
                 final Object[] args = new Object[plan.canonicalConstructorFieldAccessors().size()];
+
                 for (int i = 0; i < args.length; i++) {
                     args[i] = valuesByField.get(plan.canonicalConstructorFieldAccessors().get(i));
                 }
+
                 try {
                     dto = plan.constructor().invokeWithArguments(args);
                 } catch (Throwable e) {
@@ -364,6 +367,7 @@ public class SelectSpecDtoMapper {
 
         for (final Map.Entry<DtoJoinSpec, MappingPlan> entry : plan.joinPlans().entrySet()) {
             final PartiallyConstructedDto joinedDto = toDto(entry.getValue(), row, true);
+
             if (joinedDto != null) {
                 if (entry.getKey().collectionField() != null) {
                     dtoCache.addLink(currentDto.dto(), entry.getKey().collectionField(), joinedDto.dto());
@@ -390,12 +394,13 @@ public class SelectSpecDtoMapper {
 
             if (relatedDto == null && litebridgeContext.getRelatedDtoStrategy() == RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN) {
                 final Object partial = constructDto(dependency.targetDtoClass(), dependency.targetPrimaryKey(), dtoConstructor);
-                relatedDto = new PartiallyConstructedDto(partial, (List<Object>) dependency.targetPrimaryKeyValue(), Collections.emptyList(), tableRegistry.getTableOrThrow(dependency.targetDtoClass()));
+                relatedDto = new PartiallyConstructedDto(partial, dependency.targetPrimaryKeyValue(), Collections.emptyList(), tableRegistry.getTableOrThrow(dependency.targetDtoClass()));
                 dtoCache.put(relatedDto.primaryKey(), relatedDto);
             }
 
             if (relatedDto != null) {
                 final Object resolvedRelatedInstance = resolveRelatedDtoDependencies(relatedDto, resolvedDtoInstances);
+
                 if (currentDto.dto() instanceof Record) {
                     if (recordOverrides == null) {
                         recordOverrides = new HashMap<>();
@@ -428,6 +433,7 @@ public class SelectSpecDtoMapper {
         final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
         table.fieldAcessorStream().forEach(accessor -> {
             Object value = valueOverrides.get(accessor);
+
             if (value == null) {
                 try {
                     value = accessor.get(partialDto.dto());
@@ -439,6 +445,7 @@ public class SelectSpecDtoMapper {
         });
 
         final Object dto;
+
         if (mappingInfo.defaultConstructorUsed()) {
             try {
                 dto = mappingInfo.constructor().invoke();
@@ -450,13 +457,17 @@ public class SelectSpecDtoMapper {
             }
         } else {
             final Map<FieldAccessor, Object> valuesByField = new HashMap<>();
+
             for (final FieldAccessorValue fav : fieldValues) {
                 valuesByField.put(fav.field(), fav.value());
             }
+
             final Object[] args = new Object[mappingInfo.canonicalConstructorFieldAccessors().size()];
+
             for (int i = 0; i < args.length; i++) {
                 args[i] = valuesByField.get(mappingInfo.canonicalConstructorFieldAccessors().get(i));
             }
+
             try {
                 dto = mappingInfo.constructor().invokeWithArguments(args);
             } catch (Throwable e) {
@@ -580,10 +591,12 @@ public class SelectSpecDtoMapper {
 
         public @Nullable PartiallyConstructedDto get(final Class<?> dtoClass, final List<Object> id) {
             final Map<List<Object>, PartiallyConstructedDto> classCache = cache.get(dtoClass);
+
             if (classCache != null) {
                 final PartiallyConstructedDto dto = classCache.get(id);
                 if (dto != null) return dto;
             }
+
             for (Map.Entry<Class<?>, Map<List<Object>, PartiallyConstructedDto>> entry : cache.entrySet()) {
                 if (dtoClass.isAssignableFrom(entry.getKey())) {
                     PartiallyConstructedDto dto = entry.getValue().get(id);
@@ -592,6 +605,7 @@ public class SelectSpecDtoMapper {
                     }
                 }
             }
+
             return null;
         }
 

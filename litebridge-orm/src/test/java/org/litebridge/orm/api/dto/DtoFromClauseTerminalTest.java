@@ -84,6 +84,7 @@ class DtoFromClauseTerminalTest {
         when(databaseProvider.select(any(), any())).thenReturn(List.of(new Row().withColumn(pkCol.toColumn(), 1L)));
 
         final DtoConstructor constructor = mock(DtoConstructor.class);
+        when(constructor.getMappingInfo(any())).thenReturn(new DtoConstructor.MappingInfo(null, false, List.of()));
         when(constructor.newInstance(any(), any())).thenReturn(new DtoConstructor.ConstructionResult<>(new TestDto(), true));
 
         final DtoSelector<TestDto> selector = new DtoSelector<>(TestDto.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), constructor, databaseProvider, new NoOpAliasGenerator(), createMockContext(), null);
@@ -136,6 +137,7 @@ class DtoFromClauseTerminalTest {
         when(databaseProvider.select(any(), any())).thenReturn(List.of(new Row().withColumn(pk1.toColumn(), 1L).withColumn(pk2.toColumn(), 2L)));
 
         final DtoConstructor constructor = mock(DtoConstructor.class);
+        when(constructor.getMappingInfo(any())).thenReturn(new DtoConstructor.MappingInfo(null, false, List.of()));
         when(constructor.newInstance(any(), any())).thenReturn(new DtoConstructor.ConstructionResult<>(new TestDto(), true));
 
         final DtoSelector<TestDto> selector = new DtoSelector<>(TestDto.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), constructor, databaseProvider, new NoOpAliasGenerator(), createMockContext(), null);
@@ -167,7 +169,7 @@ class DtoFromClauseTerminalTest {
         when(ormTable.getColumnForFieldName("field1")).thenReturn(col1);
         when(ormTable.getContextTableRegistry()).thenReturn(mock(TableRegistry.class));
 
-        final DtoSelector<TestDto> selector = new DtoSelector<>(TestDto.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), createMockContext(), null);
+        final DtoSelector<TestDto> selector = new DtoSelector<>(TestDto.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), new DtoConstructor(mock(TableRegistry.class)), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), createMockContext(), null);
         final DtoFromClauseTerminal<TestDto> terminal = selector.select();
 
         assertNotNull(terminal.where("field1"));
@@ -179,7 +181,7 @@ class DtoFromClauseTerminalTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getTableOrThrow(String.class)).thenReturn(joinTable);
         // Ensure SelectExpressionMapper is set by calling select()
-        final DtoSelector<TestDto> selectorWithRegistry = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, mock(ClassFieldAccessorCache.class), mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), createMockContext(), null);
+        final DtoSelector<TestDto> selectorWithRegistry = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, mock(ClassFieldAccessorCache.class), new DtoConstructor(tableRegistry), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), createMockContext(), null);
         final DtoFromClauseTerminal<TestDto> terminalWithRegistry = selectorWithRegistry.select();
 
         assertNotNull(terminalWithRegistry.join(String.class));
