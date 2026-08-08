@@ -131,7 +131,7 @@ public class SelectSpecDtoMapper {
         for (int i = 0; i < pkColumns.size(); i++) {
             final ColumnMetaData pkCol = pkColumns.get(i);
             final FieldAccessor field = ormTable.getFieldForColumnName(pkCol.name());
-            pkTypes[i] = (field != null && org.litebridge.commons.ClassUtils.isBasicType(field.type())) ? field.type() : Object.class;
+            pkTypes[i] = (field != null && ClassUtils.isBasicType(field.type())) ? field.type() : Object.class;
             int index = -1;
 
             for (final DtoSelectSpec.FieldColumn fc : fieldColumns) {
@@ -152,6 +152,7 @@ public class SelectSpecDtoMapper {
         final Map<FieldAccessor, List<DtoSelectSpec.FieldColumn>> groupedByRoot = new HashMap<>();
         for (final DtoSelectSpec.FieldColumn fc : fieldColumns) {
             final FieldAccessor accessor = fc.fieldAccessor();
+
             if (accessor == null || !fc.column().table().equals(table)) {
                 continue;
             }
