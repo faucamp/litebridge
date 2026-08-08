@@ -162,7 +162,7 @@ public class SelectSpecDtoMapper {
         for (final DtoSelectSpec.FieldColumn fc : fieldColumns) {
             final FieldAccessor accessor = fc.fieldAccessor();
 
-            if (accessor == null || !fc.column().table().equals(table)) {
+            if (!fc.column().table().equals(table)) {
                 continue;
             }
 
@@ -220,7 +220,14 @@ public class SelectSpecDtoMapper {
         if (joins != null) {
             for (final JoinSpec join : joins) {
                 if (join instanceof DtoJoinSpec djs) {
-                    final Class<?> sourceClass = djs.sourceDtoClass() != null ? djs.sourceDtoClass() : (selectSpec instanceof DtoSelectSpec dss ? dss.dtoClass() : null);
+                    final Class<?> sourceClass;
+
+                    if (djs.sourceDtoClass() != null) {
+                        sourceClass = djs.sourceDtoClass();
+                    } else {
+                        sourceClass = selectSpec.dtoClass();
+                    }
+
                     if (dtoClass.equals(sourceClass)) {
                         joinPlans.put(djs, compileMappingPlan(djs.dtoClass(), djs.dtoTable(), djs.table(), djs.getFieldColumns(), null, referenceRow));
                     }
@@ -234,7 +241,14 @@ public class SelectSpecDtoMapper {
         if (joins != null) {
             for (final JoinSpec join : joins) {
                 if (join instanceof DtoJoinSpec djs && djs.collectionField() != null) {
-                    final Class<?> sourceClass = djs.sourceDtoClass() != null ? djs.sourceDtoClass() : (selectSpec instanceof DtoSelectSpec dss ? dss.dtoClass() : null);
+                    final Class<?> sourceClass;
+
+                    if (djs.sourceDtoClass() != null) {
+                        sourceClass = djs.sourceDtoClass();
+                    } else {
+                        sourceClass = selectSpec.dtoClass();
+                    }
+
                     if (dtoClass.equals(sourceClass)) {
                         ormTable.getOneToManyMappingForField(djs.collectionField())
                                 .ifPresent(requestedOneToMany::add);
