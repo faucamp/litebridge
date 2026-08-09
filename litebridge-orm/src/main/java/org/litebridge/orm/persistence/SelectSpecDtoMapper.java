@@ -307,6 +307,7 @@ public class SelectSpecDtoMapper {
         }
 
         PartiallyConstructedDto currentDto = dtoCache.get(plan.dtoClass(), pk);
+
         if (currentDto == null) {
             final List<FieldAccessorValue> fieldValues = new ArrayList<>(plan.fieldMappings().length);
             final List<DtoConstructor.DtoDependency> dependencies = new ArrayList<>();
@@ -341,9 +342,7 @@ public class SelectSpecDtoMapper {
 
             final Object dto;
 
-            if (plan.constructor() == null) {
-                dto = dtoConstructor.newInstance(plan.dtoClass(), fieldValues).dto();
-            } else if (plan.defaultConstructorUsed()) {
+            if (plan.defaultConstructorUsed()) {
                 try {
                     dto = plan.constructor().invoke();
                 } catch (Throwable ex) {

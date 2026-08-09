@@ -26,6 +26,8 @@ import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
@@ -85,8 +87,8 @@ class DtoFromClauseTerminalTest {
         when(databaseProvider.select(any(), any())).thenReturn(List.of(new Row().withColumn(pkCol.toColumn(), 1L)));
 
         final DtoConstructor constructor = mock(DtoConstructor.class);
-        when(constructor.getMappingInfo(any())).thenReturn(new DtoConstructor.MappingInfo(null, false, List.of()));
-        when(constructor.newInstance(any(), any())).thenReturn(new DtoConstructor.ConstructionResult<>(new TestDto(), true));
+        final MethodHandle handle = MethodHandles.constant(TestDto.class, new TestDto());
+        when(constructor.getMappingInfo(any())).thenReturn(new DtoConstructor.MappingInfo(handle, true, List.of()));
 
         final DtoSelector<TestDto> selector = new DtoSelector<>(TestDto.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), constructor, databaseProvider, new NoOpAliasGenerator(), createMockContext(), null);
         final DtoFromClauseTerminal<TestDto> terminal = selector.select();
@@ -138,8 +140,8 @@ class DtoFromClauseTerminalTest {
         when(databaseProvider.select(any(), any())).thenReturn(List.of(new Row().withColumn(pk1.toColumn(), 1L).withColumn(pk2.toColumn(), 2L)));
 
         final DtoConstructor constructor = mock(DtoConstructor.class);
-        when(constructor.getMappingInfo(any())).thenReturn(new DtoConstructor.MappingInfo(null, false, List.of()));
-        when(constructor.newInstance(any(), any())).thenReturn(new DtoConstructor.ConstructionResult<>(new TestDto(), true));
+        final MethodHandle handle = MethodHandles.constant(TestDto.class, new TestDto());
+        when(constructor.getMappingInfo(any())).thenReturn(new DtoConstructor.MappingInfo(handle, true, List.of()));
 
         final DtoSelector<TestDto> selector = new DtoSelector<>(TestDto.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), constructor, databaseProvider, new NoOpAliasGenerator(), createMockContext(), null);
         final DtoFromClauseTerminal<TestDto> terminal = selector.select();

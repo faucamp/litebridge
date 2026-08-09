@@ -31,6 +31,8 @@ import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
@@ -192,8 +194,8 @@ class DtoSelectorTest {
         when(ormTable.getFieldForColumnName("COL1")).thenReturn(field1);
 
         final DtoConstructor constructor = mock(DtoConstructor.class);
-        when(constructor.getMappingInfo(any())).thenReturn(new DtoConstructor.MappingInfo(null, false, List.of()));
-        when(constructor.newInstance(any(), any())).thenReturn(new DtoConstructor.ConstructionResult<>("result1", true), new DtoConstructor.ConstructionResult<>("result2", true));
+        final MethodHandle handle = MethodHandles.constant(String.class, "result1");
+        when(constructor.getMappingInfo(any())).thenReturn(new DtoConstructor.MappingInfo(handle, true, List.of()));
 
         final DtoSelector<String> selector = new DtoSelector<>(String.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), constructor, databaseProvider, new NoOpAliasGenerator(), createMockContext(), null);
         selector.select();
@@ -235,8 +237,8 @@ class DtoSelectorTest {
         when(ormTable.getFieldForColumnName("COL1")).thenReturn(field1);
 
         final DtoConstructor constructor = mock(DtoConstructor.class);
-        when(constructor.getMappingInfo(any())).thenReturn(new DtoConstructor.MappingInfo(null, false, List.of()));
-        when(constructor.newInstance(any(), any())).thenReturn(new DtoConstructor.ConstructionResult<>("result", true));
+        final MethodHandle handle = MethodHandles.constant(String.class, "result");
+        when(constructor.getMappingInfo(any())).thenReturn(new DtoConstructor.MappingInfo(handle, true, List.of()));
 
         final DtoSelector<String> selector = new DtoSelector<>(String.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), constructor, databaseProvider, new NoOpAliasGenerator(), createMockContext(), null);
         final org.litebridge.orm.api.dto.DtoFromClauseTerminal<String> terminal = selector.select(new SelectFieldSpec(field1, col1.toColumn()));
