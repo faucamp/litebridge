@@ -13,6 +13,7 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.api.dto.DtoJoinSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
+import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -62,7 +63,7 @@ class SelectSpecDtoMapperTest {
         transactionManager = mock(TransactionManager.class);
 
         litebridgeConfig = new LitebridgeConfig();
-        litebridgeContext = new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), new TableMetaDataCache(databaseProvider, transactionManager), new DefaultTypeConverter());
+        litebridgeContext = new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), new TableMetaDataCache(databaseProvider, transactionManager), new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
     }
 
     @Test

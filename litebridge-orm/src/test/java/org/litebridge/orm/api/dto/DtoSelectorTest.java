@@ -14,6 +14,7 @@ import org.litebridge.db.spi.expression.SelectReferenceExpressionFactory;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
+import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -55,7 +56,7 @@ class DtoSelectorTest {
         when(select.column()).thenReturn(mock(ColumnExpressionFactory.class));
         when(select.reference()).thenReturn(mock(SelectReferenceExpressionFactory.class));
         when(select.literal()).thenReturn(mock(LiteralExpressionFactory.class));
-        return new LitebridgeContext(config, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter());
+        return new LitebridgeContext(config, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
     }
 
     @Test
@@ -269,7 +270,7 @@ class DtoSelectorTest {
         when(ormTable.getDtoClassInterfaces()).thenReturn(Set.of());
 
         final QueryPlanCache cache = new QueryPlanCache();
-        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), cache, new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter());
+        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), cache, new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
 
         final QueryNode node = new SelectNode(null, new ExpressionSpec[0], null);
         final DtoSelector<String> selector = new DtoSelector<>(String.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), new DtoConstructor(mock(TableRegistry.class)), databaseProvider, new NoOpAliasGenerator(), context, node);

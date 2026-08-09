@@ -26,25 +26,15 @@ public final class LitebridgeContext {
     private final SelectExpressionMapper selectExpressionMapper;
     private RelatedDtoStrategy relatedDtoStrategy;
 
-    public LitebridgeContext(final LitebridgeConfig config,
-                             final FromClauseEngine fromClauseEngine,
-                             final SqlFunctionRegistry sqlFunctionRegistry,
-                             final QueryPlanCache queryPlanCache,
-                             final AliasGenerator aliasGenerator,
-                             final TableMetaDataCache tableMetaDataCache,
-                             final TypeConverter typeConverter) {
-        this(config, fromClauseEngine, sqlFunctionRegistry, queryPlanCache, aliasGenerator, tableMetaDataCache, typeConverter, null);
-    }
-
     /**
      * Create a new Litebridge context with the specified components.
      *
-     * @param config              Configuration for managing runtime behaviour
-     * @param fromClauseEngine    The engine responsible for managing table registries alias generation, and facilitating query specifications.
-     * @param sqlFunctionRegistry A registry for resolving SQL functions used in expressions.
-     * @param queryPlanCache      A cache for storing execution plans based on query structure.
-     * @param aliasGenerator      An alias generator for creating unique table and column aliases.
-     * @param typeConverter       A converter for converting between Java types and database types.
+     * @param config                 Configuration for managing runtime behaviour
+     * @param fromClauseEngine       The engine responsible for managing table registries alias generation, and facilitating query specifications.
+     * @param sqlFunctionRegistry    A registry for resolving SQL functions used in expressions.
+     * @param queryPlanCache         A cache for storing execution plans based on query structure.
+     * @param aliasGenerator         An alias generator for creating unique table and column aliases.
+     * @param typeConverter          A converter for converting between Java types and database types.
      * @param selectExpressionMapper A mapper for resolving query expressions.
      */
     public LitebridgeContext(final LitebridgeConfig config,

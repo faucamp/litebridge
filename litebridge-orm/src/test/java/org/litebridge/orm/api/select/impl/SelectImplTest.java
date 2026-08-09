@@ -5,13 +5,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.orm.api.select.LimitClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
+import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.api.sql.SqlProtoExpressionResolver;
 import org.litebridge.orm.api.sql.SqlSelectSpec;
 import org.litebridge.orm.config.LitebridgeConfig;
+import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -80,7 +83,7 @@ class SelectImplTest {
 
         // Use a real context for compilation
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
-        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), null, null, new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter());
+        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
         final TestSelector finalSelector = (TestSelector) resultTerminal;
         final TestSelector compiledSelector = new TestSelector(selectSpec, databaseProvider, context, finalSelector.node());
 
@@ -95,7 +98,7 @@ class SelectImplTest {
 
         // Use a real context for compilation
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
-        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), null, null, new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter());
+        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
         final TestSelector finalSelector = (TestSelector) ((DelegatingSelector) resultTerminal).delegate();
         final TestSelector compiledSelector = new TestSelector(selectSpec, databaseProvider, context, finalSelector.node());
 

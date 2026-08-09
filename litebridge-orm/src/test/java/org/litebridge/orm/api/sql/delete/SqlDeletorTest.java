@@ -71,6 +71,6 @@ class SqlDeletorTest {
     }
 
     private LitebridgeContext createLitebridgeContext() {
-        return new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter());
+        return new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
     }
 }

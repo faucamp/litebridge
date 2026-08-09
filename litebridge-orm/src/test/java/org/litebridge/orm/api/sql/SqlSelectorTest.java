@@ -7,6 +7,7 @@ import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.orm.api.select.ast.SelectNode;
+import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -41,7 +42,7 @@ class SqlSelectorTest {
     @BeforeEach
     void setUp() {
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
-        litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter());
+        litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
         lenient().when(tableRegistry.getOrCreateSpiTable(any())).thenAnswer(invocation -> new Table((String) invocation.getArgument(0)));
         sqlSelector = new SqlSelector(new Table("dummy"), databaseProvider, tableRegistry, litebridgeContext, new SelectNode(null, new ExpressionSpec[0], null));
     }
