@@ -21,6 +21,7 @@ import java.util.Map;
  */
 public final class NativeSqlContext {
 
+    private final NativeSqlCache nativeSqlCache = new NativeSqlCache();
     private final TransactionalDatabaseProvider databaseProvider;
 
     /**
@@ -118,7 +119,7 @@ public final class NativeSqlContext {
      * @throws IllegalStateException if an error occurs while executing the update statement
      */
     public UpdateResult execute(final String sql, final Map<String, @Nullable Object> bindParameters) {
-        final ParsedSql parsedSql = SqlParser.parseSql(sql);
+        final ParsedSql parsedSql = nativeSqlCache.getCachedSql(sql);
         final List<@Nullable Object> positionalParameters = parsedSql.bindParameterNames().stream()
                 .map(bindParameters::get)
                 .toList();

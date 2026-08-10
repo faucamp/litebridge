@@ -16,6 +16,7 @@ and bug fixes to ensure a more stable and efficient development experience.
     - Centralised alias management via `AliasGenerator` and `AliasGeneratorFactory`.
     - Robust support for nested conditions and complex `HAVING` clauses through `ConditionGroupNode` and `HavingNode`.
     - Introduced `TableMetaDataCache` for efficient retrieval and caching of database metadata.
+    - Added `NativeSqlCache` for caching parsed named parameter-based queries.
 - Database Provider SPI:
     - Introduced `PreparedOperation` to represent generic executable database operations.
     - Introduced `BindValueExpression` to represent bind parameters within the expression API.
