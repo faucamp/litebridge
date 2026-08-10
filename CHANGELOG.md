@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+Nothing yet
+
+## [0.4.0] - 2026-08-10
+
 ### Added
 - ORM:
   - New internal Abstract Syntax Tree (AST) for query representation (`QueryNode`, `SelectNode`, etc.), providing a robust foundation for query compilation and execution.

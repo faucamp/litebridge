@@ -22,7 +22,7 @@ To use the Litebridge Maven Plugin, add it to the `<build>` section of the `pom.
 <plugin>
     <groupId>org.litebridge.maven</groupId>
     <artifactId>litebridge-maven-plugin</artifactId>
-    <version>0.3.1</version> <!-- Replace with latest version -->
+    <version>0.4.0</version> <!-- Replace with latest version -->
     <executions>
         <execution>
             <goals>
