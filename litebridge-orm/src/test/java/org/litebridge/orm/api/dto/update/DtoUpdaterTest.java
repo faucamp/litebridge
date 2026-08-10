@@ -25,7 +25,6 @@ import static org.mockito.Mockito.when;
 class DtoUpdaterTest {
 
     @Test
-    @SuppressWarnings("unchecked")
     void testWhere() {
         final OrmTable ormTable = mock(OrmTable.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
@@ -46,7 +45,6 @@ class DtoUpdaterTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void testWhereTerminal() {
         final OrmTable ormTable = mock(OrmTable.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
@@ -88,7 +86,6 @@ class DtoUpdaterTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void testSet() {
         final OrmTable ormTable = mock(OrmTable.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);

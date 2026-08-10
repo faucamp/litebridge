@@ -52,7 +52,7 @@ import static org.mockito.Mockito.when;
 class DtoSelectorTest {
 
     @Test
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked"})
     void testSelect() {
         // Given
         final OrmTable ormTable = mock(OrmTable.class);
@@ -86,7 +86,7 @@ class DtoSelectorTest {
         final ColumnMetaData col1 = new ColumnMetaData(table, "COL1", true, Types.VARCHAR);
         final FieldAccessor field1 = mock(FieldAccessor.class);
         when(field1.name()).thenReturn("field1");
-        when(ormTable.mappedFieldTargets()).thenReturn(List.of(Map.entry(field1, (MappedFieldTarget) col1)));
+        when(ormTable.mappedFieldTargets()).thenReturn(List.of(Map.entry(field1, col1)));
         when(ormTable.getFieldForColumnName("COL1")).thenReturn(field1);
 
         final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), new DtoConstructor(mock(TableRegistry.class)), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), createMockContext(), null);

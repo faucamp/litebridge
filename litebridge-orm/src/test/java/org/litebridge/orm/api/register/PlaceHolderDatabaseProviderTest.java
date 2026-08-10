@@ -28,9 +28,9 @@ class PlaceHolderDatabaseProviderTest {
         assertThrows(UnsupportedOperationException.class, () -> provider.delete(preparedSql, connectionProvider));
         assertThrows(UnsupportedOperationException.class, () -> provider.nativeSqlQuery("SELECT 1", Collections.emptyList(), connectionProvider));
         assertThrows(UnsupportedOperationException.class, () -> provider.nativeSqlUpdate("UPDATE TEST SET COL = 1", Collections.emptyList(), connectionProvider));
-        assertThrows(UnsupportedOperationException.class, () -> provider.getTypeConverter());
-        assertThrows(UnsupportedOperationException.class, () -> provider.getSqlFunctionRegistry());
-        assertThrows(UnsupportedOperationException.class, () -> provider.getAliasTransformer());
+        assertThrows(UnsupportedOperationException.class, provider::getTypeConverter);
+        assertThrows(UnsupportedOperationException.class, provider::getSqlFunctionRegistry);
+        assertThrows(UnsupportedOperationException.class, provider::getAliasTransformer);
 
         assertNotNull(provider.getSequenceColumnValueGenerator("SEQ"));
     }
