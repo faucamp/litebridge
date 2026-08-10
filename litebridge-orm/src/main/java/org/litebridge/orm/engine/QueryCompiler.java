@@ -279,7 +279,7 @@ public final class QueryCompiler {
                             }
                         }
 
-                        if (conditionNode.operator() == Operator.USING) {
+                        if (conditionNode.operator() == Operator.USING && conditionNode.rhs() != null) {
                             lastJoin.using(conditionNode.rhs().toString());
                         }
 
@@ -314,7 +314,7 @@ public final class QueryCompiler {
                         rhs = rhsValue;
                     }
 
-                    final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), lhs);
+                    final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), Objects.requireNonNull(lhs));
                     conditionSpec.setOperator(conditionNode.operator());
                     conditionSpec.setValue(rhs);
                 }
@@ -389,7 +389,7 @@ public final class QueryCompiler {
                     rhs = rhsValue;
                 }
 
-                final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), lhs);
+                final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), Objects.requireNonNull(lhs));
                 conditionSpec.setOperator(conditionNode.operator());
                 conditionSpec.setValue(rhs);
             }
@@ -413,58 +413,63 @@ public final class QueryCompiler {
     }
 
     private @Nullable Object resolveAliases(final @Nullable Object value, final @Nullable Table sourceAlias, final @Nullable Table targetAlias, boolean preferSource) {
-        if (value == null) {
-            return null;
-        }
-
-        if (value instanceof Column column) {
-            OrmTable ormTable = tableRegistry.getOrmTable(column.table());
-
-            if (ormTable == null && sourceAlias != null) {
-                final OrmTable sourceOrmTable = tableToOrmTableMap.get(sourceAlias);
-                if (sourceOrmTable != null) {
-                    ormTable = sourceOrmTable.getContextTableRegistry().getOrmTable(column.table());
-                }
+        switch (value) {
+            case null -> {
+                return null;
             }
+            case Column column -> {
+                OrmTable ormTable = tableRegistry.getOrmTable(column.table());
 
-            if (ormTable == null && targetAlias != null) {
-                final OrmTable targetOrmTable = tableToOrmTableMap.get(targetAlias);
-                if (targetOrmTable != null) {
-                    ormTable = targetOrmTable.getContextTableRegistry().getOrmTable(column.table());
-                }
-            }
-
-            if (ormTable != null) {
-                Table resolvedTable = null;
-
-                // If we have explicit source/target aliases for this join context, use them
-                if (sourceAlias != null && ormTable.dtoClass().equals(getTableDtoClass(sourceAlias))) {
-                    if (targetAlias != null && ormTable.dtoClass().equals(getTableDtoClass(targetAlias))) {
-                        // Ambiguous (self-join); use preference
-                        resolvedTable = preferSource ? sourceAlias : targetAlias;
-                    } else {
-                        resolvedTable = sourceAlias;
-                    }
-                } else if (targetAlias != null && ormTable.dtoClass().equals(getTableDtoClass(targetAlias))) {
-                    resolvedTable = targetAlias;
-                }
-
-                if (resolvedTable == null) {
-                    // Fallback to most recent alias in history
-                    final List<Table> history = aliasHistory.get(ormTable.dtoClass());
-                    if (history != null && !history.isEmpty()) {
-                        resolvedTable = history.get(history.size() - 1);
+                if (ormTable == null && sourceAlias != null) {
+                    final OrmTable sourceOrmTable = tableToOrmTableMap.get(sourceAlias);
+                    if (sourceOrmTable != null) {
+                        ormTable = sourceOrmTable.getContextTableRegistry().getOrmTable(column.table());
                     }
                 }
 
-                if (resolvedTable != null) {
-                    return new Column(resolvedTable, column.name(), column.alias());
+                if (ormTable == null && targetAlias != null) {
+                    final OrmTable targetOrmTable = tableToOrmTableMap.get(targetAlias);
+                    if (targetOrmTable != null) {
+                        ormTable = targetOrmTable.getContextTableRegistry().getOrmTable(column.table());
+                    }
+                }
+
+                if (ormTable != null) {
+                    Table resolvedTable = null;
+
+                    // If we have explicit source/target aliases for this join context, use them
+                    if (sourceAlias != null && ormTable.dtoClass().equals(getTableDtoClass(sourceAlias))) {
+                        if (targetAlias != null && ormTable.dtoClass().equals(getTableDtoClass(targetAlias))) {
+                            // Ambiguous (self-join); use preference
+                            resolvedTable = preferSource ? sourceAlias : targetAlias;
+                        } else {
+                            resolvedTable = sourceAlias;
+                        }
+                    } else if (targetAlias != null && ormTable.dtoClass().equals(getTableDtoClass(targetAlias))) {
+                        resolvedTable = targetAlias;
+                    }
+
+                    if (resolvedTable == null) {
+                        // Fallback to most recent alias in history
+                        final List<Table> history = aliasHistory.get(ormTable.dtoClass());
+                        if (history != null && !history.isEmpty()) {
+                            resolvedTable = history.get(history.size() - 1);
+                        }
+                    }
+
+                    if (resolvedTable != null) {
+                        return new Column(resolvedTable, column.name(), column.alias());
+                    }
                 }
             }
-        } else if (value instanceof ColumnExpressionSpec ces) {
-            ces.setColumn((Column) resolveAliases(ces.getColumn(), sourceAlias, targetAlias, preferSource));
-            return ces;
+            case ColumnExpressionSpec ces -> {
+                ces.setColumn((Column) Objects.requireNonNull(resolveAliases(ces.getColumn(), sourceAlias, targetAlias, preferSource)));
+                return ces;
+            }
+            default -> {
+            }
         }
+
         return value;
     }
 

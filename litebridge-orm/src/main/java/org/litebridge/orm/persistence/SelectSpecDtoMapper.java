@@ -355,13 +355,13 @@ public class SelectSpecDtoMapper {
                     }
                 }
             } else {
-                final Map<FieldAccessor, Object> valuesByField = new HashMap<>(fieldValues.size());
+                final Map<FieldAccessor, @Nullable Object> valuesByField = new HashMap<>(fieldValues.size());
 
                 for (final FieldAccessorValue fav : fieldValues) {
                     valuesByField.put(fav.field(), fav.value());
                 }
 
-                final Object[] args = new Object[plan.canonicalConstructorFieldAccessors().size()];
+                final @Nullable Object[] args = new Object[plan.canonicalConstructorFieldAccessors().size()];
 
                 for (int i = 0; i < args.length; i++) {
                     args[i] = valuesByField.get(plan.canonicalConstructorFieldAccessors().get(i));
@@ -451,7 +451,7 @@ public class SelectSpecDtoMapper {
                 try {
                     value = accessor.get(partialDto.dto());
                 } catch (Exception e) {
-                    value = null;
+                    // Ignore
                 }
             }
             fieldValues.add(new FieldAccessorValue(accessor, value));

@@ -38,6 +38,5 @@ public final class CbSqlConditionClauseTerminal extends AbstractCbConditionClaus
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(table, fromClauseEngine, null);
         final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
         return new CbSqlConditionClauseTerminal(table, fromClauseEngine, new ConditionGroupNode(node, logicOperator, terminal.node()));
-
     }
 }
