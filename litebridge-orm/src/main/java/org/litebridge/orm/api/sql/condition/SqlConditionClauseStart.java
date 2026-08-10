@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.sql.condition;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
@@ -14,11 +15,11 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 public class SqlConditionClauseStart extends AbstractConditionClauseStart<Row> {
 
     private final Table table;
-    private final QueryNode node;
+    private final @Nullable QueryNode node;
 
     public SqlConditionClauseStart(final Table table,
                                    final FromClauseEngine fromClauseEngine,
-                                   final QueryNode node) {
+                                   final @Nullable QueryNode node) {
         super(fromClauseEngine);
         this.table = table;
         this.node = node;

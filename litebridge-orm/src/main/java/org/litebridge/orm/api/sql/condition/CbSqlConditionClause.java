@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.sql.condition;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
@@ -19,7 +20,7 @@ public class CbSqlConditionClause extends AbstractCbConditionClause<Row> {
                                 final FromClauseEngine fromClauseEngine,
                                 final LogicOperator logicOperator,
                                 final ExpressionSpec lhs,
-                                final QueryNode node,
+                                final @Nullable QueryNode node,
                                 final Function<QueryNode, AbstractCbConditionClauseTerminal<Row>> terminalCreator) {
         super(fromClauseEngine, logicOperator, lhs, node, terminalCreator);
         this.table = table;
