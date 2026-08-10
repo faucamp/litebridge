@@ -119,29 +119,15 @@ the `f()` or `field()` selectors from the `Fn` class can be used to target a spe
 import static org.litebridge.orm.expression.Fn.f;
 
 litebridge.select(Person .class)
-    .
-
-join(Account .class).
-
-on("accounts")
-    .
-
-join(Address .class).
-
-on("addresses")
-    .
-
-where(f(Person.class, "id")).
-
-eq(1L)
-    .
-
-and(f(Address.class, "id")).
-
-eq(123L)
-    .
-
-oneOrThrow();
+    .join(Account .class)
+    .on("accounts")
+    .join(Address .class)
+    .on("addresses")
+    .where(f(Person.class, "id"))
+    .eq(1L)
+    .and(f(Address.class, "id"))
+    .eq(123L)
+    .oneOrThrow();
 ```
 
 Alternatively (and recommended), [metamodels](metamodels.md) can be used:
