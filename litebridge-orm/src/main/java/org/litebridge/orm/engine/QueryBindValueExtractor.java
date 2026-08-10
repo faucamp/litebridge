@@ -49,9 +49,9 @@ public final class QueryBindValueExtractor {
             case WhereNode whereNode -> extractBindValuesAtLevel(whereNode.condition(), bindValues);
             case HavingNode havingNode -> extractBindValuesAtLevel(havingNode.condition(), bindValues);
             case SetNode setNode -> {
-                //TODO: improve
                 if (setNode.bindValue()) {
                     final Object value = setNode.value();
+
                     if (!(value instanceof Column) && !(value instanceof ExpressionSpec) && !(value instanceof MathOperation)) {
                         bindValues.add(value);
                     }

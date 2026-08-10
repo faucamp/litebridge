@@ -68,7 +68,6 @@ public final class SelectExpressionMapper {
             case SelectFieldSpec selectFieldSpec -> toSelectColumn(selectFieldSpec, useSelectReferences);
             case SelectColumnSpec selectColumnSpec -> toSelectColumn(selectColumnSpec, useSelectReferences);
             case SubselectSpec subselectSpec -> {
-                //TODO: sort out bind values
                 final PreparedOperation preparedOperation = subselectSpec.selectSpec().toSelect(tableMetaDataCache, typeConverter);
                 yield sqlFunctionRegistry.select().subselect().create((Select) preparedOperation.operation());
             }

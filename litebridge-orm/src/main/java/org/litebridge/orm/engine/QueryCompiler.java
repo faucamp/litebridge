@@ -352,7 +352,6 @@ public final class QueryCompiler {
     private void applyNode(final QueryNode node, final @Nullable QueryNode parentNode, final AbstractConditionBasedSpec spec) {
         switch (node) {
             case SetNode setNode -> {
-                //TODO: improve
                 if (spec instanceof UpdateSpec updateSpec) {
                     updateSpec.addColumnValue(new ColumnValue(setNode.column(), setNode.value()), setNode.bindValue());
                 } else if (spec instanceof InsertSpec insertSpec) {
