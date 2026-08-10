@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.ManagedConnection;
@@ -13,7 +14,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,12 +36,12 @@ import static org.mockito.Mockito.when;
 class SQLiteDatabaseProviderTest {
 
     @Test
-    void createPreparedStatementUsingConnection_withGeneratedKeys() throws SQLException {
+    void createPreparedStatementUsingConnection_withNullMetaData() throws SQLException {
         // Given
         final SQLiteDatabaseProvider provider = new SQLiteDatabaseProvider();
         final ManagedConnection mockConnection = Mockito.mock(ManagedConnection.class);
         final PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
-        final PreparedSql mockPreparedSql = new PreparedSql("SELECT * FROM test", null);
+        final PreparedSql mockPreparedSql = new PreparedSql("SELECT * FROM test", Collections.emptyList(), null, null);
 
         when(mockConnection.prepareStatement(mockPreparedSql.sql())).thenReturn(mockPreparedStatement);
 
@@ -45,6 +51,26 @@ class SQLiteDatabaseProviderTest {
         // Then
         assertNotNull(result);
         verify(mockConnection, times(1)).prepareStatement(mockPreparedSql.sql());
+        verify(mockConnection, never()).prepareStatement(anyString(), anyInt());
+    }
+
+    @Test
+    void createPreparedStatementUsingConnection_withGeneratedKeys() throws SQLException {
+        // Given
+        final SQLiteDatabaseProvider provider = new SQLiteDatabaseProvider();
+        final ManagedConnection mockConnection = Mockito.mock(ManagedConnection.class);
+        final PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
+        final UpdateMetaData updateMetaData = new UpdateMetaData(true, Collections.emptyList(), new String[0]);
+        final PreparedSql mockPreparedSql = new PreparedSql("INSERT INTO test (name) VALUES (?)", Collections.emptyList(), null, updateMetaData);
+
+        when(mockConnection.prepareStatement(mockPreparedSql.sql(), Statement.RETURN_GENERATED_KEYS)).thenReturn(mockPreparedStatement);
+
+        // When
+        final PreparedStatement result = provider.createPreparedStatementUsingConnection(mockPreparedSql, mockConnection);
+
+        // Then
+        assertNotNull(result);
+        verify(mockConnection, times(1)).prepareStatement(mockPreparedSql.sql(), Statement.RETURN_GENERATED_KEYS);
     }
 
     @Test
@@ -53,7 +79,8 @@ class SQLiteDatabaseProviderTest {
         final SQLiteDatabaseProvider provider = new SQLiteDatabaseProvider();
         final ManagedConnection mockConnection = Mockito.mock(ManagedConnection.class);
         final PreparedStatement mockPreparedStatement = Mockito.mock(PreparedStatement.class);
-        final PreparedSql mockPreparedSql = new PreparedSql("SELECT * FROM test", null);
+        final UpdateMetaData updateMetaData = new UpdateMetaData(false, Collections.emptyList(), new String[0]);
+        final PreparedSql mockPreparedSql = new PreparedSql("UPDATE test SET name = ? WHERE id = ?", Collections.emptyList(), null, updateMetaData);
 
         when(mockConnection.prepareStatement(mockPreparedSql.sql())).thenReturn(mockPreparedStatement);
 
@@ -62,8 +89,8 @@ class SQLiteDatabaseProviderTest {
 
         // Then
         assertNotNull(result);
-        verify(mockConnection, times(1))
-                .prepareStatement(mockPreparedSql.sql());
+        verify(mockConnection, times(1)).prepareStatement(mockPreparedSql.sql());
+        verify(mockConnection, never()).prepareStatement(anyString(), anyInt());
     }
 
     @Test
