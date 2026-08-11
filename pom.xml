@@ -71,7 +71,7 @@
 
         <!-- Library versions -->
         <classgraph.version>4.8.186</classgraph.version>
-        <flyway.version>13.1.0</flyway.version>
+        <flyway.version>13.2.0</flyway.version>
         <h2.version>2.4.240</h2.version>
         <jackson-annotations.version>2.22</jackson-annotations.version>
         <jspecify.version>1.0.1</jspecify.version>
