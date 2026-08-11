@@ -26,8 +26,6 @@ import java.util.function.Function;
  */
 public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implements DtoDeleteWhereClause<DTO> {
 
-    private final LitebridgeContext litebridgeContext;
-
     /**
      * Creates a new DtoDeletor.
      *
@@ -42,8 +40,7 @@ public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implem
                       final TransactionalDatabaseProvider databaseProvider,
                       final SelectExpressionMapper selectExpressionMapper,
                       final LitebridgeContext litebridgeContext) {
-        super(new DtoDeleteSpec(dtoClass, dtoTable, selectExpressionMapper), databaseProvider, litebridgeContext, new DeleteNode(null, dtoTable.getMetaData().toTable()));
-        this.litebridgeContext = litebridgeContext;
+        super(new DtoDeleteSpec(dtoClass, dtoTable, selectExpressionMapper), litebridgeContext, new DeleteNode(null, dtoTable.getMetaData().toTable()));
     }
 
     @Override

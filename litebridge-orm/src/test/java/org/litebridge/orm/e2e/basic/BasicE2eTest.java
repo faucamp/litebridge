@@ -154,7 +154,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         person3.setAge(29);
         person3.setEyeColour("green");
 
-        litebridge.save(person, person2, person3);
+        litebridge.saveAll(person, person2, person3);
 
         // When
         final Person result = litebridge.select(Person.class)
@@ -474,7 +474,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         person5.setAge(45);
         person5.setEyeColour("brown");
 
-        litebridge.save(person1, person2, person3, person4, person5);
+        litebridge.saveAll(person1, person2, person3, person4, person5);
         assumeTrue(() -> litebridge.select(Person.class).list().size() == 5);
 
         // Delete DTO directly
@@ -526,7 +526,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         person2.setAge(22);
         person2.setEyeColour("brown");
 
-        litebridge.save(person1, person2);
+        litebridge.saveAll(person1, person2);
         assumeTrue(litebridge.select(Person.class).list().size() == 2);
         assumeTrue(litebridge.select(Person.class).where("name").eq("Jane").oneOrNull() == null);
 

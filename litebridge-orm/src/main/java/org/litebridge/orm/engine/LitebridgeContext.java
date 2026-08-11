@@ -1,12 +1,16 @@
 package org.litebridge.orm.engine;
 
+import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
+import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.persistence.TableMetaDataCache;
+import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
+import org.litebridge.tracking.ClassFieldAccessorCache;
 
 /**
  * A context object that provides access to core Litebridge components and configuration.
@@ -78,6 +82,22 @@ public final class LitebridgeContext {
 
     public TableMetaDataCache tableMetaDataCache() {
         return tableMetaDataCache;
+    }
+
+    public TableRegistry tableRegistry() {
+        return fromClauseEngine.tableRegistry();
+    }
+
+    public DatabaseProvider databaseProvider() {
+        return fromClauseEngine.databaseProvider();
+    }
+
+    public TransactionManager transactionManager() {
+        return fromClauseEngine.databaseProvider().transactionManager();
+    }
+
+    public ClassFieldAccessorCache classFieldAccessorCache() {
+        return fromClauseEngine.changeTracker().classFieldAccessorCache();
     }
 
     public TypeConverter typeConverter() {

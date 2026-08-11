@@ -2,6 +2,7 @@ package org.litebridge.orm.engine;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Aliased;
+import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelector;
@@ -168,8 +169,16 @@ public final class FromClauseEngine {
      *
      * @return the table registry
      */
-    public TableRegistry tableRegistry() {
+    TableRegistry tableRegistry() {
         return tableRegistry;
+    }
+
+    TransactionalDatabaseProvider databaseProvider() {
+        return databaseProvider;
+    }
+
+    ChangeTracker changeTracker() {
+        return changeTracker;
     }
 
     private boolean hasExplicitSelect(final QueryNode node) {

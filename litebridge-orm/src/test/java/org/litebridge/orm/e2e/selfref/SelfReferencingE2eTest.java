@@ -88,7 +88,7 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
         dto3.setParent(dto2);
 
         // When
-        litebridge.save(dto1, dto2, dto3);
+        litebridge.saveAll(dto1, dto2, dto3);
 
         // Then
         litebridge.select().from(selfReferencingTableName).stream().forEach(row -> LOGGER.info("{}", row));

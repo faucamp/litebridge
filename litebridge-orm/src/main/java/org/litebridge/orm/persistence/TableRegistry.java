@@ -133,6 +133,10 @@ public final class TableRegistry {
         return getOrmTable(StringUtils.blankIfNull(table.schema()), table.name());
     }
 
+    public OrmTable getOrmTableOrThrow(final Table table) {
+        return Objects.requireNonNull(getOrmTable(table), "ORM table not found for: " + table);
+    }
+
     /**
      * Checks if a table associated with the specified DTO class exists in the registry.
      *

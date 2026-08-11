@@ -9,7 +9,6 @@ import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.UpdateNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.api.update.UpdateSetStep;
 import org.litebridge.orm.api.update.impl.AbstractUpdater;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -19,7 +18,6 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 
 import java.util.function.Function;
 
@@ -33,18 +31,16 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
     /**
      * Creates a new DtoUpdater.
      *
-     * @param dtoClass               the DTO class
-     * @param dtoTable               the DTO table
-     * @param databaseProvider       the database provider
-     * @param selectExpressionMapper the select expression mapper
-     * @param litebridgeContext      the litebridge context
+     * @param dtoClass          the DTO class
+     * @param dtoTable          the DTO table
+     * @param litebridgeContext the litebridge context
      */
     public DtoUpdater(final Class<DTO> dtoClass,
                       final OrmTable dtoTable,
-                      final TransactionalDatabaseProvider databaseProvider,
-                      final SelectExpressionMapper selectExpressionMapper,
                       final LitebridgeContext litebridgeContext) {
-        super(new DtoUpdateSpec(dtoClass, dtoTable, selectExpressionMapper), databaseProvider, litebridgeContext, new UpdateNode(null, dtoTable.getMetaData().toTable()));
+        super(new DtoUpdateSpec(dtoClass, dtoTable, litebridgeContext.selectExpressionMapper()),
+                new UpdateNode(null, dtoTable.getMetaData().toTable()),
+                litebridgeContext);
     }
 
     @Override

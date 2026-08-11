@@ -537,7 +537,7 @@ class LitebridgeTest {
     }
 
     @Test
-    void save_multiple() throws Exception {
+    void saveAll_varargs() throws Exception {
         // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final DataSource dataSource = mock(DataSource.class);
@@ -549,7 +549,7 @@ class LitebridgeTest {
         final TestDto dto2 = new TestDto();
 
         // When
-        litebridge.save(dto1, dto2);
+        litebridge.saveAll(dto1, dto2);
 
         // Then
         verify(persistenceFacade).save(any(Collection.class));

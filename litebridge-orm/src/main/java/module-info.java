@@ -13,6 +13,8 @@ module litebridge.orm {
     requires litebridge.converter;
     requires litebridge.db.spi;
     requires litebridge.tracking;
+    requires java.management;
+    requires java.xml.crypto;
 
     exports org.litebridge.orm;
     exports org.litebridge.orm.api.condition;

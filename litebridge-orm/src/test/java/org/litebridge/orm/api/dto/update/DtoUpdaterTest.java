@@ -38,7 +38,7 @@ class DtoUpdaterTest {
         final ColumnMetaData col = new ColumnMetaData(table, "COL", true, Types.VARCHAR);
         when(ormTable.getColumnForFieldName("field")).thenReturn(col);
 
-        final DtoUpdater<Object> updater = new DtoUpdater<>(Object.class, ormTable, databaseProvider, mapper, context);
+        final DtoUpdater<Object> updater = new DtoUpdater<>(Object.class, ormTable, context);
 
         final DtoUpdateWhereConditionClause<Object> clause = updater.where("field");
         assertNotNull(clause);
@@ -65,7 +65,7 @@ class DtoUpdaterTest {
         when(context.tableMetaDataCache()).thenReturn(tableMetaDataCache);
         when(tableMetaDataCache.ensureTableMetaData(any())).thenReturn(metaData);
 
-        final DtoUpdater<Object> updater = new DtoUpdater<>(Object.class, ormTable, databaseProvider, mapper, context);
+        final DtoUpdater<Object> updater = new DtoUpdater<>(Object.class, ormTable, context);
 
         final DtoUpdateWhereConditionClauseTerminalImpl<Object> terminal = (DtoUpdateWhereConditionClauseTerminalImpl<Object>) updater.where("field").eq("value");
         assertNotNull(terminal.and("field2"));
@@ -99,7 +99,7 @@ class DtoUpdaterTest {
         final ColumnMetaData col = new ColumnMetaData(table, "COL", true, Types.VARCHAR);
         when(ormTable.getColumnForFieldName("field")).thenReturn(col);
 
-        final DtoUpdater<Object> updater = new DtoUpdater<>(Object.class, ormTable, databaseProvider, mapper, context);
+        final DtoUpdater<Object> updater = new DtoUpdater<>(Object.class, ormTable, context);
 
         assertNotNull(updater.set("field"));
         assertNotNull(updater.set(new SelectColumnSpec(new Column(table, "COL"))));

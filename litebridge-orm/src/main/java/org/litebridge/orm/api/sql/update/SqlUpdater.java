@@ -11,7 +11,6 @@ import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SetNode;
 import org.litebridge.orm.api.select.ast.UpdateNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.api.update.impl.AbstractUpdater;
 import org.litebridge.orm.api.update.model.UpdateSpec;
@@ -19,17 +18,14 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 
 import java.util.function.Function;
 
 public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements SqlUpdateStep {
 
     public SqlUpdater(final Table table,
-                      final TransactionalDatabaseProvider databaseProvider,
-                      final SelectExpressionMapper selectExpressionMapper,
                       final LitebridgeContext litebridgeContext) {
-        super(new UpdateSpec(table, selectExpressionMapper), databaseProvider, litebridgeContext, new UpdateNode(null, table));
+        super(new UpdateSpec(table, litebridgeContext.selectExpressionMapper()), new UpdateNode(null, table), litebridgeContext);
     }
 
     @Override

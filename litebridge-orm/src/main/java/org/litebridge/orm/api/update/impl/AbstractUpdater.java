@@ -3,6 +3,7 @@ package org.litebridge.orm.api.update.impl;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
@@ -24,6 +25,7 @@ import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.crypto.Data;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
@@ -35,16 +37,15 @@ public abstract sealed class AbstractUpdater<US extends UpdateSpec> implements U
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractUpdater.class);
 
     protected final US updateSpec;
-    protected final TransactionalDatabaseProvider databaseProvider;
+    protected final DatabaseProvider databaseProvider;
     protected final LitebridgeContext litebridgeContext;
     protected QueryNode node;
 
     protected AbstractUpdater(final US updateSpec,
-                              final TransactionalDatabaseProvider databaseProvider,
-                              final LitebridgeContext litebridgeContext,
-                              final QueryNode node) {
+                              final QueryNode node,
+                              final LitebridgeContext litebridgeContext) {
         this.updateSpec = updateSpec;
-        this.databaseProvider = databaseProvider;
+        this.databaseProvider = litebridgeContext.databaseProvider();
         this.litebridgeContext = litebridgeContext;
         this.node = node;
     }
@@ -71,7 +72,7 @@ public abstract sealed class AbstractUpdater<US extends UpdateSpec> implements U
         final Update update = (Update) preparedOperation.operation();
         final TableMetaData tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(update.table());
         // Generate SQL and create type conversion metadata
-        final String sql = databaseProvider.toSql(update, databaseProvider.transactionManager());
+        final String sql = databaseProvider.toSql(update, litebridgeContext.transactionManager());
         final UpdateMetaData updateMetaData = createUpdateMetaData(tableMetaData);
         // Cache compiled SQL for this AST
         final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
@@ -87,7 +88,7 @@ public abstract sealed class AbstractUpdater<US extends UpdateSpec> implements U
         final UpdateResult updateResult;
 
         try {
-            updateResult = databaseProvider.update(preparedSql, databaseProvider.transactionManager());
+            updateResult = databaseProvider.update(preparedSql, litebridgeContext.transactionManager());
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute update", ex);
         }

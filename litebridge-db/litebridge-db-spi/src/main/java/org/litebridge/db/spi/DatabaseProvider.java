@@ -88,6 +88,8 @@ public interface DatabaseProvider {
      */
     String toSql(final Operation operation, final ConnectionProvider connectionProvider);
 
+    String to
+
     /**
      * Executes a SQL query with the given SQL string and a list of positional bind parameters.
      *

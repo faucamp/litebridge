@@ -34,7 +34,7 @@ class SqlDeletorTest {
         final UpdateResult expectedResult = mock(UpdateResult.class);
         when(databaseProvider.delete(any(), any())).thenReturn(expectedResult);
         final Table table = new Table("cat", "sch", "tab");
-        final SqlDeletor deletor = new SqlDeletor(table, databaseProvider, mock(SelectExpressionMapper.class), createLitebridgeContext());
+        final SqlDeletor deletor = new SqlDeletor(table, createLitebridgeContext());
 
         // When
         final UpdateResult result = deletor.execute();
@@ -50,7 +50,7 @@ class SqlDeletorTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         when(databaseProvider.delete(any(), any())).thenThrow(new SQLException("DB error"));
         final Table table = new Table("cat", "sch", "tab");
-        final SqlDeletor deletor = new SqlDeletor(table, databaseProvider, mock(SelectExpressionMapper.class), createLitebridgeContext());
+        final SqlDeletor deletor = new SqlDeletor(table, createLitebridgeContext());
 
         // When / Then
         assertThrows(IllegalStateException.class, deletor::execute);
@@ -61,7 +61,7 @@ class SqlDeletorTest {
         // Given
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final Table table = new Table("cat", "sch", "tab");
-        final SqlDeletor deletor = new SqlDeletor(table, databaseProvider, mock(SelectExpressionMapper.class), createLitebridgeContext());
+        final SqlDeletor deletor = new SqlDeletor(table, createLitebridgeContext());
 
         // When
         final SqlDeleteWhereConditionClause result = deletor.where("col1");

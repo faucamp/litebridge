@@ -37,7 +37,7 @@ class SqlUpdaterTest {
         final Table table = new Table("cat", "sch", "tab");
         final LitebridgeContext litebridgeContext = createLitebridgeContext();
         when(litebridgeContext.tableMetaDataCache().ensureTableMetaData(any(Table.class))).thenReturn(mock(TableMetaData.class));
-        final SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(SelectExpressionMapper.class), litebridgeContext);
+        final SqlUpdater updater = new SqlUpdater(table, litebridgeContext);
 
         // When
         UpdateResult result = updater.execute();
@@ -55,7 +55,7 @@ class SqlUpdaterTest {
         Table table = new Table("cat", "sch", "tab");
         final LitebridgeContext litebridgeContext = createLitebridgeContext();
         when(litebridgeContext.tableMetaDataCache().ensureTableMetaData(any(Table.class))).thenReturn(mock(TableMetaData.class));
-        final SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(SelectExpressionMapper.class), litebridgeContext);
+        final SqlUpdater updater = new SqlUpdater(table, litebridgeContext);
 
         // When / Then
         assertThrows(IllegalStateException.class, updater::execute);
@@ -66,7 +66,7 @@ class SqlUpdaterTest {
         // Given
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         Table table = new Table("cat", "sch", "tab");
-        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(SelectExpressionMapper.class), createLitebridgeContext());
+        SqlUpdater updater = new SqlUpdater(table, createLitebridgeContext());
 
         // When
         SqlUpdateWhereConditionClause result = updater.where("col1");
@@ -80,7 +80,7 @@ class SqlUpdaterTest {
         // Given
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         Table table = new Table("cat", "sch", "tab");
-        SqlUpdater updater = new SqlUpdater(table, databaseProvider, mock(SelectExpressionMapper.class), createLitebridgeContext());
+        SqlUpdater updater = new SqlUpdater(table, createLitebridgeContext());
 
         // When
         SqlUpdateSetStep result = updater.set("col1");

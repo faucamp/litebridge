@@ -16,6 +16,9 @@ import org.litebridge.orm.api.dto.delete.DtoDeleteWhereClause;
 import org.litebridge.orm.api.dto.delete.DtoDeletor;
 import org.litebridge.orm.api.dto.update.DtoUpdateStart;
 import org.litebridge.orm.api.dto.update.DtoUpdater;
+import org.litebridge.orm.api.merge.DtoMergeUsingStep;
+import org.litebridge.orm.api.merge.MergeTerminal;
+import org.litebridge.orm.api.merge.SqlMergeUsingStep;
 import org.litebridge.orm.api.register.RegistrationContext;
 import org.litebridge.orm.api.register.RegistrationContextTerminal;
 import org.litebridge.orm.api.select.FromClauseStart;
@@ -73,6 +76,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Primary entry point for Litebridge.
@@ -299,33 +303,50 @@ public final class Litebridge implements SelectApi {
      * This method utilises the persistence facade to perform the save operation. It handles SQL exceptions
      * and ensures the integrity of the save process.
      *
-     * @param dtos the Data Transfer Object(s) to be saved in the database.
+     * @param dto the Data Transfer Object(s) to be saved in the database.
      * @throws IllegalStateException if an error occurs during the save operation.
      */
-    public void save(final Object... dtos) {
+    public void save(final Object dto) {
         try {
-            if (dtos.length == 1) {
-                persistenceFacade.save(dtos[0]);
-            } else {
-                save(List.of(dtos));
-            }
+            persistenceFacade.save(dto);
         } catch (SQLException ex) {
-            throw new IllegalStateException("Failed to save DTO: " + dtos[0], ex);
+            throw new IllegalStateException("Failed to save DTO: " + dto, ex);
         }
     }
 
     /**
-     * Saves a collection of Data Transfer Objects (DTOs) to the database.
+     * Saves a collection of Data Transfer Objects (DTOs) to the database, via a SQL INSERT or UPDATE statement.
      *
      * @param dtos a collection of objects to save in the database; must not be null.
      * @throws IllegalStateException if an error occurs during the save operation.
      */
-    public void save(final Collection<Object> dtos) {
+    public void saveAll(final Collection<?> dtos) {
         try {
             persistenceFacade.save(dtos);
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to save DTOs: " + dtos, ex);
         }
+    }
+
+    /**
+     * Saves an array of Data Transfer Objects (DTOs) to the database, via a SQL INSERT or UPDATE statement.
+     *
+     * @param dtos an array of objects to save in the database; must not be null.
+     * @throws IllegalStateException if an error occurs during the save operation.
+     */
+    public void saveAll(final Object[] dtos) {
+        saveAll(Arrays.asList(dtos));
+    }
+
+    /**
+     * Save the given Data Transfer Objects (DTOs) to the database, via a SQL INSERT or UPDATE statement.
+     *
+     * @param dto       first Data Transfer Object to be saved in the database.
+     * @param otherDtos additional Data Transfer Objects to be saved in the database.
+     * @throws IllegalStateException if an error occurs during the save operation.`
+     */
+    public void saveAll(final Object dto, final Object... otherDtos) {
+        saveAll(Stream.concat(Stream.of(dto), Stream.of(otherDtos)).toList());
     }
 
     /**
@@ -375,8 +396,6 @@ public final class Litebridge implements SelectApi {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
         final DtoUpdater<DTO> dtoUpdater = new DtoUpdater<>(dtoClass,
                 ormTable,
-                databaseProvider,
-                createSelectExpressionMapper(true),
                 createLitebridgeContext());
         final UpdateTerminal updateTerminal = (UpdateTerminal) update.apply(dtoUpdater);
         updateTerminal.execute();
@@ -391,10 +410,7 @@ public final class Litebridge implements SelectApi {
      */
     public void update(final String tableName, final Function<SqlUpdateStart, UpdateQuery> query) {
         final Table table = tableRegistry.getOrCreateSpiTable(tableName);
-        final SqlUpdater sqlUpdater = new SqlUpdater(table,
-                databaseProvider,
-                createSelectExpressionMapper(false),
-                createLitebridgeContext());
+        final SqlUpdater sqlUpdater = new SqlUpdater(table, createLitebridgeContext());
         final UpdateTerminal updateTerminal = (UpdateTerminal) query.apply(sqlUpdater);
         updateTerminal.execute();
     }
@@ -492,10 +508,7 @@ public final class Litebridge implements SelectApi {
      *                  specifying the conditions for deleting the records
      */
     public void delete(final String tableName, final Function<SqlDeleteWhereClause, DeleteQuery> query) {
-        final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName, null),
-                databaseProvider,
-                createSelectExpressionMapper(false),
-                createLitebridgeContext());
+        final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName, null), createLitebridgeContext());
         final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(sqlDeletor);
         deleteTerminal.execute();
     }
@@ -507,6 +520,16 @@ public final class Litebridge implements SelectApi {
      */
     public void delete(final String tableName) {
         delete(tableName, sqlDeletor -> sqlDeletor);
+    }
+
+    public void mergeInto(final String tableName, final Function<SqlMergeUsingStep, MergeTerminal> merge) {
+        final SqlMergeUsingStep mergeUsingStep = new SqlMergeUsingStep(new Table(tableName), createLitebridgeContext());
+        final MergeTerminal mergeTerminal = merge.apply(mergeUsingStep);
+    }
+
+    public <DTO> void mergeInto(final Class<DTO> dtoClass, final Function<DtoMergeUsingStep<DTO>, MergeTerminal> merge) {
+        final DtoMergeUsingStep<DTO> mergeUsingStep = new DtoMergeUsingStep<>(dtoClass, createLitebridgeContext());
+        merge.apply(mergeUsingStep);
     }
 
     /**

@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.delete.impl;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
@@ -15,7 +16,6 @@ import org.litebridge.orm.api.sql.delete.SqlDeletor;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryBindValueExtractor;
 import org.litebridge.orm.engine.QueryPlanCache;
-import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -28,16 +28,15 @@ public abstract sealed class AbstractDeletor<DS extends DeleteSpec> implements D
     private static final UpdateMetaData UPDATE_META_DATA = new UpdateMetaData(false, Collections.emptyList(), new String[0]);
 
     protected final DS deleteSpec;
-    protected final TransactionalDatabaseProvider databaseProvider;
+    protected final DatabaseProvider databaseProvider;
     protected final LitebridgeContext litebridgeContext;
     protected QueryNode node;
 
     protected AbstractDeletor(final DS deleteSpec,
-                              final TransactionalDatabaseProvider databaseProvider,
                               final LitebridgeContext litebridgeContext,
                               final QueryNode node) {
         this.deleteSpec = deleteSpec;
-        this.databaseProvider = databaseProvider;
+        this.databaseProvider = litebridgeContext.databaseProvider();
         this.litebridgeContext = litebridgeContext;
         this.node = node;
     }
@@ -63,7 +62,7 @@ public abstract sealed class AbstractDeletor<DS extends DeleteSpec> implements D
         final PreparedOperation preparedOperation = deleteSpec.toDelete(litebridgeContext.tableMetaDataCache(), databaseProvider.getTypeConverter());
         final Delete delete = (Delete) preparedOperation.operation();
         // Generate SQL and create type conversion metadata
-        final String sql = databaseProvider.toSql(delete, databaseProvider.transactionManager());
+        final String sql = databaseProvider.toSql(delete, litebridgeContext.transactionManager());
         // Cache compiled SQL for this AST
         final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
                 .map(BindValue::sqlDataType)
@@ -78,7 +77,7 @@ public abstract sealed class AbstractDeletor<DS extends DeleteSpec> implements D
         final UpdateResult updateResult;
 
         try {
-            updateResult = databaseProvider.delete(preparedSql, databaseProvider.transactionManager());
+            updateResult = databaseProvider.delete(preparedSql, litebridgeContext.transactionManager());
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute delete", ex);
         }
