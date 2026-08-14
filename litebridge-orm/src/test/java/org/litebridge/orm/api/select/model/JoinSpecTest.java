@@ -73,8 +73,9 @@ class JoinSpecTest {
         final SelectExpressionMapper selectExpressionMapper = mock(SelectExpressionMapper.class);
         final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("TEST_SCHEMA", "TEST_TABLE"), selectExpressionMapper);
 
-        when(selectExpressionMapper.resolveProtoExpression(any(ExpressionSpec.class), eq(ClauseType.WHERE)))
-                .thenReturn(List.of(new SelectColumnSpec(new Column(new Table("TEST_SCHEMA", "TEST_TABLE"), "TEST_COLUMN"))));
+        final Table table = new Table("TEST_SCHEMA", "TEST_TABLE");
+        when(selectExpressionMapper.resolveProtoExpression(any(ExpressionSpec.class), table, eq(ClauseType.WHERE)))
+                .thenReturn(List.of(new SelectColumnSpec(new Column(table, "TEST_COLUMN"))));
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select select = mock(SqlFunctionRegistry.Select.class);
         final LiteralExpressionFactory literalExpressionFactory = mock(LiteralExpressionFactory.class);
@@ -108,9 +109,9 @@ class JoinSpecTest {
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         final ProtoExpressionResolver protoExpressionResolver = mock(ProtoExpressionResolver.class);
-        when(protoExpressionResolver.resolveExpression(any(ExpressionSpec.class), any(ClauseType.class))).thenAnswer(i -> Stream.of((ExpressionSpec) i.getArgument(0)));
-        final SqlJoinSpec joinSpec = new SqlJoinSpec(new Table("TEST_SCHEMA", "TEST_TABLE"), new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver, mock(TableMetaDataCache.class), new DefaultTypeConverter()));
-        final Table table = joinSpec.table();
+        final Table table = new Table("TEST_SCHEMA", "TEST_TABLE");
+        when(protoExpressionResolver.resolveExpression(any(ExpressionSpec.class), table, any(ClauseType.class))).thenAnswer(i -> Stream.of((ExpressionSpec) i.getArgument(0)));
+        final SqlJoinSpec joinSpec = new SqlJoinSpec(table, new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver, mock(TableMetaDataCache.class), new DefaultTypeConverter()));
         final ConditionSpec conditionSpec = joinSpec.currentConditionGroupSpec().newCondition(LogicOperator.NOOP, new SelectColumnSpec(new Column(table, "TEST_COLUMN")));
         conditionSpec.setOperator(Operator.LT);
         conditionSpec.setValue(123);

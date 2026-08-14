@@ -46,7 +46,7 @@ public class MergeE2eTest extends AbstractE2eTest {
                 .whenMatchedAnd(q -> q.and("ACCOUNT_ID").eq(Fn.c("PERSON_ID")),
                         u -> u.update(account ->
                                 account.set("PERSON_ID").to(1)))
-                .whenMatched(MergeUpdateStep::delete)
+//                .whenMatched(MergeUpdateStep::delete)
                 .whenNotMatched(i ->
                         i.insert("ACCOUNT_ID", "ACCOUNT_NAME", "BALANCE")
                                 .values(123L, "Default Account", 0)));

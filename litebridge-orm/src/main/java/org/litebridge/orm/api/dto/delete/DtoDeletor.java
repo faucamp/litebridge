@@ -37,10 +37,8 @@ public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implem
      */
     public DtoDeletor(final Class<DTO> dtoClass,
                       final OrmTable dtoTable,
-                      final TransactionalDatabaseProvider databaseProvider,
-                      final SelectExpressionMapper selectExpressionMapper,
                       final LitebridgeContext litebridgeContext) {
-        super(new DtoDeleteSpec(dtoClass, dtoTable, selectExpressionMapper), litebridgeContext, new DeleteNode(null, dtoTable.getMetaData().toTable()));
+        super(new DtoDeleteSpec(dtoClass, dtoTable, litebridgeContext.selectExpressionMapper()), litebridgeContext, new DeleteNode(null, dtoTable.getMetaData().toTable()));
     }
 
     @Override

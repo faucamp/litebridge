@@ -120,7 +120,9 @@ public class ConditionSpec {
                                  final List<BindValue> bindValues,
                                  final TableMetaDataCache tableMetaDataCache,
                                  final TypeConverter typeConverter) {
-        final List<ExpressionSpec> lhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(lhs, ClauseType.WHERE).stream()
+        //TODO: rework table setting
+        final Table table = selectedTables.iterator().next();
+        final List<ExpressionSpec> lhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(lhs, table, ClauseType.WHERE).stream()
                 .peek(expressionSpec -> {
                     if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
                         final Table expressionTable = columnExpressionSpec.getColumn().table();
@@ -150,7 +152,7 @@ public class ConditionSpec {
             final SubselectExpression subselectExpression = selectExpressionMapper.sqlFunctionRegistry().select().subselect().create((Select) subselect.operation());
             return new Condition(lhsSelectExpression, operator, subselectExpression);
         } else if (value instanceof ExpressionSpec expressionSpec) {
-            final List<ExpressionSpec> rhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(expressionSpec, ClauseType.WHERE);
+            final List<ExpressionSpec> rhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(expressionSpec, table, ClauseType.WHERE);
 
             if (rhsResolvedExpressionSpecs.size() != 1) {
                 throw new IllegalArgumentException("Expected exactly one RHS expression spec, but got " + rhsResolvedExpressionSpecs.size());

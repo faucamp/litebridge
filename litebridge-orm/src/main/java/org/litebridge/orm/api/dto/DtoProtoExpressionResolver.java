@@ -26,6 +26,7 @@ import java.util.Objects;
  */
 public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
 
+    @Deprecated(forRemoval = true)
     private @Nullable DtoSelectSpec selectSpec;
     private final AliasGenerator aliasGenerator;
     private final ClassFieldAccessorCache classFieldAccessorCache;
@@ -39,6 +40,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
      * @param classFieldAccessorCache the field accessor cache
      * @param tableRegistry           the table registry
      */
+    @Deprecated(forRemoval = true)
     public DtoProtoExpressionResolver(final DtoSelectSpec selectSpec,
                                       final AliasGenerator aliasGenerator,
                                       final ClassFieldAccessorCache classFieldAccessorCache,
@@ -65,19 +67,19 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     }
 
     @Override
-    protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable, final ClauseType clause) {
+    protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable, final Table table, final ClauseType clause) {
         // Map the input DTO field names to database column names
         final Class<?> dtoClass = getDtoClass(resolvable);
-        final Column column = getColumn(dtoClass, resolvable, clause);
+        final Column column = getColumn(dtoClass, resolvable, table, clause);
         final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, resolvable.column());
         return new SelectFieldSpec(fieldAccessor, column);
     }
 
     @Override
-    protected ColumnExpressionSpec resolveSelectField(final QueryField queryField, final ClauseType clause) {
+    protected ColumnExpressionSpec resolveSelectField(final QueryField queryField, final Table table, final ClauseType clause) {
         // Map the input DTO field names to database column names
         final String fieldName = QueryFieldInspector.getFieldName(queryField);
-        final Column column = getColumn(QueryFieldInspector.getDtoClass(queryField), fieldName, clause);
+        final Column column = getColumn(QueryFieldInspector.getDtoClass(queryField), fieldName, table, clause);
         final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(QueryFieldInspector.getDtoClass(queryField), fieldName);
         return new SelectFieldSpec(fieldAccessor, column);
     }
@@ -96,20 +98,19 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     }
 
     @Override
-    protected Column getColumn(final Resolvable resolvable, final ClauseType clause) {
-        return getColumn(getDtoClass(resolvable), resolvable, clause);
+    protected Column getColumn(final Resolvable resolvable, final Table table, final ClauseType clause) {
+        return getColumn(getDtoClass(resolvable), resolvable, table, clause);
     }
 
-    private Column getColumn(final Class<?> dtoClass, final Resolvable resolvable, final ClauseType clause) {
-        return getColumn(dtoClass, resolvable.column(), clause);
+    private Column getColumn(final Class<?> dtoClass, final Resolvable resolvable, final Table table, final ClauseType clause) {
+        return getColumn(dtoClass, resolvable.column(), table, clause);
     }
 
-    private Column getColumn(final Class<?> dtoClass, final String fieldName, final ClauseType clause) {
+    private Column getColumn(final Class<?> dtoClass, final String fieldName, Table table, final ClauseType clause) {
         // Map the input DTO field names to database column names
-        final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final Table table;
-
         if (selectSpec != null) {
+            final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
+
             if (ormTable.equals(selectSpec.dtoTable())) {
                 table = selectSpec.getTable();
             } else {
@@ -121,8 +122,6 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
                         .findFirst()
                         .orElseGet(() -> ormTable.getMetaData().toTable());
             }
-        } else {
-            table = ormTable.getMetaData().toTable();
         }
 
         final ColumnMetaData columnMetaData = tableRegistry.getTableOrThrow(dtoClass).getColumnForFieldName(fieldName);

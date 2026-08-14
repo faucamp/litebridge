@@ -8,7 +8,6 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.Operation;
-import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -20,6 +19,7 @@ import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
 import org.litebridge.db.spi.impl.function.SqlFunctionRegistryFactory;
 import org.litebridge.db.spi.impl.sql.DeleteSqlGenerator;
 import org.litebridge.db.spi.impl.sql.InsertSqlGenerator;
+import org.litebridge.db.spi.impl.sql.MergeSqlGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.impl.sql.UpdateSqlGenerator;
 import org.litebridge.db.spi.query.Select;
@@ -31,6 +31,8 @@ import org.litebridge.db.spi.tx.ManagedConnection;
 import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
+import org.litebridge.db.spi.update.InsertV2;
+import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.slf4j.Logger;
@@ -114,6 +116,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     protected final ConcurrentLazy<DeleteSqlGenerator> deleteSqlGenerator = new ConcurrentLazy<>(this::createDeleteSqlGenerator);
 
     /**
+     * Lazy-loaded MERGE SQL generator.
+     */
+    protected final ConcurrentLazy<MergeSqlGenerator> mergeSqlGenerator = new ConcurrentLazy<>(this::createMergeSqlGenerator);
+
+    /**
      * Constructs a new {@code AbstractDatabaseProvider}.
      *
      * @param typeConverter The type converter to use.
@@ -140,6 +147,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     @Override
     public UpdateResult delete(final PreparedSql delete, final ConnectionProvider connectionProvider) throws SQLException {
         return executeSqlUpdate(delete, connectionProvider);
+    }
+
+    @Override
+    public UpdateResult merge(final PreparedSql merge, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeSqlUpdate(merge, connectionProvider);
     }
 
     @Override
@@ -224,8 +236,10 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return switch (operation) {
             case Select select -> selectSqlGenerator.orThrow().prepareSql(select, connectionProvider);
             case Insert insert -> insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider);
+            case InsertV2 insert -> insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider);
             case Update update -> updateSqlGenerator.orThrow().prepareSql(update, connectionProvider);
             case Delete delete -> deleteSqlGenerator.orThrow().prepareSql(delete, connectionProvider);
+            case Merge merge -> mergeSqlGenerator.orThrow().prepareSql(merge, connectionProvider);
         };
     }
 
@@ -287,8 +301,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      * This method executes the prepared statement, retrieves any generated primary key values,
      * and wraps the results in an {@link InsertResult} object.
      *
-     * @param preparedSql         the {@link PreparedSql} object containing the SQL query string and bind values to be executed
-     * @param connectionProvider  the {@link ConnectionProvider} used to obtain a database connection.
+     * @param preparedSql        the {@link PreparedSql} object containing the SQL query string and bind values to be executed
+     * @param connectionProvider the {@link ConnectionProvider} used to obtain a database connection.
      * @return an {@link InsertResult} object encapsulating the number of affected rows and a list of generated keys (if any)
      * @throws SQLException if an error occurs while executing the SQL insert or retrieving the generated keys
      */
@@ -758,5 +772,19 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
      */
     protected DeleteSqlGenerator createDeleteSqlGenerator() {
         return new DeleteSqlGenerator(typeConverter, columnIdentifierGenerator.orThrow(), this::ensureTableMetaData);
+    }
+
+    /**
+     * Create a {@link MergeSqlGenerator} instance for the database provider.
+     *
+     * @return a {@link MergeSqlGenerator} instance
+     */
+    protected MergeSqlGenerator createMergeSqlGenerator() {
+        return new MergeSqlGenerator(typeConverter,
+                columnIdentifierGenerator.orThrow(),
+                this::ensureTableMetaData,
+                insertSqlGenerator.orThrow(),
+                updateSqlGenerator.orThrow(),
+                deleteSqlGenerator.orThrow());
     }
 }

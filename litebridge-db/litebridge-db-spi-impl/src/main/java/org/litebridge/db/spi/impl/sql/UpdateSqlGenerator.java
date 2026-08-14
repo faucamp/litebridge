@@ -43,8 +43,17 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
      * @return the generated SQL query string.
      */
     public String prepareSql(final Update update, final ConnectionProvider connectionProvider) {
-        final StringBuilder sql = appendTable(new StringBuilder("UPDATE "), update.table())
-                .append(" SET ");
+        return prepareSql(update, false, connectionProvider);
+    }
+
+    public String prepareSql(final Update update, final boolean columnsOnly, final ConnectionProvider connectionProvider) {
+        final StringBuilder sql = new StringBuilder("UPDATE ");
+
+        if (!columnsOnly) {
+            appendTable(sql, update.table());
+        }
+
+        sql.append(" SET ");
 
         boolean first = true;
 

@@ -16,5 +16,5 @@ import org.litebridge.db.spi.Operation;
  * <p>
  * This interface is part of the update-related models for database operations.
  */
-public sealed interface UpdateStatement extends Operation permits Delete, Insert, Update {
+public sealed interface UpdateStatement extends Operation permits Delete, Insert, InsertV2, Merge, Update {
 }

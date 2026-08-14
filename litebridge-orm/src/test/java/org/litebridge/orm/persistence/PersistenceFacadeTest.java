@@ -59,10 +59,11 @@ class PersistenceFacadeTest {
     private PersistenceFacade createFacade(TableRegistry tableRegistry, TransactionalDatabaseProvider databaseProvider, ChangeTracker changeTracker, DtoConstructor dtoConstructor) {
         final LitebridgeContext context = mock(LitebridgeContext.class);
         when(context.queryPlanCache()).thenReturn(new QueryPlanCache());
-        when(context.createQueryCompiler()).thenReturn(new QueryCompiler(tableRegistry, new NoOpAliasGenerator()));
-        when(context.typeConverter()).thenReturn(new DefaultTypeConverter());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
         when(context.tableMetaDataCache()).thenReturn(tableMetaDataCache);
+        when(context.createQueryCompiler()).thenReturn(new QueryCompiler(tableRegistry, tableMetaDataCache, new DefaultTypeConverter(), new NoOpAliasGenerator(), mock(SelectExpressionMapper.class)));
+        when(context.typeConverter()).thenReturn(new DefaultTypeConverter());
+
 
         try {
             when(databaseProvider.tableMetaData(any(), any())).thenAnswer(invocation -> {

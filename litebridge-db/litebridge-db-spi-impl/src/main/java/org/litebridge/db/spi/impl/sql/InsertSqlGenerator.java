@@ -6,9 +6,11 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Insert;
+import org.litebridge.db.spi.update.InsertV2;
 import org.litebridge.db.spi.update.RowValue;
 
 import java.util.ArrayList;
@@ -44,10 +46,18 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
      * @return the generated SQL query string
      */
     public String prepareSql(final Insert insert, final ConnectionProvider connectionProvider) {
-        final List<String> columnNames = insert.columns().stream().map(Column::name).toList();
+        return prepareSql(insert, false, connectionProvider);
+    }
 
-        final StringBuilder sql = appendTable(new StringBuilder("INSERT INTO "), insert.table())
-                .append(" (")
+    String prepareSql(final Insert insert, final boolean columnsOnly, final ConnectionProvider connectionProvider) {
+        final List<String> columnNames = insert.columns().stream().map(Column::name).toList();
+        final StringBuilder sql = new StringBuilder("INSERT");
+
+        if (!columnsOnly) {
+            appendTable(sql.append(" INTO "), insert.table());
+        }
+
+        sql.append(" (")
                 .append(String.join(", ", columnNames.stream().map(columnIdentifierGenerator::quoteIdentifier).toList()))
                 .append(") VALUES ");
 
@@ -67,6 +77,42 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
         return sql.toString();
     }
 
+    public String prepareSql(final InsertV2 insert, final ConnectionProvider connectionProvider) {
+        final StringBuilder sql = appendTable(new StringBuilder("INSERT INTO "), insert.table())
+                .append(" (")
+                .append(String.join(", ", insert.columns().stream()
+                        .map(InsertV2.InsertColumn::name)
+                        .map(columnIdentifierGenerator::quoteIdentifier)
+                        .toList()))
+                .append(") VALUES ");
+
+        for (int i = 0; i < insert.rows(); i++) {
+            if (i > 0) {
+                sql.append(", ");
+            }
+
+            sql.append('(');
+
+            for (int j = 0; j < insert.columns().size(); j++) {
+                final InsertV2.InsertColumn insertColumn = insert.columns().get(j);
+
+                if (j > 0) {
+                    sql.append(", ");
+                }
+
+                if (insertColumn.generatedValue() != null) {
+                    sql.append(insertColumn.generatedValue());
+                } else {
+                    sql.append('?');
+                }
+            }
+
+            sql.append(')');
+        }
+
+        return sql.toString();
+    }
+
     /**
      * Prepare a row for insertion based on the provided row value. This includes
      * processing column values, converting them to a suitable format, and generating
@@ -80,7 +126,7 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
      */
     protected PreparedRow prepareRow(final RowValue rowValue, final ConnectionProvider connectionProvider) {
         final List<String> valueSpecifiers = new ArrayList<>(rowValue.columns().size());
-        final List<org.litebridge.db.spi.sql.BindValue> bindValues = new ArrayList<>(rowValue.columns().size());
+        final List<BindValue> bindValues = new ArrayList<>(rowValue.columns().size());
 
         for (final ColumnValue columnValue : rowValue.columns()) {
             final ColumnMetaData column = ensureColumnMetaData(columnValue.column(), connectionProvider);
@@ -95,7 +141,7 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
                 }
             } else {
                 valueSpecifiers.add("?");
-                bindValues.add(new org.litebridge.db.spi.sql.BindValue(convertedValue, column.getDataType()));
+                bindValues.add(new BindValue(convertedValue, column.getDataType()));
             }
         }
 

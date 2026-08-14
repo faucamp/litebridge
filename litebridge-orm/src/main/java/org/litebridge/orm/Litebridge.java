@@ -5,17 +5,18 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.tx.TransactionManager;
+import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.orm.api.delete.DeleteQuery;
 import org.litebridge.orm.api.delete.DeleteTerminal;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
-import org.litebridge.orm.api.dto.DtoProtoExpressionResolver;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.api.dto.delete.DtoDeleteWhereClause;
 import org.litebridge.orm.api.dto.delete.DtoDeletor;
 import org.litebridge.orm.api.dto.update.DtoUpdateStart;
 import org.litebridge.orm.api.dto.update.DtoUpdater;
+import org.litebridge.orm.api.insert.InsertIntoStep;
+import org.litebridge.orm.api.insert.InsertValuesStep;
 import org.litebridge.orm.api.merge.DtoMergeUsingStep;
 import org.litebridge.orm.api.merge.MergeTerminal;
 import org.litebridge.orm.api.merge.SqlMergeUsingStep;
@@ -25,10 +26,7 @@ import org.litebridge.orm.api.select.FromClauseStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.select.ast.SelectNode;
-import org.litebridge.orm.api.select.model.ProtoExpressionResolver;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.api.spec.DtoTableSpec;
-import org.litebridge.orm.api.sql.SqlProtoExpressionResolver;
 import org.litebridge.orm.api.sql.delete.SqlDeleteWhereClause;
 import org.litebridge.orm.api.sql.delete.SqlDeletor;
 import org.litebridge.orm.api.sql.update.SqlUpdateStart;
@@ -39,7 +37,9 @@ import org.litebridge.orm.api.update.UpdateTerminal;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.FromClauseEngine;
+import org.litebridge.orm.engine.InsertEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.MergeEngine;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.engine.RegistrationEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -106,6 +106,7 @@ public final class Litebridge implements SelectApi {
     private final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
     private final RegistrationEngine registrationEngine;
     private final FromClauseEngine fromClauseEngine;
+    private final InsertEngine insertEngine = new InsertEngine(tableRegistry, this::createSqlLitebridgeContext);
     private final QueryPlanCache queryPlanCache = new QueryPlanCache();
     private final LitebridgeConfig litebridgeConfig;
     private final TableMetaDataCache tableMetaDataCache;
@@ -228,8 +229,9 @@ public final class Litebridge implements SelectApi {
         this.tableMetaDataCache = new TableMetaDataCache(this.databaseProvider, transactionManager);
         final TableMapper tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
         this.registrationEngine = new RegistrationEngine(this.databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
-        this.fromClauseEngine = new FromClauseEngine(this.databaseProvider, tableRegistry, changeTracker, dtoConstructor, this::createLitebridgeContext);
-        this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor, createLitebridgeContext());
+        //TODO: cleanup context use
+        this.fromClauseEngine = new FromClauseEngine(this.databaseProvider, tableRegistry, changeTracker, dtoConstructor, () -> createLitebridgeContext(LitebridgeContext.Mode.DTO));
+        this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor, createLitebridgeContext(LitebridgeContext.Mode.DTO));
 
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("Litebridge initialised with databaseProvider: {}, config: {}", databaseProvider.getClass().getName(), litebridgeConfig);
@@ -367,6 +369,10 @@ public final class Litebridge implements SelectApi {
         }
     }
 
+    public InsertResult insert(final String tableName, final Function<InsertIntoStep, InsertValuesStep> insert) {
+        return insertEngine.insert(tableName, insert);
+    }
+
     /**
      * Update the specified Data Transfer Object (DTO) in the database via a SQL UPDATE statement.
      * <p>
@@ -396,7 +402,7 @@ public final class Litebridge implements SelectApi {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
         final DtoUpdater<DTO> dtoUpdater = new DtoUpdater<>(dtoClass,
                 ormTable,
-                createLitebridgeContext());
+                createDtoLitebridgeContext());
         final UpdateTerminal updateTerminal = (UpdateTerminal) update.apply(dtoUpdater);
         updateTerminal.execute();
     }
@@ -410,7 +416,7 @@ public final class Litebridge implements SelectApi {
      */
     public void update(final String tableName, final Function<SqlUpdateStart, UpdateQuery> query) {
         final Table table = tableRegistry.getOrCreateSpiTable(tableName);
-        final SqlUpdater sqlUpdater = new SqlUpdater(table, createLitebridgeContext());
+        final SqlUpdater sqlUpdater = new SqlUpdater(table, createSqlLitebridgeContext());
         final UpdateTerminal updateTerminal = (UpdateTerminal) query.apply(sqlUpdater);
         updateTerminal.execute();
     }
@@ -483,9 +489,7 @@ public final class Litebridge implements SelectApi {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
         final DtoDeletor<DTO> dtoDtoDeletor = new DtoDeletor<>(dtoClass,
                 ormTable,
-                databaseProvider,
-                createSelectExpressionMapper(true),
-                createLitebridgeContext());
+                createDtoLitebridgeContext());
         final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(dtoDtoDeletor);
         deleteTerminal.execute();
     }
@@ -508,7 +512,7 @@ public final class Litebridge implements SelectApi {
      *                  specifying the conditions for deleting the records
      */
     public void delete(final String tableName, final Function<SqlDeleteWhereClause, DeleteQuery> query) {
-        final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName, null), createLitebridgeContext());
+        final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName), null, createSqlLitebridgeContext());
         final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(sqlDeletor);
         deleteTerminal.execute();
     }
@@ -523,12 +527,12 @@ public final class Litebridge implements SelectApi {
     }
 
     public void mergeInto(final String tableName, final Function<SqlMergeUsingStep, MergeTerminal> merge) {
-        final SqlMergeUsingStep mergeUsingStep = new SqlMergeUsingStep(new Table(tableName), createLitebridgeContext());
-        final MergeTerminal mergeTerminal = merge.apply(mergeUsingStep);
+        final MergeEngine mergeEngine = new MergeEngine(createSqlLitebridgeContext());
+        mergeEngine.mergeInto(tableName, merge);
     }
 
     public <DTO> void mergeInto(final Class<DTO> dtoClass, final Function<DtoMergeUsingStep<DTO>, MergeTerminal> merge) {
-        final DtoMergeUsingStep<DTO> mergeUsingStep = new DtoMergeUsingStep<>(dtoClass, createLitebridgeContext());
+        final DtoMergeUsingStep<DTO> mergeUsingStep = new DtoMergeUsingStep<>(dtoClass, createDtoLitebridgeContext());
         merge.apply(mergeUsingStep);
     }
 
@@ -554,7 +558,7 @@ public final class Litebridge implements SelectApi {
      */
     public <DTO> DTO toDto(final Row row, final Class<DTO> dtoClass) {
         final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, new NoOpAliasGenerator(), createLitebridgeContext());
+        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, new NoOpAliasGenerator(), createDtoLitebridgeContext());
         selectSpec.setExpressions(row.columnStream()
                 .map(rowColumn -> {
                     final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(rowColumn.column().name());
@@ -564,7 +568,7 @@ public final class Litebridge implements SelectApi {
                 })
                 .toList());
 
-        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, createLitebridgeContext());
+        final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(selectSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, createDtoLitebridgeContext());
 
         final List<DTO> dtos = selectSpecDtoMapper.toDtos(dtoClass, List.of(row));
 
@@ -604,23 +608,16 @@ public final class Litebridge implements SelectApi {
         return queryPlanCache;
     }
 
-    private LitebridgeContext createLitebridgeContext() {
-        final SqlFunctionRegistry sqlFunctionRegistry = databaseProvider.getSqlFunctionRegistry();
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
-        return new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, queryPlanCache, aliasGenerator, tableMetaDataCache, databaseProvider.getTypeConverter(), createSelectExpressionMapper(true));
+    private LitebridgeContext createDtoLitebridgeContext() {
+        return createLitebridgeContext(LitebridgeContext.Mode.DTO);
     }
 
-    private SelectExpressionMapper createSelectExpressionMapper(final boolean dto) {
-        final ProtoExpressionResolver protoExpressionResolver;
+    private LitebridgeContext createSqlLitebridgeContext() {
+        return createLitebridgeContext(LitebridgeContext.Mode.SQL);
+    }
 
-        if (dto) {
-            protoExpressionResolver = new DtoProtoExpressionResolver(new DefaultAliasGenerator(databaseProvider.getAliasTransformer()),
-                    changeTracker.classFieldAccessorCache(),
-                    tableRegistry);
-        } else {
-            protoExpressionResolver = new SqlProtoExpressionResolver();
-        }
-
-        return new SelectExpressionMapper(databaseProvider.getSqlFunctionRegistry(), protoExpressionResolver, tableMetaDataCache, databaseProvider.getTypeConverter());
+    private LitebridgeContext createLitebridgeContext(final LitebridgeContext.Mode mode) {
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
+        return new LitebridgeContext(mode, litebridgeConfig, databaseProvider, fromClauseEngine, queryPlanCache, aliasGenerator, tableMetaDataCache);
     }
 }

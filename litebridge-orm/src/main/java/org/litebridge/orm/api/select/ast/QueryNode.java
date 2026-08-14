@@ -7,20 +7,7 @@ import org.jspecify.annotations.Nullable;
  */
 public sealed interface QueryNode
 
-        permits ConditionQueryNode,
-        DeleteNode,
-        GroupByNode,
-        HavingNode,
-        InsertNode,
-        JoinNode,
-        LimitNode,
-        MergeNode,
-        OrderByNode,
-        SelectNode,
-        SetNode,
-        UpdateNode,
-        UsingNode,
-        WhereNode {
+        permits ConditionQueryNode, DeleteNode, GroupByNode, HavingNode, InsertNode, InsertValuesNode, JoinNode, LimitNode, MergeNode, OrderByNode, SelectNode, SetNode, UpdateNode, UsingNode, WhenMatchedNode, WhenNotMatchedNode, WhereNode {
 
     /**
      * Returns the previous node in the chain, or {@code null} if this is the root node.

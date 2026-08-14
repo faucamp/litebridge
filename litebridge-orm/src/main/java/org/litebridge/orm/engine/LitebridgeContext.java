@@ -4,12 +4,16 @@ import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.tx.TransactionManager;
+import org.litebridge.orm.api.dto.DtoProtoExpressionResolver;
+import org.litebridge.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.api.sql.SqlProtoExpressionResolver;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
+import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 
 /**
@@ -20,7 +24,9 @@ import org.litebridge.tracking.ClassFieldAccessorCache;
  */
 public final class LitebridgeContext {
 
+    private final Mode mode;
     private final LitebridgeConfig config;
+    private final DatabaseProvider databaseProvider;
     private final FromClauseEngine fromClauseEngine;
     private final SqlFunctionRegistry sqlFunctionRegistry;
     private final QueryPlanCache queryPlanCache;
@@ -33,31 +39,34 @@ public final class LitebridgeContext {
     /**
      * Create a new Litebridge context with the specified components.
      *
+     * @param mode                   The mode of operation for the Litebridge context.
      * @param config                 Configuration for managing runtime behaviour
      * @param fromClauseEngine       The engine responsible for managing table registries alias generation, and facilitating query specifications.
-     * @param sqlFunctionRegistry    A registry for resolving SQL functions used in expressions.
      * @param queryPlanCache         A cache for storing execution plans based on query structure.
      * @param aliasGenerator         An alias generator for creating unique table and column aliases.
-     * @param typeConverter          A converter for converting between Java types and database types.
-     * @param selectExpressionMapper A mapper for resolving query expressions.
      */
-    public LitebridgeContext(final LitebridgeConfig config,
+    public LitebridgeContext(final Mode mode,
+                             final LitebridgeConfig config,
+                             final DatabaseProvider databaseProvider,
                              final FromClauseEngine fromClauseEngine,
-                             final SqlFunctionRegistry sqlFunctionRegistry,
                              final QueryPlanCache queryPlanCache,
                              final AliasGenerator aliasGenerator,
-                             final TableMetaDataCache tableMetaDataCache,
-                             final TypeConverter typeConverter,
-                             final SelectExpressionMapper selectExpressionMapper) {
+                             final TableMetaDataCache tableMetaDataCache) {
+        this.mode = mode;
         this.config = config;
+        this.databaseProvider = databaseProvider;
         this.fromClauseEngine = fromClauseEngine;
-        this.sqlFunctionRegistry = sqlFunctionRegistry;
+        this.sqlFunctionRegistry = databaseProvider.getSqlFunctionRegistry();
         this.queryPlanCache = queryPlanCache;
         this.aliasGenerator = aliasGenerator;
         this.relatedDtoStrategy = config.relatedDtoStrategy();
         this.tableMetaDataCache = tableMetaDataCache;
-        this.typeConverter = typeConverter;
-        this.selectExpressionMapper = selectExpressionMapper;
+        this.typeConverter = databaseProvider.getTypeConverter();
+        this.selectExpressionMapper = createSelectExpressionMapper();
+    }
+
+    public Mode mode() {
+        return mode;
     }
 
     public LitebridgeConfig config() {
@@ -117,6 +126,24 @@ public final class LitebridgeContext {
     }
 
     public QueryCompiler createQueryCompiler() {
-        return new QueryCompiler(fromClauseEngine.tableRegistry(), aliasGenerator);
+        return new QueryCompiler(fromClauseEngine.tableRegistry(), tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
+    }
+
+    private SelectExpressionMapper createSelectExpressionMapper() {
+        final ProtoExpressionResolver protoExpressionResolver;
+
+        if (mode == Mode.DTO) {
+            protoExpressionResolver = new DtoProtoExpressionResolver(aliasGenerator, classFieldAccessorCache(), tableRegistry());
+        } else {
+            protoExpressionResolver = new SqlProtoExpressionResolver();
+        }
+
+        return new SelectExpressionMapper(databaseProvider.getSqlFunctionRegistry(), protoExpressionResolver, tableMetaDataCache, databaseProvider.getTypeConverter());
+    }
+
+    public enum Mode {
+        DTO,
+        SQL,
+        NATIVE_SQL;
     }
 }

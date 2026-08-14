@@ -17,7 +17,8 @@ public class MergeConditionClause<DTO, MUS extends MergeUpdateStep<DTO>>
     public MergeConditionClause(final LitebridgeContext litebridgeContext,
                                 final LogicOperator logicOperator,
                                 final ExpressionSpec lhs,
+                                final QueryNode node,
                                 final Function<QueryNode, MergeConditionClauseTerminal<DTO, MUS>> terminalRecreator) {
-        super(litebridgeContext, logicOperator, lhs, null, terminalRecreator);
+        super(litebridgeContext, logicOperator, lhs, node, terminalRecreator);
     }
 }

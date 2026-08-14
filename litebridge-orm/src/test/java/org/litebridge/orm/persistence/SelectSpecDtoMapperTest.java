@@ -3,7 +3,6 @@ package org.litebridge.orm.persistence;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.type.ConcurrentLazy;
-import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
@@ -15,7 +14,6 @@ import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.api.dto.DtoJoinSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.api.select.model.ProtoExpressionResolver;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.FromClauseEngine;
@@ -68,7 +66,7 @@ class SelectSpecDtoMapperTest {
         transactionManager = mock(TransactionManager.class);
 
         litebridgeConfig = new LitebridgeConfig();
-        litebridgeContext = new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), new TableMetaDataCache(databaseProvider, transactionManager), new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
+        litebridgeContext = new LitebridgeContext(LitebridgeContext.Mode.DTO, litebridgeConfig, databaseProvider, fromClauseEngine, mock(QueryPlanCache.class), new NoOpAliasGenerator(), new TableMetaDataCache(databaseProvider, transactionManager));
     }
 
     @Test
@@ -484,7 +482,7 @@ class SelectSpecDtoMapperTest {
     void toDtos_withPartialObjectStrategy() {
         // Given
         litebridgeConfig = new LitebridgeConfig(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
-        litebridgeContext = new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), new TableMetaDataCache(databaseProvider, transactionManager), new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
+        litebridgeContext = new LitebridgeContext(LitebridgeContext.Mode.DTO, litebridgeConfig, databaseProvider, fromClauseEngine, mock(QueryPlanCache.class), new NoOpAliasGenerator(), new TableMetaDataCache(databaseProvider, transactionManager));
 
         final Table table = new Table("PARENT");
         final Column idCol = new Column(table, "ID");
@@ -595,7 +593,7 @@ class SelectSpecDtoMapperTest {
     void toDtos_recordWithDependency() {
         // Given
         litebridgeConfig = new LitebridgeConfig(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
-        litebridgeContext = new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), new TableMetaDataCache(databaseProvider, transactionManager), new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
+        litebridgeContext = new LitebridgeContext(LitebridgeContext.Mode.DTO, litebridgeConfig, databaseProvider, fromClauseEngine, mock(QueryPlanCache.class), new NoOpAliasGenerator(), new TableMetaDataCache(databaseProvider, transactionManager));
 
         final Table table = new Table("PARENT");
         final Column idCol = new Column(table, "ID");
@@ -698,7 +696,7 @@ class SelectSpecDtoMapperTest {
     void toDtos_withNonBasicRelatedPk() {
         // Given
         litebridgeConfig = new LitebridgeConfig(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
-        litebridgeContext = new LitebridgeContext(litebridgeConfig, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), new TableMetaDataCache(databaseProvider, transactionManager), new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
+        litebridgeContext = new LitebridgeContext(LitebridgeContext.Mode.DTO, litebridgeConfig, databaseProvider, fromClauseEngine, mock(QueryPlanCache.class), new NoOpAliasGenerator(), new TableMetaDataCache(databaseProvider, transactionManager));
 
         final Table table = new Table("PARENT");
         final Column idCol = new Column(table, "ID");

@@ -1,7 +1,10 @@
 package org.litebridge.orm.api.merge;
 
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.orm.api.select.ast.DeleteNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.UsingNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
 public abstract sealed class MergeUpdateStep<DTO> permits DtoMergeUpdateStep, SqlMergeUpdateStep {
@@ -17,6 +20,7 @@ public abstract sealed class MergeUpdateStep<DTO> permits DtoMergeUpdateStep, Sq
     }
 
     public MergeTerminal delete() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        final DeleteNode delete = new DeleteNode(null, table);
+        return new MergeTerminal(new DeleteNode(node, table));
     }
 }

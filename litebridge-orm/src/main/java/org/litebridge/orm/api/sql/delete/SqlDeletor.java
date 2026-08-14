@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.sql.delete;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
@@ -12,12 +13,10 @@ import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.DeleteNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 
 import java.util.function.Function;
 
@@ -26,8 +25,11 @@ public final class SqlDeletor extends AbstractDeletor<DeleteSpec> implements Sql
     private final LitebridgeContext litebridgeContext;
 
     public SqlDeletor(final Table table,
+                      final @Nullable QueryNode node,
                       final LitebridgeContext litebridgeContext) {
-        super(new DeleteSpec(table, litebridgeContext.selectExpressionMapper()), litebridgeContext, new DeleteNode(null, table));
+        super(new DeleteSpec(table, litebridgeContext.selectExpressionMapper()),
+                litebridgeContext,
+                new DeleteNode(node, table));
         this.litebridgeContext = litebridgeContext;
     }
 

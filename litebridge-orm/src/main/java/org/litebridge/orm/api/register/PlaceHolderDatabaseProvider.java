@@ -63,6 +63,11 @@ final class PlaceHolderDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
+    public UpdateResult merge(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        throw new UnsupportedOperationException("N/A");
+    }
+
+    @Override
     public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
         throw new UnsupportedOperationException("N/A");
     }

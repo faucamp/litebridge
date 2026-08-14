@@ -2,8 +2,13 @@ package org.litebridge.orm.engine;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.orm.api.delete.model.DeleteSpec;
 import org.litebridge.orm.api.dto.DtoDataSpec;
@@ -15,12 +20,18 @@ import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.HavingNode;
+import org.litebridge.orm.api.select.ast.InsertNode;
+import org.litebridge.orm.api.select.ast.InsertValuesNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.LimitNode;
+import org.litebridge.orm.api.select.ast.MergeNode;
 import org.litebridge.orm.api.select.ast.OrderByNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.ast.SetNode;
+import org.litebridge.orm.api.select.ast.UsingNode;
+import org.litebridge.orm.api.select.ast.WhenMatchedNode;
+import org.litebridge.orm.api.select.ast.WhenNotMatchedNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractConditionBasedSpec;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
@@ -29,6 +40,7 @@ import org.litebridge.orm.api.select.impl.DelegatingSelectorInspector;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.JoinSpec;
+import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.api.sql.SqlJoinSpec;
 import org.litebridge.orm.api.sql.SqlSelectSpec;
@@ -36,10 +48,12 @@ import org.litebridge.orm.api.update.model.UpdateSpec;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -52,13 +66,23 @@ import java.util.Objects;
 public final class QueryCompiler {
 
     private final TableRegistry tableRegistry;
+    private final TableMetaDataCache tableMetaDataCache;
+    private final TypeConverter typeConverter;
     private final AliasGenerator aliasGenerator;
+    private final SelectExpressionMapper selectExpressionMapper;
     private final Map<Class<?>, List<Table>> aliasHistory = new HashMap<>();
     private final Map<Table, OrmTable> tableToOrmTableMap = new HashMap<>();
 
-    public QueryCompiler(final TableRegistry tableRegistry, final AliasGenerator aliasGenerator) {
+    public QueryCompiler(final TableRegistry tableRegistry,
+                         final TableMetaDataCache tableMetaDataCache,
+                         final TypeConverter typeConverter,
+                         final AliasGenerator aliasGenerator,
+                         final SelectExpressionMapper selectExpressionMapper) {
         this.tableRegistry = tableRegistry;
+        this.tableMetaDataCache = tableMetaDataCache;
+        this.typeConverter = typeConverter;
         this.aliasGenerator = aliasGenerator;
+        this.selectExpressionMapper = selectExpressionMapper;
     }
 
     /**
@@ -119,6 +143,86 @@ public final class QueryCompiler {
 
         for (final QueryNode n : nodes) {
             applyNode(n, null, insertSpec);
+        }
+    }
+
+    public PreparedOperation compile(final QueryNode node) {
+        final List<QueryNode> nodes = flatten(node);
+        final QueryCompilationContext queryCompilationContext = new QueryCompilationContext();
+
+        for (final QueryNode n : nodes) {
+            applyNode(n, queryCompilationContext);
+        }
+
+        final Operation operation = queryCompilationContext.toOperation();
+        final List<BindValue> bindValues = queryCompilationContext.getBindValues();
+        return new PreparedOperation(operation, bindValues);
+    }
+
+    private void applyNode(final QueryNode node, final QueryCompilationContext queryCompilationContext) {
+        switch (node) {
+            case InsertNode insertNode -> {
+                final TableMetaData tableMetaData = tableMetaDataCache.ensureTableMetaData(insertNode.table());
+                queryCompilationContext.setCompilationContext(new InsertCompilationContext(insertNode, tableMetaData, typeConverter));
+            }
+            case InsertValuesNode insertValuesNode -> {
+                final InsertCompilationContext insertCompilationContext = queryCompilationContext.getInsertCompilationContext();
+                insertCompilationContext.addRowBindValues(Arrays.asList(insertValuesNode.values()));
+            }
+            case MergeNode mergeNode -> {
+                final MergeCompilationContext mergeCompilationContext = new MergeCompilationContext(mergeNode, selectExpressionMapper, tableMetaDataCache, typeConverter);
+                queryCompilationContext.setCompilationContext(mergeCompilationContext);
+            }
+            case UsingNode usingNode -> {
+                final MergeCompilationContext mergeCompilationContext = queryCompilationContext.getMergeCompilationContext();
+                mergeCompilationContext.setUsingNode(usingNode);
+
+                final List<QueryNode> onNodes = flatten(usingNode.on());
+
+                for (final QueryNode onNode : onNodes) {
+                    applyNode(onNode, queryCompilationContext);
+                }
+            }
+            case WhenMatchedNode whenMatchedNode -> {
+                final MergeCompilationContext mergeCompilationContext = queryCompilationContext.getMergeCompilationContext();
+                mergeCompilationContext.addWhenMatchedNode(whenMatchedNode);
+
+                if (whenMatchedNode.update() != null) {
+                    applyNode(whenMatchedNode.update(), queryCompilationContext);
+                } else if (whenMatchedNode.delete() != null) {
+                    applyNode(whenMatchedNode.delete(), queryCompilationContext);
+                }
+            }
+            case WhenNotMatchedNode whenNotMatchedNode -> {
+                final MergeCompilationContext mergeCompilationContext = queryCompilationContext.getMergeCompilationContext();
+                mergeCompilationContext.addWhenNotMatchedNode(whenNotMatchedNode);
+            }
+            case ConditionNode conditionNode -> {
+                // Nested chains
+                final ConditionGroupSpec conditionGroupSpec = queryCompilationContext.getConditionGroupSpec();
+
+                final Table sourceAlias;
+                final Table targetAlias;
+                sourceAlias = null;
+                targetAlias = null;
+
+
+                final ExpressionSpec lhs = (ExpressionSpec) resolveAliases(conditionNode.lhs(), sourceAlias, targetAlias, true);
+                final Object rhsValue = resolveAliases(conditionNode.rhs(), sourceAlias, targetAlias, false);
+                final Object rhs;
+
+                if (rhsValue instanceof SelectTerminal<?> st) {
+                    rhs = createSelectSpec(st);
+                } else {
+                    rhs = rhsValue;
+                }
+
+                final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), Objects.requireNonNull(lhs));
+                conditionSpec.setOperator(conditionNode.operator());
+                conditionSpec.setValue(rhs);
+            }
+
+            default -> throw new UnsupportedOperationException("Unsupported node type: " + node.getClass().getName());
         }
     }
 

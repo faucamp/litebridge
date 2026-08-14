@@ -214,7 +214,7 @@ public abstract class SelectSpec {
         final List<@Nullable BindValue> bindValues = new ArrayList<>();
 
         // SELECT
-        this.expressionSpecs = Objects.requireNonNull(selectExpressionMapper).resolveProtoExpressions(expressionSpecs, ClauseType.SELECT);
+        this.expressionSpecs = Objects.requireNonNull(selectExpressionMapper).resolveProtoExpressions(expressionSpecs, table, ClauseType.SELECT);
         final List<SelectExpression> selectExpressions = convertToSelectExpressions(expressionSpecs, false);
         final Set<Column> selectedColumns = selectExpressions.stream()
                 .map(selectExpression -> {
@@ -325,7 +325,7 @@ public abstract class SelectSpec {
     }
 
     private List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs, final ClauseType clause, final Set<Column> selectedColumns) {
-        return Objects.requireNonNull(selectExpressionMapper).resolveProtoExpressions(expressionSpecs, clause).stream()
+        return Objects.requireNonNull(selectExpressionMapper).resolveProtoExpressions(expressionSpecs, getTable(), clause).stream()
                 // Resolve references to selected columns (to correctly associate aliases)
                 .peek(expressionSpec -> {
                     if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {

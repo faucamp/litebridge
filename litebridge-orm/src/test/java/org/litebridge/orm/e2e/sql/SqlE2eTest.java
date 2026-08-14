@@ -5,7 +5,6 @@ import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.e2e.AbstractE2eTest;
-import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.basic.dto.Person;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.expression.Fn;
@@ -372,6 +371,16 @@ class SqlE2eTest extends AbstractE2eTest {
                 .findFirst().orElseThrow();
 
         assertEquals("Name1", person.getName());
+    }
+
+    @TestTemplate
+    @DisplayName("Insert specific columns")
+    void insert(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        litebridge.insert(tableMapper.qualifyName("PERSON"), i -> i
+                .into("PERSON_ID", "FIRST_NAME", "SURNAME")
+                .values(1, "Alice", "Smith")
+                .values(2, "Bob", "Johnson")
+                .values(3, "Charlie", "Brown"));
     }
 
     private void insertTestPersonRecords(final String personTableName) throws SQLException {

@@ -42,7 +42,7 @@ class SqlSelectorTest {
     @BeforeEach
     void setUp() {
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
-        litebridgeContext = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
+        litebridgeContext = new LitebridgeContext(LitebridgeContext.Mode.DTO, new LitebridgeConfig(), databaseProvider, mock(FromClauseEngine.class), new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache);
         lenient().when(tableRegistry.getOrCreateSpiTable(any())).thenAnswer(invocation -> new Table((String) invocation.getArgument(0)));
         sqlSelector = new SqlSelector(new Table("dummy"), databaseProvider, tableRegistry, litebridgeContext, new SelectNode(null, new ExpressionSpec[0], null));
     }

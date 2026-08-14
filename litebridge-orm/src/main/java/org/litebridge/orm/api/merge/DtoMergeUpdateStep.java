@@ -4,6 +4,7 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.dto.update.DtoUpdateStart;
 import org.litebridge.orm.api.dto.update.DtoUpdater;
 import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.UsingNode;
 import org.litebridge.orm.api.update.UpdateQuery;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.persistence.OrmTable;

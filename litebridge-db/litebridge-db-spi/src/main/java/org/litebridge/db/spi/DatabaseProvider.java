@@ -7,6 +7,7 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
+import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
@@ -65,6 +66,8 @@ public interface DatabaseProvider {
      */
     UpdateResult delete(PreparedSql delete, ConnectionProvider connectionProvider) throws SQLException;
 
+    UpdateResult merge(PreparedSql merge, ConnectionProvider connectionProvider) throws SQLException;
+
     /**
      * Executes a SELECT operation in the database using a pre-prepared {@link PreparedSql} object.
      *
@@ -87,8 +90,6 @@ public interface DatabaseProvider {
      * @return a {@link String} containing the SQL representation of the given {@link Operation}.
      */
     String toSql(final Operation operation, final ConnectionProvider connectionProvider);
-
-    String to
 
     /**
      * Executes a SQL query with the given SQL string and a list of positional bind parameters.

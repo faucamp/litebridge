@@ -3,6 +3,7 @@ package org.litebridge.orm.api.dto;
 import org.junit.jupiter.api.Test;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
@@ -12,7 +13,6 @@ import org.litebridge.db.spi.expression.ColumnExpressionFactory;
 import org.litebridge.db.spi.expression.LiteralExpressionFactory;
 import org.litebridge.db.spi.expression.SelectReferenceExpressionFactory;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -46,14 +46,14 @@ class DtoFromClauseTerminalTest {
     private LitebridgeContext createMockContext() {
         final LitebridgeConfig config = new LitebridgeConfig();
         final FromClauseEngine fromClauseEngine = mock(FromClauseEngine.class);
-//        when(fromClauseEngine.resolve(any(), any())).thenReturn(mock(From.class));
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select select = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(select);
         when(select.column()).thenReturn(mock(ColumnExpressionFactory.class));
         when(select.reference()).thenReturn(mock(SelectReferenceExpressionFactory.class));
         when(select.literal()).thenReturn(mock(LiteralExpressionFactory.class));
-        return new LitebridgeContext(config, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
+        return new LitebridgeContext(LitebridgeContext.Mode.DTO, config, databaseProvider, fromClauseEngine, mock(QueryPlanCache.class), new NoOpAliasGenerator(), mock(TableMetaDataCache.class));
     }
 
     @Test

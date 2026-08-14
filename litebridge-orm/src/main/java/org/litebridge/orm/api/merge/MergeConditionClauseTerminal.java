@@ -4,7 +4,9 @@ import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.MergeNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.UsingNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
@@ -19,10 +21,10 @@ public class MergeConditionClauseTerminal<DTO, MUS extends MergeUpdateStep<DTO>>
         MergeConditionClauseTerminal<DTO, MUS>> {
 
     public MergeConditionClauseTerminal(final Table table,
-                                        final QueryNode node,
-                                        final Supplier<MUS> mergeUpdateStepSupplier,
+                                        final MergeNode mergeNode,
+                                        final UsingNode usingNode,
                                         final LitebridgeContext litebridgeContext) {
-        super(table, node, mergeUpdateStepSupplier, litebridgeContext);
+        super(table, mergeNode, usingNode, litebridgeContext);
 
     }
 

@@ -105,6 +105,10 @@ public abstract sealed class AbstractUpdater<US extends UpdateSpec> implements U
         return updateSpec;
     }
 
+    public QueryNode node() {
+        return node;
+    }
+
     private UpdateMetaData createUpdateMetaData(final TableMetaData tableMetaData) {
         final List<ColumnMetaData> generatedPrimaryKeyColumns = getGeneratedPrimaryKeyColumns(tableMetaData);
 

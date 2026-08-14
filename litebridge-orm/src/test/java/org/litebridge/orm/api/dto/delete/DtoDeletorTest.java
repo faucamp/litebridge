@@ -32,7 +32,7 @@ class DtoDeletorTest {
         final ColumnMetaData col = new ColumnMetaData(table, "COL", true, Types.VARCHAR);
         when(ormTable.getColumnForFieldName("field")).thenReturn(col);
 
-        final DtoDeletor<Object> deletor = new DtoDeletor<>(Object.class, ormTable, databaseProvider, mapper, context);
+        final DtoDeletor<Object> deletor = new DtoDeletor<>(Object.class, ormTable, context);
 
         final DtoDeleteWhereConditionClause<Object> clause = deletor.where("field");
         assertNotNull(clause);
@@ -63,7 +63,7 @@ class DtoDeletorTest {
             throw new RuntimeException(e);
         }
 
-        final DtoDeletor<Object> deletor = new DtoDeletor<>(Object.class, ormTable, databaseProvider, mapper, context);
+        final DtoDeletor<Object> deletor = new DtoDeletor<>(Object.class, ormTable, context);
 
         DtoDeleteWhereConditionClauseTerminalImpl<Object> terminal = (DtoDeleteWhereConditionClauseTerminalImpl<Object>) deletor.where("field").eq("value");
         assertNotNull(terminal.and("field2"));

@@ -1,12 +1,10 @@
 package org.litebridge.orm.api.sql.delete;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.convert.DefaultTypeConverter;
+import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.update.UpdateResult;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -34,7 +32,7 @@ class SqlDeletorTest {
         final UpdateResult expectedResult = mock(UpdateResult.class);
         when(databaseProvider.delete(any(), any())).thenReturn(expectedResult);
         final Table table = new Table("cat", "sch", "tab");
-        final SqlDeletor deletor = new SqlDeletor(table, createLitebridgeContext());
+        final SqlDeletor deletor = new SqlDeletor(table, null, createLitebridgeContext());
 
         // When
         final UpdateResult result = deletor.execute();
@@ -50,7 +48,7 @@ class SqlDeletorTest {
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         when(databaseProvider.delete(any(), any())).thenThrow(new SQLException("DB error"));
         final Table table = new Table("cat", "sch", "tab");
-        final SqlDeletor deletor = new SqlDeletor(table, createLitebridgeContext());
+        final SqlDeletor deletor = new SqlDeletor(table, null, createLitebridgeContext());
 
         // When / Then
         assertThrows(IllegalStateException.class, deletor::execute);
@@ -61,7 +59,7 @@ class SqlDeletorTest {
         // Given
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         final Table table = new Table("cat", "sch", "tab");
-        final SqlDeletor deletor = new SqlDeletor(table, createLitebridgeContext());
+        final SqlDeletor deletor = new SqlDeletor(table, null, createLitebridgeContext());
 
         // When
         final SqlDeleteWhereConditionClause result = deletor.where("col1");
@@ -71,6 +69,6 @@ class SqlDeletorTest {
     }
 
     private LitebridgeContext createLitebridgeContext() {
-        return new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
+        return new LitebridgeContext(LitebridgeContext.Mode.SQL, new LitebridgeConfig(), mock(DatabaseProvider.class), mock(FromClauseEngine.class), new QueryPlanCache(), new NoOpAliasGenerator(), mock(TableMetaDataCache.class));
     }
 }

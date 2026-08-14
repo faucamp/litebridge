@@ -3,6 +3,7 @@ package org.litebridge.orm.api.select.model;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
@@ -54,12 +55,12 @@ public final class SelectExpressionMapper {
         return sqlFunctionRegistry;
     }
 
-    List<ExpressionSpec> resolveProtoExpression(final ExpressionSpec expressionSpec, final ClauseType clause) {
-        return protoExpressionResolver.resolveExpression(expressionSpec, clause).toList();
+    List<ExpressionSpec> resolveProtoExpression(final ExpressionSpec expressionSpec, final Table table, final ClauseType clause) {
+        return protoExpressionResolver.resolveExpression(expressionSpec, table, clause).toList();
     }
 
-    List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs, final ClauseType clause) {
-        return protoExpressionResolver.resolveExpressions(expressionSpecs, clause);
+    List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs, final Table table, final ClauseType clause) {
+        return protoExpressionResolver.resolveExpressions(expressionSpecs, table, clause);
     }
 
     SelectExpression toSelectExpression(final ExpressionSpec expressionSpec, final boolean useSelectReferences) {

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
@@ -262,7 +263,7 @@ class DtoSelectorTest {
         when(ormTable.getDtoClassInterfaces()).thenReturn(Set.of());
 
         final QueryPlanCache cache = new QueryPlanCache();
-        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), cache, new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
+        final LitebridgeContext context = new LitebridgeContext(LitebridgeContext.Mode.SQL, new LitebridgeConfig(), databaseProvider, mock(FromClauseEngine.class), cache, new NoOpAliasGenerator(), mock(TableMetaDataCache.class));
 
         final QueryNode node = new SelectNode(null, new ExpressionSpec[0], null);
         final DtoSelector<String> selector = new DtoSelector<>(String.class, ormTable, mock(TableRegistry.class), mock(ClassFieldAccessorCache.class), new DtoConstructor(mock(TableRegistry.class)), databaseProvider, new NoOpAliasGenerator(), context, node);
@@ -307,6 +308,7 @@ class DtoSelectorTest {
 
     private LitebridgeContext createMockContext() {
         final LitebridgeConfig config = new LitebridgeConfig();
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final FromClauseEngine fromClauseEngine = mock(FromClauseEngine.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select select = mock(SqlFunctionRegistry.Select.class);
@@ -314,6 +316,6 @@ class DtoSelectorTest {
         when(select.column()).thenReturn(mock(ColumnExpressionFactory.class));
         when(select.reference()).thenReturn(mock(SelectReferenceExpressionFactory.class));
         when(select.literal()).thenReturn(mock(LiteralExpressionFactory.class));
-        return new LitebridgeContext(config, fromClauseEngine, sqlFunctionRegistry, mock(QueryPlanCache.class), new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
+        return new LitebridgeContext(LitebridgeContext.Mode.DTO, config, databaseProvider, fromClauseEngine, mock(QueryPlanCache.class), new NoOpAliasGenerator(), mock(TableMetaDataCache.class));
     }
 }

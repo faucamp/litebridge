@@ -26,7 +26,7 @@ class SqlUpdateDeleteExtraTest {
     void sqlDeleteWhereConditionClauseTerminalImpl_and() {
         TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
         Table table = new Table("cat", "sch", "tab");
-        SqlDeletor deletor = new SqlDeletor(table, mock(LitebridgeContext.class));
+        SqlDeletor deletor = new SqlDeletor(table, null, mock(LitebridgeContext.class));
         SqlDeleteWhereConditionClauseTerminalImpl terminal = new SqlDeleteWhereConditionClauseTerminalImpl(deletor);
 
         assertNotNull(terminal.and("col2"));

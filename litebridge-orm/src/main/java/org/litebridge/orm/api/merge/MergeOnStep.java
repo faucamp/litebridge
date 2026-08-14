@@ -14,13 +14,15 @@ import java.util.function.Supplier;
 
 public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep<DTO>> permits DtoMergeOnStep {
 
+    protected final Table sourceTable;
     protected final Table destinationTable;
-    protected final UsingNode node;
+    protected final MergeNode mergeNode;
     protected final LitebridgeContext litebridgeContext;
 
     public MergeOnStep(final MergeNode mergeNode, final Table sourceTable, final LitebridgeContext litebridgeContext) {
+        this.sourceTable = sourceTable;
         this.destinationTable = mergeNode.table();
-        this.node = new UsingNode(mergeNode, sourceTable);
+        this.mergeNode = mergeNode;
         this.litebridgeContext = litebridgeContext;
     }
 
@@ -33,20 +35,15 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep<DTO>> permits D
     }
 
     public MergeConditionClause<DTO, MUS> on(final ExpressionSpec expression) {
-        final Supplier<MUS> mergeUpdateStepSupplier;
-
-        if (this instanceof DtoMergeOnStep<?> dtoDtoMergeOnStep) {
-            //TODO: sort out query node
-            mergeUpdateStepSupplier = () -> (MUS) new DtoMergeUpdateStep<>(dtoDtoMergeOnStep.dtoClass(), destinationTable, null, litebridgeContext);
-        } else {
-            //TODO: sort out query node
-            mergeUpdateStepSupplier = () -> (MUS) new SqlMergeUpdateStep(destinationTable, null, litebridgeContext);
-        }
 
         return new MergeConditionClause<>(litebridgeContext,
                 LogicOperator.NOOP,
                 expression,
-                conditionNode -> new MergeConditionClauseTerminal<>(node.table(), conditionNode, mergeUpdateStepSupplier, litebridgeContext));
+                null,
+                conditionNode -> {
+                    final UsingNode usingNode = new UsingNode(mergeNode, sourceTable, conditionNode);
+                    return new MergeConditionClauseTerminal<>(sourceTable, mergeNode, usingNode, litebridgeContext);
+                });
     }
 
     DtoDeleteWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final String field) {

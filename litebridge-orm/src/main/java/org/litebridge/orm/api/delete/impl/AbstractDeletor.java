@@ -85,7 +85,7 @@ public abstract sealed class AbstractDeletor<DS extends DeleteSpec> implements D
         return updateResult;
     }
 
-    protected DS deleteSpec() {
-        return deleteSpec;
+    public QueryNode node() {
+        return node;
     }
 }

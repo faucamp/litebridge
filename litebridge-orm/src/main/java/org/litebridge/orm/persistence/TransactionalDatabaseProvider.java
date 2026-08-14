@@ -98,6 +98,11 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
+    public UpdateResult merge(final PreparedSql merge, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeAndCleanupIfNeeded(() -> databaseProvider.delete(merge, transactionManager));
+    }
+
+    @Override
     public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
         return executeAndCleanupIfNeeded(() -> databaseProvider.select(preparedSql, transactionManager));
     }

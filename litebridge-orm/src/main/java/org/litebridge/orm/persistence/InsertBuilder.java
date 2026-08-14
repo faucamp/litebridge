@@ -18,7 +18,7 @@ final class InsertBuilder extends AbstractStatementBuilder {
 
     public InsertBuilder(final OrmTable table, final LitebridgeContext litebridgeContext) {
         super(table, litebridgeContext);
-        this.node = new InsertNode(null, ormTable.getMetaData().toTable());
+        this.node = new InsertNode(null, ormTable.getMetaData().toTable(), null);
     }
 
     @Override

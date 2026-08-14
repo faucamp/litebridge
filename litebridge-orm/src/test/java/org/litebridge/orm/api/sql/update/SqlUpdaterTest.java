@@ -1,13 +1,11 @@
 package org.litebridge.orm.api.sql.update;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.convert.DefaultTypeConverter;
+import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.update.UpdateResult;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -90,6 +88,6 @@ class SqlUpdaterTest {
     }
 
     private LitebridgeContext createLitebridgeContext() {
-        return new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), mock(TableMetaDataCache.class), new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
+        return new LitebridgeContext(LitebridgeContext.Mode.SQL, new LitebridgeConfig(), mock(DatabaseProvider.class), mock(FromClauseEngine.class), new QueryPlanCache(), new NoOpAliasGenerator(), mock(TableMetaDataCache.class));
     }
 }

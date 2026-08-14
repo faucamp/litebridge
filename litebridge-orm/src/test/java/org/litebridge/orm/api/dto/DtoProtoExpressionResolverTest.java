@@ -16,7 +16,6 @@ import org.litebridge.tracking.FieldAccessor;
 
 import java.sql.Types;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,7 +49,7 @@ class DtoProtoExpressionResolverTest {
         
         // When
         final org.litebridge.orm.meta.QueryField qf = new org.litebridge.orm.meta.QueryField(Object.class, "field1");
-        final ExpressionSpec resolved = resolver.resolveExpression(qf, ClauseType.SELECT).findFirst().orElseThrow();
+        final ExpressionSpec resolved = resolver.resolveExpression(qf, table, ClauseType.SELECT).findFirst().orElseThrow();
         
         // Then
         assertInstanceOf(SelectFieldSpec.class, resolved);
@@ -89,7 +88,7 @@ class DtoProtoExpressionResolverTest {
         
         // When
         final ProtoColumnExpressionSpec proto = new ProtoColumnExpressionSpec(SelectFieldSpec.class, "field1");
-        final ExpressionSpec resolved = resolver.resolveExpression((ExpressionSpec)proto, ClauseType.WHERE).findFirst().orElseThrow();
+        final ExpressionSpec resolved = resolver.resolveExpression((ExpressionSpec)proto, table, ClauseType.WHERE).findFirst().orElseThrow();
         final org.litebridge.db.spi.Column resultCol = ((SelectFieldSpec)resolved).getColumn();
         
         // Then
@@ -107,7 +106,8 @@ class DtoProtoExpressionResolverTest {
         when(tableRegistry.getTableOrThrow(any())).thenReturn(ormTable);
         final TableMetaData metaData = mock(TableMetaData.class);
         when(ormTable.getMetaData()).thenReturn(metaData);
-        when(metaData.toTable()).thenReturn(new Table("", null, "TEST"));
+        final Table table = new Table("TEST");
+        when(metaData.toTable()).thenReturn(table);
         
         final ColumnMetaData col1 = new ColumnMetaData(new Table("", null, "TEST"), "COL1", true, Types.VARCHAR);
         when(ormTable.getColumnForFieldName("field1")).thenReturn(col1);
@@ -121,7 +121,7 @@ class DtoProtoExpressionResolverTest {
         // When
         // Pass String.class in args[0] to specify DTO class
         final ProtoColumnExpressionSpec proto = new ProtoColumnExpressionSpec(SelectFieldSpec.class, "field1", null, new Object[]{String.class});
-        final ExpressionSpec resolved = resolver.resolveExpression((ExpressionSpec)proto, ClauseType.WHERE).findFirst().orElseThrow();
+        final ExpressionSpec resolved = resolver.resolveExpression((ExpressionSpec)proto, table, ClauseType.WHERE).findFirst().orElseThrow();
         final org.litebridge.db.spi.Column resultCol = ((SelectFieldSpec)resolved).getColumn();
         
         // Then

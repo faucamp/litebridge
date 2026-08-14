@@ -2,6 +2,7 @@ package org.litebridge.orm.engine;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
@@ -72,7 +73,7 @@ class QueryCompilerTest {
         aliasGenerator = new NoOpAliasGenerator();
         litebridgeContext = mock(LitebridgeContext.class);
         when(litebridgeContext.tableMetaDataCache()).thenReturn(mock(TableMetaDataCache.class));
-        compiler = new QueryCompiler(tableRegistry, aliasGenerator);
+        compiler = new QueryCompiler(tableRegistry, mock(TableMetaDataCache.class), new DefaultTypeConverter(), aliasGenerator, mock(SelectExpressionMapper.class));
     }
 
     @Test
@@ -279,16 +280,16 @@ class QueryCompilerTest {
     @SuppressWarnings("unchecked")
     void testResolveAliasesSelfJoinAmbiguity() throws Exception {
         // Given
-        final AliasGenerator ag = new DefaultAliasGenerator(a -> a);
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(a -> a);
 
         final Table sourceTable = new Table("test_table");
         final OrmTable ormTable = createMockOrmTable(TestDto.class, sourceTable, List.of());
         tableRegistry.addTable(TestDto.class, ormTable);
 
-        final Table sourceAlias = ag.aliasTable(ormTable); // tt
-        final Table targetAlias = ag.aliasTable(ormTable); // tt1
+        final Table sourceAlias = aliasGenerator.aliasTable(ormTable); // tt
+        final Table targetAlias = aliasGenerator.aliasTable(ormTable); // tt1
 
-        final QueryCompiler testCompiler = new QueryCompiler(tableRegistry, ag);
+        final QueryCompiler testCompiler = new QueryCompiler(tableRegistry, mock(TableMetaDataCache.class), new DefaultTypeConverter(), aliasGenerator, mock(SelectExpressionMapper.class));
 
         final SqlSelectSpec spec = new SqlSelectSpec(litebridgeContext, sourceAlias);
         setupSpec(spec);

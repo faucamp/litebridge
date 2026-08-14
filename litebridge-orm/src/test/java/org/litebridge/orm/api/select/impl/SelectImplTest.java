@@ -83,7 +83,7 @@ class SelectImplTest {
 
         // Use a real context for compilation
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
-        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
+        final LitebridgeContext context = new LitebridgeContext(LitebridgeContext.Mode.DTO, new LitebridgeConfig(), databaseProvider, mock(FromClauseEngine.class), new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache);
         final TestSelector finalSelector = (TestSelector) resultTerminal;
         final TestSelector compiledSelector = new TestSelector(selectSpec, databaseProvider, context, finalSelector.node());
 
@@ -98,7 +98,7 @@ class SelectImplTest {
 
         // Use a real context for compilation
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
-        final LitebridgeContext context = new LitebridgeContext(new LitebridgeConfig(), mock(FromClauseEngine.class), mock(SqlFunctionRegistry.class), new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache, new DefaultTypeConverter(), mock(SelectExpressionMapper.class));
+        final LitebridgeContext context = new LitebridgeContext(LitebridgeContext.Mode.DTO, new LitebridgeConfig(), databaseProvider, mock(FromClauseEngine.class), new QueryPlanCache(), new NoOpAliasGenerator(), tableMetaDataCache);
         final TestSelector finalSelector = (TestSelector) ((DelegatingSelector) resultTerminal).delegate();
         final TestSelector compiledSelector = new TestSelector(selectSpec, databaseProvider, context, finalSelector.node());
 

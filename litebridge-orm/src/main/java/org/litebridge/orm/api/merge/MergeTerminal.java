@@ -4,9 +4,9 @@ import org.litebridge.orm.api.select.ast.QueryNode;
 
 public class MergeTerminal {
 
-    private final QueryNode node;
+    protected final QueryNode node;
 
-    public MergeTerminal(final QueryNode node) {
+    MergeTerminal(final QueryNode node) {
         this.node = node;
     }
 

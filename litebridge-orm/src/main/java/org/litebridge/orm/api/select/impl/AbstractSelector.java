@@ -137,7 +137,7 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
         final DefaultAliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
 
         final SSP spec = createSelectSpec(aliasGenerator);
-        new QueryCompiler(tableRegistry, aliasGenerator).compile(Objects.requireNonNull(node), spec);
+        new QueryCompiler(tableRegistry, litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter(), aliasGenerator, litebridgeContext.selectExpressionMapper()).compile(Objects.requireNonNull(node), spec);
         return spec;
     }
 

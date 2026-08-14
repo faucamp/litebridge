@@ -44,9 +44,9 @@ class UpdateSpecTest {
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
 
-        final ProtoExpressionResolver protoExpressionResolver = mock(ProtoExpressionResolver.class);
-        when(protoExpressionResolver.resolveExpression(any(ExpressionSpec.class), any(ClauseType.class))).thenAnswer(i -> Stream.of((ExpressionSpec) i.getArgument(0)));
         final Table table = new Table("cat", "sch", "tab");
+        final ProtoExpressionResolver protoExpressionResolver = mock(ProtoExpressionResolver.class);
+        when(protoExpressionResolver.resolveExpression(any(ExpressionSpec.class), table, any(ClauseType.class))).thenAnswer(i -> Stream.of((ExpressionSpec) i.getArgument(0)));
         final UpdateSpec spec = new UpdateSpec(table, new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver, mock(TableMetaDataCache.class), new DefaultTypeConverter()));
 
         final Column col = new Column(table, "col");
