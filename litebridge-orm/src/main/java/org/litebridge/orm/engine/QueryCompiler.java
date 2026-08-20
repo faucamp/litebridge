@@ -21,7 +21,6 @@ import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.HavingNode;
 import org.litebridge.orm.api.select.ast.InsertNode;
-import org.litebridge.orm.api.select.ast.InsertValuesNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.LimitNode;
 import org.litebridge.orm.api.select.ast.MergeNode;
@@ -29,9 +28,6 @@ import org.litebridge.orm.api.select.ast.OrderByNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.ast.SetNode;
-import org.litebridge.orm.api.select.ast.UsingNode;
-import org.litebridge.orm.api.select.ast.WhenMatchedNode;
-import org.litebridge.orm.api.select.ast.WhenNotMatchedNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractConditionBasedSpec;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
@@ -53,7 +49,6 @@ import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -63,13 +58,10 @@ import java.util.Objects;
 /**
  * Compiles a {@link QueryNode} chain into a {@link SelectSpec}.
  */
-public final class QueryCompiler {
+public final class QueryCompiler extends AbstractQueryCompiler<CompilationContext> {
 
-    private final TableRegistry tableRegistry;
-    private final TableMetaDataCache tableMetaDataCache;
-    private final TypeConverter typeConverter;
-    private final AliasGenerator aliasGenerator;
-    private final SelectExpressionMapper selectExpressionMapper;
+    private final InsertQueryCompiler insertQueryCompiler;
+    private final MergeQueryCompiler mergeQueryCompiler;
     private final Map<Class<?>, List<Table>> aliasHistory = new HashMap<>();
     private final Map<Table, OrmTable> tableToOrmTableMap = new HashMap<>();
 
@@ -78,11 +70,14 @@ public final class QueryCompiler {
                          final TypeConverter typeConverter,
                          final AliasGenerator aliasGenerator,
                          final SelectExpressionMapper selectExpressionMapper) {
-        this.tableRegistry = tableRegistry;
-        this.tableMetaDataCache = tableMetaDataCache;
-        this.typeConverter = typeConverter;
-        this.aliasGenerator = aliasGenerator;
-        this.selectExpressionMapper = selectExpressionMapper;
+        super(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
+        this.insertQueryCompiler = new InsertQueryCompiler(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
+        this.mergeQueryCompiler = new MergeQueryCompiler(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
+    }
+
+    @Override
+    CompilationContext createCompilationContext(final QueryNode rootNode) {
+        throw new UnsupportedOperationException("Not supported - detach from interface");
     }
 
     /**
@@ -148,82 +143,24 @@ public final class QueryCompiler {
 
     public PreparedOperation compile(final QueryNode node) {
         final List<QueryNode> nodes = flatten(node);
-        final QueryCompilationContext queryCompilationContext = new QueryCompilationContext();
 
-        for (final QueryNode n : nodes) {
-            applyNode(n, queryCompilationContext);
-        }
+        final AbstractQueryCompiler<?> compiler = switch (nodes.getFirst()) {
+            case InsertNode insertNode -> insertQueryCompiler;
+            case MergeNode mergeNode -> mergeQueryCompiler;
+            default -> throw new IllegalArgumentException("Unsupported query node type: " + nodes.getFirst());
+        };
 
-        final Operation operation = queryCompilationContext.toOperation();
-        final List<BindValue> bindValues = queryCompilationContext.getBindValues();
+        final CompilationContext compilationContext = compiler.createCompilationContext(nodes.getFirst());
+        compiler.applyNodes(nodes, compilationContext);
+
+        final Operation operation = compilationContext.toOperation();
+        final List<BindValue> bindValues = compilationContext.getBindValues();
         return new PreparedOperation(operation, bindValues);
     }
 
-    private void applyNode(final QueryNode node, final QueryCompilationContext queryCompilationContext) {
-        switch (node) {
-            case InsertNode insertNode -> {
-                final TableMetaData tableMetaData = tableMetaDataCache.ensureTableMetaData(insertNode.table());
-                queryCompilationContext.setCompilationContext(new InsertCompilationContext(insertNode, tableMetaData, typeConverter));
-            }
-            case InsertValuesNode insertValuesNode -> {
-                final InsertCompilationContext insertCompilationContext = queryCompilationContext.getInsertCompilationContext();
-                insertCompilationContext.addRowBindValues(Arrays.asList(insertValuesNode.values()));
-            }
-            case MergeNode mergeNode -> {
-                final MergeCompilationContext mergeCompilationContext = new MergeCompilationContext(mergeNode, selectExpressionMapper, tableMetaDataCache, typeConverter);
-                queryCompilationContext.setCompilationContext(mergeCompilationContext);
-            }
-            case UsingNode usingNode -> {
-                final MergeCompilationContext mergeCompilationContext = queryCompilationContext.getMergeCompilationContext();
-                mergeCompilationContext.setUsingNode(usingNode);
-
-                final List<QueryNode> onNodes = flatten(usingNode.on());
-
-                for (final QueryNode onNode : onNodes) {
-                    applyNode(onNode, queryCompilationContext);
-                }
-            }
-            case WhenMatchedNode whenMatchedNode -> {
-                final MergeCompilationContext mergeCompilationContext = queryCompilationContext.getMergeCompilationContext();
-                mergeCompilationContext.addWhenMatchedNode(whenMatchedNode);
-
-                if (whenMatchedNode.update() != null) {
-                    applyNode(whenMatchedNode.update(), queryCompilationContext);
-                } else if (whenMatchedNode.delete() != null) {
-                    applyNode(whenMatchedNode.delete(), queryCompilationContext);
-                }
-            }
-            case WhenNotMatchedNode whenNotMatchedNode -> {
-                final MergeCompilationContext mergeCompilationContext = queryCompilationContext.getMergeCompilationContext();
-                mergeCompilationContext.addWhenNotMatchedNode(whenNotMatchedNode);
-            }
-            case ConditionNode conditionNode -> {
-                // Nested chains
-                final ConditionGroupSpec conditionGroupSpec = queryCompilationContext.getConditionGroupSpec();
-
-                final Table sourceAlias;
-                final Table targetAlias;
-                sourceAlias = null;
-                targetAlias = null;
-
-
-                final ExpressionSpec lhs = (ExpressionSpec) resolveAliases(conditionNode.lhs(), sourceAlias, targetAlias, true);
-                final Object rhsValue = resolveAliases(conditionNode.rhs(), sourceAlias, targetAlias, false);
-                final Object rhs;
-
-                if (rhsValue instanceof SelectTerminal<?> st) {
-                    rhs = createSelectSpec(st);
-                } else {
-                    rhs = rhsValue;
-                }
-
-                final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), Objects.requireNonNull(lhs));
-                conditionSpec.setOperator(conditionNode.operator());
-                conditionSpec.setValue(rhs);
-            }
-
-            default -> throw new UnsupportedOperationException("Unsupported node type: " + node.getClass().getName());
-        }
+    @Override
+    protected void applyNode(final QueryNode node, final CompilationContext compilationContext) {
+        throw new UnsupportedOperationException("Not supported - detach from interface");
     }
 
     private void applyNode(final QueryNode node, final SelectSpec selectSpec) {

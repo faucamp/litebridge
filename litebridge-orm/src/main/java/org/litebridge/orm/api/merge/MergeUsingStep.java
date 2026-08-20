@@ -2,7 +2,6 @@ package org.litebridge.orm.api.merge;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.MergeNode;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -20,7 +19,7 @@ public abstract sealed class MergeUsingStep<DTO, MUS extends MergeUpdateStep<DTO
         this.litebridgeContext = litebridgeContext;
     }
 
-    public MergeConditionClauseTerminal<DTO, MUS> using(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public MergeOnConditionClauseTerminal<DTO, MUS> using(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 }

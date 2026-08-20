@@ -2,7 +2,7 @@ package org.litebridge.orm.api.merge;
 
 import org.litebridge.orm.api.select.ast.QueryNode;
 
-public class MergeTerminal {
+public sealed class MergeTerminal permits MergeWhenNotMatchedStep {
 
     protected final QueryNode node;
 

@@ -3,19 +3,15 @@ package org.litebridge.orm.api.merge;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.insert.InsertValuesStep;
 import org.litebridge.orm.api.select.ast.InsertNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.expression.ExpressionSpec;
 
 public class MergeInsertStep {
 
     private final Table table;
-    private final QueryNode node;
     private final LitebridgeContext litebridgeContext;
 
-    public MergeInsertStep(final Table table, final QueryNode node, final LitebridgeContext litebridgeContext) {
+    public MergeInsertStep(final Table table, final LitebridgeContext litebridgeContext) {
         this.table = table;
-        this.node = node;
         this.litebridgeContext = litebridgeContext;
     }
 
@@ -24,7 +20,7 @@ public class MergeInsertStep {
     }
 
     public InsertValuesStep insert(final String... columns) {
-        final InsertNode insertNode = new InsertNode(node, table, columns);
+        final InsertNode insertNode = new InsertNode(null, table, columns);
         return new InsertValuesStep(insertNode, litebridgeContext);
     }
 }

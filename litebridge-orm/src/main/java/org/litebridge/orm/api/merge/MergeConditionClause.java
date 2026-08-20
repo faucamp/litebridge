@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.merge;
 
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -8,17 +9,17 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
-public class MergeConditionClause<DTO, MUS extends MergeUpdateStep<DTO>>
+public class MergeConditionClause<DTO,
+        MUS extends MergeUpdateStep<DTO>,
+        MCCT extends ConditionClauseTerminal<DTO, MergeConditionClause<DTO, MUS, MCCT>, MCCT>>
 
-        extends ConditionClauseImpl<DTO,
-        MergeConditionClause<DTO, MUS>,
-        MergeConditionClauseTerminal<DTO, MUS>> {
+        extends ConditionClauseImpl<DTO, MergeConditionClause<DTO, MUS, MCCT>, MCCT> {
 
     public MergeConditionClause(final LitebridgeContext litebridgeContext,
                                 final LogicOperator logicOperator,
                                 final ExpressionSpec lhs,
                                 final QueryNode node,
-                                final Function<QueryNode, MergeConditionClauseTerminal<DTO, MUS>> terminalRecreator) {
+                                final Function<QueryNode, MCCT> terminalRecreator) {
         super(litebridgeContext, logicOperator, lhs, node, terminalRecreator);
     }
 }

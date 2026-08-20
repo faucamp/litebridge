@@ -6,6 +6,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.select.ast.LimitNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
@@ -241,12 +242,12 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
             return (List<T>) rows;
         }
 
-        final org.litebridge.db.spi.convert.TypeConverter typeConverter = databaseProvider.getTypeConverter();
-        return rows.stream()
+        final TypeConverter typeConverter = databaseProvider.getTypeConverter();
+        return (List<T>) rows.stream()
                 .map(row -> {
                     if (row.size() == 0) return null;
                     final Object converted = typeConverter.convert(row.column(0).value(), type);
-                    return type.cast(converted);
+                    return converted;
                 })
                 .filter(Objects::nonNull)
                 .toList();

@@ -34,7 +34,7 @@ public final class WhereNode implements QueryNode {
     public boolean equals(@Nullable Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (WhereNode) obj;
+        final WhereNode that = (WhereNode) obj;
         return Objects.equals(this.previous, that.previous) &&
                 Objects.equals(this.condition, that.condition);
     }

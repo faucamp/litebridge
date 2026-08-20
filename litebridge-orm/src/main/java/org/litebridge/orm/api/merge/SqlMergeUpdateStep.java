@@ -23,8 +23,8 @@ public final class SqlMergeUpdateStep extends MergeUpdateStep<Row> {
     public MergeTerminal update(final Function<SqlUpdateStart, UpdateQuery> update) {
         final SqlUpdater sqlUpdater = new SqlUpdater(table, litebridgeContext);
         update.apply(sqlUpdater);
-        //TODO: sort out node
-        return new MergeTerminal(new WhenMatchedNode(node, (SetNode) sqlUpdater.node(), null));
+        final QueryNode setNode = sqlUpdater.node();
+        return new MergeTerminal(setNode);
     }
 
     public MergeTerminal delete() {

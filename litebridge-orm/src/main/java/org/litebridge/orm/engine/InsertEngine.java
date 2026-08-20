@@ -85,7 +85,7 @@ public class InsertEngine extends AbstractUpdateEngine {
         try {
             insertResult = litebridgeContext.databaseProvider().insert(preparedSql, litebridgeContext.transactionManager());
         } catch (final SQLException ex) {
-            throw new IllegalStateException("Failed to execute insert", ex);
+            throw new IllegalStateException("Failed to execute insert: " + preparedSql.sql(), ex);
         }
 
         LOGGER.debug("Insert result: {}", insertResult);

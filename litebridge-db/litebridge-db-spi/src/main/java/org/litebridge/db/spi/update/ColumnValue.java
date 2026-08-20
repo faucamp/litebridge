@@ -18,5 +18,6 @@ import org.litebridge.db.spi.ColumnMetaData;
  * @param column The metadata defining the column.
  * @param value  The value associated with the column, which may be null.
  */
+@Deprecated(forRemoval = true)
 public record ColumnValue(Column column, @Nullable Object value) {
 }

@@ -1,7 +1,6 @@
 package org.litebridge.db.spi.update;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.Select;
@@ -12,9 +11,21 @@ public record Merge(Table table,
                     @Nullable Table usingTable,
                     @Nullable Select usingSelect,
                     ConditionGroup on,
-                    List<WhenMatched> whenMatched,
-                    @Nullable Insert whenNotMatched) implements UpdateStatement {
+                    @Nullable List<WhenMatched<WhenMatchedOperation>> whenMatched,
+                    @Nullable List<WhenMatched<MergeInsert>> whenNotMatched) implements UpdateStatement {
 
-    public record WhenMatched(@Nullable ConditionGroup and, Operation operation) {
+    public record WhenMatched<T>(@Nullable ConditionGroup and, T operation) {
+    }
+
+    public interface WhenMatchedOperation {
+    }
+
+    public record MergeUpdate(List<InsertV2.InsertColumn> columns) implements WhenMatchedOperation {
+    }
+
+    public record MergeDelete() implements WhenMatchedOperation {
+    }
+
+    public record MergeInsert(List<InsertV2.InsertColumn> columns, int rows) {
     }
 }

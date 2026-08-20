@@ -9,17 +9,19 @@ import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.InsertV2;
 import org.litebridge.orm.api.select.ast.InsertNode;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class InsertCompilationContext implements CompilationContext {
 
     private final Table table;
-    private final List<ColumnMetaData> columnMetaDataList;
+    private final List<ColumnMetaData> columnMetaDataList = new ArrayList<>();
+    private final Set<String> insertColumns;
     private final TypeConverter typeConverter;
     private int rows = 0;
     private @Nullable List<BindValue> bindValues;
@@ -28,14 +30,33 @@ public final class InsertCompilationContext implements CompilationContext {
                                     final TableMetaData tableMetaData,
                                     final TypeConverter typeConverter) {
         this.table = insertNode.table();
-        this.columnMetaDataList = Arrays.stream(insertNode.columns())
-                .map(tableMetaData::column)
-                .toList();
         this.typeConverter = typeConverter;
+        this.insertColumns = Set.of(insertNode.columns());
+        final Set<String> unmappedInsertColumns = new HashSet<>(insertColumns);
+
+        for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
+            if (insertColumns.contains(columnMetaData.name())) {
+                // Explicit insert
+                this.columnMetaDataList.add(columnMetaData);
+                unmappedInsertColumns.remove(columnMetaData.name());
+            } else if (!columnMetaData.isNullable()) {
+                // Non-null value omitted from insert columns; see if it can be generated
+                if (columnMetaData.getGenerator() != null) {
+                    // Implicit/generated value insert
+                    this.columnMetaDataList.add(columnMetaData);
+                } else {
+                    throw new IllegalArgumentException("NOT NULL column " + columnMetaData.name() + " omitted from insert into table " + table.qualifiedName() + ", and no value generator present");
+                }
+            }
+        }
+
+        if (!unmappedInsertColumns.isEmpty()) {
+            throw new IllegalArgumentException("Invalid insert column(s) for table " + table.qualifiedName() + ": " + unmappedInsertColumns);
+        }
     }
 
     public void addRowBindValues(final List<@Nullable Object> values) {
-        if (values.size() != columnMetaDataList.size()) {
+        if (values.size() != insertColumns.size()) {
             throw new IllegalArgumentException("Number of values does not match number of columns");
         }
 
@@ -62,7 +83,7 @@ public final class InsertCompilationContext implements CompilationContext {
                 .map(columnMetaData -> {
                     final ColumnValueGenerator columnValueGenerator = columnMetaData.getGenerator();
 
-                    if (columnValueGenerator != null) {
+                    if (!insertColumns.contains(columnMetaData.name()) && columnValueGenerator != null) {
                         final Object generatedValue = columnValueGenerator.generate(columnMetaData);
                         return new InsertV2.InsertColumn(columnMetaData.name(), generatedValue);
                     } else {
@@ -71,10 +92,5 @@ public final class InsertCompilationContext implements CompilationContext {
                 })
                 .toList();
         return new InsertV2(table, columns, rows, true);
-    }
-
-    @Override
-    public ConditionGroupSpec getConditionGroupSpec() {
-        throw new UnsupportedOperationException("InsertCompilationContext does not support condition group specification");
     }
 }

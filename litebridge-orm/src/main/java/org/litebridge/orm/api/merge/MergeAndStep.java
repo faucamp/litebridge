@@ -1,36 +1,44 @@
 package org.litebridge.orm.api.merge;
 
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 
-public class MergeAndStep<DTO, MUS extends MergeUpdateStep<DTO>> {
+public sealed class MergeAndStep<DTO, MUS extends MergeUpdateStep<DTO>>
+        extends MergeStepBase
+        permits MergeWhenMatchedConditionClauseTerminal {
 
+    private final Table targetTable;
+    private final Table usingTable;
     private final QueryNode node;
     private final LitebridgeContext litebridgeContext;
 
-    public MergeAndStep(final QueryNode node, final LitebridgeContext litebridgeContext) {
+    public MergeAndStep(final Table targetTable, final Table usingTable, final QueryNode node, final LitebridgeContext litebridgeContext) {
+        super(targetTable, usingTable, litebridgeContext);
+        this.targetTable = targetTable;
+        this.usingTable = usingTable;
         this.node = node;
         this.litebridgeContext = litebridgeContext;
     }
 
-    public MergeConditionClause<DTO, MUS> and(final String column) {
-//        final Column spiColumn = litebridgeContext.tableMetaDataCache()
-//                .ensureTableMetaData(node.table())
-//                .column(column)
-//                .toColumn();
-//        return on(new SelectColumnSpec(spiColumn));
-        throw new UnsupportedOperationException("Not yet implemented");
+    public MergeConditionClause<DTO, MUS, MergeWhenMatchedConditionClauseTerminal<DTO, MUS>> and(final String column) {
+        final Column spiColumn = createSpiColumn(column);
+        return and(new SelectColumnSpec(spiColumn));
     }
 
-    public MergeConditionClause<DTO, MUS> and(final ExpressionSpec expression) {
-//        return new MergeConditionClause<>(litebridgeContext,
-//                LogicOperator.NOOP,
-//                expression,
-//                conditionNode -> new MergeConditionClauseTerminal<>(node));
-        throw new UnsupportedOperationException("Not yet implemented");
+    public MergeConditionClause<DTO, MUS, MergeWhenMatchedConditionClauseTerminal<DTO, MUS>> and(final ExpressionSpec expression) {
+        return new MergeConditionClause<>(litebridgeContext,
+                LogicOperator.NOOP,
+                expression,
+                node,
+                conditionNode -> new MergeWhenMatchedConditionClauseTerminal<>(targetTable, usingTable, conditionNode, litebridgeContext));
+    }
+
+    QueryNode node() {
+        return node;
     }
 }

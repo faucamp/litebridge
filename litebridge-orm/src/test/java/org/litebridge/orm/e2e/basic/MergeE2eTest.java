@@ -2,15 +2,22 @@ package org.litebridge.orm.e2e.basic;
 
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.api.merge.MergeUpdateStep;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.basic.dto.Person;
+import org.litebridge.orm.e2e.basic.meta.AccountMeta;
+import org.litebridge.orm.e2e.basic.meta.PersonMeta;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.e2e.setup.MultiDbTestExtension;
 import org.litebridge.orm.expression.Fn;
 
 import java.math.BigInteger;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(MultiDbTestExtension.class)
 public class MergeE2eTest extends AbstractE2eTest {
@@ -28,7 +35,7 @@ public class MergeE2eTest extends AbstractE2eTest {
             persons[i].setAge(i);
         }
 
-        final Account[] accounts = new Account[10];
+        final Account[] accounts = new Account[9];
 
         for (int i = 0; i < accounts.length; i++) {
             accounts[i] = new Account();
@@ -40,17 +47,22 @@ public class MergeE2eTest extends AbstractE2eTest {
         litebridge.saveAll(persons);
         litebridge.saveAll(accounts);
 
-        litebridge.mergeInto("LB.ACCOUNT", m -> m
-                .using("LB.PERSON")
-                .on("ACCOUNT_ID").eq(Fn.c("PERSON_ID"))
-                .whenMatchedAnd(q -> q.and("ACCOUNT_ID").eq(Fn.c("PERSON_ID")),
+        final UpdateResult updateResult = litebridge.mergeInto(Account.class, m -> m
+                .using(Person.class)
+                .on(AccountMeta.id).eq(PersonMeta.id)
+                .whenMatched(q -> q.and("ACCOUNT_ID").lt(5),
                         u -> u.update(account ->
-                                account.set("PERSON_ID").to(1)))
-//                .whenMatched(MergeUpdateStep::delete)
+                                account.set(AccountMeta.balance).to(500)))
+                .whenMatched(q -> q.and("ACCOUNT_ID").lt(5),
+                        u -> u.update(account ->
+                                account.set("BALANCE").to(500)))
+                .whenMatched(MergeUpdateStep::delete)
                 .whenNotMatched(i ->
-                        i.insert("ACCOUNT_ID", "ACCOUNT_NAME", "BALANCE")
-                                .values(123L, "Default Account", 0)));
+                        i.insert("ACCOUNT_ID", "ACCOUNT_NAME", "BALANCE", "PERSON_ID")
+                                .values(123L, "Default Account", 0, 1L)));
 
-
+        assertEquals(10, updateResult.rowsAffected());
+        final int count = litebridge.select(Fn.convert(Fn.count(), int.class)).from(Account.class).oneOrThrow();
+        assertEquals(5, count);
     }
 }

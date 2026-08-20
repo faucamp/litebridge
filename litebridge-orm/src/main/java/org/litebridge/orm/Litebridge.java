@@ -7,6 +7,7 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.InsertResult;
+import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.api.delete.DeleteQuery;
 import org.litebridge.orm.api.delete.DeleteTerminal;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
@@ -526,14 +527,17 @@ public final class Litebridge implements SelectApi {
         delete(tableName, sqlDeletor -> sqlDeletor);
     }
 
-    public void mergeInto(final String tableName, final Function<SqlMergeUsingStep, MergeTerminal> merge) {
+    public UpdateResult mergeInto(final String tableName, final Function<SqlMergeUsingStep, MergeTerminal> merge) {
         final MergeEngine mergeEngine = new MergeEngine(createSqlLitebridgeContext());
-        mergeEngine.mergeInto(tableName, merge);
+        return mergeEngine.mergeInto(tableName, merge);
     }
 
-    public <DTO> void mergeInto(final Class<DTO> dtoClass, final Function<DtoMergeUsingStep<DTO>, MergeTerminal> merge) {
+    public <DTO> UpdateResult mergeInto(final Class<DTO> dtoClass, final Function<DtoMergeUsingStep<DTO>, MergeTerminal> merge) {
+        final MergeEngine mergeEngine = new MergeEngine(createSqlLitebridgeContext());
+
         final DtoMergeUsingStep<DTO> mergeUsingStep = new DtoMergeUsingStep<>(dtoClass, createDtoLitebridgeContext());
         merge.apply(mergeUsingStep);
+        return mergeEngine.mergeInto(dtoClass, merge);
     }
 
     /**
