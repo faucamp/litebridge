@@ -31,7 +31,7 @@ class DeleteBuilderTest {
         when(litebridgeContext.createQueryCompiler()).thenReturn(queryCompiler);
 
         final DeleteBuilder builder = new DeleteBuilder(ormTable, litebridgeContext);
-        final QueryNode queryNode = new DeleteNode(null, new Table("catalog", "schema", "table"));
+        final QueryNode queryNode = new DeleteNode(null, tableMetaData.qualifiedName(), null);
         builder.where(queryNode);
 
         // When

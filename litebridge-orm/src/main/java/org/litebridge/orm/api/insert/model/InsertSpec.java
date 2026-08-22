@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Deprecated(forRemoval = true)
 public final class InsertSpec extends AbstractConditionBasedSpec {
 
     private final List<BoundColumnValue> columnValues = new ArrayList<>();

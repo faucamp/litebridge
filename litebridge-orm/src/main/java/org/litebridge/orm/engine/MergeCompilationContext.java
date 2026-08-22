@@ -15,7 +15,13 @@ import org.litebridge.orm.api.select.ast.MergeNode;
 import org.litebridge.orm.api.select.ast.SetNode;
 import org.litebridge.orm.api.select.ast.UsingNode;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.expression.ColumnExpressionSpec;
+import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.meta.QueryField;
+import org.litebridge.orm.meta.QueryFieldInspector;
+import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
+import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +32,11 @@ final class MergeCompilationContext implements CompilationContext {
 
     private final MergeNode mergeNode;
     private final TableMetaData targetTableMetaData;
+    private final @Nullable OrmTable targetOrmTable;
+    private final Table targetTable;
     private final SelectExpressionMapper selectExpressionMapper;
     private final TableMetaDataCache tableMetaDataCache;
+    private final TableRegistry tableRegistry;
     private final TypeConverter typeConverter;
     private final ConditionGroupSpecStack on = new ConditionGroupSpecStack();
     private final List<WhenMatchedSpec> whenMatchedSpecs = new ArrayList<>();
@@ -37,13 +46,28 @@ final class MergeCompilationContext implements CompilationContext {
 
     public MergeCompilationContext(final MergeNode mergeNode,
                                    final SelectExpressionMapper selectExpressionMapper,
+                                   final TableRegistry tableRegistry,
                                    final TableMetaDataCache tableMetaDataCache,
                                    final TypeConverter typeConverter) {
         this.mergeNode = mergeNode;
         this.selectExpressionMapper = selectExpressionMapper;
+        this.tableRegistry = tableRegistry;
         this.tableMetaDataCache = tableMetaDataCache;
         this.typeConverter = typeConverter;
-        this.targetTableMetaData = this.tableMetaDataCache.ensureTableMetaData(Objects.requireNonNull(mergeNode.table()));
+
+        if (mergeNode.table() != null) {
+            this.targetOrmTable = tableRegistry.getOrmTable(mergeNode.table());
+        } else {
+            this.targetOrmTable = tableRegistry.getOrmTable(Objects.requireNonNull(mergeNode.dtoClass()));
+        }
+
+        if (targetOrmTable != null) {
+            this.targetTableMetaData = targetOrmTable.getMetaData();
+        } else {
+            this.targetTableMetaData = this.tableMetaDataCache.ensureTableMetaData(tableRegistry.getOrCreateSpiTable(mergeNode.table()));
+        }
+
+        this.targetTable = targetTableMetaData.toTable();
     }
 
     public void setUsingNode(UsingNode usingNode) {
@@ -84,10 +108,37 @@ final class MergeCompilationContext implements CompilationContext {
     public void whenNotMatchedInsert(final InsertNode insertNode) {
         final WhenMatchedSpec whenMatchedSpec = whenMatchedSpecs.getLast();
         final String[] columnNames = insertNode.columns();
-        final List<ColumnMetaData> columnMetaDataList = new ArrayList<>(columnNames.length);
+        final ExpressionSpec[] expressionSpecs = insertNode.expressionSpecs();
+        final List<ColumnMetaData> columnMetaDataList;
 
-        for (String columnName : insertNode.columns()) {
-            columnMetaDataList.add(targetTableMetaData.column(columnName));
+        if (columnNames != null) {
+            columnMetaDataList = new ArrayList<>(columnNames.length);
+
+            for (String columnName : columnNames) {
+                columnMetaDataList.add(targetTableMetaData.column(columnName));
+            }
+        } else if (expressionSpecs != null) {
+            columnMetaDataList = new ArrayList<>(expressionSpecs.length);
+
+            for (ExpressionSpec expressionSpec : expressionSpecs) {
+                if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
+                    columnMetaDataList.add(targetTableMetaData.column(columnExpressionSpec.getColumn().name()));
+                } else if (expressionSpec instanceof QueryField queryField) {
+                    final Class<?> dtoClass = QueryFieldInspector.getDtoClass(queryField);
+                    final String fieldName = QueryFieldInspector.getFieldName(queryField);
+                    final ColumnMetaData columnMetaData = targetOrmTable.getColumnForFieldName(fieldName);
+
+                    if (columnMetaData == null) {
+                        throw new IllegalArgumentException("No column found for field: " + fieldName);
+                    }
+
+                    columnMetaDataList.add(columnMetaData);
+                } else {
+                    throw new UnsupportedOperationException("Unsupported expression spec: " + expressionSpec);
+                }
+            }
+        } else {
+            throw new IllegalArgumentException("No columns or expressions specified");
         }
 
         whenMatchedSpec.addUpdateColumns(columnMetaDataList);
@@ -122,7 +173,16 @@ final class MergeCompilationContext implements CompilationContext {
     @Override
     public Operation toOperation() {
         final UsingNode usingNode = Objects.requireNonNull(this.usingNode);
-        final Table usingTable = usingNode.table();
+        final Table usingTable;
+
+        if (usingNode.table() != null) {
+            usingTable = tableRegistry.getOrCreateSpiTable(usingNode.table());
+        } else {
+            usingTable = Objects.requireNonNull(tableRegistry
+                            .getOrmTable(Objects.requireNonNull(usingNode.dtoClass())))
+                    .getMetaData().toTable();
+        }
+
         final List<BindValue> bindValues = new ArrayList<>();
 
         final List<Merge.WhenMatched<Merge.WhenMatchedOperation>> whenMatchedList = new ArrayList<>();
@@ -134,7 +194,7 @@ final class MergeCompilationContext implements CompilationContext {
 
             if (andConditionGroupStack != null) {
                 andConditionGroup = andConditionGroupStack.current().toConditionGroup(selectExpressionMapper,
-                        Set.of(mergeNode.table(), usingTable),
+                        Set.of(targetTable, usingTable),
                         bindValues,
                         tableMetaDataCache,
                         typeConverter);
@@ -160,11 +220,11 @@ final class MergeCompilationContext implements CompilationContext {
             }
         }
 
-        return new Merge(mergeNode.table(),
+        return new Merge(targetTable,
                 usingTable,
                 null,
                 on.current().toConditionGroup(selectExpressionMapper,
-                        Set.of(mergeNode.table(), usingTable),
+                        Set.of(targetTable, usingTable),
                         bindValues,
                         tableMetaDataCache,
                         typeConverter),

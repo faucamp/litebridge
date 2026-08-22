@@ -22,15 +22,6 @@ public sealed interface StatementBuilder permits AbstractStatementBuilder, NoOpS
     QueryNode node();
 
     /**
-     * Adds a set node to the statement.
-     *
-     * @param column    the column to set
-     * @param value     the value to set
-     * @param bindValue whether to bind the value as a parameter
-     */
-    void addSetNode(Column column, @Nullable Object value, boolean bindValue);
-
-    /**
      * Returns the chain of statements built so far.
      *
      * @return The statement chain.

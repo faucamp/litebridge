@@ -192,7 +192,7 @@ public final class TableRegistry {
      */
     private Table getOrCreateSpiTable(final String catalog, final String schema, final String table) {
         // If the table has been registered for DTO mapping, use the corresponding Table object, else use the table name directly
-        final org.litebridge.db.spi.Table spiTable;
+        final Table spiTable;
         final OrmTable ormTable = getOrmTable(schema, table);
 
         if (ormTable != null) {

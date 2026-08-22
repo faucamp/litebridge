@@ -133,6 +133,7 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
      * @param node       the end of the query node chain
      * @param insertSpec the insert specification to populate
      */
+    @Deprecated(forRemoval = true)
     public void compile(final QueryNode node, final InsertSpec insertSpec) {
         final List<QueryNode> nodes = flatten(node);
 

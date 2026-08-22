@@ -39,7 +39,7 @@ final class MergeQueryCompiler extends ConditionBasedQueryCompiler<MergeCompilat
             throw new IllegalArgumentException("Expected MergeNode, but got: " + rootNode);
         }
 
-        return new MergeCompilationContext(mergeNode, selectExpressionMapper, tableMetaDataCache, typeConverter);
+        return new MergeCompilationContext(mergeNode, selectExpressionMapper, tableRegistry, tableMetaDataCache, typeConverter);
     }
 
     @Override

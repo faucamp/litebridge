@@ -9,5 +9,7 @@ import org.litebridge.db.spi.Table;
  * @param previous the previous node in the chain
  * @param table    the table to delete from
  */
-public record DeleteNode(@Nullable QueryNode previous, Table table) implements QueryNode {
+public record DeleteNode(@Nullable QueryNode previous,
+                         @Nullable String table,
+                         @Nullable Class<?> dtoClass) implements QueryNode {
 }

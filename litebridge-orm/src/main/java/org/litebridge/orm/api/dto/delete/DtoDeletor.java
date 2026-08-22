@@ -10,12 +10,10 @@ import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.DeleteNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 
 import java.util.function.Function;
 
@@ -38,7 +36,7 @@ public final class DtoDeletor<DTO> extends AbstractDeletor<DtoDeleteSpec> implem
     public DtoDeletor(final Class<DTO> dtoClass,
                       final OrmTable dtoTable,
                       final LitebridgeContext litebridgeContext) {
-        super(new DtoDeleteSpec(dtoClass, dtoTable, litebridgeContext.selectExpressionMapper()), litebridgeContext, new DeleteNode(null, dtoTable.getMetaData().toTable()));
+        super(new DtoDeleteSpec(dtoClass, dtoTable, litebridgeContext.selectExpressionMapper()), litebridgeContext, new DeleteNode(null, null, dtoClass));
     }
 
     @Override

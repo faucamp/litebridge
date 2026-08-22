@@ -1,10 +1,10 @@
 package org.litebridge.orm.engine;
 
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.select.ast.InsertNode;
 import org.litebridge.orm.api.select.ast.InsertValuesNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SetNode;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -28,18 +28,17 @@ final class InsertQueryCompiler extends AbstractQueryCompiler<InsertCompilationC
             throw new IllegalArgumentException("Expected InsertNode, but got " + rootNode);
         }
 
-        final TableMetaData tableMetaData = tableMetaDataCache.ensureTableMetaData(insertNode.table());
-        return new InsertCompilationContext(insertNode, tableMetaData, typeConverter);
+        return new InsertCompilationContext(insertNode, tableRegistry, tableMetaDataCache, typeConverter);
     }
 
     @Override
     protected void applyNode(final QueryNode node, final InsertCompilationContext compilationContext) {
-        if (node instanceof InsertValuesNode insertValuesNode) {
-            compilationContext.addRowBindValues(Arrays.asList(insertValuesNode.values()));
-        } else if (node instanceof InsertNode) {
-            // Ignore
-        } else {
-            throw new UnsupportedOperationException("Unsupported node type: " + node.getClass().getName());
+        switch (node) {
+            case InsertValuesNode insertValuesNode ->
+                    compilationContext.addRowBindValues(Arrays.asList(insertValuesNode.values()));
+            case InsertNode insertNode -> { /* Ignore */ }
+            case SetNode setNode -> throw new UnsupportedOperationException("Unsupported node type: SetNode");
+            default -> throw new UnsupportedOperationException("Unsupported node type: " + node.getClass().getName());
         }
     }
 }

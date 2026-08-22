@@ -12,15 +12,11 @@ public sealed class MergeAndStep<DTO, MUS extends MergeUpdateStep<DTO>>
         extends MergeStepBase
         permits MergeWhenMatchedConditionClauseTerminal {
 
-    private final Table targetTable;
-    private final Table usingTable;
     private final QueryNode node;
     private final LitebridgeContext litebridgeContext;
 
-    public MergeAndStep(final Table targetTable, final Table usingTable, final QueryNode node, final LitebridgeContext litebridgeContext) {
+    public MergeAndStep(final String targetTable, final String usingTable, final QueryNode node, final LitebridgeContext litebridgeContext) {
         super(targetTable, usingTable, litebridgeContext);
-        this.targetTable = targetTable;
-        this.usingTable = usingTable;
         this.node = node;
         this.litebridgeContext = litebridgeContext;
     }

@@ -1,7 +1,5 @@
 package org.litebridge.orm.persistence;
 
-import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.update.Update;
@@ -34,19 +32,6 @@ public final class NoOpStatementBuilder implements StatementBuilder {
     /**
      * Invoking this method will throw an {@link UnsupportedOperationException}.
      *
-     * @param column    Not supported
-     * @param value     Not supported
-     * @param bindValue Not supported
-     * @throws UnsupportedOperationException Always thrown as this operation is not supported in the {@code NoOpStatementBuilder} implementation.
-     */
-    @Override
-    public void addSetNode(final Column column, @Nullable final Object value, final boolean bindValue) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Invoking this method will throw an {@link UnsupportedOperationException}.
-     *
      * @return Not supported
      * @throws UnsupportedOperationException Always thrown as this operation is not supported in the {@code NoOpStatementBuilder} implementation.
      */
@@ -54,7 +39,6 @@ public final class NoOpStatementBuilder implements StatementBuilder {
     public StatementChain statementChain() {
         throw new UnsupportedOperationException();
     }
-
 
     /**
      * Invoking this method will throw an {@link UnsupportedOperationException}.

@@ -13,7 +13,7 @@ public final class MergeWhenMatchedConditionClauseTerminal<DTO, MUS extends Merg
         MergeConditionClause<DTO, MUS, MergeWhenMatchedConditionClauseTerminal<DTO, MUS>>,
         MergeWhenMatchedConditionClauseTerminal<DTO, MUS>> {
 
-    public MergeWhenMatchedConditionClauseTerminal(final Table targetTable, final Table usingTable, final QueryNode node, final LitebridgeContext litebridgeContext) {
+    public MergeWhenMatchedConditionClauseTerminal(final String targetTable, final String usingTable, final QueryNode node, final LitebridgeContext litebridgeContext) {
         super(targetTable, usingTable, node, litebridgeContext);
     }
 

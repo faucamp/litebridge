@@ -90,4 +90,8 @@ public final class DtoUpdater<DTO> extends AbstractUpdater<DtoUpdateSpec> implem
         this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, terminal.node()));
         return new DtoUpdateWhereConditionClauseTerminalImpl<>(this);
     }
+
+    public QueryNode node() {
+        return node;
+    }
 }

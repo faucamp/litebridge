@@ -1,10 +1,13 @@
 package org.litebridge.orm.persistence;
 
 import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Insert;
-import org.litebridge.orm.api.insert.model.InsertSpec;
 import org.litebridge.orm.api.select.ast.InsertNode;
+import org.litebridge.orm.api.select.ast.InsertValuesNode;
 import org.litebridge.orm.engine.LitebridgeContext;
+
+import java.util.List;
 
 /**
  * A builder class for constructing SQL INSERT statements.
@@ -18,13 +21,24 @@ final class InsertBuilder extends AbstractStatementBuilder {
 
     public InsertBuilder(final OrmTable table, final LitebridgeContext litebridgeContext) {
         super(table, litebridgeContext);
-        this.node = new InsertNode(null, ormTable.getMetaData().toTable(), null);
+    }
+
+    public void addRow(final List<ColumnValue> columnValues) {
+        if (node == null) {
+            final String[] insertColumns = columnValues.stream()
+                    .map(columnValue -> columnValue.column().name())
+                    .toArray(String[]::new);
+            node = new InsertNode(null, ormTable.dtoClass(), insertColumns);
+        }
+
+        final Object[] values = columnValues.stream()
+                .map(columnValue -> columnValue.value())
+                .toArray(Object[]::new);
+        node = new InsertValuesNode(node, values);
     }
 
     @Override
     public PreparedOperation build() {
-        final InsertSpec insertSpec = new InsertSpec(ormTable.getMetaData().toTable(), litebridgeContext.selectExpressionMapper());
-        litebridgeContext.createQueryCompiler().compile(node, insertSpec);
-        return insertSpec.toInsert(litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter());
+        return litebridgeContext.createQueryCompiler().compile(node);
     }
 }

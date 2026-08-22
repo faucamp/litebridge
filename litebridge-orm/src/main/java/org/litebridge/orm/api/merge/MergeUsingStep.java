@@ -14,8 +14,13 @@ public abstract sealed class MergeUsingStep<DTO, MUS extends MergeUpdateStep<DTO
     protected final MergeNode mergeNode;
     protected final LitebridgeContext litebridgeContext;
 
-    protected MergeUsingStep(final Class<DTO> dtoClass, final Table destinationTable, final LitebridgeContext litebridgeContext) {
-        this.mergeNode = new MergeNode(destinationTable, dtoClass);
+    protected MergeUsingStep(final String destinationTable, final LitebridgeContext litebridgeContext) {
+        this.mergeNode = new MergeNode(destinationTable, null);
+        this.litebridgeContext = litebridgeContext;
+    }
+
+    protected MergeUsingStep(final Class<DTO> dtoClass, final LitebridgeContext litebridgeContext) {
+        this.mergeNode = new MergeNode(null, dtoClass);
         this.litebridgeContext = litebridgeContext;
     }
 

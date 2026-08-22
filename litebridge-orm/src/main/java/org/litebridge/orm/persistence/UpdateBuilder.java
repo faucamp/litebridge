@@ -1,10 +1,12 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Update;
+import org.litebridge.orm.api.select.ast.SetNode;
 import org.litebridge.orm.api.select.ast.UpdateNode;
 import org.litebridge.orm.api.update.model.UpdateSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -29,6 +31,26 @@ final class UpdateBuilder extends AbstractConditionalStatementBuilder {
                          final LitebridgeContext litebridgeContext) {
         super(ormTable, litebridgeContext);
         this.node = new UpdateNode(null, ormTable.getMetaData().toTable());
+    }
+
+    /**
+     * Adds a set node to the statement.
+     *
+     * @param column    the column to set
+     * @param value     the value to set
+     * @param bindValue whether to bind the value as a parameter
+     */
+    public void addSetNode(Column column, @Nullable Object value, boolean bindValue) {
+        this.node = new SetNode(this.node, column, value, bindValue);
+    }
+
+    /**
+     * Adds a column value to the statement.
+     *
+     * @param columnValue the column value to add
+     */
+    public void addColumn(final ColumnValue columnValue) {
+        addSetNode(columnValue.column(), columnValue.value(), true);
     }
 
     @Override

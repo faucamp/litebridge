@@ -7,7 +7,6 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
-import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.api.merge.DtoMergeUsingStep;
@@ -21,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class MergeEngine extends AbstractUpdateEngine {
 
@@ -32,25 +32,23 @@ public class MergeEngine extends AbstractUpdateEngine {
     }
 
     public <DTO> UpdateResult mergeInto(final Class<DTO> dtoClass, final Function<DtoMergeUsingStep<DTO>, MergeTerminal> merge) {
-        final Table table = litebridgeContext.tableRegistry().getTableOrThrow(dtoClass).getMetaData().toTable();
         final DtoMergeUsingStep<DTO> mergeUsingStep = new DtoMergeUsingStep<>(dtoClass, litebridgeContext);
         final MergeTerminal mergeTerminal = merge.apply(mergeUsingStep);
-        return execute(mergeTerminal, table);
+        return execute(mergeTerminal, () -> litebridgeContext.tableRegistry().getTableOrThrow(dtoClass).getMetaData().toTable());
     }
 
     public UpdateResult mergeInto(final String tableName, final Function<SqlMergeUsingStep, MergeTerminal> merge) {
-        final Table table = litebridgeContext.tableRegistry().getOrCreateSpiTable(tableName);
-        final SqlMergeUsingStep mergeUsingStep = new SqlMergeUsingStep(new Table(tableName), litebridgeContext);
+        final SqlMergeUsingStep mergeUsingStep = new SqlMergeUsingStep(tableName, litebridgeContext);
         final MergeTerminal mergeTerminal = merge.apply(mergeUsingStep);
-        return execute(mergeTerminal, table);
+        return execute(mergeTerminal, () -> litebridgeContext.tableRegistry().getOrCreateSpiTable(tableName));
     }
 
-    private UpdateResult execute(final MergeTerminal mergeTerminal, final Table table) {
+    private UpdateResult execute(final MergeTerminal mergeTerminal, final Supplier<Table> tableSupplier) {
         final QueryNode node = MergeTerminalInspector.getNode(mergeTerminal);
-        return execute(table, node, litebridgeContext);
+        return execute(tableSupplier, node, litebridgeContext);
     }
 
-    private UpdateResult execute(final Table table, final QueryNode node, final LitebridgeContext litebridgeContext) {
+    private UpdateResult execute(final Supplier<Table> tableSupplier, final QueryNode node, final LitebridgeContext litebridgeContext) {
         final int nodeHash = node.hashCode();
         final QueryPlanCache.CachedOperation cachedOperation = litebridgeContext.queryPlanCache().get(nodeHash);
 
@@ -58,11 +56,11 @@ public class MergeEngine extends AbstractUpdateEngine {
             final List<@Nullable Object> bindValues = QueryBindValueExtractor.extractBindValues(node);
             return execute(cachedOperation.preparedSql(bindValues), litebridgeContext);
         } else {
-            return compileAndExecute(nodeHash, table, node, litebridgeContext);
+            return compileAndExecute(nodeHash, tableSupplier, node, litebridgeContext);
         }
     }
 
-    private UpdateResult compileAndExecute(final int astCacheKey, final Table table, final QueryNode node, final LitebridgeContext litebridgeContext) {
+    private UpdateResult compileAndExecute(final int astCacheKey, final Supplier<Table> tableSupplier, final QueryNode node, final LitebridgeContext litebridgeContext) {
         final int nodeHash = node.hashCode();
         final QueryPlanCache.CachedOperation cachedOperation = litebridgeContext.queryPlanCache().get(nodeHash);
 
@@ -70,6 +68,7 @@ public class MergeEngine extends AbstractUpdateEngine {
             return execute(cachedOperation.preparedSql(QueryBindValueExtractor.extractBindValues(node)), litebridgeContext);
         } else {
             // Compile/prepare SQL query
+            final Table table = tableSupplier.get();
             final TableMetaData tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);
             final PreparedOperation preparedOperation = litebridgeContext.createQueryCompiler().compile(node);
             final Merge merge = (Merge) preparedOperation.operation();
@@ -99,5 +98,4 @@ public class MergeEngine extends AbstractUpdateEngine {
         LOGGER.debug("Merge result: {}", updateResult);
         return updateResult;
     }
-
 }

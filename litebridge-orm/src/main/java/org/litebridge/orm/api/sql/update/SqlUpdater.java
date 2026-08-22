@@ -72,4 +72,8 @@ public final class SqlUpdater extends AbstractUpdater<UpdateSpec> implements Sql
     public void addSetNode(final Column column, final Object value) {
         this.node = new SetNode(this.node, column, value);
     }
+
+    public QueryNode node() {
+        return node;
+    }
 }

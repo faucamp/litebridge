@@ -18,7 +18,7 @@ public sealed class MergeWhenMatchedStep<DTO, MUS extends MergeUpdateStep<DTO>>
     protected final MergeNode mergeNode;
 
     public MergeWhenMatchedStep(final MergeNode mergeNode,
-                                final Table usingTable,
+                                final String usingTable,
                                 final QueryNode node,
                                 final LitebridgeContext litebridgeContext) {
         super(mergeNode.table(), usingTable, node, litebridgeContext);
@@ -57,7 +57,7 @@ public sealed class MergeWhenMatchedStep<DTO, MUS extends MergeUpdateStep<DTO>>
 
     protected MUS createMergeUpdateStep() {
         if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
-            return (MUS) new DtoMergeUpdateStep<>(mergeNode.dtoClass(), mergeNode.table(), node, litebridgeContext);
+            return (MUS) new DtoMergeUpdateStep<>(mergeNode.dtoClass(), node, litebridgeContext);
         } else {
             return (MUS) new SqlMergeUpdateStep(mergeNode.table(), node, litebridgeContext);
         }

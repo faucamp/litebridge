@@ -9,7 +9,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
  *
  * @param <DTO> the DTO type
  */
-public sealed interface DtoUpdateStep<DTO> extends DtoUpdateStart<DTO>, UpdateStep, UpdateQuery permits DtoUpdater {
+public sealed interface DtoUpdateStep<DTO>
+        extends DtoUpdateStart<DTO>, UpdateStep, UpdateQuery
+        permits DtoUpdater {
 
     /**
      * Adds a where condition by field name.

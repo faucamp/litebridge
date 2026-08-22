@@ -16,8 +16,10 @@ import org.litebridge.orm.api.dto.delete.DtoDeleteWhereClause;
 import org.litebridge.orm.api.dto.delete.DtoDeletor;
 import org.litebridge.orm.api.dto.update.DtoUpdateStart;
 import org.litebridge.orm.api.dto.update.DtoUpdater;
+import org.litebridge.orm.api.insert.DtoInsertIntoStep;
 import org.litebridge.orm.api.insert.InsertIntoStep;
 import org.litebridge.orm.api.insert.InsertValuesStep;
+import org.litebridge.orm.api.insert.SqlInsertIntoStep;
 import org.litebridge.orm.api.merge.DtoMergeUsingStep;
 import org.litebridge.orm.api.merge.MergeTerminal;
 import org.litebridge.orm.api.merge.SqlMergeUsingStep;
@@ -370,7 +372,11 @@ public final class Litebridge implements SelectApi {
         }
     }
 
-    public InsertResult insert(final String tableName, final Function<InsertIntoStep, InsertValuesStep> insert) {
+    public InsertResult insert(final Class<?> dtoClass, final Function<DtoInsertIntoStep, InsertValuesStep> insert) {
+        return insertEngine.insert(dtoClass, insert);
+    }
+
+    public InsertResult insert(final String tableName, final Function<SqlInsertIntoStep, InsertValuesStep> insert) {
         return insertEngine.insert(tableName, insert);
     }
 
@@ -533,10 +539,7 @@ public final class Litebridge implements SelectApi {
     }
 
     public <DTO> UpdateResult mergeInto(final Class<DTO> dtoClass, final Function<DtoMergeUsingStep<DTO>, MergeTerminal> merge) {
-        final MergeEngine mergeEngine = new MergeEngine(createSqlLitebridgeContext());
-
-        final DtoMergeUsingStep<DTO> mergeUsingStep = new DtoMergeUsingStep<>(dtoClass, createDtoLitebridgeContext());
-        merge.apply(mergeUsingStep);
+        final MergeEngine mergeEngine = new MergeEngine(createDtoLitebridgeContext());
         return mergeEngine.mergeInto(dtoClass, merge);
     }
 

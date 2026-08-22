@@ -18,8 +18,8 @@ import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Delete;
-import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
+import org.litebridge.db.spi.update.InsertV2;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.api.select.ast.ConditionNode;
@@ -207,6 +207,7 @@ public class PersistenceFacade {
         if (prepareUpdateStatement(dto, table, insertBuilder, inProgressDtos) == null) {
             return NO_OP_STATEMENT_BUILDER;
         }
+
         return insertBuilder;
     }
 
@@ -282,7 +283,6 @@ public class PersistenceFacade {
                     // Generate value using a DB sequence; don't add a bind value
                     final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), null);
                     columnValues.add(columnValue);
-                    statementBuilder.addSetNode(columnValue.column(), null, false);
                 }
 
                 continue;
@@ -295,7 +295,11 @@ public class PersistenceFacade {
             if (basicType) {
                 final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), value);
                 columnValues.add(columnValue);
-                statementBuilder.addColumn(columnValue);
+
+                if (statementBuilder instanceof UpdateBuilder updateBuilder) {
+                    updateBuilder.addColumn(columnValue);
+                }
+
                 columnsAdded = true;
             } else {
                 // Dealing with an embedded DTO - add the context to the table provider
@@ -330,7 +334,10 @@ public class PersistenceFacade {
                                                 if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
                                                     final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), pkValue);
                                                     columnValues.add(columnValue);
-                                                    statementBuilder.addColumn(columnValue);
+
+                                                    if (statementBuilder instanceof UpdateBuilder updateBuilder) {
+                                                        updateBuilder.addColumn(columnValue);
+                                                    }
                                                 }
                                             });
                                             updateDtoPrimaryKey(value, insertResult.generatedKeys());
@@ -347,7 +354,10 @@ public class PersistenceFacade {
                                         if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
                                             final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), embeddedDtoPkValue);
                                             columnValues.add(columnValue);
-                                            statementBuilder.addColumn(columnValue);
+
+                                            if (statementBuilder instanceof UpdateBuilder updateBuilder) {
+                                                updateBuilder.addColumn(columnValue);
+                                            }
                                         }
                                     });
 
@@ -365,7 +375,10 @@ public class PersistenceFacade {
                                                 if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
                                                     final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), pkValue);
                                                     columnValues.add(columnValue);
-                                                    statementBuilder.addColumn(columnValue);
+
+                                                    if (statementBuilder instanceof UpdateBuilder updateBuilder) {
+                                                        updateBuilder.addColumn(columnValue);
+                                                    }
                                                 }
                                             });
 
@@ -382,7 +395,10 @@ public class PersistenceFacade {
                                         if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
                                             final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), embeddedDtoPkValue);
                                             columnValues.add(columnValue);
-                                            statementBuilder.addColumn(columnValue);
+
+                                            if (statementBuilder instanceof UpdateBuilder updateBuilder) {
+                                                updateBuilder.addColumn(columnValue);
+                                            }
                                         }
                                     });
 
@@ -398,7 +414,10 @@ public class PersistenceFacade {
                             final Column joinColumn = table.getColumnForFieldName(fieldAccessor.name()).toColumn();
                             final ColumnValue columnValue = new ColumnValue(joinColumn, embeddedDtoPkValue);
                             columnValues.add(columnValue);
-                            statementBuilder.addColumn(columnValue);
+
+                            if (statementBuilder instanceof UpdateBuilder updateBuilder) {
+                                updateBuilder.addColumn(columnValue);
+                            }
                         });
                     }
                 } finally {
@@ -406,13 +425,19 @@ public class PersistenceFacade {
                 }
             }
         }
-        if (!(statementBuilder instanceof InsertBuilder)) {
+
+        if (isInsert) {
+            final InsertBuilder insertBuilder = (InsertBuilder) statementBuilder;
+            insertBuilder.addRow(columnValues);
+        } else {
+            if (!columnsAdded
+                    && statementChain.getDependencies().isEmpty()
+                    && statementChain.getDependants().isEmpty()) {
+                return null;
+            }
+
             final UpdateBuilder updateBuilder = (UpdateBuilder) statementBuilder;
             addPrimaryKeyConditions(dto, table, updateBuilder);
-        }
-
-        if (!isInsert && !columnsAdded && statementChain.getDependencies().isEmpty() && statementChain.getDependants().isEmpty()) {
-            return null;
         }
 
         return statementChain;
@@ -485,11 +510,13 @@ public class PersistenceFacade {
 
                                 dtoPrimaryKeyColumnValues(dto).forEach(cv -> {
                                     final ColumnValue joinCv = new ColumnValue(new Column(joinTable, mappedManyToMany.joinColumn()), cv.value());
-                                    joinTableInsertBuilder.addColumn(joinCv);
+//                                    joinTableInsertBuilder.addColumn(joinCv);
+                                    throw new UnsupportedOperationException("Regression");
                                 });
                                 dtoPrimaryKeyColumnValues(value).forEach(cv -> {
                                     final ColumnValue joinCv = new ColumnValue(new Column(joinTable, mappedManyToMany.inverseJoinColumn()), cv.value());
-                                    joinTableInsertBuilder.addColumn(joinCv);
+//                                    joinTableInsertBuilder.addColumn(joinCv);
+                                    throw new UnsupportedOperationException("Regression");
                                 });
                             }));
                         }
@@ -688,7 +715,7 @@ public class PersistenceFacade {
                 final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), null, updateMetaData);
 
                 final UpdateResult updateResult = switch (preparedOperation.operation()) {
-                    case Insert insert -> databaseProvider.insert(executionSql, transactionManager);
+                    case InsertV2 insert -> databaseProvider.insert(executionSql, transactionManager);
                     case Update update -> databaseProvider.update(executionSql, transactionManager);
                     case Delete delete -> databaseProvider.delete(executionSql, transactionManager);
                     default ->

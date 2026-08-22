@@ -832,6 +832,30 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
+    @DisplayName("Inserting specific fields via metamodel")
+    void insert(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+
+        final Person person = new Person();
+        person.setName("Test");
+        person.setSurname("User");
+        litebridge.insert(person);
+
+        // Insert specific fields using DTO and metamodel
+        litebridge.insert(Person.class, i -> i
+                .into(PersonMeta.name, PersonMeta.surname, PersonMeta.age)
+                .values("Alice", "Smith", 25)
+                .values("Bob", "Jones", 30));
+
+        // Insert specific fields using DTO and field names
+        litebridge.insert(Person.class, i -> i
+                .into("id", "name", "surname", "age")
+                .values(500, "Robert", "Frost", 28)
+                .values(501, "James", "Wilson", 34));
+    }
+
+    @TestTemplate
     @DisplayName("Verify QueryPlanCache hits for cascade operations")
     void cacheHits_cascadeOperations(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings

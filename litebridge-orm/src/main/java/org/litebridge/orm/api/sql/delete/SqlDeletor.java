@@ -29,7 +29,7 @@ public final class SqlDeletor extends AbstractDeletor<DeleteSpec> implements Sql
                       final LitebridgeContext litebridgeContext) {
         super(new DeleteSpec(table, litebridgeContext.selectExpressionMapper()),
                 litebridgeContext,
-                new DeleteNode(node, table));
+                new DeleteNode(node, table.qualifiedName(), null));
         this.litebridgeContext = litebridgeContext;
     }
 

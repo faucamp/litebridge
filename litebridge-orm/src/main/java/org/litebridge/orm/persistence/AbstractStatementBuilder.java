@@ -9,6 +9,7 @@ import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.ColumnValue;
+import org.litebridge.orm.api.select.ast.InsertValuesNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SetNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
@@ -38,7 +39,7 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
     /**
      * The current query node.
      */
-    protected QueryNode node;
+    protected @Nullable QueryNode node;
 
     /**
      * Constructs a new {@code AbstractStatementBuilder}.
@@ -55,20 +56,6 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
     @Override
     public QueryNode node() {
         return node;
-    }
-
-    @Override
-    public void addSetNode(final Column column, final @Nullable Object value, final boolean bindValue) {
-        this.node = new SetNode(this.node, column, value, bindValue);
-    }
-
-    /**
-     * Adds a column value to the statement.
-     *
-     * @param columnValue the column value to add
-     */
-    public void addColumn(final ColumnValue columnValue) {
-        addSetNode(columnValue.column(), columnValue.value(), true);
     }
 
     @Override

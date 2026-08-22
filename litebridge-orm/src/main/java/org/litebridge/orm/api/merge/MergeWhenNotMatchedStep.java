@@ -12,12 +12,12 @@ import java.util.function.Function;
 
 public sealed class MergeWhenNotMatchedStep extends MergeTerminal permits MergeWhenMatchedStep {
 
-    protected final Table targetTable;
-    protected final Table usingTable;
+    protected final String targetTable;
+    protected final String usingTable;
     protected final LitebridgeContext litebridgeContext;
 
-    public MergeWhenNotMatchedStep(final Table targetTable,
-                                   final Table usingTable,
+    public MergeWhenNotMatchedStep(final String targetTable,
+                                   final String usingTable,
                                    final QueryNode node,
                                    final LitebridgeContext litebridgeContext) {
         super(node);

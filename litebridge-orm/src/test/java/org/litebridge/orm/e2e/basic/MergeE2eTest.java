@@ -50,15 +50,12 @@ public class MergeE2eTest extends AbstractE2eTest {
         final UpdateResult updateResult = litebridge.mergeInto(Account.class, m -> m
                 .using(Person.class)
                 .on(AccountMeta.id).eq(PersonMeta.id)
-                .whenMatched(q -> q.and("ACCOUNT_ID").lt(5),
+                .whenMatched(q -> q.and(AccountMeta.id).lt(5),
                         u -> u.update(account ->
                                 account.set(AccountMeta.balance).to(500)))
-                .whenMatched(q -> q.and("ACCOUNT_ID").lt(5),
-                        u -> u.update(account ->
-                                account.set("BALANCE").to(500)))
                 .whenMatched(MergeUpdateStep::delete)
                 .whenNotMatched(i ->
-                        i.insert("ACCOUNT_ID", "ACCOUNT_NAME", "BALANCE", "PERSON_ID")
+                        i.insert(AccountMeta.id, AccountMeta.name, AccountMeta.balance, AccountMeta.owner)
                                 .values(123L, "Default Account", 0, 1L)));
 
         assertEquals(10, updateResult.rowsAffected());

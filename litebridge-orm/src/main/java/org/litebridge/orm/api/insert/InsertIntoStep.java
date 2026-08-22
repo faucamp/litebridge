@@ -1,27 +1,15 @@
 package org.litebridge.orm.api.insert;
 
-import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Table;
-import org.litebridge.orm.api.select.ast.InsertNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.expression.ExpressionSpec;
 
-public final class InsertIntoStep {
+public abstract sealed class InsertIntoStep permits DtoInsertIntoStep, SqlInsertIntoStep {
 
-    private final @Nullable QueryNode node;
-    private final LitebridgeContext litebridgeContext;
-    private final Table table;
+    protected final LitebridgeContext litebridgeContext;
 
-    public InsertIntoStep(final Table table,
-                          final @Nullable QueryNode node,
-                          final LitebridgeContext litebridgeContext) {
-        this.node = node;
+    public InsertIntoStep(final LitebridgeContext litebridgeContext) {
         this.litebridgeContext = litebridgeContext;
-        this.table = table;
     }
 
-    public InsertValuesStep into(final String... columns) {
-        final InsertNode insertNode = new InsertNode(node, table, columns);
-        return new InsertValuesStep(insertNode, litebridgeContext);
-    }
+    public abstract InsertValuesStep into(final ExpressionSpec... expressions);
 }

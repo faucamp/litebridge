@@ -2,7 +2,17 @@
 
 ## [Unreleased]
 
-Nothing yet
+### Added
+- ORM:
+  - Implement `Litebridge.mergeInto()` method for performing SQL `MERGE` operations. 
+
+### Changed
+- ORM:
+  - Refactor `QueryCompiler` to delegate specific query types to specialised sub-compilers.
+  - Simplify node compilation; drop `InsertSpec` etc
+
+### Removed
+
 
 ## [0.4.0] - 2026-08-10
 
