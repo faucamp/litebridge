@@ -9,7 +9,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
-public class SqlDeleteWhereConditionClause
+public final class SqlDeleteWhereConditionClause
 
         extends ConditionClauseImpl<Row,
         SqlDeleteWhereConditionClause,

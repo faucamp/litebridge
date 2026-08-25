@@ -13,7 +13,7 @@ import java.util.function.Function;
  *
  * @param <DTO> the type of the DTO
  */
-public class DtoDeleteWhereConditionClause<DTO>
+public final class DtoDeleteWhereConditionClause<DTO>
 
         extends ConditionClauseImpl<DTO,
         DtoDeleteWhereConditionClause<DTO>,
