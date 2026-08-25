@@ -1,6 +1,4 @@
-package org.litebridge.orm.api.dto.update;
-
-import org.litebridge.orm.api.update.UpdateWhereConditionClauseTerminal;
+package org.litebridge.orm.api.update;
 
 /**
  * The terminal interface for DTO update where condition clauses.

@@ -581,7 +581,7 @@ public class BasicE2eTest extends AbstractE2eTest {
             persons[i].setAge(20 + i);
         }
 
-        litebridge.save((Object[]) persons);
+        litebridge.saveAll(persons);
 
         // Read and populate specific fields only
         final List<Person> result = litebridge.select("id", "surname").from(Person.class).orderBy("id").asc().list();
@@ -611,7 +611,7 @@ public class BasicE2eTest extends AbstractE2eTest {
             persons[i].setAge(20 + i);
         }
 
-        litebridge.save((Object[]) persons);
+        litebridge.saveAll(persons);
 
         // Read and populate specific fields only
         final List<Person> result = litebridge.select(Fn.f("id"), Fn.f("surname"))
@@ -645,7 +645,7 @@ public class BasicE2eTest extends AbstractE2eTest {
             persons[i].setAge(20 + i);
         }
 
-        litebridge.save((Object[]) persons);
+        litebridge.saveAll(persons);
 
         // Select DTO via subselect
         final Person result = litebridge.select().from(Person.class)
@@ -676,7 +676,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         persons[1].setAge(25);
         persons[2].setAge(25);
 
-        litebridge.save((Object[]) persons);
+        litebridge.saveAll(persons);
 
         final List<Row> results = litebridge.select(Fn.row(Fn.convert(Fn.f("age"), Integer.class), Fn.convert(Fn.count(), Long.class)))
                 .from(Person.class)
@@ -719,7 +719,7 @@ public class BasicE2eTest extends AbstractE2eTest {
             persons[i].setSurname("Surname" + i);
         }
 
-        litebridge.save((Object[]) persons);
+        litebridge.saveAll(persons);
 
         // Using variable paratemeters/array
         final List<Person> results = litebridge.select()
@@ -907,7 +907,7 @@ public class BasicE2eTest extends AbstractE2eTest {
             persons[i].setSurname("Surname" + i);
         }
 
-        litebridge.save((Object[]) persons);
+        litebridge.saveAll(persons);
 
         // Using variable paratemeters/array
         final Optional<Person> results = litebridge.select()

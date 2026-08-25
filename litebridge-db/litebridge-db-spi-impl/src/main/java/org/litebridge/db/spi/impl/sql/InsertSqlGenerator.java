@@ -10,6 +10,7 @@ import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Insert;
+import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.db.spi.update.InsertV2;
 import org.litebridge.db.spi.update.RowValue;
 
@@ -81,7 +82,7 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
         final StringBuilder sql = appendTable(new StringBuilder("INSERT INTO "), insert.table())
                 .append(" (")
                 .append(String.join(", ", insert.columns().stream()
-                        .map(InsertV2.InsertColumn::name)
+                        .map(UpdateColumn::name)
                         .map(columnIdentifierGenerator::quoteIdentifier)
                         .toList()))
                 .append(") VALUES ");
@@ -94,7 +95,7 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
             sql.append('(');
 
             for (int j = 0; j < insert.columns().size(); j++) {
-                final InsertV2.InsertColumn insertColumn = insert.columns().get(j);
+                final UpdateColumn insertColumn = insert.columns().get(j);
 
                 if (j > 0) {
                     sql.append(", ");

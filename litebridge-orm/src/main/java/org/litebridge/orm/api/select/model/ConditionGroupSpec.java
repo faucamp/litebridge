@@ -1,11 +1,13 @@
 package org.litebridge.orm.api.select.model;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.LogicConditionGroup;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.TableMetaDataCache;
@@ -67,10 +69,26 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
      * @return the newly created {@link ConditionSpec}
      */
     public ConditionSpec newCondition(final LogicOperator logicOperator, final ExpressionSpec expressionSpec) {
+        return newCondition(logicOperator, expressionSpec, null);
+    }
+
+    /**
+     * Adds a new condition to the group and returns its specification.
+     *
+     * @param logicOperator  the logic operator for the condition
+     * @param expressionSpec the expression specification for the condition
+     * @return the newly created {@link ConditionSpec}
+     */
+    public ConditionSpec newCondition(final LogicOperator logicOperator, final ExpressionSpec expressionSpec, final @Nullable Operator operator) {
         final ConditionSpec conditionSpec = new ConditionSpec();
         conditionSpec.setLhs(expressionSpec);
         final LogicConditionSpec logicConditionSpec = new LogicConditionSpec(logicOperator, conditionSpec);
         conditions.add(logicConditionSpec);
+
+        if (operator != null) {
+            conditionSpec.setOperator(operator);
+        }
+
         return conditionSpec;
     }
 

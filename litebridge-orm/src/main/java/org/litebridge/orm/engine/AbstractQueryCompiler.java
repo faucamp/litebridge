@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 
 abstract sealed class AbstractQueryCompiler<CC extends CompilationContext>
-        permits ConditionBasedQueryCompiler, InsertQueryCompiler, QueryCompiler {
+        permits ConditionBasedQueryCompiler, InsertQueryCompiler, QueryCompiler, UpdateQueryCompiler {
 
     protected final TableRegistry tableRegistry;
     protected final TableMetaDataCache tableMetaDataCache;

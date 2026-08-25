@@ -68,7 +68,7 @@ class UpdateSpecTest {
         // Then
         final Update update = (Update) preparedOperation.operation();
         assertEquals(table, update.table());
-        assertEquals(1, update.columnValues().size());
+        assertEquals(1, update.columns().size());
         assertEquals(1, update.where().conditions().size());
     }
 }

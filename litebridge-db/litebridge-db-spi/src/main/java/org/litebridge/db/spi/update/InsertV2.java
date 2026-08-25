@@ -1,6 +1,5 @@
 package org.litebridge.db.spi.update;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -29,11 +28,9 @@ import java.util.List;
  * @param returnGeneratedKeys If true, generated keys will be returned after the insert operation.
  */
 public record InsertV2(Table table,
-                       List<InsertColumn> columns,
+                       List<UpdateColumn> columns,
                        int rows,
                        boolean returnGeneratedKeys)
         implements UpdateStatement {
 
-    public record InsertColumn(String name, @Nullable Object generatedValue) {
-    }
 }

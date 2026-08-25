@@ -28,6 +28,7 @@ import org.litebridge.orm.api.select.ast.OrderByNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.ast.SetNode;
+import org.litebridge.orm.api.select.ast.UpdateNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractConditionBasedSpec;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
@@ -61,6 +62,7 @@ import java.util.Objects;
 public final class QueryCompiler extends AbstractQueryCompiler<CompilationContext> {
 
     private final InsertQueryCompiler insertQueryCompiler;
+    private final UpdateQueryCompiler updateQueryCompiler;
     private final MergeQueryCompiler mergeQueryCompiler;
     private final Map<Class<?>, List<Table>> aliasHistory = new HashMap<>();
     private final Map<Table, OrmTable> tableToOrmTableMap = new HashMap<>();
@@ -72,6 +74,7 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
                          final SelectExpressionMapper selectExpressionMapper) {
         super(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
         this.insertQueryCompiler = new InsertQueryCompiler(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
+        this.updateQueryCompiler = new UpdateQueryCompiler(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
         this.mergeQueryCompiler = new MergeQueryCompiler(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
     }
 
@@ -147,8 +150,9 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
 
         final AbstractQueryCompiler<?> compiler = switch (nodes.getFirst()) {
             case InsertNode insertNode -> insertQueryCompiler;
+            case UpdateNode updateNode -> updateQueryCompiler;
             case MergeNode mergeNode -> mergeQueryCompiler;
-            default -> throw new IllegalArgumentException("Unsupported query node type: " + nodes.getFirst());
+            default -> throw new IllegalArgumentException("Unsupported root query node type: " + nodes.getFirst());
         };
 
         final CompilationContext compilationContext = compiler.createCompilationContext(nodes.getFirst());
@@ -393,13 +397,6 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
 
     private void applyNode(final QueryNode node, final @Nullable QueryNode parentNode, final AbstractConditionBasedSpec spec) {
         switch (node) {
-            case SetNode setNode -> {
-                if (spec instanceof UpdateSpec updateSpec) {
-                    updateSpec.addColumnValue(new ColumnValue(setNode.column(), setNode.value()), setNode.bindValue());
-                } else if (spec instanceof InsertSpec insertSpec) {
-                    insertSpec.addColumnValue(new ColumnValue(setNode.column(), setNode.value()), setNode.bindValue());
-                }
-            }
             case WhereNode whereNode -> {
                 final List<QueryNode> conditionNodes = flatten(whereNode.condition());
 

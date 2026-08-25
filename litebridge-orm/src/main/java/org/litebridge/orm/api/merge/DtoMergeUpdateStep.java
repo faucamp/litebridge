@@ -1,13 +1,11 @@
 package org.litebridge.orm.api.merge;
 
-import org.litebridge.orm.api.dto.update.DtoUpdateStart;
-import org.litebridge.orm.api.dto.update.DtoUpdater;
 import org.litebridge.orm.api.select.ast.DeleteNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.update.DtoUpdateStart;
 import org.litebridge.orm.api.update.UpdateQuery;
 import org.litebridge.orm.api.update.UpdateQueryInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.function.Function;
 
@@ -21,9 +19,8 @@ public final class DtoMergeUpdateStep<DTO> extends MergeUpdateStep<DTO> {
     }
 
     public MergeTerminal update(final Function<DtoUpdateStart<DTO>, UpdateQuery> update) {
-        final OrmTable ormTable = litebridgeContext.tableRegistry().getTableOrThrow(dtoClass);
-        final DtoUpdater<DTO> dtoUpdater = new DtoUpdater<>(dtoClass, ormTable, litebridgeContext);
-        final UpdateQuery terminal = update.apply(dtoUpdater);
+        final DtoUpdateStart<DTO> dtoDtoUpdateStart = new DtoUpdateStart<>(dtoClass, litebridgeContext);
+        final UpdateQuery terminal = update.apply(dtoDtoUpdateStart);
         final QueryNode terminalNode = UpdateQueryInspector.getNode(terminal);
         return new MergeTerminal(terminalNode);
     }

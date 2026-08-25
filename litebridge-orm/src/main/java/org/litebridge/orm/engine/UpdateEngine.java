@@ -9,12 +9,13 @@ import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.InsertV2;
-import org.litebridge.orm.api.insert.DtoInsertIntoStep;
-import org.litebridge.orm.api.insert.InsertIntoStep;
-import org.litebridge.orm.api.insert.InsertValuesStep;
-import org.litebridge.orm.api.insert.InsertValuesStepInspector;
-import org.litebridge.orm.api.insert.SqlInsertIntoStep;
+import org.litebridge.db.spi.update.Update;
+import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.update.DtoUpdateStart;
+import org.litebridge.orm.api.update.SqlUpdateStart;
+import org.litebridge.orm.api.update.UpdateQuery;
+import org.litebridge.orm.api.update.UpdateQueryInspector;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,30 +25,31 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class InsertEngine extends AbstractUpdateEngine {
+public class UpdateEngine extends AbstractUpdateEngine {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(InsertEngine.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UpdateEngine.class);
     private final TableRegistry tableRegistry;
 
-    public InsertEngine(final TableRegistry tableRegistry) {
+    public UpdateEngine(final TableRegistry tableRegistry) {
         this.tableRegistry = tableRegistry;
     }
 
-    public InsertResult insert(final Class<?> dtoClass,
-                               final Function<DtoInsertIntoStep, InsertValuesStep> insert,
-                               final LitebridgeContext litebridgeContext) {
-        final DtoInsertIntoStep insertIntoStep = new DtoInsertIntoStep(dtoClass, litebridgeContext);
-        final InsertValuesStep insertValuesStep = insert.apply(insertIntoStep);
-        final QueryNode node = InsertValuesStepInspector.getNode(insertValuesStep);
+
+    public <DTO> UpdateResult update(final Class<DTO> dtoClass,
+                                     final Function<DtoUpdateStart<DTO>, UpdateQuery> update,
+                                     final LitebridgeContext litebridgeContext) {
+        final DtoUpdateStart<DTO> dtoDtoUpdateStart = new DtoUpdateStart<>(dtoClass, litebridgeContext);
+        final UpdateQuery updateQuery = update.apply(dtoDtoUpdateStart);
+        final QueryNode node = UpdateQueryInspector.getNode(updateQuery);
         return execute(node, litebridgeContext, () -> tableRegistry.getTableOrThrow(dtoClass).getMetaData().toTable());
     }
 
-    public InsertResult insert(final String tableName,
-                               final Function<SqlInsertIntoStep, InsertValuesStep> insert,
+    public UpdateResult update(final String tableName,
+                               final Function<SqlUpdateStart, UpdateQuery> update,
                                final LitebridgeContext litebridgeContext) {
-        final SqlInsertIntoStep insertIntoStep = new SqlInsertIntoStep(tableName, litebridgeContext);
-        final InsertValuesStep insertValuesStep = insert.apply(insertIntoStep);
-        final QueryNode node = InsertValuesStepInspector.getNode(insertValuesStep);
+        final SqlUpdateStart sqlUpdateStart = new SqlUpdateStart(tableName, litebridgeContext);
+        final UpdateQuery updateQuery = update.apply(sqlUpdateStart);
+        final QueryNode node = UpdateQueryInspector.getNode(updateQuery);
         return execute(node, litebridgeContext, () -> tableRegistry.getOrCreateSpiTable(tableName));
     }
 
@@ -68,9 +70,9 @@ public class InsertEngine extends AbstractUpdateEngine {
         final Table table = tableSupplier.get();
         final TableMetaData tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);
         final PreparedOperation preparedOperation = litebridgeContext.createQueryCompiler().compile(node);
-        final InsertV2 insert = (InsertV2) preparedOperation.operation();
+        final Update update = (Update) preparedOperation.operation();
         // Generate SQL and create type conversion metadata
-        final String sql = litebridgeContext.databaseProvider().toSql(insert, litebridgeContext.transactionManager());
+        final String sql = litebridgeContext.databaseProvider().toSql(update, litebridgeContext.transactionManager());
         final UpdateMetaData updateMetaData = createUpdateMetaData(tableMetaData);
         // Cache compiled SQL for this AST
         final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()

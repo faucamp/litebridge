@@ -47,6 +47,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -252,8 +253,8 @@ public class PersistenceFacade {
         }
 
         final StatementChain statementChain = statementBuilder.statementChain();
-        final List<ColumnValue> columnValues = new ArrayList<>();
         boolean columnsAdded = false;
+        final LinkedHashMap<String, Object> insertValues = isInsert ? new LinkedHashMap<>() : null;
 
         for (Map.Entry<FieldAccessor, MappedFieldTarget> entry : table.mappedFieldTargets()) {
             final FieldAccessor fieldAccessor = entry.getKey();
@@ -269,41 +270,31 @@ public class PersistenceFacade {
                 continue;
             } else if (entry.getValue() instanceof MappedOneToMany mappedOneToMany) {
                 // Collection of other DTOs (reverse-mapped collection)
-                processOneToManyUpdate(dto, table, inProgressDtos, mappedOneToMany, statementChain, columnValues);
+                processOneToManyUpdate(dto, table, inProgressDtos, mappedOneToMany, statementChain);
                 continue;
             }
 
-            final ColumnMetaData columnMetaData = (ColumnMetaData) entry.getValue();
             final ChangedField changedField = changedFields.getOrNull(fieldAccessor.name());
-            final Object value;
-            final boolean basicType;
 
             if (changedField == null) {
-                if (isInsert && columnMetaData.getGenerator() != null) {
-                    // Generate value using a DB sequence; don't add a bind value
-                    final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), null);
-                    columnValues.add(columnValue);
-                }
-
                 continue;
-            } else {
-                final Object changedFieldValue = changedField.value();
-                basicType = changedFieldValue != null && ClassUtils.isBasicType(changedFieldValue.getClass());
-                value = changedField.value();
             }
 
+            final Object value = changedField.value();
+            //TODO: optimise basic type check; add to FieldAccessor as metadata perhaps?
+            final boolean basicType = value != null && ClassUtils.isBasicType(value.getClass());
+
             if (basicType) {
-                final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), value);
-                columnValues.add(columnValue);
-
                 if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                    updateBuilder.addColumn(columnValue);
+                    updateBuilder.setField(fieldAccessor.name(), value);
+                } else {
+                    insertValues.put(fieldAccessor.name(), value);
                 }
-
                 columnsAdded = true;
             } else {
                 // Dealing with an embedded DTO - add the context to the table provider
                 tableProvider.pushContext(table.getContextTableRegistry());
+                final ColumnMetaData columnMetaData = (ColumnMetaData) entry.getValue();
 
                 try {
                     final OrmTable nestedDtoTable = tableProvider.getTableOrThrow(Objects.requireNonNull(value).getClass());
@@ -331,12 +322,12 @@ public class PersistenceFacade {
                                                 && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
 
                                             insertResult.generatedKeys().forEach((pkColumn, pkValue) -> {
-                                                if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
-                                                    final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), pkValue);
-                                                    columnValues.add(columnValue);
 
+                                                if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
                                                     if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                                                        updateBuilder.addColumn(columnValue);
+                                                        updateBuilder.setField(fieldAccessor.name(), pkValue);
+                                                    } else {
+                                                        insertValues.put(fieldAccessor.name(), pkValue);
                                                     }
                                                 }
                                             });
@@ -352,11 +343,10 @@ public class PersistenceFacade {
                                         final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
 
                                         if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
-                                            final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), embeddedDtoPkValue);
-                                            columnValues.add(columnValue);
-
                                             if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                                                updateBuilder.addColumn(columnValue);
+                                                updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
+                                            } else {
+                                                insertValues.put(fieldAccessor.name(), embeddedDtoPkValue);
                                             }
                                         }
                                     });
@@ -373,11 +363,10 @@ public class PersistenceFacade {
 
                                             insertResult.generatedKeys().forEach((pkColumn, pkValue) -> {
                                                 if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
-                                                    final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), pkValue);
-                                                    columnValues.add(columnValue);
-
                                                     if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                                                        updateBuilder.addColumn(columnValue);
+                                                        updateBuilder.setField(fieldAccessor.name(), pkValue);
+                                                    } else {
+                                                        insertValues.put(fieldAccessor.name(), pkValue);
                                                     }
                                                 }
                                             });
@@ -393,11 +382,10 @@ public class PersistenceFacade {
                                         final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                                         final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
                                         if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
-                                            final ColumnValue columnValue = new ColumnValue(columnMetaData.toColumn(), embeddedDtoPkValue);
-                                            columnValues.add(columnValue);
-
                                             if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                                                updateBuilder.addColumn(columnValue);
+                                                updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
+                                            } else {
+                                                insertValues.put(fieldAccessor.name(), embeddedDtoPkValue);
                                             }
                                         }
                                     });
@@ -412,11 +400,11 @@ public class PersistenceFacade {
                             final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                             final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
                             final Column joinColumn = table.getColumnForFieldName(fieldAccessor.name()).toColumn();
-                            final ColumnValue columnValue = new ColumnValue(joinColumn, embeddedDtoPkValue);
-                            columnValues.add(columnValue);
 
                             if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                                updateBuilder.addColumn(columnValue);
+                                updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
+                            } else {
+                                insertValues.put(fieldAccessor.name(), embeddedDtoPkValue);
                             }
                         });
                     }
@@ -428,7 +416,7 @@ public class PersistenceFacade {
 
         if (isInsert) {
             final InsertBuilder insertBuilder = (InsertBuilder) statementBuilder;
-            insertBuilder.addRow(columnValues);
+            insertBuilder.addRow(insertValues);
         } else {
             if (!columnsAdded
                     && statementChain.getDependencies().isEmpty()
@@ -449,7 +437,7 @@ public class PersistenceFacade {
         return deleteBuilder.statementChain();
     }
 
-    private <DTO> void processOneToManyUpdate(final DTO dto, final OrmTable table, final Set<Object> inProgressDtos, final MappedOneToMany mappedOneToMany, final StatementChain statementChain, final List<ColumnValue> columnValues) {
+    private <DTO> void processOneToManyUpdate(final DTO dto, final OrmTable table, final Set<Object> inProgressDtos, final MappedOneToMany mappedOneToMany, final StatementChain statementChain) {
         final Collection<?> values = (Collection<?>) mappedOneToMany.collection().get(dto);
 
         if (!CollectionUtils.isEmpty(values)) {
@@ -485,7 +473,6 @@ public class PersistenceFacade {
             tableProvider.pushContext(table.getContextTableRegistry());
 
             try {
-                final OrmTable collectionDtoTable = tableProvider.getTableOrThrow(collectionDtoClass);
                 final Collection<?> updatedValues = changedCollectionField.updatedValues();
 
                 for (Object value : updatedValues) {
@@ -699,7 +686,7 @@ public class PersistenceFacade {
         } else {
             final PreparedOperation preparedOperation = statementBuilder.build();
 
-            if (preparedOperation.operation() instanceof Update update && update.columnValues().isEmpty()) {
+            if (preparedOperation.operation() instanceof Update update && update.columns().isEmpty()) {
                 dtoUpdateResult.setUpdateResult(new UpdateResult(0));
             } else {
                 // Generate SQL and create type conversion metadata

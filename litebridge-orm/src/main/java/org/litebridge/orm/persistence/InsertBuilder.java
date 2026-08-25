@@ -1,13 +1,18 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.orm.api.select.ast.InsertNode;
 import org.litebridge.orm.api.select.ast.InsertValuesNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A builder class for constructing SQL INSERT statements.
@@ -19,26 +24,35 @@ import java.util.List;
  */
 final class InsertBuilder extends AbstractStatementBuilder {
 
+    private final List<LinkedHashMap<String, @Nullable  Object>> rows = new ArrayList<>();
+
     public InsertBuilder(final OrmTable table, final LitebridgeContext litebridgeContext) {
         super(table, litebridgeContext);
     }
 
-    public void addRow(final List<ColumnValue> columnValues) {
-        if (node == null) {
-            final String[] insertColumns = columnValues.stream()
-                    .map(columnValue -> columnValue.column().name())
-                    .toArray(String[]::new);
-            node = new InsertNode(null, ormTable.dtoClass(), insertColumns);
-        }
-
-        final Object[] values = columnValues.stream()
-                .map(columnValue -> columnValue.value())
-                .toArray(Object[]::new);
-        node = new InsertValuesNode(node, values);
+    public void addRow(final LinkedHashMap<String, @Nullable Object> fieldValues) {
+        rows.add(fieldValues);
     }
 
     @Override
     public PreparedOperation build() {
         return litebridgeContext.createQueryCompiler().compile(node);
+    }
+
+    @Override
+    public QueryNode node() {
+        if (node == null) {
+            final String[] insertFields = rows.getFirst()
+                    .sequencedKeySet()
+                    .toArray(String[]::new);
+            node = new InsertNode(null, ormTable.dtoClass(), insertFields);
+
+            for (LinkedHashMap<String, @Nullable Object> fieldValues : rows) {
+                final Object[] values = fieldValues.sequencedValues().toArray(Object[]::new);
+                node = new InsertValuesNode(node, values);
+            }
+        }
+
+        return node;
     }
 }

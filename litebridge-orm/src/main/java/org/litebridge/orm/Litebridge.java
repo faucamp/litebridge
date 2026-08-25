@@ -14,10 +14,7 @@ import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.api.dto.delete.DtoDeleteWhereClause;
 import org.litebridge.orm.api.dto.delete.DtoDeletor;
-import org.litebridge.orm.api.dto.update.DtoUpdateStart;
-import org.litebridge.orm.api.dto.update.DtoUpdater;
 import org.litebridge.orm.api.insert.DtoInsertIntoStep;
-import org.litebridge.orm.api.insert.InsertIntoStep;
 import org.litebridge.orm.api.insert.InsertValuesStep;
 import org.litebridge.orm.api.insert.SqlInsertIntoStep;
 import org.litebridge.orm.api.merge.DtoMergeUsingStep;
@@ -32,11 +29,10 @@ import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.spec.DtoTableSpec;
 import org.litebridge.orm.api.sql.delete.SqlDeleteWhereClause;
 import org.litebridge.orm.api.sql.delete.SqlDeletor;
-import org.litebridge.orm.api.sql.update.SqlUpdateStart;
-import org.litebridge.orm.api.sql.update.SqlUpdater;
 import org.litebridge.orm.api.tx.TransactionContext;
+import org.litebridge.orm.api.update.DtoUpdateStart;
+import org.litebridge.orm.api.update.SqlUpdateStart;
 import org.litebridge.orm.api.update.UpdateQuery;
-import org.litebridge.orm.api.update.UpdateTerminal;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.FromClauseEngine;
@@ -45,6 +41,7 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.MergeEngine;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.engine.RegistrationEngine;
+import org.litebridge.orm.engine.UpdateEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridge.orm.expression.TypeOverride;
@@ -109,7 +106,8 @@ public final class Litebridge implements SelectApi {
     private final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
     private final RegistrationEngine registrationEngine;
     private final FromClauseEngine fromClauseEngine;
-    private final InsertEngine insertEngine = new InsertEngine(tableRegistry, this::createSqlLitebridgeContext);
+    private final InsertEngine insertEngine = new InsertEngine(tableRegistry);
+    private final UpdateEngine updateEngine = new UpdateEngine(tableRegistry);
     private final QueryPlanCache queryPlanCache = new QueryPlanCache();
     private final LitebridgeConfig litebridgeConfig;
     private final TableMetaDataCache tableMetaDataCache;
@@ -373,11 +371,11 @@ public final class Litebridge implements SelectApi {
     }
 
     public InsertResult insert(final Class<?> dtoClass, final Function<DtoInsertIntoStep, InsertValuesStep> insert) {
-        return insertEngine.insert(dtoClass, insert);
+        return insertEngine.insert(dtoClass, insert, createDtoLitebridgeContext());
     }
 
     public InsertResult insert(final String tableName, final Function<SqlInsertIntoStep, InsertValuesStep> insert) {
-        return insertEngine.insert(tableName, insert);
+        return insertEngine.insert(tableName, insert, createSqlLitebridgeContext());
     }
 
     /**
@@ -405,27 +403,19 @@ public final class Litebridge implements SelectApi {
      * @param dtoClass The class of the DTO that determines the table to be updated.
      * @param update   A function that builds the update query using the provided {@link DtoUpdateStart}.
      */
-    public <DTO> void update(final Class<DTO> dtoClass, final Function<DtoUpdateStart<DTO>, UpdateQuery> update) {
-        final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoUpdater<DTO> dtoUpdater = new DtoUpdater<>(dtoClass,
-                ormTable,
-                createDtoLitebridgeContext());
-        final UpdateTerminal updateTerminal = (UpdateTerminal) update.apply(dtoUpdater);
-        updateTerminal.execute();
+    public <DTO> UpdateResult update(final Class<DTO> dtoClass, final Function<DtoUpdateStart<DTO>, UpdateQuery> update) {
+        return updateEngine.update(dtoClass, update, createDtoLitebridgeContext());
     }
 
     /**
      * Executes an update operation on the specified table using the provided query function.
      *
      * @param tableName the name of the table to update
-     * @param query     a function that defines the update query, transforming a {@code SqlUpdateStart}
+     * @param update    a function that defines the update query, transforming a {@code SqlUpdateStart}
      *                  instance into an {@code UpdateQuery}
      */
-    public void update(final String tableName, final Function<SqlUpdateStart, UpdateQuery> query) {
-        final Table table = tableRegistry.getOrCreateSpiTable(tableName);
-        final SqlUpdater sqlUpdater = new SqlUpdater(table, createSqlLitebridgeContext());
-        final UpdateTerminal updateTerminal = (UpdateTerminal) query.apply(sqlUpdater);
-        updateTerminal.execute();
+    public UpdateResult update(final String tableName, final Function<SqlUpdateStart, UpdateQuery> update) {
+        return updateEngine.update(tableName, update, createSqlLitebridgeContext());
     }
 
     @Override

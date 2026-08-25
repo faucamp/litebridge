@@ -9,6 +9,7 @@ import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.HavingNode;
 import org.litebridge.orm.api.select.ast.InsertNode;
+import org.litebridge.orm.api.select.ast.InsertValuesNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SetNode;
@@ -57,8 +58,10 @@ public final class QueryBindValueExtractor {
                     }
                 }
             }
-            case InsertNode insertNode -> {
-                // InsertNode itself doesn't have bind values, but we might have SetNodes following it
+            case InsertValuesNode insertValuesNode -> {
+                for (final Object value : insertValuesNode.values()) {
+                    bindValues.add(value);
+                }
             }
             default -> {
                 // Ignore other node types in main chain

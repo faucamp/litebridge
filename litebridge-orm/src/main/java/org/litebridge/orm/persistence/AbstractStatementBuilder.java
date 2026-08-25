@@ -18,6 +18,7 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Abstract base class for building SQL statements.
@@ -55,7 +56,7 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
 
     @Override
     public QueryNode node() {
-        return node;
+        return Objects.requireNonNull(node, "Statement builder node not set");
     }
 
     @Override

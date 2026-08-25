@@ -50,11 +50,12 @@ public sealed class UpdateSpec extends AbstractConditionBasedSpec permits DtoUpd
             }
         }
 
-        final List<ColumnValue> updateColumnValues = columnValues.stream().map(BoundColumnValue::columnValue).toList();
-        final Update update = new Update(table,
-                updateColumnValues,
-                conditions.toConditionGroup(selectExpressionMapper, Collections.singleton(table), bindValues, tableMetaDataCache, typeConverter));
-        return new PreparedOperation(update, bindValues);
+//        final List<ColumnValue> updateColumnValues = columnValues.stream().map(BoundColumnValue::columnValue).toList();
+//        final Update update = new Update(table,
+//                updateColumnValues,
+//                conditions.toConditionGroup(selectExpressionMapper, Collections.singleton(table), bindValues, tableMetaDataCache, typeConverter));
+//        return new PreparedOperation(update, bindValues);
+        throw new UnsupportedOperationException("No longer supported");
     }
 
     private List<BindValue> createBindValues(final Column column, final @Nullable Object rawValue, final TableMetaDataCache tableMetaDataCache, final TypeConverter typeConverter) {

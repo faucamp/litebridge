@@ -1,7 +1,7 @@
 package org.litebridge.orm.api.select.ast;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Column;
+import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Objects;
 
@@ -13,10 +13,18 @@ import java.util.Objects;
  * @param value     the value to set (can be a raw value or a {@link org.litebridge.db.spi.math.MathOperation})
  * @param bindValue whether the value should be bound as a parameter
  */
-public record SetNode(@Nullable QueryNode previous, Column column, @Nullable Object value, boolean bindValue) implements QueryNode {
+public record SetNode(@Nullable QueryNode previous,
+                      @Nullable String column,
+                      @Nullable ExpressionSpec expressionSpec,
+                      @Nullable Object value,
+                      boolean bindValue) implements QueryNode {
 
-    public SetNode(@Nullable QueryNode previous, Column column, Object value) {
-        this(previous, column, value, true);
+    public SetNode(@Nullable QueryNode previous, String column, @Nullable Object value) {
+        this(previous, column, null, value, true);
+    }
+
+    public SetNode(@Nullable QueryNode previous, ExpressionSpec expressionSpec, @Nullable Object value) {
+        this(previous, null, expressionSpec, value, true);
     }
 
     @Override

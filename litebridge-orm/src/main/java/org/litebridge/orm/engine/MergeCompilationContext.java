@@ -8,7 +8,7 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.db.spi.update.InsertV2;
+import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.orm.api.select.ast.InsertNode;
 import org.litebridge.orm.api.select.ast.MergeNode;
@@ -93,7 +93,7 @@ final class MergeCompilationContext implements CompilationContext {
 
     public void whenMatchedUpdateSet(final SetNode setNode) {
         final WhenMatchedSpec whenMatchedSpec = whenMatchedSpecs.getLast();
-        final ColumnMetaData columnMetaData = targetTableMetaData.column(setNode.column().name());
+        final ColumnMetaData columnMetaData = targetTableMetaData.column(setNode.column());
         whenMatchedSpec.addUpdateColumn(columnMetaData);
 
         if (setNode.bindValue()) {
@@ -245,7 +245,7 @@ final class MergeCompilationContext implements CompilationContext {
         private final boolean matched;
         private @Nullable ConditionGroupSpecStack and;
         private @Nullable List<ColumnMetaData> columnMetaDataList;
-        private @Nullable List<InsertV2.InsertColumn> updateColumns;
+        private @Nullable List<UpdateColumn> updateColumns;
         private boolean delete;
 
         WhenMatchedSpec(final boolean matched) {
@@ -270,18 +270,18 @@ final class MergeCompilationContext implements CompilationContext {
 
         public void addUpdateColumns(final List<ColumnMetaData> columnMetaDataList) {
             ensureColumnMetaDataList().addAll(columnMetaDataList);
-            final List<InsertV2.InsertColumn> updateColumns = columnMetaDataList.stream()
-                    .map(columnMetaData -> new InsertV2.InsertColumn(columnMetaData.name(), null))
+            final List<UpdateColumn> updateColumns = columnMetaDataList.stream()
+                    .map(columnMetaData -> new UpdateColumn(columnMetaData.name(), null))
                     .toList();
             ensureUpdateColumns().addAll(updateColumns);
         }
 
         public void addUpdateColumn(final ColumnMetaData column) {
             ensureColumnMetaDataList().add(column);
-            ensureUpdateColumns().add(new InsertV2.InsertColumn(column.name(), null));
+            ensureUpdateColumns().add(new UpdateColumn(column.name(), null));
         }
 
-        public @Nullable List<InsertV2.InsertColumn> getUpdateColumns() {
+        public @Nullable List<UpdateColumn> getUpdateColumns() {
             return updateColumns;
         }
 
@@ -297,7 +297,7 @@ final class MergeCompilationContext implements CompilationContext {
             return columnMetaDataList;
         }
 
-        private List<InsertV2.InsertColumn> ensureUpdateColumns() {
+        private List<UpdateColumn> ensureUpdateColumns() {
             if (updateColumns == null) {
                 updateColumns = new ArrayList<>();
             }

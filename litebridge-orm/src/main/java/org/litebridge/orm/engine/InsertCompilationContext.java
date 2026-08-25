@@ -7,6 +7,7 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.sql.BindValue;
+import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.db.spi.update.InsertV2;
 import org.litebridge.orm.api.select.ast.InsertNode;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
@@ -32,7 +33,6 @@ public final class InsertCompilationContext implements CompilationContext {
     private final TableMetaData tableMetaData;
     private final List<ColumnMetaData> columnMetaDataList = new ArrayList<>();
     private final Set<String> insertColumns;
-    private final TypeConverter typeConverter;
     private int rows = 0;
     private @Nullable List<BindValue> bindValues;
 
@@ -51,8 +51,6 @@ public final class InsertCompilationContext implements CompilationContext {
             this.tableMetaData = tableMetaDataCache.ensureTableMetaData(table);
             ormTable = null;
         }
-
-        this.typeConverter = typeConverter;
 
         if (insertNode.columns() != null) {
             if (insertNode.columns().length > 0) {
@@ -170,15 +168,15 @@ public final class InsertCompilationContext implements CompilationContext {
 
     @Override
     public InsertV2 toOperation() {
-        final List<InsertV2.InsertColumn> columns = columnMetaDataList.stream()
+        final List<UpdateColumn> columns = columnMetaDataList.stream()
                 .map(columnMetaData -> {
                     final ColumnValueGenerator columnValueGenerator = columnMetaData.getGenerator();
 
                     if (!insertColumns.contains(columnMetaData.name()) && columnValueGenerator != null) {
                         final Object generatedValue = columnValueGenerator.generate(columnMetaData);
-                        return new InsertV2.InsertColumn(columnMetaData.name(), generatedValue);
+                        return new UpdateColumn(columnMetaData.name(), generatedValue);
                     } else {
-                        return new InsertV2.InsertColumn(columnMetaData.name(), null);
+                        return new UpdateColumn(columnMetaData.name(), null);
                     }
                 })
                 .toList();

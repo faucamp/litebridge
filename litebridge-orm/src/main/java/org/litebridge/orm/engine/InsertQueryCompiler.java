@@ -4,7 +4,6 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.select.ast.InsertNode;
 import org.litebridge.orm.api.select.ast.InsertValuesNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.SetNode;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -37,7 +36,6 @@ final class InsertQueryCompiler extends AbstractQueryCompiler<InsertCompilationC
             case InsertValuesNode insertValuesNode ->
                     compilationContext.addRowBindValues(Arrays.asList(insertValuesNode.values()));
             case InsertNode insertNode -> { /* Ignore */ }
-            case SetNode setNode -> throw new UnsupportedOperationException("Unsupported node type: SetNode");
             default -> throw new UnsupportedOperationException("Unsupported node type: " + node.getClass().getName());
         }
     }

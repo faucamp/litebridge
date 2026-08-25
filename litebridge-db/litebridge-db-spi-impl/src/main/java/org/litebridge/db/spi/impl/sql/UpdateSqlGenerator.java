@@ -9,6 +9,7 @@ import org.litebridge.db.spi.math.MathOperation;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Update;
+import org.litebridge.db.spi.update.UpdateColumn;
 
 import java.util.function.BiFunction;
 
@@ -57,18 +58,18 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
 
         boolean first = true;
 
-        for (ColumnValue columnValue : update.columnValues()) {
+        for (UpdateColumn updateColumn : update.columns()) {
             if (first) {
                 first = false;
             } else {
                 sql.append(", ");
             }
 
-            sql.append(columnIdentifierGenerator.quoteIdentifier(columnValue.column().name())).append(" = ");
-            final ColumnMetaData columnMetaData = ensureColumnMetaData(columnValue.column(), connectionProvider);
+            sql.append(columnIdentifierGenerator.quoteIdentifier(updateColumn.name())).append(" = ");
+            //final ColumnMetaData columnMetaData = ensureColumnMetaData(columnValue.column(), connectionProvider);
 
-            if (columnValue.value() instanceof MathOperation mathOperation) {
-                sql.append(createMathOperation(columnMetaData, mathOperation));
+            if (updateColumn.mathOperation() != null) {
+                sql.append(createMathOperation(updateColumn.name(), updateColumn.mathOperation()));
             } else {
                 sql.append('?');
             }
@@ -89,8 +90,7 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
      * @param mathOperation the math operation
      * @return the SQL representation of the math operation
      */
-    protected String createMathOperation(final ColumnMetaData column, final MathOperation mathOperation) {
-        final Object convertedValue = typeConverter.convert(mathOperation.value(), column.getDataType());
-        return "%s %s %s".formatted(columnIdentifierGenerator.quoteIdentifier(column.name()), mathOperation.operator().symbol(), convertedValue);
+    protected String createMathOperation(final String column, final MathOperation mathOperation) {
+        return "%s %s ?".formatted(columnIdentifierGenerator.quoteIdentifier(column), mathOperation.operator().symbol());
     }
 }

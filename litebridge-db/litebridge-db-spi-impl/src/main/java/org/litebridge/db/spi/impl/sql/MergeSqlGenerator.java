@@ -5,7 +5,7 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.InsertV2;
+import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.db.spi.update.Merge;
 
 import java.util.List;
@@ -81,7 +81,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
 
         boolean first = true;
 
-        for (InsertV2.InsertColumn updateColumn : update.columns()) {
+        for (UpdateColumn updateColumn : update.columns()) {
             if (first) {
                 first = false;
             } else {
@@ -96,7 +96,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
         return sql.toString();
     }
 
-    private static String getColumnValue(final InsertV2.InsertColumn updateColumn) {
+    private static String getColumnValue(final UpdateColumn updateColumn) {
         if (updateColumn.generatedValue() != null) {
             return Objects.requireNonNull(updateColumn.generatedValue()).toString();
         } else {
@@ -105,7 +105,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
     }
 
     protected void appendInsert(final StringBuilder sql, final Merge.MergeInsert insert) {
-        final List<String> columnNames = insert.columns().stream().map(InsertV2.InsertColumn::name).toList();
+        final List<String> columnNames = insert.columns().stream().map(UpdateColumn::name).toList();
         sql.append("INSERT (")
                 .append(String.join(", ", columnNames.stream().map(columnIdentifierGenerator::quoteIdentifier).toList()))
                 .append(") VALUES ");
@@ -118,7 +118,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
             sql.append('(');
 
             for (int j = 0; j < insert.columns().size(); j++) {
-                final InsertV2.InsertColumn insertColumn = insert.columns().get(j);
+                final UpdateColumn insertColumn = insert.columns().get(j);
 
                 if (j > 0) {
                     sql.append(", ");

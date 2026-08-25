@@ -20,12 +20,12 @@ public record Merge(Table table,
     public interface WhenMatchedOperation {
     }
 
-    public record MergeUpdate(List<InsertV2.InsertColumn> columns) implements WhenMatchedOperation {
+    public record MergeUpdate(List<UpdateColumn> columns) implements WhenMatchedOperation {
     }
 
     public record MergeDelete() implements WhenMatchedOperation {
     }
 
-    public record MergeInsert(List<InsertV2.InsertColumn> columns, int rows) {
+    public record MergeInsert(List<UpdateColumn> columns, int rows) {
     }
 }
