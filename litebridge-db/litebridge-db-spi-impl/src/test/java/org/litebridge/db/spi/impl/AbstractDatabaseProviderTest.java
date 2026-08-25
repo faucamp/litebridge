@@ -32,6 +32,7 @@ import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.RowValue;
 import org.litebridge.db.spi.update.Update;
+import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -335,15 +336,15 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData table = tableMetaDataImpl();
         final ColumnMetaData column = table.column("TEST_COLUMN");
-        final ColumnValue columnValue1 = new ColumnValue(column.toColumn(), "testValue");
-        final ColumnValue columnValue2 = new ColumnValue(column.toColumn(), "testValue");
+        final UpdateColumn updateColumn1 = new UpdateColumn(column.name());
+        final UpdateColumn updateColumn2 = new UpdateColumn(column.name());
         final ColumnExpression columnExpression = new SelectColumn(column.toColumn(), mock(ColumnIdentifierGenerator.class));
         final LogicCondition condition1 = new LogicCondition(columnExpression, Operator.EQ, "conditionValue");
         final LogicCondition condition2 = new LogicCondition(LogicOperator.AND, new Condition(columnExpression, Operator.IS_NOT_NULL));
         final LogicCondition condition3 = new LogicCondition(LogicOperator.OR, new Condition(columnExpression, Operator.IS_NULL));
         final ConditionGroup conditionGroup = new ConditionGroup(List.of(condition1, condition2, condition3));
 
-        final Update update = new Update(table.toTable(), List.of(columnValue1, columnValue2), conditionGroup);
+        final Update update = new Update(table.toTable(), List.of(updateColumn1, updateColumn2), conditionGroup);
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(preparedStatement.executeUpdate()).thenReturn(1);
@@ -363,9 +364,9 @@ class AbstractDatabaseProviderTest {
         // Given
         final TableMetaData table = tableMetaDataImpl("");
         final ColumnMetaData column = table.column("TEST_COLUMN");
-        final ColumnValue columnValue = new ColumnValue(column.toColumn(), "testValue");
+        final UpdateColumn updateColumn = new UpdateColumn(column.name());
 
-        final Update update = new Update(table.toTable(), List.of(columnValue), new ConditionGroup(Collections.emptyList()));
+        final Update update = new Update(table.toTable(), List.of(updateColumn), new ConditionGroup(Collections.emptyList()));
 
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         when(preparedStatement.executeUpdate()).thenReturn(1);
@@ -800,9 +801,9 @@ class AbstractDatabaseProviderTest {
                 org.litebridge.db.spi.math.MathOperation.Operator.SUBTRACT,
                 5
         );
-        final ColumnValue columnValue = new ColumnValue(column.toColumn(), mathOperation);
+        final UpdateColumn updateColumn = new UpdateColumn(column.name());
 
-        final Update update = new Update(tableMetaData.toTable(), List.of(columnValue), new ConditionGroup(Collections.emptyList()));
+        final Update update = new Update(tableMetaData.toTable(), List.of(updateColumn), new ConditionGroup(Collections.emptyList()));
 
         when(typeConverter.convert(5, column.getDataType())).thenReturn(5);
 

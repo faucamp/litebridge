@@ -5,16 +5,13 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.orm.api.delete.model.DeleteSpec;
 import org.litebridge.orm.api.dto.DtoDataSpec;
 import org.litebridge.orm.api.dto.DtoJoinSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
-import org.litebridge.orm.api.insert.model.InsertSpec;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
@@ -27,7 +24,6 @@ import org.litebridge.orm.api.select.ast.MergeNode;
 import org.litebridge.orm.api.select.ast.OrderByNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
-import org.litebridge.orm.api.select.ast.SetNode;
 import org.litebridge.orm.api.select.ast.UpdateNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractConditionBasedSpec;
@@ -41,7 +37,6 @@ import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.api.sql.SqlJoinSpec;
 import org.litebridge.orm.api.sql.SqlSelectSpec;
-import org.litebridge.orm.api.update.model.UpdateSpec;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
@@ -113,35 +108,6 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
 
         for (final QueryNode n : nodes) {
             applyNode(n, null, deleteSpec);
-        }
-    }
-
-    /**
-     * Compiles the given {@link QueryNode} chain into the provided {@link UpdateSpec}.
-     *
-     * @param node       the end of the query node chain
-     * @param updateSpec the update specification to populate
-     */
-    public void compile(final QueryNode node, final UpdateSpec updateSpec) {
-        final List<QueryNode> nodes = flatten(node);
-
-        for (final QueryNode n : nodes) {
-            applyNode(n, null, updateSpec);
-        }
-    }
-
-    /**
-     * Compiles the given {@link QueryNode} chain into the provided {@link InsertSpec}.
-     *
-     * @param node       the end of the query node chain
-     * @param insertSpec the insert specification to populate
-     */
-    @Deprecated(forRemoval = true)
-    public void compile(final QueryNode node, final InsertSpec insertSpec) {
-        final List<QueryNode> nodes = flatten(node);
-
-        for (final QueryNode n : nodes) {
-            applyNode(n, null, insertSpec);
         }
     }
 

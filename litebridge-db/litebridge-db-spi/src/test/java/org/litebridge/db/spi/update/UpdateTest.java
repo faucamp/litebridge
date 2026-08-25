@@ -24,16 +24,16 @@ class UpdateTest {
         // Given
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnMetaData column = new ColumnMetaData(table, "TEST_COLUMN", true, Types.VARCHAR);
-        final ColumnValue columnValue = new ColumnValue(column.toColumn(), "testValue");
+        final UpdateColumn updateColumn = new UpdateColumn(column.name());
         final Condition condition = new Condition(ColumnExpressionTest.select(new Column(table, "ID")), Operator.EQ, new LiteralExpression(1L));
         final ConditionGroup conditionGroup = new ConditionGroup(new LogicCondition(LogicOperator.AND, condition));
 
         // When
-        final Update result = new Update(table, List.of(columnValue), conditionGroup);
+        final Update result = new Update(table, List.of(updateColumn), conditionGroup);
 
         // Then
         assertEquals(table, result.table());
-        assertEquals(List.of(columnValue), result.columnValues());
+        assertEquals(List.of(updateColumn), result.columns());
         assertEquals(condition, result.where().conditions().getFirst().condition());
     }
 }

@@ -208,6 +208,11 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         }
 
         @Override
+        public UpdateResult merge(final PreparedSql merge, final ConnectionProvider connectionProvider) throws SQLException {
+            return null;
+        }
+
+        @Override
         public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
             return "";
         }

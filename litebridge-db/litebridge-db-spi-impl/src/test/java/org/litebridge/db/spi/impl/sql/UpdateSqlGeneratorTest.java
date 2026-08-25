@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
@@ -19,7 +18,6 @@ import java.util.function.BiFunction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.litebridge.db.spi.impl.sql.TestUtil.createTestColumn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,15 +40,10 @@ class UpdateSqlGeneratorTest {
         final Column column = createTestColumn();
         final MathOperation mathOperation = new MathOperation(MathOperation.Operator.ADD, 10);
         final int dataType = Types.NUMERIC;
-
-        final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
-        when(columnMetaData.name()).thenReturn(column.name());
-        when(columnMetaData.getDataType()).thenReturn(dataType);
-
         when(typeConverter.convert(10, dataType)).thenReturn(10);
 
         // When
-        final String result = updateSqlGenerator.createMathOperation(columnMetaData, mathOperation);
+        final String result = updateSqlGenerator.createMathOperation(column.name(), mathOperation);
 
         // Then
         assertEquals("TEST_COLUMN + 10", result);

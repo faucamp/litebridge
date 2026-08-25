@@ -5,7 +5,6 @@ import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.orm.api.select.ast.SetNode;
 import org.litebridge.orm.api.select.ast.UpdateNode;
-import org.litebridge.orm.api.update.model.UpdateSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
 
 /**
