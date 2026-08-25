@@ -5,7 +5,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
-public class DtoUpdateSetStep<DTO>
+public final class DtoUpdateSetStep<DTO>
 
         extends UpdateSetStep<DTO,
         DtoUpdateStep<DTO>,

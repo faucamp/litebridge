@@ -13,7 +13,7 @@ import java.util.function.Function;
  *
  * @param <DTO> the DTO type
  */
-public class DtoUpdateWhereConditionClause<DTO>
+public final class DtoUpdateWhereConditionClause<DTO>
 
         extends ConditionClauseImpl<DTO,
         DtoUpdateWhereConditionClause<DTO>,

@@ -8,10 +8,12 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
-public abstract class UpdateSetStep<DTO,
+public abstract sealed class UpdateSetStep<DTO,
         US extends UpdateStep<DTO, WCC, WCCT>,
         WCC extends UpdateWhereConditionClause<DTO, WCC, WCCT>,
-        WCCT extends UpdateWhereConditionClauseTerminal<DTO, WCC, WCCT>> {
+        WCCT extends UpdateWhereConditionClauseTerminal<DTO, WCC, WCCT>>
+
+        permits DtoUpdateSetStep, SqlUpdateSetStep {
 
     private final @Nullable String column;
     private final @Nullable ExpressionSpec expressionSpec;

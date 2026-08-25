@@ -9,7 +9,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
-public class SqlUpdateWhereConditionClause
+public final class SqlUpdateWhereConditionClause
 
         extends ConditionClauseImpl<Row,
         SqlUpdateWhereConditionClause,
