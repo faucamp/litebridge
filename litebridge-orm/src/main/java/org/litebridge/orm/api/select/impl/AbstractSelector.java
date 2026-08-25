@@ -18,7 +18,7 @@ import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryBindValueExtractor;
-import org.litebridge.orm.engine.QueryCompiler;
+import org.litebridge.orm.engine.compiler.QueryCompiler;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;

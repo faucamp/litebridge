@@ -1,4 +1,4 @@
-package org.litebridge.orm.engine;
+package org.litebridge.orm.engine.compiler;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.ColumnMetaData;
@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Stream;
 
 public final class UpdateCompilationContext implements CompilationContext {
 

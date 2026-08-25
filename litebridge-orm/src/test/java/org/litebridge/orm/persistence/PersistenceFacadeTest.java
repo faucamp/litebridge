@@ -23,7 +23,7 @@ import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.QueryCompiler;
+import org.litebridge.orm.engine.compiler.QueryCompiler;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.expression.TestColumnExpression;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;

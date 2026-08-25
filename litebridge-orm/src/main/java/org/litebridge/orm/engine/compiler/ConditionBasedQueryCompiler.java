@@ -1,4 +1,4 @@
-package org.litebridge.orm.engine;
+package org.litebridge.orm.engine.compiler;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;

@@ -1,4 +1,4 @@
-package org.litebridge.orm.engine;
+package org.litebridge.orm.engine.compiler;
 
 import org.litebridge.db.spi.query.LogicOperator;
 

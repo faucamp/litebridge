@@ -1,4 +1,4 @@
-package org.litebridge.orm.engine;
+package org.litebridge.orm.engine.compiler;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
@@ -8,13 +8,13 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.orm.api.delete.model.DeleteSpec;
 import org.litebridge.orm.api.dto.DtoDataSpec;
 import org.litebridge.orm.api.dto.DtoJoinSpec;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
+import org.litebridge.orm.api.select.ast.DeleteNode;
 import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.HavingNode;
 import org.litebridge.orm.api.select.ast.InsertNode;
@@ -59,6 +59,7 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
     private final InsertQueryCompiler insertQueryCompiler;
     private final UpdateQueryCompiler updateQueryCompiler;
     private final MergeQueryCompiler mergeQueryCompiler;
+    private final DeleteQueryCompiler deleteQueryCompiler;
     private final Map<Class<?>, List<Table>> aliasHistory = new HashMap<>();
     private final Map<Table, OrmTable> tableToOrmTableMap = new HashMap<>();
 
@@ -71,6 +72,7 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
         this.insertQueryCompiler = new InsertQueryCompiler(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
         this.updateQueryCompiler = new UpdateQueryCompiler(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
         this.mergeQueryCompiler = new MergeQueryCompiler(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
+        this.deleteQueryCompiler = new DeleteQueryCompiler(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
     }
 
     @Override
@@ -97,20 +99,6 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
         }
     }
 
-    /**
-     * Compiles the given {@link QueryNode} chain into the provided {@link DeleteSpec}.
-     *
-     * @param node       the end of the query node chain
-     * @param deleteSpec the delete specification to populate
-     */
-    public void compile(final QueryNode node, final DeleteSpec deleteSpec) {
-        final List<QueryNode> nodes = flatten(node);
-
-        for (final QueryNode n : nodes) {
-            applyNode(n, null, deleteSpec);
-        }
-    }
-
     public PreparedOperation compile(final QueryNode node) {
         final List<QueryNode> nodes = flatten(node);
 
@@ -118,6 +106,7 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
             case InsertNode insertNode -> insertQueryCompiler;
             case UpdateNode updateNode -> updateQueryCompiler;
             case MergeNode mergeNode -> mergeQueryCompiler;
+            case DeleteNode deleteNode -> deleteQueryCompiler;
             default -> throw new IllegalArgumentException("Unsupported root query node type: " + nodes.getFirst());
         };
 

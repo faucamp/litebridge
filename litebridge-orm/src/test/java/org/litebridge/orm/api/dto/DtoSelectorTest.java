@@ -17,7 +17,6 @@ import org.litebridge.db.spi.expression.SelectReferenceExpressionFactory;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.LitebridgeContext;

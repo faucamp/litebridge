@@ -1,8 +1,7 @@
-package org.litebridge.orm.api.sql.delete;
+package org.litebridge.orm.api.delete;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.delete.DeleteWhereConditionClause;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;

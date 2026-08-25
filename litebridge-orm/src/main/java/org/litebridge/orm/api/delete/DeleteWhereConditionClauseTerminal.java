@@ -1,8 +1,6 @@
 package org.litebridge.orm.api.delete;
 
-import org.litebridge.orm.api.dto.delete.DtoDeleteWhereConditionClauseTerminal;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
-import org.litebridge.orm.api.sql.delete.SqlDeleteWhereConditionClauseTerminal;
 
 /**
  * Interface for the terminal part of a WHERE condition clause in a delete query.
@@ -17,7 +15,7 @@ public sealed interface DeleteWhereConditionClauseTerminal<DTO,
 
         extends
         ConditionClauseTerminal<DTO, WCC, SELF>,
-        DeleteQuery
+        DeleteTerminal
 
         permits
         DtoDeleteWhereConditionClauseTerminal,

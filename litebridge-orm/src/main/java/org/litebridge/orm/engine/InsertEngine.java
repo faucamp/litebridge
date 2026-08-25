@@ -10,7 +10,6 @@ import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.InsertV2;
 import org.litebridge.orm.api.insert.DtoInsertIntoStep;
-import org.litebridge.orm.api.insert.InsertIntoStep;
 import org.litebridge.orm.api.insert.InsertValuesStep;
 import org.litebridge.orm.api.insert.InsertValuesStepInspector;
 import org.litebridge.orm.api.insert.SqlInsertIntoStep;
@@ -24,7 +23,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class InsertEngine extends AbstractUpdateEngine {
+public class InsertEngine extends AbstractInsertEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InsertEngine.class);
     private final TableRegistry tableRegistry;

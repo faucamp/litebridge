@@ -1,4 +1,4 @@
-package org.litebridge.orm.engine;
+package org.litebridge.orm.engine.compiler;
 
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 
 abstract sealed class AbstractQueryCompiler<CC extends CompilationContext>
-        permits ConditionBasedQueryCompiler, InsertQueryCompiler, QueryCompiler, UpdateQueryCompiler {
+        permits ConditionBasedQueryCompiler, DeleteQueryCompiler, InsertQueryCompiler, QueryCompiler, UpdateQueryCompiler {
 
     protected final TableRegistry tableRegistry;
     protected final TableMetaDataCache tableMetaDataCache;

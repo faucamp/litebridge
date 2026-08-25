@@ -1,7 +1,6 @@
 package org.litebridge.orm.persistence;
 
 import org.litebridge.db.spi.PreparedOperation;
-import org.litebridge.orm.api.delete.model.DeleteSpec;
 import org.litebridge.orm.api.select.ast.DeleteNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
@@ -26,8 +25,6 @@ public final class DeleteBuilder extends AbstractConditionalStatementBuilder {
 
     @Override
     public PreparedOperation build() {
-        final DeleteSpec deleteSpec = new DeleteSpec(ormTable.getMetaData().toTable(), litebridgeContext.selectExpressionMapper());
-        litebridgeContext.createQueryCompiler().compile(node, deleteSpec);
-        return deleteSpec.toDelete(litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter());
+        return litebridgeContext.createQueryCompiler().compile(node);
     }
 }

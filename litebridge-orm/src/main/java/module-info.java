@@ -22,8 +22,6 @@ module litebridge.orm {
     exports org.litebridge.orm.api.delete.model;
     exports org.litebridge.orm.api.dto;
     exports org.litebridge.orm.api.dto.delete;
-    exports org.litebridge.orm.api.dto.update;
-    exports org.litebridge.orm.api.insert.model;
     exports org.litebridge.orm.api.register;
     exports org.litebridge.orm.api.select;
     exports org.litebridge.orm.api.select.ast;
@@ -33,7 +31,6 @@ module litebridge.orm {
     exports org.litebridge.orm.api.sql.delete;
     exports org.litebridge.orm.api.tx;
     exports org.litebridge.orm.api.update;
-    exports org.litebridge.orm.api.update.model;
     exports org.litebridge.orm.config;
     exports org.litebridge.orm.engine;
     exports org.litebridge.orm.exception;
@@ -59,4 +56,6 @@ module litebridge.orm {
     opens org.litebridge.orm.engine to litebridge.commons, litebridge.tracking;
     exports org.litebridge.orm.api.dto.condition;
     opens org.litebridge.orm.api.dto.condition to litebridge.commons, litebridge.tracking;
+    exports org.litebridge.orm.engine.compiler;
+    opens org.litebridge.orm.engine.compiler to litebridge.commons, litebridge.tracking;
 }

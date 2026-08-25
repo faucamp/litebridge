@@ -6,7 +6,7 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.QueryCompiler;
+import org.litebridge.orm.engine.compiler.QueryCompiler;
 
 import java.util.Collections;
 

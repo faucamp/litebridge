@@ -8,12 +8,11 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.UpdateResult;
-import org.litebridge.orm.api.delete.DeleteQuery;
 import org.litebridge.orm.api.delete.DeleteTerminal;
+import org.litebridge.orm.api.delete.DtoDeleteStart;
+import org.litebridge.orm.api.delete.SqlDeleteStart;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.dto.DtoSelectSpec;
-import org.litebridge.orm.api.dto.delete.DtoDeleteWhereClause;
-import org.litebridge.orm.api.dto.delete.DtoDeletor;
 import org.litebridge.orm.api.insert.DtoInsertIntoStep;
 import org.litebridge.orm.api.insert.InsertValuesStep;
 import org.litebridge.orm.api.insert.SqlInsertIntoStep;
@@ -27,14 +26,13 @@ import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.spec.DtoTableSpec;
-import org.litebridge.orm.api.sql.delete.SqlDeleteWhereClause;
-import org.litebridge.orm.api.sql.delete.SqlDeletor;
 import org.litebridge.orm.api.tx.TransactionContext;
 import org.litebridge.orm.api.update.DtoUpdateStart;
 import org.litebridge.orm.api.update.SqlUpdateStart;
 import org.litebridge.orm.api.update.UpdateQuery;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
+import org.litebridge.orm.engine.DeleteEngine;
 import org.litebridge.orm.engine.FromClauseEngine;
 import org.litebridge.orm.engine.InsertEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -107,7 +105,8 @@ public final class Litebridge implements SelectApi {
     private final RegistrationEngine registrationEngine;
     private final FromClauseEngine fromClauseEngine;
     private final InsertEngine insertEngine = new InsertEngine(tableRegistry);
-    private final UpdateEngine updateEngine = new UpdateEngine(tableRegistry);
+    private final UpdateEngine updateEngine = new UpdateEngine();
+    private final DeleteEngine deleteEngine = new DeleteEngine();
     private final QueryPlanCache queryPlanCache = new QueryPlanCache();
     private final LitebridgeConfig litebridgeConfig;
     private final TableMetaDataCache tableMetaDataCache;
@@ -480,15 +479,10 @@ public final class Litebridge implements SelectApi {
      *
      * @param <DTO>    The type of the Data Transfer Object (DTO) representing the table.
      * @param dtoClass The class of the DTO to identify the table for deletion.
-     * @param query    A function that builds the delete query using a {@link DtoDeleteWhereClause}.
+     * @param query    A function that builds the delete query using a {@link DtoDeleteStart}.
      */
-    public <DTO> void delete(final Class<DTO> dtoClass, final Function<DtoDeleteWhereClause<DTO>, DeleteQuery> query) {
-        final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
-        final DtoDeletor<DTO> dtoDtoDeletor = new DtoDeletor<>(dtoClass,
-                ormTable,
-                createDtoLitebridgeContext());
-        final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(dtoDtoDeletor);
-        deleteTerminal.execute();
+    public <DTO> UpdateResult delete(final Class<DTO> dtoClass, final Function<DtoDeleteStart<DTO>, DeleteTerminal> query) {
+        return deleteEngine.delete(dtoClass, query, createDtoLitebridgeContext());
     }
 
     /**
@@ -498,20 +492,18 @@ public final class Litebridge implements SelectApi {
      * @param dtoClass The class type of the DTO that is to be deleted.
      */
     public <DTO> void delete(final Class<DTO> dtoClass) {
-        delete(dtoClass, dtoDeletor -> dtoDeletor);
+        delete(dtoClass, dtoDeleteStart -> dtoDeleteStart);
     }
 
     /**
      * Deletes records from the specified table in the database based on the provided delete query.
      *
      * @param tableName the name of the table from which records will be deleted
-     * @param query     a function that takes an instance of {@code SqlDeleteWhereClause} and returns a {@code DeleteQuery},
+     * @param delete    a function that takes an instance of {@code SqlDeleteWhereClause} and returns a {@code DeleteQuery},
      *                  specifying the conditions for deleting the records
      */
-    public void delete(final String tableName, final Function<SqlDeleteWhereClause, DeleteQuery> query) {
-        final SqlDeletor sqlDeletor = new SqlDeletor(new Table(tableName), null, createSqlLitebridgeContext());
-        final DeleteTerminal deleteTerminal = (DeleteTerminal) query.apply(sqlDeletor);
-        deleteTerminal.execute();
+    public UpdateResult delete(final String tableName, final Function<SqlDeleteStart, DeleteTerminal> delete) {
+        return deleteEngine.delete(tableName, delete, createSqlLitebridgeContext());
     }
 
     /**
@@ -520,7 +512,7 @@ public final class Litebridge implements SelectApi {
      * @param tableName the name of the table from which to delete entries
      */
     public void delete(final String tableName) {
-        delete(tableName, sqlDeletor -> sqlDeletor);
+        delete(tableName, sqlDeleteStart -> sqlDeleteStart);
     }
 
     public UpdateResult mergeInto(final String tableName, final Function<SqlMergeUsingStep, MergeTerminal> merge) {

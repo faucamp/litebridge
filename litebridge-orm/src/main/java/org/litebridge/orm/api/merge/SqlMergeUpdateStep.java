@@ -2,8 +2,9 @@ package org.litebridge.orm.api.merge;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
+import org.litebridge.orm.api.delete.DeleteTerminalInspector;
+import org.litebridge.orm.api.delete.SqlDeleteStart;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.sql.delete.SqlDeletor;
 import org.litebridge.orm.api.update.SqlUpdateStart;
 import org.litebridge.orm.api.update.UpdateQuery;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -30,10 +31,9 @@ public final class SqlMergeUpdateStep extends MergeUpdateStep<Row> {
     }
 
     public MergeTerminal delete() {
-        //TODO: defer table lookup
-        final Table table = litebridgeContext.tableRegistry().getOrCreateSpiTable(this.table);
-        final SqlDeletor sqlDeletor = new SqlDeletor(table, null, litebridgeContext);
+        final SqlDeleteStart sqlDeleteStart = new SqlDeleteStart(table, litebridgeContext);
         //TODO: where condition
-        return new MergeTerminal(sqlDeletor.node());
+        final QueryNode deleteNode = DeleteTerminalInspector.getNode(sqlDeleteStart);
+        return new MergeTerminal(deleteNode);
     }
 }

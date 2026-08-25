@@ -10,10 +10,10 @@ import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.api.sql.SqlProtoExpressionResolver;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
+import org.litebridge.orm.engine.compiler.QueryCompiler;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
-import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 
 /**

@@ -8,7 +8,7 @@
 //import org.litebridge.db.spi.update.UpdateResult;
 //import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 //import org.litebridge.orm.engine.LitebridgeContext;
-//import org.litebridge.orm.engine.QueryCompiler;
+//import org.litebridge.orm.engine.compiler.QueryCompiler;
 //import org.litebridge.orm.engine.QueryPlanCache;
 //import org.litebridge.orm.expression.select.SelectColumnSpec;
 //import org.litebridge.orm.persistence.OrmTable;

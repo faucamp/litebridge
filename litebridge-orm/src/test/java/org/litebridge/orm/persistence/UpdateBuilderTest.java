@@ -12,7 +12,7 @@ import org.litebridge.db.spi.update.Update;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.QueryCompiler;
+import org.litebridge.orm.engine.compiler.QueryCompiler;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.ClassFieldAccessorCache;

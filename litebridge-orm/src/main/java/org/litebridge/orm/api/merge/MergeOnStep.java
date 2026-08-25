@@ -2,7 +2,7 @@ package org.litebridge.orm.api.merge;
 
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.dto.delete.DtoDeleteWhereConditionClause;
+import org.litebridge.orm.api.delete.DtoDeleteWhereConditionClause;
 import org.litebridge.orm.api.select.ast.MergeNode;
 import org.litebridge.orm.api.select.ast.UsingNode;
 import org.litebridge.orm.engine.LitebridgeContext;

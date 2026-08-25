@@ -2,7 +2,7 @@
 //
 //import org.junit.jupiter.api.Test;
 //import org.litebridge.db.spi.Table;
-//import org.litebridge.orm.api.sql.delete.SqlDeleteWhereConditionClauseTerminalImpl;
+//import org.litebridge.orm.api.delete.SqlDeleteWhereConditionClauseTerminalImpl;
 //import org.litebridge.orm.api.sql.delete.SqlDeletor;
 //import org.litebridge.orm.engine.LitebridgeContext;
 //import org.litebridge.orm.persistence.TransactionalDatabaseProvider;

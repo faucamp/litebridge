@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class MergeEngine extends AbstractUpdateEngine {
+public class MergeEngine extends AbstractInsertEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MergeEngine.class);
     private final LitebridgeContext litebridgeContext;

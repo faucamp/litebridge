@@ -1,7 +1,6 @@
-package org.litebridge.orm.api.sql.delete;
+package org.litebridge.orm.api.delete;
 
 import org.litebridge.db.spi.Row;
-import org.litebridge.orm.api.delete.DeleteWhereConditionClauseTerminal;
 
 public sealed interface SqlDeleteWhereConditionClauseTerminal
 

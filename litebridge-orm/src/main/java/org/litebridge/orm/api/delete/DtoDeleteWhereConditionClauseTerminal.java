@@ -1,6 +1,4 @@
-package org.litebridge.orm.api.dto.delete;
-
-import org.litebridge.orm.api.delete.DeleteWhereConditionClauseTerminal;
+package org.litebridge.orm.api.delete;
 
 /**
  * Terminal clause for DTO delete WHERE conditions.
