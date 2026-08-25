@@ -5,14 +5,16 @@
 Updates and inserts can be performed in a variety of ways:
 
 - Implicitly by persisting a DTO via `litebridge.save(Object)`
+- Implicitly by persisting multiple DTOs via `litebridge.saveAll(Collection)`
 - Explicitly by inserting a new DTO via `litebridge.insert(Object)`
+- Explicitly via a query-based insert: `litebridge.insert(Class, Function)` or `litebridge.insert(String, Function)`
 - Explicitly by updating an existing DTO via `litebridge.update(Object)`
-- Explicitly via a DTO-level query: `litebridge.update(Object, Function)`
+- Explicitly via a DTO-level query: `litebridge.update(Class, Function)`
 - Explicitly via a SQL-level query: `litebridge.update(String, Function)`
 - **Natively** via raw SQL: `litebridge.nativeSql().execute(String, ...)`
 
-For the query-based APIs, the `Function` allows access to chain a sequence of update clauses,
-similar to the [`select()`](select.md) API.
+For the query-based APIs, the `Function` allows access to chain a sequence of query clauses,
+similar to the [`select()`](select.md) API. Mutating query operations (insert, update, delete) return an `UpdateResult` (or `InsertResult`) containing information such as the number of rows affected.
 
 ## Persisting DTOs
 
@@ -22,7 +24,7 @@ persistence state.
 To persist a DTO, call the `save()` method on the `Litebridge` instance:
 
 ```java
-Person person = new Persion();
+Person person = new Person();
 person.setName("Bob");
 person.setSurname("Jones");
 
@@ -30,12 +32,14 @@ person.setSurname("Jones");
 litebridge.save(person);
 ```
 
-Multiple DTOs can be saved at once:
+Multiple DTOs can be saved at once using `saveAll()`:
 
 ```java
-// Inserts 3 record into the mapped table
-litebridge.save(person1, person2, person3);
+// Inserts 3 records into the mapped table
+litebridge.saveAll(person1, person2, person3);
 ```
+
+`saveAll()` accepts a `Collection`, an array, or a varargs list of DTOs.
 
 To persist a DTO, simply invoke the `save()` method on the `Litebridge` instance:
 
@@ -67,6 +71,26 @@ litebridge.insert(person);
 
 This will attempt a SQL `INSERT` statement regardless of the input DTO's persisted state.
 
+### Query-based inserts
+
+Litebridge also supports query-based inserts, which allow for more control over the insertion process and return an `InsertResult` containing any generated keys.
+
+```java
+InsertResult result = litebridge.insert(Person.class, i -> i
+        .set("name").to("Alice")
+        .set("age").to(30));
+
+Long generatedId = result.generatedKeys().get("ID");
+```
+
+SQL-level inserts are also supported:
+
+```java
+litebridge.insert("LB.PERSON", i -> i
+        .set("NAME").to("Alice")
+        .set("AGE").to(30));
+```
+
 ## Explicit DTO updates
 
 If an explicit UPDATE statement is desired, it can be performed via `litebridge.update(Object)`:
@@ -88,11 +112,13 @@ The query function is a lambda that allows the query to be constructed using a c
 ### DTO-level query-based updates
 
 ```java
-litebridge.update(Person.class, p -> p
+UpdateResult result = litebridge.update(Person.class, p -> p
         .set("name").to("John")
         .set("surname").to("Doe")
         .set("age").to(18)
         .where("age").gt(18));
+
+int rowsAffected = result.rowsAffected();
 ```
 
 When making DTO-level updates via a query, the identifiers used in the query clauses must match 
@@ -116,7 +142,7 @@ litebridge.update(Person.class, p -> p
 Updates may be perfomed on a SQL-level using the fluent API, without requiring a DTO mapping:
 
 ```java
-litebridge.update("LB.PERSON", p -> p
+UpdateResult result = litebridge.update("LB.PERSON", p -> p
         .set("AGE").to(50)
         .where("FIRST_NAME").eq("Bob"));
 ```
@@ -124,7 +150,7 @@ litebridge.update("LB.PERSON", p -> p
 > [!NOTE]
 > To execute raw SQL `UPDATE`, `INSERT`, `DELETE` or DDL strings without using the fluent API, see [Native SQL Execution](native-sql.md).
 
-### Atomic operations
+## Atomic operations
 
 Atomic operations allow updating a column's value based on its current value in the database.
 This is especially useful for avoiding race conditions in concurrent environments.
@@ -145,7 +171,7 @@ The following atomic operations are supported:
 **Incrementing a value**
 
 ```java
-litebridge.update(Person.class, p -> p
+UpdateResult result = litebridge.update(Person.class, p -> p
         .set("age").increment()
         .where("id").eq(123));
 ```

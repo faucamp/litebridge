@@ -4,15 +4,21 @@
 
 ### Added
 - ORM:
-  - Implement `Litebridge.mergeInto()` method for performing SQL `MERGE` operations. 
+  - Implement `Litebridge.mergeInto()` method for performing SQL `MERGE` operations.
+  - New `saveAll()` overloads in `Litebridge` class for persisting multiple DTOs.
+  - New query-based `insert()` API in `Litebridge` class, returning `InsertResult`.
+  - Return `UpdateResult` and `InsertResult` classes for mutating operations, providing details on rows affected and generated keys.
 
 ### Changed
 - ORM:
   - Refactor `QueryCompiler` to delegate specific query types to specialised sub-compilers.
-  - Simplify node compilation; drop `InsertSpec` etc
+  - Simplify node compilation; drop `InsertSpec` etc.
+  - `Litebridge.save()` now accepts a single DTO instead of varargs to improve clarity and type safety.
+  - Query-based `update()` and `delete()` APIs now return `UpdateResult` instead of `void`.
 
 ### Removed
-
+- ORM:
+  - `Litebridge.save(Object... dtos)` has been removed in favour of `saveAll()`.
 
 ## [0.4.0] - 2026-08-10
 

@@ -266,8 +266,7 @@ DtoTableSpec personSpec = new DtoTableSpec(Person.class, new TableSpec("LB.PERSO
 DtoTableSpec accountSpec = new DtoTableSpec(Account.class, new TableSpec("LB.ACCOUNT", personMap));
 
 // Register the table mappings
-litebridge.register(MethodHandles.lookup(), personSpec);
-litebridge.register(MethodHandles.lookup(), accountSpec); 
+litebridge.register(personSpec, accountSpec);
 ```
 
 The above snippet makes use of staticly-imported shorthand mapping methods `f()`, `p()`, and `c()`,

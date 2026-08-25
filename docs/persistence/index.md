@@ -23,9 +23,10 @@ This section covers the core persistence features provided by Litebridge:
 3. **[Updating data](update.md)**: Persist new DTOs or update existing records using Litebridge’s persistence
    operations.
 4. **[Deleting data](delete.md)**: Remove records from the database using mapped DTOs.
-5. **[Change tracking](change-tracking.md)**: Optimise updates by only persisting modified fields.
-6. **[Transactions](transactions.md)**: Coordinate persistence operations safely using Litebridge transaction support.
-7. **[Configuration](configuration.md)**: Configure global behaviour of the Litebridge ORM.
+5. **[Merging data](merge.md)**: Conditionally perform inserts, updates, or deletes via `MERGE INTO`.
+6. **[Change tracking](change-tracking.md)**: Optimise updates by only persisting modified fields.
+7. **[Transactions](transactions.md)**: Coordinate persistence operations safely using Litebridge transaction support.
+8. **[Configuration](configuration.md)**: Configure global behaviour of the Litebridge ORM.
 
 ## Core Concepts
 
@@ -33,6 +34,6 @@ The persistence module is built around a few key ideas:
 
 - **DTO-table mappings** describe how Java DTOs correspond to database tables.
 - **Metamodels** provide a type-safe way to reference DTO fields in queries.
-- **Persistence operations** provide a simple way to select, insert, update, save, and delete DTOs.
+- **Persistence operations** provide a simple way to select, insert, update, save, delete, and merge DTOs.
 - **Change tracking** helps Litebridge determine which DTO fields need to be persisted.
 - **Transactions** ensure related database operations are committed or rolled back together.
