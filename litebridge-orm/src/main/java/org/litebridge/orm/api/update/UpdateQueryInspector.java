@@ -11,6 +11,7 @@ public final class UpdateQueryInspector {
         return switch (updateQuery) {
             case DtoUpdateWhereConditionClauseTerminalImpl<?> dtoUpdateWhereConditionClauseTerminalImpl -> dtoUpdateWhereConditionClauseTerminalImpl.node();
             case SqlUpdateWhereConditionClauseTerminalImpl sqlUpdateWhereConditionClauseTerminalImpl -> sqlUpdateWhereConditionClauseTerminalImpl.node();
+            case DtoUpdateStep<?> dtoUpdateStep -> dtoUpdateStep.node();
             default -> throw new UnsupportedOperationException("Unsupported update query type: " + updateQuery.getClass());
         };
     }

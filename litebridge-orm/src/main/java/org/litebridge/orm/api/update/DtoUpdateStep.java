@@ -55,4 +55,8 @@ public final class DtoUpdateStep<DTO> extends UpdateStepBase
                 expression,
                 node -> new DtoUpdateWhereConditionClauseTerminalImpl<>(dtoClass, new WhereNode(this.node, node), litebridgeContext));
     }
+
+    QueryNode node() {
+        return node;
+    }
 }

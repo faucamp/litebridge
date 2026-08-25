@@ -39,43 +39,16 @@ final class UpdateQueryCompiler extends AbstractQueryCompiler<UpdateCompilationC
     protected void applyNode(final QueryNode node, final UpdateCompilationContext compilationContext) {
         switch (node) {
             case SetNode setNode -> compilationContext.addSetNode(setNode);
-            case WhereNode whereNode -> flattenAndApply(whereNode.condition(), compilationContext);
+            case WhereNode whereNode -> flattenAndApplyNodes(whereNode.condition(), compilationContext);
             case UpdateNode updateNode -> { /* Ignore */ }
-            default -> throw new UnsupportedOperationException("Unsupported node type: " + node.getClass().getName());
-        }
-    }
-
-    private void flattenAndApply(final QueryNode terminalNode, final UpdateCompilationContext compilationContext) {
-        final List<QueryNode> conditionNodes = flatten(terminalNode);
-
-        for (QueryNode node : conditionNodes) {
-            applyConditionNode(node, compilationContext);
-        }
-    }
-
-    private void applyConditionNode(final QueryNode node, final UpdateCompilationContext compilationContext) {
-        switch (node) {
             case ConditionNode conditionNode -> compilationContext.addWhereCondition(conditionNode);
             case ConditionGroupNode conditionGroupNode -> {
                 final ConditionGroupSpecStack conditionGroupSpecStack = compilationContext.ensureWhereConditionGroupStack();
                 conditionGroupSpecStack.push(conditionGroupNode.logicOperator());
-                flattenAndApply(conditionGroupNode.lastChild(), compilationContext);
+                flattenAndApplyNodes(conditionGroupNode.lastChild(), compilationContext);
                 conditionGroupSpecStack.pop();
             }
             default -> throw new UnsupportedOperationException("Unsupported node type: " + node.getClass().getName());
         }
-    }
-
-    private static List<QueryNode> flatten(final QueryNode node) {
-        final List<QueryNode> nodes = new ArrayList<>();
-        QueryNode current = node;
-
-        while (current != null) {
-            nodes.add(current);
-            current = current.previous();
-        }
-
-        Collections.reverse(nodes);
-        return nodes;
     }
 }

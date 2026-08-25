@@ -93,7 +93,21 @@ final class MergeCompilationContext implements CompilationContext {
 
     public void whenMatchedUpdateSet(final SetNode setNode) {
         final WhenMatchedSpec whenMatchedSpec = whenMatchedSpecs.getLast();
-        final ColumnMetaData columnMetaData = targetTableMetaData.column(setNode.column());
+        final ColumnMetaData columnMetaData;
+
+        if (setNode.column() != null) {
+            columnMetaData = targetTableMetaData.column(setNode.column());
+        } else {
+            final ExpressionSpec expressionSpec = setNode.expressionSpec();
+
+            if (expressionSpec instanceof QueryField queryField) {
+                columnMetaData = targetOrmTable.getColumnForFieldName(QueryFieldInspector.getFieldName(queryField));
+            } else if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
+                columnMetaData = targetTableMetaData.column(columnExpressionSpec.getColumn().name());
+            } else {
+                throw new IllegalArgumentException("Unsupported expression spec type: " + expressionSpec.getClass().getName());
+            }
+        }
         whenMatchedSpec.addUpdateColumn(columnMetaData);
 
         if (setNode.bindValue()) {
