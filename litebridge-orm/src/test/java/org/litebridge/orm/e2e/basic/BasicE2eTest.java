@@ -385,7 +385,7 @@ public class BasicE2eTest extends AbstractE2eTest {
                                 ))));
 
         // Split the multi-table DTO into two single-table DTOs and save them separately
-        litebridge.save(entityDtoMapper.entities(personAccount));
+        litebridge.saveAll(entityDtoMapper.entities(personAccount));
 
         // Load the indidual entities and reconstruct the composite DTO
         final Person person = litebridge.select(Person.class).where("id").eq(personAccount.getId()).oneOrThrow();

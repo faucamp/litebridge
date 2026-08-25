@@ -7,8 +7,8 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.db.spi.update.InsertV2;
+import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.orm.api.select.ast.InsertNode;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -25,14 +25,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public final class InsertCompilationContext implements CompilationContext {
 
     private final Table table;
     private final TableMetaData tableMetaData;
     private final List<ColumnMetaData> columnMetaDataList = new ArrayList<>();
-    private final Set<String> insertColumns;
+    private final List<String> insertColumns;
     private int rows = 0;
     private @Nullable List<BindValue> bindValues;
 
@@ -56,39 +55,36 @@ public final class InsertCompilationContext implements CompilationContext {
             if (insertNode.columns().length > 0) {
                 if (ormTable != null) {
                     // Translate field names to column names
-                    this.insertColumns = new HashSet<>(Arrays.stream(insertNode.columns())
+                    insertColumns = Arrays.stream(insertNode.columns())
                             .map(ormTable::getColumnForFieldName)
                             .map(ColumnMetaData::name)
-                            .collect(Collectors.toSet()));
+                            .toList();
                 } else {
-                    this.insertColumns = new HashSet<>(Set.of(insertNode.columns()));
+                    this.insertColumns = List.of(insertNode.columns());
                 }
 
-                final Set<String> unmappedInsertColumns = new HashSet<>(insertColumns);
-
-                for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
-                    if (insertColumns.contains(columnMetaData.name())) {
-                        // Explicit insert
-                        this.columnMetaDataList.add(columnMetaData);
-                        unmappedInsertColumns.remove(columnMetaData.name());
-                    } else if (!columnMetaData.isNullable()) {
-                        // Non-null value omitted from insert columns; see if it can be generated
-                        if (columnMetaData.getGenerator() != null) {
-                            // Implicit/generated value insert
-                            this.columnMetaDataList.add(columnMetaData);
-                        } else {
-                            throw new IllegalArgumentException("NOT NULL column " + columnMetaData.name() + " omitted from insert into table " + table.qualifiedName() + ", and no value generator present");
-                        }
-                    }
+                // Process insert columns in the order provided
+                for (final String insertColumnName : insertColumns) {
+                    final ColumnMetaData columnMetaData = tableMetaData.column(insertColumnName);
+                    this.columnMetaDataList.add(columnMetaData);
                 }
 
-                if (!unmappedInsertColumns.isEmpty()) {
-                    throw new IllegalArgumentException("Invalid insert column(s) for table " + table.qualifiedName() + ": " + unmappedInsertColumns);
-                }
+                // Process any remaining non-nullable columns
+                tableMetaData.columns().stream()
+                        .filter(columnMetaData -> !insertColumns.contains(columnMetaData.name()) && !columnMetaData.isNullable())
+                        .forEach(columnMetaData -> {
+                            // Non-null value omitted from insert columns; see if it can be generated
+                            if (columnMetaData.getGenerator() != null) {
+                                // Implicit/generated value insert
+                                this.columnMetaDataList.add(columnMetaData);
+                            } else {
+                                throw new IllegalArgumentException("NOT NULL column " + columnMetaData.name() + " omitted from insert into table " + table.qualifiedName() + ", and no value generator present");
+                            }
+                        });
             } else {
                 // All columns
                 final List<ColumnMetaData> columnMetaDatas = tableMetaData.columns();
-                this.insertColumns = new HashSet<>(columnMetaDatas.size());
+                this.insertColumns = new ArrayList<>(columnMetaDatas.size());
 
                 for (ColumnMetaData columnMetaData : columnMetaDatas) {
                     this.columnMetaDataList.add(columnMetaData);
@@ -97,7 +93,7 @@ public final class InsertCompilationContext implements CompilationContext {
             }
         } else {
             final ExpressionSpec[] expressionSpecs = Objects.requireNonNull(insertNode.expressionSpecs());
-            this.insertColumns = new HashSet<>(expressionSpecs.length);
+            this.insertColumns = new ArrayList<>(expressionSpecs.length);
 
             for (ExpressionSpec expressionSpec : expressionSpecs) {
                 if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
@@ -176,7 +172,7 @@ public final class InsertCompilationContext implements CompilationContext {
                         final Object generatedValue = columnValueGenerator.generate(columnMetaData);
                         return new UpdateColumn(columnMetaData.name(), generatedValue);
                     } else {
-                        return new UpdateColumn(columnMetaData.name(), null);
+                        return new UpdateColumn(columnMetaData.name());
                     }
                 })
                 .toList();

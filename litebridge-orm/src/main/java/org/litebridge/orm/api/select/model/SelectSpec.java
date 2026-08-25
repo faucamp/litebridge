@@ -247,9 +247,15 @@ public abstract class SelectSpec {
             }
         }
 
-        final Set<Table> selectedTables = Stream.concat(selectedColumns.stream().map(Column::table),
-                        joinClause.stream().map(join -> join.table()))
-                .collect(Collectors.toSet());
+        final Set<Table> selectedTables;
+
+        if (!selectedColumns.isEmpty()) {
+            selectedTables = Stream.concat(selectedColumns.stream().map(Column::table),
+                            joinClause.stream().map(join -> join.table()))
+                    .collect(Collectors.toSet());
+        } else {
+            selectedTables = Collections.singleton(table);
+        }
 
         // WHERE
         final Optional<ConditionGroup> whereClause = whereConditions != null ? Optional.of(whereConditions.toConditionGroup(selectExpressionMapper, selectedTables, bindValues, tableMetaDataCache, typeConverter)) : Optional.empty();

@@ -16,8 +16,8 @@ import java.util.Objects;
  */
 public record InsertNode(@Nullable String table,
                          @Nullable Class<?> dtoClass,
-                         @Nullable String[] columns,
-                         @Nullable ExpressionSpec[] expressionSpecs) implements QueryNode {
+                         String @Nullable [] columns,
+                         ExpressionSpec @Nullable [] expressionSpecs) implements QueryNode {
 
     public InsertNode(final @Nullable String table, final @Nullable Class<?> dtoClass, final String[] columns) {
         this(table, dtoClass, columns, null);

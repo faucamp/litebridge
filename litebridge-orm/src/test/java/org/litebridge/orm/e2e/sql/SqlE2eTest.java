@@ -384,12 +384,11 @@ class SqlE2eTest extends AbstractE2eTest {
     }
 
     private void insertTestPersonRecords(final String personTableName) throws SQLException {
-        try (final Connection connection = dbEnv.getDataSource().getConnection()) {
-            try (final PreparedStatement preparedStatement = connection.prepareStatement(sql("INSERT INTO " + personTableName + " (PERSON_ID, FIRST_NAME, SURNAME, AGE, EYE_COLOUR) VALUES (?, ?, ?, ?, ?)"))) {
-                insertPerson(1L, "Alice", "Smith", 20, "brown", preparedStatement);
-                insertPerson(2L, "Bob", "Johnson", 30, null, preparedStatement);
-            }
-        }
+        litebridge.insert(personTableName, i -> i
+                .into("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE", "EYE_COLOUR")
+                .values(1L, "Alice", "Smith", 20, "brown")
+                .values(2L, "Bob", "Johnson", 30, null)
+        );
     }
 
     private void insertTestAccountRecords(final String accountTableName) throws SQLException {
