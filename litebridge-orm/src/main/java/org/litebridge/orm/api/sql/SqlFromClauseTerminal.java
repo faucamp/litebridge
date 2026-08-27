@@ -21,8 +21,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
         SqlOrderByClause,
-        SqlOrderByClauseChain,
-        SqlSelectSpec>
+        SqlOrderByClauseChain>
 
         implements SqlJoinClauseTerminal {
 

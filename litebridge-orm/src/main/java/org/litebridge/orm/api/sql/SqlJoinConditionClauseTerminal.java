@@ -1,23 +1,13 @@
 package org.litebridge.orm.api.sql;
 
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.api.select.ast.ConditionGroupNode;
-import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
-import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
-
-import java.util.function.Function;
 
 public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionClauseTerminal<Row,
         SqlJoinConditionClause,
@@ -26,9 +16,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
         SqlOrderByClause,
-        SqlOrderByClauseChain,
-        SqlSelectSpec,
-        SqlJoinSpec>
+        SqlOrderByClauseChain>
 
         implements SqlJoinClauseTerminal {
 

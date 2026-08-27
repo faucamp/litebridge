@@ -29,8 +29,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         DtoHavingConditionClause<DTO>,
         DtoHavingConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
-        DtoOrderByClauseChain<DTO>,
-        DtoSelectSpec>
+        DtoOrderByClauseChain<DTO>>
 
         implements DtoJoinClassTerminal<DTO> {
 

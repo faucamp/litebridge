@@ -8,8 +8,6 @@ import org.litebridge.orm.api.select.JoinConditionClauseTerminal;
 import org.litebridge.orm.api.select.OrderByClause;
 import org.litebridge.orm.api.select.OrderByClauseChain;
 import org.litebridge.orm.api.select.ast.JoinNode;
-import org.litebridge.orm.api.select.model.JoinSpec;
-import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 
@@ -20,11 +18,9 @@ public abstract class AbstractJoinConditionClauseTerminal<DTO,
         HCC extends HavingConditionClause<DTO, HCC, HCCT, OBC, OBCC>,
         HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
         OBC extends OrderByClause<DTO, OBC, OBCC>,
-        OBCC extends OrderByClauseChain<DTO, OBC, OBCC>,
-        SSP extends SelectSpec,
-        JSP extends JoinSpec>
+        OBCC extends OrderByClauseChain<DTO, OBC, OBCC>>
 
-        extends AbstractWhereClauseTerminal<DTO, GBCT, HCC, HCCT, OBC, OBCC, SSP>
+        extends AbstractWhereClauseTerminal<DTO, GBCT, HCC, HCCT, OBC, OBCC>
         implements JoinConditionClauseTerminal<DTO, JCC, SELF> {
 
     protected final JoinNode joinNode;

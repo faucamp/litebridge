@@ -1,6 +1,5 @@
 package org.litebridge.orm.api.dto;
 
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.JoinClauseTerminal;
@@ -10,8 +9,6 @@ import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.function.Function;
 
@@ -28,9 +25,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         DtoHavingConditionClause<DTO>,
         DtoHavingConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
-        DtoOrderByClauseChain<DTO>,
-        DtoSelectSpec,
-        DtoJoinSpec>
+        DtoOrderByClauseChain<DTO>>
 
         implements JoinClauseTerminal<DTO,
         DtoJoinClause<DTO>,

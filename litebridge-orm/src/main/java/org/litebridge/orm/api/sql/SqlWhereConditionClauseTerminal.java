@@ -18,8 +18,7 @@ public final class SqlWhereConditionClauseTerminal
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
         SqlOrderByClause,
-        SqlOrderByClauseChain,
-        SqlSelectSpec>
+        SqlOrderByClauseChain>
 
         implements WhereConditionClauseTerminal<Row,
         SqlWhereConditionClause,
