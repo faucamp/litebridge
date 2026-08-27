@@ -64,12 +64,13 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
     /**
      * Adds a new condition to the group and returns its specification.
      *
-     * @param logicOperator  the logic operator for the condition
-     * @param expressionSpec the expression specification for the condition
+     * @param logicOperator the logic operator for the condition
      * @return the newly created {@link ConditionSpec}
      */
-    public ConditionSpec newCondition(final LogicOperator logicOperator, final ExpressionSpec expressionSpec) {
-        return newCondition(logicOperator, expressionSpec, null);
+    public ConditionSpec newCondition(final LogicOperator logicOperator,
+                                      final @Nullable String lhsColumn,
+                                      final @Nullable ExpressionSpec lhsExpression) {
+        return newCondition(logicOperator, lhsColumn, lhsExpression, null, null);
     }
 
     /**
@@ -79,16 +80,14 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
      * @param expressionSpec the expression specification for the condition
      * @return the newly created {@link ConditionSpec}
      */
-    public ConditionSpec newCondition(final LogicOperator logicOperator, final ExpressionSpec expressionSpec, final @Nullable Operator operator) {
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(expressionSpec);
+    public ConditionSpec newCondition(final LogicOperator logicOperator,
+                                      final @Nullable String fieldOrColumn,
+                                      final @Nullable ExpressionSpec expressionSpec,
+                                      final @Nullable Operator operator,
+                                      final @Nullable Object rawValue) {
+        final ConditionSpec conditionSpec = new ConditionSpec(fieldOrColumn, expressionSpec, operator, rawValue);
         final LogicConditionSpec logicConditionSpec = new LogicConditionSpec(logicOperator, conditionSpec);
         conditions.add(logicConditionSpec);
-
-        if (operator != null) {
-            conditionSpec.setOperator(operator);
-        }
-
         return conditionSpec;
     }
 

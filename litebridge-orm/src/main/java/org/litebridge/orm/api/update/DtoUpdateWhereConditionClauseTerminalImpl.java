@@ -1,6 +1,6 @@
 package org.litebridge.orm.api.update;
 
-import org.litebridge.db.spi.Column;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
@@ -10,7 +10,6 @@ import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.function.Function;
@@ -40,12 +39,12 @@ public final class DtoUpdateWhereConditionClauseTerminalImpl<DTO>
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> and(final String field) {
-        return whereImpl(LogicOperator.AND, field);
+        return whereImpl(LogicOperator.AND, field, null);
     }
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> and(final ExpressionSpec expression) {
-        return whereImpl(LogicOperator.AND, expression);
+        return whereImpl(LogicOperator.AND, null, expression);
     }
 
     @Override
@@ -55,12 +54,12 @@ public final class DtoUpdateWhereConditionClauseTerminalImpl<DTO>
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> or(final String field) {
-        return whereImpl(LogicOperator.OR, field);
+        return whereImpl(LogicOperator.OR, field, null);
     }
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> or(final ExpressionSpec expression) {
-        return whereImpl(LogicOperator.OR, expression);
+        return whereImpl(LogicOperator.OR, null, expression);
     }
 
     @Override
@@ -68,26 +67,22 @@ public final class DtoUpdateWhereConditionClauseTerminalImpl<DTO>
         return whereImpl(LogicOperator.OR, query);
     }
 
-    private DtoUpdateWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final String field) {
-        final Column column = litebridgeContext.tableRegistry().getTableOrThrow(dtoClass).getColumnForFieldName(field).toColumn();
-        return whereImpl(logicOperator, new SelectColumnSpec(column));
-    }
-
-    private DtoUpdateWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+    private DtoUpdateWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final @Nullable String field, final @Nullable ExpressionSpec expression) {
         final Function<QueryNode, DtoUpdateWhereConditionClauseTerminal<DTO>> recreator = n -> {
             this.node = new WhereNode(this.node, n);
             return this;
         };
 
-        return new DtoUpdateWhereConditionClause<>(litebridgeContext, logicOperator, expression, recreator);
+        return new DtoUpdateWhereConditionClause<>(litebridgeContext, logicOperator, field, expression, recreator);
     }
 
     private DtoUpdateWhereConditionClauseTerminalImpl<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        final OrmTable ormTable = litebridgeContext.tableRegistry().getTableOrThrow(dtoClass);
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, litebridgeContext.fromClauseEngine(), null);
-        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
-        this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, terminal.node()));
-        return this;
+//        final OrmTable ormTable = litebridgeContext.tableRegistry().getTableOrThrow(dtoClass);
+//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, litebridgeContext.fromClauseEngine(), null);
+//        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+//        this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, terminal.node()));
+//        return this;
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     QueryNode node() {

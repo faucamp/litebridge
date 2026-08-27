@@ -1,23 +1,15 @@
 package org.litebridge.orm.api.dto;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
-import org.litebridge.orm.api.select.ast.GroupByNode;
-import org.litebridge.orm.api.select.ast.JoinNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.TableRegistry;
 
-import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -42,29 +34,23 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
         implements DtoJoinClassTerminal<DTO> {
 
-    private final TableRegistry tableRegistry;
-    private final OrmTable ormTable;
-
     /**
      * Creates a new DtoFromClauseTerminal.
-     *
-     * @param delegate the DTO selector delegate
      */
-    public DtoFromClauseTerminal(final DtoSelector<DTO> delegate) {
-        super(delegate);
-        tableRegistry = delegate.tableRegistry();
-        ormTable = delegate.ormTable();
+    public DtoFromClauseTerminal(final SelectNode selectNode,
+                                 final SelectEngineTerminal selectEngineTerminal,
+                                 final LitebridgeContext litebridgeContext) {
+        super(selectNode, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoWhereConditionClause<DTO> where(final String field) {
-        final Column column = ormTable.getColumnForFieldName(field).toColumn();
-        return where(new SelectColumnSpec(column));
+        return whereImpl(LogicOperator.NOOP, field, null);
     }
 
     @Override
     public DtoWhereConditionClause<DTO> where(final ExpressionSpec expression) {
-        return whereImpl(LogicOperator.NOOP, expression);
+        return whereImpl(LogicOperator.NOOP, null, expression);
     }
 
     /**
@@ -76,9 +62,10 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
      * @return the parent condition clause interface, allowing further chaining of conditions
      */
     public DtoWhereConditionClauseTerminal<DTO> where(final QueryConditionBuilder<DTO> query) {
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
-        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
-        return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new WhereNode(delegate.node(), terminal.node())));
+//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
+//        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+//        return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new WhereNode(delegate.node(), terminal.node())));
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     /**
@@ -127,106 +114,107 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     @Override
     public DtoJoinClause<DTO> join(final Class<?> dtoClass) {
-        final OrmTable joinTable;
-
-        // First check for inline/contextually-registered tables
-        final OrmTable contextScopedTable = ormTable.getContextTableRegistry().getOrmTable(dtoClass);
-
-        if (contextScopedTable != null) {
-            joinTable = contextScopedTable;
-        } else {
-            joinTable = tableRegistry.getTableOrThrow(dtoClass);
-        }
-
-
-        return new DtoJoinClause<>((DtoSelector<DTO>) delegate, joinTable, node -> {
-            final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
-            joinNode.withCondition(node);
-            delegate.withNode(joinNode);
-            return new DtoJoinConditionClauseTerminal<>(joinNode, (DtoSelector<DTO>) delegate);
-        });
+//        final OrmTable joinTable;
+//
+//        // First check for inline/contextually-registered tables
+//        final OrmTable contextScopedTable = ormTable.getContextTableRegistry().getOrmTable(dtoClass);
+//
+//        if (contextScopedTable != null) {
+//            joinTable = contextScopedTable;
+//        } else {
+//            joinTable = tableRegistry.getTableOrThrow(dtoClass);
+//        }
+//
+//
+//        return new DtoJoinClause<>((DtoSelector<DTO>) delegate, joinTable, node -> {
+//            final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+//            joinNode.withCondition(node);
+//            delegate.withNode(joinNode);
+//            return new DtoJoinConditionClauseTerminal<>(joinNode, (DtoSelector<DTO>) delegate);
+//        });
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
     public DtoGroupByClauseTerminal<DTO> groupBy(final String... fields) {
-        return groupBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
+        return new DtoGroupByClauseTerminal(fields, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
-    public DtoGroupByClauseTerminal<DTO> groupBy(final ExpressionSpec... fields) {
-        final QueryNode groupByNode = new GroupByNode(delegate.node(), fields);
-        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(groupByNode));
+    public DtoGroupByClauseTerminal<DTO> groupBy(final ExpressionSpec... expressions) {
+        return new DtoGroupByClauseTerminal(expressions, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return orderBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
+        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
-        // OrderBy is a bit more complex because it returns a DtoOrderByClause which then has .asc()/.desc()
-        return new DtoOrderByClause<>(fields, (DtoSelector<DTO>) delegate);
+        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
     }
 
     private DtoWhereConditionClauseTerminal<DTO> createWithIdClause(final Object id) {
-        final String[] primaryKeyFieldNames = ormTable.getMetaData().primaryKey().stream()
-                .map(columnMetaData -> ormTable.getFieldForColumnName(columnMetaData.name()).name())
-                .toArray(String[]::new);
-
-        if (primaryKeyFieldNames.length == 0) {
-            throw new IllegalArgumentException("No primary key fields found for table " + ormTable.getMetaData().name());
-        } else if (primaryKeyFieldNames.length == 1) {
-            return where(primaryKeyFieldNames[0]).eq(id);
-        } else {
-            // Composite PK
-            if (id instanceof List<?> idList) {
-                if (idList.size() != primaryKeyFieldNames.length) {
-                    throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idList.size()));
-                }
-
-                DtoWhereConditionClauseTerminal<DTO> clause = where(primaryKeyFieldNames[0]).eq(idList.getFirst());
-
-                for (int i = 1; i < primaryKeyFieldNames.length; i++) {
-                    clause = clause.and(primaryKeyFieldNames[i]).eq(idList.get(i));
-                }
-
-                return clause;
-            } else if (id instanceof Object[] idArray) {
-                if (idArray.length != primaryKeyFieldNames.length) {
-                    throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idArray.length));
-                }
-
-                DtoWhereConditionClauseTerminal<DTO> clause = where(primaryKeyFieldNames[0]).eq(idArray[0]);
-
-                for (int i = 1; i < primaryKeyFieldNames.length; i++) {
-                    clause = clause.and(primaryKeyFieldNames[i]).eq(idArray[i]);
-                }
-
-                return clause;
-            } else if (id instanceof Map<?, ?> idMap) {
-                if (idMap.size() != primaryKeyFieldNames.length) {
-                    throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idMap.size()));
-                }
-
-                DtoWhereConditionClauseTerminal<DTO> clause = where(primaryKeyFieldNames[0]).eq(idMap.get(primaryKeyFieldNames[0]));
-
-                for (int i = 1; i < primaryKeyFieldNames.length; i++) {
-                    clause = clause.and(primaryKeyFieldNames[i]).eq(idMap.get(primaryKeyFieldNames[i]));
-                }
-
-                return clause;
-            } else {
-                throw new IllegalArgumentException("Invalid composite primary key value type provided; expected: List<?>, Object[], or Map<String, ?>");
-            }
-        }
+//        final String[] primaryKeyFieldNames = ormTable.getMetaData().primaryKey().stream()
+//                .map(columnMetaData -> ormTable.getFieldForColumnName(columnMetaData.name()).name())
+//                .toArray(String[]::new);
+//
+//        if (primaryKeyFieldNames.length == 0) {
+//            throw new IllegalArgumentException("No primary key fields found for table " + ormTable.getMetaData().name());
+//        } else if (primaryKeyFieldNames.length == 1) {
+//            return where(primaryKeyFieldNames[0]).eq(id);
+//        } else {
+//            // Composite PK
+//            if (id instanceof List<?> idList) {
+//                if (idList.size() != primaryKeyFieldNames.length) {
+//                    throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idList.size()));
+//                }
+//
+//                DtoWhereConditionClauseTerminal<DTO> clause = where(primaryKeyFieldNames[0]).eq(idList.getFirst());
+//
+//                for (int i = 1; i < primaryKeyFieldNames.length; i++) {
+//                    clause = clause.and(primaryKeyFieldNames[i]).eq(idList.get(i));
+//                }
+//
+//                return clause;
+//            } else if (id instanceof Object[] idArray) {
+//                if (idArray.length != primaryKeyFieldNames.length) {
+//                    throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idArray.length));
+//                }
+//
+//                DtoWhereConditionClauseTerminal<DTO> clause = where(primaryKeyFieldNames[0]).eq(idArray[0]);
+//
+//                for (int i = 1; i < primaryKeyFieldNames.length; i++) {
+//                    clause = clause.and(primaryKeyFieldNames[i]).eq(idArray[i]);
+//                }
+//
+//                return clause;
+//            } else if (id instanceof Map<?, ?> idMap) {
+//                if (idMap.size() != primaryKeyFieldNames.length) {
+//                    throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idMap.size()));
+//                }
+//
+//                DtoWhereConditionClauseTerminal<DTO> clause = where(primaryKeyFieldNames[0]).eq(idMap.get(primaryKeyFieldNames[0]));
+//
+//                for (int i = 1; i < primaryKeyFieldNames.length; i++) {
+//                    clause = clause.and(primaryKeyFieldNames[i]).eq(idMap.get(primaryKeyFieldNames[i]));
+//                }
+//
+//                return clause;
+//            } else {
+//                throw new IllegalArgumentException("Invalid composite primary key value type provided; expected: List<?>, Object[], or Map<String, ?>");
+//            }
+//        }
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        return new DtoWhereConditionClause<>(delegate.litebridgeContext(),
+    private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final @Nullable String field, final @Nullable ExpressionSpec expression) {
+        return new DtoWhereConditionClause<>(litebridgeContext,
                 logicOperator,
+                field,
                 expression,
                 null,
-                node -> new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new WhereNode(delegate.node(), node))));
+                conditionNode -> new DtoWhereConditionClauseTerminal<>(new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 }

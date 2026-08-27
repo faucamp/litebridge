@@ -1,29 +1,17 @@
 package org.litebridge.orm.engine.compiler;
 
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SetNode;
 import org.litebridge.orm.api.select.ast.UpdateNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
-import org.litebridge.orm.persistence.TableMetaDataCache;
-import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import org.litebridge.orm.engine.LitebridgeContext;
 
 final class UpdateQueryCompiler extends AbstractQueryCompiler<UpdateCompilationContext> {
 
-    public UpdateQueryCompiler(final TableRegistry tableRegistry,
-                               final TableMetaDataCache tableMetaDataCache,
-                               final TypeConverter typeConverter,
-                               final AliasGenerator aliasGenerator,
-                               final SelectExpressionMapper selectExpressionMapper) {
-        super(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
+    public UpdateQueryCompiler(final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
     }
 
     @Override
@@ -32,7 +20,7 @@ final class UpdateQueryCompiler extends AbstractQueryCompiler<UpdateCompilationC
             throw new IllegalArgumentException("Expected UpdateNode, but got " + rootNode);
         }
 
-        return new UpdateCompilationContext(updateNode, selectExpressionMapper, tableRegistry, tableMetaDataCache, typeConverter);
+        return new UpdateCompilationContext(updateNode, litebridgeContext);
     }
 
     @Override
@@ -41,7 +29,7 @@ final class UpdateQueryCompiler extends AbstractQueryCompiler<UpdateCompilationC
             case SetNode setNode -> compilationContext.addSetNode(setNode);
             case WhereNode whereNode -> flattenAndApplyNodes(whereNode.condition(), compilationContext);
             case UpdateNode updateNode -> { /* Ignore */ }
-            case ConditionNode conditionNode -> compilationContext.addWhereCondition(conditionNode);
+            case ConditionNode conditionNode -> compilationContext.addCondition(conditionNode);
             case ConditionGroupNode conditionGroupNode -> {
                 final ConditionGroupSpecStack conditionGroupSpecStack = compilationContext.ensureWhereConditionGroupStack();
                 conditionGroupSpecStack.push(conditionGroupNode.logicOperator());

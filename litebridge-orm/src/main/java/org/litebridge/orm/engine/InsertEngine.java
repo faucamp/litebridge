@@ -75,7 +75,7 @@ public class InsertEngine extends AbstractInsertEngine {
         final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
                 .map(BindValue::sqlDataType)
                 .toList();
-        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, updateMetaData, null));
+        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, updateMetaData));
         // Execute SQL query
         final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), null, updateMetaData);
         return execute(executionSql, litebridgeContext);

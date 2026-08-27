@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+@Deprecated(forRemoval = true)
 public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements SelectTerminal<DTO> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSelector.class);
@@ -137,27 +138,28 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
         final DefaultAliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
 
         final SSP spec = createSelectSpec(aliasGenerator);
-        new QueryCompiler(tableRegistry, litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter(), aliasGenerator, litebridgeContext.selectExpressionMapper()).compile(Objects.requireNonNull(node), spec);
+        new QueryCompiler(litebridgeContext);
         return spec;
     }
 
     protected abstract SSP createSelectSpec(final AliasGenerator aliasGenerator);
 
     protected List<Row> executeQuery(final SSP selectSpec, final int astCacheKey) {
-        // Compile/prepare SQL query
-        final PreparedOperation preparedOperation = selectSpec.toSelect(litebridgeContext.tableMetaDataCache(), databaseProvider.getTypeConverter());
-        final Select select = (Select) preparedOperation.operation();
-        // Generate SQL and create type conversion metadata
-        final String sql = databaseProvider.toSql(preparedOperation.operation(), databaseProvider.transactionManager());
-        final TypeConversionMetaData typeConversionMetaData = createTypeConversionMetaData(select);
-        // Cache compiled SQL for this AST
-        final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
-                .map(BindValue::sqlDataType)
-                .toList();
-        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, typeConversionMetaData, null, selectSpec));
-        // Execute SQL query
-        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), typeConversionMetaData, null);
-        return executeQuery(executionSql);
+//        // Compile/prepare SQL query
+//        final PreparedOperation preparedOperation = selectSpec.toSelect(litebridgeContext.tableMetaDataCache(), databaseProvider.getTypeConverter());
+//        final Select select = (Select) preparedOperation.operation();
+//        // Generate SQL and create type conversion metadata
+//        final String sql = databaseProvider.toSql(preparedOperation.operation(), databaseProvider.transactionManager());
+//        final TypeConversionMetaData typeConversionMetaData = createTypeConversionMetaData(select);
+//        // Cache compiled SQL for this AST
+//        final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
+//                .map(BindValue::sqlDataType)
+//                .toList();
+//        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, typeConversionMetaData, null, selectSpec));
+//        // Execute SQL query
+//        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), typeConversionMetaData, null);
+//        return executeQuery(executionSql);
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     protected List<Row> executeQuery(final PreparedSql preparedSql) {

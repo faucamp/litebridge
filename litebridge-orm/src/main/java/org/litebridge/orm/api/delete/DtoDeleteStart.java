@@ -1,6 +1,6 @@
 package org.litebridge.orm.api.delete;
 
-import org.litebridge.db.spi.Column;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.ast.DeleteNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -8,7 +8,6 @@ import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.update.UpdateStepBase;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 public final class DtoDeleteStart<DTO> extends UpdateStepBase
 
@@ -29,16 +28,18 @@ public final class DtoDeleteStart<DTO> extends UpdateStepBase
 
     @Override
     public DtoDeleteWhereConditionClause<DTO> where(final String field) {
-        final Column column = litebridgeContext.tableRegistry().getTableOrThrow(dtoClass)
-                .getColumnForFieldName(field)
-                .toColumn();
-        return where(new SelectColumnSpec(column));
+        return whereImpl(field, null);
     }
 
     @Override
     public DtoDeleteWhereConditionClause<DTO> where(final ExpressionSpec expression) {
+        return whereImpl(null, expression);
+    }
+
+    private DtoDeleteWhereConditionClause<DTO> whereImpl(final @Nullable String field, final @Nullable ExpressionSpec expression) {
         return new DtoDeleteWhereConditionClause<>(litebridgeContext,
                 LogicOperator.NOOP,
+                field,
                 expression,
                 node -> new DtoDeleteWhereConditionClauseTerminalImpl<>(dtoClass, new WhereNode(deleteNode, node), litebridgeContext));
     }

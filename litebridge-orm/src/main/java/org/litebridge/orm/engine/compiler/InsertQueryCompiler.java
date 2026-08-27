@@ -5,6 +5,7 @@ import org.litebridge.orm.api.select.ast.InsertNode;
 import org.litebridge.orm.api.select.ast.InsertValuesNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
@@ -13,12 +14,8 @@ import java.util.Arrays;
 
 final class InsertQueryCompiler extends AbstractQueryCompiler<InsertCompilationContext> {
 
-    public InsertQueryCompiler(final TableRegistry tableRegistry,
-                               final TableMetaDataCache tableMetaDataCache,
-                               final TypeConverter typeConverter,
-                               final AliasGenerator aliasGenerator,
-                               final SelectExpressionMapper selectExpressionMapper) {
-        super(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
+    public InsertQueryCompiler(final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
     }
 
     @Override
@@ -27,7 +24,7 @@ final class InsertQueryCompiler extends AbstractQueryCompiler<InsertCompilationC
             throw new IllegalArgumentException("Expected InsertNode, but got " + rootNode);
         }
 
-        return new InsertCompilationContext(insertNode, tableRegistry, tableMetaDataCache, typeConverter);
+        return new InsertCompilationContext(insertNode, litebridgeContext);
     }
 
     @Override

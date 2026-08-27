@@ -62,7 +62,7 @@ public class UpdateEngine extends AbstractUpdateEngine {
         final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
                 .map(BindValue::sqlDataType)
                 .toList();
-        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, UPDATE_META_DATA, null));
+        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, UPDATE_META_DATA));
         // Execute SQL query
         final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), null, UPDATE_META_DATA);
         return execute(executionSql, litebridgeContext);

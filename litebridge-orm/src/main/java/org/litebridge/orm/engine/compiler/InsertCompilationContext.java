@@ -10,6 +10,7 @@ import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.InsertV2;
 import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.orm.api.select.ast.InsertNode;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.meta.QueryField;
@@ -36,18 +37,16 @@ public final class InsertCompilationContext implements CompilationContext {
     private @Nullable List<BindValue> bindValues;
 
     public InsertCompilationContext(final InsertNode insertNode,
-                                    final TableRegistry tableRegistry,
-                                    final TableMetaDataCache tableMetaDataCache,
-                                    final TypeConverter typeConverter) {
+                                    final LitebridgeContext litebridgeContext) {
         final OrmTable ormTable;
 
         if (insertNode.dtoClass() != null) {
-            ormTable = tableRegistry.getTableOrThrow(insertNode.dtoClass());
+            ormTable = litebridgeContext.tableRegistry().getTableOrThrow(insertNode.dtoClass());
             this.tableMetaData = ormTable.getMetaData();
             this.table = tableMetaData.toTable();
         } else {
-            this.table = tableRegistry.getOrCreateSpiTable(Objects.requireNonNull(insertNode.table()));
-            this.tableMetaData = tableMetaDataCache.ensureTableMetaData(table);
+            this.table = litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(insertNode.table()));
+            this.tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);
             ormTable = null;
         }
 

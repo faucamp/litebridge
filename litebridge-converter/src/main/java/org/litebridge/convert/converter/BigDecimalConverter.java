@@ -36,7 +36,13 @@ public class BigDecimalConverter implements SqlConverter<BigDecimal> {
             case Byte byteValue -> BigDecimal.valueOf(byteValue);
             case Double doubleValue -> BigDecimal.valueOf(doubleValue.longValue());
             case Float floatValue -> BigDecimal.valueOf(floatValue.longValue());
-            default -> new BigDecimal(value.toString());
+            default -> {
+                try {
+                    yield new BigDecimal(value.toString());
+                } catch (final Exception ex) {
+                    throw new IllegalArgumentException("Cannot convert value to BigDecimal: " + value, ex);
+                }
+            }
         };
     }
 

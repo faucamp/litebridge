@@ -9,9 +9,15 @@ import org.litebridge.orm.api.select.JoinConditionClause;
 import org.litebridge.orm.api.select.JoinConditionClauseTerminal;
 import org.litebridge.orm.api.select.OrderByClause;
 import org.litebridge.orm.api.select.OrderByClauseChain;
+import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.WhereConditionClause;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
+
+import java.util.function.Function;
 
 public abstract class AbstractFromClauseTerminal<DTO,
         JC extends JoinClause<DTO, JCC, JCCT>,
@@ -29,7 +35,7 @@ public abstract class AbstractFromClauseTerminal<DTO,
         extends AbstractJoinClauseTerminal<DTO, JC, JCC, JCCT, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC, SSP>
         implements FromClauseTerminal<DTO, JC, JCC, JCCT, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC> {
 
-    public AbstractFromClauseTerminal(final AbstractSelector<DTO, SSP> delegate) {
-        super(delegate);
+    public AbstractFromClauseTerminal(final QueryNode node, final SelectEngineTerminal selectEngineTerminal, final LitebridgeContext litebridgeContext) {
+        super(node, selectEngineTerminal, litebridgeContext);
     }
 }

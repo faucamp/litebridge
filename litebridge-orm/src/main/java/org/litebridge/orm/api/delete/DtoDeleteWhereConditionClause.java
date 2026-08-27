@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.delete;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
@@ -25,8 +26,9 @@ public final class DtoDeleteWhereConditionClause<DTO>
 
     public DtoDeleteWhereConditionClause(final LitebridgeContext litebridgeContext,
                                          final LogicOperator logicOperator,
-                                         final ExpressionSpec lhs,
+                                         final @Nullable String lhsColumn,
+                                         final @Nullable ExpressionSpec lhsExpression,
                                          final Function<QueryNode, DtoDeleteWhereConditionClauseTerminal<DTO>> terminalRecreator) {
-        super(litebridgeContext, logicOperator, lhs, null, terminalRecreator);
+        super(litebridgeContext, logicOperator, lhsColumn, lhsExpression, null, terminalRecreator);
     }
 }

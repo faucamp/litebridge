@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 /**
  * Specification for a DTO select query.
  */
+@Deprecated(forRemoval = true)
 public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
 
     private final Class<?> dtoClass;

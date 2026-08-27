@@ -1,7 +1,6 @@
 package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.engine.SelectEngine;
 
 import java.util.Collection;
 import java.util.function.Function;
@@ -118,7 +117,7 @@ public interface ConditionClause<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    CCT in(final Function<SelectEngine, SelectTerminal<?>> subselect);
+    CCT in(final Function<SelectApi, SelectTerminal<?>> subselect);
 
     /**
      * Exclusion from a set.
@@ -143,6 +142,6 @@ public interface ConditionClause<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    CCT notIn(final Function<SelectEngine, SelectTerminal<?>> subselect);
+    CCT notIn(final Function<SelectApi, SelectTerminal<?>> subselect);
 
 }

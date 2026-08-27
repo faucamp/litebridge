@@ -1,24 +1,16 @@
 package org.litebridge.orm.engine.compiler;
 
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.DeleteNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
-import org.litebridge.orm.persistence.TableMetaDataCache;
-import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
+import org.litebridge.orm.engine.LitebridgeContext;
 
 final class DeleteQueryCompiler extends AbstractQueryCompiler<DeleteCompilationContext> {
 
-    public DeleteQueryCompiler(final TableRegistry tableRegistry,
-                               final TableMetaDataCache tableMetaDataCache,
-                               final TypeConverter typeConverter,
-                               final AliasGenerator aliasGenerator,
-                               final SelectExpressionMapper selectExpressionMapper) {
-        super(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
+    public DeleteQueryCompiler(final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
     }
 
     @Override
@@ -27,7 +19,7 @@ final class DeleteQueryCompiler extends AbstractQueryCompiler<DeleteCompilationC
             throw new IllegalArgumentException("Expected DeleteNode, but got " + rootNode);
         }
 
-        return new DeleteCompilationContext(deleteNode, selectExpressionMapper, tableRegistry, tableMetaDataCache, typeConverter);
+        return new DeleteCompilationContext(deleteNode, litebridgeContext);
     }
 
     @Override

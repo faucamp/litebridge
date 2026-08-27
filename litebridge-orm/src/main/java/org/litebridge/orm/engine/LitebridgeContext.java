@@ -27,42 +27,50 @@ public final class LitebridgeContext {
     private final Mode mode;
     private final LitebridgeConfig config;
     private final DatabaseProvider databaseProvider;
-    private final FromClauseEngine fromClauseEngine;
     private final SqlFunctionRegistry sqlFunctionRegistry;
     private final QueryPlanCache queryPlanCache;
     private final AliasGenerator aliasGenerator;
+    private final TableRegistry tableRegistry;
     private final TableMetaDataCache tableMetaDataCache;
     private final TypeConverter typeConverter;
     private final SelectExpressionMapper selectExpressionMapper;
+    private final ClassFieldAccessorCache classFieldAccessorCache;
+    private final TransactionManager transactionManager;
+    private final SelectEngine selectEngine;
     private RelatedDtoStrategy relatedDtoStrategy;
 
     /**
      * Create a new Litebridge context with the specified components.
      *
-     * @param mode                   The mode of operation for the Litebridge context.
-     * @param config                 Configuration for managing runtime behaviour
-     * @param fromClauseEngine       The engine responsible for managing table registries alias generation, and facilitating query specifications.
-     * @param queryPlanCache         A cache for storing execution plans based on query structure.
-     * @param aliasGenerator         An alias generator for creating unique table and column aliases.
+     * @param mode           The mode of operation for the Litebridge context.
+     * @param config         Configuration for managing runtime behaviour
+     * @param queryPlanCache A cache for storing execution plans based on query structure.
+     * @param aliasGenerator An alias generator for creating unique table and column aliases.
      */
     public LitebridgeContext(final Mode mode,
                              final LitebridgeConfig config,
                              final DatabaseProvider databaseProvider,
-                             final FromClauseEngine fromClauseEngine,
                              final QueryPlanCache queryPlanCache,
                              final AliasGenerator aliasGenerator,
-                             final TableMetaDataCache tableMetaDataCache) {
+                             final TableRegistry tableRegistry,
+                             final TableMetaDataCache tableMetaDataCache,
+                             final ClassFieldAccessorCache classFieldAccessorCache,
+                             final TransactionManager transactionManager,
+                             final SelectEngine selectEngine) {
         this.mode = mode;
         this.config = config;
         this.databaseProvider = databaseProvider;
-        this.fromClauseEngine = fromClauseEngine;
         this.sqlFunctionRegistry = databaseProvider.getSqlFunctionRegistry();
         this.queryPlanCache = queryPlanCache;
         this.aliasGenerator = aliasGenerator;
         this.relatedDtoStrategy = config.relatedDtoStrategy();
+        this.tableRegistry = tableRegistry;
         this.tableMetaDataCache = tableMetaDataCache;
+        this.classFieldAccessorCache = classFieldAccessorCache;
+        this.transactionManager = transactionManager;
         this.typeConverter = databaseProvider.getTypeConverter();
         this.selectExpressionMapper = createSelectExpressionMapper();
+        this.selectEngine = selectEngine;
     }
 
     public Mode mode() {
@@ -71,10 +79,6 @@ public final class LitebridgeContext {
 
     public LitebridgeConfig config() {
         return config;
-    }
-
-    public FromClauseEngine fromClauseEngine() {
-        return fromClauseEngine;
     }
 
     public SqlFunctionRegistry sqlFunctionRegistry() {
@@ -94,19 +98,19 @@ public final class LitebridgeContext {
     }
 
     public TableRegistry tableRegistry() {
-        return fromClauseEngine.tableRegistry();
+        return tableRegistry;
     }
 
     public DatabaseProvider databaseProvider() {
-        return fromClauseEngine.databaseProvider();
+        return databaseProvider;
     }
 
     public TransactionManager transactionManager() {
-        return fromClauseEngine.databaseProvider().transactionManager();
+        return transactionManager;
     }
 
     public ClassFieldAccessorCache classFieldAccessorCache() {
-        return fromClauseEngine.changeTracker().classFieldAccessorCache();
+        return classFieldAccessorCache;
     }
 
     public TypeConverter typeConverter() {
@@ -115,6 +119,10 @@ public final class LitebridgeContext {
 
     public SelectExpressionMapper selectExpressionMapper() {
         return selectExpressionMapper;
+    }
+
+    public SelectEngine selectEngine() {
+        return selectEngine;
     }
 
     public RelatedDtoStrategy getRelatedDtoStrategy() {
@@ -126,7 +134,7 @@ public final class LitebridgeContext {
     }
 
     public QueryCompiler createQueryCompiler() {
-        return new QueryCompiler(fromClauseEngine.tableRegistry(), tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
+        return new QueryCompiler(this);
     }
 
     private SelectExpressionMapper createSelectExpressionMapper() {

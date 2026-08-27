@@ -1,12 +1,11 @@
 package org.litebridge.orm.api.update;
 
-import org.litebridge.db.spi.Column;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 public final class DtoUpdateStep<DTO> extends UpdateStepBase
         implements UpdateStep<DTO,
@@ -42,16 +41,18 @@ public final class DtoUpdateStep<DTO> extends UpdateStepBase
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> where(final String field) {
-        final Column column = litebridgeContext.tableRegistry().getTableOrThrow(dtoClass)
-                .getColumnForFieldName(field)
-                .toColumn();
-        return where(new SelectColumnSpec(column));
+        return whereImpl(field, null);
     }
 
     @Override
     public DtoUpdateWhereConditionClause<DTO> where(final ExpressionSpec expression) {
+        return whereImpl(null, expression);
+    }
+
+    private DtoUpdateWhereConditionClause<DTO> whereImpl(final @Nullable String field, final @Nullable ExpressionSpec expression) {
         return new DtoUpdateWhereConditionClause<>(litebridgeContext,
                 LogicOperator.NOOP,
+                field,
                 expression,
                 node -> new DtoUpdateWhereConditionClauseTerminalImpl<>(dtoClass, new WhereNode(this.node, node), litebridgeContext));
     }

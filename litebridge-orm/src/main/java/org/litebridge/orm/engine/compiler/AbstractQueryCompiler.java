@@ -1,35 +1,21 @@
 package org.litebridge.orm.engine.compiler;
 
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
-import org.litebridge.orm.persistence.TableMetaDataCache;
-import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
+import org.litebridge.orm.engine.LitebridgeContext;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 abstract sealed class AbstractQueryCompiler<CC extends CompilationContext>
         permits ConditionBasedQueryCompiler, DeleteQueryCompiler, InsertQueryCompiler, QueryCompiler, UpdateQueryCompiler {
 
-    protected final TableRegistry tableRegistry;
-    protected final TableMetaDataCache tableMetaDataCache;
-    protected final TypeConverter typeConverter;
-    protected final AliasGenerator aliasGenerator;
-    protected final SelectExpressionMapper selectExpressionMapper;
+    protected final LitebridgeContext litebridgeContext;
 
-    public AbstractQueryCompiler(final TableRegistry tableRegistry,
-                                 final TableMetaDataCache tableMetaDataCache,
-                                 final TypeConverter typeConverter,
-                                 final AliasGenerator aliasGenerator,
-                                 final SelectExpressionMapper selectExpressionMapper) {
-        this.tableRegistry = tableRegistry;
-        this.tableMetaDataCache = tableMetaDataCache;
-        this.typeConverter = typeConverter;
-        this.aliasGenerator = aliasGenerator;
-        this.selectExpressionMapper = selectExpressionMapper;
+    public AbstractQueryCompiler(final LitebridgeContext litebridgeContext) {
+        this.litebridgeContext = litebridgeContext;
     }
 
     @SuppressWarnings("unchecked")
@@ -48,6 +34,14 @@ abstract sealed class AbstractQueryCompiler<CC extends CompilationContext>
     protected final void flattenAndApplyNodes(final QueryNode terminalNode, final CC compilationContext) {
         final List<QueryNode> nodes = flatten(terminalNode);
         applyNodes(nodes, compilationContext);
+    }
+
+    protected final void flattenAndApplyNodes(final QueryNode terminalNode, final CC compilationContext, final Consumer<QueryNode> nodeHandler) {
+        final List<QueryNode> nodes = flatten(terminalNode);
+
+        for (final QueryNode node : nodes) {
+            nodeHandler.accept(node);
+        }
     }
 
     private static List<QueryNode> flatten(final QueryNode node) {

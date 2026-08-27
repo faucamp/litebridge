@@ -35,6 +35,7 @@ import java.util.Optional;
  *
  * @param <TypeOverride> the type of the DTO
  */
+@Deprecated(forRemoval = true)
 public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverride, DtoSelectSpec> {
 
     private final OrmTable ormTable;
@@ -93,8 +94,9 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
      * @return the from clause terminal
      */
     public DtoFromClauseTerminal<TypeOverride> select(final ExpressionSpec... expressionSpecs) {
-        final QueryNode selectNode = new SelectNode(node, expressionSpecs, dtoClass);
-        return new DtoFromClauseTerminal<>(withNode(selectNode));
+//        final QueryNode selectNode = new SelectNode(node, expressionSpecs, dtoClass);
+//        return new DtoFromClauseTerminal<>(withNode(selectNode));
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     /**
@@ -103,9 +105,10 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
      * @return the from clause terminal
      */
     public DtoFromClauseTerminal<TypeOverride> select() {
-        final List<ExpressionSpec> expressionSpecs = createAllFieldsSelectExpressions();
-        final QueryNode selectNode = new SelectNode(node, expressionSpecs.toArray(ExpressionSpec[]::new), dtoClass);
-        return new DtoFromClauseTerminal<>(withNode(selectNode));
+//        final List<ExpressionSpec> expressionSpecs = createAllFieldsSelectExpressions();
+//        final QueryNode selectNode = new SelectNode(node, expressionSpecs.toArray(ExpressionSpec[]::new), dtoClass);
+//        return new DtoFromClauseTerminal<>(withNode(selectNode));
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     private List<ExpressionSpec> createAllFieldsSelectExpressions() {
@@ -150,34 +153,35 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
 
     @Override
     public List<TypeOverride> list() {
-        final int nodeHash = Objects.requireNonNull(node).hashCode();
-        final QueryPlanCache.CachedOperation cachedOperation = litebridgeContext.queryPlanCache().get(nodeHash);
-        final List<Row> rows;
-        final DtoSelectSpec compiledSpec;
-
-        if (cachedOperation != null) {
-            // Extract bind values and executed cached query
-            final List<@Nullable Object> rawBindValues = QueryBindValueExtractor.extractBindValues(node);
-            rows = executeQuery(cachedOperation.preparedSql(rawBindValues));
-            compiledSpec = (DtoSelectSpec) Objects.requireNonNull(cachedOperation.selectSpec());
-        } else {
-            // Compile and execute query (it will be cached as part of this process)
-            compiledSpec = compile();
-            rows = executeQuery(compiledSpec, nodeHash);
-        }
-
-        final OrmTable ormTable = compiledSpec.dtoTable();
-
-        if (dtoClass == ormTable.dtoClass()
-                || ormTable.getDtoClassInterfaces().contains(dtoClass)) {
-            // Selecting the actual DTO
-            final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(compiledSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, litebridgeContext);
-            final List<TypeOverride> dtos = selectSpecDtoMapper.toDtos(dtoClass, rows);
-            dtos.forEach(ormTable::syncPersistedDto);
-            return dtos;
-        } else {
-            return unwrap(dtoClass, rows);
-        }
+//        final int nodeHash = Objects.requireNonNull(node).hashCode();
+//        final QueryPlanCache.CachedOperation cachedOperation = litebridgeContext.queryPlanCache().get(nodeHash);
+//        final List<Row> rows;
+//        final DtoSelectSpec compiledSpec;
+//
+//        if (cachedOperation != null) {
+//            // Extract bind values and executed cached query
+//            final List<@Nullable Object> rawBindValues = QueryBindValueExtractor.extractBindValues(node);
+//            rows = executeQuery(cachedOperation.preparedSql(rawBindValues));
+//            compiledSpec = (DtoSelectSpec) Objects.requireNonNull(cachedOperation.selectSpec());
+//        } else {
+//            // Compile and execute query (it will be cached as part of this process)
+//            compiledSpec = compile();
+//            rows = executeQuery(compiledSpec, nodeHash);
+//        }
+//
+//        final OrmTable ormTable = compiledSpec.dtoTable();
+//
+//        if (dtoClass == ormTable.dtoClass()
+//                || ormTable.getDtoClassInterfaces().contains(dtoClass)) {
+//            // Selecting the actual DTO
+//            final SelectSpecDtoMapper selectSpecDtoMapper = new SelectSpecDtoMapper(compiledSpec, databaseProvider.getTypeConverter(), tableRegistry, dtoConstructor, litebridgeContext);
+//            final List<TypeOverride> dtos = selectSpecDtoMapper.toDtos(dtoClass, rows);
+//            dtos.forEach(ormTable::syncPersistedDto);
+//            return dtos;
+//        } else {
+//            return unwrap(dtoClass, rows);
+//        }
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     /**
@@ -217,23 +221,24 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
     }
 
     private @Nullable TypeOverride fetchOneDto(final boolean first) {
-        final List<TypeOverride> result;
-        if (first) {
-            // Use a new selector with a LIMIT node
-            result = withNode(new LimitNode(node, Optional.of(1), Optional.empty())).list();
-        } else {
-            result = list();
-        }
-
-        if (CollectionUtils.isEmpty(result)) {
-            return null;
-        }
-
-        if (!first && result.size() > 1) {
-            throw new IllegalStateException("Expected exactly one result, but got %d".formatted(result.size()));
-        }
-
-        return result.getFirst();
+//        final List<TypeOverride> result;
+//        if (first) {
+//            // Use a new selector with a LIMIT node
+//            result = withNode(new LimitNode(node, Optional.of(1), Optional.empty())).list();
+//        } else {
+//            result = list();
+//        }
+//
+//        if (CollectionUtils.isEmpty(result)) {
+//            return null;
+//        }
+//
+//        if (!first && result.size() > 1) {
+//            throw new IllegalStateException("Expected exactly one result, but got %d".formatted(result.size()));
+//        }
+//
+//        return result.getFirst();
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     @SuppressWarnings("unchecked")

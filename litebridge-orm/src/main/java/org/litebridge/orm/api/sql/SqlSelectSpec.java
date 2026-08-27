@@ -18,6 +18,7 @@ import java.util.Objects;
  * This class encapsulates table, column, join, condition, order by,
  * and limit specifications for building a query.
  */
+@Deprecated(forRemoval = true)
 public class SqlSelectSpec extends SelectSpec {
 
     public SqlSelectSpec(final LitebridgeContext litebridgeContext, final Table table) {

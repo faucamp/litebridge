@@ -1,12 +1,11 @@
 package org.litebridge.orm.api.merge;
 
-import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.Table;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 public sealed class MergeAndStep<DTO, MUS extends MergeUpdateStep<DTO>>
         extends MergeStepBase
@@ -22,13 +21,17 @@ public sealed class MergeAndStep<DTO, MUS extends MergeUpdateStep<DTO>>
     }
 
     public MergeConditionClause<DTO, MUS, MergeWhenMatchedConditionClauseTerminal<DTO, MUS>> and(final String column) {
-        final Column spiColumn = createSpiColumn(column);
-        return and(new SelectColumnSpec(spiColumn));
+        return andImpl(column, null);
     }
 
     public MergeConditionClause<DTO, MUS, MergeWhenMatchedConditionClauseTerminal<DTO, MUS>> and(final ExpressionSpec expression) {
+        return andImpl(null, expression);
+    }
+
+    private @NonNull MergeConditionClause<DTO, MUS, MergeWhenMatchedConditionClauseTerminal<DTO, MUS>> andImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {
         return new MergeConditionClause<>(litebridgeContext,
                 LogicOperator.NOOP,
+                column,
                 expression,
                 node,
                 conditionNode -> new MergeWhenMatchedConditionClauseTerminal<>(targetTable, usingTable, conditionNode, litebridgeContext));

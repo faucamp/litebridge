@@ -2,13 +2,13 @@ package org.litebridge.orm.api.sql;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.HavingNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractGroupByClauseTerminal;
-import org.litebridge.orm.api.select.model.ConditionSpec;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;
-
-import java.util.function.Function;
 
 public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
         SqlHavingConditionClause,
@@ -17,26 +17,37 @@ public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTermina
         SqlOrderByClauseChain,
         SqlSelectSpec> {
 
-    public SqlGroupByClauseTerminal(final SqlSelector delegate) {
-        super(delegate);
+    public SqlGroupByClauseTerminal(final ExpressionSpec[] expressions,
+                                    final QueryNode node,
+                                    final SelectEngineTerminal selectEngineTerminal,
+                                    final LitebridgeContext litebridgeContext) {
+        super(expressions, new GroupByNode(node, null, expressions), selectEngineTerminal, litebridgeContext);
+    }
+
+    public SqlGroupByClauseTerminal(final String[] columns,
+                                    final QueryNode node,
+                                    final SelectEngineTerminal selectEngineTerminal,
+                                    final LitebridgeContext litebridgeContext) {
+        super(columns, new GroupByNode(node, columns, null), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public SqlHavingConditionClause having(final ExpressionSpec expression) {
-        return new SqlHavingConditionClause(delegate.litebridgeContext(),
+        return new SqlHavingConditionClause(litebridgeContext,
                 LogicOperator.NOOP,
+                null,
                 expression,
                 null,
-                node -> new SqlHavingConditionClauseTerminal((SqlSelector) delegate.withNode(new HavingNode(delegate.node(), node))));
+                conditionNode -> new SqlHavingConditionClauseTerminal(new HavingNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return orderBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
+        return new SqlOrderByClause(columns, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
-    public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
-        return new SqlOrderByClause(columns, (SqlSelector) delegate);
+    public SqlOrderByClause orderBy(final ExpressionSpec... expressions) {
+        return new SqlOrderByClause(expressions, node, selectEngineTerminal, litebridgeContext);
     }
 }

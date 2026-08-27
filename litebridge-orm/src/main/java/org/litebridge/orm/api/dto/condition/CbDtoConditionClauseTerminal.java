@@ -44,6 +44,7 @@ public final class CbDtoConditionClauseTerminal<DTO> extends AbstractCbCondition
         return new CbDtoConditionClause<>(ormTable,
                 fromClauseEngine,
                 logicOperator,
+                null,
                 expression,
                 node,
                 conditionNode -> new CbDtoConditionClauseTerminal<>(ormTable, fromClauseEngine, conditionNode));

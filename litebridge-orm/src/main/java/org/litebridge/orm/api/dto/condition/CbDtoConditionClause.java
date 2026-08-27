@@ -34,10 +34,11 @@ public class CbDtoConditionClause<DTO> extends AbstractCbConditionClause<DTO> {
     public CbDtoConditionClause(final OrmTable ormTable,
                                 final FromClauseEngine fromClauseEngine,
                                 final LogicOperator logicOperator,
-                                final ExpressionSpec lhs,
+                                final @Nullable String lhsColumn,
+                                final @Nullable ExpressionSpec lhsExpression,
                                 final @Nullable QueryNode node,
                                 final Function<QueryNode, AbstractCbConditionClauseTerminal<DTO>> terminalCreator) {
-        super(fromClauseEngine, logicOperator, lhs, node, terminalCreator);
+        super(fromClauseEngine, logicOperator, lhsColumn, lhsExpression, node, terminalCreator);
         this.ormTable = ormTable;
         this.terminalCreator = terminalCreator;
     }

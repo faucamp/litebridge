@@ -1,21 +1,16 @@
 package org.litebridge.orm.engine;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.select.FromClauseStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
-import org.litebridge.orm.api.select.SelectApi;
-import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
-import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.expression.ExpressionModifier;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridge.orm.expression.TypeOverride;
 import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
+import org.litebridge.orm.persistence.DtoConstructor;
 
-import java.util.Arrays;
+import java.util.function.Function;
 
 /**
  * Provides methods for constructing SQL SELECT statements in a fluent, object-oriented manner.
@@ -23,59 +18,43 @@ import java.util.Arrays;
  * This class supports the selection of data transfer objects (DTOs), raw fields/columns, and custom expressions with optional
  * support for related DTO strategies and contextual mappings.
  */
-public class SelectEngine implements SelectApi {
+public class SelectEngine {
 
-    private final FromClauseEngine fromClauseEngine;
+    private final SelectEngineTerminal selectEngineTerminal;
 
-    /**
-     * Creates a new SelectEngine.
-     *
-     * @param fromClauseEngine the engine for building FROM clauses
-     */
-    public SelectEngine(final FromClauseEngine fromClauseEngine) {
-        this.fromClauseEngine = fromClauseEngine;
+    public SelectEngine(final DtoConstructor dtoConstructor) {
+        this.selectEngineTerminal = new SelectEngineTerminal(dtoConstructor);
     }
 
-    @Override
-    public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass) {
-        return select(dtoClass, (RelatedDtoStrategy) null);
+    public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final LitebridgeContext litebridgeContext) {
+        final SelectNode selectNode = new SelectNode(null, dtoClass, null, null, null);
+        return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContext);
     }
 
-    @Override
-    public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        return fromClauseEngine.from(new SelectNode(null, new ExpressionSpec[0], null), dtoClass, relatedDtoStrategy);
+    public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass, final LitebridgeContext litebridgeContext) {
+        //TODO: fix
+//        return new FromClauseStart(new SelectNode(null, new ExpressionSpec[0], null), fromClauseEngine).from(dtoClass, contextDtoClass);
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    @Override
-    public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
-        return new FromClauseStart(new SelectNode(null, new ExpressionSpec[0], null), fromClauseEngine).from(dtoClass, contextDtoClass);
+    public FromClauseStart select(final String[] fieldsOrColumns, final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
+        return new FromClauseStart(fieldsOrColumns, selectEngineTerminal, litebridgeContextCreator);
     }
 
-    @Override
-    public FromClauseStart select(final String... fieldsOrColumns) {
-        final ExpressionSpec[] expressionSpecs = Arrays.stream(fieldsOrColumns)
-                .map(fieldOrColumn -> new ProtoColumnExpressionSpec(SelectFieldSpec.class, fieldOrColumn, null))
-                .toArray(ProtoColumnExpressionSpec[]::new);
-        return new FromClauseStart(new SelectNode(null, expressionSpecs, null), fromClauseEngine);
+    public FromClauseStart select(final ExpressionSpec[] expressions, final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
+        return new FromClauseStart(expressions, selectEngineTerminal, litebridgeContextCreator);
     }
 
-    @Override
-    public FromClauseStart select(final ExpressionSpec... expressions) {
-        return new FromClauseStart(new SelectNode(null, expressions, null), fromClauseEngine);
-    }
-
-    @Override
-    public <T> FromClauseStartTypeOverride<T> select(final TypeOverride<T> expression) {
+    public <T> FromClauseStartTypeOverride<T> select(final TypeOverride<T> expression, final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
         final ExpressionSpec[] expressionSpecs = {switch (expression) {
             case TypeOverrideExpressionSpec<?> typeOverrideExpression -> typeOverrideExpression;
             case ExpressionModifier expressionModifier -> expressionModifier.toExpression();
         }};
 
-        return new FromClauseStartTypeOverride<>(expression.returnType(), new SelectNode(null, expressionSpecs, expression.returnType()), fromClauseEngine);
+        return new FromClauseStartTypeOverride<>(expression.returnType(), expressionSpecs, selectEngineTerminal, litebridgeContextCreator);
     }
 
-    @Override
-    public FromClauseStart select() {
-        return new FromClauseStart(new SelectNode(null, new ExpressionSpec[0], null), fromClauseEngine);
+    public FromClauseStart select(final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
+        return new FromClauseStart(selectEngineTerminal, litebridgeContextCreator);
     }
 }

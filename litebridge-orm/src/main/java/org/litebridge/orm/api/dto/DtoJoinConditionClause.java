@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.dto;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.JoinConditionClause;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -23,9 +24,10 @@ public final class DtoJoinConditionClause<DTO> extends ConditionClauseImpl<DTO,
 
     public DtoJoinConditionClause(final LitebridgeContext litebridgeContext,
                                   final LogicOperator logicOperator,
-                                  final ExpressionSpec lhs,
+                                  final @Nullable String lhsColumn,
+                                  final @Nullable ExpressionSpec lhsExpression,
                                   final QueryNode node,
                                   final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> terminalRecreator) {
-        super(litebridgeContext, logicOperator, lhs, node, terminalRecreator);
+        super(litebridgeContext, logicOperator, lhsColumn, lhsExpression, node, terminalRecreator);
     }
 }

@@ -18,7 +18,12 @@ public class OracleSelectSqlGenerator extends SelectSqlGenerator {
 
     @Override
     protected void appendLimitClause(final Limit limit, final StringBuilder sql) {
-        limit.offset().ifPresent(offset -> sql.append(" OFFSET ").append(offset).append(" ROWS"));
-        limit.limit().ifPresent(limitVal -> sql.append(" FETCH FIRST ").append(limitVal).append(" ROWS ONLY"));
+        if (limit.offset() != null) {
+            sql.append(" OFFSET ").append(limit.offset()).append(" ROWS");
+        }
+
+        if (limit.limit() != null) {
+            sql.append(" FETCH FIRST ").append(limit.limit()).append(" ROWS ONLY");
+        }
     }
 }

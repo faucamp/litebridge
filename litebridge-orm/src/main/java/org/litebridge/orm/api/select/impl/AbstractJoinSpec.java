@@ -27,7 +27,7 @@ public abstract class AbstractJoinSpec extends AbstractConditionBasedSpec implem
     @Override
     public ConditionSpec using(final String column) {
         final Column spiColumn = new Column(table, column);
-        final ConditionSpec usingCondition = conditions.newCondition(LogicOperator.NOOP, new SelectColumnSpec(spiColumn));
+        final ConditionSpec usingCondition = conditions.newCondition(LogicOperator.NOOP, null, new SelectColumnSpec(spiColumn));
         usingCondition.setOperator(Operator.USING);
         return usingCondition;
     }

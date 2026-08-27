@@ -528,7 +528,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         litebridge.saveAll(person1, person2);
         assumeTrue(litebridge.select(Person.class).list().size() == 2);
-        assumeTrue(litebridge.select(Person.class).where("name").eq("Jane").oneOrNull() == null);
+        assertNull(litebridge.select(Person.class).where("name").eq("Jane").oneOrNull());
 
         // Update the person's first name directly
         person1.setName("Jane");

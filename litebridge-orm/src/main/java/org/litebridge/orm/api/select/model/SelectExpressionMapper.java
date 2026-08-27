@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.select.model;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.PreparedOperation;
@@ -30,6 +31,7 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.expression.select.SubselectSpec;
 import org.litebridge.orm.meta.QueryField;
+import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.List;
@@ -55,15 +57,15 @@ public final class SelectExpressionMapper {
         return sqlFunctionRegistry;
     }
 
-    List<ExpressionSpec> resolveProtoExpression(final ExpressionSpec expressionSpec, final Table table, final ClauseType clause) {
-        return protoExpressionResolver.resolveExpression(expressionSpec, table, clause).toList();
+    public List<ExpressionSpec> resolveProtoExpression(final ExpressionSpec expressionSpec, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
+        return protoExpressionResolver.resolveExpression(expressionSpec, ormTable, table, clause).toList();
     }
 
-    List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs, final Table table, final ClauseType clause) {
-        return protoExpressionResolver.resolveExpressions(expressionSpecs, table, clause);
+    List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
+        return protoExpressionResolver.resolveExpressions(expressionSpecs, ormTable, table, clause);
     }
 
-    SelectExpression toSelectExpression(final ExpressionSpec expressionSpec, final boolean useSelectReferences) {
+    public SelectExpression toSelectExpression(final ExpressionSpec expressionSpec, final boolean useSelectReferences) {
         return switch (expressionSpec) {
             // Select targets
             case SelectFieldSpec selectFieldSpec -> toSelectColumn(selectFieldSpec, useSelectReferences);

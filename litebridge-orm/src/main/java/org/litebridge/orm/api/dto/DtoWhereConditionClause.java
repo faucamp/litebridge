@@ -31,9 +31,10 @@ public final class DtoWhereConditionClause<DTO>
 
     public DtoWhereConditionClause(final LitebridgeContext litebridgeContext,
                                    final LogicOperator logicOperator,
-                                   final ExpressionSpec lhs,
+                                   final @Nullable String lhsField,
+                                   final @Nullable ExpressionSpec lhsExpression,
                                    final @Nullable QueryNode node,
                                    final Function<QueryNode, DtoWhereConditionClauseTerminal<DTO>> terminalRecreator) {
-        super(litebridgeContext, logicOperator, lhs, node, terminalRecreator);
+        super(litebridgeContext, logicOperator, lhsField, lhsExpression, node, terminalRecreator);
     }
 }

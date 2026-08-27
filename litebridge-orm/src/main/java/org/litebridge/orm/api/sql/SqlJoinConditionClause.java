@@ -21,9 +21,10 @@ public final class SqlJoinConditionClause extends ConditionClauseImpl<Row,
 
     public SqlJoinConditionClause(final LitebridgeContext litebridgeContext,
                                   final LogicOperator logicOperator,
-                                  final ExpressionSpec lhs,
+                                  final @Nullable String lhsField,
+                                  final @Nullable ExpressionSpec lhsExpression,
                                   final @Nullable QueryNode node,
                                   final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalRecreator) {
-        super(litebridgeContext, logicOperator, lhs, node, terminalRecreator);
+        super(litebridgeContext, logicOperator, lhsField, lhsExpression, node, terminalRecreator);
     }
 }

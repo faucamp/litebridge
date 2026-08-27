@@ -1,13 +1,12 @@
 package org.litebridge.orm.api.merge;
 
-import org.litebridge.db.spi.Column;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.delete.DtoDeleteWhereConditionClause;
 import org.litebridge.orm.api.select.ast.MergeNode;
 import org.litebridge.orm.api.select.ast.UsingNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 import java.util.Objects;
 
@@ -28,13 +27,17 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep<DTO>>
     }
 
     public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS>> on(final String column) {
-        final Column spiColumn = createSpiColumn(column);
-        return on(new SelectColumnSpec(spiColumn));
+        return onImpl(column, null);
     }
 
     public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS>> on(final ExpressionSpec expression) {
+        return onImpl(null, expression);
+    }
+
+    private MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS>> onImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {
         return new MergeConditionClause<>(litebridgeContext,
                 LogicOperator.NOOP,
+                column,
                 expression,
                 null,
                 conditionNode -> {

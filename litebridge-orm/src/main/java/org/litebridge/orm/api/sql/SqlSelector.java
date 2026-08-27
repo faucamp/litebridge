@@ -17,6 +17,7 @@ import org.litebridge.orm.persistence.alias.AliasGenerator;
 import java.util.List;
 import java.util.Optional;
 
+@Deprecated(forRemoval = true)
 public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
 
     private final TableRegistry tableRegistry;
@@ -34,14 +35,16 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
 
     @Override
     protected SqlSelectSpec createSelectSpec(final AliasGenerator aliasGenerator) {
-        final SqlSelectSpec selectSpec = new SqlSelectSpec(litebridgeContext, table);
-        selectSpec.setProtoExpressionResolver(new SqlProtoExpressionResolver(selectSpec));
-        return selectSpec;
+//        final SqlSelectSpec selectSpec = new SqlSelectSpec(litebridgeContext, table);
+//        selectSpec.setProtoExpressionResolver(new SqlProtoExpressionResolver(selectSpec));
+//        return selectSpec;
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     public SqlFromClause select(final ExpressionSpec... expressionSpecs) {
-        final QueryNode selectNode = new SelectNode(node, expressionSpecs, null);
-        return new SqlFromClause(withNode(selectNode));
+//        final QueryNode selectNode = new SelectNode(node, expressionSpecs, null);
+//        return new SqlFromClause(withNode(selectNode));
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     @Override
@@ -66,23 +69,24 @@ public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {
     }
 
     private @Nullable Row fetchOneRecord(final boolean first) {
-        final List<Row> resultList;
-
-        if (first) {
-            resultList = withNode(new LimitNode(node, Optional.of(1), Optional.empty())).executeQuery();
-        } else {
-            resultList = executeQuery();
-        }
-
-        if (CollectionUtils.isEmpty(resultList)) {
-            return null;
-        }
-
-        if (!first && resultList.size() > 1) {
-            throw new IllegalStateException("Expected exactly one result, but got %d".formatted(resultList.size()));
-        }
-
-        return resultList.getFirst();
+//        final List<Row> resultList;
+//
+//        if (first) {
+//            resultList = withNode(new LimitNode(node, Optional.of(1), Optional.empty())).executeQuery();
+//        } else {
+//            resultList = executeQuery();
+//        }
+//
+//        if (CollectionUtils.isEmpty(resultList)) {
+//            return null;
+//        }
+//
+//        if (!first && resultList.size() > 1) {
+//            throw new IllegalStateException("Expected exactly one result, but got %d".formatted(resultList.size()));
+//        }
+//
+//        return resultList.getFirst();
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     Table table() {

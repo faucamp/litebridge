@@ -1,7 +1,6 @@
 package org.litebridge.orm.engine.compiler;
 
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.InsertNode;
@@ -15,22 +14,15 @@ import org.litebridge.orm.api.select.ast.WhenMatchedNode;
 import org.litebridge.orm.api.select.ast.WhenNotMatchedNode;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.persistence.TableMetaDataCache;
-import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
 
 import java.util.Objects;
 
 final class MergeQueryCompiler extends ConditionBasedQueryCompiler<MergeCompilationContext> {
 
-    public MergeQueryCompiler(final TableRegistry tableRegistry,
-                              final TableMetaDataCache tableMetaDataCache,
-                              final TypeConverter typeConverter,
-                              final AliasGenerator aliasGenerator,
-                              final SelectExpressionMapper selectExpressionMapper) {
-        super(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
+    public MergeQueryCompiler(final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
     }
 
     @Override
@@ -39,7 +31,7 @@ final class MergeQueryCompiler extends ConditionBasedQueryCompiler<MergeCompilat
             throw new IllegalArgumentException("Expected MergeNode, but got: " + rootNode);
         }
 
-        return new MergeCompilationContext(mergeNode, selectExpressionMapper, tableRegistry, tableMetaDataCache, typeConverter);
+        return new MergeCompilationContext(mergeNode, litebridgeContext);
     }
 
     @Override
@@ -79,7 +71,7 @@ final class MergeQueryCompiler extends ConditionBasedQueryCompiler<MergeCompilat
                 targetAlias = null;
 
 
-                final ExpressionSpec lhs = (ExpressionSpec) resolveAliases(conditionNode.lhs(), sourceAlias, targetAlias, true);
+                final ExpressionSpec lhs = (ExpressionSpec) resolveAliases(conditionNode.lhsExpression(), sourceAlias, targetAlias, true);
                 final Object rhsValue = resolveAliases(conditionNode.rhs(), sourceAlias, targetAlias, false);
                 final Object rhs;
 
@@ -93,7 +85,7 @@ final class MergeQueryCompiler extends ConditionBasedQueryCompiler<MergeCompilat
                     }
                 }
 
-                final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), Objects.requireNonNull(lhs));
+                final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), null, Objects.requireNonNull(lhs));
                 conditionSpec.setOperator(conditionNode.operator());
                 conditionSpec.setValue(rhs);
 

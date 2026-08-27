@@ -19,10 +19,11 @@ public class CbSqlConditionClause extends AbstractCbConditionClause<Row> {
     public CbSqlConditionClause(final Table table,
                                 final FromClauseEngine fromClauseEngine,
                                 final LogicOperator logicOperator,
-                                final ExpressionSpec lhs,
+                                final @Nullable String lhsColumn,
+                                final @Nullable ExpressionSpec lhsExpression,
                                 final @Nullable QueryNode node,
                                 final Function<QueryNode, AbstractCbConditionClauseTerminal<Row>> terminalCreator) {
-        super(fromClauseEngine, logicOperator, lhs, node, terminalCreator);
+        super(fromClauseEngine, logicOperator, lhsColumn, lhsExpression, node, terminalCreator);
         this.table = table;
     }
 

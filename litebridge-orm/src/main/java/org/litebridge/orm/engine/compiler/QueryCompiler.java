@@ -5,7 +5,6 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.orm.api.dto.DtoDataSpec;
@@ -28,19 +27,17 @@ import org.litebridge.orm.api.select.ast.UpdateNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractConditionBasedSpec;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
-import org.litebridge.orm.api.select.impl.DelegatingSelector;
-import org.litebridge.orm.api.select.impl.DelegatingSelectorInspector;
+import org.litebridge.orm.api.select.impl.DelegatingSelectTerminal;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.JoinSpec;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.api.sql.SqlJoinSpec;
 import org.litebridge.orm.api.sql.SqlSelectSpec;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 
@@ -56,23 +53,25 @@ import java.util.Objects;
  */
 public final class QueryCompiler extends AbstractQueryCompiler<CompilationContext> {
 
+    private final SelectQueryCompiler selectQueryCompiler;
     private final InsertQueryCompiler insertQueryCompiler;
     private final UpdateQueryCompiler updateQueryCompiler;
     private final MergeQueryCompiler mergeQueryCompiler;
     private final DeleteQueryCompiler deleteQueryCompiler;
+    private final AliasGenerator aliasGenerator;
+    private final TableRegistry tableRegistry;
     private final Map<Class<?>, List<Table>> aliasHistory = new HashMap<>();
     private final Map<Table, OrmTable> tableToOrmTableMap = new HashMap<>();
 
-    public QueryCompiler(final TableRegistry tableRegistry,
-                         final TableMetaDataCache tableMetaDataCache,
-                         final TypeConverter typeConverter,
-                         final AliasGenerator aliasGenerator,
-                         final SelectExpressionMapper selectExpressionMapper) {
-        super(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
-        this.insertQueryCompiler = new InsertQueryCompiler(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
-        this.updateQueryCompiler = new UpdateQueryCompiler(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
-        this.mergeQueryCompiler = new MergeQueryCompiler(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
-        this.deleteQueryCompiler = new DeleteQueryCompiler(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
+    public QueryCompiler(final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
+        this.selectQueryCompiler = new SelectQueryCompiler(litebridgeContext);
+        this.insertQueryCompiler = new InsertQueryCompiler(litebridgeContext);
+        this.updateQueryCompiler = new UpdateQueryCompiler(litebridgeContext);
+        this.mergeQueryCompiler = new MergeQueryCompiler(litebridgeContext);
+        this.deleteQueryCompiler = new DeleteQueryCompiler(litebridgeContext);
+        this.aliasGenerator = litebridgeContext.aliasGenerator();
+        this.tableRegistry = litebridgeContext.tableRegistry();
     }
 
     @Override
@@ -103,6 +102,7 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
         final List<QueryNode> nodes = flatten(node);
 
         final AbstractQueryCompiler<?> compiler = switch (nodes.getFirst()) {
+            case SelectNode selectNode -> selectQueryCompiler;
             case InsertNode insertNode -> insertQueryCompiler;
             case UpdateNode updateNode -> updateQueryCompiler;
             case MergeNode mergeNode -> mergeQueryCompiler;
@@ -305,7 +305,7 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
                         targetAlias = null;
                     }
 
-                    final ExpressionSpec lhs = (ExpressionSpec) resolveAliases(conditionNode.lhs(), sourceAlias, targetAlias, true);
+                    final ExpressionSpec lhs = (ExpressionSpec) resolveAliases(conditionNode.lhsExpression(), sourceAlias, targetAlias, true);
                     final Object rhsValue = resolveAliases(conditionNode.rhs(), sourceAlias, targetAlias, false);
                     final Object rhs;
 
@@ -315,7 +315,7 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
                         rhs = rhsValue;
                     }
 
-                    final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), Objects.requireNonNull(lhs));
+                    final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), null, Objects.requireNonNull(lhs));
                     conditionSpec.setOperator(conditionNode.operator());
                     conditionSpec.setValue(rhs);
                 }
@@ -337,11 +337,12 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
             }
             case OrderByNode orderByNode -> selectSpec.addOrderBy(orderByNode.expression(), orderByNode.ascending());
             case LimitNode limitNode -> {
-                if (limitNode.limit().isPresent()) {
-                    selectSpec.ensureLimit().setLimit(limitNode.limit().get());
+                if (limitNode.limit() != null) {
+                    selectSpec.ensureLimit().setLimit(limitNode.limit());
                 }
-                if (limitNode.offset().isPresent()) {
-                    selectSpec.ensureLimit().setOffset(limitNode.offset().get());
+
+                if (limitNode.offset() != null) {
+                    selectSpec.ensureLimit().setOffset(limitNode.offset());
                 }
             }
             default -> {
@@ -372,7 +373,7 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
             case ConditionNode conditionNode -> {
                 final ConditionGroupSpec conditionGroupSpec = spec.currentConditionGroupSpec();
 
-                final ExpressionSpec lhs = (ExpressionSpec) resolveAliases(conditionNode.lhs(), null, null, true);
+                final ExpressionSpec lhs = (ExpressionSpec) resolveAliases(conditionNode.lhsExpression(), null, null, true);
                 final Object rhsValue = resolveAliases(conditionNode.rhs(), null, null, false);
                 final Object rhs;
 
@@ -382,7 +383,7 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
                     rhs = rhsValue;
                 }
 
-                final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), Objects.requireNonNull(lhs));
+                final ConditionSpec conditionSpec = conditionGroupSpec.newCondition(conditionNode.logicOperator(), null, Objects.requireNonNull(lhs));
                 conditionSpec.setOperator(conditionNode.operator());
                 conditionSpec.setValue(rhs);
             }
@@ -472,14 +473,16 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
         return ormTable != null ? ormTable.dtoClass() : null;
     }
 
+    @Deprecated(forRemoval = true)
     private SelectSpec createSelectSpec(final SelectTerminal<?> selectTerminal) {
-        final AbstractSelector<?, ?> selector = switch (selectTerminal) {
-            case DelegatingSelector<?, ?> delegating -> DelegatingSelectorInspector.getDelegate(delegating);
-            case AbstractSelector<?, ?> s -> s;
-            default ->
-                    throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
-        };
-
-        return selector.compile();
+//        final AbstractSelector<?, ?> selector = switch (selectTerminal) {
+//            case DelegatingSelectTerminal<?, ?> delegating -> DelegatingSelectorInspector.getDelegate(delegating);
+//            case AbstractSelector<?, ?> s -> s;
+//            default ->
+//                    throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
+//        };
+//
+//        return selector.compile();
+        throw new UnsupportedOperationException("Deprecated");
     }
 }

@@ -696,7 +696,7 @@ public class PersistenceFacade {
                 final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
                         .map(BindValue::sqlDataType)
                         .toList();
-                litebridgeContext.queryPlanCache().put(nodeHash, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, updateMetaData, null));
+                litebridgeContext.queryPlanCache().put(nodeHash, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, updateMetaData));
 
                 // Execute SQL query
                 final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), null, updateMetaData);
@@ -799,9 +799,9 @@ public class PersistenceFacade {
             final LogicOperator logicOperator = first ? LogicOperator.NOOP : LogicOperator.AND;
 
             if (pkValue != null) {
-                conditionNode = new ConditionNode(conditionNode, logicOperator, pkColumnSpec, Operator.EQ, pkValue);
+                conditionNode = new ConditionNode(conditionNode, logicOperator, null, pkColumnSpec, Operator.EQ, pkValue);
             } else {
-                conditionNode = new ConditionNode(conditionNode, logicOperator, pkColumnSpec, Operator.IS_NULL, null);
+                conditionNode = new ConditionNode(conditionNode, logicOperator, null, pkColumnSpec, Operator.IS_NULL, null);
             }
 
             first = false;

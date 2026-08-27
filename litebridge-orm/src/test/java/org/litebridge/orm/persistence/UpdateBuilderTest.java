@@ -35,7 +35,7 @@ class UpdateBuilderTest {
     void where() {
         // Given
         final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable(), mock(LitebridgeContext.class));
-        final QueryNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, null, Operator.IS_NULL, null);
+        final QueryNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, null, null, Operator.IS_NULL, null);
 
         // When
         final AbstractStatementBuilder result = updateBuilder.where(conditionNode);
@@ -54,7 +54,7 @@ class UpdateBuilderTest {
         final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable, litebridgeContext);
 
         final Column column = new Column(new Table("TEST_TABLE"), "TEST_COLUMN");
-        final ConditionNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, new SelectColumnSpec(column), Operator.EQ, "test");
+        final ConditionNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, null, new SelectColumnSpec(column), Operator.EQ, "test");
 
         // When
         updateBuilder.where(conditionNode);

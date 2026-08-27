@@ -22,17 +22,19 @@ import java.util.Objects;
  */
 public record ConditionNode(@Nullable QueryNode previous,
                             LogicOperator logicOperator,
-                            @Nullable ExpressionSpec lhs,
+                            @Nullable String lhsColumn,
+                            @Nullable ExpressionSpec lhsExpression,
                             Operator operator,
                             @Nullable Object rhs,
                             @Nullable String relationshipField) implements ConditionQueryNode {
 
     public ConditionNode(@Nullable QueryNode previous,
                          LogicOperator logicOperator,
-                         @Nullable ExpressionSpec lhs,
+                         @Nullable String lhsColumn,
+                         @Nullable ExpressionSpec lhsExpression,
                          Operator operator,
                          @Nullable Object rhs) {
-        this(previous, logicOperator, lhs, operator, rhs, null);
+        this(previous, logicOperator, lhsColumn, lhsExpression, operator, rhs, null);
     }
 
     @Override
@@ -40,7 +42,8 @@ public record ConditionNode(@Nullable QueryNode previous,
         if (!(o instanceof final ConditionNode that)) return false;
         return operator == that.operator
                 && Objects.equals(previous, that.previous)
-                && Objects.equals(lhs, that.lhs)
+                && Objects.equals(lhsColumn, that.lhsColumn)
+                && Objects.equals(lhsExpression, that.lhsExpression)
                 && Objects.equals(relationshipField, that.relationshipField)
                 && logicOperator == that.logicOperator
                 && Objects.equals(rhsStructuralKey(), that.rhsStructuralKey());
@@ -48,7 +51,7 @@ public record ConditionNode(@Nullable QueryNode previous,
 
     @Override
     public int hashCode() {
-        return Objects.hash(previous, logicOperator, lhs, operator, relationshipField, rhsStructuralKey());
+        return Objects.hash(previous, logicOperator, lhsColumn, lhsExpression, operator, relationshipField, rhsStructuralKey());
     }
 
     private @Nullable Object rhsStructuralKey() {

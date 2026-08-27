@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.merge;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -17,9 +18,10 @@ public class MergeConditionClause<DTO,
 
     public MergeConditionClause(final LitebridgeContext litebridgeContext,
                                 final LogicOperator logicOperator,
-                                final ExpressionSpec lhs,
+                                final @Nullable String lhsColumn,
+                                final @Nullable ExpressionSpec lhsExpression,
                                 final QueryNode node,
                                 final Function<QueryNode, MCCT> terminalRecreator) {
-        super(litebridgeContext, logicOperator, lhs, node, terminalRecreator);
+        super(litebridgeContext, logicOperator, lhsColumn, lhsExpression, node, terminalRecreator);
     }
 }

@@ -9,5 +9,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
  * @param previous    the previous node in the chain
  * @param expressions the expressions to group by
  */
-public record GroupByNode(@Nullable QueryNode previous, ExpressionSpec[] expressions) implements QueryNode {
+public record GroupByNode(@Nullable QueryNode previous,
+                          String @Nullable [] columns,
+                          ExpressionSpec @Nullable [] expressions) implements QueryNode {
 }

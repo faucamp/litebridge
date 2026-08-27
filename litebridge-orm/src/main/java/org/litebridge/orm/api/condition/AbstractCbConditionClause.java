@@ -5,15 +5,12 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.ConditionClause;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
+import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.impl.AbstractSelector;
-import org.litebridge.orm.api.select.impl.DelegatingSelector;
-import org.litebridge.orm.api.select.impl.DelegatingSelectorInspector;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.FromClauseEngine;
-import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Arrays;
@@ -34,7 +31,8 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      */
     protected final FromClauseEngine fromClauseEngine;
     private final LogicOperator logicOperator;
-    private final ExpressionSpec lhs;
+    private final @Nullable String lhsColumn;
+    private final @Nullable ExpressionSpec lhsExpression;
     private final @Nullable QueryNode node;
 
     /**
@@ -42,17 +40,20 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      *
      * @param fromClauseEngine The FROM clause engine.
      * @param logicOperator    The logic operator (AND/OR).
-     * @param lhs              The left-hand side expression.
+     * @param lhsColumn        The left-hand side column name.
+     * @param lhsExpression    The left-hand side expression.
      * @param node             The previous node in the chain.
      * @param terminalCreator  The function to create the terminal clause.
      */
     public AbstractCbConditionClause(final FromClauseEngine fromClauseEngine,
                                      final LogicOperator logicOperator,
-                                     final ExpressionSpec lhs,
+                                     final @Nullable String lhsColumn,
+                                     final @Nullable ExpressionSpec lhsExpression,
                                      final @Nullable QueryNode node,
                                      final Function<QueryNode, AbstractCbConditionClauseTerminal<DTO>> terminalCreator) {
         this.logicOperator = logicOperator;
-        this.lhs = lhs;
+        this.lhsColumn = lhsColumn;
+        this.lhsExpression = lhsExpression;
         this.fromClauseEngine = fromClauseEngine;
         this.node = node;
     }
@@ -73,7 +74,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> eq(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> eq(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.EQ, subselect, true);
     }
 
@@ -93,7 +94,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> neq(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> neq(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.NEQ, subselect, true);
     }
 
@@ -113,7 +114,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> lt(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> lt(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.LT, subselect, false);
     }
 
@@ -133,7 +134,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> lte(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> lte(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.LTE, subselect, false);
     }
 
@@ -153,7 +154,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> gt(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> gt(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.GT, subselect, false);
     }
 
@@ -173,7 +174,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> gte(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> gte(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.GTE, subselect, false);
     }
 
@@ -203,7 +204,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     }
 
     @Override
-    public AbstractCbConditionClauseTerminal<DTO> in(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> in(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.IN, subselect, false);
     }
 
@@ -222,7 +223,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     }
 
     @Override
-    public AbstractCbConditionClauseTerminal<DTO> notIn(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> notIn(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.NOT_IN, subselect, false);
     }
 
@@ -249,7 +250,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     }
 
     private AbstractCbConditionClauseTerminal<DTO> subselectImpl(final Operator operator,
-                                                                 final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect,
+                                                                 final @Nullable Function<SelectApi, SelectTerminal<?>> subselect,
                                                                  final boolean allowNull) {
         // To support the current overloading and null parameters
         if (subselect == null) {
@@ -285,7 +286,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
             translatedOperator = operator;
         }
 
-        final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value);
+        final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhsColumn, lhsExpression, translatedOperator, value);
 
         return createCbConditionClauseTerminal(conditionNode);
     }
@@ -298,20 +299,22 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      */
     protected abstract AbstractCbConditionClauseTerminal<DTO> createCbConditionClauseTerminal(final QueryNode conditionNode);
 
-    private SelectSpec createSelectSpec(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
-        final SelectTerminal<?> selectTerminal = Objects.requireNonNull(subselect, "Subselect cannot be null")
-                .apply(new SelectEngine(fromClauseEngine));
-        return getSelectSpec(selectTerminal);
+    private SelectSpec createSelectSpec(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
+//        final SelectTerminal<?> selectTerminal = Objects.requireNonNull(subselect, "Subselect cannot be null")
+//                .apply(new SelectEngine(fromClauseEngine));
+//        return getSelectSpec(selectTerminal);
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     private SelectSpec getSelectSpec(final SelectTerminal<?> selectTerminal) {
-        final AbstractSelector<?, ?> selector = switch (selectTerminal) {
-            case DelegatingSelector<?, ?> delegating -> DelegatingSelectorInspector.getDelegate(delegating);
-            case AbstractSelector<?, ?> s -> s;
-            default ->
-                    throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
-        };
-
-        return selector.compile();
+//        final AbstractSelector<?, ?> selector = switch (selectTerminal) {
+//            case DelegatingSelectTerminal<?, ?> delegating -> DelegatingSelectorInspector.getDelegate(delegating);
+//            case AbstractSelector<?, ?> s -> s;
+//            default ->
+//                    throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
+//        };
+//
+//        return selector.compile();
+        throw new UnsupportedOperationException("Deprecated");
     }
 }

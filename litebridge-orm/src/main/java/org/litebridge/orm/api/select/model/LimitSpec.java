@@ -13,6 +13,7 @@ import java.util.Optional;
  * The limit specifies the maximum number of records to return, while the offset specifies
  * the number of records to skip before starting to return results.
  */
+@Deprecated(forRemoval = true)
 public final class LimitSpec {
 
     @Nullable
@@ -62,6 +63,7 @@ public final class LimitSpec {
      * @return an optional containing the SPI limit object.
      */
     public Optional<Limit> toLimit() {
-        return Optional.of(new Limit(getLimit(), getOffset()));
+//        return Optional.of(new Limit(getLimit(), getOffset()));
+        throw new UnsupportedOperationException("Deprecated");
     }
 }

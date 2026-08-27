@@ -24,6 +24,7 @@ public final class SqlFromClause implements FromClause<Row,
 
     @Override
     public SqlFromClauseTerminal from(final String table) {
-        return new SqlFromClauseTerminal(delegate);
+//        return new SqlFromClauseTerminal(delegate);
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 }

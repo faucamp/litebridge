@@ -5,38 +5,27 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.orm.api.select.model.ProtoExpressionResolver;
-import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
 import org.litebridge.orm.expression.Resolvable;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.meta.QueryField;
+import org.litebridge.orm.persistence.OrmTable;
 
 public final class SqlProtoExpressionResolver extends ProtoExpressionResolver {
 
-    @Deprecated(forRemoval = true)
-    private @Nullable SelectSpec selectSpec;
-
-    @Deprecated(forRemoval = true)
-    public SqlProtoExpressionResolver(@Nullable final SelectSpec selectSpec) {
-        this.selectSpec = selectSpec;
-    }
-
-    public SqlProtoExpressionResolver() {
+    @Override
+    protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
+        return new SelectColumnSpec(getColumn(resolvable, ormTable, table, clause));
     }
 
     @Override
-    protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable, final Table table, final ClauseType clause) {
-        return new SelectColumnSpec(getColumn(resolvable, table, clause));
-    }
-
-    @Override
-    protected ColumnExpressionSpec resolveSelectField(final QueryField queryField, final Table table, final ClauseType clause) {
+    protected ColumnExpressionSpec resolveSelectField(final QueryField queryField, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
         throw new UnsupportedOperationException("QueryField not yet supported in SQL mode: " + queryField);
     }
 
     @Override
-    protected Column getColumn(final Resolvable resolvable, final Table table, final ClauseType clause) {
+    protected Column getColumn(final Resolvable resolvable, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
         if (resolvable instanceof ProtoExpressionSpec protoExpressionSpec) {
             return new Column(table, resolvable.column(), protoExpressionSpec.alias());
         } else {

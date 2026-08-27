@@ -8,13 +8,14 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.db.spi.update.Merge;
+import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.orm.api.select.ast.InsertNode;
 import org.litebridge.orm.api.select.ast.MergeNode;
 import org.litebridge.orm.api.select.ast.SetNode;
 import org.litebridge.orm.api.select.ast.UsingNode;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.meta.QueryField;
@@ -45,15 +46,12 @@ final class MergeCompilationContext implements CompilationContext {
     private MergeCompilationContext.ConditionContext conditionContext;
 
     public MergeCompilationContext(final MergeNode mergeNode,
-                                   final SelectExpressionMapper selectExpressionMapper,
-                                   final TableRegistry tableRegistry,
-                                   final TableMetaDataCache tableMetaDataCache,
-                                   final TypeConverter typeConverter) {
+                                   final LitebridgeContext litebridgeContext) {
         this.mergeNode = mergeNode;
-        this.selectExpressionMapper = selectExpressionMapper;
-        this.tableRegistry = tableRegistry;
-        this.tableMetaDataCache = tableMetaDataCache;
-        this.typeConverter = typeConverter;
+        this.selectExpressionMapper = litebridgeContext.selectExpressionMapper();
+        this.tableRegistry = litebridgeContext.tableRegistry();
+        this.tableMetaDataCache = litebridgeContext.tableMetaDataCache();
+        this.typeConverter = litebridgeContext.typeConverter();
 
         if (mergeNode.table() != null) {
             this.targetOrmTable = tableRegistry.getOrmTable(mergeNode.table());

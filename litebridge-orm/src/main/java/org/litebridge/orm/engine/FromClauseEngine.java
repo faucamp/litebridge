@@ -31,6 +31,7 @@ import java.util.function.Supplier;
  * <p>
  * This class is immutable and thread-safe. Instances of this class should not be modified after construction.
  */
+@Deprecated(forRemoval = true)
 public final class FromClauseEngine {
 
     /**
@@ -87,13 +88,14 @@ public final class FromClauseEngine {
      * @return the DTO from clause terminal.
      */
     public <DTO> DtoFromClauseTerminal<DTO> from(final @Nullable SelectNode node, final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        final DtoSelector<DTO> dtoSelector = createDtoSelectorForType(node, dtoClass, dtoClass, relatedDtoStrategy);
-
-        if (node != null && node.expressions().length > 0) {
-            return new DtoFromClauseTerminal<>(dtoSelector);
-        } else {
-            return dtoSelector.select();
-        }
+//        final DtoSelector<DTO> dtoSelector = createDtoSelectorForType(node, dtoClass, dtoClass, relatedDtoStrategy);
+//
+//        if (node != null && node.expressions().length > 0) {
+//            return new DtoFromClauseTerminal<>(dtoSelector);
+//        } else {
+//            return dtoSelector.select();
+//        }
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     /**
@@ -107,20 +109,22 @@ public final class FromClauseEngine {
      * @return the DTO from clause terminal.
      */
     public <TypeOverride> DtoFromClauseTerminal<TypeOverride> from(final QueryNode node, final Class<?> dtoClass, final Class<TypeOverride> typeOverrideClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        final DtoSelector<TypeOverride> dtoSelector = createDtoSelectorForType(node, typeOverrideClass, dtoClass, relatedDtoStrategy);
-
-        if (hasExplicitSelect(node)) {
-            return new DtoFromClauseTerminal<>(dtoSelector);
-        } else {
-            return dtoSelector.select();
-        }
+//        final DtoSelector<TypeOverride> dtoSelector = createDtoSelectorForType(node, typeOverrideClass, dtoClass, relatedDtoStrategy);
+//
+//        if (hasExplicitSelect(node)) {
+//            return new DtoFromClauseTerminal<>(dtoSelector);
+//        } else {
+//            return dtoSelector.select();
+//        }
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     private <TypeOverride> DtoSelector<TypeOverride> createDtoSelectorForType(final @Nullable QueryNode node, final Class<TypeOverride> typeOverride, final Class<?> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
-        final LitebridgeContext litebridgeContext = createLitebridgeContext(relatedDtoStrategy);
-
-        return new DtoSelector<>(typeOverride, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, litebridgeContext.aliasGenerator(), litebridgeContext, node);
+//        final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
+//        final LitebridgeContext litebridgeContext = createLitebridgeContext(relatedDtoStrategy);
+//
+//        return new DtoSelector<>(typeOverride, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, litebridgeContext.aliasGenerator(), litebridgeContext, node);
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     private LitebridgeContext createLitebridgeContext() {
@@ -146,10 +150,11 @@ public final class FromClauseEngine {
      * @return the DTO from clause terminal.
      */
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
-        final OrmTable table = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
-        final LitebridgeContext litebridgeContext = createLitebridgeContext();
-        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, litebridgeContext.aliasGenerator(), litebridgeContext, null)
-                .select();
+//        final OrmTable table = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
+//        final LitebridgeContext litebridgeContext = createLitebridgeContext();
+//        return new DtoSelector<>(dtoClass, table, tableRegistry, changeTracker.classFieldAccessorCache(), dtoConstructor, databaseProvider, litebridgeContext.aliasGenerator(), litebridgeContext, null)
+//                .select();
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     /**

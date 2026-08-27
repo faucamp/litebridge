@@ -1,62 +1,73 @@
 package org.litebridge.orm.engine.compiler;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.expression.BindValueExpression;
+import org.litebridge.db.spi.expression.ClauseType;
+import org.litebridge.db.spi.expression.ColumnExpression;
+import org.litebridge.db.spi.expression.LiteralExpression;
+import org.litebridge.db.spi.expression.SelectExpression;
+import org.litebridge.db.spi.expression.SelectReference;
+import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.math.MathOperation;
+import org.litebridge.db.spi.query.Condition;
+import org.litebridge.db.spi.query.ConditionGroup;
+import org.litebridge.db.spi.query.LogicCondition;
+import org.litebridge.db.spi.query.LogicConditionGroup;
+import org.litebridge.db.spi.query.Operator;
+import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.SetNode;
 import org.litebridge.orm.api.select.ast.UpdateNode;
+import org.litebridge.orm.api.select.model.ConditionGroupSpec;
+import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
+import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
-import org.litebridge.orm.persistence.TableRegistry;
 
+import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
-public final class UpdateCompilationContext implements CompilationContext {
+public final class UpdateCompilationContext extends AbstractCompilationContext {
 
     private final Table table;
     private final TableMetaData tableMetaData;
-    private final OrmTable ormTable;
-    private final SelectExpressionMapper selectExpressionMapper;
-    private final TableMetaDataCache tableMetaDataCache;
-    private final TypeConverter typeConverter;
+    private final @Nullable OrmTable ormTable;
     private final List<SetNode> setNodes = new ArrayList<>();
     private final List<BindValue> bindValues = new ArrayList<>();
     private @Nullable ConditionGroupSpecStack where;
 
     public UpdateCompilationContext(final UpdateNode updateNode,
-                                    final SelectExpressionMapper selectExpressionMapper,
-                                    final TableRegistry tableRegistry,
-                                    final TableMetaDataCache tableMetaDataCache,
-                                    final TypeConverter typeConverter) {
-        this.selectExpressionMapper = selectExpressionMapper;
-        this.tableMetaDataCache = tableMetaDataCache;
+                                    final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
 
         if (updateNode.dtoClass() != null) {
-            this.ormTable = tableRegistry.getTableOrThrow(updateNode.dtoClass());
+            this.ormTable = litebridgeContext.tableRegistry().getTableOrThrow(updateNode.dtoClass());
             this.tableMetaData = ormTable.getMetaData();
             this.table = tableMetaData.toTable();
         } else {
             this.ormTable = null;
-            this.table = tableRegistry.getOrCreateSpiTable(Objects.requireNonNull(updateNode.table()));
-            this.tableMetaData = tableMetaDataCache.ensureTableMetaData(table);
+            this.table = litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(updateNode.table()));
+            this.tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);
         }
-
-        this.typeConverter = typeConverter;
     }
 
     public void addSetNode(final SetNode setNode) {
@@ -71,12 +82,12 @@ public final class UpdateCompilationContext implements CompilationContext {
         return where;
     }
 
-    public @Nullable ConditionGroupSpecStack getWhereConditionGroupStack() {
-        return where;
-    }
-
-    public void addWhereCondition(final ConditionNode conditionNode) {
-        ensureWhereConditionGroupStack().current().newCondition(conditionNode.logicOperator(), conditionNode.lhs(), conditionNode.operator());
+    public void addCondition(final ConditionNode conditionNode) {
+        ensureWhereConditionGroupStack().current().newCondition(conditionNode.logicOperator(),
+                conditionNode.lhsColumn(),
+                conditionNode.lhsExpression(),
+                conditionNode.operator(),
+                conditionNode.rhs());
         //TODO: fix datatype
         final int sqlDataType = 0;
         final BindValue bindValue = new BindValue(conditionNode.rhs(), sqlDataType);
@@ -135,11 +146,8 @@ public final class UpdateCompilationContext implements CompilationContext {
             this.bindValues.addAll(bindValues);
         }
 
-        return new Update(table, updateColumns, where.current().toConditionGroup(selectExpressionMapper,
-                Set.of(table),
-                bindValues,
-                tableMetaDataCache,
-                typeConverter));
+        final ConditionGroup conditionGroup = toConditionGroup(where.current(), ormTable, table);
+        return new Update(table, updateColumns, conditionGroup);
     }
 
     private static String getColumn(final SetNode setNode) {

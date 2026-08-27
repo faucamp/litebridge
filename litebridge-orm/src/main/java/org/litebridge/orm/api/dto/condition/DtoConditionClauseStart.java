@@ -44,6 +44,6 @@ public class DtoConditionClauseStart<DTO> extends AbstractConditionClauseStart<D
 
     @Override
     public AbstractCbConditionClause<DTO> where(final ExpressionSpec expression) {
-        return new CbDtoConditionClause<>(ormTable, fromClauseEngine, LogicOperator.NOOP, expression, node, node -> new CbDtoConditionClauseTerminal<>(ormTable, fromClauseEngine, node));
+        return new CbDtoConditionClause<>(ormTable, fromClauseEngine, LogicOperator.NOOP, null, expression, node, node -> new CbDtoConditionClauseTerminal<>(ormTable, fromClauseEngine, node));
     }
 }

@@ -36,7 +36,10 @@ public final class DtoJoinSpec extends AbstractJoinSpec implements DtoDataSpec {
      * @param table the database table representation
      * @param selectExpressionMapper the mapper for select expressions
      */
-    public DtoJoinSpec(final Class<?> dtoClass, final OrmTable ormTable, final Table table, final SelectExpressionMapper selectExpressionMapper) {
+    public DtoJoinSpec(final Class<?> dtoClass,
+                       final OrmTable ormTable,
+                       final Table table,
+                       final SelectExpressionMapper selectExpressionMapper) {
         super(table, selectExpressionMapper);
         this.dtoClass = dtoClass;
         this.ormTable = ormTable;

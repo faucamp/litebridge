@@ -1,6 +1,6 @@
 package org.litebridge.orm.api.update;
 
-import org.litebridge.db.spi.Column;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
@@ -12,7 +12,6 @@ import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 import java.util.function.Function;
 
@@ -32,12 +31,12 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl implements SqlUpdat
 
     @Override
     public SqlUpdateWhereConditionClause and(final String column) {
-        return whereImpl(LogicOperator.AND, column);
+        return whereImpl(LogicOperator.AND, column, null);
     }
 
     @Override
     public SqlUpdateWhereConditionClause and(final ExpressionSpec expression) {
-        return whereImpl(LogicOperator.AND, expression);
+        return whereImpl(LogicOperator.AND, null, expression);
     }
 
     @Override
@@ -47,12 +46,12 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl implements SqlUpdat
 
     @Override
     public SqlUpdateWhereConditionClause or(final String column) {
-        return whereImpl(LogicOperator.OR, column);
+        return whereImpl(LogicOperator.OR, column, null);
     }
 
     @Override
     public SqlUpdateWhereConditionClause or(final ExpressionSpec expression) {
-        return whereImpl(LogicOperator.OR, expression);
+        return whereImpl(LogicOperator.OR, null, expression);
     }
 
     @Override
@@ -60,26 +59,22 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl implements SqlUpdat
         return whereImpl(LogicOperator.OR, query);
     }
 
-    private SqlUpdateWhereConditionClause whereImpl(final LogicOperator logicOperator, final String column) {
-        final Table table = litebridgeContext.tableRegistry().getOrCreateSpiTable(tableName);
-        return whereImpl(logicOperator, new SelectColumnSpec(new Column(table, column)));
-    }
-
-    private SqlUpdateWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+    private SqlUpdateWhereConditionClause whereImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {
         final Function<QueryNode, SqlUpdateWhereConditionClauseTerminal> recreator = n -> {
             this.node = new WhereNode(this.node, n);
             return this;
         };
 
-        return new SqlUpdateWhereConditionClause(litebridgeContext, logicOperator, expression, recreator);
+        return new SqlUpdateWhereConditionClause(litebridgeContext, logicOperator, column, expression, recreator);
     }
 
     private SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-        final Table table = litebridgeContext.tableRegistry().getOrCreateSpiTable(tableName);
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(table, litebridgeContext.fromClauseEngine(), null);
-        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
-        this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, terminal.node()));
-        return this;
+//        final Table table = litebridgeContext.tableRegistry().getOrCreateSpiTable(tableName);
+//        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(table, litebridgeContext.fromClauseEngine(), null);
+//        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+//        this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, terminal.node()));
+//        return this;
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     QueryNode node() {

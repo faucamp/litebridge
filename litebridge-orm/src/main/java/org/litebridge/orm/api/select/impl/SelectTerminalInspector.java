@@ -19,8 +19,8 @@ public final class SelectTerminalInspector {
      * @return the {@link QueryNode} associated with the given {@link SelectTerminal}
      */
     public static @Nullable QueryNode getNode(final SelectTerminal<?> selectTerminal) {
-        if (selectTerminal instanceof DelegatingSelector<?, ?> delegatingSelector) {
-            return delegatingSelector.delegate.node();
+        if (selectTerminal instanceof DelegatingSelectTerminal<?> delegatingSelector) {
+            return delegatingSelector.node();
         } else {
             throw new IllegalStateException("Unsupported select terminal type: " + selectTerminal.getClass().getName());
         }

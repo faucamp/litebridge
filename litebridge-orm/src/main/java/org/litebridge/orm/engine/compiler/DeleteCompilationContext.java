@@ -2,54 +2,37 @@ package org.litebridge.orm.engine.compiler;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.Delete;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.DeleteNode;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.TableMetaDataCache;
-import org.litebridge.orm.persistence.TableRegistry;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
-public final class DeleteCompilationContext implements CompilationContext {
+public final class DeleteCompilationContext extends AbstractCompilationContext {
 
     private static final ConditionGroup EMPTY_CONDITION_GROUP = new ConditionGroup(Collections.emptyList());
 
     private final Table table;
-    private final SelectExpressionMapper selectExpressionMapper;
-    private final TableMetaDataCache tableMetaDataCache;
-    private final TableMetaData tableMetaData;
-    private final TypeConverter typeConverter;
-    private final List<BindValue> bindValues = new ArrayList<>();
+    private final @Nullable OrmTable ormTable;
     private @Nullable ConditionGroupSpecStack where;
 
     public DeleteCompilationContext(final DeleteNode deleteNode,
-                                    final SelectExpressionMapper selectExpressionMapper,
-                                    final TableRegistry tableRegistry,
-                                    final TableMetaDataCache tableMetaDataCache,
-                                    final TypeConverter typeConverter) {
-        this.selectExpressionMapper = selectExpressionMapper;
-        this.tableMetaDataCache = tableMetaDataCache;
+                                    final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
 
         if (deleteNode.dtoClass() != null) {
-            final OrmTable ormTable = tableRegistry.getTableOrThrow(deleteNode.dtoClass());
-            this.tableMetaData = ormTable.getMetaData();
-            this.table = tableMetaData.toTable();
+            this.ormTable = litebridgeContext.tableRegistry().getTableOrThrow(deleteNode.dtoClass());
+            this.table = ormTable.getMetaData().toTable();
         } else {
-            this.table = tableRegistry.getOrCreateSpiTable(Objects.requireNonNull(deleteNode.table()));
-            this.tableMetaData = tableMetaDataCache.ensureTableMetaData(table);
+            this.ormTable = null;
+            this.table = litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(deleteNode.table()));
         }
-
-        this.typeConverter = typeConverter;
     }
 
     public ConditionGroupSpecStack ensureWhereConditionGroupStack() {
@@ -61,11 +44,11 @@ public final class DeleteCompilationContext implements CompilationContext {
     }
 
     public void addWhereCondition(final ConditionNode conditionNode) {
-        ensureWhereConditionGroupStack().current().newCondition(conditionNode.logicOperator(), conditionNode.lhs(), conditionNode.operator());
-        //TODO: fix datatype
-        final int sqlDataType = 0;
-        final BindValue bindValue = new BindValue(conditionNode.rhs(), sqlDataType);
-        bindValues.add(bindValue);
+        ensureWhereConditionGroupStack().current().newCondition(conditionNode.logicOperator(),
+                conditionNode.lhsColumn(),
+                conditionNode.lhsExpression(),
+                conditionNode.operator(),
+                conditionNode.rhs());
     }
 
     @Override
@@ -78,12 +61,7 @@ public final class DeleteCompilationContext implements CompilationContext {
         final ConditionGroup whereConditionGroup;
 
         if (where != null) {
-            whereConditionGroup = where.current().toConditionGroup(selectExpressionMapper,
-                    Set.of(table),
-                    //TODO: temp patch until condition spec stuff is replaced
-                    new ArrayList<>(),
-                    tableMetaDataCache,
-                    typeConverter);
+            whereConditionGroup = toConditionGroup(where.current(), ormTable, table);
         } else {
             whereConditionGroup = EMPTY_CONDITION_GROUP;
         }

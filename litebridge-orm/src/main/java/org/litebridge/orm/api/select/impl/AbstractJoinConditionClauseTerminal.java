@@ -10,6 +10,8 @@ import org.litebridge.orm.api.select.OrderByClauseChain;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
 
 public abstract class AbstractJoinConditionClauseTerminal<DTO,
         JCC extends JoinConditionClause<DTO, JCC, SELF>,
@@ -27,8 +29,8 @@ public abstract class AbstractJoinConditionClauseTerminal<DTO,
 
     protected final JoinNode joinNode;
 
-    public AbstractJoinConditionClauseTerminal(final JoinNode joinNode, final AbstractSelector<DTO, SSP> delegate) {
-        super(delegate);
+    public AbstractJoinConditionClauseTerminal(final JoinNode joinNode, final SelectEngineTerminal selectEngineTerminal, final LitebridgeContext litebridgeContext) {
+        super(joinNode, selectEngineTerminal, litebridgeContext);
         this.joinNode = joinNode;
     }
 }

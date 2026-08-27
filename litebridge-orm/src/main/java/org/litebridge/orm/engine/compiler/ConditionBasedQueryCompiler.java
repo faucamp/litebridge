@@ -3,31 +3,25 @@ package org.litebridge.orm.engine.compiler;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
-import org.litebridge.orm.api.select.impl.DelegatingSelector;
-import org.litebridge.orm.api.select.impl.DelegatingSelectorInspector;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.TableMetaDataCache;
-import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-abstract sealed class ConditionBasedQueryCompiler<CC extends CompilationContext> extends AbstractQueryCompiler<CC> permits MergeQueryCompiler {
+abstract sealed class ConditionBasedQueryCompiler<CC extends CompilationContext> extends AbstractQueryCompiler<CC> permits MergeQueryCompiler, SelectQueryCompiler {
 
     private final Map<Class<?>, List<Table>> aliasHistory = new HashMap<>();
     private final Map<Table, OrmTable> tableToOrmTableMap = new HashMap<>();
 
-    public ConditionBasedQueryCompiler(final TableRegistry tableRegistry, final TableMetaDataCache tableMetaDataCache, final TypeConverter typeConverter, final AliasGenerator aliasGenerator, final SelectExpressionMapper selectExpressionMapper) {
-        super(tableRegistry, tableMetaDataCache, typeConverter, aliasGenerator, selectExpressionMapper);
+    public ConditionBasedQueryCompiler(final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
     }
 
     protected final @Nullable Object resolveAliases(final @Nullable Object value, final @Nullable Table sourceAlias, final @Nullable Table targetAlias, boolean preferSource) {
@@ -36,7 +30,7 @@ abstract sealed class ConditionBasedQueryCompiler<CC extends CompilationContext>
                 return null;
             }
             case Column column -> {
-                OrmTable ormTable = tableRegistry.getOrmTable(column.table());
+                OrmTable ormTable = litebridgeContext.tableRegistry().getOrmTable(column.table());
 
                 if (ormTable == null && sourceAlias != null) {
                     final OrmTable sourceOrmTable = tableToOrmTableMap.get(sourceAlias);
@@ -91,21 +85,22 @@ abstract sealed class ConditionBasedQueryCompiler<CC extends CompilationContext>
         return value;
     }
 
-    @Deprecated
+    @Deprecated(forRemoval = true)
     protected final SelectSpec createSelectSpec(final SelectTerminal<?> selectTerminal) {
-        final AbstractSelector<?, ?> selector = switch (selectTerminal) {
-            case DelegatingSelector<?, ?> delegating -> DelegatingSelectorInspector.getDelegate(delegating);
-            case AbstractSelector<?, ?> s -> s;
-            default ->
-                    throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
-        };
-
-        return selector.compile();
+//        final AbstractSelector<?, ?> selector = switch (selectTerminal) {
+//            case DelegatingSelectTerminal<?, ?> delegating -> DelegatingSelectorInspector.getDelegate(delegating);
+//            case AbstractSelector<?, ?> s -> s;
+//            default ->
+//                    throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
+//        };
+//
+//        return selector.compile();
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     @SuppressWarnings("ConstantConditions")
     private Class<?> getTableDtoClass(Table table) {
-        final OrmTable ormTable = tableToOrmTableMap.getOrDefault(table, tableRegistry.getOrmTable(table));
+        final OrmTable ormTable = tableToOrmTableMap.getOrDefault(table, litebridgeContext.tableRegistry().getOrmTable(table));
         return ormTable != null ? ormTable.dtoClass() : null;
     }
 }

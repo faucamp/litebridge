@@ -43,6 +43,7 @@ import java.util.stream.Stream;
  * Its subclasses {@link org.litebridge.orm.api.dto.DtoSelectSpec} and {@link org.litebridge.orm.api.sql.SqlSelectSpec}
  * specialise in dealing with DTOs and SQL-specific constructs, respectively.
  */
+@Deprecated(forRemoval = true)
 public abstract class SelectSpec {
 
     protected @Nullable SelectExpressionMapper selectExpressionMapper;
@@ -150,13 +151,13 @@ public abstract class SelectSpec {
         havingConditionGroupStack.pop();
     }
 
-    public void addWhereCondition(final ExpressionSpec condition) {
-        currentWhereConditionGroupSpec().newCondition(LogicOperator.NOOP, condition);
-    }
-
-    public void addHavingCondition(final ExpressionSpec condition) {
-        currentHavingConditionGroupSpec().newCondition(LogicOperator.NOOP, condition);
-    }
+//    public void addWhereCondition(final ExpressionSpec condition) {
+//        currentWhereConditionGroupSpec().newCondition(LogicOperator.NOOP, condition);
+//    }
+//
+//    public void addHavingCondition(final ExpressionSpec condition) {
+//        currentHavingConditionGroupSpec().newCondition(LogicOperator.NOOP, condition);
+//    }
 
     public void addOrderBy(final ExpressionSpec expression, final boolean ascending) {
         final OrderBySpec orderBySpec = newOrderBy(expression);
@@ -207,101 +208,102 @@ public abstract class SelectSpec {
     }
 
     public PreparedOperation toSelect(final TableMetaDataCache tableMetaDataCache, final TypeConverter typeConverter) {
-        if (table == null) {
-            throw new IllegalStateException("Table not specified");
-        }
-
-        final List<@Nullable BindValue> bindValues = new ArrayList<>();
-
-        // SELECT
-        this.expressionSpecs = Objects.requireNonNull(selectExpressionMapper).resolveProtoExpressions(expressionSpecs, table, ClauseType.SELECT);
-        final List<SelectExpression> selectExpressions = convertToSelectExpressions(expressionSpecs, false);
-        final Set<Column> selectedColumns = selectExpressions.stream()
-                .map(selectExpression -> {
-                    if (selectExpression instanceof DelegateExpression delegateExpression) {
-                        SelectExpression nestedExpression = delegateExpression.target();
-
-                        while (nestedExpression instanceof DelegateExpression nested) {
-                            nestedExpression = nested.target();
-                        }
-
-                        return nestedExpression;
-                    } else {
-                        return selectExpression;
-                    }
-                })
-                .filter(selectExpression -> selectExpression instanceof ColumnExpression)
-                .map(ColumnExpression.class::cast)
-                .map(ColumnExpression::column)
-                .collect(Collectors.toSet());
-
-        // JOIN
-        final List<Join> joinClause = new ArrayList<>();
-        final List<Table> currentTables = new ArrayList<>();
-        currentTables.add(table);
-
-        if (joins != null) {
-            for (final JoinSpec joinSpec : joins) {
-                joinClause.add(joinSpec.toJoin(currentTables, bindValues, tableMetaDataCache, typeConverter));
-                currentTables.add(joinSpec.table());
-            }
-        }
-
-        final Set<Table> selectedTables;
-
-        if (!selectedColumns.isEmpty()) {
-            selectedTables = Stream.concat(selectedColumns.stream().map(Column::table),
-                            joinClause.stream().map(join -> join.table()))
-                    .collect(Collectors.toSet());
-        } else {
-            selectedTables = Collections.singleton(table);
-        }
-
-        // WHERE
-        final Optional<ConditionGroup> whereClause = whereConditions != null ? Optional.of(whereConditions.toConditionGroup(selectExpressionMapper, selectedTables, bindValues, tableMetaDataCache, typeConverter)) : Optional.empty();
-
-        // GROUP BY
-        final List<SelectExpression> groupByClause;
-
-        if (groupBy != null) {
-            groupByClause = convertToSelectExpressions(resolveProtoExpressions(groupBy.expressions(), ClauseType.GROUP_BY, selectedColumns), false);
-
-            // Validate that the column exists in the select statement if a GROUP BY is present
-//            groupByClause.forEach(groupBy -> {
-//                for (Column column : groupBy.columns()) {
-//                    if (selectedColumns.stream().noneMatch(column::equalsIgnoreAlias)) {
-//                        throw new IllegalArgumentException("Invalid grouped query: ORDER BY column %s must be grouped or aggregated".formatted(column.name()));
+//        if (table == null) {
+//            throw new IllegalStateException("Table not specified");
+//        }
+//
+//        final List<@Nullable BindValue> bindValues = new ArrayList<>();
+//
+//        // SELECT
+//        this.expressionSpecs = Objects.requireNonNull(selectExpressionMapper).resolveProtoExpressions(expressionSpecs, table, ClauseType.SELECT);
+//        final List<SelectExpression> selectExpressions = convertToSelectExpressions(expressionSpecs, false);
+//        final Set<Column> selectedColumns = selectExpressions.stream()
+//                .map(selectExpression -> {
+//                    if (selectExpression instanceof DelegateExpression delegateExpression) {
+//                        SelectExpression nestedExpression = delegateExpression.target();
+//
+//                        while (nestedExpression instanceof DelegateExpression nested) {
+//                            nestedExpression = nested.target();
+//                        }
+//
+//                        return nestedExpression;
+//                    } else {
+//                        return selectExpression;
 //                    }
-//                }
-//            });
-        } else {
-            groupByClause = Collections.emptyList();
-        }
-
-        final Optional<ConditionGroup> havingClause = havingConditions != null ? Optional.of(havingConditions.toConditionGroup(selectExpressionMapper, selectedTables, bindValues, tableMetaDataCache, typeConverter)) : Optional.empty();
-
-        final List<OrderBy> orderByClause;
-
-        // ORDER BY
-        if (orderBys != null) {
-            orderByClause = orderBys.stream()
-                    .flatMap(orderBySpec ->
-                            convertToSelectExpressions(resolveProtoExpressions(orderBySpec.expressions(), ClauseType.ORDER_BY, selectedColumns), true).stream()
-                                    .map(selectExpression -> new OrderBy(selectExpression, orderBySpec.isAsc())))
-                    .toList();
-        } else {
-            orderByClause = Collections.emptyList();
-        }
-
-        final Select select = new Select(table,
-                selectExpressions,
-                joinClause,
-                whereClause,
-                groupByClause,
-                havingClause,
-                orderByClause,
-                limit != null ? limit.toLimit() : Optional.empty());
-        return new PreparedOperation(select, bindValues);
+//                })
+//                .filter(selectExpression -> selectExpression instanceof ColumnExpression)
+//                .map(ColumnExpression.class::cast)
+//                .map(ColumnExpression::column)
+//                .collect(Collectors.toSet());
+//
+//        // JOIN
+//        final List<Join> joinClause = new ArrayList<>();
+//        final List<Table> currentTables = new ArrayList<>();
+//        currentTables.add(table);
+//
+//        if (joins != null) {
+//            for (final JoinSpec joinSpec : joins) {
+//                joinClause.add(joinSpec.toJoin(currentTables, bindValues, tableMetaDataCache, typeConverter));
+//                currentTables.add(joinSpec.table());
+//            }
+//        }
+//
+//        final Set<Table> selectedTables;
+//
+//        if (!selectedColumns.isEmpty()) {
+//            selectedTables = Stream.concat(selectedColumns.stream().map(Column::table),
+//                            joinClause.stream().map(join -> join.table()))
+//                    .collect(Collectors.toSet());
+//        } else {
+//            selectedTables = Collections.singleton(table);
+//        }
+//
+//        // WHERE
+//        final Optional<ConditionGroup> whereClause = whereConditions != null ? Optional.of(whereConditions.toConditionGroup(selectExpressionMapper, selectedTables, bindValues, tableMetaDataCache, typeConverter)) : Optional.empty();
+//
+//        // GROUP BY
+//        final List<SelectExpression> groupByClause;
+//
+//        if (groupBy != null) {
+//            groupByClause = convertToSelectExpressions(resolveProtoExpressions(groupBy.expressions(), ClauseType.GROUP_BY, selectedColumns), false);
+//
+//            // Validate that the column exists in the select statement if a GROUP BY is present
+////            groupByClause.forEach(groupBy -> {
+////                for (Column column : groupBy.columns()) {
+////                    if (selectedColumns.stream().noneMatch(column::equalsIgnoreAlias)) {
+////                        throw new IllegalArgumentException("Invalid grouped query: ORDER BY column %s must be grouped or aggregated".formatted(column.name()));
+////                    }
+////                }
+////            });
+//        } else {
+//            groupByClause = Collections.emptyList();
+//        }
+//
+//        final Optional<ConditionGroup> havingClause = havingConditions != null ? Optional.of(havingConditions.toConditionGroup(selectExpressionMapper, selectedTables, bindValues, tableMetaDataCache, typeConverter)) : Optional.empty();
+//
+//        final List<OrderBy> orderByClause;
+//
+//        // ORDER BY
+//        if (orderBys != null) {
+//            orderByClause = orderBys.stream()
+//                    .flatMap(orderBySpec ->
+//                            convertToSelectExpressions(resolveProtoExpressions(orderBySpec.expressions(), ClauseType.ORDER_BY, selectedColumns), true).stream()
+//                                    .map(selectExpression -> new OrderBy(selectExpression, orderBySpec.isAsc())))
+//                    .toList();
+//        } else {
+//            orderByClause = Collections.emptyList();
+//        }
+//
+//        final Select select = new Select(table,
+//                selectExpressions,
+//                joinClause,
+//                whereClause,
+//                groupByClause,
+//                havingClause,
+//                orderByClause,
+//                limit != null ? limit.toLimit() : Optional.empty());
+//        return new PreparedOperation(select, bindValues);
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     private List<SelectExpression> convertToSelectExpressions(final List<ExpressionSpec> expressionSpecs, final boolean useSelectReferences) {
@@ -331,27 +333,28 @@ public abstract class SelectSpec {
     }
 
     private List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs, final ClauseType clause, final Set<Column> selectedColumns) {
-        return Objects.requireNonNull(selectExpressionMapper).resolveProtoExpressions(expressionSpecs, getTable(), clause).stream()
-                // Resolve references to selected columns (to correctly associate aliases)
-                .peek(expressionSpec -> {
-                    if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
-                        final Column column = columnExpressionSpec.getColumn();
-
-                        for (Column selectedColumn : selectedColumns) {
-                            if (column.equalsIgnoreAlias(selectedColumn)) {
-                                // Overwrite with the selected column to copy the alias
-                                columnExpressionSpec.setColumn(selectedColumn);
-                            }
-                        }
-
-                        // No direct column match; Copy the table alias
-                        if (column.table().alias() == null && getTable().equalsIgnoreAlias(column.table())) {
-                            final Column replacementColumn = new Column(getTable(), column.name());
-                            columnExpressionSpec.setColumn(replacementColumn);
-                        }
-                    }
-                })
-                .toList();
+//        return Objects.requireNonNull(selectExpressionMapper).resolveProtoExpressions(expressionSpecs, getTable(), clause).stream()
+//                // Resolve references to selected columns (to correctly associate aliases)
+//                .peek(expressionSpec -> {
+//                    if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
+//                        final Column column = columnExpressionSpec.getColumn();
+//
+//                        for (Column selectedColumn : selectedColumns) {
+//                            if (column.equalsIgnoreAlias(selectedColumn)) {
+//                                // Overwrite with the selected column to copy the alias
+//                                columnExpressionSpec.setColumn(selectedColumn);
+//                            }
+//                        }
+//
+//                        // No direct column match; Copy the table alias
+//                        if (column.table().alias() == null && getTable().equalsIgnoreAlias(column.table())) {
+//                            final Column replacementColumn = new Column(getTable(), column.name());
+//                            columnExpressionSpec.setColumn(replacementColumn);
+//                        }
+//                    }
+//                })
+//                .toList();
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     private ConditionGroupSpec ensureWhereConditions() {

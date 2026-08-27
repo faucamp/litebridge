@@ -1,5 +1,6 @@
 package org.litebridge.db.spi.query;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.SelectExpression;
@@ -25,11 +26,11 @@ import java.util.Optional;
  */
 public record Select(Table table,
                      List<SelectExpression> expressions,
-                     List<Join> joins,
-                     Optional<ConditionGroup> where,
-                     List<SelectExpression> groupBy,
-                     Optional<ConditionGroup> having,
-                     List<OrderBy> orderBy,
-                     Optional<Limit> limit) implements Operation {
+                     @Nullable List<Join> joins,
+                     @Nullable ConditionGroup where,
+                     @Nullable List<SelectExpression> groupBy,
+                     @Nullable ConditionGroup having,
+                     @Nullable List<OrderBy> orderBy,
+                     @Nullable Limit limit) implements Operation {
 
 }

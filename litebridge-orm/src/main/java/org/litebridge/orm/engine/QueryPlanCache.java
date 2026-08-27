@@ -78,8 +78,7 @@ public final class QueryPlanCache {
     public record CachedOperation(String sql,
                                   List<Integer> bindValueSqlTypes,
                                   @Nullable TypeConversionMetaData typeConversionMetaData,
-                                  @Nullable UpdateMetaData updateMetaData,
-                                  @Nullable SelectSpec selectSpec) {
+                                  @Nullable UpdateMetaData updateMetaData) {
 
         public PreparedSql preparedSql(final List<@Nullable Object> rawBindValues) {
             if (rawBindValues.size() != bindValueSqlTypes.size()) {

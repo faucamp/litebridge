@@ -24,6 +24,7 @@ public final class JoinNode implements QueryNode {
      * @param tableName      the name of the table being joined
      */
     public JoinNode(@Nullable QueryNode previous,
+                    //TODO: switch to enum
                     String type,
                     @Nullable Class<?> dtoClass,
                     @Nullable Class<?> sourceDtoClass,
@@ -44,6 +45,7 @@ public final class JoinNode implements QueryNode {
      * @param tableName the name of the table being joined
      */
     public JoinNode(@Nullable QueryNode previous,
+                    //TODO: switch to enum
                     String type,
                     @Nullable Class<?> dtoClass,
                     @Nullable String tableName) {

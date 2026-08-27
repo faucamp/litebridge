@@ -1,14 +1,12 @@
 package org.litebridge.orm.api.update;
 
-import org.litebridge.db.spi.ColumnMetaData;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
-import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 public final class SqlUpdateStep extends UpdateStepBase
         implements UpdateStep<Row,
@@ -44,17 +42,18 @@ public final class SqlUpdateStep extends UpdateStepBase
 
     @Override
     public SqlUpdateWhereConditionClause where(final String column) {
-        final Table table = litebridgeContext.tableRegistry().getOrCreateSpiTable(tableName);
-        final ColumnMetaData columnMetaData = litebridgeContext.tableMetaDataCache()
-                .ensureTableMetaData(table)
-                .column(column);
-        return where(new SelectColumnSpec(columnMetaData.toColumn()));
+        return whereImpl(column, null);
     }
 
     @Override
     public SqlUpdateWhereConditionClause where(final ExpressionSpec expression) {
+        return whereImpl(null, expression);
+    }
+
+    private SqlUpdateWhereConditionClause whereImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {
         return new SqlUpdateWhereConditionClause(litebridgeContext,
                 LogicOperator.NOOP,
+                column,
                 expression,
                 node -> new SqlUpdateWhereConditionClauseTerminalImpl(tableName, new WhereNode(this.node, node), litebridgeContext));
     }

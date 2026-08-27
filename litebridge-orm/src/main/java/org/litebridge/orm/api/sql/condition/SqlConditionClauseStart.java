@@ -34,6 +34,6 @@ public class SqlConditionClauseStart extends AbstractConditionClauseStart<Row> {
 
     @Override
     public AbstractCbConditionClause<Row> where(final ExpressionSpec expression) {
-        return new CbSqlConditionClause(table, fromClauseEngine, LogicOperator.NOOP, expression, node, conditionNode -> new CbSqlConditionClauseTerminal(table, fromClauseEngine, conditionNode));
+        return new CbSqlConditionClause(table, fromClauseEngine, LogicOperator.NOOP, null, expression, node, conditionNode -> new CbSqlConditionClauseTerminal(table, fromClauseEngine, conditionNode));
     }
 }

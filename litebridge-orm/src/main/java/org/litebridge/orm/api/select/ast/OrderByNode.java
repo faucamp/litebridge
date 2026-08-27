@@ -10,5 +10,8 @@ import org.litebridge.orm.expression.ExpressionSpec;
  * @param expression the expression to order by
  * @param ascending  whether to sort in ascending order
  */
-public record OrderByNode(@Nullable QueryNode previous, ExpressionSpec expression, boolean ascending) implements QueryNode {
+public record OrderByNode(@Nullable QueryNode previous,
+                          @Nullable String column,
+                          @Nullable ExpressionSpec expression,
+                          boolean ascending) implements QueryNode {
 }

@@ -61,7 +61,7 @@ class PersistenceFacadeTest {
         when(context.queryPlanCache()).thenReturn(new QueryPlanCache());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
         when(context.tableMetaDataCache()).thenReturn(tableMetaDataCache);
-        when(context.createQueryCompiler()).thenReturn(new QueryCompiler(tableRegistry, tableMetaDataCache, new DefaultTypeConverter(), new NoOpAliasGenerator(), mock(SelectExpressionMapper.class)));
+        when(context.createQueryCompiler()).thenReturn(new QueryCompiler(context));
         when(context.typeConverter()).thenReturn(new DefaultTypeConverter());
 
 

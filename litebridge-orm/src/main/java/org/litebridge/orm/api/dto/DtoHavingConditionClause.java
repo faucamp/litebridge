@@ -28,9 +28,10 @@ public final class DtoHavingConditionClause<DTO>
 
     public DtoHavingConditionClause(final LitebridgeContext litebridgeContext,
                                     final LogicOperator logicOperator,
-                                    final ExpressionSpec lhs,
+                                    final @Nullable String lhsField,
+                                    final @Nullable ExpressionSpec lhsExpression,
                                     final @Nullable QueryNode node,
                                     final Function<QueryNode, DtoHavingConditionClauseTerminal<DTO>> terminalRecreator) {
-        super(litebridgeContext, logicOperator, lhs, node, terminalRecreator);
+        super(litebridgeContext, logicOperator, lhsField, lhsExpression, node, terminalRecreator);
     }
 }

@@ -1,17 +1,15 @@
 package org.litebridge.orm.api.dto;
 
-import org.litebridge.db.spi.Column;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
-import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.HavingNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractHavingClauseTerminal;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
 /**
@@ -36,11 +34,12 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     /**
      * Creates a new DtoHavingConditionClauseTerminal.
      *
-     * @param delegate the DTO selector delegate
      */
-    public DtoHavingConditionClauseTerminal(final DtoSelector<DTO> delegate) {
-        super(delegate);
-        ormTable = delegate.ormTable();
+    public DtoHavingConditionClauseTerminal(final QueryNode node, final SelectEngineTerminal selectEngineTerminal, final LitebridgeContext litebridgeContext) {
+        super(node, selectEngineTerminal, litebridgeContext);
+        //TODO: remove
+//        ormTable = node.getOrmTable();
+        ormTable = null;
     }
 
     /**
@@ -52,13 +51,12 @@ public final class DtoHavingConditionClauseTerminal<DTO>
      */
     @Override
     public DtoHavingConditionClause<DTO> and(final String field) {
-        final Column column = ormTable.getColumnForFieldName(field).toColumn();
-        return and(new SelectColumnSpec(column));
+        return havingImpl(LogicOperator.AND, field, null);
     }
 
     @Override
     public DtoHavingConditionClause<DTO> and(final ExpressionSpec expression) {
-        return havingImpl(LogicOperator.AND, expression, (DtoSelector<DTO>) delegate);
+        return havingImpl(LogicOperator.AND, null, expression);
     }
 
     @Override
@@ -68,13 +66,12 @@ public final class DtoHavingConditionClauseTerminal<DTO>
 
     @Override
     public DtoHavingConditionClause<DTO> or(final String field) {
-        final Column column = ormTable.getColumnForFieldName(field).toColumn();
-        return or(new SelectColumnSpec(column));
+        return havingImpl(LogicOperator.OR, field, null);
     }
 
     @Override
     public DtoHavingConditionClause<DTO> or(final ExpressionSpec expression) {
-        return havingImpl(LogicOperator.OR, expression, (DtoSelector<DTO>) delegate);
+        return havingImpl(LogicOperator.OR, null, expression);
     }
 
     @Override
@@ -84,44 +81,49 @@ public final class DtoHavingConditionClauseTerminal<DTO>
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return orderBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
+//        return orderBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
-        return new DtoOrderByClause<>(fields, (DtoSelector<DTO>) delegate);
+//        return new DtoOrderByClause<>(fields, (DtoSelector<DTO>) delegate);
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    private DtoHavingConditionClause<DTO> havingImpl(final LogicOperator logicOperator, final ExpressionSpec expression, final DtoSelector<DTO> newDelegate) {
-        if (delegate.node() instanceof HavingNode havingNode) {
-            return new DtoHavingConditionClause<>(delegate.litebridgeContext(),
+    private DtoHavingConditionClause<DTO> havingImpl(final LogicOperator logicOperator, final @Nullable String field, final @Nullable ExpressionSpec expression) {
+        if (node instanceof HavingNode havingNode) {
+            return new DtoHavingConditionClause<>(litebridgeContext,
                     logicOperator,
+                    field,
                     expression,
                     havingNode.condition(),
-                    node -> new DtoHavingConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(havingNode.withCondition(node))));
+                    conditionNode -> new DtoHavingConditionClauseTerminal<>(havingNode.withCondition(conditionNode), selectEngineTerminal, litebridgeContext));
         }
 
-        return new DtoHavingConditionClause<>(delegate.litebridgeContext(),
+        return new DtoHavingConditionClause<>(litebridgeContext,
                 logicOperator,
+                field,
                 expression,
                 null,
-                node -> new DtoHavingConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new HavingNode(delegate.node(), node))));
+                conditionNode -> new DtoHavingConditionClauseTerminal<>(new HavingNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
     private DtoHavingConditionClauseTerminal<DTO> havingImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
-        final org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
-        final QueryNode conditionNode = terminal.node();
-
-        if (delegate.node() instanceof HavingNode havingNode) {
-            final ConditionGroupNode groupNode = new ConditionGroupNode(havingNode.condition(), logicOperator, conditionNode);
-            havingNode.withCondition(groupNode);
-            return this;
-        }
-
-        final ConditionGroupNode groupNode = new ConditionGroupNode(null, logicOperator, conditionNode);
-        delegate.withNode(new HavingNode(delegate.node(), groupNode));
-
-        return this;
+//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
+//        final org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+//        final QueryNode conditionNode = terminal.node();
+//
+//        if (delegate.node() instanceof HavingNode havingNode) {
+//            final ConditionGroupNode groupNode = new ConditionGroupNode(havingNode.condition(), logicOperator, conditionNode);
+//            havingNode.withCondition(groupNode);
+//            return this;
+//        }
+//
+//        final ConditionGroupNode groupNode = new ConditionGroupNode(null, logicOperator, conditionNode);
+//        delegate.withNode(new HavingNode(delegate.node(), groupNode));
+//
+//        return this;
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 }

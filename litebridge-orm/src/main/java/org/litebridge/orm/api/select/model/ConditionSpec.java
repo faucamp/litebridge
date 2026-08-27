@@ -3,23 +3,15 @@ package org.litebridge.orm.api.select.model;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.BindValueExpression;
-import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
-import org.litebridge.db.spi.expression.SelectReference;
-import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.sql.Types;
@@ -38,17 +30,39 @@ import java.util.StringJoiner;
  */
 public class ConditionSpec {
 
-    private ExpressionSpec lhs;
-    private Operator operator;
+    private @Nullable String lhsColumn;
+    private @Nullable ExpressionSpec lhsExpression;
+    private @Nullable Operator operator;
     private @Nullable Object value;
+
+    public ConditionSpec(final @Nullable String lhsColumn,
+                         final @Nullable ExpressionSpec lhsExpression,
+                         final @Nullable Operator operator,
+                         final @Nullable Object rawValue) {
+        this.lhsColumn = lhsColumn;
+        this.lhsExpression = lhsExpression;
+        this.operator = operator;
+        this.value = rawValue;
+    }
+
+    public ConditionSpec() {
+    }
+
+    public @Nullable String getLhsColumn() {
+        return lhsColumn;
+    }
+
+    public void setLhsColumn(final String lhsColumn) {
+        this.lhsColumn = lhsColumn;
+    }
 
     /**
      * Gets the left-hand side expression of the condition.
      *
      * @return the LHS expression
      */
-    public ExpressionSpec getLhs() {
-        return lhs;
+    public @Nullable ExpressionSpec getLhsExpression() {
+        return lhsExpression;
     }
 
     /**
@@ -56,17 +70,8 @@ public class ConditionSpec {
      *
      * @param lhs the LHS expression to set
      */
-    public void setLhs(final ExpressionSpec lhs) {
-        this.lhs = lhs;
-    }
-
-    /**
-     * Sets the left-hand side expression of the condition to a specific column.
-     *
-     * @param column the column to set as LHS
-     */
-    public void setLhs(final Column column) {
-        this.lhs = new SelectColumnSpec(column);
+    public void setLhsExpression(final ExpressionSpec lhs) {
+        this.lhsExpression = lhsExpression;
     }
 
     /**
@@ -115,74 +120,77 @@ public class ConditionSpec {
      * @param typeConverter          the type converter to use
      * @return the resulting {@link Condition}
      */
+    @Deprecated(forRemoval = true)
     public Condition toCondition(final SelectExpressionMapper selectExpressionMapper,
                                  final Collection<Table> selectedTables,
                                  final List<BindValue> bindValues,
                                  final TableMetaDataCache tableMetaDataCache,
                                  final TypeConverter typeConverter) {
-        //TODO: rework table setting
-        final Table table = selectedTables.iterator().next();
-        final List<ExpressionSpec> lhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(lhs, table, ClauseType.WHERE).stream()
-                .peek(expressionSpec -> {
-                    if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
-                        final Table expressionTable = columnExpressionSpec.getColumn().table();
-
-                        // Override condtion column/table references to inherit the aliases from selected/joined tables if necessary
-                        if (expressionTable.alias() == null) {
-                            for (Table selectedTable : selectedTables) {
-                                if (selectedTable.equalsIgnoreAlias(expressionTable)
-                                        && !selectedTable.equals(expressionTable)) {
-                                    columnExpressionSpec.setColumn(new Column(selectedTable, columnExpressionSpec.getColumn().name(), columnExpressionSpec.getColumn().alias()));
-                                }
-                            }
-                        }
-                    }
-                })
-                .toList();
-
-        if (lhsResolvedExpressionSpecs.size() != 1) {
-            throw new IllegalArgumentException("Expected exactly one LHS expression spec, but got " + lhsResolvedExpressionSpecs.size());
-        }
-
-        final SelectExpression lhsSelectExpression = selectExpressionMapper.toSelectExpression(lhsResolvedExpressionSpecs.getFirst(), true);
-
-        if (value instanceof SelectSpec selectSpec) {
-            final PreparedOperation subselect = selectSpec.toSelect(tableMetaDataCache, typeConverter);
-            bindValues.addAll(subselect.bindValues());
-            final SubselectExpression subselectExpression = selectExpressionMapper.sqlFunctionRegistry().select().subselect().create((Select) subselect.operation());
-            return new Condition(lhsSelectExpression, operator, subselectExpression);
-        } else if (value instanceof ExpressionSpec expressionSpec) {
-            final List<ExpressionSpec> rhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(expressionSpec, table, ClauseType.WHERE);
-
-            if (rhsResolvedExpressionSpecs.size() != 1) {
-                throw new IllegalArgumentException("Expected exactly one RHS expression spec, but got " + rhsResolvedExpressionSpecs.size());
-            }
-
-            return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(rhsResolvedExpressionSpecs.getFirst(), true));
-        } else if (value instanceof Column referencedColumn) {
-            // Reference to a selected column
-            final SelectReference selectReference = selectExpressionMapper.sqlFunctionRegistry().select().reference().create(referencedColumn);
-            return new Condition(lhsSelectExpression, operator, selectReference);
-        }
-
-        // Setup bind value creators
-        switch (operator) {
-            case USING -> {
-                final LiteralExpression literalExpression = selectExpressionMapper.sqlFunctionRegistry().select().literal().create(value, true);
-                return new Condition(lhsSelectExpression, operator, literalExpression);
-            }
-            default -> {
-                final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size());
-                bindValues.addAll(createBindValues(lhsSelectExpression, value, tableMetaDataCache, typeConverter));
-                return new Condition(lhsSelectExpression, operator, bindValueExpression);
-            }
-        }
+//        //TODO: rework table setting
+//        final Table table = selectedTables.iterator().next();
+//        final List<ExpressionSpec> lhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(lhsExpression, table, ClauseType.WHERE).stream()
+//                .peek(expressionSpec -> {
+//                    if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
+//                        final Table expressionTable = columnExpressionSpec.getColumn().table();
+//
+//                        // Override condtion column/table references to inherit the aliases from selected/joined tables if necessary
+//                        if (expressionTable.alias() == null) {
+//                            for (Table selectedTable : selectedTables) {
+//                                if (selectedTable.equalsIgnoreAlias(expressionTable)
+//                                        && !selectedTable.equals(expressionTable)) {
+//                                    columnExpressionSpec.setColumn(new Column(selectedTable, columnExpressionSpec.getColumn().name(), columnExpressionSpec.getColumn().alias()));
+//                                }
+//                            }
+//                        }
+//                    }
+//                })
+//                .toList();
+//
+//        if (lhsResolvedExpressionSpecs.size() != 1) {
+//            throw new IllegalArgumentException("Expected exactly one LHS expression spec, but got " + lhsResolvedExpressionSpecs.size());
+//        }
+//
+//        final SelectExpression lhsSelectExpression = selectExpressionMapper.toSelectExpression(lhsResolvedExpressionSpecs.getFirst(), true);
+//
+//        if (value instanceof SelectSpec selectSpec) {
+//            final PreparedOperation subselect = selectSpec.toSelect(tableMetaDataCache, typeConverter);
+//            bindValues.addAll(subselect.bindValues());
+//            final SubselectExpression subselectExpression = selectExpressionMapper.sqlFunctionRegistry().select().subselect().create((Select) subselect.operation());
+//            return new Condition(lhsSelectExpression, operator, subselectExpression);
+//        } else if (value instanceof ExpressionSpec expressionSpec) {
+//            final List<ExpressionSpec> rhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(expressionSpec, table, ClauseType.WHERE);
+//
+//            if (rhsResolvedExpressionSpecs.size() != 1) {
+//                throw new IllegalArgumentException("Expected exactly one RHS expression spec, but got " + rhsResolvedExpressionSpecs.size());
+//            }
+//
+//            return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(rhsResolvedExpressionSpecs.getFirst(), true));
+//        } else if (value instanceof Column referencedColumn) {
+//            // Reference to a selected column
+//            final SelectReference selectReference = selectExpressionMapper.sqlFunctionRegistry().select().reference().create(referencedColumn);
+//            return new Condition(lhsSelectExpression, operator, selectReference);
+//        }
+//
+//        // Setup bind value creators
+//        switch (operator) {
+//            case USING -> {
+//                final LiteralExpression literalExpression = selectExpressionMapper.sqlFunctionRegistry().select().literal().create(value, true);
+//                return new Condition(lhsSelectExpression, operator, literalExpression);
+//            }
+//            default -> {
+//                final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size());
+//                bindValues.addAll(createBindValues(lhsSelectExpression, value, tableMetaDataCache, typeConverter));
+//                return new Condition(lhsSelectExpression, operator, bindValueExpression);
+//            }
+//        }
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     @Override
     public String toString() {
         return new StringJoiner(", ", ConditionSpec.class.getSimpleName() + "[", "]")
-                .add("lhs=" + lhs)
+                .add("lhsColumn=" + lhsColumn)
+                .add("lhsExpression=" + lhsExpression)
                 .add("operator=" + operator)
                 .add("value=" + value)
                 .toString();

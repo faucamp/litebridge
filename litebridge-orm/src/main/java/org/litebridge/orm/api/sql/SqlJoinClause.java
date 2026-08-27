@@ -1,28 +1,24 @@
 package org.litebridge.orm.api.sql;
 
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
-import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
+import org.litebridge.orm.engine.LitebridgeContext;
 
 import java.util.function.Function;
 
 public final class SqlJoinClause extends AbstractJoinClause<Row,
         SqlJoinConditionClause,
-        SqlJoinConditionClauseTerminal,
-        SqlSelectSpec,
-        SqlJoinSpec> {
+        SqlJoinConditionClauseTerminal> {
 
     private final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator;
 
-    public SqlJoinClause(final SqlSelector delegate, final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator) {
-        super(delegate);
+    public SqlJoinClause(final QueryNode node,
+                         final LitebridgeContext litebridgeContext,
+                         final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator) {
+        super(node, litebridgeContext);
         this.terminalCreator = terminalCreator;
     }
 
@@ -34,8 +30,12 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
      * @return an instance of the join condition clause to allow further configuration
      */
     public SqlJoinConditionClause on(final String column) {
-        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
-        return new SqlJoinConditionClause(delegate.litebridgeContext(), LogicOperator.NOOP, new SelectColumnSpec(spiColumn), null, terminalCreator);
+        return new SqlJoinConditionClause(litebridgeContext,
+                LogicOperator.NOOP,
+                column,
+                null,
+                node,
+                terminalCreator);
     }
 
     /**
@@ -45,12 +45,13 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
      * @return an instance of the join condition clause to allow further configuration
      */
     public SqlJoinConditionClauseTerminal on(final QueryConditionBuilder<Row> builder) {
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(((SqlSelector) delegate).table(), delegate.litebridgeContext().fromClauseEngine(), null);
-        final AbstractCbConditionClauseTerminal<Row> terminal = builder.apply(conditionClauseStart);
-        final QueryNode conditionNode = terminal.node();
-
-        final ConditionGroupNode groupNode = new ConditionGroupNode(null, LogicOperator.NOOP, conditionNode);
-        return terminalCreator.apply(groupNode);
+//        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(((SqlSelector) delegate).table(), delegate.litebridgeContext().fromClauseEngine(), null);
+//        final AbstractCbConditionClauseTerminal<Row> terminal = builder.apply(conditionClauseStart);
+//        final QueryNode conditionNode = terminal.node();
+//
+//        final ConditionGroupNode groupNode = new ConditionGroupNode(null, LogicOperator.NOOP, conditionNode);
+//        return terminalCreator.apply(groupNode);
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     /**

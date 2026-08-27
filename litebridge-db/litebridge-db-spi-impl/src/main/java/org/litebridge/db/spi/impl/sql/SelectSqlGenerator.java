@@ -1,8 +1,6 @@
 package org.litebridge.db.spi.impl.sql;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
-import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
@@ -83,13 +81,13 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         }
 
         // Where
-        if (select.where().isPresent()) {
+        if (select.where() != null) {
             sql.append(" WHERE ");
-            appendConditionsAndSubgroups(sql, select.where().get(), select, connectionProvider);
+            appendConditionsAndSubgroups(sql, select.where(), select, connectionProvider);
         }
 
         // Group by
-        if (!select.groupBy().isEmpty()) {
+        if (!CollectionUtils.isEmpty(select.groupBy())) {
             sql.append(" GROUP BY ");
 
             first = true;
@@ -103,9 +101,9 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
                 sql.append(expression.toSql(select, ClauseType.GROUP_BY));
             }
 
-            if (select.having().isPresent()) {
+            if (select.having() != null) {
                 sql.append(" HAVING ");
-                appendConditionsAndSubgroups(sql, select.having().get(), select, connectionProvider);
+                appendConditionsAndSubgroups(sql, select.having(), select, connectionProvider);
             }
         }
 
@@ -126,9 +124,9 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
             }
         }
 
-        select.limit().ifPresent(limit -> {
-            appendLimitClause(limit, sql);
-        });
+        if (select.limit() != null) {
+            appendLimitClause(select.limit(), sql);
+        }
 
         return sql.toString();
     }
@@ -172,7 +170,12 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
      * @param sql   the SQL string builder
      */
     protected void appendLimitClause(final Limit limit, final StringBuilder sql) {
-        limit.limit().ifPresent(limitVal -> sql.append(" LIMIT ").append(limitVal));
-        limit.offset().ifPresent(offset -> sql.append(" OFFSET ").append(offset));
+        if (limit.limit() != null) {
+            sql.append(" LIMIT ").append(limit.limit());
+        }
+
+        if (limit.offset() != null) {
+            sql.append(" OFFSET ").append(limit.offset());
+        }
     }
 }

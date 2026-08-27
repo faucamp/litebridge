@@ -6,7 +6,10 @@ import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
 import org.litebridge.orm.api.select.OrderByClause;
 import org.litebridge.orm.api.select.OrderByClauseChain;
 import org.litebridge.orm.api.select.WhereClauseTerminal;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
 
 public abstract class AbstractWhereClauseTerminal<DTO,
         GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
@@ -16,10 +19,10 @@ public abstract class AbstractWhereClauseTerminal<DTO,
         OBCC extends OrderByClauseChain<DTO, OBC, OBCC>,
         SSP extends SelectSpec>
 
-        extends OrderByClauseTerminalImpl<DTO, SSP>
+        extends OrderByClauseTerminalImpl<DTO>
         implements WhereClauseTerminal<DTO, GBCT, HCC, HCCT, OBC, OBCC> {
 
-    public AbstractWhereClauseTerminal(final AbstractSelector<DTO, SSP> delegate) {
-        super(delegate);
+    public AbstractWhereClauseTerminal(final QueryNode node, final SelectEngineTerminal selectEngineTerminal, final LitebridgeContext litebridgeContext) {
+        super(node, selectEngineTerminal, litebridgeContext);
     }
 }

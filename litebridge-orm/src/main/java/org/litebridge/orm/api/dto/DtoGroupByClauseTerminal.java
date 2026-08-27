@@ -2,9 +2,11 @@ package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.ast.HavingNode;
+import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractGroupByClauseTerminal;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.persistence.OrmTable;
 
 /**
  * Terminal clause for DTO GROUP BY clauses.
@@ -18,34 +20,37 @@ public final class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTe
         DtoOrderByClauseChain<DTO>,
         DtoSelectSpec> {
 
-    private final OrmTable ormTable;
+    public DtoGroupByClauseTerminal(final ExpressionSpec[] expressions,
+                                    final QueryNode node,
+                                    final SelectEngineTerminal selectEngineTerminal,
+                                    final LitebridgeContext litebridgeContext) {
+        super(expressions, node, selectEngineTerminal, litebridgeContext);
+    }
 
-    /**
-     * Creates a new DtoGroupByClauseTerminal.
-     *
-     * @param delegate the DTO selector delegate
-     */
-    public DtoGroupByClauseTerminal(final DtoSelector<DTO> delegate) {
-        super(delegate);
-        this.ormTable = delegate.ormTable();
+    public DtoGroupByClauseTerminal(final String[] columns,
+                                    final QueryNode node,
+                                    final SelectEngineTerminal selectEngineTerminal,
+                                    final LitebridgeContext litebridgeContext) {
+        super(columns, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoHavingConditionClause<DTO> having(final ExpressionSpec expression) {
-        return new DtoHavingConditionClause<>(delegate.litebridgeContext(),
+        return new DtoHavingConditionClause<>(litebridgeContext,
                 LogicOperator.NOOP,
+                null,
                 expression,
                 null,
-                node -> new DtoHavingConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new HavingNode(delegate.node(), node))));
+                conditionNode -> new DtoHavingConditionClauseTerminal<>(new HavingNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return orderBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
+        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
-    public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
-        return new DtoOrderByClause<>(fields, (DtoSelector<DTO>) delegate);
+    public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... expressions) {
+        return new DtoOrderByClause<>(expressions, node, selectEngineTerminal, litebridgeContext);
     }
 }

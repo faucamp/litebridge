@@ -1,8 +1,7 @@
 package org.litebridge.orm.api.delete;
 
-import org.litebridge.db.spi.ColumnMetaData;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
-import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.ast.DeleteNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -10,7 +9,6 @@ import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.update.UpdateStepBase;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 public final class SqlDeleteStart extends UpdateStepBase
 
@@ -31,17 +29,18 @@ public final class SqlDeleteStart extends UpdateStepBase
 
     @Override
     public SqlDeleteWhereConditionClause where(final String column) {
-        final Table table = litebridgeContext.tableRegistry().getOrCreateSpiTable(tableName);
-        final ColumnMetaData columnMetaData = litebridgeContext.tableMetaDataCache()
-                .ensureTableMetaData(table)
-                .column(column);
-        return where(new SelectColumnSpec(columnMetaData.toColumn()));
+        return whereImpl(column, null);
     }
 
     @Override
     public SqlDeleteWhereConditionClause where(final ExpressionSpec expression) {
+        return whereImpl(null, expression);
+    }
+
+    private SqlDeleteWhereConditionClause whereImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {
         return new SqlDeleteWhereConditionClause(litebridgeContext,
                 LogicOperator.NOOP,
+                column,
                 expression,
                 node -> new SqlDeleteWhereConditionClauseTerminalImpl(tableName, new WhereNode(deleteNode, node), litebridgeContext));
     }

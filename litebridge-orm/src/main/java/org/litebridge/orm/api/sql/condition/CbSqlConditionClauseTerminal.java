@@ -30,7 +30,7 @@ public final class CbSqlConditionClauseTerminal extends AbstractCbConditionClaus
 
     @Override
     protected CbSqlConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        return new CbSqlConditionClause(table, fromClauseEngine, logicOperator, expression, node, conditionNode -> new CbSqlConditionClauseTerminal(table, fromClauseEngine, conditionNode));
+        return new CbSqlConditionClause(table, fromClauseEngine, logicOperator, null, expression, node, conditionNode -> new CbSqlConditionClauseTerminal(table, fromClauseEngine, conditionNode));
     }
 
     @Override

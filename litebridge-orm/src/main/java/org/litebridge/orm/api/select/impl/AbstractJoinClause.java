@@ -3,20 +3,20 @@ package org.litebridge.orm.api.select.impl;
 import org.litebridge.orm.api.select.JoinClause;
 import org.litebridge.orm.api.select.JoinConditionClause;
 import org.litebridge.orm.api.select.JoinConditionClauseTerminal;
-import org.litebridge.orm.api.select.model.JoinSpec;
-import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.LitebridgeContext;
 
 public abstract class AbstractJoinClause<DTO,
         JCC extends JoinConditionClause<DTO, JCC, JCCT>,
-        JCCT extends JoinConditionClauseTerminal<DTO, JCC, JCCT>,
-        SSP extends SelectSpec,
-        JSP extends JoinSpec>
+        JCCT extends JoinConditionClauseTerminal<DTO, JCC, JCCT>>
 
         implements JoinClause<DTO, JCC, JCCT> {
 
-    protected final AbstractSelector<DTO, SSP> delegate;
+    protected final QueryNode node;
+    protected final LitebridgeContext litebridgeContext;
 
-    public AbstractJoinClause(final AbstractSelector<DTO, SSP> delegate) {
-        this.delegate = delegate;
+    public AbstractJoinClause(final QueryNode node, final LitebridgeContext litebridgeContext) {
+        this.node = node;
+        this.litebridgeContext = litebridgeContext;
     }
 }

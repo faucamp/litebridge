@@ -2,21 +2,20 @@ package org.litebridge.orm.api.select.impl;
 
 import org.litebridge.orm.api.select.LimitClauseTerminal;
 import org.litebridge.orm.api.select.OrderByClauseTerminal;
-import org.litebridge.orm.api.select.ast.LimitNode;
-import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
 
-import java.util.Optional;
-
-public class OrderByClauseTerminalImpl<DTO, SSP extends SelectSpec>
-        extends LimitClauseTerminalImpl<DTO, SSP>
+public class OrderByClauseTerminalImpl<DTO>
+        extends LimitClauseTerminalImpl<DTO>
         implements OrderByClauseTerminal<DTO> {
 
-    public OrderByClauseTerminalImpl(final AbstractSelector<DTO, SSP> delegate) {
-        super(delegate);
+    public OrderByClauseTerminalImpl(final QueryNode node, final SelectEngineTerminal selectEngineTerminal, final LitebridgeContext litebridgeContext) {
+        super(node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public LimitClauseTerminal<DTO> limit(final int limit) {
-        return new LimitClauseTerminalImpl<>(delegate.withNode(new LimitNode(delegate.node(), Optional.of(limit), Optional.empty())));
+        return new LimitClauseTerminalImpl<>(limit, node, selectEngineTerminal, litebridgeContext);
     }
 }

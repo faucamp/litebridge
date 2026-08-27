@@ -111,6 +111,10 @@ public final class TableRegistry {
         return getOrmTable(catalogSchemaTable[1], catalogSchemaTable[2]);
     }
 
+    public OrmTable getOrmTableOrThrow(final String table) {
+        return Objects.requireNonNull(getOrmTable(table), "ORM table not found for: " + table);
+    }
+
     /**
      * Retrieves the {@link OrmTable} associated with the specified schema and table name.
      *
