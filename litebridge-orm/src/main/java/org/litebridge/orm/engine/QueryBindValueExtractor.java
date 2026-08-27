@@ -7,8 +7,9 @@ import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
+import org.litebridge.orm.api.select.ast.ConditionQueryNode;
+import org.litebridge.orm.api.select.ast.ConditionWithIdNode;
 import org.litebridge.orm.api.select.ast.HavingNode;
-import org.litebridge.orm.api.select.ast.InsertNode;
 import org.litebridge.orm.api.select.ast.InsertValuesNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
@@ -73,44 +74,49 @@ public final class QueryBindValueExtractor {
         final List<QueryNode> nodes = flatten(lastNode);
 
         // Separate conditions and subgroups to match ConditionGroupSpec.toConditionGroup order
-        final List<ConditionNode> conditions = new ArrayList<>();
+        final List<ConditionQueryNode> conditions = new ArrayList<>();
         final List<ConditionGroupNode> subgroups = new ArrayList<>();
 
         for (QueryNode node : nodes) {
-            if (node instanceof ConditionNode cn) {
-                conditions.add(cn);
-            } else if (node instanceof ConditionGroupNode gn) {
-                subgroups.add(gn);
+            if (node instanceof ConditionGroupNode conditionGroupNode) {
+                subgroups.add(conditionGroupNode);
+            } else if (node instanceof ConditionQueryNode conditionQueryNode) {
+                conditions.add(conditionQueryNode);
             }
         }
 
         // Process conditions first
-        for (ConditionNode conditionNode : conditions) {
-            final Operator operator = conditionNode.operator();
-            if (operator == Operator.IS_NULL || operator == Operator.IS_NOT_NULL || operator == Operator.USING) {
-                continue;
-            }
+        for (ConditionQueryNode conditionQueryNode : conditions) {
+            if (conditionQueryNode instanceof ConditionNode conditionNode) {
+                final Operator operator = conditionNode.operator();
 
-            final Object rhs = conditionNode.rhs();
+                if (operator == Operator.IS_NULL || operator == Operator.IS_NOT_NULL || operator == Operator.USING) {
+                    continue;
+                }
 
-            if (rhs instanceof SelectTerminal<?> st) {
-                extractBindValues(Objects.requireNonNull(SelectTerminalInspector.getNode(st)), bindValues);
-                continue;
-            }
+                final Object rhs = conditionNode.rhs();
 
-            if (rhs instanceof QueryNode qn) {
-                extractBindValues(qn, bindValues);
-                continue;
-            }
+                if (rhs instanceof SelectTerminal<?> st) {
+                    extractBindValues(Objects.requireNonNull(SelectTerminalInspector.getNode(st)), bindValues);
+                    continue;
+                }
 
-            if (rhs instanceof Column || rhs instanceof ExpressionSpec) {
-                continue;
-            }
+                if (rhs instanceof QueryNode qn) {
+                    extractBindValues(qn, bindValues);
+                    continue;
+                }
 
-            if (rhs instanceof Collection<?> collection) {
-                bindValues.addAll(collection);
-            } else {
-                bindValues.add(rhs);
+                if (rhs instanceof Column || rhs instanceof ExpressionSpec) {
+                    continue;
+                }
+
+                if (rhs instanceof Collection<?> collection) {
+                    bindValues.addAll(collection);
+                } else {
+                    bindValues.add(rhs);
+                }
+            } else if (conditionQueryNode instanceof ConditionWithIdNode conditionWithIdNode) {
+                bindValues.add(conditionWithIdNode.id());
             }
         }
 

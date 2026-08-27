@@ -37,7 +37,7 @@
 //
 //        capturingClause.eq("val");
 //        assertEquals(Operator.EQ, ((ConditionNode) capturedNode[0]).operator());
-//        assertEquals("val", ((ConditionNode) capturedNode[0]).rhs());
+//        assertEquals("val", ((ConditionNode) capturedNode[0]).id());
 //
 //        capturingClause.neq("val");
 //        assertEquals(Operator.NEQ, ((ConditionNode) capturedNode[0]).operator());
@@ -83,10 +83,10 @@
 //
 //        capturingClause.in(1, 2, 3);
 //        assertEquals(Operator.IN, ((ConditionNode) capturedNode[0]).operator());
-//        assertEquals(List.of(1, 2, 3), ((ConditionNode) capturedNode[0]).rhs());
+//        assertEquals(List.of(1, 2, 3), ((ConditionNode) capturedNode[0]).id());
 //
 //        capturingClause.in(List.of(4, 5));
-//        assertEquals(List.of(4, 5), ((ConditionNode) capturedNode[0]).rhs());
+//        assertEquals(List.of(4, 5), ((ConditionNode) capturedNode[0]).id());
 //
 //        capturingClause.notIn(1, 2);
 //        assertEquals(Operator.NOT_IN, ((ConditionNode) capturedNode[0]).operator());

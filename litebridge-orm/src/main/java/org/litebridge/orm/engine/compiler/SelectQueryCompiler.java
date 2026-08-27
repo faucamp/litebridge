@@ -2,6 +2,7 @@ package org.litebridge.orm.engine.compiler;
 
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
+import org.litebridge.orm.api.select.ast.ConditionWithIdNode;
 import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.HavingNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
@@ -62,6 +63,10 @@ public final class SelectQueryCompiler extends ConditionBasedQueryCompiler<Selec
                     case WHERE -> compilationContext.addWhereCondition(conditionNode);
                     case HAVING -> compilationContext.addHavingCondition(conditionNode);
                 }
+            }
+            case ConditionWithIdNode conditionWithIdNode -> {
+                final ConditionNode conditionNode = compilationContext.toConditionNode(conditionWithIdNode);
+                applyConditionNode(conditionNode, compilationContext, conditionClauseType);
             }
             case ConditionGroupNode conditionGroupNode -> {
                 final ConditionGroupSpecStack conditionGroupSpecStack = switch (conditionClauseType) {

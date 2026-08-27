@@ -11,10 +11,12 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.Limit;
+import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.orm.api.select.ast.ConditionNode;
+import org.litebridge.orm.api.select.ast.ConditionWithIdNode;
 import org.litebridge.orm.api.select.ast.GroupByNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.LimitNode;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public final class SelectCompilationContext extends AbstractCompilationContext {
@@ -147,6 +150,56 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
                         conditionNode.lhsExpression(),
                         conditionNode.operator(),
                         conditionNode.rhs());
+    }
+
+    public ConditionNode toConditionNode(final ConditionWithIdNode conditionWithIdNode) {
+        final String[] primaryKeyFieldNames = tableMetaData.primaryKey().stream()
+                .map(columnMetaData -> ormTable.getFieldForColumnName(columnMetaData.name()).name())
+                .toArray(String[]::new);
+
+        final Object id = conditionWithIdNode.id();
+        ConditionNode conditionNode = null;
+
+        if (primaryKeyFieldNames.length == 0) {
+            throw new IllegalArgumentException("No primary key fields found for table " + tableMetaData.name());
+        } else if (primaryKeyFieldNames.length == 1) {
+            conditionNode = new ConditionNode(null, conditionWithIdNode.logicOperator(), primaryKeyFieldNames[0], null, conditionWithIdNode.operator(), id);
+        } else {
+            // Composite PK
+            switch (id) {
+                case List<?> idList -> {
+                    if (idList.size() != primaryKeyFieldNames.length) {
+                        throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idList.size()));
+                    }
+
+                    for (int i = 0; i < primaryKeyFieldNames.length; i++) {
+                        conditionNode = new ConditionNode(conditionNode, LogicOperator.AND, primaryKeyFieldNames[i], null, conditionWithIdNode.operator(), idList.get(i));
+                    }
+                }
+                case Object[] idArray -> {
+                    if (idArray.length != primaryKeyFieldNames.length) {
+                        throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idArray.length));
+                    }
+
+                    for (int i = 1; i < primaryKeyFieldNames.length; i++) {
+                        conditionNode = new ConditionNode(conditionNode, conditionWithIdNode.logicOperator(), primaryKeyFieldNames[i], null, conditionWithIdNode.operator(), idArray[i]);
+                    }
+                }
+                case Map<?, ?> idMap -> {
+                    if (idMap.size() != primaryKeyFieldNames.length) {
+                        throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idMap.size()));
+                    }
+
+                    for (int i = 0; i < primaryKeyFieldNames.length; i++) {
+                        conditionNode = new ConditionNode(conditionNode, conditionWithIdNode.logicOperator(), primaryKeyFieldNames[0], null, conditionWithIdNode.operator(), idMap.get(primaryKeyFieldNames[i]));
+                    }
+                }
+                case null, default ->
+                        throw new IllegalArgumentException("Invalid composite primary key value type provided; expected: List<?>, Object[], or Map<String, ?>");
+            }
+        }
+
+        return Objects.requireNonNull(conditionNode, "Condition node not resolved for 'withId' condition");
     }
 
     public ConditionGroupSpecStack ensureWhereConditionGroupStack() {

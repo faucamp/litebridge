@@ -3,12 +3,11 @@ package org.litebridge.orm.api.select.ast;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.expression.ExpressionSpec;
 
-import java.util.Collection;
 import java.util.Objects;
+
+import static org.litebridge.orm.api.select.ast.ConditionNodeUtil.valueStructuralKey;
 
 /**
  * Represents a condition within a JOIN, WHERE or HAVING clause in the query AST.
@@ -46,20 +45,11 @@ public record ConditionNode(@Nullable QueryNode previous,
                 && Objects.equals(lhsExpression, that.lhsExpression)
                 && Objects.equals(relationshipField, that.relationshipField)
                 && logicOperator == that.logicOperator
-                && Objects.equals(rhsStructuralKey(), that.rhsStructuralKey());
+                && Objects.equals(valueStructuralKey(rhs), valueStructuralKey(that.rhs));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(previous, logicOperator, lhsColumn, lhsExpression, operator, relationshipField, rhsStructuralKey());
-    }
-
-    private @Nullable Object rhsStructuralKey() {
-        return switch (rhs) {
-            case Collection<?> collection -> collection.size();
-            case QueryNode queryNode -> queryNode;
-            case SelectTerminal<?> st -> SelectTerminalInspector.getNode(st);
-            case null, default -> 1;
-        };
+        return Objects.hash(previous, logicOperator, lhsColumn, lhsExpression, operator, relationshipField, valueStructuralKey(rhs));
     }
 }

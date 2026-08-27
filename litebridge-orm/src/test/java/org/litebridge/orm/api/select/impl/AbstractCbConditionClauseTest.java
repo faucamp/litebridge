@@ -54,7 +54,7 @@
 //        // Then
 //        ConditionNode node = (ConditionNode) capturedNode[0];
 //        assertEquals(Operator.EQ, node.operator());
-//        assertEquals("value", node.rhs());
+//        assertEquals("value", node.id());
 //    }
 //
 //    @Test
@@ -125,7 +125,7 @@
 //        // Then
 //        ConditionNode node = (ConditionNode) capturedNode[0];
 //        assertEquals(Operator.IN, node.operator());
-//        assertEquals(List.of(1, 2, 3), node.rhs());
+//        assertEquals(List.of(1, 2, 3), node.id());
 //    }
 //
 //    @Test
@@ -135,7 +135,7 @@
 //
 //        // Then
 //        ConditionNode node = (ConditionNode) capturedNode[0];
-//        assertEquals(List.of(4, 5), node.rhs());
+//        assertEquals(List.of(4, 5), node.id());
 //    }
 //
 //    @Test

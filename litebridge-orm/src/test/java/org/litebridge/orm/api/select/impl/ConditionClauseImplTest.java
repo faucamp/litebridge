@@ -45,7 +45,7 @@
 //        clause.eq("column");
 //        ConditionNode node = (ConditionNode) capturedNode[0];
 //        assertEquals(Operator.EQ, node.operator());
-//        assertEquals("column", node.rhs());
+//        assertEquals("column", node.id());
 //    }
 //
 //    @Test
@@ -53,7 +53,7 @@
 //        clause.eq((Object) null);
 //        ConditionNode node = (ConditionNode) capturedNode[0];
 //        assertEquals(Operator.IS_NULL, node.operator());
-//        assertNull(node.rhs());
+//        assertNull(node.id());
 //    }
 //
 //    @Test
@@ -61,7 +61,7 @@
 //        clause.neq("column");
 //        ConditionNode node = (ConditionNode) capturedNode[0];
 //        assertEquals(Operator.NEQ, node.operator());
-//        assertEquals("column", node.rhs());
+//        assertEquals("column", node.id());
 //    }
 //
 //    @Test
@@ -69,7 +69,7 @@
 //        clause.neq(null);
 //        ConditionNode node = (ConditionNode) capturedNode[0];
 //        assertEquals(Operator.IS_NOT_NULL, node.operator());
-//        assertNull(node.rhs());
+//        assertNull(node.id());
 //    }
 //
 //    @Test
@@ -77,7 +77,7 @@
 //        clause.lt(10);
 //        ConditionNode node = (ConditionNode) capturedNode[0];
 //        assertEquals(Operator.LT, node.operator());
-//        assertEquals(10, node.rhs());
+//        assertEquals(10, node.id());
 //    }
 //
 //    @Test
@@ -85,7 +85,7 @@
 //        clause.lte(10);
 //        ConditionNode node = (ConditionNode) capturedNode[0];
 //        assertEquals(Operator.LTE, node.operator());
-//        assertEquals(10, node.rhs());
+//        assertEquals(10, node.id());
 //    }
 //
 //    @Test
@@ -93,7 +93,7 @@
 //        clause.gt(10);
 //        ConditionNode node = (ConditionNode) capturedNode[0];
 //        assertEquals(Operator.GT, node.operator());
-//        assertEquals(10, node.rhs());
+//        assertEquals(10, node.id());
 //    }
 //
 //    @Test
@@ -101,7 +101,7 @@
 //        clause.gte(10);
 //        ConditionNode node = (ConditionNode) capturedNode[0];
 //        assertEquals(Operator.GTE, node.operator());
-//        assertEquals(10, node.rhs());
+//        assertEquals(10, node.id());
 //    }
 //
 //    @Test
@@ -109,7 +109,7 @@
 //        clause.isNull();
 //        ConditionNode node = (ConditionNode) capturedNode[0];
 //        assertEquals(Operator.IS_NULL, node.operator());
-//        assertNull(node.rhs());
+//        assertNull(node.id());
 //    }
 //
 //    @Test
@@ -117,7 +117,7 @@
 //        clause.isNotNull();
 //        ConditionNode node = (ConditionNode) capturedNode[0];
 //        assertEquals(Operator.IS_NOT_NULL, node.operator());
-//        assertNull(node.rhs());
+//        assertNull(node.id());
 //    }
 //
 //    @Test
@@ -166,7 +166,7 @@
 //
 //        ConditionNode node = (ConditionNode) capturedNode[0];
 //        assertEquals(expectedOperator, node.operator());
-//        assertInstanceOf(SelectTerminal.class, node.rhs());
+//        assertInstanceOf(SelectTerminal.class, node.id());
 //    }
 //
 //    @FunctionalInterface
