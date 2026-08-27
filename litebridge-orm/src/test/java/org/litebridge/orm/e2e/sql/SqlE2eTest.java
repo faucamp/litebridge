@@ -33,31 +33,36 @@ class SqlE2eTest extends AbstractE2eTest {
     void selectAll(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
         insertTestPersonRecords(personTableName);
 
         // When
         LOGGER.info("Selecting all records");
         final List<Row> result =
                 litebridge.select().from(personTableName)
-                        .orderBy(tableMapper.transformColumnName("PERSON_ID")).asc()
+                        .orderBy(personId).asc()
                         .list();
 
         // Then
         assertEquals(2, result.size());
         final Row row1 = result.getFirst();
         assertEquals(5, row1.columnStream().count());
-        assertNumberEquals(1, row1.column(tableMapper.transformColumnName("PERSON_ID")).orElseThrow().value());
-        assertEquals("Alice", row1.column(tableMapper.transformColumnName("FIRST_NAME")).orElseThrow().value());
-        assertEquals("Smith", row1.column(tableMapper.transformColumnName("SURNAME")).orElseThrow().value());
-        assertNumberEquals(20, row1.column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
-        assertEquals("brown", row1.column(tableMapper.transformColumnName("EYE_COLOUR")).orElseThrow().value());
+        assertNumberEquals(1, row1.column(personId).orElseThrow().value());
+        assertEquals("Alice", row1.column(firstName).orElseThrow().value());
+        assertEquals("Smith", row1.column(surname).orElseThrow().value());
+        assertNumberEquals(20, row1.column(age).orElseThrow().value());
+        assertEquals("brown", row1.column(eyeColour).orElseThrow().value());
         final Row row2 = result.get(1);
         assertEquals(5, row2.columnStream().count());
-        assertNumberEquals(2, row2.column(tableMapper.transformColumnName("PERSON_ID")).orElseThrow().value());
-        assertEquals("Bob", row2.column(tableMapper.transformColumnName("FIRST_NAME")).orElseThrow().value());
-        assertEquals("Johnson", row2.column(tableMapper.transformColumnName("SURNAME")).orElseThrow().value());
-        assertNull(row2.column(tableMapper.transformColumnName("EYE_COLOUR")).orElseThrow().value());
-        assertNumberEquals(30, row2.column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+        assertNumberEquals(2, row2.column(personId).orElseThrow().value());
+        assertEquals("Bob", row2.column(firstName).orElseThrow().value());
+        assertEquals("Johnson", row2.column(surname).orElseThrow().value());
+        assertNull(row2.column(eyeColour).orElseThrow().value());
+        assertNumberEquals(30, row2.column(age).orElseThrow().value());
     }
 
     @TestTemplate
@@ -113,14 +118,15 @@ class SqlE2eTest extends AbstractE2eTest {
     void selectQuery(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
         insertTestPersonRecords(personTableName);
 
         // When
         LOGGER.info("Selecting specific expressions and filtering records using a query");
         final List<Row> result =
-                litebridge.select(tableMapper.transformColumnName("FIRST_NAME"),
-                                tableMapper.transformColumnName("SURNAME"),
-                                tableMapper.transformColumnName("AGE"))
+                litebridge.select(firstName, surname, age)
                         .from(personTableName)
                         .where(tableMapper.transformColumnName("AGE")).gt(18)
                         .and(tableMapper.transformColumnName("AGE")).lt(25)
@@ -129,9 +135,9 @@ class SqlE2eTest extends AbstractE2eTest {
         // Then
         assertEquals(1, result.size());
         assertEquals(3, result.getFirst().columnStream().count());
-        assertEquals("Alice", result.getFirst().column(tableMapper.transformColumnName("FIRST_NAME")).orElseThrow().value());
-        assertEquals("Smith", result.getFirst().column(tableMapper.transformColumnName("SURNAME")).orElseThrow().value());
-        assertNumberEquals(20, result.getFirst().column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+        assertEquals("Alice", result.getFirst().column(firstName).orElseThrow().value());
+        assertEquals("Smith", result.getFirst().column(surname).orElseThrow().value());
+        assertNumberEquals(20, result.getFirst().column(age).orElseThrow().value());
     }
 
     @TestTemplate

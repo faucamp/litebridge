@@ -6,8 +6,12 @@ import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.sql.SqlFromClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.expression.ExpressionModifier;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -76,7 +80,22 @@ public final class FromClauseStart {
      * @return the SQL from clause terminal.
      */
     public SqlFromClauseTerminal from(final String table) {
-        final SelectNode selectNode = new SelectNode(table, null, columns, expressionSpecs, null);
+        Class<?>[] resultTypes = null;
+
+        if (expressionSpecs != null) {
+            for (int i = 0; i < expressionSpecs.length; i++) {
+                if (expressionSpecs[i] instanceof TypeOverrideExpressionSpec<?> typeOverrideExpression) {
+                    if (resultTypes == null) {
+                        resultTypes = new Class<?>[expressionSpecs.length];
+                    }
+
+                    resultTypes[i] = typeOverrideExpression.returnType();
+                }
+            }
+        }
+
+
+        final SelectNode selectNode = new SelectNode(table, null, columns, expressionSpecs, resultTypes);
         return new SqlFromClauseTerminal(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
     }
 }

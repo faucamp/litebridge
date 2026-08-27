@@ -59,7 +59,15 @@ public class SelectEngineTerminal {
         if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
             return (DTO) mapDto(selectNode, row, litebridgeContext);
         } else {
-            return (DTO) row;
+            final Row result;
+
+            if (selectNode.resultTypes() != null) {
+                result = convertRowValue(row, selectNode.resultTypes(), litebridgeContext.typeConverter());
+            } else {
+                result = row;
+            }
+
+            return (DTO) result;
         }
     }
 
@@ -116,9 +124,7 @@ public class SelectEngineTerminal {
     }
 
     public <DTO> List<DTO> fetchList(final QueryNode node, final LitebridgeContext litebridgeContext) {
-        // DtoSelector
         final List<Row> rows = execute(node, litebridgeContext);
-
         final SelectNode selectNode = findSelectNode(node);
 
         if (selectNode.dtoClass() != null) {
@@ -133,7 +139,19 @@ public class SelectEngineTerminal {
                 return unwrap(dtoClass, rows, litebridgeContext.typeConverter());
             }
         } else {
-            return (List<DTO>) rows;
+            final List<Row> resultRows;
+
+            if (selectNode.resultTypes() != null) {
+                final TypeConverter typeConverter = litebridgeContext.typeConverter();
+
+                resultRows = rows.stream()
+                        .map(row -> convertRowValue(row, selectNode.resultTypes(), typeConverter))
+                        .toList();
+            } else {
+                resultRows = rows;
+            }
+
+            return (List<DTO>) resultRows;
         }
     }
 
@@ -164,14 +182,39 @@ public class SelectEngineTerminal {
             return (List<T>) rows;
         }
 
-        return (List<T>) rows.stream()
-                .filter(row -> row.size() > 0)
-                .map(row -> {
-                    final Object converted = typeConverter.convert(row.column(0).value(), type);
-                    return converted;
-                })
-                .filter(Objects::nonNull)
+        return rows.stream()
+                .map(row -> unwrap(type, row, typeConverter))
                 .toList();
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T unwrap(final Class<T> type, final Row row, final TypeConverter typeConverter) {
+        if (type == Row.class || row.size() != 1) {
+            return (T) row;
+        }
+
+        final Object converted = typeConverter.convert(row.column(0).value(), type);
+        return (T) converted;
+    }
+
+    private Row convertRowValue(final Row row, final @Nullable Class<?>[] resultTypes, final TypeConverter typeConverter) {
+        if (row.size() != resultTypes.length) {
+            throw new IllegalStateException("Row size " + row.size() + " does not match result type array length " + resultTypes.length);
+        }
+
+        for (int i = 0; i < resultTypes.length; i++) {
+            final Class<?> resultType = resultTypes[i];
+
+            if (resultType == null) {
+                continue;
+            }
+
+            final Row.RowColumn rowColumn = row.column(i);
+            final Object converted = typeConverter.convert(rowColumn.value(), resultType);
+            row.updateColumn(rowColumn.column(), converted);
+        }
+
+        return row;
     }
 
     private List<Row> execute(final QueryNode node, final LitebridgeContext litebridgeContext) {
@@ -223,8 +266,8 @@ public class SelectEngineTerminal {
         final OrmTable ormTable;
         final Class<?> resultClass;
 
-        if (selectNode.resultType() != null) {
-            resultClass = selectNode.resultType();
+        if (selectNode.resultTypes() != null) {
+            resultClass = selectNode.resultTypes()[0];
 
             if (selectNode.dtoClass() != null) {
                 ormTable = tableRegistry.getTableOrThrow(selectNode.dtoClass());
@@ -242,7 +285,7 @@ public class SelectEngineTerminal {
         if (ormTable != null) {
             return mapDtos(resultClass, Collections.singletonList(row), ormTable, litebridgeContext).getFirst();
         } else {
-            return unwrap(resultClass, Collections.singletonList(row), litebridgeContext.typeConverter()).getFirst();
+            return unwrap(resultClass, row, litebridgeContext.typeConverter());
         }
     }
 

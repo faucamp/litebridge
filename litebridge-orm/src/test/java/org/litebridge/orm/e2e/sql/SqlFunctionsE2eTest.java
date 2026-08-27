@@ -40,10 +40,10 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
     @DisplayName("COUNT()")
     void count(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Count the records
-//        final Row personCount = litebridge.select(Fn.count()).from(personTableName).oneOrThrow();
-//        assertEquals(1, personCount.size());
-//        assertEquals(1, personCount.columns().size());
-//        assertEquals(3, ((Number) personCount.column(0).value()).intValue());
+        final Row personCount = litebridge.select(Fn.count()).from(personTableName).oneOrThrow();
+        assertEquals(1, personCount.size());
+        assertEquals(1, personCount.columns().size());
+        assertEquals(3, ((Number) personCount.column(0).value()).intValue());
 
         // Type override
         final Row personCountDouble = litebridge.select(Fn.convert(Fn.count(), Double.class)).from(personTableName).oneOrThrow();
