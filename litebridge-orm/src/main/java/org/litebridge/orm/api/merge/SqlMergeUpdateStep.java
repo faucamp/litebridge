@@ -1,12 +1,12 @@
 package org.litebridge.orm.api.merge;
 
 import org.litebridge.db.spi.Row;
-import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.delete.DeleteTerminalInspector;
 import org.litebridge.orm.api.delete.SqlDeleteStart;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.update.SqlUpdateStart;
 import org.litebridge.orm.api.update.UpdateQuery;
+import org.litebridge.orm.api.update.UpdateQueryInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
 
 import java.util.function.Function;
@@ -21,13 +21,10 @@ public final class SqlMergeUpdateStep extends MergeUpdateStep<Row> {
     }
 
     public MergeTerminal update(final Function<SqlUpdateStart, UpdateQuery> update) {
-        throw new UnsupportedOperationException("Not implemented yet");
-//        //TODO: defer table lookup
-//        final Table table = litebridgeContext.tableRegistry().getOrCreateSpiTable(this.table);
-//        final SqlUpdater sqlUpdater = new SqlUpdater(table, litebridgeContext);
-//        update.apply(sqlUpdater);
-//        final QueryNode setNode = sqlUpdater.node();
-//        return new MergeTerminal(setNode);
+        final SqlUpdateStart sqlUpdateStart = new SqlUpdateStart(table, litebridgeContext);
+        final UpdateQuery updateQuery = update.apply(sqlUpdateStart);
+        final QueryNode setNode = UpdateQueryInspector.getNode(updateQuery);
+        return new MergeTerminal(setNode);
     }
 
     public MergeTerminal delete() {

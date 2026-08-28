@@ -11,6 +11,7 @@ import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.FromClauseEngine;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Arrays;
@@ -26,26 +27,22 @@ import java.util.stream.Stream;
  */
 public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<DTO, AbstractCbConditionClause<DTO>, AbstractCbConditionClauseTerminal<DTO>> {
 
-    /**
-     * The engine used to process the FROM clause.
-     */
-    protected final FromClauseEngine fromClauseEngine;
     private final LogicOperator logicOperator;
     private final @Nullable String lhsColumn;
     private final @Nullable ExpressionSpec lhsExpression;
     private final @Nullable QueryNode node;
+    protected final LitebridgeContext litebridgeContext;
 
     /**
      * Constructs a new {@code AbstractCbConditionClause}.
      *
-     * @param fromClauseEngine The FROM clause engine.
      * @param logicOperator    The logic operator (AND/OR).
      * @param lhsColumn        The left-hand side column name.
      * @param lhsExpression    The left-hand side expression.
      * @param node             The previous node in the chain.
      * @param terminalCreator  The function to create the terminal clause.
      */
-    public AbstractCbConditionClause(final FromClauseEngine fromClauseEngine,
+    public AbstractCbConditionClause(final LitebridgeContext litebridgeContext,
                                      final LogicOperator logicOperator,
                                      final @Nullable String lhsColumn,
                                      final @Nullable ExpressionSpec lhsExpression,
@@ -54,8 +51,8 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
         this.logicOperator = logicOperator;
         this.lhsColumn = lhsColumn;
         this.lhsExpression = lhsExpression;
-        this.fromClauseEngine = fromClauseEngine;
         this.node = node;
+        this.litebridgeContext = litebridgeContext;
     }
 
     /**

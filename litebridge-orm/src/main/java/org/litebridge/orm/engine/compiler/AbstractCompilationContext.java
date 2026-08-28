@@ -20,7 +20,6 @@ import org.litebridge.db.spi.query.LogicConditionGroup;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
@@ -82,7 +81,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             lhsExpressionSpec = lhsResolvedExpressionSpecs.getFirst();
         } else if (ormTable != null) {
             // DTO field name
-            final ColumnMetaData columnMetaData = ormTable.getColumnForFieldName(Objects.requireNonNull(conditionSpec.getLhsColumn()));
+            final ColumnMetaData columnMetaData = ormTable.columnMetaDataForFieldName(Objects.requireNonNull(conditionSpec.getLhsColumn()));
             final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(columnMetaData.name());
             lhsExpressionSpec = new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn());
         } else {

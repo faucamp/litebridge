@@ -1,6 +1,7 @@
 package org.litebridge.orm.engine.compiler;
 
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
+import org.litebridge.orm.api.select.ast.ConditionJoinUsingNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.ConditionWithIdNode;
 import org.litebridge.orm.api.select.ast.GroupByNode;
@@ -68,6 +69,8 @@ public final class SelectQueryCompiler extends ConditionBasedQueryCompiler<Selec
                 final ConditionNode conditionNode = compilationContext.toConditionNode(conditionWithIdNode);
                 applyConditionNode(conditionNode, compilationContext, conditionClauseType);
             }
+            case ConditionJoinUsingNode conditionJoinUsingNode ->
+                    compilationContext.addJoinCondition(conditionJoinUsingNode);
             case ConditionGroupNode conditionGroupNode -> {
                 final ConditionGroupSpecStack conditionGroupSpecStack = switch (conditionClauseType) {
                     case JOIN -> compilationContext.joinConditionGroupStack();
@@ -76,7 +79,9 @@ public final class SelectQueryCompiler extends ConditionBasedQueryCompiler<Selec
                 };
 
                 conditionGroupSpecStack.push(conditionGroupNode.logicOperator());
-                flattenAndApplyNodes(conditionGroupNode.lastChild(), compilationContext);
+                flattenAndApplyNodes(conditionGroupNode.lastChild(),
+                        compilationContext,
+                        conditionNode -> applyConditionNode(conditionNode, compilationContext, conditionClauseType));
                 conditionGroupSpecStack.pop();
             }
             default -> throw new IllegalArgumentException("Unsupported condition node type: " + node);

@@ -17,7 +17,6 @@ import static org.litebridge.orm.api.select.ast.ConditionNodeUtil.valueStructura
  * @param lhs               the left-hand side expression
  * @param operator          the operator (EQ, USING, etc.)
  * @param rhs               the right-hand side value
- * @param relationshipField the field name of the relationship (if any)
  */
 public record ConditionNode(@Nullable QueryNode previous,
                             LogicOperator logicOperator,
@@ -25,7 +24,7 @@ public record ConditionNode(@Nullable QueryNode previous,
                             @Nullable ExpressionSpec lhsExpression,
                             Operator operator,
                             @Nullable Object rhs,
-                            @Nullable String relationshipField) implements ConditionQueryNode {
+                            @Nullable String rhsColumn) implements ConditionQueryNode {
 
     public ConditionNode(@Nullable QueryNode previous,
                          LogicOperator logicOperator,
@@ -43,13 +42,13 @@ public record ConditionNode(@Nullable QueryNode previous,
                 && Objects.equals(previous, that.previous)
                 && Objects.equals(lhsColumn, that.lhsColumn)
                 && Objects.equals(lhsExpression, that.lhsExpression)
-                && Objects.equals(relationshipField, that.relationshipField)
+                && Objects.equals(rhsColumn, that.rhsColumn)
                 && logicOperator == that.logicOperator
                 && Objects.equals(valueStructuralKey(rhs), valueStructuralKey(that.rhs));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(previous, logicOperator, lhsColumn, lhsExpression, operator, relationshipField, valueStructuralKey(rhs));
+        return Objects.hash(previous, logicOperator, lhsColumn, lhsExpression, operator, rhsColumn, valueStructuralKey(rhs));
     }
 }

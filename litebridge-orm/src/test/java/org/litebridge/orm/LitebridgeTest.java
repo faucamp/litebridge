@@ -88,7 +88,7 @@ class LitebridgeTest {
 
         // Then
         final TableRegistry tableRegistry = ObjectUtils.getFieldValue(litebridge, "tableRegistry", TableRegistry.class);
-        final OrmTable result = tableRegistry.getTableOrThrow(TestDto.class);
+        final OrmTable result = tableRegistry.getOrmTableOrThrow(TestDto.class);
         assertNotNull(result);
     }
 
@@ -115,7 +115,7 @@ class LitebridgeTest {
 
         // Then
         final TableRegistry tableRegistry = ObjectUtils.getFieldValue(litebridge, "tableRegistry", TableRegistry.class);
-        final OrmTable table = tableRegistry.getTableOrThrow(TestDto.class);
+        final OrmTable table = tableRegistry.getOrmTableOrThrow(TestDto.class);
         assertNotNull(table.getTrackedDto(testDto));
     }
 

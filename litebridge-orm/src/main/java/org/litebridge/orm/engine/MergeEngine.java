@@ -34,7 +34,7 @@ public class MergeEngine extends AbstractInsertEngine {
     public <DTO> UpdateResult mergeInto(final Class<DTO> dtoClass, final Function<DtoMergeUsingStep<DTO>, MergeTerminal> merge) {
         final DtoMergeUsingStep<DTO> mergeUsingStep = new DtoMergeUsingStep<>(dtoClass, litebridgeContext);
         final MergeTerminal mergeTerminal = merge.apply(mergeUsingStep);
-        return execute(mergeTerminal, () -> litebridgeContext.tableRegistry().getTableOrThrow(dtoClass).getMetaData().toTable());
+        return execute(mergeTerminal, () -> litebridgeContext.tableRegistry().getOrmTableOrThrow(dtoClass).getMetaData().toTable());
     }
 
     public UpdateResult mergeInto(final String tableName, final Function<SqlMergeUsingStep, MergeTerminal> merge) {

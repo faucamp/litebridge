@@ -52,7 +52,7 @@ public final class TableRegistry {
      * @return the {@link OrmTable} associated with the specified DTO class
      * @throws IllegalArgumentException if no table is mapped to the class
      */
-    public OrmTable getTableOrThrow(final Class<?> dtoClass) throws IllegalArgumentException {
+    public OrmTable getOrmTableOrThrow(final Class<?> dtoClass) throws IllegalArgumentException {
         return Objects.requireNonNull(getOrmTable(dtoClass), "DTO class not registered: '%s'".formatted(dtoClass.getName()));
     }
 
@@ -95,9 +95,9 @@ public final class TableRegistry {
      * @throws IllegalArgumentException if no {@link OrmTable} is mapped to the context class or the DTO class
      */
     public OrmTable getTableInContextOrThrow(final Class<?> dtoClass, final Class<?> contextClass) {
-        return getTableOrThrow(contextClass)
+        return getOrmTableOrThrow(contextClass)
                 .getContextTableRegistry()
-                .getTableOrThrow(dtoClass);
+                .getOrmTableOrThrow(dtoClass);
     }
 
     /**

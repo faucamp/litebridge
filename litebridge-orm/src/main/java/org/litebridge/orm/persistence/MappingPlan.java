@@ -33,7 +33,7 @@ public record MappingPlan(Class<?> dtoClass,
                           MethodHandle constructor,
                           boolean defaultConstructorUsed,
                           List<FieldAccessor> canonicalConstructorFieldAccessors,
-                          Map<DtoJoinSpec, MappingPlan> joinPlans,
+                          Map<FieldAccessor, MappingPlan> joinPlans,
                           Map<FieldAccessor, MappingPlan> nestedPlans,
                           List<MappedOneToMany> oneToManyMappings,
                           List<MappedManyToMany> manyToManyMappings) {

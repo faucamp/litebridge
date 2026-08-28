@@ -129,7 +129,7 @@ public class SelectEngineTerminal {
 
         if (selectNode.dtoClass() != null) {
             final Class<DTO> dtoClass = (Class<DTO>) selectNode.dtoClass();
-            final OrmTable ormTable = litebridgeContext.tableRegistry().getTableOrThrow(selectNode.dtoClass());
+            final OrmTable ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(selectNode.dtoClass());
 
             if (dtoClass == ormTable.dtoClass()
                     || ormTable.getDtoClassInterfaces().contains(dtoClass)) {
@@ -270,13 +270,13 @@ public class SelectEngineTerminal {
             resultClass = selectNode.resultTypes()[0];
 
             if (selectNode.dtoClass() != null) {
-                ormTable = tableRegistry.getTableOrThrow(selectNode.dtoClass());
+                ormTable = tableRegistry.getOrmTableOrThrow(selectNode.dtoClass());
             } else {
                 ormTable = tableRegistry.getOrmTable(Objects.requireNonNull(selectNode.table(), "No DTO class or table name specified"));
             }
         } else if (selectNode.dtoClass() != null) {
             resultClass = selectNode.dtoClass();
-            ormTable = tableRegistry.getTableOrThrow(resultClass);
+            ormTable = tableRegistry.getOrmTableOrThrow(resultClass);
         } else {
             // No mapping required
             return row;

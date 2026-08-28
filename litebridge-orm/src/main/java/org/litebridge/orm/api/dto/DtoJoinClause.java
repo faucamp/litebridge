@@ -5,10 +5,12 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.select.ast.ConditionJoinUsingNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
+import org.litebridge.orm.api.sql.SqlJoinConditionClause;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
@@ -71,7 +73,8 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
 //        // Field not in source; try target table
 //        final FieldAccessor targetFieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(targetTable.dtoClass(), field);
 //        return joinOnInverse(targetFieldAccessor.name(), field);
-        throw new UnsupportedOperationException("Not implemented yet");
+        final ConditionJoinUsingNode conditionJoinUsingNode = new ConditionJoinUsingNode(null, LogicOperator.NOOP, field, null);
+        return terminalCreator.apply(conditionJoinUsingNode);
     }
 
     /**

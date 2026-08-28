@@ -4,7 +4,6 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.InsertV2;
@@ -16,8 +15,6 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.TableMetaDataCache;
-import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +38,7 @@ public final class InsertCompilationContext implements CompilationContext {
         final OrmTable ormTable;
 
         if (insertNode.dtoClass() != null) {
-            ormTable = litebridgeContext.tableRegistry().getTableOrThrow(insertNode.dtoClass());
+            ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(insertNode.dtoClass());
             this.tableMetaData = ormTable.getMetaData();
             this.table = tableMetaData.toTable();
         } else {
@@ -55,7 +52,7 @@ public final class InsertCompilationContext implements CompilationContext {
                 if (ormTable != null) {
                     // Translate field names to column names
                     insertColumns = Arrays.stream(insertNode.columns())
-                            .map(ormTable::getColumnForFieldName)
+                            .map(ormTable::columnMetaDataForFieldName)
                             .map(ColumnMetaData::name)
                             .toList();
                 } else {
@@ -99,7 +96,7 @@ public final class InsertCompilationContext implements CompilationContext {
                     insertColumns.add(columnExpressionSpec.getColumn().name());
                 } else if (expressionSpec instanceof QueryField queryField) {
                     final String fieldName = QueryFieldInspector.getFieldName(queryField);
-                    final ColumnMetaData columnMetaData = ormTable.getColumnForFieldName(fieldName);
+                    final ColumnMetaData columnMetaData = ormTable.columnMetaDataForFieldName(fieldName);
                     insertColumns.add(columnMetaData.name());
                 } else {
                     throw new IllegalArgumentException("Unsupported expression spec type: " + expressionSpec.getClass().getName());

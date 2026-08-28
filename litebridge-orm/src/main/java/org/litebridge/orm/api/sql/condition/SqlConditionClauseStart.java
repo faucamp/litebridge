@@ -1,39 +1,35 @@
 package org.litebridge.orm.api.sql.condition;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
-import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClause;
 import org.litebridge.orm.api.condition.AbstractConditionClauseStart;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.engine.FromClauseEngine;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 public class SqlConditionClauseStart extends AbstractConditionClauseStart<Row> {
 
-    private final Table table;
-    private final @Nullable QueryNode node;
+    private final String table;
 
-    public SqlConditionClauseStart(final Table table,
-                                   final FromClauseEngine fromClauseEngine,
-                                   final @Nullable QueryNode node) {
-        super(fromClauseEngine);
+    public SqlConditionClauseStart(final String table,
+                                   final @Nullable QueryNode node,
+                                   final LitebridgeContext litebridgeContext) {
+        super(node, litebridgeContext);
         this.table = table;
-        this.node = node;
     }
 
     @Override
     public CbSqlConditionClause where(final String column) {
-        final Column spiColumn = new Column(table, column);
-        return (CbSqlConditionClause) where(new SelectColumnSpec(spiColumn));
+        return new CbSqlConditionClause(table, litebridgeContext, LogicOperator.NOOP, column, null, node,
+                conditionNode -> new CbSqlConditionClauseTerminal(table, conditionNode, litebridgeContext));
     }
 
 
     @Override
     public AbstractCbConditionClause<Row> where(final ExpressionSpec expression) {
-        return new CbSqlConditionClause(table, fromClauseEngine, LogicOperator.NOOP, null, expression, node, conditionNode -> new CbSqlConditionClauseTerminal(table, fromClauseEngine, conditionNode));
+        return new CbSqlConditionClause(table, litebridgeContext, LogicOperator.NOOP, null, expression, node,
+                conditionNode -> new CbSqlConditionClauseTerminal(table, conditionNode, litebridgeContext));
     }
 }

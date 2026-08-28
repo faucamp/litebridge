@@ -1,10 +1,12 @@
 package org.litebridge.orm.api.dto;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.JoinClauseTerminal;
 import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
@@ -88,15 +90,12 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoWhereConditionClause<DTO> where(final String field) {
-//        final Column column = ormTable.getColumnForFieldName(field).toColumn();
-//        return where(new SelectColumnSpec(column));
-        throw new UnsupportedOperationException("Not implemented yet");
+        return whereImpl(LogicOperator.NOOP, field, null);
     }
 
     @Override
     public DtoWhereConditionClause<DTO> where(final ExpressionSpec expression) {
-//        return whereImpl(LogicOperator.NOOP, expression, (DtoSelector<DTO>) delegate);
-        throw new UnsupportedOperationException("Not implemented yet");
+        return whereImpl(LogicOperator.NOOP, null, expression);
     }
 
 
@@ -124,27 +123,22 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoGroupByClauseTerminal<DTO> groupBy(final String... fields) {
-//        return groupBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new DtoGroupByClauseTerminal(fields, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
-    public DtoGroupByClauseTerminal<DTO> groupBy(final ExpressionSpec... fields) {
-//        final QueryNode groupByNode = new GroupByNode(delegate.node(), fields);
-//        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(groupByNode));
-        throw new UnsupportedOperationException("Not implemented yet");
+    public DtoGroupByClauseTerminal<DTO> groupBy(final ExpressionSpec... expressions) {
+        return new DtoGroupByClauseTerminal(expressions, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-//        return orderBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
-//        return new DtoOrderByClause<>(fields, (DtoSelector<DTO>) delegate);
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
     }
 
     private DtoJoinConditionClause<DTO> joinImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
@@ -176,5 +170,14 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 //
 //        return this;
         throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final @Nullable String field, final @Nullable ExpressionSpec expression) {
+        return new DtoWhereConditionClause<>(litebridgeContext,
+                logicOperator,
+                field,
+                expression,
+                null,
+                conditionNode -> new DtoWhereConditionClauseTerminal<>(new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 }

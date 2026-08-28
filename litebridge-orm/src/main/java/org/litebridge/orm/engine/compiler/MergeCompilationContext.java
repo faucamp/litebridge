@@ -99,7 +99,7 @@ final class MergeCompilationContext implements CompilationContext {
             final ExpressionSpec expressionSpec = setNode.expressionSpec();
 
             if (expressionSpec instanceof QueryField queryField) {
-                columnMetaData = targetOrmTable.getColumnForFieldName(QueryFieldInspector.getFieldName(queryField));
+                columnMetaData = targetOrmTable.columnMetaDataForFieldName(QueryFieldInspector.getFieldName(queryField));
             } else if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
                 columnMetaData = targetTableMetaData.column(columnExpressionSpec.getColumn().name());
             } else {
@@ -138,7 +138,7 @@ final class MergeCompilationContext implements CompilationContext {
                 } else if (expressionSpec instanceof QueryField queryField) {
                     final Class<?> dtoClass = QueryFieldInspector.getDtoClass(queryField);
                     final String fieldName = QueryFieldInspector.getFieldName(queryField);
-                    final ColumnMetaData columnMetaData = targetOrmTable.getColumnForFieldName(fieldName);
+                    final ColumnMetaData columnMetaData = targetOrmTable.columnMetaDataForFieldName(fieldName);
 
                     if (columnMetaData == null) {
                         throw new IllegalArgumentException("No column found for field: " + fieldName);
@@ -249,7 +249,6 @@ final class MergeCompilationContext implements CompilationContext {
         return switch (conditionContext) {
             case ON -> on;
             case WHEN_MATCHED, WHEN_NOT_MATCHED -> whenMatchedSpecs.getLast().ensureAndConditionGroupStack();
-            default -> throw new UnsupportedOperationException("Not yet implemented");
         };
     }
 

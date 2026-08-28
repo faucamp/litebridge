@@ -154,9 +154,9 @@ public final class DtoConstructor {
 
         if (parentDtoClass != null) {
             ormTable = tableRegistry.getTableInContext(dtoClass, parentDtoClass)
-                    .orElseGet(() -> tableRegistry.getTableOrThrow(dtoClass));
+                    .orElseGet(() -> tableRegistry.getOrmTableOrThrow(dtoClass));
         } else {
-            ormTable = tableRegistry.getTableOrThrow(dtoClass);
+            ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
         }
 
         final List<FieldAccessor> fieldAccessors = ormTable.fieldAcessorStream().toList();

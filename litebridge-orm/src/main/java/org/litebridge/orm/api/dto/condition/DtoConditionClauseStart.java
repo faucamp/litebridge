@@ -1,15 +1,13 @@
 package org.litebridge.orm.api.dto.condition;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClause;
 import org.litebridge.orm.api.condition.AbstractConditionClauseStart;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.engine.FromClauseEngine;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.persistence.OrmTable;
 
 /**
  * Start of a DTO-based condition clause.
@@ -18,32 +16,33 @@ import org.litebridge.orm.persistence.OrmTable;
  */
 public class DtoConditionClauseStart<DTO> extends AbstractConditionClauseStart<DTO> {
 
-    private final OrmTable ormTable;
-    private final @Nullable QueryNode node;
-
     /**
      * Creates a new DTO condition clause start.
      *
-     * @param ormTable         the ORM table metadata
-     * @param fromClauseEngine the from clause engine
-     * @param node             the current query node
+     * @param node              the current query node
+     * @param litebridgeContext the litebridge context
      */
-    public DtoConditionClauseStart(final OrmTable ormTable,
-                                   final FromClauseEngine fromClauseEngine,
-                                   final @Nullable QueryNode node) {
-        super(fromClauseEngine);
-        this.ormTable = ormTable;
-        this.node = node;
+    public DtoConditionClauseStart(final @Nullable QueryNode node,
+                                   final LitebridgeContext litebridgeContext) {
+        super(node, litebridgeContext);
     }
 
     @Override
     public CbDtoConditionClause<DTO> where(final String field) {
-        final Column column = ormTable.getColumnForFieldName(field).toColumn();
-        return (CbDtoConditionClause<DTO>) where(new SelectColumnSpec(column));
+        return whereImpl(field, null);
     }
 
     @Override
     public AbstractCbConditionClause<DTO> where(final ExpressionSpec expression) {
-        return new CbDtoConditionClause<>(ormTable, fromClauseEngine, LogicOperator.NOOP, null, expression, node, node -> new CbDtoConditionClauseTerminal<>(ormTable, fromClauseEngine, node));
+        return whereImpl(null, expression);
+    }
+
+    private @NonNull CbDtoConditionClause<DTO> whereImpl(final @Nullable String field, final @Nullable ExpressionSpec expression) {
+        return new CbDtoConditionClause<>(litebridgeContext,
+                LogicOperator.NOOP,
+                field,
+                expression,
+                node,
+                node -> new CbDtoConditionClauseTerminal<>(node, litebridgeContext));
     }
 }

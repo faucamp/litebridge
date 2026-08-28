@@ -196,15 +196,15 @@ public class SelectSpecDtoMapper {
                                 return fc;
                             })
                             .toList();
-                    nestedPlans.put(accessor, compileMappingPlan(fieldType, tableRegistry.getTableOrThrow(fieldType), table, shiftedFc, null, referenceRow));
+                    nestedPlans.put(accessor, compileMappingPlan(fieldType, tableRegistry.getOrmTableOrThrow(fieldType), table, shiftedFc, null, referenceRow));
                 }
             } else if (!ClassUtils.isBasicType(accessor.type())) {
                 isRelatedDto = true;
-                final ColumnMetaData columnMetaData = ormTable.getColumnForFieldName(accessor.name());
+                final ColumnMetaData columnMetaData = ormTable.columnMetaDataForFieldName(accessor.name());
 
                 if (columnMetaData.getJoinColumn() != null) {
                     final OrmTable relatedOrmTable = tableRegistry.getTableInContext(accessor.type(), dtoClass)
-                            .orElseGet(() -> tableRegistry.getTableOrThrow(accessor.type()));
+                            .orElseGet(() -> tableRegistry.getOrmTableOrThrow(accessor.type()));
                     relatedPkAccessor = relatedOrmTable.getFieldForColumnName(columnMetaData.getJoinColumn());
                 }
             }
@@ -268,7 +268,7 @@ public class SelectSpecDtoMapper {
                 mappingInfo.constructor(),
                 mappingInfo.defaultConstructorUsed(),
                 mappingInfo.canonicalConstructorFieldAccessors(),
-                joinPlans,
+                (Map) joinPlans,
                 nestedPlans,
                 requestedOneToMany,
                 requestedManyToMany
@@ -378,17 +378,18 @@ public class SelectSpecDtoMapper {
             dtoCache.put(pk, currentDto);
         }
 
-        for (final Map.Entry<DtoJoinSpec, MappingPlan> entry : plan.joinPlans().entrySet()) {
+        for (final Map.Entry<?, MappingPlan> entry : plan.joinPlans().entrySet()) {
             final PartiallyConstructedDto joinedDto = toDto(entry.getValue(), row, true);
 
-            if (joinedDto != null) {
-                if (entry.getKey().collectionField() != null) {
-                    dtoCache.addLink(currentDto.dto(), entry.getKey().collectionField(), joinedDto.dto());
-                }
-                if (entry.getKey().reverseCollectionField() != null) {
-                    dtoCache.addLink(joinedDto.dto(), entry.getKey().reverseCollectionField(), currentDto.dto());
-                }
-            }
+//            if (joinedDto != null) {
+//                if (entry.getKey().collectionField() != null) {
+//                    dtoCache.addLink(currentDto.dto(), entry.getKey().collectionField(), joinedDto.dto());
+//                }
+//                if (entry.getKey().reverseCollectionField() != null) {
+//                    dtoCache.addLink(joinedDto.dto(), entry.getKey().reverseCollectionField(), currentDto.dto());
+//                }
+//            }
+            throw new UnsupportedOperationException("Deprecated");
         }
 
         return currentDto;
@@ -407,7 +408,7 @@ public class SelectSpecDtoMapper {
 
             if (relatedDto == null && litebridgeContext.getRelatedDtoStrategy() == RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN) {
                 final Object partial = constructDto(dependency.targetDtoClass(), dependency.targetPrimaryKey(), dtoConstructor);
-                relatedDto = new PartiallyConstructedDto(partial, dependency.targetPrimaryKeyValue(), Collections.emptyList(), tableRegistry.getTableOrThrow(dependency.targetDtoClass()));
+                relatedDto = new PartiallyConstructedDto(partial, dependency.targetPrimaryKeyValue(), Collections.emptyList(), tableRegistry.getOrmTableOrThrow(dependency.targetDtoClass()));
                 dtoCache.put(relatedDto.primaryKey(), relatedDto);
             }
 
@@ -443,7 +444,7 @@ public class SelectSpecDtoMapper {
         final DtoConstructor.MappingInfo mappingInfo = dtoConstructor.getMappingInfo(dtoClass);
         final List<FieldAccessorValue> fieldValues = new ArrayList<>();
 
-        final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
+        final OrmTable table = tableRegistry.getOrmTableOrThrow(dtoClass);
         table.fieldAcessorStream().forEach(accessor -> {
             Object value = valueOverrides.get(accessor);
 

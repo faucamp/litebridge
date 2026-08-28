@@ -26,8 +26,6 @@ import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.ast.UpdateNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractConditionBasedSpec;
-import org.litebridge.orm.api.select.impl.AbstractSelector;
-import org.litebridge.orm.api.select.impl.DelegatingSelectTerminal;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.JoinSpec;
@@ -151,9 +149,9 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
                     final OrmTable joinOrmTable;
                     if (joinNode.sourceDtoClass() != null) {
                         joinOrmTable = tableRegistry.getTableInContext(joinNode.dtoClass(), joinNode.sourceDtoClass())
-                                .orElseGet(() -> tableRegistry.getTableOrThrow(joinNode.dtoClass()));
+                                .orElseGet(() -> tableRegistry.getOrmTableOrThrow(joinNode.dtoClass()));
                     } else {
-                        joinOrmTable = tableRegistry.getTableOrThrow(joinNode.dtoClass());
+                        joinOrmTable = tableRegistry.getOrmTableOrThrow(joinNode.dtoClass());
                     }
 
                     final Table joinTable = aliasGenerator.aliasTable(joinOrmTable);
@@ -256,12 +254,12 @@ public final class QueryCompiler extends AbstractQueryCompiler<CompilationContex
                         final List<JoinSpec> joins = Objects.requireNonNull(selectSpec.getJoins());
                         final JoinSpec lastJoin = joins.get(joins.size() - 1);
 
-                        if (conditionNode.relationshipField() != null && lastJoin instanceof org.litebridge.orm.api.dto.DtoJoinSpec djs) {
+                        if (conditionNode.rhsColumn() != null && lastJoin instanceof org.litebridge.orm.api.dto.DtoJoinSpec djs) {
                             // The source table is stored in the JoinNode
                             if (joinNode.sourceDtoClass() != null) {
-                                final OrmTable sourceTable = tableRegistry.getTableOrThrow(joinNode.sourceDtoClass());
+                                final OrmTable sourceTable = tableRegistry.getOrmTableOrThrow(joinNode.sourceDtoClass());
                                 sourceTable.fieldAcessorStream()
-                                        .filter(accessor -> accessor.name().equals(conditionNode.relationshipField()))
+                                        .filter(accessor -> accessor.name().equals(conditionNode.rhsColumn()))
                                         .findFirst()
                                         .ifPresent(fieldAccessor -> {
                                             djs.setCollectionField(fieldAccessor);

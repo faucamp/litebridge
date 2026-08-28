@@ -9,10 +9,12 @@ public final class UpdateQueryInspector {
 
     public static QueryNode getNode(final UpdateQuery updateQuery) {
         return switch (updateQuery) {
-            case DtoUpdateWhereConditionClauseTerminalImpl<?> dtoUpdateWhereConditionClauseTerminalImpl -> dtoUpdateWhereConditionClauseTerminalImpl.node();
-            case SqlUpdateWhereConditionClauseTerminalImpl sqlUpdateWhereConditionClauseTerminalImpl -> sqlUpdateWhereConditionClauseTerminalImpl.node();
+            case DtoUpdateWhereConditionClauseTerminalImpl<?> dtoUpdateWhereConditionClauseTerminalImpl ->
+                    dtoUpdateWhereConditionClauseTerminalImpl.node();
+            case SqlUpdateWhereConditionClauseTerminalImpl sqlUpdateWhereConditionClauseTerminalImpl ->
+                    sqlUpdateWhereConditionClauseTerminalImpl.node();
             case DtoUpdateStep<?> dtoUpdateStep -> dtoUpdateStep.node();
-            default -> throw new UnsupportedOperationException("Unsupported update query type: " + updateQuery.getClass());
+            case SqlUpdateStep sqlUpdateStep -> sqlUpdateStep.node();
         };
     }
 }

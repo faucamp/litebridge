@@ -12,9 +12,11 @@ import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.BindValue;
+import org.litebridge.orm.api.select.ast.ConditionJoinUsingNode;
 import org.litebridge.orm.api.select.ast.ConditionNode;
 import org.litebridge.orm.api.select.ast.ConditionWithIdNode;
 import org.litebridge.orm.api.select.ast.GroupByNode;
@@ -25,8 +27,11 @@ import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.SelectColumnSpec;
+import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.tracking.FieldAccessor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,10 +42,10 @@ import java.util.Objects;
 
 public final class SelectCompilationContext extends AbstractCompilationContext {
 
+    private final boolean selectAll;
     private final Table table;
     private final TableMetaData tableMetaData;
     private final @Nullable OrmTable ormTable;
-    private final List<ColumnMetaData> columnMetaDataList = new ArrayList<>();
     private final List<SelectExpression> selectExpressions;
     private final SelectExpressionMapper selectExpressionMapper;
     private @Nullable List<JoinSpec> joinSpecs;
@@ -55,9 +60,10 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
                                     final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
         this.selectExpressionMapper = litebridgeContext.selectExpressionMapper();
+        this.selectAll = selectNode.isSelectAll();
 
         if (selectNode.dtoClass() != null) {
-            this.ormTable = litebridgeContext.tableRegistry().getTableOrThrow(selectNode.dtoClass());
+            this.ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(selectNode.dtoClass());
             this.tableMetaData = ormTable.getMetaData();
             this.table = tableMetaData.toTable();
         } else {
@@ -68,14 +74,13 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
 
         final SqlFunctionRegistry sqlFunctionRegistry = litebridgeContext.sqlFunctionRegistry();
 
-        if (selectNode.isSelectAll()) {
+        if (selectAll) {
             // All columns
             final List<ColumnMetaData> columnMetaDatas = tableMetaData.columns();
             final List<String> selectColumns = new ArrayList<>(columnMetaDatas.size());
             this.selectExpressions = new ArrayList<>(columnMetaDatas.size());
 
             for (ColumnMetaData columnMetaData : columnMetaDatas) {
-                this.columnMetaDataList.add(columnMetaData);
                 selectColumns.add(columnMetaData.name());
                 this.selectExpressions.add(sqlFunctionRegistry.select().column().create(columnMetaData.toColumn()));
             }
@@ -87,7 +92,7 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
             if (ormTable != null) {
                 // Translate field names to column names
                 selectColumns = Arrays.stream(selectNode.columns())
-                        .map(ormTable::getColumnForFieldName)
+                        .map(ormTable::columnMetaDataForFieldName)
                         .map(ColumnMetaData::name)
                         .toList();
             } else {
@@ -98,7 +103,6 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
 
             for (final String selectColumnName : selectColumns) {
                 final ColumnMetaData columnMetaData = tableMetaData.column(selectColumnName);
-                this.columnMetaDataList.add(columnMetaData);
                 this.selectExpressions.add(sqlFunctionRegistry.select().column().create(columnMetaData.toColumn()));
             }
         } else {
@@ -134,13 +138,24 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
     }
 
     public void addJoinCondition(final ConditionNode conditionNode) {
-        Objects.requireNonNull(currentJoinSpec, "No current JOIN")
+        final JoinSpec joinSpec = Objects.requireNonNull(currentJoinSpec, "No current JOIN");
+        final Object rhs;
+
+        if (conditionNode.rhsColumn() != null) {
+            final ColumnMetaData relationshipColumn = ormTable.columnMetaDataForFieldName(conditionNode.rhsColumn());
+            final FieldAccessor relationshipFieldAccessor = ormTable.getFieldForColumnName(relationshipColumn.name());
+            rhs = new SelectFieldSpec(relationshipFieldAccessor, relationshipColumn.toColumn());
+        } else {
+            rhs = conditionNode.rhs();
+        }
+
+        joinSpec
                 .conditionGroupStack().current()
                 .newCondition(conditionNode.logicOperator(),
                         conditionNode.lhsColumn(),
                         conditionNode.lhsExpression(),
                         conditionNode.operator(),
-                        conditionNode.rhs());
+                        rhs);
     }
 
     public void addWhereCondition(final ConditionNode conditionNode) {
@@ -202,6 +217,43 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
         return Objects.requireNonNull(conditionNode, "Condition node not resolved for 'withId' condition");
     }
 
+    public void addJoinCondition(final ConditionJoinUsingNode conditionJoinUsingNode) {
+        final JoinSpec joinSpec = Objects.requireNonNull(currentJoinSpec, "No current JOIN");
+        final ConditionNode conditionNode;
+
+        if (conditionJoinUsingNode.usingColumn() != null) {
+            if (ormTable != null) {
+                // Get details on the USING column on the local table
+                final ColumnMetaData usingColumnMetaData = ormTable.columnMetaDataForFieldName(conditionJoinUsingNode.usingColumn());
+                final SelectColumnSpec usingSelectColumnSpec = new SelectColumnSpec(usingColumnMetaData.toColumn());
+
+                // Join table & column
+                final OrmTable joinOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(joinSpec.dtoClass()));
+                final TableMetaData joinTableMetaData = joinOrmTable.getMetaData();
+                final ColumnMetaData joinColumnMetadata = joinTableMetaData.column(usingColumnMetaData.getJoinColumn());
+                final SelectColumnSpec joinSelectColumnSpec = new SelectColumnSpec(joinColumnMetadata.toColumn());
+
+                // Add join table columns to select
+                if (selectAll) {
+                    final SqlFunctionRegistry sqlFunctionRegistry = litebridgeContext.sqlFunctionRegistry();
+
+                    for (ColumnMetaData columnMetaData : joinTableMetaData.columns()) {
+                        this.selectExpressions.add(sqlFunctionRegistry.select().column().create(columnMetaData.toColumn()));
+                    }
+                }
+
+                // Create actual condition
+                conditionNode = new ConditionNode(null, conditionJoinUsingNode.logicOperator(), null, usingSelectColumnSpec, Operator.EQ, joinSelectColumnSpec);
+            } else {
+                throw new UnsupportedOperationException("Not implemented yet");
+            }
+        } else {
+            throw new UnsupportedOperationException("Not implemented yet");
+        }
+
+        addJoinCondition(conditionNode);
+    }
+
     public ConditionGroupSpecStack ensureWhereConditionGroupStack() {
         if (where == null) {
             where = new ConditionGroupSpecStack();
@@ -230,7 +282,7 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
                 // DTO field names; translate to columns
                 groupByExpressions = Arrays.stream(columnNames)
                         .map(columnName -> {
-                            final ColumnMetaData columnMetaData = ormTable.getColumnForFieldName(columnName);
+                            final ColumnMetaData columnMetaData = ormTable.columnMetaDataForFieldName(columnName);
                             return (SelectExpression) sqlFunctionRegistry.select().reference().create(columnMetaData.toColumn());
                         })
                         .toList();
@@ -283,7 +335,7 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
 
             if (ormTable != null) {
                 // DTO field name; translate it to a column
-                final ColumnMetaData columnMetaData = ormTable.getColumnForFieldName(columnName);
+                final ColumnMetaData columnMetaData = ormTable.columnMetaDataForFieldName(columnName);
                 orderByExpressions = Collections.singletonList(litebridgeContext.sqlFunctionRegistry().select().reference().create(columnMetaData.toColumn()));
             } else {
                 // Column name
@@ -323,7 +375,7 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
                         final Table joinTable;
 
                         if (joinSpec.dtoClass() != null) {
-                            joinTable = tableRegistry.getTableOrThrow(joinSpec.dtoClass()).getMetaData().toTable();
+                            joinTable = tableRegistry.getOrmTableOrThrow(joinSpec.dtoClass()).getMetaData().toTable();
                         } else {
                             joinTable = tableRegistry.getOrCreateSpiTable(Objects.requireNonNull(joinSpec.tableName()));
                         }

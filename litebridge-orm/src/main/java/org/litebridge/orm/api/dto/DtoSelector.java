@@ -1,24 +1,18 @@
 package org.litebridge.orm.api.dto;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
-import org.litebridge.orm.api.select.ast.LimitNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.QueryBindValueExtractor;
-import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.SelectSpecDtoMapper;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
@@ -28,7 +22,6 @@ import org.litebridge.tracking.FieldAccessor;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Selector for DTOs.
@@ -215,7 +208,7 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
     }
 
     private ExpressionSpec createSelectFieldSpec(final String field) {
-        final ColumnMetaData columnMetaData = ormTable.getColumnForFieldName(field);
+        final ColumnMetaData columnMetaData = ormTable.columnMetaDataForFieldName(field);
         final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(columnMetaData.name());
         return new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn());
     }

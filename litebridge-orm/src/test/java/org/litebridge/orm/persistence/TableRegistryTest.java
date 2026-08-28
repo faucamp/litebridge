@@ -65,7 +65,7 @@ class TableRegistryTest {
         tableRegistry.addTable(TestDto.class, ormTable);
 
         // When
-        final OrmTable result = tableRegistry.getTableOrThrow(TestDto.class);
+        final OrmTable result = tableRegistry.getOrmTableOrThrow(TestDto.class);
 
         // Then
         assertSame(ormTable, result);
@@ -77,7 +77,7 @@ class TableRegistryTest {
         final TableRegistry tableRegistry = new TableRegistry();
 
         // When/Then
-        assertThrows(NullPointerException.class, () -> tableRegistry.getTableOrThrow(TestDto.class));
+        assertThrows(NullPointerException.class, () -> tableRegistry.getOrmTableOrThrow(TestDto.class));
     }
 
     @Test

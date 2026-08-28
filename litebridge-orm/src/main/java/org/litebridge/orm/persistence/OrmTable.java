@@ -170,7 +170,7 @@ public class OrmTable {
      * @param fieldName the field name to retrieve the column metadata for
      * @return the column metadata for the specified field name, or null if not found
      */
-    public ColumnMetaData getColumnForFieldName(final String fieldName) {
+    public ColumnMetaData columnMetaDataForFieldName(final String fieldName) {
         final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, fieldName);
 
         if (fieldAccessor instanceof FieldAccessorChain fieldAccessorChain) {

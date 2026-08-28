@@ -254,7 +254,7 @@ public final class TableMapper {
         final OrmTable joinTable = ensureManyToManyJoinTable(manyToMany, lookup, manyToOneDependencies);
 
         final Class<?> targetDto = getJoinTargetDto(dtoClass, fieldAccessor);
-        final ConcurrentLazy<OrmTable> targetTable = new ConcurrentLazy<>(() -> tableRegistry.getTableOrThrow(targetDto));
+        final ConcurrentLazy<OrmTable> targetTable = new ConcurrentLazy<>(() -> tableRegistry.getOrmTableOrThrow(targetDto));
 
         final MappedManyToMany mappedManyToMany = new MappedManyToMany(
                 joinTable,

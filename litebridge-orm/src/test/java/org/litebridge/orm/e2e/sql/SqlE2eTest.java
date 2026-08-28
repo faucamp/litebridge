@@ -181,6 +181,7 @@ class SqlE2eTest extends AbstractE2eTest {
         final String age = tableMapper.transformColumnName("AGE");
         final String accountId = tableMapper.transformColumnName("ACCOUNT_ID");
         final String accountName = tableMapper.transformColumnName("ACCOUNT_NAME");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
         insertTestPersonRecords(personTableName);
         insertTestAccountRecords(accountTableName);
 
@@ -194,7 +195,7 @@ class SqlE2eTest extends AbstractE2eTest {
                                 c(accountTableName, accountId),
                                 c(accountTableName, accountName))
                         .from(personTableName)
-                        .join(accountTableName).using(tableMapper.transformColumnName("PERSON_ID"))
+                        .join(accountTableName).using(personId)
                         .list();
 
         // Then

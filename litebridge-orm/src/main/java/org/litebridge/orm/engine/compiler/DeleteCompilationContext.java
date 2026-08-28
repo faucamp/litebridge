@@ -27,7 +27,7 @@ public final class DeleteCompilationContext extends AbstractCompilationContext {
         super(litebridgeContext);
 
         if (deleteNode.dtoClass() != null) {
-            this.ormTable = litebridgeContext.tableRegistry().getTableOrThrow(deleteNode.dtoClass());
+            this.ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(deleteNode.dtoClass());
             this.table = ormTable.getMetaData().toTable();
         } else {
             this.ormTable = null;

@@ -5,7 +5,7 @@ import org.litebridge.orm.api.dto.condition.CbDtoConditionClauseTerminal;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.api.sql.condition.CbSqlConditionClauseTerminal;
-import org.litebridge.orm.engine.FromClauseEngine;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -19,11 +19,7 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
 
         permits CbDtoConditionClauseTerminal, CbSqlConditionClauseTerminal {
 
-    /**
-     * The engine used to process the FROM clause.
-     */
-    protected final FromClauseEngine fromClauseEngine;
-
+    protected final LitebridgeContext litebridgeContext;
     /**
      * The current query node in the AST.
      */
@@ -32,12 +28,11 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
     /**
      * Constructs a new {@code AbstractCbConditionClauseTerminal}.
      *
-     * @param fromClauseEngine The FROM clause engine.
-     * @param node             The current query node.
+     * @param node The current query node.
      */
-    public AbstractCbConditionClauseTerminal(final FromClauseEngine fromClauseEngine, final QueryNode node) {
-        this.fromClauseEngine = fromClauseEngine;
+    public AbstractCbConditionClauseTerminal(final QueryNode node, final LitebridgeContext litebridgeContext) {
         this.node = node;
+        this.litebridgeContext = litebridgeContext;
     }
 
     @Override

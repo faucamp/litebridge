@@ -9,8 +9,6 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.dto.DtoJoinSpec;
-import org.litebridge.orm.api.dto.DtoSelectSpec;
-import org.litebridge.orm.api.select.model.JoinSpec;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.persistence.DtoConstructor.FieldAccessorValue;
@@ -78,11 +76,16 @@ public class DtoMapper {
             return Collections.emptyList();
         }
 
-        final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
+
+        final OrmTable primaryOrmTable = tableRegistry.getOrmTableOrThrow(dtoClass);
+        final Table table = primaryOrmTable.getMetaData().toTable();
+        final Map<Table, OrmTable> ormTableMap = new HashMap<>();
+        ormTableMap.put(table, primaryOrmTable);
 
         final List<FieldColumn> fieldColumns = rows.getFirst().columnStream()
                 .map(rowColumn -> {
                     final Column column = rowColumn.column();
+                    final OrmTable ormTable = ormTableMap.computeIfAbsent(column.table(), tableRegistry::getOrmTableOrThrow);
                     final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(column.name());
                     return new FieldColumn(fieldAccessor, column);
                 })
@@ -102,7 +105,7 @@ public class DtoMapper {
                     .toList();
         }
 
-        this.mappingPlan = compileMappingPlan(dtoClass, ormTable, ormTable.getMetaData().toTable(), fieldColumns, null, rows.getFirst());
+        this.mappingPlan = compileMappingPlan(dtoClass, primaryOrmTable, table, fieldColumns, rows.getFirst());
 
         final List<PartiallyConstructedDto> rootDtos = new ArrayList<>(rows.size());
         final Set<List<Object>> seenRootPks = new HashSet<>();
@@ -141,7 +144,7 @@ public class DtoMapper {
                 .toList();
     }
 
-    private MappingPlan compileMappingPlan(final Class<?> dtoClass, final OrmTable ormTable, final Table table, final List<FieldColumn> fieldColumns, final @Nullable List<JoinSpec> joins, final Row referenceRow) {
+    private MappingPlan compileMappingPlan(final Class<?> dtoClass, final OrmTable ormTable, final Table table, final List<FieldColumn> fieldColumns, final Row referenceRow) {
         // Primary Key Indices and Types
         final List<ColumnMetaData> pkColumns = ormTable.getMetaData().primaryKey();
         final int[] pkIndices = new int[pkColumns.size()];
@@ -169,6 +172,7 @@ public class DtoMapper {
 
         // Group fields by their first accessor part for nested DTO handling
         final Map<FieldAccessor, List<FieldColumn>> groupedByRoot = new HashMap<>();
+
         for (final FieldColumn fc : fieldColumns) {
             final FieldAccessor accessor = fc.fieldAccessor();
 
@@ -181,6 +185,8 @@ public class DtoMapper {
                 groupedByRoot.computeIfAbsent(rootAccessor, k -> new ArrayList<>()).add(fc);
             }
         }
+
+        final Map<FieldAccessor, MappingPlan> joinPlans = new HashMap<>();
 
         for (final Map.Entry<FieldAccessor, List<FieldColumn>> entry : groupedByRoot.entrySet()) {
             final FieldAccessor accessor = entry.getKey();
@@ -206,16 +212,22 @@ public class DtoMapper {
                                 return fc;
                             })
                             .toList();
-                    nestedPlans.put(accessor, compileMappingPlan(fieldType, tableRegistry.getTableOrThrow(fieldType), table, shiftedFc, null, referenceRow));
+
+                    nestedPlans.put(accessor, compileMappingPlan(fieldType, tableRegistry.getOrmTableOrThrow(fieldType), table, shiftedFc, referenceRow));
                 }
             } else if (!ClassUtils.isBasicType(accessor.type())) {
                 isRelatedDto = true;
-                final ColumnMetaData columnMetaData = ormTable.getColumnForFieldName(accessor.name());
+                final ColumnMetaData columnMetaData = ormTable.columnMetaDataForFieldName(accessor.name());
 
                 if (columnMetaData.getJoinColumn() != null) {
                     final OrmTable relatedOrmTable = tableRegistry.getTableInContext(accessor.type(), dtoClass)
-                            .orElseGet(() -> tableRegistry.getTableOrThrow(accessor.type()));
+                            .orElseGet(() -> tableRegistry.getOrmTableOrThrow(accessor.type()));
                     relatedPkAccessor = relatedOrmTable.getFieldForColumnName(columnMetaData.getJoinColumn());
+
+                    if (!ormTable.equals(relatedOrmTable)) {
+                        final Class<?> joinDtoClass = relatedOrmTable.dtoClass();
+                        joinPlans.put(accessor, compileMappingPlan(joinDtoClass, relatedOrmTable, relatedOrmTable.getMetaData().toTable(), fieldColumns, referenceRow));
+                    }
                 }
             }
 
@@ -225,49 +237,48 @@ public class DtoMapper {
         }
 
         final DtoConstructor.MappingInfo mappingInfo = dtoConstructor.getMappingInfo(dtoClass);
-        final Map<DtoJoinSpec, MappingPlan> joinPlans = new HashMap<>();
 
-        if (joins != null) {
-            for (final JoinSpec join : joins) {
-                if (join instanceof DtoJoinSpec djs) {
-                    final Class<?> sourceClass;
-
-                    if (djs.sourceDtoClass() != null) {
-                        sourceClass = djs.sourceDtoClass();
-                    } else {
-                        sourceClass = dtoClass;
-                    }
-
-                    if (dtoClass.equals(sourceClass)) {
-                        joinPlans.put(djs, compileMappingPlan(djs.dtoClass(), djs.dtoTable(), djs.table(), null, null, referenceRow));
-                    }
-                }
-            }
-        }
+//        if (joins != null) {
+//            for (final JoinSpec join : joins) {
+//                if (join instanceof DtoJoinSpec djs) {
+//                    final Class<?> sourceClass;
+//
+//                    if (djs.sourceDtoClass() != null) {
+//                        sourceClass = djs.sourceDtoClass();
+//                    } else {
+//                        sourceClass = dtoClass;
+//                    }
+//
+//                    if (dtoClass.equals(sourceClass)) {
+//                        joinPlans.put(djs, compileMappingPlan(djs.dtoClass(), djs.dtoTable(), djs.table(), null, null, referenceRow));
+//                    }
+//                }
+//            }
+//        }
 
         final List<MappedOneToMany> requestedOneToMany = new ArrayList<>();
         final List<MappedManyToMany> requestedManyToMany = new ArrayList<>();
 
-        if (joins != null) {
-            for (final JoinSpec join : joins) {
-                if (join instanceof DtoJoinSpec djs && djs.collectionField() != null) {
-                    final Class<?> sourceClass;
-
-                    if (djs.sourceDtoClass() != null) {
-                        sourceClass = djs.sourceDtoClass();
-                    } else {
-                        sourceClass = dtoClass;
-                    }
-
-                    if (dtoClass.equals(sourceClass)) {
-                        ormTable.getOneToManyMappingForField(djs.collectionField())
-                                .ifPresent(requestedOneToMany::add);
-                        ormTable.getManyToManyMappingForField(djs.collectionField())
-                                .ifPresent(requestedManyToMany::add);
-                    }
-                }
-            }
-        }
+//        if (joins != null) {
+//            for (final JoinSpec join : joins) {
+//                if (join instanceof DtoJoinSpec djs && djs.collectionField() != null) {
+//                    final Class<?> sourceClass;
+//
+//                    if (djs.sourceDtoClass() != null) {
+//                        sourceClass = djs.sourceDtoClass();
+//                    } else {
+//                        sourceClass = dtoClass;
+//                    }
+//
+//                    if (dtoClass.equals(sourceClass)) {
+//                        ormTable.getOneToManyMappingForField(djs.collectionField())
+//                                .ifPresent(requestedOneToMany::add);
+//                        ormTable.getManyToManyMappingForField(djs.collectionField())
+//                                .ifPresent(requestedManyToMany::add);
+//                    }
+//                }
+//            }
+//        }
 
         return new MappingPlan(
                 dtoClass,
@@ -388,16 +399,17 @@ public class DtoMapper {
             dtoCache.put(pk, currentDto);
         }
 
-        for (final Map.Entry<DtoJoinSpec, MappingPlan> entry : plan.joinPlans().entrySet()) {
+        for (final Map.Entry<FieldAccessor, MappingPlan> entry : plan.joinPlans().entrySet()) {
             final PartiallyConstructedDto joinedDto = toDto(entry.getValue(), row, true);
 
             if (joinedDto != null) {
-                if (entry.getKey().collectionField() != null) {
-                    dtoCache.addLink(currentDto.dto(), entry.getKey().collectionField(), joinedDto.dto());
-                }
-                if (entry.getKey().reverseCollectionField() != null) {
-                    dtoCache.addLink(joinedDto.dto(), entry.getKey().reverseCollectionField(), currentDto.dto());
-                }
+//                if (entry.getKey().collectionField() != null) {
+//                    dtoCache.addLink(currentDto.dto(), entry.getKey().collectionField(), joinedDto.dto());
+//                }
+//                if (entry.getKey().reverseCollectionField() != null) {
+//                    dtoCache.addLink(joinedDto.dto(), entry.getKey().reverseCollectionField(), currentDto.dto());
+//                }
+                dtoCache.addLink(joinedDto.dto(), entry.getKey(), currentDto.dto());
             }
         }
 
@@ -417,7 +429,7 @@ public class DtoMapper {
 
             if (relatedDto == null && litebridgeContext.getRelatedDtoStrategy() == RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN) {
                 final Object partial = constructDto(dependency.targetDtoClass(), dependency.targetPrimaryKey(), dtoConstructor);
-                relatedDto = new PartiallyConstructedDto(partial, dependency.targetPrimaryKeyValue(), Collections.emptyList(), tableRegistry.getTableOrThrow(dependency.targetDtoClass()));
+                relatedDto = new PartiallyConstructedDto(partial, dependency.targetPrimaryKeyValue(), Collections.emptyList(), tableRegistry.getOrmTableOrThrow(dependency.targetDtoClass()));
                 dtoCache.put(relatedDto.primaryKey(), relatedDto);
             }
 
@@ -453,7 +465,7 @@ public class DtoMapper {
         final DtoConstructor.MappingInfo mappingInfo = dtoConstructor.getMappingInfo(dtoClass);
         final List<FieldAccessorValue> fieldValues = new ArrayList<>();
 
-        final OrmTable table = tableRegistry.getTableOrThrow(dtoClass);
+        final OrmTable table = tableRegistry.getOrmTableOrThrow(dtoClass);
         table.fieldAcessorStream().forEach(accessor -> {
             Object value = valueOverrides.get(accessor);
 

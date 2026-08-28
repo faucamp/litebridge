@@ -5,9 +5,12 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ast.ConditionWithIdNode;
+import org.litebridge.orm.api.select.ast.JoinNode;
 import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
+import org.litebridge.orm.api.sql.SqlJoinClause;
+import org.litebridge.orm.api.sql.SqlJoinConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -133,7 +136,11 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 //            delegate.withNode(joinNode);
 //            return new DtoJoinConditionClauseTerminal<>(joinNode, (DtoSelector<DTO>) delegate);
 //        });
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new DtoJoinClause<>(null, litebridgeContext, conditionNode -> {
+            final JoinNode joinNode = new JoinNode(node, "INNER", dtoClass, null);
+            joinNode.withCondition(conditionNode);
+            return new DtoJoinConditionClauseTerminal(joinNode, selectEngineTerminal, litebridgeContext);
+        });
     }
 
     @Override

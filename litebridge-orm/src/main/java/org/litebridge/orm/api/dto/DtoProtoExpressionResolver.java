@@ -109,7 +109,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     private Column getColumn(final Class<?> dtoClass, final String fieldName, Table table, final ClauseType clause) {
         // Map the input DTO field names to database column names
         if (selectSpec != null) {
-            final OrmTable ormTable = tableRegistry.getTableOrThrow(dtoClass);
+            final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
 
             if (ormTable.equals(selectSpec.dtoTable())) {
                 table = selectSpec.getTable();
@@ -124,7 +124,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
             }
         }
 
-        final ColumnMetaData columnMetaData = tableRegistry.getTableOrThrow(dtoClass).getColumnForFieldName(fieldName);
+        final ColumnMetaData columnMetaData = tableRegistry.getOrmTableOrThrow(dtoClass).columnMetaDataForFieldName(fieldName);
 
         if (clause == ClauseType.SELECT) {
             return aliasGenerator.aliasColumn(table, columnMetaData);

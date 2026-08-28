@@ -399,7 +399,7 @@ public class PersistenceFacade {
                         nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
                             final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                             final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
-                            final Column joinColumn = table.getColumnForFieldName(fieldAccessor.name()).toColumn();
+                            final Column joinColumn = table.columnMetaDataForFieldName(fieldAccessor.name()).toColumn();
 
                             if (statementBuilder instanceof UpdateBuilder updateBuilder) {
                                 updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
@@ -766,7 +766,7 @@ public class PersistenceFacade {
                     table = tableRegistry.getOrmTable(dtoClass);
                 } else {
                     // Root table registry - if not found, throw an exception
-                    table = tableRegistry.getTableOrThrow(dtoClass);
+                    table = tableRegistry.getOrmTableOrThrow(dtoClass);
                 }
 
                 if (table != null) {

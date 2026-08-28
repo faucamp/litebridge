@@ -27,7 +27,7 @@ class DtoConstructorTest {
         // Given
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final OrmTable ormTable = ormTable();
-        when(tableRegistry.getTableOrThrow(DefaultConstructorDto.class)).thenReturn(ormTable);
+        when(tableRegistry.getOrmTableOrThrow(DefaultConstructorDto.class)).thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
 
@@ -46,7 +46,7 @@ class DtoConstructorTest {
         // Given
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final OrmTable ormTable = ormTable();
-        when(tableRegistry.getTableOrThrow(DefaultConstructorDto.class)).thenReturn(ormTable);
+        when(tableRegistry.getOrmTableOrThrow(DefaultConstructorDto.class)).thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
 
@@ -55,7 +55,7 @@ class DtoConstructorTest {
         dtoConstructor.newInstance(DefaultConstructorDto.class, List.of());
 
         // Then
-        verify(tableRegistry).getTableOrThrow(DefaultConstructorDto.class);
+        verify(tableRegistry).getOrmTableOrThrow(DefaultConstructorDto.class);
     }
 
     @Test
@@ -66,7 +66,7 @@ class DtoConstructorTest {
         final OrmTable ormTable = ormTable(id, name);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        when(tableRegistry.getTableOrThrow(PojoCanonicalDto.class))
+        when(tableRegistry.getOrmTableOrThrow(PojoCanonicalDto.class))
                 .thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
@@ -97,7 +97,7 @@ class DtoConstructorTest {
                 new DtoConstructor.DtoDependency(dependency, DependencyDto.class, List.of(new DtoConstructor.FieldAccessorValue(id, 456L)));
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        when(tableRegistry.getTableOrThrow(PojoWithDependencyDto.class))
+        when(tableRegistry.getOrmTableOrThrow(PojoWithDependencyDto.class))
                 .thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
@@ -127,7 +127,7 @@ class DtoConstructorTest {
         final OrmTable ormTable = ormTable(id, name);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        when(tableRegistry.getTableOrThrow(RecordDto.class))
+        when(tableRegistry.getOrmTableOrThrow(RecordDto.class))
                 .thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
@@ -156,7 +156,7 @@ class DtoConstructorTest {
         final OrmTable relatedContextTable = ormTable();
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        when(tableRegistry.getTableOrThrow(ParentWithDefaultConstructorDto.class)).thenReturn(parentTable);
+        when(tableRegistry.getOrmTableOrThrow(ParentWithDefaultConstructorDto.class)).thenReturn(parentTable);
         when(tableRegistry.getTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class))
                 .thenReturn(Optional.of(relatedContextTable));
 
@@ -180,10 +180,10 @@ class DtoConstructorTest {
         final OrmTable relatedGlobalTable = ormTable();
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        when(tableRegistry.getTableOrThrow(ParentWithDefaultConstructorDto.class)).thenReturn(parentTable);
+        when(tableRegistry.getOrmTableOrThrow(ParentWithDefaultConstructorDto.class)).thenReturn(parentTable);
         when(tableRegistry.getTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class))
                 .thenReturn(Optional.empty());
-        when(tableRegistry.getTableOrThrow(DependencyDto.class)).thenReturn(relatedGlobalTable);
+        when(tableRegistry.getOrmTableOrThrow(DependencyDto.class)).thenReturn(relatedGlobalTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
 
@@ -191,7 +191,7 @@ class DtoConstructorTest {
         dtoConstructor.newInstance(ParentWithDefaultConstructorDto.class, List.of());
 
         // Then
-        verify(tableRegistry).getTableOrThrow(DependencyDto.class);
+        verify(tableRegistry).getOrmTableOrThrow(DependencyDto.class);
     }
 
     @Test
@@ -201,7 +201,7 @@ class DtoConstructorTest {
         final OrmTable ormTable = ormTable(id);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        when(tableRegistry.getTableOrThrow(NoSuitableConstructorDto.class))
+        when(tableRegistry.getOrmTableOrThrow(NoSuitableConstructorDto.class))
                 .thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
@@ -224,7 +224,7 @@ class DtoConstructorTest {
         final OrmTable ormTable = ormTable(firstName, lastName);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        when(tableRegistry.getTableOrThrow(DuplicateTypePojoDto.class))
+        when(tableRegistry.getOrmTableOrThrow(DuplicateTypePojoDto.class))
                 .thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
@@ -253,7 +253,7 @@ class DtoConstructorTest {
         final OrmTable ormTable = ormTable(different, name);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        when(tableRegistry.getTableOrThrow(RecordDto.class))
+        when(tableRegistry.getOrmTableOrThrow(RecordDto.class))
                 .thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
@@ -279,7 +279,7 @@ class DtoConstructorTest {
         final OrmTable ormTable = ormTable(id, name);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        when(tableRegistry.getTableOrThrow(RecordDto.class))
+        when(tableRegistry.getOrmTableOrThrow(RecordDto.class))
                 .thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
@@ -308,7 +308,7 @@ class DtoConstructorTest {
         final OrmTable ormTable = ormTable(id, name);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        when(tableRegistry.getTableOrThrow(RecordDto.class))
+        when(tableRegistry.getOrmTableOrThrow(RecordDto.class))
                 .thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
@@ -336,7 +336,7 @@ class DtoConstructorTest {
         final OrmTable ormTable = ormTable(id, active);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        when(tableRegistry.getTableOrThrow(PojoCanonicalDto.class))
+        when(tableRegistry.getOrmTableOrThrow(PojoCanonicalDto.class))
                 .thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
@@ -363,7 +363,7 @@ class DtoConstructorTest {
         final OrmTable ormTable = ormTable(id, name, active);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        when(tableRegistry.getTableOrThrow(PojoCanonicalDto.class))
+        when(tableRegistry.getOrmTableOrThrow(PojoCanonicalDto.class))
                 .thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);

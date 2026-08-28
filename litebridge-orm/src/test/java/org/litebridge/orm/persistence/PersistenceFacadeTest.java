@@ -27,7 +27,6 @@ import org.litebridge.orm.engine.compiler.QueryCompiler;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.expression.TestColumnExpression;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
-import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 
@@ -131,7 +130,7 @@ class PersistenceFacadeTest {
         final CustomerDto dto = new CustomerDto();
         dto.name = "test";
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
-        when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.insert(any(), any())).thenReturn(new org.litebridge.db.spi.update.InsertResult(1));
@@ -168,7 +167,7 @@ class PersistenceFacadeTest {
         // Simulate change
         dto.name = "changed";
 
-        when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.update(any(), any())).thenReturn(new UpdateResult(1));
 
@@ -199,7 +198,7 @@ class PersistenceFacadeTest {
         dto.id = 1L;
 
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
-        when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.delete(any(), any())).thenReturn(new UpdateResult(1));
 
@@ -225,7 +224,7 @@ class PersistenceFacadeTest {
         c2.name = "c2";
 
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
-        when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
@@ -257,7 +256,7 @@ class PersistenceFacadeTest {
         p2.relatedProduct = p1;
 
         final OrmTable table = createOrmTable(changeTracker, ProductDto.class, "products", Map.of("id", numeric("ID"), "name", varchar("NAME"), "relatedProduct", numeric("RELATED_ID")), List.of("ID"));
-        when(tableRegistry.getTableOrThrow(ProductDto.class)).thenReturn(table);
+        when(tableRegistry.getOrmTableOrThrow(ProductDto.class)).thenReturn(table);
         when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
 
         // When
@@ -281,7 +280,7 @@ class PersistenceFacadeTest {
         final PersonRecord person = new PersonRecord(null, "John");
 
         final OrmTable table = createOrmTable(changeTracker, PersonRecord.class, "persons", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
-        when(tableRegistry.getTableOrThrow(PersonRecord.class)).thenReturn(table);
+        when(tableRegistry.getOrmTableOrThrow(PersonRecord.class)).thenReturn(table);
         when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1, Map.of(table.getMetaData().column("ID"), 123L)));
 
         // When
@@ -307,7 +306,7 @@ class PersistenceFacadeTest {
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
         table.syncPersistedDto(dto); // Marks as persisted and takes snapshot
 
-        when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         setupMockSqlFunctions(databaseProvider);
 
@@ -335,7 +334,7 @@ class PersistenceFacadeTest {
         dto.name = "test";
 
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
-        when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1, Map.of(table.getMetaData().column("ID"), 1L)));
 
         final List<Runnable> rollbackCallbacks = new ArrayList<>();
@@ -376,8 +375,8 @@ class PersistenceFacadeTest {
         final OrmTable customerTable = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
         final OrmTable orderTable = createOrmTable(changeTracker, OrderDto.class, "orders", Map.of("id", numeric("ID"), "orderNo", varchar("ORDER_NO"), "customer", numeric("CUST_ID")), List.of("ID"));
 
-        when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(customerTable);
-        when(tableRegistry.getTableOrThrow(OrderDto.class)).thenReturn(orderTable);
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(customerTable);
+        when(tableRegistry.getOrmTableOrThrow(OrderDto.class)).thenReturn(orderTable);
 
         when(databaseProvider.insert(any(), any())).thenAnswer(invocation -> {
             final PreparedSql preparedSql = invocation.getArgument(0);
@@ -418,8 +417,8 @@ class PersistenceFacadeTest {
         final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products", Map.of("id", numeric("ID"), "name", varchar("NAME"), "category", numeric("CAT_ID")), List.of("ID"));
 
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        when(tableRegistry.getTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
-        when(tableRegistry.getTableOrThrow(ProductDto.class)).thenReturn(productTable);
+        when(tableRegistry.getOrmTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
+        when(tableRegistry.getOrmTableOrThrow(ProductDto.class)).thenReturn(productTable);
 
         when(databaseProvider.insert(any(), any())).thenAnswer(invocation -> {
             final PreparedSql preparedSql = invocation.getArgument(0);
@@ -475,8 +474,8 @@ class PersistenceFacadeTest {
 
         final OrmTable tagTable = createOrmTable(changeTracker, TagDto.class, "tags", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
 
-        when(tableRegistry.getTableOrThrow(ProductDto.class)).thenReturn(productTableWithM2M);
-        when(tableRegistry.getTableOrThrow(TagDto.class)).thenReturn(tagTable);
+        when(tableRegistry.getOrmTableOrThrow(ProductDto.class)).thenReturn(productTableWithM2M);
+        when(tableRegistry.getOrmTableOrThrow(TagDto.class)).thenReturn(tagTable);
 
         when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
         setupMockSqlFunctions(databaseProvider);
@@ -511,8 +510,8 @@ class PersistenceFacadeTest {
         final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products", Map.of("id", numeric("ID"), "name", varchar("NAME"), "category", numeric("CAT_ID")), List.of("ID"));
         productTable.addOneToManyReverseMapping(changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products"));
 
-        when(tableRegistry.getTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
-        when(tableRegistry.getTableOrThrow(ProductDto.class)).thenReturn(productTable);
+        when(tableRegistry.getOrmTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
+        when(tableRegistry.getOrmTableOrThrow(ProductDto.class)).thenReturn(productTable);
         when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
 
         // When
@@ -537,7 +536,7 @@ class PersistenceFacadeTest {
         dto.id = null;
 
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID")), List.of("ID"));
-        when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.delete(any(), any())).thenReturn(new UpdateResult(1));
 
@@ -564,7 +563,7 @@ class PersistenceFacadeTest {
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
         table.syncPersistedDto(dto);
 
-        when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         setupMockSqlFunctions(databaseProvider);
 
@@ -589,7 +588,7 @@ class PersistenceFacadeTest {
         dto.name = "test";
 
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"), Set.of("ID"));
-        when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
@@ -621,7 +620,7 @@ class PersistenceFacadeTest {
         dto.id = 1L;
         dto.name = "test";
 
-        when(tableRegistry.getTableOrThrow(CustomerDto.class)).thenReturn(table);
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
@@ -654,8 +653,8 @@ class PersistenceFacadeTest {
         final OrmTable categoryTable = createOrmTable(changeTracker, CategoryDto.class, "categories", Map.of("id", numeric("ID"), "name", varchar("NAME"), "products", new MappedOneToMany(null, changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products"))), List.of("ID"));
         final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products", Map.of("id", numeric("ID"), "name", varchar("NAME"), "category", numeric("CAT_ID")), List.of("ID"));
 
-        when(tableRegistry.getTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
-        when(tableRegistry.getTableOrThrow(ProductDto.class)).thenReturn(productTable);
+        when(tableRegistry.getOrmTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
+        when(tableRegistry.getOrmTableOrThrow(ProductDto.class)).thenReturn(productTable);
 
         when(databaseProvider.insert(any(), any())).thenAnswer(invocation -> {
             final PreparedSql preparedSql = invocation.getArgument(0);

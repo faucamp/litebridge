@@ -57,4 +57,8 @@ public final class SqlUpdateStep extends UpdateStepBase
                 expression,
                 node -> new SqlUpdateWhereConditionClauseTerminalImpl(tableName, new WhereNode(this.node, node), litebridgeContext));
     }
+
+    QueryNode node() {
+        return node;
+    }
 }

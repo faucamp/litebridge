@@ -38,7 +38,7 @@ public class InsertEngine extends AbstractInsertEngine {
         final DtoInsertIntoStep insertIntoStep = new DtoInsertIntoStep(dtoClass, litebridgeContext);
         final InsertValuesStep insertValuesStep = insert.apply(insertIntoStep);
         final QueryNode node = InsertValuesStepInspector.getNode(insertValuesStep);
-        return execute(node, litebridgeContext, () -> tableRegistry.getTableOrThrow(dtoClass).getMetaData().toTable());
+        return execute(node, litebridgeContext, () -> tableRegistry.getOrmTableOrThrow(dtoClass).getMetaData().toTable());
     }
 
     public InsertResult insert(final String tableName,

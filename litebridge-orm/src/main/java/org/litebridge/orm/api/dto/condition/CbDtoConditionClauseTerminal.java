@@ -1,15 +1,13 @@
 package org.litebridge.orm.api.dto.condition;
 
-import org.litebridge.db.spi.Column;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ast.ConditionGroupNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.engine.FromClauseEngine;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.persistence.OrmTable;
 
 /**
  * Implementation of a terminal condition clause for DTO-based queries.
@@ -18,42 +16,39 @@ import org.litebridge.orm.persistence.OrmTable;
  */
 public final class CbDtoConditionClauseTerminal<DTO> extends AbstractCbConditionClauseTerminal<DTO> {
 
-    private final OrmTable ormTable;
-
     /**
      * Constructs a new {@code CbDtoConditionClauseTerminal}.
      *
-     * @param ormTable         The ORM table metadata.
-     * @param fromClauseEngine The FROM clause engine.
-     * @param node             The current query node.
+     * @param node The current query node.
      */
-    public CbDtoConditionClauseTerminal(final OrmTable ormTable, final FromClauseEngine fromClauseEngine, final QueryNode node) {
-        super(fromClauseEngine, node);
-        this.ormTable = ormTable;
+    public CbDtoConditionClauseTerminal(final QueryNode node,
+                                        final LitebridgeContext litebridgeContext) {
+        super(node, litebridgeContext);
     }
-
 
     @Override
     protected CbDtoConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final String field) {
-        final Column column = ormTable.getColumnForFieldName(field).toColumn();
-        return whereImpl(logicOperator, new SelectColumnSpec(column));
+        return whereImpl(logicOperator, field, null);
     }
 
     @Override
     protected CbDtoConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        return new CbDtoConditionClause<>(ormTable,
-                fromClauseEngine,
-                logicOperator,
-                null,
-                expression,
-                node,
-                conditionNode -> new CbDtoConditionClauseTerminal<>(ormTable, fromClauseEngine, conditionNode));
+        return whereImpl(logicOperator, null, expression);
     }
 
     @Override
     protected AbstractCbConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, fromClauseEngine, null);
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
         final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
-        return new CbDtoConditionClauseTerminal<>(ormTable, fromClauseEngine, new ConditionGroupNode(node, logicOperator, terminal.node()));
+        return new CbDtoConditionClauseTerminal<>(new ConditionGroupNode(node, logicOperator, terminal.node()), litebridgeContext);
+    }
+
+    private CbDtoConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final @Nullable String field, final @Nullable ExpressionSpec expression) {
+        return new CbDtoConditionClause<>(litebridgeContext,
+                logicOperator,
+                field,
+                expression,
+                node,
+                conditionNode -> new CbDtoConditionClauseTerminal<>(conditionNode, litebridgeContext));
     }
 }
