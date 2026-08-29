@@ -12,7 +12,7 @@ final class ConditionNodeUtil {
     private ConditionNodeUtil() {
     }
 
-    public static Object valueStructuralKey(final @Nullable Object value) {
+    static Object valueStructuralKey(final @Nullable Object value) {
         return switch (value) {
             case Collection<?> collection -> collection.size();
             case QueryNode queryNode -> queryNode;
