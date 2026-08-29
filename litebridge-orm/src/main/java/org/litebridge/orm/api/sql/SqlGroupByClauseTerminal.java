@@ -2,20 +2,19 @@ package org.litebridge.orm.api.sql;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.engine.ast.GroupByNode;
-import org.litebridge.orm.engine.ast.HavingNode;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractGroupByClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.GroupByNode;
+import org.litebridge.orm.engine.ast.HavingNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
         SqlOrderByClause,
-        SqlOrderByClauseChain,
-        SqlSelectSpec> {
+        SqlOrderByClauseChain> {
 
     public SqlGroupByClauseTerminal(final ExpressionSpec[] expressions,
                                     final QueryNode node,

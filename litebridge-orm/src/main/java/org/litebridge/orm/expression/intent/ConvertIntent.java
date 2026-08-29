@@ -1,6 +1,5 @@
 package org.litebridge.orm.expression.intent;
 
-import org.litebridge.orm.expression.ExpressionModifier;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverride;
 
@@ -19,9 +18,5 @@ import org.litebridge.orm.expression.TypeOverride;
  * @param returnType The target class type for conversion.
  */
 public record ConvertIntent<T>(ExpressionSpec[] target, Class<T> returnType)
-        implements ExpressionModifier, TypeOverride<T> {
-
-    public ExpressionSpecArray toExpression() {
-        return new ExpressionSpecArray(target);
-    }
+        implements TypeOverride<T> {
 }

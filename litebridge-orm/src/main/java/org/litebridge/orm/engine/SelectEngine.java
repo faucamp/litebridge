@@ -4,10 +4,10 @@ import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.select.FromClauseStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridge.orm.engine.ast.SelectNode;
-import org.litebridge.orm.expression.ExpressionModifier;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverride;
 import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
+import org.litebridge.orm.expression.intent.ConvertIntent;
 import org.litebridge.orm.persistence.DtoConstructor;
 
 import java.util.function.Function;
@@ -46,10 +46,10 @@ public class SelectEngine {
     }
 
     public <T> FromClauseStartTypeOverride<T> select(final TypeOverride<T> expression, final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
-        final ExpressionSpec[] expressionSpecs = {switch (expression) {
-            case TypeOverrideExpressionSpec<?> typeOverrideExpression -> typeOverrideExpression;
-            case ExpressionModifier expressionModifier -> expressionModifier.toExpression();
-        }};
+        final ExpressionSpec[] expressionSpecs = switch (expression) {
+            case TypeOverrideExpressionSpec<T> typeOverride -> new ExpressionSpec[]{typeOverride};
+            case ConvertIntent<T> convertIntent -> convertIntent.target();
+        };
 
         return new FromClauseStartTypeOverride<>(expression.returnType(), expressionSpecs, selectEngineTerminal, litebridgeContextCreator);
     }

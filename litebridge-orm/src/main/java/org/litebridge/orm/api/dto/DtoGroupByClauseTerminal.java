@@ -1,11 +1,12 @@
 package org.litebridge.orm.api.dto;
 
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.engine.ast.HavingNode;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractGroupByClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.GroupByNode;
+import org.litebridge.orm.engine.ast.HavingNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -17,21 +18,20 @@ public final class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTe
         DtoHavingConditionClause<DTO>,
         DtoHavingConditionClauseTerminal<DTO>,
         DtoOrderByClause<DTO>,
-        DtoOrderByClauseChain<DTO>,
-        DtoSelectSpec> {
+        DtoOrderByClauseChain<DTO>> {
 
     public DtoGroupByClauseTerminal(final ExpressionSpec[] expressions,
                                     final QueryNode node,
                                     final SelectEngineTerminal selectEngineTerminal,
                                     final LitebridgeContext litebridgeContext) {
-        super(expressions, node, selectEngineTerminal, litebridgeContext);
+        super(expressions, new GroupByNode(node, null, expressions), selectEngineTerminal, litebridgeContext);
     }
 
-    public DtoGroupByClauseTerminal(final String[] columns,
+    public DtoGroupByClauseTerminal(final String[] fields,
                                     final QueryNode node,
                                     final SelectEngineTerminal selectEngineTerminal,
                                     final LitebridgeContext litebridgeContext) {
-        super(columns, node, selectEngineTerminal, litebridgeContext);
+        super(fields, new GroupByNode(node, fields, null), selectEngineTerminal, litebridgeContext);
     }
 
     @Override

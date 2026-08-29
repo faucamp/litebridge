@@ -90,26 +90,44 @@ public class SelectEngineTerminal {
     }
 
     public <DTO> List<DTO> fetchList(final QueryNode node, final LitebridgeContext litebridgeContext) {
+        final TypeConverter typeConverter = litebridgeContext.typeConverter();
         final List<Row> rows = execute(node, litebridgeContext);
         final SelectNode selectNode = findSelectNode(node);
 
         if (selectNode.dtoClass() != null) {
-            final Class<DTO> dtoClass = (Class<DTO>) selectNode.dtoClass();
+            final Class<DTO> dtoClass;
+
+            if (!CollectionUtils.isEmpty(selectNode.resultTypes())) {
+                if (selectNode.resultTypes().length == 1
+                        && selectNode.resultTypes()[0] != selectNode.dtoClass()) {
+                    // Single type override
+                    dtoClass = (Class<DTO>) selectNode.resultTypes()[0];
+                } else {
+                    dtoClass = null;
+                }
+            } else {
+                dtoClass = (Class<DTO>) selectNode.dtoClass();
+            }
+
             final OrmTable ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(selectNode.dtoClass());
 
             if (dtoClass == ormTable.dtoClass()
                     || ormTable.getDtoClassInterfaces().contains(dtoClass)) {
                 // Selecting the actual DTO
                 return mapDtos(dtoClass, rows, ormTable, litebridgeContext);
-            } else {
+            } else if (dtoClass != null) {
+                // Single type override
                 return unwrap(dtoClass, rows, litebridgeContext.typeConverter());
+            } else {
+                // Multipe type overrides
+                return (List<DTO>) rows.stream()
+                        .map(row -> convertRowValue(row, selectNode.resultTypes(), typeConverter))
+                        .toList();
             }
         } else {
             final List<Row> resultRows;
 
             if (selectNode.resultTypes() != null) {
-                final TypeConverter typeConverter = litebridgeContext.typeConverter();
-
                 resultRows = rows.stream()
                         .map(row -> convertRowValue(row, selectNode.resultTypes(), typeConverter))
                         .toList();
@@ -144,22 +162,18 @@ public class SelectEngineTerminal {
 
     @SuppressWarnings("unchecked")
     private <T> List<T> unwrap(final Class<T> type, final List<Row> rows, final TypeConverter typeConverter) {
-        if (type == Row.class) {
+        if (type == Row.class || rows.size() != 1) {
             return (List<T>) rows;
         }
 
         return rows.stream()
-                .map(row -> unwrap(type, row, typeConverter))
+                .map(row -> unwrap(type, row.column(0), typeConverter))
                 .toList();
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T unwrap(final Class<T> type, final Row row, final TypeConverter typeConverter) {
-        if (type == Row.class || row.size() != 1) {
-            return (T) row;
-        }
-
-        final Object converted = typeConverter.convert(row.column(0).value(), type);
+    private <T> T unwrap(final Class<T> type, final Row.RowColumn rowColumn, final TypeConverter typeConverter) {
+        final Object converted = typeConverter.convert(rowColumn.value(), type);
         return (T) converted;
     }
 

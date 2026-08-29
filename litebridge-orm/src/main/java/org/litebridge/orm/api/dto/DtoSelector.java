@@ -75,9 +75,10 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
 
     @Override
     protected DtoSelectSpec createSelectSpec(final AliasGenerator aliasGenerator) {
-        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, aliasGenerator, litebridgeContext);
-        selectSpec.setProtoExpressionResolver(new DtoProtoExpressionResolver(selectSpec, aliasGenerator, classFieldAccessorCache, tableRegistry));
-        return selectSpec;
+//        final DtoSelectSpec selectSpec = new DtoSelectSpec(dtoClass, ormTable, aliasGenerator, litebridgeContext);
+//        selectSpec.setProtoExpressionResolver(new DtoProtoExpressionResolver(selectSpec, aliasGenerator, classFieldAccessorCache, tableRegistry));
+//        return selectSpec;
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     /**
@@ -234,20 +235,20 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
         throw new UnsupportedOperationException("Deprecated");
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> List<T> unwrap(final Class<T> type, final List<Row> rows) {
-        if (type == Row.class) {
-            return (List<T>) rows;
-        }
-
-        final TypeConverter typeConverter = databaseProvider.getTypeConverter();
-        return (List<T>) rows.stream()
-                .map(row -> {
-                    if (row.size() == 0) return null;
-                    final Object converted = typeConverter.convert(row.column(0).value(), type);
-                    return converted;
-                })
-                .filter(Objects::nonNull)
-                .toList();
-    }
+//    @SuppressWarnings("unchecked")
+//    private <T> List<T> unwrap(final Class<T> type, final List<Row> rows) {
+//        if (type == Row.class) {
+//            return (List<T>) rows;
+//        }
+//
+//        final TypeConverter typeConverter = databaseProvider.getTypeConverter();
+//        return (List<T>) rows.stream()
+//                .map(row -> {
+//                    if (row.size() == 0) return null;
+//                    final Object converted = typeConverter.convert(row.column(0).value(), type);
+//                    return converted;
+//                })
+//                .filter(Objects::nonNull)
+//                .toList();
+//    }
 }
