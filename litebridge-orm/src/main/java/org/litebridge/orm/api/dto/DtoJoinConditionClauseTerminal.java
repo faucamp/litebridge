@@ -118,7 +118,11 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 //            delegate.withNode(joinNode);
 //            return new DtoJoinConditionClauseTerminal<>(joinNode, (DtoSelector<DTO>) delegate);
 //        });
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new DtoJoinClause<>(null, litebridgeContext, conditionNode -> {
+            final JoinNode joinNode = new JoinNode(node, "INNER", dtoClass, null);
+            joinNode.withCondition(conditionNode);
+            return new DtoJoinConditionClauseTerminal(joinNode, selectEngineTerminal, litebridgeContext);
+        });
     }
 
     @Override
