@@ -1,4 +1,4 @@
-package org.litebridge.orm.api.select.ast;
+package org.litebridge.orm.engine.ast;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
@@ -6,7 +6,7 @@ import org.litebridge.db.spi.query.Operator;
 
 import java.util.Objects;
 
-import static org.litebridge.orm.api.select.ast.ConditionNodeUtil.valueStructuralKey;
+import static org.litebridge.orm.engine.ast.ConditionNodeUtil.valueStructuralKey;
 
 public record ConditionWithIdNode(@Nullable QueryNode previous,
                                   LogicOperator logicOperator,

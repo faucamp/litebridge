@@ -2,7 +2,7 @@ package org.litebridge.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 
 /**
  * Utility class for inspecting {@link SelectTerminal} instances.

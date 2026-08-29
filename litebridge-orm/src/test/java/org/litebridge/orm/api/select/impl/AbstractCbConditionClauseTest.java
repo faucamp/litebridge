@@ -9,8 +9,8 @@
 //import org.litebridge.orm.api.condition.AbstractCbConditionClause;
 //import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 //import org.litebridge.orm.api.select.SelectTerminal;
-//import org.litebridge.orm.api.select.ast.ConditionNode;
-//import org.litebridge.orm.api.select.ast.QueryNode;
+//import org.litebridge.orm.engine.ast.ConditionNode;
+//import org.litebridge.orm.engine.ast.QueryNode;
 //import org.litebridge.orm.engine.FromClauseEngine;
 //import org.litebridge.orm.engine.SelectEngine;
 //import org.litebridge.orm.expression.ExpressionSpec;

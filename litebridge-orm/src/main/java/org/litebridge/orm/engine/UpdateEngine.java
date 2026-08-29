@@ -6,7 +6,7 @@ import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.update.DtoUpdateStart;
 import org.litebridge.orm.api.update.SqlUpdateStart;
 import org.litebridge.orm.api.update.UpdateQuery;

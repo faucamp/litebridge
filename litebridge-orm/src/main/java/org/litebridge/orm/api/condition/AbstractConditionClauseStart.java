@@ -1,7 +1,7 @@
 package org.litebridge.orm.api.condition;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 

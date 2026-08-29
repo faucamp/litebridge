@@ -13,7 +13,7 @@ import org.litebridge.orm.api.insert.DtoInsertIntoStep;
 import org.litebridge.orm.api.insert.InsertValuesStep;
 import org.litebridge.orm.api.insert.InsertValuesStepInspector;
 import org.litebridge.orm.api.insert.SqlInsertIntoStep;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

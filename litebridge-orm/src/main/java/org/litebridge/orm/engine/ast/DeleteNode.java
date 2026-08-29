@@ -1,15 +1,14 @@
-package org.litebridge.orm.api.select.ast;
+package org.litebridge.orm.engine.ast;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Table;
 
 /**
- * Represents an UPDATE statement in the query AST.
+ * Represents a DELETE statement in the query AST.
  *
  * @param previous the previous node in the chain
- * @param table    the table to update
+ * @param table    the table to delete from
  */
-public record UpdateNode(@Nullable QueryNode previous,
+public record DeleteNode(@Nullable QueryNode previous,
                          @Nullable String table,
                          @Nullable Class<?> dtoClass) implements QueryNode {
 }

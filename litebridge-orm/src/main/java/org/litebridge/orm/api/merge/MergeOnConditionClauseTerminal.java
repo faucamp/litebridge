@@ -2,8 +2,8 @@ package org.litebridge.orm.api.merge;
 
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
-import org.litebridge.orm.api.select.ast.MergeNode;
-import org.litebridge.orm.api.select.ast.UsingNode;
+import org.litebridge.orm.engine.ast.MergeNode;
+import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 

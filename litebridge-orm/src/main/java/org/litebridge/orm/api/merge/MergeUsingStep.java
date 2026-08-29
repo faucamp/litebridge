@@ -1,9 +1,8 @@
 package org.litebridge.orm.api.merge;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.ast.MergeNode;
+import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngine;
 

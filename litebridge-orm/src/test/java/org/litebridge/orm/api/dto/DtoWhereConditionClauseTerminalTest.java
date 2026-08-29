@@ -4,8 +4,8 @@
 //import org.litebridge.db.spi.Table;
 //import org.litebridge.db.spi.TableMetaData;
 //import org.litebridge.orm.api.dto.condition.CbDtoConditionClauseTerminal;
-//import org.litebridge.orm.api.select.ast.ConditionGroupNode;
-//import org.litebridge.orm.api.select.ast.WhereNode;
+//import org.litebridge.orm.engine.ast.ConditionGroupNode;
+//import org.litebridge.orm.engine.ast.WhereNode;
 //import org.litebridge.orm.api.select.impl.DelegatingSelectorInspector;
 //import org.litebridge.orm.engine.LitebridgeContext;
 //import org.litebridge.orm.persistence.DtoConstructor;

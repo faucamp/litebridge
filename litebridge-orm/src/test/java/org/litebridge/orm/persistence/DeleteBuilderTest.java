@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.update.Delete;
-import org.litebridge.orm.api.select.ast.DeleteNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.DeleteNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.compiler.QueryCompiler;
 

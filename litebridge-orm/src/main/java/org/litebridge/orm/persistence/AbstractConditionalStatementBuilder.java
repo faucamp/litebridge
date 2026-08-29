@@ -1,7 +1,7 @@
 package org.litebridge.orm.persistence;
 
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.WhereNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
 /**

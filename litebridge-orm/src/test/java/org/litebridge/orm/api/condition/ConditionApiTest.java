@@ -3,8 +3,8 @@
 //import org.junit.jupiter.api.Test;
 //import org.litebridge.db.spi.query.LogicOperator;
 //import org.litebridge.db.spi.query.Operator;
-//import org.litebridge.orm.api.select.ast.ConditionNode;
-//import org.litebridge.orm.api.select.ast.QueryNode;
+//import org.litebridge.orm.engine.ast.ConditionNode;
+//import org.litebridge.orm.engine.ast.QueryNode;
 //import org.litebridge.orm.engine.FromClauseEngine;
 //import org.litebridge.orm.expression.ExpressionSpec;
 //

@@ -1,7 +1,7 @@
 package org.litebridge.orm.api.update;
 
 import org.litebridge.db.spi.Row;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;

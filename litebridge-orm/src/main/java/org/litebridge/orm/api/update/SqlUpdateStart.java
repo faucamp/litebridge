@@ -1,7 +1,7 @@
 package org.litebridge.orm.api.update;
 
 import org.litebridge.db.spi.Row;
-import org.litebridge.orm.api.select.ast.UpdateNode;
+import org.litebridge.orm.engine.ast.UpdateNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 

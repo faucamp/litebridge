@@ -1,12 +1,9 @@
 package org.litebridge.orm.api.sql;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
-import org.litebridge.orm.api.select.ast.LimitNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.SelectNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -15,7 +12,6 @@ import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 
 import java.util.List;
-import java.util.Optional;
 
 @Deprecated(forRemoval = true)
 public final class SqlSelector extends AbstractSelector<Row, SqlSelectSpec> {

@@ -2,17 +2,15 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.PreparedOperation;
-import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Insert;
-import org.litebridge.orm.api.select.ast.InsertNode;
-import org.litebridge.orm.api.select.ast.InsertValuesNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.InsertNode;
+import org.litebridge.orm.engine.ast.InsertValuesNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A builder class for constructing SQL INSERT statements.

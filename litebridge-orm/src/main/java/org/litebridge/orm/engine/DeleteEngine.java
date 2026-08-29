@@ -10,7 +10,7 @@ import org.litebridge.orm.api.delete.DeleteTerminal;
 import org.litebridge.orm.api.delete.DeleteTerminalInspector;
 import org.litebridge.orm.api.delete.DtoDeleteStart;
 import org.litebridge.orm.api.delete.SqlDeleteStart;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

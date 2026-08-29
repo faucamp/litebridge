@@ -3,7 +3,7 @@ package org.litebridge.orm.api.sql;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
 import org.litebridge.orm.engine.LitebridgeContext;
 

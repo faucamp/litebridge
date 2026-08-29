@@ -1,8 +1,8 @@
 //package org.litebridge.orm.engine;
 //
 //import org.junit.jupiter.api.Test;
-//import org.litebridge.orm.api.select.ast.QueryNode;
-//import org.litebridge.orm.api.select.ast.SelectNode;
+//import org.litebridge.orm.engine.ast.QueryNode;
+//import org.litebridge.orm.engine.ast.SelectNode;
 //import org.litebridge.orm.expression.ExpressionSpec;
 //
 //import java.util.Collections;

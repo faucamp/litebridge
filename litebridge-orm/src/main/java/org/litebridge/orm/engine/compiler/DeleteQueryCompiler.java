@@ -1,10 +1,10 @@
 package org.litebridge.orm.engine.compiler;
 
-import org.litebridge.orm.api.select.ast.ConditionGroupNode;
-import org.litebridge.orm.api.select.ast.ConditionNode;
-import org.litebridge.orm.api.select.ast.DeleteNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.WhereNode;
+import org.litebridge.orm.engine.ast.ConditionGroupNode;
+import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.DeleteNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
 final class DeleteQueryCompiler extends AbstractQueryCompiler<DeleteCompilationContext> {

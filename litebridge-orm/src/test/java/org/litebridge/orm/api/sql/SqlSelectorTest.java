@@ -4,7 +4,7 @@
 //import org.junit.jupiter.api.Test;
 //import org.junit.jupiter.api.extension.ExtendWith;
 //import org.litebridge.db.spi.Table;
-//import org.litebridge.orm.api.select.ast.SelectNode;
+//import org.litebridge.orm.engine.ast.SelectNode;
 //import org.litebridge.orm.config.LitebridgeConfig;
 //import org.litebridge.orm.engine.FromClauseEngine;
 //import org.litebridge.orm.engine.LitebridgeContext;

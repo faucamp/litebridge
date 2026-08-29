@@ -1,12 +1,11 @@
 package org.litebridge.orm.api.merge;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Table;
-import org.litebridge.orm.api.select.ast.DeleteNode;
-import org.litebridge.orm.api.select.ast.MergeNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.SetNode;
-import org.litebridge.orm.api.select.ast.WhenMatchedNode;
+import org.litebridge.orm.engine.ast.DeleteNode;
+import org.litebridge.orm.engine.ast.MergeNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SetNode;
+import org.litebridge.orm.engine.ast.WhenMatchedNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
 import java.util.function.Function;

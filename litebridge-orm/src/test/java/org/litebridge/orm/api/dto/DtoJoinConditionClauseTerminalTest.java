@@ -8,7 +8,7 @@
 //import org.litebridge.db.spi.Table;
 //import org.litebridge.db.spi.TableMetaData;
 //import org.litebridge.db.spi.alias.DefaultAliasTransformer;
-//import org.litebridge.orm.api.select.ast.JoinNode;
+//import org.litebridge.orm.engine.ast.JoinNode;
 //import org.litebridge.orm.engine.LitebridgeContext;
 //import org.litebridge.orm.expression.select.SelectColumnSpec;
 //import org.litebridge.orm.persistence.DtoConstructor;

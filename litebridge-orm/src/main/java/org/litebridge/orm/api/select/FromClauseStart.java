@@ -2,16 +2,13 @@ package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
-import org.litebridge.orm.api.select.ast.SelectNode;
+import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.api.sql.SqlFromClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
-import org.litebridge.orm.expression.ExpressionModifier;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 
 /**

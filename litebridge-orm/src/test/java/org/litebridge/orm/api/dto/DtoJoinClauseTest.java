@@ -85,7 +85,7 @@
 //        selector.select(new SelectFieldSpec(mock(FieldAccessor.class), leftColumn));
 //
 //        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(selector, joinTable, conditionNode -> {
-//            final org.litebridge.orm.api.select.ast.JoinNode joinNode = new org.litebridge.orm.api.select.ast.JoinNode(selector.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+//            final org.litebridge.orm.engine.ast.JoinNode joinNode = new org.litebridge.orm.engine.ast.JoinNode(selector.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
 //            joinNode.withCondition(conditionNode);
 //            selector.withNode(joinNode);
 //            return new DtoJoinConditionClauseTerminal<>(joinNode, selector);
@@ -152,7 +152,7 @@
 //        selector.select(new SelectFieldSpec(mock(FieldAccessor.class), leftColumn));
 //
 //        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(selector, joinTable, conditionNode -> {
-//            final org.litebridge.orm.api.select.ast.JoinNode joinNode = new org.litebridge.orm.api.select.ast.JoinNode(selector.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+//            final org.litebridge.orm.engine.ast.JoinNode joinNode = new org.litebridge.orm.engine.ast.JoinNode(selector.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
 //            joinNode.withCondition(conditionNode);
 //            selector.withNode(joinNode);
 //            return new DtoJoinConditionClauseTerminal<>(joinNode, selector);
@@ -208,7 +208,7 @@
 //        selector.select(new SelectFieldSpec(mock(FieldAccessor.class), leftColumn));
 //
 //        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(selector, joinTable, conditionNode -> {
-//            final org.litebridge.orm.api.select.ast.JoinNode joinNode = new org.litebridge.orm.api.select.ast.JoinNode(selector.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+//            final org.litebridge.orm.engine.ast.JoinNode joinNode = new org.litebridge.orm.engine.ast.JoinNode(selector.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
 //            joinNode.withCondition(conditionNode);
 //            selector.withNode(joinNode);
 //            return new DtoJoinConditionClauseTerminal<>(joinNode, selector);

@@ -13,7 +13,7 @@ import org.litebridge.orm.api.merge.DtoMergeUsingStep;
 import org.litebridge.orm.api.merge.MergeTerminal;
 import org.litebridge.orm.api.merge.MergeTerminalInspector;
 import org.litebridge.orm.api.merge.SqlMergeUsingStep;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

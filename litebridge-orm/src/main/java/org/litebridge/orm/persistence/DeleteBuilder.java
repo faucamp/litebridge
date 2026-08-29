@@ -1,7 +1,7 @@
 package org.litebridge.orm.persistence;
 
 import org.litebridge.db.spi.PreparedOperation;
-import org.litebridge.orm.api.select.ast.DeleteNode;
+import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
 /**

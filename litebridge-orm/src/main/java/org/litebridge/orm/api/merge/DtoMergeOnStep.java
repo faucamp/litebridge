@@ -1,7 +1,7 @@
 package org.litebridge.orm.api.merge;
 
 import org.litebridge.db.spi.Column;
-import org.litebridge.orm.api.select.ast.MergeNode;
+import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.tracking.FieldAccessor;

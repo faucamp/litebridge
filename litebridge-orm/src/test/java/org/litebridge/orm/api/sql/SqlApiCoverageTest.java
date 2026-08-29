@@ -4,9 +4,9 @@
 //import org.litebridge.db.spi.Column;
 //import org.litebridge.db.spi.Table;
 //import org.litebridge.db.spi.query.LogicOperator;
-//import org.litebridge.orm.api.select.ast.JoinNode;
-//import org.litebridge.orm.api.select.ast.QueryNode;
-//import org.litebridge.orm.api.select.ast.SelectNode;
+//import org.litebridge.orm.engine.ast.JoinNode;
+//import org.litebridge.orm.engine.ast.QueryNode;
+//import org.litebridge.orm.engine.ast.SelectNode;
 //import org.litebridge.orm.engine.LitebridgeContext;
 //import org.litebridge.orm.expression.ExpressionSpec;
 //import org.litebridge.orm.expression.select.SelectColumnSpec;

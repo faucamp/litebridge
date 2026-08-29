@@ -4,7 +4,7 @@ import org.litebridge.orm.api.dto.DtoHavingConditionClauseTerminal;
 import org.litebridge.orm.api.select.HavingClauseTerminal;
 import org.litebridge.orm.api.select.OrderByClause;
 import org.litebridge.orm.api.select.OrderByClauseChain;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.api.sql.SqlHavingConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;

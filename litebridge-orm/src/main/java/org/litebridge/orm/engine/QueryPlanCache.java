@@ -6,8 +6,7 @@ import org.litebridge.db.spi.query.TypeConversionMetaData;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.engine.ast.QueryNode;
 
 import java.util.ArrayList;
 import java.util.List;

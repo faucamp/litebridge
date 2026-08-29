@@ -1,11 +1,10 @@
 package org.litebridge.orm.api.merge;
 
-import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.insert.InsertValuesStep;
 import org.litebridge.orm.api.insert.InsertValuesStepInspector;
-import org.litebridge.orm.api.select.ast.InsertValuesNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.WhenNotMatchedNode;
+import org.litebridge.orm.engine.ast.InsertValuesNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.WhenNotMatchedNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
 import java.util.function.Function;

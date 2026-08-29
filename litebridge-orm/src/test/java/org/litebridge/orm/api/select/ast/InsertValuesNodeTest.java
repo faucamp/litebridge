@@ -1,6 +1,8 @@
 package org.litebridge.orm.api.select.ast;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.orm.engine.ast.InsertNode;
+import org.litebridge.orm.engine.ast.InsertValuesNode;
 
 import static org.junit.jupiter.api.Assertions.*;
 

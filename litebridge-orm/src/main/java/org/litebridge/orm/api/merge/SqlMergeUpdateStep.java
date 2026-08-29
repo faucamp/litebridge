@@ -3,7 +3,7 @@ package org.litebridge.orm.api.merge;
 import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.delete.DeleteTerminalInspector;
 import org.litebridge.orm.api.delete.SqlDeleteStart;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.update.SqlUpdateStart;
 import org.litebridge.orm.api.update.UpdateQuery;
 import org.litebridge.orm.api.update.UpdateQueryInspector;

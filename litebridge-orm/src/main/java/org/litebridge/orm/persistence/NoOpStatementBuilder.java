@@ -3,7 +3,7 @@ package org.litebridge.orm.persistence;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.update.Update;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 
 /**
  * A no-operation implementation of the {@link StatementBuilder} interface.

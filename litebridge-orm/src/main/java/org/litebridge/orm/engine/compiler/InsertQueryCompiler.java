@@ -1,8 +1,8 @@
 package org.litebridge.orm.engine.compiler;
 
-import org.litebridge.orm.api.select.ast.InsertNode;
-import org.litebridge.orm.api.select.ast.InsertValuesNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.InsertNode;
+import org.litebridge.orm.engine.ast.InsertValuesNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
 import java.util.Arrays;

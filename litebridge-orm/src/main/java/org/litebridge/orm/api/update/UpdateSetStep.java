@@ -2,8 +2,8 @@ package org.litebridge.orm.api.update;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.math.MathOperation;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.SetNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;

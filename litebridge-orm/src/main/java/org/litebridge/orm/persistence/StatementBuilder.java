@@ -1,13 +1,8 @@
 package org.litebridge.orm.persistence;
 
-import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.query.UpdateMetaData;
-import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.orm.api.select.ast.QueryNode;
-
-import java.util.List;
+import org.litebridge.orm.engine.ast.QueryNode;
 
 /**
  * Interface for building SQL execution/update statements.

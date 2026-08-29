@@ -3,7 +3,7 @@ package org.litebridge.orm.api.select.impl;
 import org.litebridge.orm.api.select.JoinClause;
 import org.litebridge.orm.api.select.JoinConditionClause;
 import org.litebridge.orm.api.select.JoinConditionClauseTerminal;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
 public abstract class AbstractJoinClause<DTO,

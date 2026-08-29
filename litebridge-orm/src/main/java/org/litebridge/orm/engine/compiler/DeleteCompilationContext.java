@@ -5,8 +5,8 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.Delete;
-import org.litebridge.orm.api.select.ast.ConditionNode;
-import org.litebridge.orm.api.select.ast.DeleteNode;
+import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.persistence.OrmTable;
 

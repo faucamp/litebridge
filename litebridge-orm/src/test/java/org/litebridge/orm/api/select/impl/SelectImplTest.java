@@ -6,8 +6,8 @@
 //import org.litebridge.db.spi.Table;
 //import org.litebridge.orm.api.select.LimitClauseTerminal;
 //import org.litebridge.orm.api.select.SelectTerminal;
-//import org.litebridge.orm.api.select.ast.QueryNode;
-//import org.litebridge.orm.api.select.ast.SelectNode;
+//import org.litebridge.orm.engine.ast.QueryNode;
+//import org.litebridge.orm.engine.ast.SelectNode;
 //import org.litebridge.orm.api.sql.SqlProtoExpressionResolver;
 //import org.litebridge.orm.api.sql.SqlSelectSpec;
 //import org.litebridge.orm.config.LitebridgeConfig;

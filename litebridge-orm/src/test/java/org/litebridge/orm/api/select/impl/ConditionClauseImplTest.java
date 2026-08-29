@@ -6,8 +6,8 @@
 //import org.litebridge.db.spi.query.Operator;
 //import org.litebridge.orm.api.select.ConditionClauseTerminal;
 //import org.litebridge.orm.api.select.SelectTerminal;
-//import org.litebridge.orm.api.select.ast.ConditionNode;
-//import org.litebridge.orm.api.select.ast.QueryNode;
+//import org.litebridge.orm.engine.ast.ConditionNode;
+//import org.litebridge.orm.engine.ast.QueryNode;
 //import org.litebridge.orm.api.sql.SqlSelector;
 //import org.litebridge.orm.api.sql.SqlWhereConditionClauseTerminal;
 //import org.litebridge.orm.engine.LitebridgeContext;

@@ -1,7 +1,7 @@
 package org.litebridge.orm.api.merge;
 
 import org.litebridge.orm.api.insert.InsertValuesStep;
-import org.litebridge.orm.api.select.ast.InsertNode;
+import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 

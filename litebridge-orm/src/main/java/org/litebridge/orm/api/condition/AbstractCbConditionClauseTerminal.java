@@ -3,7 +3,7 @@ package org.litebridge.orm.api.condition;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.dto.condition.CbDtoConditionClauseTerminal;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.sql.condition.CbSqlConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;

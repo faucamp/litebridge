@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.select.ast;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.orm.engine.ast.InsertNode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;

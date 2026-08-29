@@ -1,7 +1,7 @@
 //package org.litebridge.orm.api.select.impl;
 //
 //import org.junit.jupiter.api.Test;
-//import org.litebridge.orm.api.select.ast.LimitNode;
+//import org.litebridge.orm.engine.ast.LimitNode;
 //import org.litebridge.orm.api.select.model.SelectSpec;
 //
 //import java.util.Optional;

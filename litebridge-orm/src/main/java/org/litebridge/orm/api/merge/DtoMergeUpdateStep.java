@@ -1,7 +1,7 @@
 package org.litebridge.orm.api.merge;
 
-import org.litebridge.orm.api.select.ast.DeleteNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.DeleteNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.update.DtoUpdateStart;
 import org.litebridge.orm.api.update.UpdateQuery;
 import org.litebridge.orm.api.update.UpdateQueryInspector;

@@ -2,8 +2,8 @@ package org.litebridge.orm.api.dto;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.select.OrderByClause;
-import org.litebridge.orm.api.select.ast.OrderByNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.OrderByNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;

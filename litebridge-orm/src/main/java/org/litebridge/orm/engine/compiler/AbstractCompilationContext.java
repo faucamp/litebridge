@@ -20,7 +20,7 @@ import org.litebridge.db.spi.query.LogicConditionGroup;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
