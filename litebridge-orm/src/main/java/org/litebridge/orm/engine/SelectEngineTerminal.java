@@ -115,14 +115,14 @@ public class SelectEngineTerminal {
                     || ormTable.getDtoClassInterfaces().contains(dtoClass)) {
                 // Selecting the actual DTO
                 return mapDtos(dtoClass, rows, ormTable, litebridgeContext);
-            } else if (dtoClass != null) {
-                // Single type override
-                return unwrap(dtoClass, rows, litebridgeContext.typeConverter());
-            } else {
+            } else if (dtoClass == Row.class) {
                 // Multipe type overrides
                 return (List<DTO>) rows.stream()
                         .map(row -> convertRowValue(row, selectNode.resultTypes(), typeConverter))
                         .toList();
+            } else {
+                // Single type override
+                return unwrap(dtoClass, rows, litebridgeContext.typeConverter());
             }
         } else {
             final List<Row> resultRows;
@@ -162,7 +162,7 @@ public class SelectEngineTerminal {
 
     @SuppressWarnings("unchecked")
     private <T> List<T> unwrap(final Class<T> type, final List<Row> rows, final TypeConverter typeConverter) {
-        if (type == Row.class || rows.size() != 1) {
+        if (type == Row.class) {
             return (List<T>) rows;
         }
 

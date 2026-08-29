@@ -43,7 +43,7 @@ public class FunctionsE2eTest extends AbstractE2eTest {
             persons[i].setAge(20 + (i * 5));
         }
 
-        litebridge.save((Object[]) persons);
+        litebridge.saveAll(persons);
     }
 
     @TestTemplate
