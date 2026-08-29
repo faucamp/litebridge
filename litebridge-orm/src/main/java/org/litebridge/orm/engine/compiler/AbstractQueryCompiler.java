@@ -3,19 +3,15 @@ package org.litebridge.orm.engine.compiler;
 import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 abstract sealed class AbstractQueryCompiler<CC extends CompilationContext>
-        permits ConditionBasedQueryCompiler, DeleteQueryCompiler, InsertQueryCompiler, QueryCompiler, UpdateQueryCompiler {
-
-    protected final LitebridgeContext litebridgeContext;
+        extends AbstractRootQueryCompiler
+        permits ConditionBasedQueryCompiler, DeleteQueryCompiler, InsertQueryCompiler, UpdateQueryCompiler {
 
     public AbstractQueryCompiler(final LitebridgeContext litebridgeContext) {
-        this.litebridgeContext = litebridgeContext;
+        super(litebridgeContext);
     }
 
     @SuppressWarnings("unchecked")
@@ -42,18 +38,5 @@ abstract sealed class AbstractQueryCompiler<CC extends CompilationContext>
         for (final QueryNode node : nodes) {
             nodeHandler.accept(node);
         }
-    }
-
-    private static List<QueryNode> flatten(final QueryNode node) {
-        final List<QueryNode> nodes = new ArrayList<>();
-        QueryNode current = node;
-
-        while (current != null) {
-            nodes.add(current);
-            current = current.previous();
-        }
-
-        Collections.reverse(nodes);
-        return nodes;
     }
 }
