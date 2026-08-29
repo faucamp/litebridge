@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public final class DeleteCompilationContext extends AbstractCompilationContext {
+final class DeleteCompilationContext extends AbstractCompilationContext {
 
     private static final ConditionGroup EMPTY_CONDITION_GROUP = new ConditionGroup(Collections.emptyList());
 
@@ -22,7 +22,7 @@ public final class DeleteCompilationContext extends AbstractCompilationContext {
     private final @Nullable OrmTable ormTable;
     private @Nullable ConditionGroupSpecStack where;
 
-    public DeleteCompilationContext(final DeleteNode deleteNode,
+    DeleteCompilationContext(final DeleteNode deleteNode,
                                     final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
 

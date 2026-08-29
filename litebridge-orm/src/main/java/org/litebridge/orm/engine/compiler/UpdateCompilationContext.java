@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public final class UpdateCompilationContext extends AbstractCompilationContext {
+final class UpdateCompilationContext extends AbstractCompilationContext {
 
     private final Table table;
     private final TableMetaData tableMetaData;
@@ -32,8 +32,8 @@ public final class UpdateCompilationContext extends AbstractCompilationContext {
     private final List<BindValue> bindValues = new ArrayList<>();
     private @Nullable ConditionGroupSpecStack where;
 
-    public UpdateCompilationContext(final UpdateNode updateNode,
-                                    final LitebridgeContext litebridgeContext) {
+    UpdateCompilationContext(final UpdateNode updateNode,
+                             final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
 
         if (updateNode.dtoClass() != null) {

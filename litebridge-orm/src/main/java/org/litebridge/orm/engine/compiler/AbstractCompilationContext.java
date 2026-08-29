@@ -44,7 +44,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
     protected final LitebridgeContext litebridgeContext;
     protected final List<BindValue> bindValues = new ArrayList<>();
 
-    public AbstractCompilationContext(final LitebridgeContext litebridgeContext) {
+    protected AbstractCompilationContext(final LitebridgeContext litebridgeContext) {
         this.litebridgeContext = litebridgeContext;
     }
 

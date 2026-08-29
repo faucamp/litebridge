@@ -1,20 +1,15 @@
 package org.litebridge.orm.engine.compiler;
 
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.api.select.ast.InsertNode;
 import org.litebridge.orm.api.select.ast.InsertValuesNode;
 import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.persistence.TableMetaDataCache;
-import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
 
 import java.util.Arrays;
 
 final class InsertQueryCompiler extends AbstractQueryCompiler<InsertCompilationContext> {
 
-    public InsertQueryCompiler(final LitebridgeContext litebridgeContext) {
+    InsertQueryCompiler(final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
     }
 

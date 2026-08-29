@@ -21,7 +21,7 @@ import java.util.Objects;
 
 final class MergeQueryCompiler extends ConditionBasedQueryCompiler<MergeCompilationContext> {
 
-    public MergeQueryCompiler(final LitebridgeContext litebridgeContext) {
+    MergeQueryCompiler(final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
     }
 

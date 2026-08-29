@@ -10,7 +10,7 @@ import org.litebridge.orm.engine.LitebridgeContext;
 
 final class UpdateQueryCompiler extends AbstractQueryCompiler<UpdateCompilationContext> {
 
-    public UpdateQueryCompiler(final LitebridgeContext litebridgeContext) {
+    UpdateQueryCompiler(final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
     }
 

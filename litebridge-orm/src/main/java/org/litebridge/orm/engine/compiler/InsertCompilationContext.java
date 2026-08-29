@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public final class InsertCompilationContext implements CompilationContext {
+final class InsertCompilationContext implements CompilationContext {
 
     private final Table table;
     private final TableMetaData tableMetaData;
@@ -33,8 +33,8 @@ public final class InsertCompilationContext implements CompilationContext {
     private int rows = 0;
     private @Nullable List<BindValue> bindValues;
 
-    public InsertCompilationContext(final InsertNode insertNode,
-                                    final LitebridgeContext litebridgeContext) {
+    InsertCompilationContext(final InsertNode insertNode,
+                             final LitebridgeContext litebridgeContext) {
         final OrmTable ormTable;
 
         if (insertNode.dtoClass() != null) {

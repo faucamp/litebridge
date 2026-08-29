@@ -45,8 +45,8 @@ final class MergeCompilationContext implements CompilationContext {
     private @Nullable UsingNode usingNode;
     private MergeCompilationContext.ConditionContext conditionContext;
 
-    public MergeCompilationContext(final MergeNode mergeNode,
-                                   final LitebridgeContext litebridgeContext) {
+    MergeCompilationContext(final MergeNode mergeNode,
+                            final LitebridgeContext litebridgeContext) {
         this.mergeNode = mergeNode;
         this.selectExpressionMapper = litebridgeContext.selectExpressionMapper();
         this.tableRegistry = litebridgeContext.tableRegistry();

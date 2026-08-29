@@ -9,23 +9,23 @@ final class JoinSpec {
     private final @Nullable String tableName;
     private final ConditionGroupSpecStack conditionGroupSpecStack = new ConditionGroupSpecStack();
 
-    public JoinSpec(final String type,
-                    final @Nullable Class<?> dtoClass,
-                    final @Nullable String tableName) {
+    JoinSpec(final String type,
+             final @Nullable Class<?> dtoClass,
+             final @Nullable String tableName) {
         this.type = type;
         this.dtoClass = dtoClass;
         this.tableName = tableName;
     }
 
-    public @Nullable Class<?> dtoClass() {
+    @Nullable Class<?> dtoClass() {
         return dtoClass;
     }
 
-    public @Nullable String tableName() {
+    @Nullable String tableName() {
         return tableName;
     }
 
-    public ConditionGroupSpecStack conditionGroupStack() {
+    ConditionGroupSpecStack conditionGroupStack() {
         return conditionGroupSpecStack;
     }
 }

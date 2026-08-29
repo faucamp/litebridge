@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class SelectCompilationContext extends AbstractCompilationContext {
+final class SelectCompilationContext extends AbstractCompilationContext {
 
     private final boolean selectAll;
     private final Table table;
@@ -58,8 +58,8 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
     private @Nullable List<OrderBy> orderBys;
     private @Nullable Limit limit;
 
-    public SelectCompilationContext(final SelectNode selectNode,
-                                    final LitebridgeContext litebridgeContext) {
+    SelectCompilationContext(final SelectNode selectNode,
+                             final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
         this.selectExpressionMapper = litebridgeContext.selectExpressionMapper();
         this.selectAll = selectNode.isSelectAll();
@@ -229,8 +229,10 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
                 final MappedFieldTarget mappedFieldTarget = ormTable.mappedFieldTargetForField(conditionJoinUsingNode.usingColumn());
 
                 final JoinUsingSpecs joinUsingSpecs = switch (mappedFieldTarget) {
-                    case ColumnMetaData usingColumnMetaData -> processOneToManyJoin(joinSpec.dtoClass(), usingColumnMetaData);
-                    case MappedOneToMany mappedOneToMany -> processOneToManyReverseJoin(joinSpec.dtoClass(), mappedOneToMany);
+                    case ColumnMetaData usingColumnMetaData ->
+                            processOneToManyJoin(joinSpec.dtoClass(), usingColumnMetaData);
+                    case MappedOneToMany mappedOneToMany ->
+                            processOneToManyReverseJoin(joinSpec.dtoClass(), mappedOneToMany);
                     default ->
                             throw new UnsupportedOperationException("Unsupported mapped field target: " + mappedFieldTarget);
                 };

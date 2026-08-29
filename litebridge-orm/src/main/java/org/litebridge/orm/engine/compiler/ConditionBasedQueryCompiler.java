@@ -4,7 +4,6 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.impl.AbstractSelector;
 import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
@@ -20,7 +19,7 @@ abstract sealed class ConditionBasedQueryCompiler<CC extends CompilationContext>
     private final Map<Class<?>, List<Table>> aliasHistory = new HashMap<>();
     private final Map<Table, OrmTable> tableToOrmTableMap = new HashMap<>();
 
-    public ConditionBasedQueryCompiler(final LitebridgeContext litebridgeContext) {
+    protected ConditionBasedQueryCompiler(final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
     }
 

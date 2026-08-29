@@ -14,9 +14,9 @@ import org.litebridge.orm.api.select.ast.SelectNode;
 import org.litebridge.orm.api.select.ast.WhereNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
-public final class SelectQueryCompiler extends ConditionBasedQueryCompiler<SelectCompilationContext> {
+final class SelectQueryCompiler extends ConditionBasedQueryCompiler<SelectCompilationContext> {
 
-    public SelectQueryCompiler(final LitebridgeContext litebridgeContext) {
+    SelectQueryCompiler(final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
     }
 

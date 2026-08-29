@@ -12,7 +12,7 @@ abstract sealed class AbstractRootQueryCompiler
 
     protected final LitebridgeContext litebridgeContext;
 
-    public AbstractRootQueryCompiler(final LitebridgeContext litebridgeContext) {
+    protected AbstractRootQueryCompiler(final LitebridgeContext litebridgeContext) {
         this.litebridgeContext = litebridgeContext;
     }
 

@@ -10,7 +10,7 @@ abstract sealed class AbstractQueryCompiler<CC extends CompilationContext>
         extends AbstractRootQueryCompiler
         permits ConditionBasedQueryCompiler, DeleteQueryCompiler, InsertQueryCompiler, UpdateQueryCompiler {
 
-    public AbstractQueryCompiler(final LitebridgeContext litebridgeContext) {
+    protected AbstractQueryCompiler(final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
     }
 

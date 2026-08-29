@@ -9,7 +9,7 @@ import org.litebridge.orm.engine.LitebridgeContext;
 
 final class DeleteQueryCompiler extends AbstractQueryCompiler<DeleteCompilationContext> {
 
-    public DeleteQueryCompiler(final LitebridgeContext litebridgeContext) {
+    DeleteQueryCompiler(final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
     }
 
