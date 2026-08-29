@@ -81,7 +81,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             lhsExpressionSpec = lhsResolvedExpressionSpecs.getFirst();
         } else if (ormTable != null) {
             // DTO field name
-            final ColumnMetaData columnMetaData = ormTable.columnMetaDataForFieldName(Objects.requireNonNull(conditionSpec.getLhsColumn()));
+            final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(Objects.requireNonNull(conditionSpec.getLhsColumn()));
             final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(columnMetaData.name());
             lhsExpressionSpec = new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn());
         } else {

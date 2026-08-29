@@ -292,7 +292,7 @@
 //        final DtoSelectSpec selectSpec = new DtoSelectSpec(ParentDto.class, parentOrmTable, aliasGenerator, litebridgeContext);
 //        selectSpec.setProtoExpressionResolver(mock(ProtoExpressionResolver.class));
 //
-//        // Use setExpressions on selectSpec (which sets fieldColumns)
+//        // Use setExpressions on selectSpec (which sets fieldMappings)
 //        selectSpec.setExpressions(List.of(
 //                new SelectFieldSpec(accessorCache.fieldAccessor(ParentDto.class, "id"), parentPkCol),
 //                new SelectFieldSpec(accessorCache.fieldAccessor(ParentDto.class, "name"), parentNameCol),
@@ -300,7 +300,7 @@
 //
 //        // Join
 //        final DtoJoinSpec joinSpec = selectSpec.newJoinSpec(ChildDto.class, childOrmTable, childTable);
-//        final DtoSelectSpec.FieldColumn fcChildId = new DtoSelectSpec.FieldColumn(accessorCache.fieldAccessor(ChildDto.class, "id"), childPkCol.as("c_id"));
+//        final DtoSelectSpec.FieldMapping fcChildId = new DtoSelectSpec.FieldMapping(accessorCache.fieldAccessor(ChildDto.class, "id"), childPkCol.as("c_id"));
 //        joinSpec.setFieldColumns(List.of(fcChildId));
 //
 //        final SelectSpecDtoMapper mapper = new SelectSpecDtoMapper(selectSpec, typeConverter, tableRegistry, dtoConstructor, litebridgeContext);
@@ -792,7 +792,7 @@
 //        when(joinSpec.dtoClass()).thenReturn((Class) ChildDto.class);
 //        when(joinSpec.dtoTable()).thenReturn(childOrmTable);
 //        when(joinSpec.table()).thenReturn(childIdCol.table());
-//        when(joinSpec.getFieldColumns()).thenReturn(List.of(new DtoSelectSpec.FieldColumn(accessorCache.fieldAccessor(ChildDto.class, "id"), childIdCol)));
+//        when(joinSpec.getFieldColumns()).thenReturn(List.of(new DtoSelectSpec.FieldMapping(accessorCache.fieldAccessor(ChildDto.class, "id"), childIdCol)));
 //        when(joinSpec.collectionField()).thenReturn(accessorCache.fieldAccessor(ParentDto.class, "child"));
 //
 //        selectSpec.setExpressions(List.of(new SelectFieldSpec(accessorCache.fieldAccessor(ParentDto.class, "id"), idCol)));

@@ -49,8 +49,8 @@ class OrmTableTest {
         // Then
         assertEquals(TestDto.class, ormTable.dtoClass());
         assertEquals(tableMetaData("test_table", idColumn, nameColumn), ormTable.getMetaData());
-        assertSame(idColumn, ormTable.columnMetaDataForFieldName("id"));
-        assertSame(nameColumn, ormTable.columnMetaDataForFieldName("name"));
+        assertSame(idColumn, ormTable.columnMetaDataForField("id"));
+        assertSame(nameColumn, ormTable.columnMetaDataForField("name"));
         assertSame(idColumn, ormTable.getColumnMetaData("id"));
         assertSame(nameField, ormTable.getFieldForColumnName("name"));
         assertSame(idField, ormTable.fieldForColumnNameOrNull("id"));
@@ -65,7 +65,7 @@ class OrmTableTest {
         final OrmTable ormTable = simpleOrmTable();
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> ormTable.columnMetaDataForFieldName("unknown"));
+        assertThrows(IllegalArgumentException.class, () -> ormTable.columnMetaDataForField("unknown"));
     }
 
     @Test
@@ -247,7 +247,7 @@ class OrmTableTest {
                 new ClassFieldAccessorCache(MethodHandles.lookup()));
 
         // Then
-        assertSame(nestedColumn, ormTable.columnMetaDataForFieldName("nested"));
+        assertSame(nestedColumn, ormTable.columnMetaDataForField("nested"));
         assertSame(nestedField, ormTable.getFieldForColumnName("nested_id"));
         assertSame(inlineTable, ormTable.getContextTableRegistry().getOrmTable(InlineNestedDto.class));
         assertSame(nestedField, ormTable.mappedFieldTargets().getFirst().getKey());
@@ -277,7 +277,7 @@ class OrmTableTest {
 
         // Then
         assertEquals(List.of(AddressDto.class), ormTable.getNestedDtoClasses());
-        assertSame(addressColumn, ormTable.columnMetaDataForFieldName("address.city"));
+        assertSame(addressColumn, ormTable.columnMetaDataForField("address.city"));
         assertSame(cityField, ormTable.getFieldForColumnName("city"));
     }
 
@@ -297,7 +297,7 @@ class OrmTableTest {
                 classFieldAccessorCache);
 
         // When/Then
-        assertThrows(NullPointerException.class, () -> ormTable.columnMetaDataForFieldName("address.city"));
+        assertThrows(NullPointerException.class, () -> ormTable.columnMetaDataForField("address.city"));
     }
 
     @Test

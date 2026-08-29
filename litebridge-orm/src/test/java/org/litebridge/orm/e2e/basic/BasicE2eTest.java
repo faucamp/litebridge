@@ -125,7 +125,9 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertEquals(person.getId(), result2.getOwner().getId());
         assertNull(result2.getOwner().getName());
         assertNull(result2.getOwner().getSurname());
-        assertNull(result2.getOwner().getAccounts());
+        assertNotNull(result2.getOwner().getAccounts());
+        assertEquals(1, result2.getOwner().getAccounts().size());
+        assertEquals(result2, result2.getOwner().getAccounts().getFirst());
         assertNull(result2.getOwner().getEyeColour());
         assertEquals(0, result2.getOwner().getAge());
     }

@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -47,28 +46,7 @@ public class SelectEngineTerminal {
     }
 
     public <DTO> @Nullable DTO fetchOneOrNull(final QueryNode node, final LitebridgeContext litebridgeContext) {
-        final Row row = fetchOneRecord(false, node, litebridgeContext);
-
-        if (row == null) {
-            return null;
-        }
-
-        // Map the rows to DTOs
-        final SelectNode selectNode = findSelectNode(node);
-
-        if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
-            return (DTO) mapDto(selectNode, row, litebridgeContext);
-        } else {
-            final Row result;
-
-            if (selectNode.resultTypes() != null) {
-                result = convertRowValue(row, selectNode.resultTypes(), litebridgeContext.typeConverter());
-            } else {
-                result = row;
-            }
-
-            return (DTO) result;
-        }
+        return fetchOneOrNullImpl(false, node, litebridgeContext);
     }
 
     public <DTO> DTO fetchOneOrThrow(final QueryNode node, final LitebridgeContext litebridgeContext) {
@@ -90,19 +68,7 @@ public class SelectEngineTerminal {
     }
 
     public <DTO> @Nullable DTO fetchFirstOrNull(final QueryNode node, final LitebridgeContext litebridgeContext) {
-        final Row row = fetchOneRecord(true, node, litebridgeContext);
-
-        if (row == null) {
-            return null;
-        }
-
-        final SelectNode selectNode = findSelectNode(node);
-
-        if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
-            return (DTO) mapDto(selectNode, row, litebridgeContext);
-        } else {
-            return (DTO) row;
-        }
+        return fetchOneOrNullImpl(true, node, litebridgeContext);
     }
 
     public <DTO> DTO fetchFirstOrThrow(final QueryNode node, final LitebridgeContext litebridgeContext) {
@@ -259,8 +225,41 @@ public class SelectEngineTerminal {
         return result;
     }
 
+    private <DTO> @Nullable DTO fetchOneOrNullImpl(final boolean first, final QueryNode node, final LitebridgeContext litebridgeContext) {
+        final SelectNode selectNode = findSelectNode(node);
+
+        if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
+            // Map the rows to DTOs
+            final List<DTO> dtos = fetchList(node, litebridgeContext);
+
+            if (dtos.isEmpty()) {
+                return null;
+            } else if (!first && dtos.size() > 1) {
+                throw new IllegalStateException("Expected exactly one mapped result, but got %d".formatted(dtos.size()));
+            }
+
+            return dtos.getFirst();
+        } else {
+            final Row row = fetchOneRecord(first, node, litebridgeContext);
+
+            if (row == null) {
+                return null;
+            }
+
+            final Row result;
+
+            if (selectNode.resultTypes() != null) {
+                result = convertRowValue(row, selectNode.resultTypes(), litebridgeContext.typeConverter());
+            } else {
+                result = row;
+            }
+
+            return (DTO) result;
+        }
+    }
+
     private Object mapDto(final SelectNode selectNode,
-                          final Row row,
+                          final List<Row> rows,
                           final LitebridgeContext litebridgeContext) {
         final TableRegistry tableRegistry = litebridgeContext.tableRegistry();
         final OrmTable ormTable;
@@ -279,13 +278,19 @@ public class SelectEngineTerminal {
             ormTable = tableRegistry.getOrmTableOrThrow(resultClass);
         } else {
             // No mapping required
-            return row;
+            return rows;
         }
 
         if (ormTable != null) {
-            return mapDtos(resultClass, Collections.singletonList(row), ormTable, litebridgeContext).getFirst();
+            final List<Object> dtos = (List<Object>) mapDtos(resultClass, rows, ormTable, litebridgeContext);
+
+            if (dtos.size() > 1) {
+                throw new IllegalStateException("Expected exactly one mapped result, but got %d".formatted(dtos.size()));
+            }
+
+            return dtos.getFirst();
         } else {
-            return unwrap(resultClass, row, litebridgeContext.typeConverter());
+            return unwrap(resultClass, rows, litebridgeContext.typeConverter());
         }
     }
 

@@ -124,7 +124,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
             }
         }
 
-        final ColumnMetaData columnMetaData = tableRegistry.getOrmTableOrThrow(dtoClass).columnMetaDataForFieldName(fieldName);
+        final ColumnMetaData columnMetaData = tableRegistry.getOrmTableOrThrow(dtoClass).columnMetaDataForField(fieldName);
 
         if (clause == ClauseType.SELECT) {
             return aliasGenerator.aliasColumn(table, columnMetaData);

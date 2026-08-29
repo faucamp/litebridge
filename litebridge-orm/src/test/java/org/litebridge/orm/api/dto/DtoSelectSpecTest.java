@@ -80,7 +80,7 @@ class DtoSelectSpecTest {
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(columnMetaData.name()).thenReturn("TEST_COLUMN");
         when(columnMetaData.toColumn()).thenReturn(new org.litebridge.db.spi.Column(table, "TEST_COLUMN"));
-        when(ormTable.columnMetaDataForFieldName("testField")).thenReturn(columnMetaData);
+        when(ormTable.columnMetaDataForField("testField")).thenReturn(columnMetaData);
         final FieldAccessor fieldAccessor = mock(FieldAccessor.class);
         when(ormTable.getFieldForColumnName("TEST_COLUMN")).thenReturn(fieldAccessor);
 

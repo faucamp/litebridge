@@ -85,7 +85,7 @@ public final class UpdateCompilationContext extends AbstractCompilationContext {
             updateColumns = setNodes.stream()
                     .map(setNode -> {
                         final String fieldName = getColumn(setNode);
-                        final ColumnMetaData columnMetaData = ormTable.columnMetaDataForFieldName(fieldName);
+                        final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(fieldName);
 
                         if (setNode.value() instanceof MathOperation mathOperation) {
                             final BindValue bindValue = new BindValue(mathOperation.value(), columnMetaData.getDataType());

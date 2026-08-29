@@ -3,6 +3,7 @@ package org.litebridge.orm.engine.compiler;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.expression.ClauseType;
@@ -29,6 +30,7 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
+import org.litebridge.orm.persistence.MappedOneToMany;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.FieldAccessor;
@@ -92,7 +94,7 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
             if (ormTable != null) {
                 // Translate field names to column names
                 selectColumns = Arrays.stream(selectNode.columns())
-                        .map(ormTable::columnMetaDataForFieldName)
+                        .map(ormTable::columnMetaDataForField)
                         .map(ColumnMetaData::name)
                         .toList();
             } else {
@@ -142,7 +144,7 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
         final Object rhs;
 
         if (conditionNode.rhsColumn() != null) {
-            final ColumnMetaData relationshipColumn = ormTable.columnMetaDataForFieldName(conditionNode.rhsColumn());
+            final ColumnMetaData relationshipColumn = ormTable.columnMetaDataForField(conditionNode.rhsColumn());
             final FieldAccessor relationshipFieldAccessor = ormTable.getFieldForColumnName(relationshipColumn.name());
             rhs = new SelectFieldSpec(relationshipFieldAccessor, relationshipColumn.toColumn());
         } else {
@@ -224,26 +226,17 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
         if (conditionJoinUsingNode.usingColumn() != null) {
             if (ormTable != null) {
                 // Get details on the USING column on the local table
-                final ColumnMetaData usingColumnMetaData = ormTable.columnMetaDataForFieldName(conditionJoinUsingNode.usingColumn());
-                final SelectColumnSpec usingSelectColumnSpec = new SelectColumnSpec(usingColumnMetaData.toColumn());
+                final MappedFieldTarget mappedFieldTarget = ormTable.mappedFieldTargetForField(conditionJoinUsingNode.usingColumn());
 
-                // Join table & column
-                final OrmTable joinOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(joinSpec.dtoClass()));
-                final TableMetaData joinTableMetaData = joinOrmTable.getMetaData();
-                final ColumnMetaData joinColumnMetadata = joinTableMetaData.column(usingColumnMetaData.getJoinColumn());
-                final SelectColumnSpec joinSelectColumnSpec = new SelectColumnSpec(joinColumnMetadata.toColumn());
-
-                // Add join table columns to select
-                if (selectAll) {
-                    final SqlFunctionRegistry sqlFunctionRegistry = litebridgeContext.sqlFunctionRegistry();
-
-                    for (ColumnMetaData columnMetaData : joinTableMetaData.columns()) {
-                        this.selectExpressions.add(sqlFunctionRegistry.select().column().create(columnMetaData.toColumn()));
-                    }
-                }
+                final JoinUsingSpecs joinUsingSpecs = switch (mappedFieldTarget) {
+                    case ColumnMetaData usingColumnMetaData -> processOneToManyJoin(joinSpec.dtoClass(), usingColumnMetaData);
+                    case MappedOneToMany mappedOneToMany -> processOneToManyReverseJoin(joinSpec.dtoClass(), mappedOneToMany);
+                    default ->
+                            throw new UnsupportedOperationException("Unsupported mapped field target: " + mappedFieldTarget);
+                };
 
                 // Create actual condition
-                conditionNode = new ConditionNode(null, conditionJoinUsingNode.logicOperator(), null, usingSelectColumnSpec, Operator.EQ, joinSelectColumnSpec);
+                conditionNode = new ConditionNode(null, conditionJoinUsingNode.logicOperator(), null, joinUsingSpecs.usingSelectColumnSpec(), Operator.EQ, joinUsingSpecs.joinSelectColumnSpec());
             } else {
                 throw new UnsupportedOperationException("Not implemented yet");
             }
@@ -282,7 +275,7 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
                 // DTO field names; translate to columns
                 groupByExpressions = Arrays.stream(columnNames)
                         .map(columnName -> {
-                            final ColumnMetaData columnMetaData = ormTable.columnMetaDataForFieldName(columnName);
+                            final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(columnName);
                             return (SelectExpression) sqlFunctionRegistry.select().reference().create(columnMetaData.toColumn());
                         })
                         .toList();
@@ -335,7 +328,7 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
 
             if (ormTable != null) {
                 // DTO field name; translate it to a column
-                final ColumnMetaData columnMetaData = ormTable.columnMetaDataForFieldName(columnName);
+                final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(columnName);
                 orderByExpressions = Collections.singletonList(litebridgeContext.sqlFunctionRegistry().select().reference().create(columnMetaData.toColumn()));
             } else {
                 // Column name
@@ -399,5 +392,53 @@ public final class SelectCompilationContext extends AbstractCompilationContext {
                 havingConditionGroup,
                 orderBys,
                 limit);
+    }
+
+    private JoinUsingSpecs processOneToManyJoin(final Class<?> joinDtoClass, final ColumnMetaData usingColumnMetaData) {
+        // Local column
+        final SelectColumnSpec usingSelectColumnSpec = new SelectColumnSpec(usingColumnMetaData.toColumn());
+
+        // Join table & column
+        final OrmTable joinOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(joinDtoClass));
+        final TableMetaData joinTableMetaData = joinOrmTable.getMetaData();
+        final ColumnMetaData joinColumnMetadata = joinTableMetaData.column(usingColumnMetaData.getJoinColumn());
+        final SelectColumnSpec joinSelectColumnSpec = new SelectColumnSpec(joinColumnMetadata.toColumn());
+
+        // Add join table columns to select
+        if (selectAll) {
+            final SqlFunctionRegistry sqlFunctionRegistry = litebridgeContext.sqlFunctionRegistry();
+
+            for (ColumnMetaData columnMetaData : joinTableMetaData.columns()) {
+                this.selectExpressions.add(sqlFunctionRegistry.select().column().create(columnMetaData.toColumn()));
+            }
+        }
+
+        return new JoinUsingSpecs(usingSelectColumnSpec, joinSelectColumnSpec);
+    }
+
+    private JoinUsingSpecs processOneToManyReverseJoin(final Class<?> joinDtoClass, final MappedOneToMany mappedOneToMany) {
+        // Join table & column
+        final OrmTable joinOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(joinDtoClass));
+        final ColumnMetaData joinColumnMetaData = joinOrmTable.columnMetaDataForField(mappedOneToMany.mappedByField());
+        final SelectColumnSpec joinSelectColumnSpec = new SelectColumnSpec(joinColumnMetaData.toColumn());
+
+        // Local column
+        //TODO: composite primary keys
+        final ColumnMetaData usingColumnMetaData = ormTable.getMetaData().primaryKey().getFirst();
+        final SelectColumnSpec usingSelectColumnSpec = new SelectColumnSpec(usingColumnMetaData.toColumn());
+
+        // Add join table columns to select
+        if (selectAll) {
+            final SqlFunctionRegistry sqlFunctionRegistry = litebridgeContext.sqlFunctionRegistry();
+
+            for (ColumnMetaData columnMetaData : joinOrmTable.getMetaData().columns()) {
+                this.selectExpressions.add(sqlFunctionRegistry.select().column().create(columnMetaData.toColumn()));
+            }
+        }
+
+        return new JoinUsingSpecs(usingSelectColumnSpec, joinSelectColumnSpec);
+    }
+
+    private record JoinUsingSpecs(SelectColumnSpec usingSelectColumnSpec, SelectColumnSpec joinSelectColumnSpec) {
     }
 }

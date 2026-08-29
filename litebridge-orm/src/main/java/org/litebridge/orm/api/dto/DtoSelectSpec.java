@@ -124,7 +124,7 @@ public final class DtoSelectSpec extends SelectSpec implements DtoDataSpec {
 
     @Deprecated(forRemoval = true)
     private ExpressionSpec createSelectFieldSpec(final String field) {
-        final ColumnMetaData columnMetaData = dtoTable.columnMetaDataForFieldName(field);
+        final ColumnMetaData columnMetaData = dtoTable.columnMetaDataForField(field);
         final FieldAccessor fieldAccessor = dtoTable.getFieldForColumnName(columnMetaData.name());
         return new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn());
     }

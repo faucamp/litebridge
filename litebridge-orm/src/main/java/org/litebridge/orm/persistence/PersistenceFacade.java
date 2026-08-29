@@ -399,7 +399,7 @@ public class PersistenceFacade {
                         nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
                             final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                             final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
-                            final Column joinColumn = table.columnMetaDataForFieldName(fieldAccessor.name()).toColumn();
+                            final Column joinColumn = table.columnMetaDataForField(fieldAccessor.name()).toColumn();
 
                             if (statementBuilder instanceof UpdateBuilder updateBuilder) {
                                 updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);

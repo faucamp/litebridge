@@ -15,7 +15,7 @@ public final class DtoMergeOnStep<DTO> extends MergeOnStep<DTO, DtoMergeUpdateSt
     @Override
     public MergeConditionClause<DTO, DtoMergeUpdateStep<DTO>, MergeOnConditionClauseTerminal<DTO, DtoMergeUpdateStep<DTO>>> on(final String field) {
         final FieldAccessor fieldAccessor = litebridgeContext.classFieldAccessorCache().fieldAccessor(usingDtoClass, field);
-        final Column column = litebridgeContext.tableRegistry().getOrmTableOrThrow(usingDtoClass).columnMetaDataForFieldName(field).toColumn();
+        final Column column = litebridgeContext.tableRegistry().getOrmTableOrThrow(usingDtoClass).columnMetaDataForField(field).toColumn();
         return on(new SelectFieldSpec(fieldAccessor, column));
     }
 }

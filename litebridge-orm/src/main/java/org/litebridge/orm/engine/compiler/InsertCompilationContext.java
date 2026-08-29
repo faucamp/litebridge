@@ -52,7 +52,7 @@ public final class InsertCompilationContext implements CompilationContext {
                 if (ormTable != null) {
                     // Translate field names to column names
                     insertColumns = Arrays.stream(insertNode.columns())
-                            .map(ormTable::columnMetaDataForFieldName)
+                            .map(ormTable::columnMetaDataForField)
                             .map(ColumnMetaData::name)
                             .toList();
                 } else {
@@ -96,7 +96,7 @@ public final class InsertCompilationContext implements CompilationContext {
                     insertColumns.add(columnExpressionSpec.getColumn().name());
                 } else if (expressionSpec instanceof QueryField queryField) {
                     final String fieldName = QueryFieldInspector.getFieldName(queryField);
-                    final ColumnMetaData columnMetaData = ormTable.columnMetaDataForFieldName(fieldName);
+                    final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(fieldName);
                     insertColumns.add(columnMetaData.name());
                 } else {
                     throw new IllegalArgumentException("Unsupported expression spec type: " + expressionSpec.getClass().getName());

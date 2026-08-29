@@ -208,7 +208,7 @@ public final class DtoSelector<TypeOverride> extends AbstractSelector<TypeOverri
     }
 
     private ExpressionSpec createSelectFieldSpec(final String field) {
-        final ColumnMetaData columnMetaData = ormTable.columnMetaDataForFieldName(field);
+        final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(field);
         final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(columnMetaData.name());
         return new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn());
     }
