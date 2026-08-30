@@ -1,5 +1,6 @@
 package org.litebridge.orm.engine.compiler;
 
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.ConditionJoinUsingNode;
 import org.litebridge.orm.engine.ast.ConditionNode;
@@ -12,9 +13,8 @@ import org.litebridge.orm.engine.ast.OrderByNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.ast.WhereNode;
-import org.litebridge.orm.engine.LitebridgeContext;
 
-final class SelectQueryCompiler extends ConditionBasedQueryCompiler<SelectCompilationContext> {
+final class SelectQueryCompiler extends AbstractQueryCompiler<SelectCompilationContext> {
 
     SelectQueryCompiler(final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
@@ -33,13 +33,11 @@ final class SelectQueryCompiler extends ConditionBasedQueryCompiler<SelectCompil
     protected void applyNode(final QueryNode node, final SelectCompilationContext compilationContext) {
         switch (node) {
             case JoinNode joinNode -> applyJoinNode(joinNode, compilationContext);
-            case WhereNode whereNode -> flattenAndApplyNodes(whereNode.condition(),
-                    compilationContext,
-                    conditionNode -> applyConditionNode(conditionNode, compilationContext, ConditionClauseType.WHERE));
+            case WhereNode whereNode ->
+                    flattenAndApplyConditionNode(whereNode.condition(), compilationContext, ConditionClauseType.WHERE);
             case GroupByNode groupByNode -> compilationContext.addGroupBy(groupByNode);
-            case HavingNode havingNode -> flattenAndApplyNodes(havingNode.condition(),
-                    compilationContext,
-                    conditionNode -> applyConditionNode(conditionNode, compilationContext, ConditionClauseType.HAVING));
+            case HavingNode havingNode ->
+                    flattenAndApplyConditionNode(havingNode.condition(), compilationContext, ConditionClauseType.HAVING);
             case OrderByNode orderByNode -> compilationContext.addOrderBy(orderByNode);
             case LimitNode limitNode -> compilationContext.setLimit(limitNode);
             case SelectNode selectNode -> { /* Ignore */ }
@@ -50,8 +48,11 @@ final class SelectQueryCompiler extends ConditionBasedQueryCompiler<SelectCompil
     private void applyJoinNode(final JoinNode joinNode, final SelectCompilationContext compilationContext) {
         compilationContext.addJoin(joinNode);
         flattenAndApplyNodes(joinNode.condition(),
-                compilationContext,
                 conditionNode -> applyConditionNode(conditionNode, compilationContext, ConditionClauseType.JOIN));
+    }
+
+    private void flattenAndApplyConditionNode(final QueryNode node, final SelectCompilationContext compilationContext, ConditionClauseType conditionClauseType) {
+        flattenAndApplyNodes(node, conditionNode -> applyConditionNode(conditionNode, compilationContext, conditionClauseType));
     }
 
     private void applyConditionNode(final QueryNode node,
@@ -79,9 +80,7 @@ final class SelectQueryCompiler extends ConditionBasedQueryCompiler<SelectCompil
                 };
 
                 conditionGroupSpecStack.push(conditionGroupNode.logicOperator());
-                flattenAndApplyNodes(conditionGroupNode.lastChild(),
-                        compilationContext,
-                        conditionNode -> applyConditionNode(conditionNode, compilationContext, conditionClauseType));
+                flattenAndApplyConditionNode(conditionGroupNode.lastChild(), compilationContext, conditionClauseType);
                 conditionGroupSpecStack.pop();
             }
             default -> throw new IllegalArgumentException("Unsupported condition node type: " + node);

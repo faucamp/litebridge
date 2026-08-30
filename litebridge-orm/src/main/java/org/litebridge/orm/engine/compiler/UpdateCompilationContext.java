@@ -9,17 +9,16 @@ import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateColumn;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.UpdateNode;
-import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,7 +28,6 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
     private final TableMetaData tableMetaData;
     private final @Nullable OrmTable ormTable;
     private final List<SetNode> setNodes = new ArrayList<>();
-    private final List<BindValue> bindValues = new ArrayList<>();
     private @Nullable ConditionGroupSpecStack where;
 
     UpdateCompilationContext(final UpdateNode updateNode,
@@ -65,15 +63,6 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
                 conditionNode.lhsExpression(),
                 conditionNode.operator(),
                 conditionNode.rhs());
-        //TODO: fix datatype
-        final int sqlDataType = 0;
-        final BindValue bindValue = new BindValue(conditionNode.rhs(), sqlDataType);
-        bindValues.add(bindValue);
-    }
-
-    @Override
-    public List<BindValue> getBindValues() {
-        return bindValues != null ? bindValues : Collections.emptyList();
     }
 
     @Override

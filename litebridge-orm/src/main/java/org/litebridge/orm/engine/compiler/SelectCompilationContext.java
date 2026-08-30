@@ -16,7 +16,8 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
-import org.litebridge.db.spi.sql.BindValue;
+import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionJoinUsingNode;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.ConditionWithIdNode;
@@ -25,8 +26,6 @@ import org.litebridge.orm.engine.ast.JoinNode;
 import org.litebridge.orm.engine.ast.LimitNode;
 import org.litebridge.orm.engine.ast.OrderByNode;
 import org.litebridge.orm.engine.ast.SelectNode;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
-import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
@@ -351,11 +350,6 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
     public void setLimit(final LimitNode limitNode) {
         this.limit = new Limit(limitNode.limit(), limitNode.offset());
-    }
-
-    @Override
-    public List<BindValue> getBindValues() {
-        return bindValues != null ? bindValues : Collections.emptyList();
     }
 
     @Override

@@ -3,15 +3,13 @@ package org.litebridge.orm.engine.compiler;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.ConditionGroup;
-import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.Delete;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.DeleteNode;
-import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 
 final class DeleteCompilationContext extends AbstractCompilationContext {
@@ -23,7 +21,7 @@ final class DeleteCompilationContext extends AbstractCompilationContext {
     private @Nullable ConditionGroupSpecStack where;
 
     DeleteCompilationContext(final DeleteNode deleteNode,
-                                    final LitebridgeContext litebridgeContext) {
+                             final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
 
         if (deleteNode.dtoClass() != null) {
@@ -49,11 +47,6 @@ final class DeleteCompilationContext extends AbstractCompilationContext {
                 conditionNode.lhsExpression(),
                 conditionNode.operator(),
                 conditionNode.rhs());
-    }
-
-    @Override
-    public List<BindValue> getBindValues() {
-        return bindValues;
     }
 
     @Override

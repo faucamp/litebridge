@@ -39,13 +39,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-abstract sealed class AbstractCompilationContext implements CompilationContext permits DeleteCompilationContext, SelectCompilationContext, UpdateCompilationContext {
+abstract sealed class AbstractCompilationContext implements CompilationContext permits DeleteCompilationContext, MergeCompilationContext, SelectCompilationContext, UpdateCompilationContext {
 
     protected final LitebridgeContext litebridgeContext;
     protected final List<BindValue> bindValues = new ArrayList<>();
 
     protected AbstractCompilationContext(final LitebridgeContext litebridgeContext) {
         this.litebridgeContext = litebridgeContext;
+    }
+
+    @Override
+    public List<BindValue> getBindValues() {
+        return bindValues;
     }
 
     protected final ConditionGroup toConditionGroup(final ConditionGroupSpec conditionGroupSpec, final @Nullable OrmTable ormTable, final Table table) {

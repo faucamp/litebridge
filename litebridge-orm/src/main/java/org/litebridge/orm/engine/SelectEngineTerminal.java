@@ -89,6 +89,7 @@ public class SelectEngineTerminal {
         return (Stream<DTO>) fetchList(node, litebridgeContext).stream();
     }
 
+    @SuppressWarnings("unchecked")
     public <DTO> List<DTO> fetchList(final QueryNode node, final LitebridgeContext litebridgeContext) {
         final TypeConverter typeConverter = litebridgeContext.typeConverter();
         final List<Row> rows = execute(node, litebridgeContext);
@@ -103,7 +104,7 @@ public class SelectEngineTerminal {
                     // Single type override
                     dtoClass = (Class<DTO>) selectNode.resultTypes()[0];
                 } else {
-                    dtoClass = null;
+                    dtoClass = (Class<DTO>) Row.class;
                 }
             } else {
                 dtoClass = (Class<DTO>) selectNode.dtoClass();

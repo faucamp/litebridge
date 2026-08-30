@@ -10,12 +10,15 @@ import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateColumn;
+import org.litebridge.orm.api.select.model.ConditionGroupSpec;
+import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.InsertNode;
+import org.litebridge.orm.engine.ast.InsertValuesNode;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.UsingNode;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
-import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.meta.QueryField;
@@ -25,11 +28,11 @@ import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
-final class MergeCompilationContext implements CompilationContext {
+final class MergeCompilationContext extends AbstractCompilationContext {
 
     private final MergeNode mergeNode;
     private final TableMetaData targetTableMetaData;
@@ -41,12 +44,11 @@ final class MergeCompilationContext implements CompilationContext {
     private final TypeConverter typeConverter;
     private final ConditionGroupSpecStack on = new ConditionGroupSpecStack();
     private final List<WhenMatchedSpec> whenMatchedSpecs = new ArrayList<>();
-    private final List<BindValue> bindValues = new ArrayList<>();
     private @Nullable UsingNode usingNode;
-    private MergeCompilationContext.ConditionContext conditionContext;
 
     MergeCompilationContext(final MergeNode mergeNode,
                             final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
         this.mergeNode = mergeNode;
         this.selectExpressionMapper = litebridgeContext.selectExpressionMapper();
         this.tableRegistry = litebridgeContext.tableRegistry();
@@ -68,9 +70,26 @@ final class MergeCompilationContext implements CompilationContext {
         this.targetTable = targetTableMetaData.toTable();
     }
 
-    public void setUsingNode(UsingNode usingNode) {
+    /**
+     * Sets the USING clause information.
+     *
+     * @param usingNode The USING node to apply.
+     */
+    public void setUsingNode(final UsingNode usingNode) {
         this.usingNode = usingNode;
-        this.conditionContext = ConditionContext.ON;
+    }
+
+    /**
+     * Adds a condition to the ON clause for USING.
+     *
+     * @param conditionNode The condition node to apply.
+     */
+    public void addOnCondition(final ConditionNode conditionNode) {
+        addConditionToGroup(conditionNode, on.current());
+    }
+
+    public ConditionGroupSpecStack onConditionGroupStack() {
+        return on;
     }
 
     public WhenMatchedSpec getWhenMatchedSpec() {
@@ -78,15 +97,23 @@ final class MergeCompilationContext implements CompilationContext {
     }
 
     public WhenMatchedSpec addWhenMatchedSpec(final boolean matched) {
-        if (matched) {
-            this.conditionContext = ConditionContext.WHEN_MATCHED;
-        } else {
-            this.conditionContext = ConditionContext.WHEN_NOT_MATCHED;
-        }
-
         final WhenMatchedSpec whenMatchedSpec = new WhenMatchedSpec(matched);
         whenMatchedSpecs.add(whenMatchedSpec);
         return whenMatchedSpec;
+    }
+
+    /**
+     * Adds an AND condition to the current WHEN MATCHED/WHEN NOT MATCHED clause.
+     *
+     * @param conditionNode The condition node to apply.
+     */
+    public void addMatchAndCondition(final ConditionNode conditionNode) {
+        final ConditionGroupSpec conditionGroupSpec = matchAndConditionGroupStack().current();
+        addConditionToGroup(conditionNode, conditionGroupSpec);
+    }
+
+    public ConditionGroupSpecStack matchAndConditionGroupStack() {
+        return whenMatchedSpecs.getLast().ensureAndConditionGroupStack();
     }
 
     public void whenMatchedUpdateSet(final SetNode setNode) {
@@ -106,10 +133,11 @@ final class MergeCompilationContext implements CompilationContext {
                 throw new IllegalArgumentException("Unsupported expression spec type: " + expressionSpec.getClass().getName());
             }
         }
+
         whenMatchedSpec.addUpdateColumn(columnMetaData);
 
         if (setNode.bindValue()) {
-            bindValues.add(new BindValue(setNode.value(), columnMetaData.getDataType()));
+            whenMatchedSpec.addBindValue(new BindValue(setNode.value(), columnMetaData.getDataType()));
         } else {
             throw new UnsupportedOperationException("Not yet implemented");
         }
@@ -156,29 +184,16 @@ final class MergeCompilationContext implements CompilationContext {
         whenMatchedSpec.addUpdateColumns(columnMetaDataList);
     }
 
-    @Override
-    public List<BindValue> getBindValues() {
-        return bindValues;
-    }
+    public void addInsertValues(final InsertValuesNode insertValuesNode) {
+        final WhenMatchedSpec whenMatchedSpec = getWhenMatchedSpec();
 
-    public void addBindValues(final @Nullable Object... values) {
-        switch (conditionContext) {
-            case WHEN_MATCHED, WHEN_NOT_MATCHED -> {
-                final List<ColumnMetaData> columnMetaDataList = getWhenMatchedSpec().getColumnMetaDataList();
+        final List<ColumnMetaData> columnMetaDataList = getWhenMatchedSpec().getColumnMetaDataList();
+        final Object[] values = insertValuesNode.values();
 
-                for (int i = 0; i < values.length; i++) {
-                    //TODO: fix datatype detection
-                    final int sqlDataType = columnMetaDataList != null ? columnMetaDataList.get(i).getDataType() : 0;
-                    bindValues.add(new BindValue(values[i], sqlDataType));
-                }
-            }
-            case ON -> {
-                for (int i = 0; i < values.length; i++) {
-                    //TODO: fix datatype detection
-                    final int sqlDataType = 0;
-                    bindValues.add(new BindValue(values[i], sqlDataType));
-                }
-            }
+        for (int i = 0; i < values.length; i++) {
+            //TODO: fix datatype detection
+            final int sqlDataType = columnMetaDataList != null ? columnMetaDataList.get(i).getDataType() : 0;
+            whenMatchedSpec.addBindValue(new BindValue(values[i], sqlDataType));
         }
     }
 
@@ -195,8 +210,6 @@ final class MergeCompilationContext implements CompilationContext {
                     .getMetaData().toTable();
         }
 
-        final List<BindValue> bindValues = new ArrayList<>();
-
         final List<Merge.WhenMatched<Merge.WhenMatchedOperation>> whenMatchedList = new ArrayList<>();
         final List<Merge.WhenMatched<Merge.MergeInsert>> whenNotMatchedList = new ArrayList<>();
 
@@ -205,11 +218,7 @@ final class MergeCompilationContext implements CompilationContext {
             final ConditionGroup andConditionGroup;
 
             if (andConditionGroupStack != null) {
-                andConditionGroup = andConditionGroupStack.current().toConditionGroup(selectExpressionMapper,
-                        Set.of(targetTable, usingTable),
-                        bindValues,
-                        tableMetaDataCache,
-                        typeConverter);
+                andConditionGroup = toConditionGroup(andConditionGroupStack.current(), null, targetTable);
             } else {
                 andConditionGroup = null;
             }
@@ -230,26 +239,18 @@ final class MergeCompilationContext implements CompilationContext {
                 final Merge.WhenMatched<Merge.MergeInsert> whenNotMatched = new Merge.WhenMatched<>(null, new Merge.MergeInsert(whenMatchedSpec.getUpdateColumns(), 1));
                 whenNotMatchedList.add(whenNotMatched);
             }
+
+            bindValues.addAll(whenMatchedSpec.getBindValues());
         }
+
+        final ConditionGroup onConditionGroup = toConditionGroup(on.current(), null, usingTable);
 
         return new Merge(targetTable,
                 usingTable,
                 null,
-                on.current().toConditionGroup(selectExpressionMapper,
-                        Set.of(targetTable, usingTable),
-                        bindValues,
-                        tableMetaDataCache,
-                        typeConverter),
+                onConditionGroup,
                 whenMatchedList,
                 whenNotMatchedList);
-    }
-
-
-    public ConditionGroupSpecStack getConditionGroupSpecStack() {
-        return switch (conditionContext) {
-            case ON -> on;
-            case WHEN_MATCHED, WHEN_NOT_MATCHED -> whenMatchedSpecs.getLast().ensureAndConditionGroupStack();
-        };
     }
 
     static final class WhenMatchedSpec {
@@ -258,6 +259,7 @@ final class MergeCompilationContext implements CompilationContext {
         private @Nullable List<ColumnMetaData> columnMetaDataList;
         private @Nullable List<UpdateColumn> updateColumns;
         private boolean delete;
+        private @Nullable List<BindValue> bindValues;
 
         WhenMatchedSpec(final boolean matched) {
             this.matched = matched;
@@ -308,6 +310,18 @@ final class MergeCompilationContext implements CompilationContext {
             return columnMetaDataList;
         }
 
+        public List<BindValue> getBindValues() {
+            return bindValues != null ? bindValues : Collections.emptyList();
+        }
+
+        public void addBindValue(final BindValue bindValue) {
+            if (bindValues == null) {
+                bindValues = new ArrayList<>();
+            }
+
+            bindValues.add(bindValue);
+        }
+
         private List<UpdateColumn> ensureUpdateColumns() {
             if (updateColumns == null) {
                 updateColumns = new ArrayList<>();
@@ -325,9 +339,11 @@ final class MergeCompilationContext implements CompilationContext {
         }
     }
 
-    enum ConditionContext {
-        ON,
-        WHEN_MATCHED,
-        WHEN_NOT_MATCHED
+    private static void addConditionToGroup(final ConditionNode conditionNode, final ConditionGroupSpec conditionGroupSpec) {
+        conditionGroupSpec.newCondition(conditionNode.logicOperator(),
+                conditionNode.lhsColumn(),
+                conditionNode.lhsExpression(),
+                conditionNode.operator(),
+                conditionNode.rhs());
     }
 }

@@ -5,7 +5,7 @@ import org.litebridge.db.spi.sql.BindValue;
 
 import java.util.List;
 
-sealed interface CompilationContext permits AbstractCompilationContext, InsertCompilationContext, MergeCompilationContext {
+sealed interface CompilationContext permits AbstractCompilationContext, InsertCompilationContext {
 
     List<BindValue> getBindValues();
 
