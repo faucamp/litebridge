@@ -4,17 +4,16 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractHavingClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 public final class SqlHavingConditionClauseTerminal
         extends AbstractHavingClauseTerminal<Row,
         SqlOrderByClause,
-        SqlOrderByClauseChain,
-        SqlSelectSpec>
+        SqlOrderByClauseChain>
 
         implements HavingConditionClauseTerminal<Row,
         SqlHavingConditionClause,

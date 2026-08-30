@@ -4,11 +4,11 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
-import org.litebridge.orm.engine.ast.HavingNode;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractHavingClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.HavingNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
 
@@ -20,8 +20,7 @@ import org.litebridge.orm.persistence.OrmTable;
 public final class DtoHavingConditionClauseTerminal<DTO>
         extends AbstractHavingClauseTerminal<DTO,
         DtoOrderByClause<DTO>,
-        DtoOrderByClauseChain<DTO>,
-        DtoSelectSpec>
+        DtoOrderByClauseChain<DTO>>
 
         implements HavingConditionClauseTerminal<DTO,
         DtoHavingConditionClause<DTO>,
