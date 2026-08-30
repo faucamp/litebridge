@@ -43,7 +43,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select DTO and join fetch related DTOs")
-    void nestedDtos_fetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    void select_fetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
@@ -85,7 +85,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select DTO without related DTOs")
-    void nestedDtos_doNotFetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    void select_doNotFetchRelatedDtos(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 

@@ -2,10 +2,18 @@ package org.litebridge.orm.engine;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
+import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.expression.ColumnExpression;
+import org.litebridge.db.spi.expression.ConvertExpression;
+import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.TypeConversionMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.engine.ast.LimitNode;
@@ -14,12 +22,16 @@ import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -214,6 +226,7 @@ public class SelectEngineTerminal {
         // Compile/prepare SQL query
         final PreparedOperation preparedOperation = litebridgeContext.createQueryCompiler().compile(node);
         final Select select = (Select) preparedOperation.operation();
+        final TypeConversionMetaData typeConversionMetaData = createTypeConversionMetaData(select, litebridgeContext);
         // Generate SQL and create type conversion metadata
         final String sql = litebridgeContext.databaseProvider().toSql(select, litebridgeContext.transactionManager());
         // Cache compiled SQL for this AST
@@ -222,7 +235,7 @@ public class SelectEngineTerminal {
                 .toList();
         litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, null));
         // Execute SQL query
-        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), null, null);
+        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), typeConversionMetaData, null);
         return execute(executionSql, litebridgeContext);
     }
 
@@ -317,6 +330,33 @@ public class SelectEngineTerminal {
         final List<DTO> dtos = dtoMapper.toDtos(dtoClass, rows);
         dtos.forEach(ormTable::syncPersistedDto);
         return dtos;
+    }
+
+    private TypeConversionMetaData createTypeConversionMetaData(final Select select, final LitebridgeContext litebridgeContext) {
+        final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.expressions().size());
+        final Class<?>[] typeOverrides = new Class<?>[select.expressions().size()];
+        final TableMetaDataCache tableMetaDataCache = litebridgeContext.tableMetaDataCache();
+        final AliasTransformer aliasTransformer = litebridgeContext.databaseProvider().getAliasTransformer();
+
+        for (int i = 0; i < select.expressions().size(); i++) {
+            SelectExpression expression = select.expressions().get(i);
+
+            if (expression instanceof ConvertExpression convertExpression) {
+                typeOverrides[i] = convertExpression.typeOverride();
+                // Process the nested expression (in case it targets a column)
+                expression = convertExpression.target();
+            }
+
+            if (expression instanceof ColumnExpression columnExpression) {
+                final Column column = columnExpression.column();
+                final String key = Objects.requireNonNull(aliasTransformer.transformAlias(column.alias() != null ? column.alias() : column.name()));
+                final TableMetaData table = litebridgeContext.tableMetaDataCache().ensureTableMetaData(column.table());
+                final ColumnMetaData columnMetaData = table.column(column.name());
+                columnLabelsToColumnMetaData.put(key, columnMetaData);
+            }
+        }
+
+        return new TypeConversionMetaData(columnLabelsToColumnMetaData, typeOverrides);
     }
 
     private static SelectNode findSelectNode(final QueryNode node) {

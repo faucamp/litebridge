@@ -11,7 +11,9 @@ import java.util.StringJoiner;
  * It extends the functionality of the {@code Aliased} class to include the concept of table association.
  * Columns can be used to construct queries and represent database metadata.
  */
-public class Column extends Aliased {
+public final class Column extends Aliased {
+
+    private static final Table NO_TABLE = new Table("");
 
     private Table table;
 
@@ -36,6 +38,20 @@ public class Column extends Aliased {
     public Column(final Table table, final String name, final @Nullable String alias) {
         super(name, alias);
         this.table = table;
+    }
+
+    /**
+     * Construct a new {@code Column} instance without an associated {@link Table} instance.
+     *
+     * @param name  the name of the column; must not be null
+     * @param alias an optional alias for the column; may be null if not needed
+     */
+    public Column(final String name, final @Nullable String alias) {
+        this(NO_TABLE, name);
+    }
+
+    public boolean hasTable() {
+        return table != NO_TABLE;
     }
 
     /**

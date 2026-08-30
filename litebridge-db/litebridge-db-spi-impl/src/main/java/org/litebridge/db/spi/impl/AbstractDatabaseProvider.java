@@ -2,6 +2,7 @@ package org.litebridge.db.spi.impl;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
+import org.litebridge.commons.StringUtils;
 import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
@@ -177,6 +178,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
             while (resultSet.next()) {
                 final Row row = new Row();
                 final int columnCount = resultSet.getMetaData().getColumnCount();
+                final Map<String, Table> seenTables = new HashMap<>();
 
                 for (int i = 1; i <= columnCount; i++) {
                     final String alias = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(resultSet.getMetaData().getColumnLabel(i)));
@@ -195,9 +197,20 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                         final String columnName = resultSet.getMetaData().getColumnName(i);
                         final String columnAlias = resultSet.getMetaData().getColumnLabel(i);
                         columnSqlType = resultSet.getMetaData().getColumnType(i);
+                        final String qualifiedTableName;
 
-                        final Table table = new Table(null, schemaName, tableName);
-                        column = new Column(table, columnName, columnAlias);
+                        if (!StringUtils.isEmpty(tableName)) {
+                            if (!StringUtils.isEmpty(schemaName)) {
+                                qualifiedTableName = "%s.%s".formatted(schemaName, tableName);
+                            } else {
+                                qualifiedTableName = tableName;
+                            }
+
+                            final Table table = seenTables.computeIfAbsent(qualifiedTableName, key -> new Table(null, schemaName, tableName));
+                            column = new Column(table, columnName, columnAlias);
+                        } else {
+                            column = new Column(columnName, columnAlias);
+                        }
                     }
 
                     final Class<?> typeOverride = i <= typeOverrides.length ? typeOverrides[i - 1] : null;

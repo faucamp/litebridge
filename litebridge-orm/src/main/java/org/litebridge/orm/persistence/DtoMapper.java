@@ -2,9 +2,11 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
+import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -19,6 +21,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The SelectSpecDtoMapper class is responsible for mapping data from rows of a database query to DTO (Data Transfer Object) instances.
@@ -27,6 +31,11 @@ import java.util.Map;
 public class DtoMapper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DtoMapper.class);
+    private static final Pattern FUNCTION_SQL_COLUMN_PATTERN = Pattern.compile(
+            "\\b[a-zA-Z_]\\w*\\s*\\((?:\\s*\\b[a-zA-Z_]\\w*\\s*\\()*+\\s*(?:([a-zA-Z_]\\w*)\\.)?([a-zA-Z_]\\w*)",
+            Pattern.CASE_INSENSITIVE
+    );
+
     private final DtoCache dtoCache = new DtoCache();
     private final TypeConverter typeConverter;
     private final TableRegistry tableRegistry;
@@ -48,7 +57,7 @@ public class DtoMapper {
         }
 
         // Compile per-DTO mapping data
-        final Map<Table, MappingData> mappingDataMap = compileMappingData(rows);
+        final Map<Table, MappingData> mappingDataMap = compileMappingData(dtoClass, rows);
 
         // Create DTOs and populate the cache
         final Map<Class<?>, List<PartiallyConstructedDto>> createdDtos = cacheDtos(rows, mappingDataMap);
@@ -61,15 +70,23 @@ public class DtoMapper {
                 .toList();
     }
 
-    private Map<Table, MappingData> compileMappingData(final List<Row> rows) {
+    private Map<Table, MappingData> compileMappingData(final Class<?> dtoClass, final List<Row> rows) {
+        final TableMetaData dtoClassTableMetaData = tableRegistry.getOrmTableOrThrow(dtoClass).getMetaData();
         final Map<Table, MappingData> mappingDataMap = new HashMap<>();
         int columnIndex = 0;
 
         for (final Row.RowColumn rowColumn : rows.getFirst().columns()) {
             final Column column = rowColumn.column();
-            final MappingData mappingData = createMappingDataIfAbsent(mappingDataMap, column.table());
+            final Column targetColumn;
 
-            final FieldAccessor fieldAccessor = mappingData.ormTable().getFieldForColumnName(column.name());
+            if (column.hasTable()) {
+                targetColumn = column;
+            } else {
+                targetColumn = parseTargetColumn(column.name(), dtoClassTableMetaData.schema());
+            }
+
+            final MappingData mappingData = createMappingDataIfAbsent(mappingDataMap, targetColumn.table());
+            final FieldAccessor fieldAccessor = mappingData.ormTable().getFieldForColumnName(targetColumn.name());
             final boolean basicType = ClassUtils.isBasicType(fieldAccessor.type());
             final boolean relatedDto = !basicType;
             FieldAccessor relatedCollectionField = null;
@@ -302,6 +319,28 @@ public class DtoMapper {
         }
 
         return dto;
+    }
+
+    private Column parseTargetColumn(String sqlFunction, final String defaultSchema) {
+        final Matcher matcher = FUNCTION_SQL_COLUMN_PATTERN.matcher(sqlFunction);
+
+        if (matcher.find()) {
+            String tableName = matcher.group(1);
+            final String columnName = matcher.group(2);
+
+            if (tableName != null) {
+                if (!StringUtils.isEmpty(defaultSchema)) {
+                    tableName = defaultSchema + "." + tableName;
+                }
+
+                final Table table = tableRegistry.getOrCreateSpiTable(tableName);
+                return new Column(table, columnName);
+            } else {
+                throw new IllegalStateException("Cannot infer target table from label: " + sqlFunction);
+            }
+        } else {
+            throw new IllegalStateException("Cannot infer target column/table from label: " + sqlFunction);
+        }
     }
 
     /**
