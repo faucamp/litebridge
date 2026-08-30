@@ -28,8 +28,9 @@ import org.litebridge.orm.api.spec.FieldSpec;
 import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.api.tx.TransactionContext;
 import org.litebridge.orm.config.LitebridgeConfig;
-import org.litebridge.orm.engine.FromClauseEngine;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.RegistrationEngine;
+import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
 import org.litebridge.orm.expression.TestSelectReference;
@@ -649,14 +650,14 @@ class LitebridgeTest {
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
-        final FromClauseEngine fromClauseEngine = mock(FromClauseEngine.class);
-        setFieldValue(litebridge, "fromClauseEngine", fromClauseEngine);
+        final SelectEngine selectEngine = mock(SelectEngine.class);
+        setFieldValue(litebridge, "fromClauseEngine", selectEngine);
 
         // When
         litebridge.select(TestDto.class, String.class);
 
         // Then
-        verify(fromClauseEngine).from(eq(TestDto.class), eq(String.class));
+        verify(selectEngine).select(eq(TestDto.class), eq(String.class), any(LitebridgeContext.class));
     }
 
     @Test
