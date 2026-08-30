@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class InsertEngine extends AbstractInsertEngine {
+public final class InsertEngine extends AbstractInsertEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InsertEngine.class);
     private final TableRegistry tableRegistry;

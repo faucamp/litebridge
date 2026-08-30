@@ -18,7 +18,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.function.Function;
 
-public class UpdateEngine extends AbstractUpdateEngine {
+public final class UpdateEngine extends AbstractUpdateEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateEngine.class);
 

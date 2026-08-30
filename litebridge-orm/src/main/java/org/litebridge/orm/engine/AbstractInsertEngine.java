@@ -8,7 +8,7 @@ import org.litebridge.db.spi.query.UpdateMetaData;
 import java.util.Collections;
 import java.util.List;
 
-abstract class AbstractInsertEngine {
+abstract sealed class AbstractInsertEngine permits InsertEngine, MergeEngine {
 
     protected static UpdateMetaData createUpdateMetaData(final TableMetaData tableMetaData) {
         final List<ColumnMetaData> generatedPrimaryKeyColumns = getGeneratedPrimaryKeyColumns(tableMetaData);
