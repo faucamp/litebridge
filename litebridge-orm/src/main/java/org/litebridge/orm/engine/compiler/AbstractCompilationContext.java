@@ -20,19 +20,15 @@ import org.litebridge.db.spi.query.LogicConditionGroup;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.expression.ColumnExpressionSpec;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
-import org.litebridge.tracking.FieldAccessor;
 
 import java.sql.Types;
 import java.util.ArrayList;
@@ -138,18 +134,19 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             return new Condition(lhsSelectExpression, operator, selectReference);
         }
 
-        // Setup bind value creators
-        switch (operator) {
+        // Store bind values and return condition
+        return switch (operator) {
             case USING -> {
                 final LiteralExpression literalExpression = litebridgeContext.sqlFunctionRegistry().select().literal().create(value, true);
-                return new Condition(lhsSelectExpression, operator, literalExpression);
+                yield  new Condition(lhsSelectExpression, operator, literalExpression);
             }
+            case IS_NULL, IS_NOT_NULL -> new Condition(lhsSelectExpression, operator, null);
             default -> {
                 final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size());
                 bindValues.addAll(createBindValues(lhsSelectExpression, value, litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter()));
-                return new Condition(lhsSelectExpression, operator, bindValueExpression);
+                yield  new Condition(lhsSelectExpression, operator, bindValueExpression);
             }
-        }
+        };
     }
 
     /**

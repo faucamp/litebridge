@@ -10,6 +10,7 @@ import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.basic.dto.Address;
 import org.litebridge.orm.e2e.basic.dto.Person;
 import org.litebridge.orm.e2e.basic.dto.PersonAccount;
+import org.litebridge.orm.e2e.basic.meta.AccountMeta;
 import org.litebridge.orm.e2e.basic.meta.PersonMeta;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.engine.QueryPlanCache;
@@ -73,14 +74,28 @@ public class BasicE2eTest extends AbstractE2eTest {
                 .oneOrThrow();
 
         // Then
+        assertEquals(account, result);
         assertEquals(person, result.getOwner());
 
         // Retrieve the person record using a type-safe metamodel
+        final Account result2 = litebridge.select(Account.class)
+                .join(Person.class).on(AccountMeta.owner)
+                .where(AccountMeta.id).eq(person.getId())
+                .oneOrThrow();
+
+        assertEquals(account, result2);
+        assertEquals(person, result2.getOwner());
+
+        // Reverse the join
         final Person resultPerson = litebridge.select(Person.class)
+                .join(Account.class).on(PersonMeta.accounts)
                 .where(PersonMeta.name).eq("Alice")
                 .oneOrThrow();
 
-        assertEquals("Smith", resultPerson.getSurname());
+        assertEquals(person.getName(), resultPerson.getName());
+        assertNotNull(resultPerson.getAccounts());
+        assertEquals(1, resultPerson.getAccounts().size());
+        assertEquals(account, resultPerson.getAccounts().getFirst());
     }
 
     @TestTemplate
@@ -109,6 +124,7 @@ public class BasicE2eTest extends AbstractE2eTest {
                 .oneOrThrow();
 
         // Then
+        assertEquals(account.getId(), result.getId());
         assertNull(result.getOwner());
 
         // Since the data was loaded from the database, saving it again should do nothing
@@ -158,17 +174,41 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         litebridge.saveAll(person, person2, person3);
 
-        // When
+        // Query using field names
         final Person result = litebridge.select(Person.class)
                 .where("name").eq("Alice")
-                .and(q ->
-                        q.where("surname").eq("Jones")
-                                .or("age").eq(21)
-                                .or(q2 -> q2.where("eyeColour").eq("green")
-                                        .and("age").gt(35)))
+                .and(q -> q
+                        .where("surname").eq("Jones")
+                        .or("age").eq(21)
+                        .or(q2 -> q2
+                                .where("eyeColour").eq("green")
+                                .and("age").gt(35)))
                 .oneOrThrow();
 
         assertEquals(person2, result);
+
+        // Similar query using metamodels
+        final Person result2 = litebridge.select(Person.class)
+                .where(PersonMeta.name).eq("Alice")
+                .and(q -> q
+                        .where(PersonMeta.surname).eq("Jones")
+                        .or(PersonMeta.age).eq(21)
+                        .or(q2 -> q2
+                                .where(PersonMeta.eyeColour).eq("green")
+                                .and(PersonMeta.age).gt(35)))
+                .and(PersonMeta.id).isNotNull()
+                .oneOrThrow();
+
+        assertEquals(person2, result2);
+
+        // Nested query on initial where clause
+        final List<Person> result3 = litebridge.select(Person.class)
+                .where(q -> q
+                        .where(PersonMeta.id).eq(3)
+                        .or(PersonMeta.eyeColour).neq("green"))
+                .list();
+
+        assertEquals(2, result3.size());
     }
 
     @TestTemplate

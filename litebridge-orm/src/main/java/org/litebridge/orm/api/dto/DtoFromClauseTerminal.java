@@ -3,14 +3,16 @@ package org.litebridge.orm.api.dto;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
+import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.ConditionWithIdNode;
 import org.litebridge.orm.engine.ast.JoinNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.ast.WhereNode;
-import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
-import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.NoSuchElementException;
@@ -64,10 +66,9 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
      * @return the parent condition clause interface, allowing further chaining of conditions
      */
     public DtoWhereConditionClauseTerminal<DTO> where(final QueryConditionBuilder<DTO> query) {
-//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
-//        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
-//        return new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new WhereNode(delegate.node(), terminal.node())));
-        throw new UnsupportedOperationException("Not implemented yet");
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
+        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        return new DtoWhereConditionClauseTerminal<>(new WhereNode(this.node, terminal.node()), selectEngineTerminal, litebridgeContext);
     }
 
     /**

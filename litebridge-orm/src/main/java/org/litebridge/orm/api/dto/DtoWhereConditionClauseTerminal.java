@@ -1,17 +1,18 @@
 package org.litebridge.orm.api.dto;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
-import org.litebridge.orm.engine.ast.ConditionGroupNode;
-import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.ConditionGroupNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -119,11 +120,7 @@ public final class DtoWhereConditionClauseTerminal<DTO>
     }
 
     private DtoWhereConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        if (!(node instanceof WhereNode whereNode)) {
-            //TODO: remove scaffolding
-            throw new IllegalArgumentException("AST error: Expected a WhereNode but got " + node);
-        }
-
+        final WhereNode whereNode = ObjectUtils.requireInstanceOf(node, WhereNode.class);
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
         final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
         whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, terminal.node()));

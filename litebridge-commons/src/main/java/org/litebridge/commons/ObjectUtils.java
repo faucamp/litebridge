@@ -49,6 +49,19 @@ public final class ObjectUtils {
         }
     }
 
+    public static <X extends Throwable, T> T requireInstanceOf(@Nullable final Object obj, final Class<T> type) throws X {
+        return requireInstanceOf(obj, type, () ->
+                new IllegalArgumentException("Not an instance of " + type.getName()));
+    }
+
+    public static <X extends Throwable, T> T requireInstanceOf(@Nullable final Object obj, final Class<T> type, final Supplier<? extends X> exceptionSupplier) throws X {
+        if (type.isInstance(obj)) {
+            return (T) obj;
+        } else {
+            throw exceptionSupplier.get();
+        }
+    }
+
     /**
      * Retrieves the value of a specified field from the given object.
      * <p>

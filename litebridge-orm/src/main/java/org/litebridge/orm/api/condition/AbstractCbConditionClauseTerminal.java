@@ -97,6 +97,7 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
      *
      * @return the query node
      */
+    //TODO: check visibility level - should not be exposed to end user API
     public QueryNode node() {
         return node;
     }
