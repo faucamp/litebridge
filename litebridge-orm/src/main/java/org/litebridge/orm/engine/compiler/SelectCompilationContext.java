@@ -42,6 +42,7 @@ import org.litebridge.tracking.FieldAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,6 +52,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
     private final boolean selectAll;
     private final Table aliasedTable;
+    private final Map<String, Table> aliasedTables = new HashMap<>();
     private final TableMetaData tableMetaData;
     private final @Nullable OrmTable ormTable;
     private final List<SelectExpression> selectExpressions;
@@ -74,9 +76,9 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         if (selectNode.dtoClass() != null) {
             this.ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(selectNode.dtoClass());
             this.tableMetaData = ormTable.getMetaData();
-            this.aliasedTable = aliasGenerator.aliasTable(tableMetaData.toTable());
+            this.aliasedTable = aliasTable(tableMetaData.toTable());
         } else {
-            this.aliasedTable = aliasGenerator.aliasTable(litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(selectNode.table())));
+            this.aliasedTable = aliasTable(litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(selectNode.table())));
             this.tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(aliasedTable);
             this.ormTable = null;
         }
@@ -429,8 +431,28 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         return expressionSpec;
     }
 
+    private Table aliasTable(final Table table) {
+        if (table == aliasedTable) {
+            return table;
+        } else if (table.equalsIgnoreAlias(aliasedTable)) {
+            return aliasedTable;
+        }
+
+        return aliasedTables.computeIfAbsent(table.qualifiedName(), tableName -> aliasGenerator.aliasTable(table));
+    }
+
+    private Table aliasTable(final OrmTable ormTable) {
+        final TableMetaData tableMetaData = ormTable.getMetaData();
+        if (Objects.equals(tableMetaData.name(), aliasedTable.name())
+                && Objects.equals(tableMetaData.schema(), aliasedTable.schema())) {
+            return aliasedTable;
+        }
+
+        return aliasedTables.computeIfAbsent(tableMetaData.qualifiedName(), tableName -> aliasGenerator.aliasTable(ormTable));
+    }
+
     private Column resolveAlias(final Table table, final String columnName) {
-        return resolveAlias(table, columnName, () -> aliasGenerator.aliasColumn(table, new Column(table, columnName)));
+        return resolveAlias(table, columnName, () -> new Column(table, columnName));
     }
 
     private Column resolveAlias(final Table table, final String columnName, final Supplier<Column> columnSupplier) {
@@ -439,7 +461,17 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 .filter(Objects::nonNull)
                 .filter(column -> table.equalsIgnoreAlias(table) && columnName.equals(column.name()))
                 .findFirst()
-                .orElseGet(columnSupplier);
+                .orElseGet(() -> {
+                    // Column not in the select list; do not assign an alias to it, but use the alias of the table
+                    final Column column = columnSupplier.get();
+                    final Table aliasedTable = aliasedTables.get(table.qualifiedName());
+
+                    if (aliasedTable != null) {
+                        column.setTable(aliasedTable);
+                    }
+
+                    return column;
+                });
     }
 
     private ExpressionSpec aliasExpression(final ExpressionSpec expressionSpec) {
@@ -500,7 +532,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
         // Join table & column
         final OrmTable rightOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(joinDtoClass));
-        final Table aliasedRightTable = aliasGenerator.aliasTable(rightOrmTable);
+        final Table aliasedRightTable = aliasTable(rightOrmTable);
         final TableMetaData rightTableMetaData = rightOrmTable.getMetaData();
         final ColumnMetaData rightColumnMetaData = rightTableMetaData.column(leftColumnMetaData.getJoinColumn());
 
@@ -526,7 +558,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
     private JoinOnSpec processOneToManyReverseJoin(final Class<?> joinDtoClass, final MappedOneToMany mappedOneToMany) {
         // Join table & column
         final OrmTable rightOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(joinDtoClass));
-        final Table aliasedRightTable = aliasGenerator.aliasTable(rightOrmTable);
+        final Table aliasedRightTable = aliasTable(rightOrmTable);
         final ColumnMetaData rightColumnMetaData = rightOrmTable.columnMetaDataForField(mappedOneToMany.mappedByField());
 
         // Local column

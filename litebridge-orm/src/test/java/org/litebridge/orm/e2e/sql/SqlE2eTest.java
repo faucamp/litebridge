@@ -145,18 +145,21 @@ class SqlE2eTest extends AbstractE2eTest {
     void selectMapToDto(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
         insertTestPersonRecords(personTableName);
         tableMapper.registerPersonDtoTableMapping(litebridge);
 
         // When
         LOGGER.info("Selecting specific expressions and filtering records using a query");
         final List<Person> result =
-                litebridge.select(tableMapper.transformColumnName("FIRST_NAME"),
-                                tableMapper.transformColumnName("SURNAME"),
-                                tableMapper.transformColumnName("AGE")).from(personTableName)
-                        .where(tableMapper.transformColumnName("AGE")).gt(18)
-                        .and(tableMapper.transformColumnName("AGE")).lt(25)
-                        .orderBy(tableMapper.transformColumnName("PERSON_ID")).asc()
+                litebridge.select(firstName, surname, age)
+                        .from(personTableName)
+                        .where(age).gt(18)
+                        .and(age).lt(25)
+                        .orderBy(personId).asc()
                         .stream()
                         .map(row -> litebridge.toDto(row, Person.class))
                         .toList();
