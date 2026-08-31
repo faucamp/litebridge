@@ -139,6 +139,19 @@ public final class Column extends Aliased {
         return new Column(new Table(catalog, schema, table), column);
     }
 
+    /**
+     * Returns the qualified name of the column ("tableName.columnName").
+     *
+     * @return the qualified column name
+     */
+    public String qualifiedName() {
+        if (table != NO_TABLE) {
+            return table.name() + "." + name();
+        } else {
+            return name();
+        }
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof final Column column)) return false;

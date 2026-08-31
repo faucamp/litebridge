@@ -7,6 +7,7 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.orm.persistence.OrmTable;
+import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +54,16 @@ public final class DefaultAliasGenerator implements AliasGenerator {
         final TableMetaData tableMetaData = ormTable.getMetaData();
         final String tableAlias = newAlias(tableMetaData.name());
         return new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), tableAlias);
+    }
+
+    @Override
+    public Table aliasTable(final Table table) {
+        if (table.alias() != null) {
+            return table;
+        }
+
+        final String tableAlias = newAlias(table.name());
+        return table.as(tableAlias);
     }
 
     @Override

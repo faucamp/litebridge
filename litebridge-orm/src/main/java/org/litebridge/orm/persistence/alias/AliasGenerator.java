@@ -18,6 +18,8 @@ public sealed interface AliasGenerator permits DefaultAliasGenerator, NoOpAliasG
      */
     Table aliasTable(OrmTable ormTable);
 
+    Table aliasTable(Table table);
+
     /**
      * Generates an aliased column for the specified table and column metadata.
      *

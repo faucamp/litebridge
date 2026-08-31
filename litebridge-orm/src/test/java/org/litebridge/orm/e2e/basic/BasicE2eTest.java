@@ -335,7 +335,8 @@ public class BasicE2eTest extends AbstractE2eTest {
                 .join(Account.class).on("accounts")
                 .where("id").eq(person.getId())
                 .oneOrThrow();
-        assertEquals("Alice", fetchedPerson.getName());
+        assertEquals(person.getId(), fetchedPerson.getId());
+        assertEquals(person.getName(), fetchedPerson.getName());
         assertNotNull(fetchedPerson.getAccounts());
         assertEquals(2, fetchedPerson.getAccounts().size());
         assertTrue(fetchedPerson.getAccounts().contains(account));

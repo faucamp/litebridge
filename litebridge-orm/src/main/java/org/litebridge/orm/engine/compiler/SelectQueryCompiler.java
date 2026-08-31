@@ -47,8 +47,7 @@ final class SelectQueryCompiler extends AbstractQueryCompiler<SelectCompilationC
 
     private void applyJoinNode(final JoinNode joinNode, final SelectCompilationContext compilationContext) {
         compilationContext.addJoin(joinNode);
-        flattenAndApplyNodes(joinNode.condition(),
-                conditionNode -> applyConditionNode(conditionNode, compilationContext, ConditionClauseType.JOIN));
+        flattenAndApplyConditionNode(joinNode.condition(), compilationContext, ConditionClauseType.JOIN);
     }
 
     private void flattenAndApplyConditionNode(final QueryNode node, final SelectCompilationContext compilationContext, ConditionClauseType conditionClauseType) {

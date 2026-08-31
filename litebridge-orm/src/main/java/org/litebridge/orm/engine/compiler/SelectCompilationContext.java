@@ -7,6 +7,7 @@ import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.expression.ClauseType;
+import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.query.ConditionGroup;
@@ -32,6 +33,7 @@ import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.persistence.MappedOneToMany;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.util.ArrayList;
@@ -40,15 +42,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 final class SelectCompilationContext extends AbstractCompilationContext {
 
     private final boolean selectAll;
-    private final Table table;
+    private final Table aliasedTable;
     private final TableMetaData tableMetaData;
     private final @Nullable OrmTable ormTable;
     private final List<SelectExpression> selectExpressions;
     private final SelectExpressionMapper selectExpressionMapper;
+    private final AliasGenerator aliasGenerator;
     private @Nullable List<JoinSpec> joinSpecs;
     private @Nullable JoinSpec currentJoinSpec;
     private @Nullable ConditionGroupSpecStack where;
@@ -61,15 +65,16 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                              final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
         this.selectExpressionMapper = litebridgeContext.selectExpressionMapper();
+        this.aliasGenerator = litebridgeContext.aliasGenerator();
         this.selectAll = selectNode.isSelectAll();
 
         if (selectNode.dtoClass() != null) {
             this.ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(selectNode.dtoClass());
             this.tableMetaData = ormTable.getMetaData();
-            this.table = tableMetaData.toTable();
+            this.aliasedTable = aliasGenerator.aliasTable(tableMetaData.toTable());
         } else {
-            this.table = litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(selectNode.table()));
-            this.tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);
+            this.aliasedTable = aliasGenerator.aliasTable(litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(selectNode.table())));
+            this.tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(aliasedTable);
             this.ormTable = null;
         }
 
@@ -78,33 +83,29 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         if (selectAll) {
             // All columns
             final List<ColumnMetaData> columnMetaDatas = tableMetaData.columns();
-            final List<String> selectColumns = new ArrayList<>(columnMetaDatas.size());
             this.selectExpressions = new ArrayList<>(columnMetaDatas.size());
 
             for (ColumnMetaData columnMetaData : columnMetaDatas) {
-                selectColumns.add(columnMetaData.name());
-                this.selectExpressions.add(sqlFunctionRegistry.select().column().create(columnMetaData.toColumn()));
+                final Column aliasedColumn = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
+                this.selectExpressions.add(sqlFunctionRegistry.select().column().create(aliasedColumn));
             }
 
         } else if (selectNode.columns() != null) {
             // Specific field/column names specified
-            final List<String> selectColumns;
+            this.selectExpressions = new ArrayList<>(selectNode.columns().length);
 
             if (ormTable != null) {
                 // Translate field names to column names
-                selectColumns = Arrays.stream(selectNode.columns())
-                        .map(ormTable::columnMetaDataForField)
-                        .map(ColumnMetaData::name)
-                        .toList();
+                for (final String fieldName : selectNode.columns()) {
+                    final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(fieldName);
+                    final Column aliasedColumn = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
+                    this.selectExpressions.add(sqlFunctionRegistry.select().column().create(aliasedColumn));
+                }
             } else {
-                selectColumns = List.of(selectNode.columns());
-            }
-
-            this.selectExpressions = new ArrayList<>(selectColumns.size());
-
-            for (final String selectColumnName : selectColumns) {
-                final ColumnMetaData columnMetaData = tableMetaData.column(selectColumnName);
-                this.selectExpressions.add(sqlFunctionRegistry.select().column().create(columnMetaData.toColumn()));
+                for (final String columnName : selectNode.columns()) {
+                    final ColumnMetaData columnMetaData = tableMetaData.column(columnName);
+                    this.selectExpressions.add(sqlFunctionRegistry.select().column().create(columnMetaData.toColumn()));
+                }
             }
         } else {
             // Select expressions
@@ -112,7 +113,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
             final List<ExpressionSpec> resolvedExpressionSpecs = new ArrayList<>(expressionSpecs.length);
 
             for (ExpressionSpec expressionSpec : expressionSpecs) {
-                resolvedExpressionSpecs.addAll(selectExpressionMapper.resolveProtoExpression(expressionSpec, ormTable, table, ClauseType.SELECT));
+                resolvedExpressionSpecs.addAll(selectExpressionMapper.resolveProtoExpression(expressionSpec, ormTable, aliasedTable, ClauseType.SELECT));
             }
 
             this.selectExpressions = resolvedExpressionSpecs.stream()
@@ -227,7 +228,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 // Get details on the USING column on the local table
                 final MappedFieldTarget mappedFieldTarget = ormTable.mappedFieldTargetForField(conditionJoinUsingNode.usingColumn());
 
-                final JoinUsingSpecs joinUsingSpecs = switch (mappedFieldTarget) {
+                final JoinOnSpec joinOnSpec = switch (mappedFieldTarget) {
                     case ColumnMetaData usingColumnMetaData ->
                             processOneToManyJoin(joinSpec.dtoClass(), usingColumnMetaData);
                     case MappedOneToMany mappedOneToMany ->
@@ -237,7 +238,9 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 };
 
                 // Create actual condition
-                conditionNode = new ConditionNode(null, conditionJoinUsingNode.logicOperator(), null, joinUsingSpecs.usingSelectColumnSpec(), Operator.EQ, joinUsingSpecs.joinSelectColumnSpec());
+                conditionNode = new ConditionNode(null, conditionJoinUsingNode.logicOperator(), null, joinOnSpec.leftSelectColumnSpec(), Operator.EQ, joinOnSpec.rightSelectColumnSpec());
+                // Set the aliased table in the join spec
+                joinSpec.setAliasedTable(joinOnSpec.rightSelectColumnSpec().getColumn().table());
             } else {
                 throw new UnsupportedOperationException("Not implemented yet");
             }
@@ -263,7 +266,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
             // Explicit expression
             groupByExpressions = Arrays.stream(groupByNode.expressions())
                     .flatMap(expressionSpec -> selectExpressionMapper
-                            .resolveProtoExpression(expressionSpec, ormTable, table, ClauseType.GROUP_BY)
+                            .resolveProtoExpression(expressionSpec, ormTable, aliasedTable, ClauseType.GROUP_BY)
                             .stream())
                     .map(expressionSpec -> selectExpressionMapper.toSelectExpression(expressionSpec, true))
                     .toList();
@@ -284,7 +287,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 // Column names
                 groupByExpressions = Arrays.stream(columnNames)
                         .map(columnName -> {
-                            final Column column = new Column(table, columnName);
+                            final Column column = new Column(aliasedTable, columnName);
                             return (SelectExpression) sqlFunctionRegistry.select().reference().create(column);
                         })
                         .toList();
@@ -320,7 +323,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
         if (orderByNode.expression() != null) {
             // Explicit expression
-            orderByExpressions = selectExpressionMapper.resolveProtoExpression(orderByNode.expression(), ormTable, table, ClauseType.ORDER_BY).stream()
+            orderByExpressions = selectExpressionMapper.resolveProtoExpression(orderByNode.expression(), ormTable, aliasedTable, ClauseType.ORDER_BY).stream()
                     .map(expressionSpec -> selectExpressionMapper.toSelectExpression(expressionSpec, true))
                     .toList();
         } else {
@@ -333,7 +336,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 orderByExpressions = Collections.singletonList(litebridgeContext.sqlFunctionRegistry().select().reference().create(columnMetaData.toColumn()));
             } else {
                 // Column name
-                final Column column = new Column(table, columnName);
+                final Column column = new Column(aliasedTable, columnName);
                 orderByExpressions = Collections.singletonList(litebridgeContext.sqlFunctionRegistry().select().reference().create(column));
             }
         }
@@ -363,7 +366,9 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                     .map(joinSpec -> {
                         final Table joinTable;
 
-                        if (joinSpec.dtoClass() != null) {
+                        if (joinSpec.getAliasedTable() != null) {
+                            joinTable = joinSpec.getAliasedTable();
+                        } else if (joinSpec.dtoClass() != null) {
                             joinTable = tableRegistry.getOrmTableOrThrow(joinSpec.dtoClass()).getMetaData().toTable();
                         } else {
                             joinTable = tableRegistry.getOrCreateSpiTable(Objects.requireNonNull(joinSpec.tableName()));
@@ -377,10 +382,10 @@ final class SelectCompilationContext extends AbstractCompilationContext {
             joins = null;
         }
 
-        final ConditionGroup whereConditionGroup = where != null ? toConditionGroup(where.current(), ormTable, table) : null;
-        final ConditionGroup havingConditionGroup = having != null ? toConditionGroup(having.current(), ormTable, table) : null;
+        final ConditionGroup whereConditionGroup = where != null ? toConditionGroup(where.current(), ormTable, aliasedTable) : null;
+        final ConditionGroup havingConditionGroup = having != null ? toConditionGroup(having.current(), ormTable, aliasedTable) : null;
 
-        return new Select(table,
+        return new Select(aliasedTable,
                 selectExpressions,
                 joins,
                 whereConditionGroup,
@@ -390,51 +395,87 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 limit);
     }
 
-    private JoinUsingSpecs processOneToManyJoin(final Class<?> joinDtoClass, final ColumnMetaData usingColumnMetaData) {
+    @Override
+    protected Column resolveAlias(final Table table, final ColumnMetaData columnMetaData) {
+        return resolveAlias(table, columnMetaData.name(), () -> aliasGenerator.aliasColumn(table, columnMetaData));
+    }
+
+
+    @Override
+    protected Column resolveAlias(final Table table, final Column column) {
+        return resolveAlias(table, column.name(), () -> aliasGenerator.aliasColumn(table, column));
+    }
+
+    private Column resolveAlias(final Table table, final String columnName, final Supplier<Column> columnSupplier) {
+        return selectExpressions.stream()
+                .filter(ColumnExpression.class::isInstance)
+                .map(ColumnExpression.class::cast)
+                .map(ColumnExpression::column)
+                .filter(column -> table.equalsIgnoreAlias(table) && columnName.equals(column.name()))
+                .findFirst()
+                .orElseGet(columnSupplier);
+    }
+
+    private JoinOnSpec processOneToManyJoin(final Class<?> joinDtoClass, final ColumnMetaData leftColumnMetaData) {
         // Local column
-        final SelectColumnSpec usingSelectColumnSpec = new SelectColumnSpec(usingColumnMetaData.toColumn());
+        final SelectColumnSpec leftSelectColumnSpec = new SelectColumnSpec(resolveAlias(aliasedTable, leftColumnMetaData));
 
         // Join table & column
-        final OrmTable joinOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(joinDtoClass));
-        final TableMetaData joinTableMetaData = joinOrmTable.getMetaData();
-        final ColumnMetaData joinColumnMetadata = joinTableMetaData.column(usingColumnMetaData.getJoinColumn());
-        final SelectColumnSpec joinSelectColumnSpec = new SelectColumnSpec(joinColumnMetadata.toColumn());
+        final OrmTable rightOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(joinDtoClass));
+        final Table aliasedRightTable = aliasGenerator.aliasTable(rightOrmTable);
+        final TableMetaData rightTableMetaData = rightOrmTable.getMetaData();
+        final ColumnMetaData rightColumnMetaData = rightTableMetaData.column(leftColumnMetaData.getJoinColumn());
 
         // Add join table columns to select
+        SelectColumnSpec rightSelectColumnSpec = null;
+
         if (selectAll) {
             final SqlFunctionRegistry sqlFunctionRegistry = litebridgeContext.sqlFunctionRegistry();
 
-            for (ColumnMetaData columnMetaData : joinTableMetaData.columns()) {
-                this.selectExpressions.add(sqlFunctionRegistry.select().column().create(columnMetaData.toColumn()));
+            for (ColumnMetaData columnMetaData : rightTableMetaData.columns()) {
+                final Column aliasedColumn = aliasGenerator.aliasColumn(aliasedRightTable, columnMetaData);
+                this.selectExpressions.add(sqlFunctionRegistry.select().column().create(aliasedColumn));
+
+                if (columnMetaData.equals(rightColumnMetaData)) {
+                    rightSelectColumnSpec = new SelectColumnSpec(aliasedColumn);
+                }
             }
         }
 
-        return new JoinUsingSpecs(usingSelectColumnSpec, joinSelectColumnSpec);
+        return new JoinOnSpec(leftSelectColumnSpec, Objects.requireNonNull(rightSelectColumnSpec, "Right JOIN column not selected"));
     }
 
-    private JoinUsingSpecs processOneToManyReverseJoin(final Class<?> joinDtoClass, final MappedOneToMany mappedOneToMany) {
+    private JoinOnSpec processOneToManyReverseJoin(final Class<?> joinDtoClass, final MappedOneToMany mappedOneToMany) {
         // Join table & column
-        final OrmTable joinOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(joinDtoClass));
-        final ColumnMetaData joinColumnMetaData = joinOrmTable.columnMetaDataForField(mappedOneToMany.mappedByField());
-        final SelectColumnSpec joinSelectColumnSpec = new SelectColumnSpec(joinColumnMetaData.toColumn());
+        final OrmTable rightOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(joinDtoClass));
+        final Table aliasedRightTable = aliasGenerator.aliasTable(rightOrmTable);
+        final ColumnMetaData rightColumnMetaData = rightOrmTable.columnMetaDataForField(mappedOneToMany.mappedByField());
 
         // Local column
         //TODO: composite primary keys
-        final ColumnMetaData usingColumnMetaData = ormTable.getMetaData().primaryKey().getFirst();
-        final SelectColumnSpec usingSelectColumnSpec = new SelectColumnSpec(usingColumnMetaData.toColumn());
+        final ColumnMetaData leftColumnMetaData = ormTable.getMetaData().primaryKey().getFirst();
+        final Column leftAliasedColumn = resolveAlias(aliasedTable, leftColumnMetaData);
+        final SelectColumnSpec leftSelectColumnSpec = new SelectColumnSpec(leftAliasedColumn);
 
         // Add join table columns to select
+        SelectColumnSpec rightSelectColumnSpec = null;
+
         if (selectAll) {
             final SqlFunctionRegistry sqlFunctionRegistry = litebridgeContext.sqlFunctionRegistry();
 
-            for (ColumnMetaData columnMetaData : joinOrmTable.getMetaData().columns()) {
-                this.selectExpressions.add(sqlFunctionRegistry.select().column().create(columnMetaData.toColumn()));
+            for (ColumnMetaData columnMetaData : rightOrmTable.getMetaData().columns()) {
+                final Column aliasedColumn = aliasGenerator.aliasColumn(aliasedRightTable, columnMetaData);
+                this.selectExpressions.add(sqlFunctionRegistry.select().column().create(aliasedColumn));
+
+                if (columnMetaData.equals(rightColumnMetaData)) {
+                    rightSelectColumnSpec = new SelectColumnSpec(aliasedColumn);
+                }
             }
         }
 
-        return new JoinUsingSpecs(usingSelectColumnSpec, joinSelectColumnSpec);
+        return new JoinOnSpec(leftSelectColumnSpec, Objects.requireNonNull(rightSelectColumnSpec, "Right JOIN column not selected"));
     }
 
-    private record JoinUsingSpecs(SelectColumnSpec usingSelectColumnSpec, SelectColumnSpec joinSelectColumnSpec) {
+    private record JoinOnSpec(SelectColumnSpec leftSelectColumnSpec, SelectColumnSpec rightSelectColumnSpec) {
     }
 }

@@ -30,6 +30,7 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.sql.Types;
@@ -51,6 +52,16 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
     @Override
     public List<BindValue> getBindValues() {
         return bindValues;
+    }
+
+    protected Column resolveAlias(final Table table, final ColumnMetaData columnMetaData) {
+        // Default implementation does nothing
+        return columnMetaData.toColumn();
+    }
+
+    protected Column resolveAlias(final Table table, final Column column) {
+        // Default implementation does nothing
+        return column;
     }
 
     protected final ConditionGroup toConditionGroup(final ConditionGroupSpec conditionGroupSpec, final @Nullable OrmTable ormTable, final Table table) {
@@ -87,11 +98,12 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         } else if (ormTable != null) {
             // DTO field name
             final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(Objects.requireNonNull(conditionSpec.getLhsColumn()));
-            final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(columnMetaData.name());
-            lhsExpressionSpec = new SelectFieldSpec(fieldAccessor, columnMetaData.toColumn());
+            final Column aliasedColumn = resolveAlias(table, columnMetaData);
+            lhsExpressionSpec = new SelectColumnSpec(aliasedColumn);
         } else {
             // Column name
-            lhsExpressionSpec = new SelectColumnSpec(new Column(table, Objects.requireNonNull(conditionSpec.getLhsColumn())));
+            final Column aliasedColumn = resolveAlias(table, new Column(table, Objects.requireNonNull(conditionSpec.getLhsColumn())));
+            lhsExpressionSpec = new SelectColumnSpec(aliasedColumn);
         }
 
         final SelectExpression lhsSelectExpression = selectExpressionMapper.toSelectExpression(lhsExpressionSpec, true);

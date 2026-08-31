@@ -181,7 +181,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                 final Map<String, Table> seenTables = new HashMap<>();
 
                 for (int i = 1; i <= columnCount; i++) {
-                    final String alias = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(resultSet.getMetaData().getColumnLabel(i)));
+                    final String columnAlias = resultSet.getMetaData().getColumnLabel(i);
+                    final String alias = Objects.requireNonNull(aliasTransformer.orThrow().transformAlias(columnAlias));
                     final ColumnMetaData columnMetaData = columnLabelsToColumnMetaData.get(alias);
                     final int columnSqlType;
                     final Column column;
@@ -195,7 +196,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                         final String schemaName = resultSet.getMetaData().getSchemaName(i);
                         final String tableName = resultSet.getMetaData().getTableName(i);
                         final String columnName = resultSet.getMetaData().getColumnName(i);
-                        final String columnAlias = resultSet.getMetaData().getColumnLabel(i);
                         columnSqlType = resultSet.getMetaData().getColumnType(i);
                         final String qualifiedTableName;
 
