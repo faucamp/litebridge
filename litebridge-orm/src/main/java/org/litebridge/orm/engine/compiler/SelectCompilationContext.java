@@ -409,13 +409,13 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
     @Override
     protected Column resolveAlias(final Table table, final ColumnMetaData columnMetaData) {
-        return resolveAlias(table, columnMetaData.name(), () -> aliasGenerator.aliasColumn(table, columnMetaData));
+        return resolveAlias(table, columnMetaData.name(), columnMetaData::toColumn);
     }
 
 
     @Override
     protected Column resolveAlias(final Table table, final Column column) {
-        return resolveAlias(table, column.name(), () -> aliasGenerator.aliasColumn(table, column));
+        return resolveAlias(table, column.name(), () -> column);
     }
 
     @Override
