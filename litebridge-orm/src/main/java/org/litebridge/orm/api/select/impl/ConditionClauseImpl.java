@@ -26,7 +26,7 @@ public class ConditionClauseImpl<DTO,
         implements ConditionClause<DTO, SELF, CCT> {
 
     private final LitebridgeContext litebridgeContext;
-    private final Function<QueryNode, CCT> terminalRecreator;
+    private final Function<QueryNode, CCT> terminalCreator;
     private final LogicOperator logicOperator;
     private final @Nullable String lhsColumn;
     private final @Nullable ExpressionSpec lhsExpression;
@@ -37,13 +37,13 @@ public class ConditionClauseImpl<DTO,
                                   final @Nullable String lhsColumn,
                                   final @Nullable ExpressionSpec lhsExpression,
                                   final @Nullable QueryNode node,
-                                  final Function<QueryNode, CCT> terminalRecreator) {
+                                  final Function<QueryNode, CCT> terminalCreator) {
         this.litebridgeContext = litebridgeContext;
         this.logicOperator = logicOperator;
         this.lhsColumn = lhsColumn;
         this.lhsExpression = lhsExpression;
         this.node = node;
-        this.terminalRecreator = terminalRecreator;
+        this.terminalCreator = terminalCreator;
     }
 
     /**
@@ -58,7 +58,7 @@ public class ConditionClauseImpl<DTO,
 
     public CCT using(final String column) {
         final QueryNode newNode = new ConditionNode(node, LogicOperator.NOOP, column, null, Operator.USING, column);
-        return terminalRecreator.apply(newNode);
+        return terminalCreator.apply(newNode);
     }
 
     /**
@@ -283,6 +283,6 @@ public class ConditionClauseImpl<DTO,
 
         final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhsColumn, lhsExpression, translatedOperator, value);
 
-        return terminalRecreator.apply(conditionNode);
+        return terminalCreator.apply(conditionNode);
     }
 }

@@ -295,22 +295,11 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      */
     protected abstract AbstractCbConditionClauseTerminal<DTO> createCbConditionClauseTerminal(final QueryNode conditionNode);
 
+    @Deprecated(forRemoval = true)
     private SelectSpec createSelectSpec(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
 //        final SelectTerminal<?> selectTerminal = Objects.requireNonNull(subselect, "Subselect cannot be null")
 //                .apply(new SelectEngine(fromClauseEngine));
 //        return getSelectSpec(selectTerminal);
-        throw new UnsupportedOperationException("Deprecated");
-    }
-
-    private SelectSpec getSelectSpec(final SelectTerminal<?> selectTerminal) {
-//        final AbstractSelector<?, ?> selector = switch (selectTerminal) {
-//            case DelegatingSelectTerminal<?, ?> delegating -> DelegatingSelectorInspector.getDelegate(delegating);
-//            case AbstractSelector<?, ?> s -> s;
-//            default ->
-//                    throw new IllegalArgumentException("Unsupported terminal type: " + selectTerminal.getClass().getName());
-//        };
-//
-//        return selector.compile();
         throw new UnsupportedOperationException("Deprecated");
     }
 }
