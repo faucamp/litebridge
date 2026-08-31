@@ -8,6 +8,7 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
+import org.litebridge.db.spi.expression.ConvertExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.query.ConditionGroup;
@@ -27,7 +28,9 @@ import org.litebridge.orm.engine.ast.JoinNode;
 import org.litebridge.orm.engine.ast.LimitNode;
 import org.litebridge.orm.engine.ast.OrderByNode;
 import org.litebridge.orm.engine.ast.SelectNode;
+import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.intent.ConvertSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.persistence.MappedOneToMany;
@@ -104,7 +107,8 @@ final class SelectCompilationContext extends AbstractCompilationContext {
             } else {
                 for (final String columnName : selectNode.columns()) {
                     final ColumnMetaData columnMetaData = tableMetaData.column(columnName);
-                    this.selectExpressions.add(sqlFunctionRegistry.select().column().create(columnMetaData.toColumn()));
+                    final Column aliasedColumn = aliasGenerator.aliasColumn(aliasedTable, columnMetaData);
+                    this.selectExpressions.add(sqlFunctionRegistry.select().column().create(aliasedColumn));
                 }
             }
         } else {
@@ -117,6 +121,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
             }
 
             this.selectExpressions = resolvedExpressionSpecs.stream()
+                    .map(this::aliasExpression)
                     .map(expressionSpec -> selectExpressionMapper.toSelectExpression(expressionSpec, false))
                     .toList();
         }
@@ -268,6 +273,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                     .flatMap(expressionSpec -> selectExpressionMapper
                             .resolveProtoExpression(expressionSpec, ormTable, aliasedTable, ClauseType.GROUP_BY)
                             .stream())
+                    .map(this::resolveAlias)
                     .map(expressionSpec -> selectExpressionMapper.toSelectExpression(expressionSpec, true))
                     .toList();
         } else {
@@ -280,14 +286,15 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 groupByExpressions = Arrays.stream(columnNames)
                         .map(columnName -> {
                             final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(columnName);
-                            return (SelectExpression) sqlFunctionRegistry.select().reference().create(columnMetaData.toColumn());
+                            final Column aliasedColumn = resolveAlias(aliasedTable, columnMetaData);
+                            return (SelectExpression) sqlFunctionRegistry.select().reference().create(aliasedColumn);
                         })
                         .toList();
             } else {
                 // Column names
                 groupByExpressions = Arrays.stream(columnNames)
                         .map(columnName -> {
-                            final Column column = new Column(aliasedTable, columnName);
+                            final Column column = resolveAlias(aliasedTable, columnName);
                             return (SelectExpression) sqlFunctionRegistry.select().reference().create(column);
                         })
                         .toList();
@@ -324,21 +331,24 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         if (orderByNode.expression() != null) {
             // Explicit expression
             orderByExpressions = selectExpressionMapper.resolveProtoExpression(orderByNode.expression(), ormTable, aliasedTable, ClauseType.ORDER_BY).stream()
+                    .map(this::resolveAlias)
                     .map(expressionSpec -> selectExpressionMapper.toSelectExpression(expressionSpec, true))
                     .toList();
         } else {
             // Column/field names
             final String columnName = Objects.requireNonNull(orderByNode.column());
+            final Column aliasedColumn;
 
             if (ormTable != null) {
                 // DTO field name; translate it to a column
                 final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(columnName);
-                orderByExpressions = Collections.singletonList(litebridgeContext.sqlFunctionRegistry().select().reference().create(columnMetaData.toColumn()));
+                aliasedColumn = resolveAlias(aliasedTable, columnMetaData);
             } else {
                 // Column name
-                final Column column = new Column(aliasedTable, columnName);
-                orderByExpressions = Collections.singletonList(litebridgeContext.sqlFunctionRegistry().select().reference().create(column));
+                aliasedColumn = resolveAlias(aliasedTable, columnName);
             }
+
+            orderByExpressions = Collections.singletonList(litebridgeContext.sqlFunctionRegistry().select().reference().create(aliasedColumn));
         }
 
         if (orderBys == null) {
@@ -406,14 +416,82 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         return resolveAlias(table, column.name(), () -> aliasGenerator.aliasColumn(table, column));
     }
 
+    @Override
+    protected ExpressionSpec resolveAlias(final ExpressionSpec expressionSpec) {
+        final ColumnExpressionSpec columnExpressionSpec = findColumnExpressionSpec(expressionSpec);
+
+        if (columnExpressionSpec != null) {
+            final Column column = columnExpressionSpec.getColumn();
+            final Column aliasedColumn = resolveAlias(column.table(), column);
+            columnExpressionSpec.setColumn(aliasedColumn);
+        }
+
+        return expressionSpec;
+    }
+
+    private Column resolveAlias(final Table table, final String columnName) {
+        return resolveAlias(table, columnName, () -> aliasGenerator.aliasColumn(table, new Column(table, columnName)));
+    }
+
     private Column resolveAlias(final Table table, final String columnName, final Supplier<Column> columnSupplier) {
         return selectExpressions.stream()
-                .filter(ColumnExpression.class::isInstance)
-                .map(ColumnExpression.class::cast)
-                .map(ColumnExpression::column)
+                .map(SelectCompilationContext::findColumn)
+                .filter(Objects::nonNull)
                 .filter(column -> table.equalsIgnoreAlias(table) && columnName.equals(column.name()))
                 .findFirst()
                 .orElseGet(columnSupplier);
+    }
+
+    private ExpressionSpec aliasExpression(final ExpressionSpec expressionSpec) {
+        final ColumnExpressionSpec columnExpressionSpec = findColumnExpressionSpec(expressionSpec);
+
+        if (columnExpressionSpec != null) {
+            final Column column = columnExpressionSpec.getColumn();
+            final Column aliasedColumn;
+
+            if (column.table().equalsIgnoreAlias(aliasedTable)) {
+                aliasedColumn = aliasGenerator.aliasColumn(aliasedTable, column);
+            } else {
+                //TODO: may need to alias the table itself
+                aliasedColumn = aliasGenerator.aliasColumn(column.table(), column);
+            }
+
+            columnExpressionSpec.setColumn(aliasedColumn);
+        }
+
+        return expressionSpec;
+    }
+
+    private static @Nullable ColumnExpressionSpec findColumnExpressionSpec(final ExpressionSpec expressionSpec) {
+        final ExpressionSpec targetExpressionSpec;
+
+        if (expressionSpec instanceof ConvertSpec<?> convertSpec) {
+            targetExpressionSpec = convertSpec.target();
+        } else {
+            targetExpressionSpec = expressionSpec;
+        }
+
+        if (targetExpressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
+            return columnExpressionSpec;
+        } else {
+            return null;
+        }
+    }
+
+    private static @Nullable Column findColumn(final SelectExpression selectExpression) {
+        final SelectExpression targetExpression;
+
+        if (selectExpression instanceof ConvertExpression convertExpression) {
+            targetExpression = convertExpression.target();
+        } else {
+            targetExpression = selectExpression;
+        }
+
+        if (targetExpression instanceof ColumnExpression columnExpression) {
+            return columnExpression.column();
+        } else {
+            return null;
+        }
     }
 
     private JoinOnSpec processOneToManyJoin(final Class<?> joinDtoClass, final ColumnMetaData leftColumnMetaData) {

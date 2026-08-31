@@ -74,14 +74,15 @@ public final class DefaultAliasGenerator implements AliasGenerator {
     }
 
     @Override
-    public Column aliasColumn(final Table ormTable, final Column column) {
+    public Column aliasColumn(final Table aliasedTable, final Column column) {
         if (column.alias() != null) {
             return column;
         }
 
         // Create a new alias
-        final String columnAlias = ormTable.alias() + newAlias(column.name());
+        final String columnAlias = aliasedTable.alias() + newAlias(column.name());
         column.setAlias(columnAlias);
+        column.setTable(aliasedTable);
         return column;
     }
 

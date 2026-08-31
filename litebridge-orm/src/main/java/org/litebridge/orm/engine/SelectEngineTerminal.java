@@ -245,7 +245,7 @@ public class SelectEngineTerminal {
         try {
             result = litebridgeContext.databaseProvider().select(preparedSql, litebridgeContext.transactionManager());
         } catch (final SQLException ex) {
-            throw new IllegalStateException("Failed to execute update: " + preparedSql.sql(), ex);
+            throw new IllegalStateException("Failed to execute query: " + preparedSql.sql(), ex);
         }
 
         LOGGER.debug("Row count: {}", result.size());

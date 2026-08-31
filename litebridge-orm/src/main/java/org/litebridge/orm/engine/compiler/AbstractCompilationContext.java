@@ -25,6 +25,7 @@ import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
@@ -64,6 +65,11 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return column;
     }
 
+    protected ExpressionSpec resolveAlias(final ExpressionSpec expressionSpec) {
+        // Default implementation does nothing
+        return expressionSpec;
+    }
+
     protected final ConditionGroup toConditionGroup(final ConditionGroupSpec conditionGroupSpec, final @Nullable OrmTable ormTable, final Table table) {
         final List<LogicCondition> resolvedConditions = conditionGroupSpec.conditions().stream()
                 .map(spec -> new LogicCondition(spec.logicOperator(),
@@ -94,7 +100,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
                 throw new IllegalArgumentException("Expected exactly one LHS expression spec, but got " + lhsResolvedExpressionSpecs.size());
             }
 
-            lhsExpressionSpec = lhsResolvedExpressionSpecs.getFirst();
+            lhsExpressionSpec = resolveAlias(lhsResolvedExpressionSpecs.getFirst());
         } else if (ormTable != null) {
             // DTO field name
             final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(Objects.requireNonNull(conditionSpec.getLhsColumn()));
