@@ -196,7 +196,7 @@ class OrmTableTest {
                 joinTable,
                 "parent_id",
                 childrenField,
-                new ConcurrentLazy<>(() -> targetTable),
+                () -> targetTable,
                 "child_id");
 
         final OrmTable ormTable = new OrmTable(ParentDto.class,

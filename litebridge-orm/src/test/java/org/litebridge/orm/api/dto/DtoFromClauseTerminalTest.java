@@ -179,10 +179,10 @@
 //        assertNotNull(terminal.where(new org.litebridge.orm.expression.select.SelectColumnSpec(mock(org.litebridge.db.spi.Column.class))));
 //        assertNotNull(terminal.where(q -> q.where("field1").eq("val")));
 //
-//        final OrmTable joinTable = mock(OrmTable.class);
-//        when(joinTable.getMetaData()).thenReturn(metaData);
+//        final OrmTable joinOrmTable = mock(OrmTable.class);
+//        when(joinOrmTable.getMetaData()).thenReturn(metaData);
 //        final TableRegistry tableRegistry = mock(TableRegistry.class);
-//        when(tableRegistry.getTableOrThrow(String.class)).thenReturn(joinTable);
+//        when(tableRegistry.getTableOrThrow(String.class)).thenReturn(joinOrmTable);
 //        // Ensure SelectExpressionMapper is set by calling select()
 //        final DtoSelector<TestDto> selectorWithRegistry = new DtoSelector<>(TestDto.class, ormTable, tableRegistry, mock(ClassFieldAccessorCache.class), new DtoConstructor(tableRegistry), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), createMockContext(), null);
 //        final DtoFromClauseTerminal<TestDto> terminalWithRegistry = selectorWithRegistry.select();

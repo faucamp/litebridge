@@ -15,6 +15,7 @@ import org.litebridge.tracking.TrackedDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,6 +51,7 @@ public class OrmTable {
     private final List<Class<?>> nestedDtoClasses;
     private final TableRegistry contextTableRegistry = new TableRegistry();
     private final ClassFieldAccessorCache classFieldAccessorCache;
+    final boolean manyToManyJoinTable;
     private @Nullable List<FieldAccessor> oneToManyReverseMappings;
     private Set<Class<?>> dtoClassInterfaces = Collections.emptySet();
     private Set<Class<?>> relatedDtoClasses = new HashSet<>();
@@ -58,10 +60,10 @@ public class OrmTable {
      * Constructs a new {@code OrmTable} instance, initializing table metadata, field-to-column mappings,
      * and a change tracker for managing object state.
      *
-     * @param dtoClass       the DTO class associated with the table
-     * @param metaData       the metadata describing the table structure
+     * @param dtoClass                the DTO class associated with the table
+     * @param metaData                the metadata describing the table structure
      * @param fieldAccessorTargetMap  a map associating field accessors with their corresponding column metadata
-     * @param changeTracker   the change tracker to monitor and track modifications made to the table's data
+     * @param changeTracker           the change tracker to monitor and track modifications made to the table's data
      * @param classFieldAccessorCache the cache for field accessors
      */
     public OrmTable(final Class<?> dtoClass,
@@ -70,6 +72,7 @@ public class OrmTable {
                     final ChangeTracker changeTracker,
                     final ClassFieldAccessorCache classFieldAccessorCache) {
         this.dtoClass = dtoClass;
+        this.manyToManyJoinTable = Proxy.isProxyClass(dtoClass);
         this.metaData = metaData;
         this.classFieldAccessorCache = classFieldAccessorCache;
 
@@ -385,6 +388,14 @@ public class OrmTable {
         return fieldTargetEntries;
     }
 
+    public List<ColumnMetaData> mappedColumns() {
+        return fieldTargetEntries.stream()
+                .map(Map.Entry::getValue)
+                .filter(ColumnMetaData.class::isInstance)
+                .map(ColumnMetaData.class::cast)
+                .toList();
+    }
+
     /**
      * Get the context table registry.
      *
@@ -441,5 +452,9 @@ public class OrmTable {
      */
     public Set<Class<?>> getRelatedDtoClasses() {
         return relatedDtoClasses;
+    }
+
+    public boolean isManyToManyJoinTable() {
+        return manyToManyJoinTable;
     }
 }

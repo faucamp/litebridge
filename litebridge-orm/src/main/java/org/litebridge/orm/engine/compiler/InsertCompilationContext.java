@@ -49,7 +49,7 @@ final class InsertCompilationContext implements CompilationContext {
 
         if (insertNode.columns() != null) {
             if (insertNode.columns().length > 0) {
-                if (ormTable != null) {
+                if (ormTable != null && !ormTable.isManyToManyJoinTable()) {
                     // Translate field names to column names
                     insertColumns = Arrays.stream(insertNode.columns())
                             .map(ormTable::columnMetaDataForField)

@@ -8,7 +8,7 @@ package org.litebridge.orm.api.register;
  * relationship. It serves as an intermediate step in the configuration, allowing the user to
  * proceed to defining the inverse join column after setting the join column.
  * <p>
- * Instances of this class are created by the {@code joinTable} method of {@link ManyToManyBuilder}
+ * Instances of this class are created by the {@code joinOrmTable} method of {@link ManyToManyBuilder}
  * and provide a method for specifying the join column in the relationship.
  */
 public class ManyToManyBuilderJoinColumnStep {

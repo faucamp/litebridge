@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -249,20 +250,22 @@ public final class TableMapper {
                                final Set<String> unmappedColumns,
                                final Map<FieldAccessor, MappedFieldTarget> mappedFields,
                                final List<FieldAccessor> manyToOneDependencies) {
-        // Verify we are dealing with a collection
-        final FieldAccessor fieldAccessor = fieldAccessor(dtoClass, fieldSpec);
-        final OrmTable joinTable = ensureManyToManyJoinTable(manyToMany, lookup, manyToOneDependencies);
+        //TODO: Verify we are dealing with a collection
+        final FieldAccessor leftCollectionFieldAccessor = fieldAccessor(dtoClass, fieldSpec);
+        final ColumnMetaData leftColumnMetaData = tableMetaData.column(manyToMany.joinColumn());
 
-        final Class<?> targetDto = getJoinTargetDto(dtoClass, fieldAccessor);
-        final ConcurrentLazy<OrmTable> targetTable = new ConcurrentLazy<>(() -> tableRegistry.getOrmTableOrThrow(targetDto));
+        final OrmTable joinOrmTable = ensureManyToManyJoinTable(manyToMany, lookup, manyToOneDependencies);
+
+        final Class<?> rightDto = getJoinTargetDto(dtoClass, leftCollectionFieldAccessor);
+        final Supplier<OrmTable> rightOrmTable = () -> tableRegistry.getOrmTableOrThrow(rightDto);
 
         final MappedManyToMany mappedManyToMany = new MappedManyToMany(
-                joinTable,
+                joinOrmTable,
                 manyToMany.joinColumn(),
-                fieldAccessor,
-                targetTable,
+                leftCollectionFieldAccessor,
+                rightOrmTable,
                 manyToMany.inverseJoinColumn());
-        mappedFields.put(fieldAccessor, mappedManyToMany);
+        mappedFields.put(leftCollectionFieldAccessor, mappedManyToMany);
     }
 
     private static Class<?> getJoinTargetDto(final Class<?> dtoClass, final FieldAccessor fieldAccessor) {

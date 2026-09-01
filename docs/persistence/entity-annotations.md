@@ -178,7 +178,7 @@ public class Group {
 }
 ```
 
-- `joinTable`: The name of the intermediate table.
+- `joinOrmTable`: The name of the intermediate table.
 - `joinColumn`: The column in the join table referencing the current entity (`Group`).
 - `inverseJoinColumn`: The column in the join table referencing the target entity (`Person`).
 
@@ -268,6 +268,6 @@ Applied to a collection field or method.
 
 ### `@ManyToMany`
 Applied to a collection field or method.
-- `joinTable`: The join table name.
+- `joinOrmTable`: The join table name.
 - `joinColumn`: The column in the join table referencing the current entity.
 - `inverseJoinColumn`: The column in the join table referencing the target entity.

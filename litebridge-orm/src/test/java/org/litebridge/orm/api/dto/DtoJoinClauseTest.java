@@ -64,28 +64,28 @@
 //        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context, null);
 //        selector.select();
 //
-//        final OrmTable joinTable = mock(OrmTable.class);
+//        final OrmTable joinOrmTable = mock(OrmTable.class);
 //        final Table joinSpiTable = new Table("", null, "JOIN_TABLE", "t2");
 //        final TableMetaData joinMetaData = mock(TableMetaData.class);
-//        when(joinTable.getMetaData()).thenReturn(joinMetaData);
+//        when(joinOrmTable.getMetaData()).thenReturn(joinMetaData);
 //        when(joinMetaData.toTable()).thenReturn(joinSpiTable);
-//        when(joinTable.dtoClass()).thenReturn((Class) String.class);
+//        when(joinOrmTable.dtoClass()).thenReturn((Class) String.class);
 //
 //        final ColumnMetaData joinColMetaData = new ColumnMetaData(table, "JOIN_COL", true, Types.VARCHAR);
 //        joinColMetaData.setJoinColumn("ID"); // Points to ID in target table
 //        when(ormTable.getColumnForFieldName("field1")).thenReturn(joinColMetaData);
 //
 //        final ColumnMetaData targetColMetaData = new ColumnMetaData(joinSpiTable, "ID", false, Types.BIGINT);
-//        when(joinTable.getColumnMetaData("ID")).thenReturn(targetColMetaData);
+//        when(joinOrmTable.getColumnMetaData("ID")).thenReturn(targetColMetaData);
 //        when(joinMetaData.columns()).thenReturn(List.of(targetColMetaData));
-//        when(joinTable.getFieldForColumnName("ID")).thenReturn(mock(FieldAccessor.class));
+//        when(joinOrmTable.getFieldForColumnName("ID")).thenReturn(mock(FieldAccessor.class));
 //
 //        // Mock left column in select spec
 //        final org.litebridge.db.spi.Column leftColumn = new org.litebridge.db.spi.Column(table, "JOIN_COL");
 //        selector.select(new SelectFieldSpec(mock(FieldAccessor.class), leftColumn));
 //
-//        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(selector, joinTable, conditionNode -> {
-//            final org.litebridge.orm.engine.ast.JoinNode joinNode = new org.litebridge.orm.engine.ast.JoinNode(selector.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+//        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(selector, joinOrmTable, conditionNode -> {
+//            final org.litebridge.orm.engine.ast.JoinNode joinNode = new org.litebridge.orm.engine.ast.JoinNode(selector.node(), "INNER", joinOrmTable.dtoClass(), ormTable.dtoClass(), null);
 //            joinNode.withCondition(conditionNode);
 //            selector.withNode(joinNode);
 //            return new DtoJoinConditionClauseTerminal<>(joinNode, selector);
@@ -130,29 +130,29 @@
 //        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context, null);
 //        selector.select();
 //
-//        final OrmTable joinTable = mock(OrmTable.class);
+//        final OrmTable joinOrmTable = mock(OrmTable.class);
 //        final Table joinSpiTable = new Table("", null, "JOIN_TABLE", "t2");
 //        final TableMetaData joinMetaData = mock(TableMetaData.class);
-//        when(joinTable.getMetaData()).thenReturn(joinMetaData);
+//        when(joinOrmTable.getMetaData()).thenReturn(joinMetaData);
 //        when(joinMetaData.toTable()).thenReturn(joinSpiTable);
 //
 //        final ColumnMetaData ownerIdCol = new ColumnMetaData(joinSpiTable, "OWNER_ID", true, Types.BIGINT);
 //        ownerIdCol.setJoinColumn("ID");
-//        when(joinTable.getColumnForFieldName("ownerId")).thenReturn(ownerIdCol);
+//        when(joinOrmTable.getColumnForFieldName("ownerId")).thenReturn(ownerIdCol);
 //
 //        final ColumnMetaData idCol = new ColumnMetaData(joinSpiTable, "ID", false, Types.BIGINT);
-//        when(joinTable.getColumnMetaData("ID")).thenReturn(idCol);
+//        when(joinOrmTable.getColumnMetaData("ID")).thenReturn(idCol);
 //        when(joinMetaData.columns()).thenReturn(List.of(ownerIdCol, idCol));
 //
-//        when(joinTable.getFieldForColumnName("OWNER_ID")).thenReturn(mappedByField);
-//        when(joinTable.getFieldForColumnName("ID")).thenReturn(mock(FieldAccessor.class));
+//        when(joinOrmTable.getFieldForColumnName("OWNER_ID")).thenReturn(mappedByField);
+//        when(joinOrmTable.getFieldForColumnName("ID")).thenReturn(mock(FieldAccessor.class));
 //
 //        // Mock left column
 //        final Column leftColumn = new Column(joinSpiTable, "OWNER_ID");
 //        selector.select(new SelectFieldSpec(mock(FieldAccessor.class), leftColumn));
 //
-//        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(selector, joinTable, conditionNode -> {
-//            final org.litebridge.orm.engine.ast.JoinNode joinNode = new org.litebridge.orm.engine.ast.JoinNode(selector.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+//        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(selector, joinOrmTable, conditionNode -> {
+//            final org.litebridge.orm.engine.ast.JoinNode joinNode = new org.litebridge.orm.engine.ast.JoinNode(selector.node(), "INNER", joinOrmTable.dtoClass(), ormTable.dtoClass(), null);
 //            joinNode.withCondition(conditionNode);
 //            selector.withNode(joinNode);
 //            return new DtoJoinConditionClauseTerminal<>(joinNode, selector);
@@ -187,28 +187,28 @@
 //        final DtoSelector<Object> selector = new DtoSelector<>(Object.class, ormTable, mock(TableRegistry.class), cache, mock(DtoConstructor.class), mock(TransactionalDatabaseProvider.class), new NoOpAliasGenerator(), context, null);
 //        selector.select();
 //
-//        final OrmTable joinTable = mock(OrmTable.class);
+//        final OrmTable joinOrmTable = mock(OrmTable.class);
 //        final Table joinSpiTable = new Table("", null, "JOIN_TABLE", "t2");
 //        final TableMetaData joinMetaData = mock(TableMetaData.class);
-//        when(joinTable.getMetaData()).thenReturn(joinMetaData);
+//        when(joinOrmTable.getMetaData()).thenReturn(joinMetaData);
 //        when(joinMetaData.toTable()).thenReturn(joinSpiTable);
-//        when(joinTable.dtoClass()).thenReturn((Class) String.class);
+//        when(joinOrmTable.dtoClass()).thenReturn((Class) String.class);
 //
 //        final ColumnMetaData joinColMetaData = new ColumnMetaData(table, "JOIN_COL", true, Types.VARCHAR);
 //        joinColMetaData.setJoinColumn("ID");
 //        when(ormTable.getColumnForFieldName("field1")).thenReturn(joinColMetaData);
 //
 //        final ColumnMetaData targetColMetaData = new ColumnMetaData(joinSpiTable, "ID", false, Types.BIGINT);
-//        when(joinTable.getColumnMetaData("ID")).thenReturn(targetColMetaData);
+//        when(joinOrmTable.getColumnMetaData("ID")).thenReturn(targetColMetaData);
 //        when(joinMetaData.columns()).thenReturn(List.of(targetColMetaData));
-//        when(joinTable.getFieldForColumnName("ID")).thenReturn(mock(FieldAccessor.class));
+//        when(joinOrmTable.getFieldForColumnName("ID")).thenReturn(mock(FieldAccessor.class));
 //
 //        // Mock left column
 //        final Column leftColumn = new Column(table, "JOIN_COL");
 //        selector.select(new SelectFieldSpec(mock(FieldAccessor.class), leftColumn));
 //
-//        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(selector, joinTable, conditionNode -> {
-//            final org.litebridge.orm.engine.ast.JoinNode joinNode = new org.litebridge.orm.engine.ast.JoinNode(selector.node(), "INNER", joinTable.dtoClass(), ormTable.dtoClass(), null);
+//        final DtoJoinClause<Object> joinClause = new DtoJoinClause<>(selector, joinOrmTable, conditionNode -> {
+//            final org.litebridge.orm.engine.ast.JoinNode joinNode = new org.litebridge.orm.engine.ast.JoinNode(selector.node(), "INNER", joinOrmTable.dtoClass(), ormTable.dtoClass(), null);
 //            joinNode.withCondition(conditionNode);
 //            selector.withNode(joinNode);
 //            return new DtoJoinConditionClauseTerminal<>(joinNode, selector);

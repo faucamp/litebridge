@@ -61,7 +61,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
 //        }
 //
 //        // Field not in source; try target table
-//        final FieldAccessor targetFieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(targetTable.dtoClass(), field);
+//        final FieldAccessor targetFieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(targetOrmTable.dtoClass(), field);
 //        return joinOnInverse(targetFieldAccessor.name(), field);
         final ConditionJoinUsingNode conditionJoinUsingNode = new ConditionJoinUsingNode(null, LogicOperator.NOOP, field, null);
         return terminalCreator.apply(conditionJoinUsingNode);
@@ -89,7 +89,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
      * @return an instance of the join condition clause to allow further configuration
      */
     public DtoJoinConditionClauseTerminal<DTO> on(final QueryConditionBuilder<DTO> builder) {
-//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(targetTable, delegate.litebridgeContext().fromClauseEngine(), null);
+//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(targetOrmTable, delegate.litebridgeContext().fromClauseEngine(), null);
 //        final AbstractCbConditionClauseTerminal<DTO> terminal = builder.apply(conditionClauseStart);
 //        final QueryNode conditionNode = terminal.node();
 //
@@ -106,7 +106,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
 //        }
 //
 //        final Column sourceColumn = sourceColumnMetaData.toColumn();
-//        final ColumnMetaData targetColumnMetaData = targetTable.getColumnMetaData(sourceColumnMetaData.getJoinColumn());
+//        final ColumnMetaData targetColumnMetaData = targetOrmTable.getColumnMetaData(sourceColumnMetaData.getJoinColumn());
 //        final Column targetColumn = targetColumnMetaData.toColumn();
 //
 //        final ConditionNode conditionNode;
@@ -121,10 +121,10 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
     }
 
     private DtoJoinConditionClauseTerminal<DTO> joinOnInverse(final String lookupField, final String relationshipField) {
-//        final ColumnMetaData targetColumnMetaData = targetTable.getColumnForFieldName(lookupField);
+//        final ColumnMetaData targetColumnMetaData = targetOrmTable.getColumnForFieldName(lookupField);
 //
 //        if (targetColumnMetaData.getJoinColumn() == null) {
-//            throw new IllegalStateException("No join column specified for column '%s' mapped to field '%s' in joined table '%s'".formatted(targetColumnMetaData.name(), lookupField, targetTable.getMetaData().name()));
+//            throw new IllegalStateException("No join column specified for column '%s' mapped to field '%s' in joined table '%s'".formatted(targetColumnMetaData.name(), lookupField, targetOrmTable.getMetaData().name()));
 //        }
 //
 //        final Column targetColumn = targetColumnMetaData.toColumn();
@@ -148,7 +148,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
     }
 
     private DtoJoinConditionClauseTerminal<DTO> manyToManyJoin(MappedManyToMany mappedManyToMany, String relationshipField) {
-//        final OrmTable joinOrmTable = mappedManyToMany.joinTable();
+//        final OrmTable joinOrmTable = mappedManyToMany.joinOrmTable();
 //
 //        // Create intermediate JoinNode (raw join on the join table)
 //        final JoinNode intermediateJoinNode = new JoinNode(
@@ -159,7 +159,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
 //                joinOrmTable.getMetaData().name()
 //        );
 //
-//        // Set ON condition for intermediate join: sourceTable.pk == joinTable.joinColumn
+//        // Set ON condition for intermediate join: sourceTable.pk == joinOrmTable.joinColumn
 //        final List<ColumnMetaData> sourcePkColumns = table.getMetaData().primaryKey();
 //        if (sourcePkColumns.size() != 1) {
 //            throw new UnsupportedOperationException("Many-to-many joins currently only support single-column primary keys");
@@ -175,13 +175,13 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
 //        final JoinNode targetJoinNode = new JoinNode(
 //                intermediateJoinNode,
 //                "INNER",
-//                targetTable.dtoClass(),
+//                targetOrmTable.dtoClass(),
 //                table.dtoClass(),
 //                null
 //        );
 //
-//        // Set ON condition for target join: joinTable.inverseJoinColumn == targetTable.pk
-//        final List<ColumnMetaData> targetPkColumns = targetTable.getMetaData().primaryKey();
+//        // Set ON condition for target join: joinOrmTable.inverseJoinColumn == targetOrmTable.pk
+//        final List<ColumnMetaData> targetPkColumns = targetOrmTable.getMetaData().primaryKey();
 //
 //        if (targetPkColumns.size() != 1) {
 //            throw new UnsupportedOperationException("Many-to-many joins currently only support single-column primary keys");

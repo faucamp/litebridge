@@ -208,10 +208,10 @@
 //        setupSpec(spec);
 //
 //        final Class<AnotherDto> joinDtoClass = AnotherDto.class;
-//        final Table joinTable = new Table("join_table");
-//        final ColumnMetaData joinCol = new ColumnMetaData(joinTable, "join_col", false, java.sql.Types.VARCHAR);
+//        final Table joinOrmTable = new Table("join_table");
+//        final ColumnMetaData joinCol = new ColumnMetaData(joinOrmTable, "join_col", false, java.sql.Types.VARCHAR);
 //
-//        final OrmTable joinOrmTable = createMockOrmTable(joinDtoClass, joinTable, List.of(joinCol));
+//        final OrmTable joinOrmTable = createMockOrmTable(joinDtoClass, joinOrmTable, List.of(joinCol));
 //        tableRegistry.addTable(joinDtoClass, joinOrmTable);
 //
 //        final FieldAccessor accessor = mock(org.litebridge.tracking.FieldAccessor.class);
@@ -239,8 +239,8 @@
 //        setupSpec(spec);
 //
 //        final Class<AnotherDto> joinDtoClass = AnotherDto.class;
-//        final Table joinTable = new Table("join_table");
-//        final OrmTable joinOrmTable = createMockOrmTable(joinDtoClass, joinTable, List.of());
+//        final Table joinOrmTable = new Table("join_table");
+//        final OrmTable joinOrmTable = createMockOrmTable(joinDtoClass, joinOrmTable, List.of());
 //        tableRegistry.addTable(joinDtoClass, joinOrmTable);
 //
 //        final JoinNode joinNode = new JoinNode(null, "INNER", joinDtoClass, sourceDtoClass, "many_to_many_table");

@@ -16,7 +16,6 @@ import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
-import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.InsertV2;
@@ -41,7 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
@@ -464,13 +462,13 @@ public class PersistenceFacade {
         }
     }
 
-    private <DTO> void processManyToManyUpdate(final DTO dto, final OrmTable table, final Set<Object> inProgressDtos, final MappedManyToMany mappedManyToMany, final ChangedFields changedFields, final FieldAccessor fieldAccessor, final StatementChain statementChain) {
+    private <DTO> void processManyToManyUpdate(final DTO leftDto, final OrmTable leftOrmTable, final Set<Object> inProgressDtos, final MappedManyToMany mappedManyToMany, final ChangedFields changedFields, final FieldAccessor fieldAccessor, final StatementChain statementChain) {
         final ChangedCollectionField changedCollectionField = (ChangedCollectionField) changedFields.get(fieldAccessor.name()).orElse(null);
 
         if (changedCollectionField != null && !changedCollectionField.updatedIndices().isEmpty()) {
-            LOGGER.trace("Processing MappedManyToMany relationship '{}' of DTO: {}", mappedManyToMany.collection().name(), dto);
+            LOGGER.trace("Processing MappedManyToMany relationship '{}' of DTO: {}", mappedManyToMany.collection().name(), leftDto);
             final Class<?> collectionDtoClass = mappedManyToMany.collection().genericType();
-            tableProvider.pushContext(table.getContextTableRegistry());
+            tableProvider.pushContext(leftOrmTable.getContextTableRegistry());
 
             try {
                 final Collection<?> updatedValues = changedCollectionField.updatedValues();
@@ -478,7 +476,7 @@ public class PersistenceFacade {
                 for (Object value : updatedValues) {
                     if (!inProgressDtos.contains(value)) {
                         // Prepare join table entry
-                        final InsertBuilder joinTableInsertBuilder = new InsertBuilder(mappedManyToMany.joinTable(), litebridgeContext);
+                        final InsertBuilder joinTableInsertBuilder = new InsertBuilder(mappedManyToMany.joinOrmTable(), litebridgeContext);
                         statementChain.addDependant(joinTableInsertBuilder, new PipedStatement(joinTableInsertBuilder, value));
 
                         // Cascade save to the nested DTO
@@ -493,18 +491,25 @@ public class PersistenceFacade {
                                 }
 
                                 // Add join table entry
-                                final Table joinTable = mappedManyToMany.joinTable().getMetaData().toTable();
+                                final Table joinTable = mappedManyToMany.joinOrmTable().getMetaData().toTable();
+                                final LinkedHashMap<String, @Nullable Object> joinTableInsertValues = new LinkedHashMap<>();
 
-                                dtoPrimaryKeyColumnValues(dto).forEach(cv -> {
-                                    final ColumnValue joinCv = new ColumnValue(new Column(joinTable, mappedManyToMany.joinColumn()), cv.value());
-//                                    joinTableInsertBuilder.addColumn(joinCv);
-                                    throw new UnsupportedOperationException("Regression");
-                                });
-                                dtoPrimaryKeyColumnValues(value).forEach(cv -> {
-                                    final ColumnValue joinCv = new ColumnValue(new Column(joinTable, mappedManyToMany.inverseJoinColumn()), cv.value());
-//                                    joinTableInsertBuilder.addColumn(joinCv);
-                                    throw new UnsupportedOperationException("Regression");
-                                });
+                                addDtoPrimaryKeyValues(leftDto, joinTableInsertValues);
+                                addDtoPrimaryKeyValues(value, joinTableInsertValues);
+                                joinTableInsertBuilder.addRow(joinTableInsertValues);
+//                                dtoPrimaryKeyFieldAndValues(leftDto).forEach(fieldName, value -> {
+//
+//                                    final ColumnValue joinCv = new ColumnValue(new Column(joinOrmTable, mappedManyToMany.joinColumn()), cv.value());
+////                                    joinTableInsertBuilder.addColumn(joinCv);
+//
+//                                    joinTableInsertBuilder.addRow();
+//                                    throw new UnsupportedOperationException("Regression");
+//                                });
+//                                dtoPrimaryKeyFieldAndValues(value).forEach(cv -> {
+//                                    final ColumnValue joinCv = new ColumnValue(new Column(joinOrmTable, mappedManyToMany.inverseJoinColumn()), cv.value());
+////                                    joinTableInsertBuilder.addColumn(joinCv);
+//                                    throw new UnsupportedOperationException("Regression");
+//                                });
                             }));
                         }
                     }
@@ -564,16 +569,15 @@ public class PersistenceFacade {
         return currentDto;
     }
 
-    private List<ColumnValue> dtoPrimaryKeyColumnValues(final Object dto) {
-        final OrmTable embeddedDtoTable = tableProvider.getTableOrThrow(dto.getClass());
-        final List<ColumnValue> pkColumnValues = new ArrayList<>(embeddedDtoTable.getMetaData().primaryKey().size());
+    private LinkedHashMap<String, @Nullable Object> addDtoPrimaryKeyValues(final Object dto, final LinkedHashMap<String, @Nullable Object> rowValues) {
+        final OrmTable ormTable = tableProvider.getTableOrThrow(dto.getClass());
 
-        embeddedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
-            final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(pkColumn.name());
-            pkColumnValues.add(new ColumnValue(pkColumn.toColumn(), field.get(dto)));
+        ormTable.getMetaData().primaryKey().forEach(pkColumn -> {
+            final FieldAccessor pkField = ormTable.getFieldForColumnName(pkColumn.name());
+            rowValues.put(pkColumn.name(), pkField.get(dto));
         });
 
-        return pkColumnValues;
+        return rowValues;
     }
 
     @SuppressWarnings("unchecked")

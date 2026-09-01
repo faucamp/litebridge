@@ -18,6 +18,7 @@ import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -185,7 +186,7 @@ class ManyToManyE2eTest extends AbstractE2eTest {
                 .oneOrThrow();
 
         assertEquals(group1.getName(), resultGroup1.getName());
-        assertTrue(resultGroup1.getMembers().isEmpty());
+        assertNull(resultGroup1.getMembers());
 
         // Load member from group 1
         LOGGER.info("Loading member from group 1: person1");
@@ -194,7 +195,7 @@ class ManyToManyE2eTest extends AbstractE2eTest {
                 .oneOrThrow();
 
         assertEquals(person1.getName(), groupedMember1.getName());
-        assertTrue(groupedMember1.getGroups().isEmpty());
+        assertNull(groupedMember1.getGroups());
 
         // Save group 2
         LOGGER.info("Saving group 2");
@@ -207,7 +208,7 @@ class ManyToManyE2eTest extends AbstractE2eTest {
                 .oneOrThrow();
 
         assertEquals(group2.getName(), resultGroup2.getName());
-        assertTrue(resultGroup2.getMembers().isEmpty());
+        assertNull(resultGroup2.getMembers());
 
         // Load member from group 2
         LOGGER.info("Loading member from group 2: person2");
@@ -216,7 +217,7 @@ class ManyToManyE2eTest extends AbstractE2eTest {
                 .oneOrThrow();
 
         assertEquals(person2.getName(), groupedMember2.getName());
-        assertTrue(groupedMember2.getGroups().isEmpty());
+        assertNull(groupedMember2.getGroups());
 
         // Save group 2 again (should do nothing)
         LOGGER.info("Saving group 1 again (should do nothing)");

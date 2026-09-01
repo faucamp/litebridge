@@ -240,11 +240,28 @@ public class DtoMapper {
     private void resolveDependencies(final Map<Class<?>, List<PartiallyConstructedDto>> createdDtos) {
         for (List<PartiallyConstructedDto> partialDtosOfType : createdDtos.values()) {
             for (PartiallyConstructedDto partialDto : partialDtosOfType) {
+                final OrmTable ormTable = partialDto.mappingData().ormTable();
+                final Object dto = partialDto.dto();
+                final List<MappedManyToMany> mappedManyToManyList = ormTable.getManyToManyMappings();
+
+                for (MappedManyToMany mappedManyToMany : mappedManyToManyList) {
+                    final OrmTable targetOrmTable = mappedManyToMany.targetOrmTable().get();
+                    final List<PartiallyConstructedDto> matchingCreatedDtos = createdDtos.get(targetOrmTable.dtoClass());
+
+                    if (matchingCreatedDtos != null) {
+                        // Many-to-many match to a created DTO type; create and populate the collection field
+                        final FieldAccessor collectionFieldAccessor = mappedManyToMany.collection();
+                        final Collection<Object> collection = (Collection<Object>) ClassUtils.newInstance(collectionFieldAccessor.type());
+                        matchingCreatedDtos.stream()
+                                .map(PartiallyConstructedDto::dto)
+                                .forEach(collection::add);
+                        collectionFieldAccessor.set(dto, collection);
+                    }
+                }
+
                 if (partialDto.dependencies().isEmpty()) {
                     continue;
                 }
-
-                final Object dto = partialDto.dto();
 
                 for (RelatedDtoDependency dependency : partialDto.dependencies()) {
                     // Inject the dependency target DTO into the host DTO
