@@ -65,7 +65,14 @@ public class DtoMapper {
         // Resolve inter-DTO dependencies
         resolveDependencies(createdDtos);
 
-        return createdDtos.get(dtoClass).stream()
+        // Return result
+        final List<PartiallyConstructedDto> dtosOfType = createdDtos.get(dtoClass);
+
+        if (dtosOfType == null) {
+            return Collections.emptyList();
+        }
+
+        return dtosOfType.stream()
                 .map(partialDto -> (DTO) partialDto.dto())
                 .toList();
     }
@@ -151,8 +158,14 @@ public class DtoMapper {
 
                 if (createdDto != null) {
                     final Class<?> createdDtoClass = createdDto.mappingData().dtoClass();
-                    createdDtos.computeIfAbsent(createdDtoClass, cls -> new ArrayList<>())
-                            .add(createdDto);
+                    final List<PartiallyConstructedDto> dtosOfType = createdDtos.computeIfAbsent(createdDtoClass, cls -> new ArrayList<>());
+                    dtosOfType.add(createdDto);
+
+                    // Also map interfaces to the created DTO(s)
+                    mappingData.ormTable().getDtoClassInterfaces()
+                            .forEach(dtoClassInterface -> {
+                                createdDtos.put(dtoClassInterface, dtosOfType);
+                            });
                 }
             }
         }
