@@ -7,10 +7,9 @@ import org.litebridge.orm.api.select.ConditionClause;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.select.SelectTerminal;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.api.select.model.SelectSpec;
-import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Arrays;
@@ -35,11 +34,11 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     /**
      * Constructs a new {@code AbstractCbConditionClause}.
      *
-     * @param logicOperator    The logic operator (AND/OR).
-     * @param lhsColumn        The left-hand side column name.
-     * @param lhsExpression    The left-hand side expression.
-     * @param node             The previous node in the chain.
-     * @param terminalCreator  The function to create the terminal clause.
+     * @param logicOperator   The logic operator (AND/OR).
+     * @param lhsColumn       The left-hand side column name.
+     * @param lhsExpression   The left-hand side expression.
+     * @param node            The previous node in the chain.
+     * @param terminalCreator The function to create the terminal clause.
      */
     public AbstractCbConditionClause(final LitebridgeContext litebridgeContext,
                                      final LogicOperator logicOperator,
@@ -248,16 +247,17 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     private AbstractCbConditionClauseTerminal<DTO> subselectImpl(final Operator operator,
                                                                  final @Nullable Function<SelectApi, SelectTerminal<?>> subselect,
                                                                  final boolean allowNull) {
-        // To support the current overloading and null parameters
-        if (subselect == null) {
-            if (allowNull) {
-                return condition(operator, null);
-            }
-
-            throw new NullPointerException("Operator " + operator + " requires a non-NULL RHS value");
-        }
-
-        return condition(operator, createSelectSpec(subselect));
+//        // To support the current overloading and null parameters
+//        if (subselect == null) {
+//            if (allowNull) {
+//                return condition(operator, null);
+//            }
+//
+//            throw new NullPointerException("Operator " + operator + " requires a non-NULL RHS value");
+//        }
+//
+//        return condition(operator, createSelectSpec(subselect));
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     /**
@@ -294,12 +294,4 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @return A new {@link AbstractCbConditionClauseTerminal} instance.
      */
     protected abstract AbstractCbConditionClauseTerminal<DTO> createCbConditionClauseTerminal(final QueryNode conditionNode);
-
-    @Deprecated(forRemoval = true)
-    private SelectSpec createSelectSpec(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
-//        final SelectTerminal<?> selectTerminal = Objects.requireNonNull(subselect, "Subselect cannot be null")
-//                .apply(new SelectEngine(fromClauseEngine));
-//        return getSelectSpec(selectTerminal);
-        throw new UnsupportedOperationException("Deprecated");
-    }
 }

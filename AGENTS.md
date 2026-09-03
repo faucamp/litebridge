@@ -76,13 +76,10 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 - **Nested Conditions**: Complex logic is supported via `QueryConditionBuilder`, which allows building sub-trees of conditions (e.g., `q -> q.where(...).and(...)`) that are represented as `ConditionGroupNode` instances.
 
 #### Query Compilation
-- When a terminal method like `list()` or `execute()` is called, the `QueryCompiler` flattens the `QueryNode` chain and populates a specification object (`SelectSpec`, `DeleteSpec`, or `UpdateSpec`).
-- The `QueryCompiler` handles tasks like:
-  - Resolving column aliases and table references across the query.
-  - Mapping DTO fields to database columns based on registered mappings.
-  - Resolving implicit joins and many-to-many relationship paths.
-  - Compiling subqueries in conditions into their own `SelectSpec`.
-- The resulting specification is then passed to the `DatabaseProvider` to be converted into dialect-specific SQL and executed.
+- When a terminal method like `list()` or `execute()` is called, the generic `QueryCompiler` flattens the `QueryNode` chain and compiles the query using a specialised delegate compiler for the particular query type.
+- It first computes a hash of the query node chain and checks its cache for the corresponding previously-compiled SQL statement.
+- If no cache entry is found, the resulting compiled operation is then passed to the `DatabaseProvider` to be converted into dialect-specific SQL. The result of this step is cached for future invocations.
+- The dialect-specific SQL string is passed to the `DatabaseProvider` for execution along with bind parameters.
 
 #### Terminal Recreator Pattern
 - Condition clauses use a "terminal recreator" pattern (`Function<QueryNode, T>`) to return to the correct fluent API step after a condition is added to the AST. 

@@ -1,7 +1,6 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.api.dto.DtoJoinSpec;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.lang.invoke.MethodHandle;

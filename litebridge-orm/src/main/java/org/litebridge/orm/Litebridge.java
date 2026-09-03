@@ -1,7 +1,6 @@
 package org.litebridge.orm;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
@@ -40,7 +39,6 @@ import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.engine.UpdateEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverride;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.nativesql.NativeSqlContext;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.DtoEntityMapping;
@@ -48,17 +46,14 @@ import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.EntityDtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.PersistenceFacade;
-import org.litebridge.orm.persistence.SelectSpecDtoMapper;
 import org.litebridge.orm.persistence.TableMapper;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
-import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridge.orm.tx.DefaultTransactionManager;
 import org.litebridge.tracking.ChangeTracker;
-import org.litebridge.tracking.FieldAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -21,11 +21,11 @@ import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.InsertV2;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
-import org.litebridge.orm.engine.ast.ConditionNode;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryBindValueExtractor;
 import org.litebridge.orm.engine.QueryPlanCache;
+import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.manytomany.NoOpFieldAccessor;
 import org.litebridge.tracking.ChangeTracker;
@@ -552,7 +552,7 @@ public class PersistenceFacade {
                     })
                     .toList();
 
-            currentDto = SelectSpecDtoMapper.constructDto(dto.getClass(), fieldAccessorValues, dtoConstructor);
+            currentDto = constructDto(dto.getClass(), fieldAccessorValues, dtoConstructor);
         } else {
             // Normal class
             generatedPkValues.forEach((field, value) -> {
@@ -578,6 +578,31 @@ public class PersistenceFacade {
         });
 
         return rowValues;
+    }
+
+    private static <DTO> DTO constructDto(final Class<DTO> dtoClass, final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues, final DtoConstructor dtoConstructor) {
+        final DtoConstructor.ConstructionResult<DTO> constructionResult = dtoConstructor.newInstance(dtoClass, fieldAccessorValues);
+        final DTO dto = constructionResult.dto();
+
+        if (constructionResult.defaultConstructorUsed()) {
+            fieldAccessorValues.forEach(fieldAccessorValue -> {
+                final FieldAccessor fieldAccessor = fieldAccessorValue.field();
+                final Object rawValue = fieldAccessorValue.value();
+                final Object value;
+
+                if (rawValue == null) {
+                    value = ClassUtils.getDefaultValue(fieldAccessor.type());
+                } else if (fieldAccessorValue.value() instanceof DtoConstructor.DtoDependency dependency) {
+                    value = null;
+                } else {
+                    value = fieldAccessorValue.value();
+                }
+
+                fieldAccessorValue.field().set(dto, value);
+            });
+        }
+
+        return dto;
     }
 
     @SuppressWarnings("unchecked")

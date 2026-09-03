@@ -29,7 +29,6 @@ import org.litebridge.orm.expression.intent.ConvertSpec;
 import org.litebridge.orm.expression.intent.ExpressionSpecArray;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
-import org.litebridge.orm.expression.select.SubselectSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
@@ -70,10 +69,6 @@ public final class SelectExpressionMapper {
             // Select targets
             case SelectFieldSpec selectFieldSpec -> toSelectColumn(selectFieldSpec, useSelectReferences);
             case SelectColumnSpec selectColumnSpec -> toSelectColumn(selectColumnSpec, useSelectReferences);
-            case SubselectSpec subselectSpec -> {
-                final PreparedOperation preparedOperation = subselectSpec.selectSpec().toSelect(tableMetaDataCache, typeConverter);
-                yield sqlFunctionRegistry.select().subselect().create((Select) preparedOperation.operation());
-            }
             case ConvertSpec<?> convertSpec ->
                     new ConvertExpression(toSelectExpression(convertSpec.target(), useSelectReferences), convertSpec.returnType());
             case ExpressionSpecArray expressionSpecArray ->
