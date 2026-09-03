@@ -1,12 +1,14 @@
 package org.litebridge.orm.api.sql;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.engine.ast.JoinNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.JoinNode;
+import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionClauseTerminal<Row,
@@ -73,48 +75,50 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     @Override
     public SqlWhereConditionClause where(final String column) {
-//        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
-//        return where(new SelectColumnSpec(spiColumn));
-        throw new UnsupportedOperationException("Not implemented yet");
+        return whereImpl(LogicOperator.NOOP, column, null);
     }
 
     @Override
     public SqlWhereConditionClause where(final ExpressionSpec expression) {
-        return whereImpl(LogicOperator.NOOP, expression);
+        return whereImpl(LogicOperator.NOOP, null, expression);
     }
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final String... columns) {
-//        return groupBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new SqlGroupByClauseTerminal(columns, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
-    public SqlGroupByClauseTerminal groupBy(final ExpressionSpec... columns) {
-//        final QueryNode groupByNode = new GroupByNode(delegate.node(), columns);
-//        return new SqlGroupByClauseTerminal((SqlSelector) delegate.withNode(groupByNode));
-        throw new UnsupportedOperationException("Not implemented yet");
+    public SqlGroupByClauseTerminal groupBy(final ExpressionSpec... expressions) {
+        return new SqlGroupByClauseTerminal(expressions, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-//        return orderBy(SqlSelectSpec.createSelectColumnSpecs(columns).toArray(ExpressionSpec[]::new));
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new SqlOrderByClause(columns, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
-    public SqlOrderByClause orderBy(final ExpressionSpec... columns) {
-//        return new SqlOrderByClause(columns, (SqlSelector) delegate);
-        throw new UnsupportedOperationException("Not implemented yet");
+    public SqlOrderByClause orderBy(final ExpressionSpec... expressions) {
+        return new SqlOrderByClause(expressions, node, selectEngineTerminal, litebridgeContext);
     }
 
-    private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-//        return new SqlWhereConditionClause(delegate.litebridgeContext(),
-//                logicOperator,
-//                expression,
-//                null,
-//                node -> new SqlWhereConditionClauseTerminal((SqlSelector) delegate.withNode(new WhereNode(delegate.node(), node))));
-        throw new UnsupportedOperationException("Not implemented yet");
+    private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {
+        if (node instanceof WhereNode whereNode) {
+            return new SqlWhereConditionClause(litebridgeContext,
+                    logicOperator,
+                    column,
+                    expression,
+                    whereNode.condition(),
+                    node -> new SqlWhereConditionClauseTerminal(whereNode.withCondition(node), selectEngineTerminal, litebridgeContext));
+        }
+
+        return new SqlWhereConditionClause(litebridgeContext,
+                logicOperator,
+                column,
+                expression,
+                null,
+                conditionNode -> new SqlWhereConditionClauseTerminal(new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
     private SqlJoinConditionClause joinImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {

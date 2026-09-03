@@ -10,7 +10,6 @@ import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.HavingNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.persistence.OrmTable;
 
 /**
  * Terminal clause for DTO HAVING conditions.
@@ -28,17 +27,12 @@ public final class DtoHavingConditionClauseTerminal<DTO>
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 
-    private final OrmTable ormTable;
-
     /**
      * Creates a new DtoHavingConditionClauseTerminal.
      *
      */
     public DtoHavingConditionClauseTerminal(final QueryNode node, final SelectEngineTerminal selectEngineTerminal, final LitebridgeContext litebridgeContext) {
         super(node, selectEngineTerminal, litebridgeContext);
-        //TODO: remove
-//        ormTable = node.getOrmTable();
-        ormTable = null;
     }
 
     /**
@@ -80,14 +74,12 @@ public final class DtoHavingConditionClauseTerminal<DTO>
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-//        return orderBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
-//        return new DtoOrderByClause<>(fields, (DtoSelector<DTO>) delegate);
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
     }
 
     private DtoHavingConditionClause<DTO> havingImpl(final LogicOperator logicOperator, final @Nullable String field, final @Nullable ExpressionSpec expression) {
