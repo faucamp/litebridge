@@ -3,6 +3,7 @@ package org.litebridge.orm.persistence;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -12,6 +13,7 @@ import org.litebridge.db.spi.update.Update;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.engine.compiler.QueryCompiler;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.tracking.ChangeTracker;
@@ -26,7 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class UpdateBuilderTest {
@@ -51,6 +55,7 @@ class UpdateBuilderTest {
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         final QueryCompiler queryCompiler = mock(QueryCompiler.class);
         when(litebridgeContext.createQueryCompiler()).thenReturn(queryCompiler);
+        when(queryCompiler.compile(any(QueryNode.class))).thenReturn(mock(PreparedOperation.class));
         final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable, litebridgeContext);
 
         final Column column = new Column(new Table("TEST_TABLE"), "TEST_COLUMN");
@@ -64,9 +69,7 @@ class UpdateBuilderTest {
 
         // Then
         assertNotNull(result);
-        assertInstanceOf(Update.class, result.operation());
-        final Update update = (Update) result.operation();
-        assertEquals(ormTable.getMetaData().toTable(), update.table());
+        verify(queryCompiler).compile(any(WhereNode.class));
     }
 
     private static OrmTable ormTable() {

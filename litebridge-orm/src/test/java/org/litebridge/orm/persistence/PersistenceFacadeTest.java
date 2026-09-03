@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.DelegateColumnExpression;
@@ -62,8 +63,8 @@ class PersistenceFacadeTest {
         when(context.tableMetaDataCache()).thenReturn(tableMetaDataCache);
         when(context.createQueryCompiler()).thenReturn(new QueryCompiler(context));
         when(context.typeConverter()).thenReturn(new DefaultTypeConverter());
-
-
+        when(context.tableRegistry()).thenReturn(tableRegistry);
+        
         try {
             when(databaseProvider.tableMetaData(any(), any())).thenAnswer(invocation -> {
                 org.litebridge.db.spi.Table table = invocation.getArgument(0);
@@ -133,7 +134,7 @@ class PersistenceFacadeTest {
         when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        when(databaseProvider.insert(any(), any())).thenReturn(new org.litebridge.db.spi.update.InsertResult(1));
+        when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
 
         // When
         facade.insert(dto);
@@ -382,9 +383,9 @@ class PersistenceFacadeTest {
             final PreparedSql preparedSql = invocation.getArgument(0);
 
             if (preparedSql.sql().contains("customers")) {
-                return new org.litebridge.db.spi.update.InsertResult(1, Map.of(customerTable.getMetaData().column("ID"), 1L));
+                return new InsertResult(1, Map.of(customerTable.getMetaData().column("ID"), 1L));
             }
-            return new org.litebridge.db.spi.update.InsertResult(1);
+            return new InsertResult(1);
         });
 
         // When
@@ -424,9 +425,9 @@ class PersistenceFacadeTest {
             final PreparedSql preparedSql = invocation.getArgument(0);
 
             if (preparedSql.sql().contains("categories")) {
-                return new org.litebridge.db.spi.update.InsertResult(1, Map.of(categoryTable.getMetaData().column("ID"), 1L));
+                return new InsertResult(1, Map.of(categoryTable.getMetaData().column("ID"), 1L));
             }
-            return new org.litebridge.db.spi.update.InsertResult(1);
+            return new InsertResult(1);
         });
 
         // When
@@ -688,7 +689,7 @@ class PersistenceFacadeTest {
     }
 
     private OrmTable createOrmTable(ChangeTracker changeTracker, Class<?> dtoClass, String tableName, Map<String, Object> fieldToTarget, List<String> pkColumns, Set<String> autoIncColumns) {
-        final org.litebridge.db.spi.Table table = new org.litebridge.db.spi.Table("", "public", tableName);
+        final Table table = new Table("", "public", tableName);
         final List<ColumnMetaData> columns = fieldToTarget.entrySet().stream()
                 .filter(e -> e.getValue() instanceof TestCol)
                 .map(e -> {

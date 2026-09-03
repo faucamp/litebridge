@@ -34,7 +34,7 @@ final class InsertBuilder extends AbstractStatementBuilder {
 
     @Override
     public PreparedOperation build() {
-        return litebridgeContext.createQueryCompiler().compile(node);
+        return litebridgeContext.createQueryCompiler().compile(node());
     }
 
     @Override

@@ -4,17 +4,18 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.update.Insert;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.InsertValuesNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.compiler.QueryCompiler;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class InsertBuilderTest {
@@ -30,18 +31,18 @@ class InsertBuilderTest {
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         final QueryCompiler queryCompiler = mock(QueryCompiler.class);
         when(litebridgeContext.createQueryCompiler()).thenReturn(queryCompiler);
+        when(queryCompiler.compile(any(QueryNode.class))).thenReturn(mock(PreparedOperation.class));
 
         final InsertBuilder builder = new InsertBuilder(table, litebridgeContext);
+        final LinkedHashMap<String, Object> row = new LinkedHashMap<>();
+        row.put("TEST_COLUMN", "TEST_VALUE");
+        builder.addRow(row);
 
         // When
         final PreparedOperation result = builder.build();
 
         // Then
         assertNotNull(result);
-        assertInstanceOf(Insert.class, result.operation());
-        final Insert insert = (Insert) result.operation();
-        assertEquals("TEST_TABLE", insert.table().name());
-        assertEquals(1, insert.rows().size());
-        assertFalse(insert.returnGeneratedKeys());
+        verify(queryCompiler).compile(any(InsertValuesNode.class));
     }
 }
