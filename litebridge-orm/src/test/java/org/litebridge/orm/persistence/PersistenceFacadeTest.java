@@ -21,13 +21,15 @@ import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.UpdateResult;
-import org.litebridge.orm.api.select.model.ProtoExpressionResolver;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.compiler.QueryCompiler;
 import org.litebridge.orm.engine.QueryPlanCache;
+import org.litebridge.orm.engine.SelectEngine;
+import org.litebridge.orm.engine.compiler.QueryCompiler;
 import org.litebridge.orm.expression.TestColumnExpression;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
+import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
+import org.litebridge.orm.persistence.manytomany.NoOpFieldAccessor;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 
@@ -45,7 +47,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -58,13 +59,16 @@ class PersistenceFacadeTest {
     private final Map<String, TableMetaData> metaDataMap = new HashMap<>();
 
     private PersistenceFacade createFacade(TableRegistry tableRegistry, TransactionalDatabaseProvider databaseProvider, ChangeTracker changeTracker, DtoConstructor dtoConstructor) {
-        final LitebridgeContext context = mock(LitebridgeContext.class);
-        when(context.queryPlanCache()).thenReturn(new QueryPlanCache());
-        final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
-        when(context.tableMetaDataCache()).thenReturn(tableMetaDataCache);
-        when(context.createQueryCompiler()).thenReturn(new QueryCompiler(context));
-        when(context.typeConverter()).thenReturn(new DefaultTypeConverter());
-        when(context.tableRegistry()).thenReturn(tableRegistry);
+        final TransactionManager transactionManager = mock(TransactionManager.class);
+
+        if (databaseProvider.getTypeConverter() == null) {
+            when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        }
+
+        if (databaseProvider.transactionManager() == null) {
+            when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        }
+
         when(tableRegistry.getOrCreateSpiTable(anyString())).thenAnswer(invocation -> {
             String tableName = invocation.getArgument(0);
             if (tableName.contains(".")) {
@@ -73,14 +77,6 @@ class PersistenceFacadeTest {
 
             return new Table("", "public", tableName);
         });
-
-        if (databaseProvider.getTypeConverter() == null) {
-            when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        }
-        
-        if (databaseProvider.transactionManager() == null) {
-            when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
-        }
 
         try {
             when(databaseProvider.tableMetaData(any(), any())).thenAnswer(invocation -> {
@@ -129,11 +125,22 @@ class PersistenceFacadeTest {
 
         when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
 
-        final ProtoExpressionResolver protoExpressionResolver = mock(ProtoExpressionResolver.class, CALLS_REAL_METHODS);
-        final SelectExpressionMapper selectExpressionMapper = new SelectExpressionMapper(sqlFunctionRegistry, protoExpressionResolver, tableMetaDataCache, new DefaultTypeConverter());
-        when(context.selectExpressionMapper()).thenReturn(selectExpressionMapper);
+        final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
+        final LitebridgeConfig litebridgeConfig = new LitebridgeConfig();
 
-        return new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor, context);
+        final LitebridgeContext litebridgeContext = new LitebridgeContext(LitebridgeContext.Mode.DTO,
+                litebridgeConfig,
+                databaseProvider,
+                new QueryPlanCache(),
+                new NoOpAliasGenerator(),
+                tableRegistry,
+                tableMetaDataCache,
+                new ClassFieldAccessorCache(MethodHandles.lookup()),
+                transactionManager,
+                new SelectEngine(dtoConstructor)
+        );
+
+        return new PersistenceFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor, litebridgeContext);
     }
 
     @Test
@@ -470,6 +477,7 @@ class PersistenceFacadeTest {
         product.id = 1L;
         product.name = "prod";
         final TagDto tag = new TagDto();
+        tag.id = 1L;
         tag.name = "tag";
         product.tags = new ArrayList<>(List.of(tag));
 
@@ -477,6 +485,7 @@ class PersistenceFacadeTest {
         productTable.syncPersistedDto(product);
 
         final OrmTable joinTable = createOrmTable(changeTracker, ProductTag.class, "product_tags", Map.of("prod_id", numeric("PROD_ID"), "tag_id", numeric("TAG_ID")), List.of());
+        when(tableRegistry.getOrmTableOrThrow(ProductTag.class)).thenReturn(joinTable);
         final MappedManyToMany m2m = new MappedManyToMany(joinTable, "prod_id", changeTracker.classFieldAccessorCache().fieldAccessor(ProductDto.class, "tags"), null, "tag_id");
 
         final Map<String, Object> productFields = new HashMap<>();
@@ -484,11 +493,14 @@ class PersistenceFacadeTest {
         productFields.put("name", varchar("NAME"));
         productFields.put("tags", m2m);
         final OrmTable productTableWithM2M = createOrmTable(changeTracker, ProductDto.class, "products", productFields, List.of("ID"));
+        when(tableRegistry.getOrmTableOrThrow(ProductDto.class)).thenReturn(productTableWithM2M);
         productTableWithM2M.syncPersistedDto(product);
         productTableWithM2M.trackDto(product);
 
         // Trigger change in collection
-        product.tags.add(new TagDto()); // This will be the second tag, but for simplicity let's just say we added one
+        final TagDto tag2 = new TagDto();
+        tag2.name = "tag2";
+        product.tags.add(tag2); // This will be the second tag, but for simplicity let's just say we added one
 
         final OrmTable tagTable = createOrmTable(changeTracker, TagDto.class, "tags", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
 
@@ -630,7 +642,7 @@ class PersistenceFacadeTest {
 
         final Map<String, Object> fields = new HashMap<>();
         fields.put("id", numeric("ID"));
-        fields.put("name", new org.litebridge.orm.persistence.manytomany.NoOpFieldAccessor());
+        fields.put("name", new NoOpFieldAccessor());
 
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", fields, List.of("ID"));
         table.trackDto(dto);
