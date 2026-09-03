@@ -141,11 +141,10 @@ class SelfReferencingE2eTest extends AbstractE2eTest {
                 .join(SelfReferencingDto.class).on("parent")
                 .orderBy("id").asc()
                 .list();
-        // TODO: this is broken - should be 3 results, but currently broken because of using a default JOIN
-        assertEquals(2, result.size());
-        //assertEquals("parent", result.get(0).getMyVar());
-        assertEquals("middle", result.get(0).getMyVar());
-        assertEquals("child", result.get(1).getMyVar());
+        assertEquals(3, result.size());
+        assertEquals("parent", result.get(0).getMyVar());
+        assertEquals("middle", result.get(1).getMyVar());
+        assertEquals("child", result.get(2).getMyVar());
     }
 
     private void registerDtoTableMappings(final DbEnvDtoTableMapper tableMapper) throws SQLException {

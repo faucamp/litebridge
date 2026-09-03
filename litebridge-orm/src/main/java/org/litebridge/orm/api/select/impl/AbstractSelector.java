@@ -219,6 +219,6 @@ public abstract class AbstractSelector<DTO, SSP extends SelectSpec> implements S
             }
         }
 
-        return new TypeConversionMetaData(columnLabelsToColumnMetaData, typeOverrides);
+        return new TypeConversionMetaData(columnLabelsToColumnMetaData, typeOverrides, null);
     }
 }

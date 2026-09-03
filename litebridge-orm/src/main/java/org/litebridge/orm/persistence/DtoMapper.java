@@ -56,8 +56,8 @@ public class DtoMapper {
             return Collections.emptyList();
         }
 
-        // Compile per-DTO mapping data
-        final Map<Table, MappingData> mappingDataMap = compileMappingData(dtoClass, rows);
+        // Compile per-DTO mapping data; key is the table alias or table name (if no alias exists)
+        final Map<String, MappingData> mappingDataMap = compileMappingData(dtoClass, rows);
 
         // Create DTOs and populate the cache
         final Map<Class<?>, List<PartiallyConstructedDto>> createdDtos = cacheDtos(rows, mappingDataMap);
@@ -77,9 +77,9 @@ public class DtoMapper {
                 .toList();
     }
 
-    private Map<Table, MappingData> compileMappingData(final Class<?> dtoClass, final List<Row> rows) {
+    private Map<String, MappingData> compileMappingData(final Class<?> dtoClass, final List<Row> rows) {
         final TableMetaData dtoClassTableMetaData = tableRegistry.getOrmTableOrThrow(dtoClass).getMetaData();
-        final Map<Table, MappingData> mappingDataMap = new HashMap<>();
+        final Map<String, MappingData> mappingDataMap = new HashMap<>();
         int columnIndex = 0;
 
         for (final Row.RowColumn rowColumn : rows.getFirst().columns()) {
@@ -130,12 +130,13 @@ public class DtoMapper {
         return mappingDataMap;
     }
 
-    private MappingData createMappingDataIfAbsent(final Map<Table, MappingData> mappingDataMap, final Table table) {
-        return mappingDataMap.computeIfAbsent(table, tbl -> {
-            final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(tbl);
+    private MappingData createMappingDataIfAbsent(final Map<String, MappingData> mappingDataMap, final Table table) {
+        final String key = table.alias() != null ? table.alias() : table.qualifiedName();
+        return mappingDataMap.computeIfAbsent(key, alias -> {
+            final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
             final List<FieldAccessor> pkFields = ormTable.getPrimaryKeyFields();
             return new MappingData(ormTable.dtoClass(),
-                    tbl,
+                    table,
                     ormTable,
                     new int[pkFields.size()],
                     new ArrayList<>());
@@ -149,7 +150,7 @@ public class DtoMapper {
                 .toList();
     }
 
-    private Map<Class<?>, List<PartiallyConstructedDto>> cacheDtos(final List<Row> rows, final Map<Table, MappingData> mappingDataMap) {
+    private Map<Class<?>, List<PartiallyConstructedDto>> cacheDtos(final List<Row> rows, final Map<String, MappingData> mappingDataMap) {
         final Map<Class<?>, List<PartiallyConstructedDto>> createdDtos = new HashMap<>();
 
         for (MappingData mappingData : mappingDataMap.values()) {

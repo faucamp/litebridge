@@ -600,7 +600,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
     private List<JoinOnSpec> processManyToManyJoin(final Class<?> joinDtoClass, final MappedManyToMany mappedManyToMany) {
         final JoinOnSpec leftLeftJoinOnSpec = createManyToManyLeftJoinOnSpec(mappedManyToMany);
-        return List.of(leftLeftJoinOnSpec, createManyToManyRightJoinOnSpec(mappedManyToMany, leftLeftJoinOnSpec.rightSelectColumnSpec().getColumn()));
+        return List.of(leftLeftJoinOnSpec, createManyToManyRightJoinOnSpec(mappedManyToMany, leftLeftJoinOnSpec.rightSelectColumnSpec().getColumn().table()));
     }
 
     private @NonNull JoinOnSpec createManyToManyLeftJoinOnSpec(final MappedManyToMany mappedManyToMany) {
@@ -608,16 +608,16 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final SelectColumnSpec leftSelectColumnSpec = new SelectColumnSpec(resolveAlias(aliasedTable, mappedManyToMany.joinColumn()));
 
         // Join table & column - alias it directly in order to support self-references
-        final Table aliasedJoinTable = aliasGenerator.aliasTable(ormTable);
+        final Table aliasedJoinTable = aliasGenerator.aliasTable(mappedManyToMany.joinOrmTable());
         final Column aliasedJoinColumn = resolveAlias(aliasedJoinTable, mappedManyToMany.joinColumn());
         final SelectColumnSpec joinSelectColumnSpec = new SelectColumnSpec(aliasedJoinColumn);
 
         return new JoinOnSpec(leftSelectColumnSpec, joinSelectColumnSpec);
     }
 
-    private @NonNull JoinOnSpec createManyToManyRightJoinOnSpec(final MappedManyToMany mappedManyToMany, final Column aliasedJoinColumn) {
+    private @NonNull JoinOnSpec createManyToManyRightJoinOnSpec(final MappedManyToMany mappedManyToMany, final Table aliasedJoinTable) {
         // Join table & column
-        final SelectColumnSpec joinSelectColumnSpec = new SelectColumnSpec(aliasedJoinColumn);
+        final SelectColumnSpec joinSelectColumnSpec = new SelectColumnSpec(resolveAlias(aliasedJoinTable, mappedManyToMany.inverseJoinColumn()));
 
         // Right column
         final OrmTable rightOrmTable = mappedManyToMany.targetOrmTable().get();

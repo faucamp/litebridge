@@ -158,13 +158,16 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     @Override
     public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
         final Map<String, ColumnMetaData> columnLabelsToColumnMetaData;
+        final Map<String, Table> columnAliasesToTable;
         final Class<?>[] typeOverrides;
 
         if (preparedSql.typeConversionMetaData() != null) {
             columnLabelsToColumnMetaData = preparedSql.typeConversionMetaData().columnLabelsToColumnMetaData();
+            columnAliasesToTable = preparedSql.typeConversionMetaData().columnAliasesToTable();
             typeOverrides = preparedSql.typeConversionMetaData().typeOverrides();
         } else {
             columnLabelsToColumnMetaData = Collections.emptyMap();
+            columnAliasesToTable = Collections.emptyMap();
             typeOverrides = new Class<?>[0];
         }
 
@@ -190,7 +193,14 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
                     if (columnMetaData != null) {
                         // Use ORM-side metadata
                         columnSqlType = columnMetaData.getDataType();
-                        column = columnMetaData.toColumn().as(alias);
+
+                        final Table aliasedTable = columnAliasesToTable.get(alias);
+
+                        if (aliasedTable != null) {
+                            column = new Column(aliasedTable, columnMetaData.name(), alias);
+                        } else {
+                            column = columnMetaData.toColumn().as(alias);
+                        }
                     } else {
                         // Read the metadata from the result
                         final String schemaName = resultSet.getMetaData().getSchemaName(i);

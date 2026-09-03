@@ -6,6 +6,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
@@ -334,8 +335,8 @@ public class SelectEngineTerminal {
 
     private TypeConversionMetaData createTypeConversionMetaData(final Select select, final LitebridgeContext litebridgeContext) {
         final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.expressions().size());
+        final Map<String, Table> columnAliasesToTable = new HashMap<>();
         final Class<?>[] typeOverrides = new Class<?>[select.expressions().size()];
-        final TableMetaDataCache tableMetaDataCache = litebridgeContext.tableMetaDataCache();
         final AliasTransformer aliasTransformer = litebridgeContext.databaseProvider().getAliasTransformer();
 
         for (int i = 0; i < select.expressions().size(); i++) {
@@ -349,14 +350,15 @@ public class SelectEngineTerminal {
 
             if (expression instanceof ColumnExpression columnExpression) {
                 final Column column = columnExpression.column();
-                final String key = Objects.requireNonNull(aliasTransformer.transformAlias(column.alias() != null ? column.alias() : column.name()));
-                final TableMetaData table = litebridgeContext.tableMetaDataCache().ensureTableMetaData(column.table());
-                final ColumnMetaData columnMetaData = table.column(column.name());
-                columnLabelsToColumnMetaData.put(key, columnMetaData);
+                final String columnKey = Objects.requireNonNull(aliasTransformer.transformAlias(column.alias() != null ? column.alias() : column.name()));
+                final TableMetaData tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(column.table());
+                final ColumnMetaData columnMetaData = tableMetaData.column(column.name());
+                columnLabelsToColumnMetaData.put(columnKey, columnMetaData);
+                columnAliasesToTable.put(columnKey, column.table());
             }
         }
 
-        return new TypeConversionMetaData(columnLabelsToColumnMetaData, typeOverrides);
+        return new TypeConversionMetaData(columnLabelsToColumnMetaData, typeOverrides, columnAliasesToTable);
     }
 
     private static SelectNode findSelectNode(final QueryNode node) {
