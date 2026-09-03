@@ -230,7 +230,7 @@ class SqlE2eTest extends AbstractE2eTest {
                                     c(accountTableName, accountId),
                                     c(accountTableName, accountName))
                             .from(personTableName)
-                            .join(accountTableName).on(personId).eq(c(accountTableName, personId))
+                            .join(accountTableName).on(c(personTableName, personId)).eq(c(accountTableName, personId))
                             .list();
 
             assertEquals(2, result.size());

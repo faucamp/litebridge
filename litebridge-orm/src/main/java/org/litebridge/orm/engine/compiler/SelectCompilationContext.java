@@ -417,7 +417,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                             joinTable = tableRegistry.getOrCreateSpiTable(Objects.requireNonNull(joinSpec.tableName()));
                         }
 
-                        final ConditionGroup joinConditionGroup = toConditionGroup(joinSpec.conditionGroupStack().current(), ormTable, joinTable);
+                        final ConditionGroup joinConditionGroup = toConditionGroup(joinSpec.conditionGroupStack().current(), ormTable, aliasedTable);
                         return new Join(joinTable, joinConditionGroup);
                     })
                     .toList();

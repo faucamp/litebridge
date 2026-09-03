@@ -11,6 +11,7 @@ import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
+import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 import java.util.function.Function;
 
@@ -52,11 +53,11 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
      * @return an instance of the join condition clause to allow further configuration
      */
     public SqlJoinConditionClause on(final ExpressionSpec expression) {
-        if (expression instanceof ProtoExpressionSpec protoExpressionSpec) {
-            return on(protoExpressionSpec.column());
-        } else {
-            throw new IllegalArgumentException("Unsupported JOIN ON expression: " + expression);
-        }
+        return switch (expression) {
+            case ProtoExpressionSpec protoExpressionSpec -> on(protoExpressionSpec.column());
+            case SelectColumnSpec selectColumnSpec -> on(selectColumnSpec.getColumn().name());
+            default -> throw new IllegalArgumentException("Unsupported JOIN ON expression: " + expression);
+        };
     }
 
     /**
