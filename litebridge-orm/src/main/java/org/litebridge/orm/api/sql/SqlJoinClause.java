@@ -2,10 +2,15 @@ package org.litebridge.orm.api.sql;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
+import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.ConditionGroupNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.ProtoExpressionSpec;
 
 import java.util.function.Function;
 
@@ -13,18 +18,20 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal> {
 
+    private final String selectedTable;
     private final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator;
 
-    public SqlJoinClause(final QueryNode node,
+    public SqlJoinClause(final String selectedTable,
+                         final QueryNode node,
                          final LitebridgeContext litebridgeContext,
                          final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator) {
         super(node, litebridgeContext);
         this.terminalCreator = terminalCreator;
+        this.selectedTable = selectedTable;
     }
 
     /**
      * Adds a join ON condition to the current join clause based on the specified column.
-     * The join condition constrains the relationship between the tables being joined.
      *
      * @param column the name of the column to be used in the join condition
      * @return an instance of the join condition clause to allow further configuration
@@ -39,19 +46,32 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
     }
 
     /**
+     * Adds a join ON condition based on a query expression.
+     *
+     * @param expression the expression to use for the join condition
+     * @return an instance of the join condition clause to allow further configuration
+     */
+    public SqlJoinConditionClause on(final ExpressionSpec expression) {
+        if (expression instanceof ProtoExpressionSpec protoExpressionSpec) {
+            return on(protoExpressionSpec.column());
+        } else {
+            throw new IllegalArgumentException("Unsupported JOIN ON expression: " + expression);
+        }
+    }
+
+    /**
      * Adds a join ON condition based on a query condition builder.
      *
      * @param builder the builder for the join condition
      * @return an instance of the join condition clause to allow further configuration
      */
     public SqlJoinConditionClauseTerminal on(final QueryConditionBuilder<Row> builder) {
-//        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(((SqlSelector) delegate).table(), delegate.litebridgeContext().fromClauseEngine(), null);
-//        final AbstractCbConditionClauseTerminal<Row> terminal = builder.apply(conditionClauseStart);
-//        final QueryNode conditionNode = terminal.node();
-//
-//        final ConditionGroupNode groupNode = new ConditionGroupNode(null, LogicOperator.NOOP, conditionNode);
-//        return terminalCreator.apply(groupNode);
-        throw new UnsupportedOperationException("Not implemented yet");
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectedTable, node, litebridgeContext);
+        final AbstractCbConditionClauseTerminal<Row> terminal = builder.apply(conditionClauseStart);
+        final QueryNode conditionNode = terminal.node();
+
+        final ConditionGroupNode groupNode = new ConditionGroupNode(null, LogicOperator.NOOP, conditionNode);
+        return terminalCreator.apply(groupNode);
     }
 
     /**

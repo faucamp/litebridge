@@ -3,10 +3,13 @@ package org.litebridge.orm.api.update;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
-import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
@@ -65,12 +68,10 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl implements SqlUpdat
     }
 
     private SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-//        final Table table = litebridgeContext.tableRegistry().getOrCreateSpiTable(tableName);
-//        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(table, litebridgeContext.fromClauseEngine(), null);
-//        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
-//        this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, terminal.node()));
-//        return this;
-        throw new UnsupportedOperationException("Not implemented yet");
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(tableName, node, litebridgeContext);
+        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+        this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, terminal.node()));
+        return this;
     }
 
     QueryNode node() {

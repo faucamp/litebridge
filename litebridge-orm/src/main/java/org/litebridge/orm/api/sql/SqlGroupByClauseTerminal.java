@@ -16,18 +16,24 @@ public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTermina
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
-    public SqlGroupByClauseTerminal(final ExpressionSpec[] expressions,
+    private final String table;
+
+    public SqlGroupByClauseTerminal(final String table,
+                                    final ExpressionSpec[] expressions,
                                     final QueryNode node,
                                     final SelectEngineTerminal selectEngineTerminal,
                                     final LitebridgeContext litebridgeContext) {
         super(expressions, new GroupByNode(node, null, expressions), selectEngineTerminal, litebridgeContext);
+        this.table = table;
     }
 
-    public SqlGroupByClauseTerminal(final String[] columns,
+    public SqlGroupByClauseTerminal(final String table,
+                                    final String[] columns,
                                     final QueryNode node,
                                     final SelectEngineTerminal selectEngineTerminal,
                                     final LitebridgeContext litebridgeContext) {
         super(columns, new GroupByNode(node, columns, null), selectEngineTerminal, litebridgeContext);
+        this.table = table;
     }
 
     @Override
@@ -37,7 +43,7 @@ public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTermina
                 null,
                 expression,
                 null,
-                conditionNode -> new SqlHavingConditionClauseTerminal(new HavingNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
+                conditionNode -> new SqlHavingConditionClauseTerminal(table, new HavingNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
     @Override

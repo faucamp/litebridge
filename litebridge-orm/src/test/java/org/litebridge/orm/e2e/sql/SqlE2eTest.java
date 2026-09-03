@@ -174,8 +174,8 @@ class SqlE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Select with a JOIN USING clause")
-    void selectJoinUsing(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    @DisplayName("Select with JOIN clause")
+    void select_join(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
         final String accountTableName = tableMapper.qualifyName("ACCOUNT");
@@ -188,35 +188,67 @@ class SqlE2eTest extends AbstractE2eTest {
         insertTestPersonRecords(personTableName);
         insertTestAccountRecords(accountTableName);
 
-        // When
-        LOGGER.info("Selecting with a JOIN USING clause");
-        final List<Row> result =
-                litebridge.select(
-                                c(personTableName, firstName),
-                                c(personTableName, surname),
-                                c(personTableName, age),
-                                c(accountTableName, accountId),
-                                c(accountTableName, accountName))
-                        .from(personTableName)
-                        .join(accountTableName).using(personId)
-                        .list();
+        // Join using
+        {
+            LOGGER.info("Selecting with a JOIN USING clause");
+            final List<Row> result =
+                    litebridge.select(
+                                    c(personTableName, firstName),
+                                    c(personTableName, surname),
+                                    c(personTableName, age),
+                                    c(accountTableName, accountId),
+                                    c(accountTableName, accountName))
+                            .from(personTableName)
+                            .join(accountTableName).using(personId)
+                            .list();
 
-        // Then
-        assertEquals(2, result.size());
-        final Row row1 = result.getFirst();
-        assertEquals(5, row1.columnStream().count());
-        assertEquals("Alice", row1.column(firstName).orElseThrow().value());
-        assertEquals("Smith", row1.column(surname).orElseThrow().value());
-        assertNumberEquals(20, row1.column(age).orElseThrow().value());
-        assertNumberEquals(1, row1.column(accountId).orElseThrow().value());
-        assertEquals("Alice's Account", row1.column(accountName).orElseThrow().value());
-        final Row row2 = result.get(1);
-        assertEquals(5, row2.columnStream().count());
-        assertEquals("Bob", row2.column(firstName).orElseThrow().value());
-        assertEquals("Johnson", row2.column(surname).orElseThrow().value());
-        assertNumberEquals(30, row2.column(age).orElseThrow().value());
-        assertNumberEquals(2, row2.column(accountId).orElseThrow().value());
-        assertEquals("Bob's Account", row2.column(accountName).orElseThrow().value());
+            assertEquals(2, result.size());
+            final Row row1 = result.getFirst();
+            assertEquals(5, row1.columnStream().count());
+            assertEquals("Alice", row1.column(firstName).orElseThrow().value());
+            assertEquals("Smith", row1.column(surname).orElseThrow().value());
+            assertNumberEquals(20, row1.column(age).orElseThrow().value());
+            assertNumberEquals(1, row1.column(accountId).orElseThrow().value());
+            assertEquals("Alice's Account", row1.column(accountName).orElseThrow().value());
+            final Row row2 = result.get(1);
+            assertEquals(5, row2.columnStream().count());
+            assertEquals("Bob", row2.column(firstName).orElseThrow().value());
+            assertEquals("Johnson", row2.column(surname).orElseThrow().value());
+            assertNumberEquals(30, row2.column(age).orElseThrow().value());
+            assertNumberEquals(2, row2.column(accountId).orElseThrow().value());
+            assertEquals("Bob's Account", row2.column(accountName).orElseThrow().value());
+        }
+        // Join on
+        {
+            // When
+            LOGGER.info("Selecting with a JOIN ON clause");
+            final List<Row> result =
+                    litebridge.select(
+                                    c(personTableName, firstName),
+                                    c(personTableName, surname),
+                                    c(personTableName, age),
+                                    c(accountTableName, accountId),
+                                    c(accountTableName, accountName))
+                            .from(personTableName)
+                            .join(accountTableName).on(personId).eq(c(accountTableName, personId))
+                            .list();
+
+            assertEquals(2, result.size());
+            final Row row1 = result.getFirst();
+            assertEquals(5, row1.columnStream().count());
+            assertEquals("Alice", row1.column(firstName).orElseThrow().value());
+            assertEquals("Smith", row1.column(surname).orElseThrow().value());
+            assertNumberEquals(20, row1.column(age).orElseThrow().value());
+            assertNumberEquals(1, row1.column(accountId).orElseThrow().value());
+            assertEquals("Alice's Account", row1.column(accountName).orElseThrow().value());
+            final Row row2 = result.get(1);
+            assertEquals(5, row2.columnStream().count());
+            assertEquals("Bob", row2.column(firstName).orElseThrow().value());
+            assertEquals("Johnson", row2.column(surname).orElseThrow().value());
+            assertNumberEquals(30, row2.column(age).orElseThrow().value());
+            assertNumberEquals(2, row2.column(accountId).orElseThrow().value());
+            assertEquals("Bob's Account", row2.column(accountName).orElseThrow().value());
+        }
     }
 
     @TestTemplate

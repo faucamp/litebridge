@@ -22,22 +22,24 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
         implements SqlJoinClauseTerminal {
 
-    public SqlJoinConditionClauseTerminal(final JoinNode joinNode,
+    private final String selectedTable;
+
+    public SqlJoinConditionClauseTerminal(final String selectedTable,
+                                          final JoinNode joinNode,
                                           final SelectEngineTerminal selectEngineTerminal,
                                           final LitebridgeContext litebridgeContext) {
         super(joinNode, selectEngineTerminal, litebridgeContext);
+        this.selectedTable = selectedTable;
     }
 
     @Override
     public SqlJoinConditionClause and(final String column) {
-//        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
-//        return and(new SelectColumnSpec(spiColumn));
-        throw new UnsupportedOperationException("Not implemented yet");
+        return joinImpl(LogicOperator.AND, column, null);
     }
 
     @Override
     public SqlJoinConditionClause and(final ExpressionSpec expression) {
-        return joinImpl(LogicOperator.AND, expression);
+        return joinImpl(LogicOperator.AND, null, expression);
     }
 
     @Override
@@ -47,14 +49,12 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     @Override
     public SqlJoinConditionClause or(final String column) {
-//        final Column spiColumn = new Column(((SqlSelector) delegate).table(), column);
-//        return or(new SelectColumnSpec(spiColumn));
-        throw new UnsupportedOperationException("Not implemented yet");
+        return joinImpl(LogicOperator.OR, column, null);
     }
 
     @Override
     public SqlJoinConditionClause or(final ExpressionSpec expression) {
-        return joinImpl(LogicOperator.OR, expression);
+        return joinImpl(LogicOperator.OR, null, expression);
     }
 
     @Override
@@ -85,12 +85,12 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final String... columns) {
-        return new SqlGroupByClauseTerminal(columns, node, selectEngineTerminal, litebridgeContext);
+        return new SqlGroupByClauseTerminal(selectedTable, columns, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final ExpressionSpec... expressions) {
-        return new SqlGroupByClauseTerminal(expressions, node, selectEngineTerminal, litebridgeContext);
+        return new SqlGroupByClauseTerminal(selectedTable, expressions, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
@@ -110,7 +110,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
                     column,
                     expression,
                     whereNode.condition(),
-                    node -> new SqlWhereConditionClauseTerminal(whereNode.withCondition(node), selectEngineTerminal, litebridgeContext));
+                    node -> new SqlWhereConditionClauseTerminal(selectedTable, whereNode.withCondition(node), selectEngineTerminal, litebridgeContext));
         }
 
         return new SqlWhereConditionClause(litebridgeContext,
@@ -118,16 +118,19 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
                 column,
                 expression,
                 null,
-                conditionNode -> new SqlWhereConditionClauseTerminal(new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
+                conditionNode -> new SqlWhereConditionClauseTerminal(selectedTable, new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
-    private SqlJoinConditionClause joinImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-//        final Function<QueryNode, SqlJoinConditionClauseTerminal> recreator = n -> {
-//            joinNode.withCondition(n);
-//            return this;
-//        };
-//        return new SqlJoinConditionClause(delegate.litebridgeContext(), logicOperator, expression, joinNode.condition(), recreator);
-        throw new UnsupportedOperationException("Not implemented yet");
+    private SqlJoinConditionClause joinImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {
+        return new SqlJoinConditionClause(litebridgeContext,
+                logicOperator,
+                column,
+                expression,
+                null,
+                conditionNode -> {
+                    joinNode.withCondition(conditionNode);
+                    return this;
+                });
     }
 
     private SqlJoinConditionClauseTerminal joinImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {

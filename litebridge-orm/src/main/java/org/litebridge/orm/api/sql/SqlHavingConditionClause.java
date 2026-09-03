@@ -24,10 +24,10 @@ public final class SqlHavingConditionClause
 
     public SqlHavingConditionClause(final LitebridgeContext litebridgeContext,
                                     final LogicOperator logicOperator,
-                                    final @Nullable String lhsField,
+                                    final @Nullable String lhsColumn,
                                     final @Nullable ExpressionSpec lhsExpression,
                                     final @Nullable QueryNode node,
                                     final Function<QueryNode, SqlHavingConditionClauseTerminal> terminalRecreator) {
-        super(litebridgeContext, logicOperator, lhsField, lhsExpression, node, terminalRecreator);
+        super(litebridgeContext, logicOperator, lhsColumn, lhsExpression, node, terminalRecreator);
     }
 }

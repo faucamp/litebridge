@@ -3,13 +3,15 @@ package org.litebridge.orm.api.sql;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.engine.ast.JoinNode;
-import org.litebridge.orm.engine.ast.SelectNode;
-import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.JoinNode;
+import org.litebridge.orm.engine.ast.SelectNode;
+import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
+
+import java.util.Objects;
 
 public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
         SqlJoinClause,
@@ -25,18 +27,21 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
 
         implements SqlJoinClauseTerminal {
 
+    private final String table;
+
     public SqlFromClauseTerminal(final SelectNode selectNode,
                                  final SelectEngineTerminal selectEngineTerminal,
                                  final LitebridgeContext litebridgeContext) {
         super(selectNode, selectEngineTerminal, litebridgeContext);
+        this.table = Objects.requireNonNull(selectNode.table());
     }
 
     @Override
     public SqlJoinClause join(final String table) {
-        return new SqlJoinClause(null, litebridgeContext, conditionNode -> {
+        return new SqlJoinClause(table, null, litebridgeContext, conditionNode -> {
             final JoinNode joinNode = new JoinNode(node, "INNER", null, table);
             joinNode.withCondition(conditionNode);
-            return new SqlJoinConditionClauseTerminal(joinNode, selectEngineTerminal, litebridgeContext);
+            return new SqlJoinConditionClauseTerminal(this.table, joinNode, selectEngineTerminal, litebridgeContext);
         });
     }
 
@@ -52,12 +57,12 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final String... columns) {
-        return new SqlGroupByClauseTerminal(columns, node, selectEngineTerminal, litebridgeContext);
+        return new SqlGroupByClauseTerminal(table, columns, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final ExpressionSpec... expressions) {
-        return new SqlGroupByClauseTerminal(expressions, node, selectEngineTerminal, litebridgeContext);
+        return new SqlGroupByClauseTerminal(table, expressions, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
@@ -76,6 +81,6 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
                 column,
                 expression,
                 null,
-                conditionNode -> new SqlWhereConditionClauseTerminal(new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
+                conditionNode -> new SqlWhereConditionClauseTerminal(table, new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 }

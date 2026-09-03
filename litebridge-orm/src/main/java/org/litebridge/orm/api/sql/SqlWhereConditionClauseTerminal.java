@@ -3,13 +3,16 @@ package org.litebridge.orm.api.sql;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
-import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
+import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.ConditionGroupNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 public final class SqlWhereConditionClauseTerminal
@@ -29,10 +32,14 @@ public final class SqlWhereConditionClauseTerminal
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
-    public SqlWhereConditionClauseTerminal(final QueryNode node,
+    private final String table;
+
+    public SqlWhereConditionClauseTerminal(final String table,
+                                           final QueryNode node,
                                            final SelectEngineTerminal selectEngineTerminal,
                                            final LitebridgeContext litebridgeContext) {
         super(node, selectEngineTerminal, litebridgeContext);
+        this.table = table;
     }
 
     @Override
@@ -67,12 +74,12 @@ public final class SqlWhereConditionClauseTerminal
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final String... columns) {
-        return new SqlGroupByClauseTerminal(columns, node, selectEngineTerminal, litebridgeContext);
+        return new SqlGroupByClauseTerminal(table, columns, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final ExpressionSpec... expressions) {
-        return new SqlGroupByClauseTerminal(expressions, node, selectEngineTerminal, litebridgeContext);
+        return new SqlGroupByClauseTerminal(table, expressions, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
@@ -92,7 +99,7 @@ public final class SqlWhereConditionClauseTerminal
                     column,
                     expression,
                     whereNode.condition(),
-                    node -> new SqlWhereConditionClauseTerminal(whereNode.withCondition(node), selectEngineTerminal, litebridgeContext));
+                    node -> new SqlWhereConditionClauseTerminal(table, whereNode.withCondition(node), selectEngineTerminal, litebridgeContext));
         }
 
         return new SqlWhereConditionClause(litebridgeContext,
@@ -100,19 +107,18 @@ public final class SqlWhereConditionClauseTerminal
                 column,
                 expression,
                 null,
-                conditionNode -> new SqlWhereConditionClauseTerminal(new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
+                conditionNode -> new SqlWhereConditionClauseTerminal(table, new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
     private SqlWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-//        if (!(delegate.node() instanceof WhereNode whereNode)) {
-//            throw new IllegalArgumentException("AST error: Expected a WhereNode but got " + delegate.node());
-//        }
-//
-//        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(((SqlSelector) delegate).table(), delegate.litebridgeContext().fromClauseEngine(), null);
-//        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
-//
-//        whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, terminal.node()));
-//        return this;
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (!(node instanceof WhereNode whereNode)) {
+            throw new IllegalArgumentException("AST error: Expected a WhereNode but got " + node);
+        }
+
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(table, node, litebridgeContext);
+        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+
+        whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, terminal.node()));
+        return this;
     }
 }
