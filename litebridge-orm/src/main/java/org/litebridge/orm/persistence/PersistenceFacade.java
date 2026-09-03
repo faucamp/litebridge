@@ -7,7 +7,6 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.PreparedOperation;
-import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.query.LogicOperator;
@@ -17,8 +16,8 @@ import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.Delete;
-import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.Insert;
+import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -491,25 +490,10 @@ public class PersistenceFacade {
                                 }
 
                                 // Add join table entry
-                                final Table joinTable = mappedManyToMany.joinOrmTable().getMetaData().toTable();
                                 final LinkedHashMap<String, @Nullable Object> joinTableInsertValues = new LinkedHashMap<>();
-
-                                addDtoPrimaryKeyValues(leftDto, joinTableInsertValues);
-                                addDtoPrimaryKeyValues(value, joinTableInsertValues);
+                                addManyToManyJoinValue(leftDto, mappedManyToMany.joinColumn(), joinTableInsertValues);
+                                addManyToManyJoinValue(value, mappedManyToMany.inverseJoinColumn(), joinTableInsertValues);
                                 joinTableInsertBuilder.addRow(joinTableInsertValues);
-//                                dtoPrimaryKeyFieldAndValues(leftDto).forEach(fieldName, value -> {
-//
-//                                    final ColumnValue joinCv = new ColumnValue(new Column(joinOrmTable, mappedManyToMany.joinColumn()), cv.value());
-////                                    joinTableInsertBuilder.addColumn(joinCv);
-//
-//                                    joinTableInsertBuilder.addRow();
-//                                    throw new UnsupportedOperationException("Regression");
-//                                });
-//                                dtoPrimaryKeyFieldAndValues(value).forEach(cv -> {
-//                                    final ColumnValue joinCv = new ColumnValue(new Column(joinOrmTable, mappedManyToMany.inverseJoinColumn()), cv.value());
-////                                    joinTableInsertBuilder.addColumn(joinCv);
-//                                    throw new UnsupportedOperationException("Regression");
-//                                });
                             }));
                         }
                     }
@@ -569,15 +553,18 @@ public class PersistenceFacade {
         return currentDto;
     }
 
-    private LinkedHashMap<String, @Nullable Object> addDtoPrimaryKeyValues(final Object dto, final LinkedHashMap<String, @Nullable Object> rowValues) {
+    private void addManyToManyJoinValue(final Object dto, final String joinColumnName, final LinkedHashMap<String, @Nullable Object> rowValues) {
         final OrmTable ormTable = tableProvider.getTableOrThrow(dto.getClass());
+        final List<ColumnMetaData> primaryKeyColumns = ormTable.getMetaData().primaryKey();
 
-        ormTable.getMetaData().primaryKey().forEach(pkColumn -> {
-            final FieldAccessor pkField = ormTable.getFieldForColumnName(pkColumn.name());
-            rowValues.put(pkColumn.name(), pkField.get(dto));
-        });
+        if (primaryKeyColumns.size() != 1) {
+            //TODO: add support for composite primary keys in many-to-many joins
+            throw new UnsupportedOperationException("Composite primary keys are not yet supported for many-to-many relationships; table: " + ormTable.getMetaData().name());
+        }
 
-        return rowValues;
+        final ColumnMetaData pkColumn = primaryKeyColumns.getFirst();
+        final FieldAccessor pkField = ormTable.getFieldForColumnName(pkColumn.name());
+        rowValues.put(joinColumnName, pkField.get(dto));
     }
 
     private static <DTO> DTO constructDto(final Class<DTO> dtoClass, final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues, final DtoConstructor dtoConstructor) {
