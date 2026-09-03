@@ -1,7 +1,5 @@
 package org.litebridge.db.spi.update;
 
-import org.litebridge.commons.CollectionUtils;
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -30,37 +28,9 @@ import java.util.List;
  * @param returnGeneratedKeys If true, generated keys will be returned after the insert operation.
  */
 public record Insert(Table table,
-                     List<Column> columns,
-                     List<RowValue> rows,
+                     List<UpdateColumn> columns,
+                     int rows,
                      boolean returnGeneratedKeys)
         implements UpdateStatement {
 
-    /**
-     * Constructs a new {@code Insert} instance for a single row.
-     *
-     * @param table               the target table for the insertion
-     * @param row                 the row to be inserted
-     * @param returnGeneratedKeys whether to return generated keys
-     */
-    public Insert(final Table table, final RowValue row, final boolean returnGeneratedKeys) {
-        this(table, row.columns().stream().map(ColumnValue::column).toList(), List.of(row), returnGeneratedKeys);
-    }
-
-    /**
-     * Constructs a new {@code Insert} instance for multiple rows.
-     *
-     * @param table               the target table for the insertion
-     * @param rows                the list of rows to be inserted
-     * @param returnGeneratedKeys whether to return generated keys
-     */
-    public Insert(final Table table, final List<RowValue> rows, final boolean returnGeneratedKeys) {
-        this(table,
-                CollectionUtils.requireNonEmpty(rows, "No rows to insert for table: " + table.name())
-                        .getFirst()
-                        .columns().stream()
-                        .map(ColumnValue::column)
-                        .toList(),
-                rows,
-                returnGeneratedKeys);
-    }
 }

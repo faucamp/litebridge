@@ -64,7 +64,7 @@ class PersistenceFacadeTest {
         when(context.createQueryCompiler()).thenReturn(new QueryCompiler(context));
         when(context.typeConverter()).thenReturn(new DefaultTypeConverter());
         when(context.tableRegistry()).thenReturn(tableRegistry);
-        
+
         try {
             when(databaseProvider.tableMetaData(any(), any())).thenAnswer(invocation -> {
                 org.litebridge.db.spi.Table table = invocation.getArgument(0);

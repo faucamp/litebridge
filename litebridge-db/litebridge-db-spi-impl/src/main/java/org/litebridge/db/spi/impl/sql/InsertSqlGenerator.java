@@ -1,6 +1,5 @@
 package org.litebridge.db.spi.impl.sql;
 
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -10,9 +9,8 @@ import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Insert;
-import org.litebridge.db.spi.update.UpdateColumn;
-import org.litebridge.db.spi.update.InsertV2;
 import org.litebridge.db.spi.update.RowValue;
+import org.litebridge.db.spi.update.UpdateColumn;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,38 +45,6 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
      * @return the generated SQL query string
      */
     public String prepareSql(final Insert insert, final ConnectionProvider connectionProvider) {
-        return prepareSql(insert, false, connectionProvider);
-    }
-
-    String prepareSql(final Insert insert, final boolean columnsOnly, final ConnectionProvider connectionProvider) {
-        final List<String> columnNames = insert.columns().stream().map(Column::name).toList();
-        final StringBuilder sql = new StringBuilder("INSERT");
-
-        if (!columnsOnly) {
-            appendTable(sql.append(" INTO "), insert.table());
-        }
-
-        sql.append(" (")
-                .append(String.join(", ", columnNames.stream().map(columnIdentifierGenerator::quoteIdentifier).toList()))
-                .append(") VALUES ");
-
-        boolean first = true;
-
-        for (RowValue row : insert.rows()) {
-            if (!first) {
-                sql.append(", ");
-            }
-
-            first = false;
-
-            final PreparedRow preparedRow = prepareRow(row, connectionProvider);
-            sql.append('(').append(String.join(", ", preparedRow.valueSpecifiers())).append(')');
-        }
-
-        return sql.toString();
-    }
-
-    public String prepareSql(final InsertV2 insert, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = appendTable(new StringBuilder("INSERT INTO "), insert.table())
                 .append(" (")
                 .append(String.join(", ", insert.columns().stream()

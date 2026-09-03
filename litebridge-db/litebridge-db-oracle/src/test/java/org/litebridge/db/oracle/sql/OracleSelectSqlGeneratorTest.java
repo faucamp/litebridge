@@ -11,7 +11,6 @@ import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.mockito.Mock;
 
-import java.util.Optional;
 import java.util.function.BiFunction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,7 +32,7 @@ class OracleSelectSqlGeneratorTest {
     void appendLimitClause_withOffsetAndLimit() {
         // Given
         final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final Limit limit = new Limit(Optional.of(10), Optional.of(5));
+        final Limit limit = new Limit(10, 5);
         final StringBuilder sql = new StringBuilder("SELECT * FROM TEST_TABLE");
 
         // When
@@ -47,7 +46,7 @@ class OracleSelectSqlGeneratorTest {
     void appendLimitClause_withOffsetOnly() {
         // Given
         final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final Limit limit = new Limit(Optional.empty(), Optional.of(5));
+        final Limit limit = new Limit(null, 5);
         final StringBuilder sql = new StringBuilder("SELECT * FROM TEST_TABLE");
 
         // When
@@ -61,7 +60,7 @@ class OracleSelectSqlGeneratorTest {
     void appendLimitClause_withLimitOnly() {
         // Given
         final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final Limit limit = new Limit(Optional.of(10), Optional.empty());
+        final Limit limit = new Limit(10, null);
         final StringBuilder sql = new StringBuilder("SELECT * FROM TEST_TABLE");
 
         // When
@@ -69,19 +68,5 @@ class OracleSelectSqlGeneratorTest {
 
         // Then
         assertEquals("SELECT * FROM TEST_TABLE FETCH FIRST 10 ROWS ONLY", sql.toString());
-    }
-
-    @Test
-    void appendLimitClause_withoutOffsetAndLimit() {
-        // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final Limit limit = new Limit(Optional.empty(), Optional.empty());
-        final StringBuilder sql = new StringBuilder("SELECT * FROM TEST_TABLE");
-
-        // When
-        oracleSelectSqlGenerator.appendLimitClause(limit, sql);
-
-        // Then
-        assertEquals("SELECT * FROM TEST_TABLE", sql.toString());
     }
 }

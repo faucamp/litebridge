@@ -11,8 +11,8 @@ class LimitTest {
     @Test
     void constructor() {
         // Given
-        final Optional<Integer> limit = Optional.of(10);
-        final Optional<Integer> offset = Optional.of(20);
+        final Integer limit = 10;
+        final Integer offset = 20;
 
         // When
         final Limit result = new Limit(limit, offset);

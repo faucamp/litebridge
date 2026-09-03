@@ -8,7 +8,7 @@ import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.InsertV2;
+import org.litebridge.db.spi.update.Insert;
 import org.litebridge.orm.api.insert.DtoInsertIntoStep;
 import org.litebridge.orm.api.insert.InsertValuesStep;
 import org.litebridge.orm.api.insert.InsertValuesStepInspector;
@@ -67,7 +67,7 @@ public final class InsertEngine extends AbstractInsertEngine {
         final Table table = tableSupplier.get();
         final TableMetaData tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);
         final PreparedOperation preparedOperation = litebridgeContext.createQueryCompiler().compile(node);
-        final InsertV2 insert = (InsertV2) preparedOperation.operation();
+        final Insert insert = (Insert) preparedOperation.operation();
         // Generate SQL and create type conversion metadata
         final String sql = litebridgeContext.databaseProvider().toSql(insert, litebridgeContext.transactionManager());
         final UpdateMetaData updateMetaData = createUpdateMetaData(tableMetaData);

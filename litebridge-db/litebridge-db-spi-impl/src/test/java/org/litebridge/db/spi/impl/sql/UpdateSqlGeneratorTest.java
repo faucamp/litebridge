@@ -39,13 +39,11 @@ class UpdateSqlGeneratorTest {
         // Given
         final Column column = createTestColumn();
         final MathOperation mathOperation = new MathOperation(MathOperation.Operator.ADD, 10);
-        final int dataType = Types.NUMERIC;
-        when(typeConverter.convert(10, dataType)).thenReturn(10);
 
         // When
         final String result = updateSqlGenerator.createMathOperation(column.name(), mathOperation);
 
         // Then
-        assertEquals("TEST_COLUMN + 10", result);
+        assertEquals("TEST_COLUMN + ?", result);
     }
 }

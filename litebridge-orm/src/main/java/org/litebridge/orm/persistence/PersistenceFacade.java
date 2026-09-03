@@ -18,7 +18,7 @@ import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.InsertV2;
+import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -731,7 +731,7 @@ public class PersistenceFacade {
                 final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), null, updateMetaData);
 
                 final UpdateResult updateResult = switch (preparedOperation.operation()) {
-                    case InsertV2 insert -> databaseProvider.insert(executionSql, transactionManager);
+                    case Insert insert -> databaseProvider.insert(executionSql, transactionManager);
                     case Update update -> databaseProvider.update(executionSql, transactionManager);
                     case Delete delete -> databaseProvider.delete(executionSql, transactionManager);
                     default ->

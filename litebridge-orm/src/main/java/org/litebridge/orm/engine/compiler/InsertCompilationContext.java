@@ -6,7 +6,7 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.db.spi.update.InsertV2;
+import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -159,7 +159,7 @@ final class InsertCompilationContext implements CompilationContext {
     }
 
     @Override
-    public InsertV2 toOperation() {
+    public Insert toOperation() {
         final List<UpdateColumn> columns = columnMetaDataList.stream()
                 .map(columnMetaData -> {
                     final ColumnValueGenerator columnValueGenerator = columnMetaData.getGenerator();
@@ -172,6 +172,6 @@ final class InsertCompilationContext implements CompilationContext {
                     }
                 })
                 .toList();
-        return new InsertV2(table, columns, rows, true);
+        return new Insert(table, columns, rows, true);
     }
 }

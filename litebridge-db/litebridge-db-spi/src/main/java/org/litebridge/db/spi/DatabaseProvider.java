@@ -7,9 +7,7 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.Delete;
-import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
@@ -37,7 +35,7 @@ public interface DatabaseProvider {
     TableMetaData tableMetaData(Table table, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
-     * Execute an INSERT operation in the database using the provided {@link Insert} statement.
+     * Execute an INSERT operation in the database using the provided statement.
      *
      * @param insert             the {@link PreparedSql} for the statement.
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.

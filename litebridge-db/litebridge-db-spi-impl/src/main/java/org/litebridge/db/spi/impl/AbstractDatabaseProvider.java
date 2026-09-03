@@ -30,9 +30,8 @@ import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.ManagedConnection;
 import org.litebridge.db.spi.update.Delete;
-import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.InsertV2;
+import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
@@ -259,7 +258,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         return switch (operation) {
             case Select select -> selectSqlGenerator.orThrow().prepareSql(select, connectionProvider);
             case Insert insert -> insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider);
-            case InsertV2 insert -> insertSqlGenerator.orThrow().prepareSql(insert, connectionProvider);
             case Update update -> updateSqlGenerator.orThrow().prepareSql(update, connectionProvider);
             case Delete delete -> deleteSqlGenerator.orThrow().prepareSql(delete, connectionProvider);
             case Merge merge -> mergeSqlGenerator.orThrow().prepareSql(merge, connectionProvider);

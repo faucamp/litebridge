@@ -2,11 +2,10 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.PreparedOperation;
-import org.litebridge.db.spi.update.Insert;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.engine.ast.InsertValuesNode;
 import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.engine.LitebridgeContext;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -14,15 +13,10 @@ import java.util.List;
 
 /**
  * A builder class for constructing SQL INSERT statements.
- * <p>
- * The {@code InsertBuilder} is responsible for creating instances of the {@link Insert} class
- * by specifying the target table, column values to insert, and whether to return generated keys.
- * <p>
- * Instances of this class support method chaining for a fluent API style.
  */
 final class InsertBuilder extends AbstractStatementBuilder {
 
-    private final List<LinkedHashMap<String, @Nullable  Object>> rows = new ArrayList<>();
+    private final List<LinkedHashMap<String, @Nullable Object>> rows = new ArrayList<>();
 
     public InsertBuilder(final OrmTable table, final LitebridgeContext litebridgeContext) {
         super(table, litebridgeContext);
