@@ -32,9 +32,8 @@ public class SelectEngine {
     }
 
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass, final LitebridgeContext litebridgeContext) {
-        //TODO: fix
-//        return new FromClauseStart(new SelectNode(null, new ExpressionSpec[0], null), fromClauseEngine).from(dtoClass, contextDtoClass);
-        throw new UnsupportedOperationException("Not implemented yet");
+        final SelectNode selectNode = new SelectNode(null, dtoClass, contextDtoClass, null, null, null);
+        return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContext);
     }
 
     public FromClauseStart select(final String[] fieldsOrColumns, final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {

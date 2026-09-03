@@ -64,13 +64,11 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     @Override
     public SqlJoinClause join(final String table) {
-//        return new SqlJoinClause((SqlSelector) delegate, node -> {
-//            final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", null, table);
-//            joinNode.withCondition(node);
-//            delegate.withNode(joinNode);
-//            return new SqlJoinConditionClauseTerminal(joinNode, (SqlSelector) delegate);
-//        });
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new SqlJoinClause(table, null, litebridgeContext, conditionNode -> {
+            final JoinNode joinNode = new JoinNode(node, "INNER", null, table);
+            joinNode.withCondition(conditionNode);
+            return new SqlJoinConditionClauseTerminal(table, joinNode, selectEngineTerminal, litebridgeContext);
+        });
     }
 
     @Override

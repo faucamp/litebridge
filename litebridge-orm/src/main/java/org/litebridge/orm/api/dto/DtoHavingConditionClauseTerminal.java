@@ -1,12 +1,16 @@
 package org.litebridge.orm.api.dto;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractHavingClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.HavingNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -101,20 +105,18 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     }
 
     private DtoHavingConditionClauseTerminal<DTO> havingImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
-//        final org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
-//        final QueryNode conditionNode = terminal.node();
-//
-//        if (delegate.node() instanceof HavingNode havingNode) {
-//            final ConditionGroupNode groupNode = new ConditionGroupNode(havingNode.condition(), logicOperator, conditionNode);
-//            havingNode.withCondition(groupNode);
-//            return this;
-//        }
-//
-//        final ConditionGroupNode groupNode = new ConditionGroupNode(null, logicOperator, conditionNode);
-//        delegate.withNode(new HavingNode(delegate.node(), groupNode));
-//
-//        return this;
-        throw new UnsupportedOperationException("Not implemented yet");
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(node, litebridgeContext);
+        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        final QueryNode conditionNode = terminal.node();
+
+        if (node instanceof HavingNode havingNode) {
+            final ConditionGroupNode groupNode = new ConditionGroupNode(havingNode.condition(), logicOperator, conditionNode);
+            havingNode.withCondition(groupNode);
+            return this;
+        }
+
+        final ConditionGroupNode groupNode = new ConditionGroupNode(null, logicOperator, conditionNode);
+        this.node = new HavingNode(node, groupNode);
+        return this;
     }
 }

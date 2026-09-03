@@ -6,7 +6,9 @@ import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.ConditionClause;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectApi;
+import org.litebridge.orm.api.select.SelectApiImpl;
 import org.litebridge.orm.api.select.SelectTerminal;
+import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.QueryNode;
@@ -247,17 +249,17 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     private AbstractCbConditionClauseTerminal<DTO> subselectImpl(final Operator operator,
                                                                  final @Nullable Function<SelectApi, SelectTerminal<?>> subselect,
                                                                  final boolean allowNull) {
-//        // To support the current overloading and null parameters
-//        if (subselect == null) {
-//            if (allowNull) {
-//                return condition(operator, null);
-//            }
-//
-//            throw new NullPointerException("Operator " + operator + " requires a non-NULL RHS value");
-//        }
-//
-//        return condition(operator, createSelectSpec(subselect));
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (subselect == null) {
+            if (allowNull) {
+                return condition(operator, null);
+            }
+
+            throw new NullPointerException("Operator " + operator + " requires a non-NULL RHS value");
+        }
+
+        final SelectTerminal<?> selectTerminal = subselect.apply(new SelectApiImpl(litebridgeContext));
+        final QueryNode subselectNode = SelectTerminalInspector.getNode(selectTerminal);
+        return condition(operator, subselectNode);
     }
 
     /**
