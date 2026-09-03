@@ -14,6 +14,7 @@ import java.util.Objects;
  */
 public record SelectNode(@Nullable String table,
                          @Nullable Class<?> dtoClass,
+                         @Nullable Class<?> contextDtoClass,
                          String @Nullable [] columns,
                          ExpressionSpec @Nullable [] expressions,
                          @Nullable Class<?> @Nullable [] resultTypes) implements QueryNode {
@@ -30,11 +31,16 @@ public record SelectNode(@Nullable String table,
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof final SelectNode that)) return false;
-        return Objects.equals(table, that.table) && Objects.equals(dtoClass, that.dtoClass) && Arrays.deepEquals(resultTypes, that.resultTypes) && Objects.deepEquals(columns, that.columns) && Objects.deepEquals(expressions, that.expressions);
+        return Objects.equals(table, that.table)
+                && Objects.equals(dtoClass, that.dtoClass)
+                && Objects.equals(contextDtoClass, that.contextDtoClass)
+                && Arrays.deepEquals(resultTypes, that.resultTypes)
+                && Objects.deepEquals(columns, that.columns)
+                && Objects.deepEquals(expressions, that.expressions);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(table, dtoClass, Arrays.hashCode(columns), Arrays.hashCode(expressions), Arrays.hashCode(resultTypes));
+        return Objects.hash(table, dtoClass, contextDtoClass, Arrays.hashCode(columns), Arrays.hashCode(expressions), Arrays.hashCode(resultTypes));
     }
 }

@@ -74,13 +74,19 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         this.selectExpressionMapper = litebridgeContext.selectExpressionMapper();
         this.aliasGenerator = litebridgeContext.aliasGenerator();
         this.selectAll = selectNode.isSelectAll();
+        final TableRegistry tableRegistry = litebridgeContext.tableRegistry();
 
         if (selectNode.dtoClass() != null) {
-            this.ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(selectNode.dtoClass());
+            if (selectNode.contextDtoClass() != null) {
+                this.ormTable = tableRegistry.getTableInContextOrThrow(selectNode.dtoClass(), selectNode.contextDtoClass());
+            } else {
+                this.ormTable = tableRegistry.getOrmTableOrThrow(selectNode.dtoClass());
+            }
+
             this.tableMetaData = ormTable.getMetaData();
             this.aliasedTable = aliasTable(tableMetaData.toTable());
         } else {
-            this.aliasedTable = aliasTable(litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(selectNode.table())));
+            this.aliasedTable = aliasTable(tableRegistry.getOrCreateSpiTable(Objects.requireNonNull(selectNode.table())));
             this.tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(aliasedTable);
             this.ormTable = null;
         }

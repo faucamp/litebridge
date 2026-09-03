@@ -62,7 +62,7 @@ public final class FromClauseStartTypeOverride<ReturnType> {
             returnTypes = new Class<?>[]{typeOverride};
         }
 
-        final SelectNode selectNode = new SelectNode(null, dtoClass, null, expressionSpecs, returnTypes);
+        final SelectNode selectNode = new SelectNode(null, dtoClass, null, null, expressionSpecs, returnTypes);
         return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.DTO));
     }
 
@@ -99,7 +99,7 @@ public final class FromClauseStartTypeOverride<ReturnType> {
      * @return the SQL from clause terminal.
      */
     public SqlFromClauseTerminal from(final String table) {
-        final SelectNode selectNode = new SelectNode(table, null, null, expressionSpecs, new Class<?>[]{typeOverride});
+        final SelectNode selectNode = new SelectNode(table, null, null, null, expressionSpecs, new Class<?>[]{typeOverride});
         return new SqlFromClauseTerminal(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
     }
 }

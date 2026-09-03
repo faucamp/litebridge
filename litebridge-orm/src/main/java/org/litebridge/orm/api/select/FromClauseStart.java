@@ -2,10 +2,10 @@ package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
-import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.api.sql.SqlFromClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
 
@@ -53,7 +53,7 @@ public final class FromClauseStart {
      * @return the DTO from clause terminal.
      */
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass) {
-        final SelectNode selectNode = new SelectNode(null, dtoClass, columns, expressionSpecs, null);
+        final SelectNode selectNode = new SelectNode(null, dtoClass, null, columns, expressionSpecs, null);
         return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.DTO));
     }
 
@@ -66,8 +66,8 @@ public final class FromClauseStart {
      * @return the DTO from clause terminal.
      */
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
-//        return fromClauseEngine.from(dtoClass, contextDtoClass);
-        throw new UnsupportedOperationException("Not implemented yet");
+        final SelectNode selectNode = new SelectNode(null, dtoClass, contextDtoClass, columns, expressionSpecs, null);
+        return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.DTO));
     }
 
     /**
@@ -92,7 +92,7 @@ public final class FromClauseStart {
         }
 
 
-        final SelectNode selectNode = new SelectNode(table, null, columns, expressionSpecs, resultTypes);
+        final SelectNode selectNode = new SelectNode(table, null, null, columns, expressionSpecs, resultTypes);
         return new SqlFromClauseTerminal(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
     }
 }

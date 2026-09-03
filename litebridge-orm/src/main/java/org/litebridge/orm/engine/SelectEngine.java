@@ -27,7 +27,7 @@ public class SelectEngine {
     }
 
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final LitebridgeContext litebridgeContext) {
-        final SelectNode selectNode = new SelectNode(null, dtoClass, null, null, null);
+        final SelectNode selectNode = new SelectNode(null, dtoClass, null, null, null, null);
         return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContext);
     }
 
