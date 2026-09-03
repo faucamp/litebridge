@@ -155,15 +155,6 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression, final DtoSelector<DTO> newDelegate) {
-//        return new DtoWhereConditionClause<>(delegate.litebridgeContext(),
-//                logicOperator,
-//                expression,
-//                null,
-//                node -> new DtoWhereConditionClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(new WhereNode(delegate.node(), node))));
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
-
     private DtoJoinConditionClauseTerminal<DTO> joinImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
 //        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
 //        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
