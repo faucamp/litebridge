@@ -473,13 +473,25 @@ final class SelectCompilationContext extends AbstractCompilationContext {
     }
 
     private Table aliasTable(final OrmTable ormTable) {
-        final TableMetaData tableMetaData = ormTable.getMetaData();
-        if (Objects.equals(tableMetaData.name(), aliasedTable.name())
-                && Objects.equals(tableMetaData.schema(), aliasedTable.schema())) {
-            return aliasedTable;
-        }
+//        final TableMetaData tableMetaData = ormTable.getMetaData();
 
-        return aliasedTables.computeIfAbsent(tableMetaData.qualifiedName(), tableName -> aliasGenerator.aliasTable(ormTable));
+        //TODO: this check overrides the aliasing, but that is necessary for self-referencing tables
+//        if (Objects.equals(tableMetaData.name(), aliasedTable.name())
+//                && Objects.equals(tableMetaData.schema(), aliasedTable.schema())) {
+//            return aliasedTable;
+//        }
+
+//        return aliasedTables.computeIfAbsent(tableMetaData.qualifiedName(), tableName -> aliasGenerator.aliasTable(ormTable));
+        return aliasTable(ormTable, false);
+    }
+
+    private Table aliasTable(final OrmTable ormTable, final boolean forceAlias) {
+        if (forceAlias) {
+            return aliasGenerator.aliasTable(ormTable);
+        } else {
+            final TableMetaData tableMetaData = ormTable.getMetaData();
+            return aliasedTables.computeIfAbsent(tableMetaData.qualifiedName(), tableName -> aliasGenerator.aliasTable(ormTable));
+        }
     }
 
     private Column resolveAlias(final Table table, final String columnName) {
@@ -563,7 +575,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
         // Right table & column
         final OrmTable rightOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(joinDtoClass));
-        final Table aliasedRightTable = aliasTable(rightOrmTable);
+        final Table aliasedRightTable = aliasTable(rightOrmTable, true);
         final TableMetaData rightTableMetaData = rightOrmTable.getMetaData();
         final ColumnMetaData rightColumnMetaData = rightTableMetaData.column(leftColumnMetaData.getJoinColumn());
 
@@ -587,25 +599,25 @@ final class SelectCompilationContext extends AbstractCompilationContext {
     }
 
     private List<JoinOnSpec> processManyToManyJoin(final Class<?> joinDtoClass, final MappedManyToMany mappedManyToMany) {
-        return List.of(createManyToManyLeftJoinOnSpec(mappedManyToMany), createManyToManyRightJoinOnSpec(mappedManyToMany));
+        final JoinOnSpec leftLeftJoinOnSpec = createManyToManyLeftJoinOnSpec(mappedManyToMany);
+        return List.of(leftLeftJoinOnSpec, createManyToManyRightJoinOnSpec(mappedManyToMany, leftLeftJoinOnSpec.rightSelectColumnSpec().getColumn()));
     }
 
     private @NonNull JoinOnSpec createManyToManyLeftJoinOnSpec(final MappedManyToMany mappedManyToMany) {
         // Left column
         final SelectColumnSpec leftSelectColumnSpec = new SelectColumnSpec(resolveAlias(aliasedTable, mappedManyToMany.joinColumn()));
 
-        // Join table & column
-        final Table aliasedJoinTable = aliasTable(mappedManyToMany.joinOrmTable());
+        // Join table & column - alias it directly in order to support self-references
+        final Table aliasedJoinTable = aliasGenerator.aliasTable(ormTable);
         final Column aliasedJoinColumn = resolveAlias(aliasedJoinTable, mappedManyToMany.joinColumn());
         final SelectColumnSpec joinSelectColumnSpec = new SelectColumnSpec(aliasedJoinColumn);
 
         return new JoinOnSpec(leftSelectColumnSpec, joinSelectColumnSpec);
     }
 
-    private @NonNull JoinOnSpec createManyToManyRightJoinOnSpec(final MappedManyToMany mappedManyToMany) {
+    private @NonNull JoinOnSpec createManyToManyRightJoinOnSpec(final MappedManyToMany mappedManyToMany, final Column aliasedJoinColumn) {
         // Join table & column
-        final Table aliasedJoinTable = aliasTable(mappedManyToMany.joinOrmTable());
-        final SelectColumnSpec joinSelectColumnSpec = new SelectColumnSpec(resolveAlias(aliasedJoinTable, mappedManyToMany.inverseJoinColumn()));
+        final SelectColumnSpec joinSelectColumnSpec = new SelectColumnSpec(aliasedJoinColumn);
 
         // Right column
         final OrmTable rightOrmTable = mappedManyToMany.targetOrmTable().get();
