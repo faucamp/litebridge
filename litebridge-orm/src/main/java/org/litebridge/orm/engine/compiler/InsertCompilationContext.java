@@ -67,7 +67,7 @@ final class InsertCompilationContext implements CompilationContext {
 
                 // Process any remaining non-nullable columns
                 tableMetaData.columns().stream()
-                        .filter(columnMetaData -> !insertColumns.contains(columnMetaData.name()) && !columnMetaData.isNullable())
+                        .filter(columnMetaData -> !insertColumns.contains(columnMetaData.name()) && !columnMetaData.isNullable() && !columnMetaData.isAutoIncrement())
                         .forEach(columnMetaData -> {
                             // Non-null value omitted from insert columns; see if it can be generated
                             if (columnMetaData.getGenerator() != null) {
@@ -110,7 +110,7 @@ final class InsertCompilationContext implements CompilationContext {
                     // Explicit insert
                     this.columnMetaDataList.add(columnMetaData);
                     unmappedInsertColumns.remove(columnMetaData.name());
-                } else if (!columnMetaData.isNullable()) {
+                } else if (!columnMetaData.isNullable() && !columnMetaData.isAutoIncrement()) {
                     // Non-null value omitted from insert columns; see if it can be generated
                     if (columnMetaData.getGenerator() != null) {
                         // Implicit/generated value insert
