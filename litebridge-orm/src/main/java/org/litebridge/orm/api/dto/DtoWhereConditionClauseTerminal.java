@@ -76,15 +76,12 @@ public final class DtoWhereConditionClauseTerminal<DTO>
 
     @Override
     public DtoGroupByClauseTerminal<DTO> groupBy(final String... fields) {
-//        return groupBy(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new));
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new DtoGroupByClauseTerminal<>(fields, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
-    public DtoGroupByClauseTerminal<DTO> groupBy(final ExpressionSpec... fields) {
-//        final QueryNode groupByNode = new GroupByNode(delegate.node(), fields);
-//        return new DtoGroupByClauseTerminal<>((DtoSelector<DTO>) delegate.withNode(groupByNode));
-        throw new UnsupportedOperationException("Not implemented yet");
+    public DtoGroupByClauseTerminal<DTO> groupBy(final ExpressionSpec... expressions) {
+        return new DtoGroupByClauseTerminal<>(expressions, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override

@@ -126,12 +126,12 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     @Override
     public DtoGroupByClauseTerminal<DTO> groupBy(final String... fields) {
-        return new DtoGroupByClauseTerminal(fields, node, selectEngineTerminal, litebridgeContext);
+        return new DtoGroupByClauseTerminal<>(fields, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoGroupByClauseTerminal<DTO> groupBy(final ExpressionSpec... expressions) {
-        return new DtoGroupByClauseTerminal(expressions, node, selectEngineTerminal, litebridgeContext);
+        return new DtoGroupByClauseTerminal<>(expressions, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
