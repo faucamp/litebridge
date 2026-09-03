@@ -252,7 +252,6 @@ public final class TableMapper {
                                final List<FieldAccessor> manyToOneDependencies) {
         //TODO: Verify we are dealing with a collection
         final FieldAccessor leftCollectionFieldAccessor = fieldAccessor(dtoClass, fieldSpec);
-        final ColumnMetaData leftColumnMetaData = tableMetaData.column(manyToMany.joinColumn());
 
         final OrmTable joinOrmTable = ensureManyToManyJoinTable(manyToMany, lookup, manyToOneDependencies);
 

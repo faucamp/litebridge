@@ -611,7 +611,13 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
     private @NonNull JoinOnSpec createManyToManyLeftJoinOnSpec(final MappedManyToMany mappedManyToMany) {
         // Left column
-        final SelectColumnSpec leftSelectColumnSpec = new SelectColumnSpec(resolveAlias(aliasedTable, mappedManyToMany.joinColumn()));
+        if (tableMetaData.primaryKey().isEmpty()) {
+            throw new IllegalArgumentException("Left table " + tableMetaData.name() + " does not have a primary key; cannot map many-to-many join: " + mappedManyToMany);
+        }
+
+        //TODO: add support for composite primary keys in many-to-many joins
+        final ColumnMetaData leftColumnMetaData = tableMetaData.primaryKey().getFirst();
+        final SelectColumnSpec leftSelectColumnSpec = new SelectColumnSpec(resolveAlias(aliasedTable, leftColumnMetaData));
 
         // Join table & column - alias it directly in order to support self-references
         final Table aliasedJoinTable = aliasGenerator.aliasTable(mappedManyToMany.joinOrmTable());
@@ -628,8 +634,13 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         // Right column
         final OrmTable rightOrmTable = mappedManyToMany.targetOrmTable().get();
         final TableMetaData rightTableMetaData = rightOrmTable.getMetaData();
-        //TODO: look into extending MappedManyToMany to specify the left/right columns explicitly
-        final ColumnMetaData rightColumnMetaData = rightTableMetaData.column(mappedManyToMany.inverseJoinColumn());
+
+        if (rightTableMetaData.primaryKey().isEmpty()) {
+            throw new IllegalArgumentException("Right table " + tableMetaData.name() + " does not have a primary key; cannot map many-to-many join: " + mappedManyToMany);
+        }
+
+        //TODO: add support for composite primary keys in many-to-many joins
+        final ColumnMetaData rightColumnMetaData = rightTableMetaData.primaryKey().getFirst();
         final Table aliasedRightTable = aliasTable(rightOrmTable);
 
         // Add joined table columns to select

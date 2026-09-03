@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.expression.ClauseType;
@@ -25,15 +26,17 @@ import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.engine.SelectEngine;
-import org.litebridge.orm.engine.compiler.QueryCompiler;
 import org.litebridge.orm.expression.TestColumnExpression;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
 import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
+import org.litebridge.orm.persistence.manytomany.HiddenJoinEntity;
 import org.litebridge.orm.persistence.manytomany.NoOpFieldAccessor;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.ClassFieldAccessorCache;
+import org.litebridge.tracking.FieldAccessor;
 
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Proxy;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -484,9 +487,10 @@ class PersistenceFacadeTest {
         final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
         productTable.syncPersistedDto(product);
 
-        final OrmTable joinTable = createOrmTable(changeTracker, ProductTag.class, "product_tags", Map.of("prod_id", numeric("PROD_ID"), "tag_id", numeric("TAG_ID")), List.of());
-        when(tableRegistry.getOrmTableOrThrow(ProductTag.class)).thenReturn(joinTable);
-        final MappedManyToMany m2m = new MappedManyToMany(joinTable, "prod_id", changeTracker.classFieldAccessorCache().fieldAccessor(ProductDto.class, "tags"), null, "tag_id");
+        final Class<?> joinTableClass = Proxy.getProxyClass(HiddenJoinEntity.class.getClassLoader(), HiddenJoinEntity.class);
+        final OrmTable joinTable = createOrmTable(changeTracker, joinTableClass, "product_tags", Map.of("prod_id", numeric("PROD_ID"), "tag_id", numeric("TAG_ID")), List.of());
+        when(tableRegistry.getOrmTableOrThrow(joinTableClass)).thenReturn(joinTable);
+        final MappedManyToMany m2m = new MappedManyToMany(joinTable, "PROD_ID", changeTracker.classFieldAccessorCache().fieldAccessor(ProductDto.class, "tags"), null, "TAG_ID");
 
         final Map<String, Object> productFields = new HashMap<>();
         productFields.put("id", numeric("ID"));
@@ -729,9 +733,16 @@ class PersistenceFacadeTest {
         final TableMetaData tableMetaData = new TableMetaData(table, pkColumns, columns);
         metaDataMap.put(table.qualifiedName(), tableMetaData);
 
-        final Map<org.litebridge.tracking.FieldAccessor, org.litebridge.db.spi.MappedFieldTarget> fieldTargetMap = new java.util.HashMap<>();
+        final Map<FieldAccessor, MappedFieldTarget> fieldTargetMap = new HashMap<>();
         fieldToTarget.forEach((field, target) -> {
-            final org.litebridge.tracking.FieldAccessor accessor = changeTracker.classFieldAccessorCache().fieldAccessor(dtoClass, field);
+            final FieldAccessor accessor;
+
+            if (Proxy.isProxyClass(dtoClass)) {
+                accessor = new NoOpFieldAccessor();
+            } else {
+                accessor = changeTracker.classFieldAccessorCache().fieldAccessor(dtoClass, field);
+            }
+
             if (target instanceof TestCol col) {
                 fieldTargetMap.put(accessor, tableMetaData.column(col.name()));
             } else if (target instanceof org.litebridge.db.spi.MappedFieldTarget mft) {
@@ -778,11 +789,6 @@ class PersistenceFacadeTest {
     public static class TagDto {
         private Long id;
         private String name;
-    }
-
-    public static class ProductTag {
-        private Long prod_id;
-        private Long tag_id;
     }
 
     public record PersonRecord(Long id, String name) {
