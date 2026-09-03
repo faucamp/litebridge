@@ -47,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -64,6 +65,22 @@ class PersistenceFacadeTest {
         when(context.createQueryCompiler()).thenReturn(new QueryCompiler(context));
         when(context.typeConverter()).thenReturn(new DefaultTypeConverter());
         when(context.tableRegistry()).thenReturn(tableRegistry);
+        when(tableRegistry.getOrCreateSpiTable(anyString())).thenAnswer(invocation -> {
+            String tableName = invocation.getArgument(0);
+            if (tableName.contains(".")) {
+                tableName = tableName.substring(tableName.lastIndexOf('.') + 1);
+            }
+
+            return new Table("", "public", tableName);
+        });
+
+        if (databaseProvider.getTypeConverter() == null) {
+            when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        }
+        
+        if (databaseProvider.transactionManager() == null) {
+            when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
+        }
 
         try {
             when(databaseProvider.tableMetaData(any(), any())).thenAnswer(invocation -> {
@@ -460,7 +477,7 @@ class PersistenceFacadeTest {
         productTable.syncPersistedDto(product);
 
         final OrmTable joinTable = createOrmTable(changeTracker, ProductTag.class, "product_tags", Map.of("prod_id", numeric("PROD_ID"), "tag_id", numeric("TAG_ID")), List.of());
-        final MappedManyToMany m2m = new MappedManyToMany(joinTable, "PROD_ID", changeTracker.classFieldAccessorCache().fieldAccessor(ProductDto.class, "tags"), null, "TAG_ID");
+        final MappedManyToMany m2m = new MappedManyToMany(joinTable, "prod_id", changeTracker.classFieldAccessorCache().fieldAccessor(ProductDto.class, "tags"), null, "tag_id");
 
         final Map<String, Object> productFields = new HashMap<>();
         productFields.put("id", numeric("ID"));
@@ -501,7 +518,6 @@ class PersistenceFacadeTest {
 
         final CategoryDto category = new CategoryDto();
         category.name = "cat";
-        changeTracker.trackDto(category);
 
         final ProductDto product = new ProductDto();
         product.name = "prod";
@@ -588,7 +604,7 @@ class PersistenceFacadeTest {
         dto.id = 1L;
         dto.name = "test";
 
-        final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"), Set.of("ID"));
+        final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"), Collections.emptySet());
         when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
@@ -685,7 +701,7 @@ class PersistenceFacadeTest {
     }
 
     private OrmTable createOrmTable(ChangeTracker changeTracker, Class<?> dtoClass, String tableName, Map<String, Object> fieldToTarget, List<String> pkColumns) {
-        return createOrmTable(changeTracker, dtoClass, tableName, fieldToTarget, pkColumns, Collections.emptySet());
+        return createOrmTable(changeTracker, dtoClass, tableName, fieldToTarget, pkColumns, new java.util.HashSet<>(pkColumns));
     }
 
     private OrmTable createOrmTable(ChangeTracker changeTracker, Class<?> dtoClass, String tableName, Map<String, Object> fieldToTarget, List<String> pkColumns, Set<String> autoIncColumns) {
@@ -694,7 +710,8 @@ class PersistenceFacadeTest {
                 .filter(e -> e.getValue() instanceof TestCol)
                 .map(e -> {
                     TestCol tc = (TestCol) e.getValue();
-                    return new ColumnMetaData(table, tc.name(), autoIncColumns.contains(tc.name()), tc.type());
+                    final boolean autoInc = autoIncColumns.contains(tc.name());
+                    return new ColumnMetaData(table, tc.name(), !pkColumns.contains(tc.name()), tc.type(), 0, 0, autoInc, null, null);
                 })
                 .toList();
         final TableMetaData tableMetaData = new TableMetaData(table, pkColumns, columns);

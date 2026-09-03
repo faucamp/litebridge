@@ -20,7 +20,7 @@ public final class DeleteBuilder extends AbstractConditionalStatementBuilder {
      */
     public DeleteBuilder(final OrmTable table, final LitebridgeContext litebridgeContext) {
         super(table, litebridgeContext);
-        this.node = new DeleteNode(null, table.getMetaData().qualifiedName(), null);
+        this.node = new DeleteNode(null, table.getMetaData().qualifiedName(), table.dtoClass());
     }
 
     @Override
