@@ -43,7 +43,6 @@ public class DtoMapper {
     private final TableRegistry tableRegistry;
     private final DtoConstructor dtoConstructor;
     private final LitebridgeContext litebridgeContext;
-    private MappingPlan mappingPlan;
 
     public DtoMapper(final DtoConstructor dtoConstructor,
                      final LitebridgeContext litebridgeContext) {
@@ -293,7 +292,7 @@ public class DtoMapper {
 
                         if (relatedDtoStrategy == RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN) {
                             // Create a DTO with just the primary key set
-                            relatedDto = createDtoPrimaryKeyOnly(relatedDtoClass, dependency.primaryKeyValue());
+                            relatedDto = createDtoPrimaryKeyOnly(relatedDtoClass, partialDto.mappingData().ormTable().getPrimaryKeyFields(), dependency.primaryKeyValue());
                         } else {
                             relatedDto = null;
                         }
@@ -345,34 +344,43 @@ public class DtoMapper {
         }
     }
 
-    private Object createDtoPrimaryKeyOnly(final Class<?> dtoClass, final List<Object> primaryKey) {
+    private Object createDtoPrimaryKeyOnly(final Class<?> dtoClass, final List<FieldAccessor> pkFieldAccessors, final List<Object> primaryKey) {
         final DtoConstructor.MappingInfo constructorMappingInfo = dtoConstructor.getMappingInfo(dtoClass);
-
-        if (!constructorMappingInfo.defaultConstructorUsed()) {
-            throw new IllegalStateException("Cannot construct partial object without default constructor: " + dtoClass);
-        }
-
         final Object dto;
 
-        try {
-            dto = constructorMappingInfo.constructor().invoke();
-        } catch (Throwable e) {
-            throw new IllegalStateException("Failed to construct DTO: " + dtoClass, e);
-        }
+        if (constructorMappingInfo.defaultConstructorUsed()) {
+            try {
+                dto = constructorMappingInfo.constructor().invoke();
+            } catch (Throwable e) {
+                throw new IllegalStateException("Failed to construct DTO: " + dtoClass, e);
+            }
 
-        final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
-        final List<FieldAccessor> primaryKeyFields = ormTable.getPrimaryKeyFields();
+            final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
+            final List<FieldAccessor> primaryKeyFields = ormTable.getPrimaryKeyFields();
 
-        if (primaryKeyFields.size() != primaryKey.size()) {
-            LOGGER.error("Input primary key values {} do not match expect PK size: {}", primaryKey, primaryKeyFields.size());
-            throw new IllegalStateException("DTO primary key size mismatch: %s; expected %d values, but got: %d".formatted(dtoClass, primaryKeyFields.size(), primaryKey.size()));
-        }
+            if (primaryKeyFields.size() != primaryKey.size()) {
+                LOGGER.error("Input primary key values {} do not match expect PK size: {}", primaryKey, primaryKeyFields.size());
+                throw new IllegalStateException("DTO primary key size mismatch: %s; expected %d values, but got: %d".formatted(dtoClass, primaryKeyFields.size(), primaryKey.size()));
+            }
 
-        for (int i = 0; i < primaryKeyFields.size(); i++) {
-            final FieldAccessor fieldAccessor = primaryKeyFields.get(i);
-            final Object dbPkValue = primaryKey.get(i);
-            final Object convertedPkValue = typeConverter.convert(dbPkValue, fieldAccessor.type());
-            fieldAccessor.set(dto, convertedPkValue);
+            for (int i = 0; i < primaryKeyFields.size(); i++) {
+                final FieldAccessor fieldAccessor = primaryKeyFields.get(i);
+                final Object dbPkValue = primaryKey.get(i);
+                final Object convertedPkValue = typeConverter.convert(dbPkValue, fieldAccessor.type());
+                fieldAccessor.set(dto, convertedPkValue);
+            }
+        } else {
+            final @Nullable Object[] args = new Object[constructorMappingInfo.canonicalConstructorFieldAccessors().size()];
+
+            for (int i = 0; i < args.length; i++) {
+//                args[i] = valuesByField.get(constructorMappingInfo.canonicalConstructorFieldAccessors().get(i));
+            }
+
+            try {
+                dto = constructorMappingInfo.constructor().invokeWithArguments(args);
+            } catch (Throwable e) {
+                throw new IllegalStateException("Failed to construct DTO: " + dtoClass, e);
+            }
         }
 
         return dto;
