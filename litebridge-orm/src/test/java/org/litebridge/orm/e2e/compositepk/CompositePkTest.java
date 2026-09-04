@@ -1,6 +1,5 @@
 package org.litebridge.orm.e2e.compositepk;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.orm.config.RelatedDtoStrategy;
@@ -134,7 +133,7 @@ class CompositePkTest extends AbstractE2eTest {
 
         // Retrieve without join - NULL non-joined fields (default behaviour)
         final CompositePkFkTest result2 = litebridge.select(CompositePkFkTest.class)
-                        .withIdOrThrow(List.of(123, 1L));
+                .withIdOrThrow(List.of(123, 1L));
 
         assertNull(result2.lookup());
         assertEquals(test1.testId(), result2.testId());

@@ -67,7 +67,7 @@ final class SelectQueryCompiler extends AbstractQueryCompiler<SelectCompilationC
             }
             case ConditionWithIdNode conditionWithIdNode -> {
                 final ConditionNode conditionNode = compilationContext.toConditionNode(conditionWithIdNode);
-                applyConditionNode(conditionNode, compilationContext, conditionClauseType);
+                flattenAndApplyConditionNode(conditionNode, compilationContext, conditionClauseType);
             }
             case ConditionJoinUsingNode conditionJoinUsingNode ->
                     compilationContext.addJoinCondition(conditionJoinUsingNode);

@@ -559,7 +559,7 @@ public class PersistenceFacade {
                     })
                     .toList();
 
-            currentDto = constructDto(dto.getClass(), fieldAccessorValues, dtoConstructor);
+            currentDto = DtoMapper.constructDto(dto.getClass(), fieldAccessorValues, dtoConstructor);
         } else {
             // Normal class
             generatedPkValues.forEach((field, value) -> {
@@ -588,31 +588,6 @@ public class PersistenceFacade {
         final ColumnMetaData pkColumn = primaryKeyColumns.getFirst();
         final FieldAccessor pkField = ormTable.getFieldForColumnName(pkColumn.name());
         rowValues.put(joinColumnName, pkField.get(dto));
-    }
-
-    private static <DTO> DTO constructDto(final Class<DTO> dtoClass, final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues, final DtoConstructor dtoConstructor) {
-        final DtoConstructor.ConstructionResult<DTO> constructionResult = dtoConstructor.newInstance(dtoClass, fieldAccessorValues);
-        final DTO dto = constructionResult.dto();
-
-        if (constructionResult.defaultConstructorUsed()) {
-            fieldAccessorValues.forEach(fieldAccessorValue -> {
-                final FieldAccessor fieldAccessor = fieldAccessorValue.field();
-                final Object rawValue = fieldAccessorValue.value();
-                final Object value;
-
-                if (rawValue == null) {
-                    value = ClassUtils.getDefaultValue(fieldAccessor.type());
-                } else if (fieldAccessorValue.value() instanceof DtoConstructor.DtoDependency dependency) {
-                    value = null;
-                } else {
-                    value = fieldAccessorValue.value();
-                }
-
-                fieldAccessorValue.field().set(dto, value);
-            });
-        }
-
-        return dto;
     }
 
     @SuppressWarnings("unchecked")

@@ -219,7 +219,8 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                     }
 
                     for (int i = 0; i < primaryKeyFieldNames.length; i++) {
-                        conditionNode = new ConditionNode(conditionNode, LogicOperator.AND, primaryKeyFieldNames[i], null, conditionWithIdNode.operator(), idList.get(i));
+                        final LogicOperator logicOperator = conditionNode == null ? LogicOperator.NOOP : LogicOperator.AND;
+                        conditionNode = new ConditionNode(conditionNode, logicOperator, primaryKeyFieldNames[i], null, conditionWithIdNode.operator(), idList.get(i));
                     }
                 }
                 case Object[] idArray -> {
