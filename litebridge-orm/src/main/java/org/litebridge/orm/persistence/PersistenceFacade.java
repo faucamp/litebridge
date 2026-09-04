@@ -279,7 +279,7 @@ public class PersistenceFacade {
 
             final Object value = changedField.value();
             //TODO: optimise basic type check; add to FieldAccessor as metadata perhaps?
-            final boolean basicType = value != null && ClassUtils.isBasicType(value.getClass());
+            final boolean basicType = ClassUtils.isBasicType(fieldAccessor.type());
 
             if (basicType) {
                 if (statementBuilder instanceof UpdateBuilder updateBuilder) {
@@ -451,7 +451,30 @@ public class PersistenceFacade {
 
                         if (existingStatement == null) {
                             final StatementBuilder dependantStatementBuilder = createStatementBuilder(value, inProgressDtos);
-                            statementChain.addDependant(value, new PipedStatement(dependantStatementBuilder, value));
+                            statementChain.addDependant(value, new PipedStatement(dependantStatementBuilder, value, parentUpdateResult -> {
+                                final List<ColumnMetaData> primaryKeyColumns = table.getMetaData().primaryKey();
+
+                                if (primaryKeyColumns.size() != 1) {
+                                    //TODO: add support for composite primary keys in one-to-many relationships
+                                    throw new UnsupportedOperationException("Composite primary keys are not yet supported for one-to-many relationships; table: " + table.getMetaData().name());
+                                }
+
+                                if (parentUpdateResult instanceof InsertResult insertResult
+                                        && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
+                                    final Object pkValue = insertResult.generatedKeys().values().iterator().next();
+
+                                    if (mappedOneToMany.mappedByField() != null) {
+                                        dependantStatementBuilder.setField(mappedOneToMany.mappedByField().name(), pkValue);
+                                    }
+                                } else {
+                                    final ColumnMetaData pkColumn = primaryKeyColumns.getFirst();
+                                    final FieldAccessor pkField = table.getFieldForColumnName(pkColumn.name());
+
+                                    if (mappedOneToMany.mappedByField() != null) {
+                                        dependantStatementBuilder.setField(mappedOneToMany.mappedByField().name(), pkField.get(dto));
+                                    }
+                                }
+                            }));
                         }
                     }
                 }

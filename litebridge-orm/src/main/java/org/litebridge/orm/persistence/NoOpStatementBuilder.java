@@ -54,6 +54,18 @@ public final class NoOpStatementBuilder implements StatementBuilder {
     /**
      * Invoking this method will throw an {@link UnsupportedOperationException}.
      *
+     * @param fieldName Not supported
+     * @param value     Not supported
+     * @throws UnsupportedOperationException Always thrown as this operation is not supported in the {@code NoOpStatementBuilder} implementation.
+     */
+    @Override
+    public void setField(final String fieldName, final Object value) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Invoking this method will throw an {@link UnsupportedOperationException}.
+     *
      * @return Not supported
      * @throws UnsupportedOperationException Always thrown as this operation is not supported in the {@code NoOpStatementBuilder} implementation.
      */

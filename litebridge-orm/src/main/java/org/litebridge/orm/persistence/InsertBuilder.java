@@ -27,6 +27,14 @@ final class InsertBuilder extends AbstractStatementBuilder {
     }
 
     @Override
+    public void setField(final String fieldName, final @Nullable Object value) {
+        if (!rows.isEmpty()) {
+            rows.getLast().put(fieldName, value);
+            this.node = null;
+        }
+    }
+
+    @Override
     public PreparedOperation build() {
         return litebridgeContext.createQueryCompiler().compile(node());
     }

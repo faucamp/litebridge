@@ -1,5 +1,6 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.orm.engine.ast.QueryNode;
@@ -29,6 +30,14 @@ public sealed interface StatementBuilder permits AbstractStatementBuilder, NoOpS
      * @return the update metadata
      */
     UpdateMetaData createUpdateMetaData();
+
+    /**
+     * Sets a field value on the statement.
+     *
+     * @param fieldName the name of the field to set
+     * @param value     the value to set
+     */
+    void setField(String fieldName, @Nullable Object value);
 
     /**
      * Builds the final SQL statement.

@@ -32,6 +32,7 @@ final class UpdateBuilder extends AbstractConditionalStatementBuilder {
      * @param fieldName the field name to set
      * @param value     the value to set
      */
+    @Override
     public void setField(final String fieldName, final @Nullable Object value) {
         this.node = new SetNode(this.node, fieldName, value);
     }

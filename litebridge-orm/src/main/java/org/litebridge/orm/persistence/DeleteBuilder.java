@@ -24,6 +24,11 @@ public final class DeleteBuilder extends AbstractConditionalStatementBuilder {
     }
 
     @Override
+    public void setField(final String fieldName, final Object value) {
+        throw new UnsupportedOperationException("setField is not supported for DeleteBuilder");
+    }
+
+    @Override
     public PreparedOperation build() {
         return litebridgeContext.createQueryCompiler().compile(node);
     }
