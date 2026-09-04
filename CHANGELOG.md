@@ -12,13 +12,15 @@
 ### Changed
 - ORM:
   - Refactor `QueryCompiler` to delegate specific query types to specialised sub-compilers.
-  - Simplify node compilation; drop `InsertSpec` etc.
+  - Simplify node compilation; drop `SelectSpec`, `InsertSpec` etc.
+  - Reimplent the default DTO mapper (now called `DtoMapper`) to be simpler and more performant and handle non-ORM generated query results better.
   - `Litebridge.save()` now accepts a single DTO instead of varargs to improve clarity and type safety.
   - Query-based `update()` and `delete()` APIs now return `UpdateResult` instead of `void`.
 
 ### Removed
 - ORM:
   - `Litebridge.save(Object... dtos)` has been removed in favour of `saveAll()`.
+  - `SelectSpecDtoMapper`: replaced by `DtoMapper`
 
 ## [0.4.0] - 2026-08-10
 

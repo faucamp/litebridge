@@ -14,7 +14,7 @@ It supports annotated entity classes as well as unannotated, plain DTOs as datab
 
 Litebridge is modular and uses JPMS (`module-info.java`).
 
-- `docs`: Documentation and guides for users and contributors. It is contains subsections detailing various aspects, logically grouped.
+- `docs`: Documentation and guides for users and contributors. It contains subsections detailing various aspects, logically grouped.
 - `litebridge-orm`: The core engine and primary entry point. Contains the `Litebridge` class.
 - `litebridge-orm-support`: Supporting utilities for Litebridge ORM, allowing classpath scanning for entities/DTO-table mappings.
 - `litebridge-db`: Contains the `DatabaseProvider` SPI and its implementations (e.g. `litebridge-db-h2`, `litebridge-db-postgres`, etc.).
@@ -88,6 +88,14 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 #### Metamodels
 - Metamodels of entities/DTOs provide static query expressions with the same name as the entity/DTO's fields, enabling type-safe queries. They can be created via the Maven plugin or hand-crafted.
 
+#### DTO Mapping
+- The `DtoMapper` class handles the conversion of `Row` result sets to DTO instances.
+- **High Performance**: It uses a compiled mapping plan that resolves column indices once per result set, bypassing metadata lookups during row iteration.
+- **Identity Map**: A `DtoCache` ensures that each unique database record (identified by its primary key) is mapped to exactly one DTO instance per `toDtos` call.
+- **PK Representation**: Specialized `Pk` implementations (`SinglePk`, `CompositePk`) are used to minimize object allocations during primary key resolution.
+- **Relationship Handling**: It automatically resolves one-to-one, one-to-many (reverse collection injection), and many-to-many relationships.
+- **Record Support**: Java Records are reconstructed at most once per row, even when multiple dependencies are being injected.
+
 ### 4. Database Support
 
 - Database-specific logic (SQL dialect, metadata handling) must reside in `DatabaseProvider` implementations.
@@ -119,7 +127,8 @@ They are bound to Maven's `integration-test` phase and thus executed using `mvn 
 - `org.litebridge.db.spi.DatabaseProvider`: The SPI that must be implemented for each supported database.
 - `org.litebridge.orm.persistence.TransactionalDatabaseProvider`: A wrapper around `DatabaseProvider` that handles transactions and provides access to the `TransactionManager`.
 - `org.litebridge.orm.engine.LitebridgeContext`: A shared context object containing configuration, table registry, and engine instances.
-- `org.litebridge.orm.engine.QueryCompiler`: The centralized compiler that translates the fluent API's AST into executable specifications.
+- `org.litebridge.orm.engine.compiler.QueryCompiler`: The centralized compiler that translates the fluent API's AST into executable specifications.
+- `org.litebridge.orm.persistence.DtoMapper`: The high-performance engine for mapping database rows to DTO instances.
 
 ## Common Agent Tasks
 

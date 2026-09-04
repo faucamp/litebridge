@@ -29,8 +29,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The SelectSpecDtoMapper class is responsible for mapping data from rows of a database query to DTO (Data Transfer Object) instances.
- * It uses a "compiled" MappingPlan to achieve high performance by pre-resolving column indices and constructors.
+ * Maps data from rows of a database query to DTO (Data Transfer Object) instances.
+ * <p>
+ * It uses a "compiled" mapping plan to achieve high performance by pre-resolving column indices and constructors.
+ * <p>
+ * This implementation is designed to handle generic SQL query results to a limited extent.
+ * (results from queries that did not necessarily originate from the ORM).
  */
 public class DtoMapper {
 
