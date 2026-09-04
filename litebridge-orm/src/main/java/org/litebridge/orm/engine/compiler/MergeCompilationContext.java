@@ -121,7 +121,11 @@ final class MergeCompilationContext extends AbstractCompilationContext {
         final ColumnMetaData columnMetaData;
 
         if (setNode.column() != null) {
-            columnMetaData = targetTableMetaData.column(setNode.column());
+            if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO && targetOrmTable != null) {
+                columnMetaData = targetOrmTable.columnMetaDataForField(setNode.column());
+            } else {
+                columnMetaData = targetTableMetaData.column(setNode.column());
+            }
         } else {
             final ExpressionSpec expressionSpec = setNode.expressionSpec();
 
@@ -155,7 +159,11 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             columnMetaDataList = new ArrayList<>(columnNames.length);
 
             for (String columnName : columnNames) {
-                columnMetaDataList.add(targetTableMetaData.column(columnName));
+                if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO && targetOrmTable != null) {
+                    columnMetaDataList.add(targetOrmTable.columnMetaDataForField(columnName));
+                } else {
+                    columnMetaDataList.add(targetTableMetaData.column(columnName));
+                }
             }
         } else if (expressionSpecs != null) {
             columnMetaDataList = new ArrayList<>(expressionSpecs.length);

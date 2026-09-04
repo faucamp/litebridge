@@ -24,6 +24,8 @@ import java.util.Objects;
 
 final class UpdateCompilationContext extends AbstractCompilationContext {
 
+    private static final ConditionGroup EMPTY_CONDITION_GROUP = new ConditionGroup(List.of());
+
     private final Table table;
     private final TableMetaData tableMetaData;
     private final @Nullable OrmTable ormTable;
@@ -112,7 +114,7 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
             this.bindValues.addAll(bindValues);
         }
 
-        final ConditionGroup conditionGroup = toConditionGroup(where.current(), ormTable, table);
+        final ConditionGroup conditionGroup = where != null ? toConditionGroup(where.current(), ormTable, table) : EMPTY_CONDITION_GROUP;
         return new Update(table, updateColumns, conditionGroup);
     }
 

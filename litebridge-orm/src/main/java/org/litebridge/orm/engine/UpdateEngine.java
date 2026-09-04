@@ -72,7 +72,7 @@ public final class UpdateEngine extends AbstractUpdateEngine {
         final UpdateResult updateResult;
 
         try {
-            updateResult = litebridgeContext.databaseProvider().insert(preparedSql, litebridgeContext.transactionManager());
+            updateResult = litebridgeContext.databaseProvider().update(preparedSql, litebridgeContext.transactionManager());
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute update: " + preparedSql.sql(), ex);
         }

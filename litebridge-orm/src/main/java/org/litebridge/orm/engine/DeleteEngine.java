@@ -72,7 +72,7 @@ public final class DeleteEngine extends AbstractUpdateEngine {
         final UpdateResult updateResult;
 
         try {
-            updateResult = litebridgeContext.databaseProvider().insert(preparedSql, litebridgeContext.transactionManager());
+            updateResult = litebridgeContext.databaseProvider().delete(preparedSql, litebridgeContext.transactionManager());
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute delete: " + preparedSql.sql(), ex);
         }

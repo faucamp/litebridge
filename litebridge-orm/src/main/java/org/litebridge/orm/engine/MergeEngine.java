@@ -92,7 +92,7 @@ public final class MergeEngine extends AbstractInsertEngine {
         try {
             updateResult = litebridgeContext.databaseProvider().merge(preparedSql, litebridgeContext.transactionManager());
         } catch (final SQLException ex) {
-            throw new IllegalStateException("Failed to execute insert", ex);
+            throw new IllegalStateException("Failed to execute merge", ex);
         }
 
         LOGGER.debug("Merge result: {}", updateResult);

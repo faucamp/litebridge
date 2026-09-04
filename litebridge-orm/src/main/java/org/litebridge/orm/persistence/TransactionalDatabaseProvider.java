@@ -99,7 +99,7 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
 
     @Override
     public UpdateResult merge(final PreparedSql merge, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeAndCleanupIfNeeded(() -> databaseProvider.delete(merge, transactionManager));
+        return executeAndCleanupIfNeeded(() -> databaseProvider.merge(merge, transactionManager));
     }
 
     @Override
