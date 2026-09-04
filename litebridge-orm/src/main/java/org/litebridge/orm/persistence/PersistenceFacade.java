@@ -199,10 +199,10 @@ public class PersistenceFacade {
         executeUpdateStatement(dto, null, statementBuilder, new CompositeUpdateResult());
     }
 
-    private StatementBuilder createInsertBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos) {
-        final InsertBuilder insertBuilder = new InsertBuilder(table, litebridgeContext);
+    private StatementBuilder createInsertBuilder(final Object dto, final OrmTable ormTable, final Set<Object> inProgressDtos) {
+        final InsertBuilder insertBuilder = new InsertBuilder(ormTable, litebridgeContext);
 
-        if (prepareUpdateStatement(dto, table, insertBuilder, inProgressDtos) == null) {
+        if (prepareUpdateStatement(dto, ormTable, insertBuilder, inProgressDtos) == null) {
             return NO_OP_STATEMENT_BUILDER;
         }
 
@@ -628,12 +628,12 @@ public class PersistenceFacade {
             throw new IllegalStateException("DTO already in progress: %s".formatted(dto));
         }
 
-        final OrmTable table = tableProvider.getTableOrThrow(dto.getClass());
+        final OrmTable ormTable = tableProvider.getTableOrThrow(dto.getClass());
 
-        if (table.isPersistedDto(dto)) {
-            return createUpdateBuilder(dto, table, inProgressDtos);
+        if (ormTable.isPersistedDto(dto)) {
+            return createUpdateBuilder(dto, ormTable, inProgressDtos);
         } else {
-            return createInsertBuilder(dto, table, inProgressDtos);
+            return createInsertBuilder(dto, ormTable, inProgressDtos);
         }
     }
 
@@ -767,6 +767,17 @@ public class PersistenceFacade {
 
         public void popContext() {
             contextStack.pop();
+        }
+
+        public @Nullable TableRegistry peekPreviousContext() {
+            if (contextStack.size() > 2) {
+                TableRegistry last = contextStack.pop();
+                TableRegistry secondLast = contextStack.peek();
+                contextStack.push(last);
+                return secondLast;
+            }
+
+            return null;
         }
 
         public OrmTable getTableOrThrow(final Class<?> dtoClass) {

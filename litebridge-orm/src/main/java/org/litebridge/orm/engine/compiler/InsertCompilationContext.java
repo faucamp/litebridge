@@ -38,7 +38,12 @@ final class InsertCompilationContext implements CompilationContext {
         final OrmTable ormTable;
 
         if (insertNode.dtoClass() != null) {
-            ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(insertNode.dtoClass());
+            if (insertNode.contextDtoClass() != null) {
+                ormTable = litebridgeContext.tableRegistry().getTableInContextOrThrow(insertNode.dtoClass(), insertNode.contextDtoClass());
+            } else {
+                ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(insertNode.dtoClass());
+            }
+
             this.tableMetaData = ormTable.getMetaData();
             this.table = tableMetaData.toTable();
         } else {
