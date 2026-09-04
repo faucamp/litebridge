@@ -4,6 +4,8 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -95,28 +97,40 @@ public class DtoMapper {
 
             final MappingData mappingData = createMappingDataIfAbsent(mappingDataMap, targetColumn.table());
             final FieldAccessor fieldAccessor = mappingData.ormTable().getFieldForColumnName(targetColumn.name());
-            final boolean basicType = ClassUtils.isBasicType(fieldAccessor.type());
-            final boolean relatedDto = !basicType;
-            FieldAccessor relatedCollectionField = null;
 
-            if (relatedDto) {
-                final OrmTable reverseMappingOrmTable = tableRegistry.getOrmTableOrThrow(fieldAccessor.type());
-                final List<FieldAccessor> oneToManyReverseMappings = mappingData.ormTable().getOneToManyReverseMappings();
+            // Check if we already have a mapping for this field
+            FieldMapping fieldMapping = mappingData.fieldMappings().stream()
+                    .filter(m -> m.fieldAccessor().equals(fieldAccessor))
+                    .findFirst()
+                    .orElse(null);
 
-                if (oneToManyReverseMappings != null) {
-                    relatedCollectionField = oneToManyReverseMappings.stream()
-                            .filter(collectionField -> collectionField.dtoClass() == fieldAccessor.type())
-                            .map(reverseMappingOrmTable::mappedFieldTargetForField)
-                            .filter(MappedOneToMany.class::isInstance)
-                            .map(MappedOneToMany.class::cast)
-                            .filter(mappedOneToMany -> mappedOneToMany.mappedByField() == fieldAccessor)
-                            .findFirst()
-                            .map(MappedOneToMany::collection)
-                            .orElse(null);
+            if (fieldMapping != null) {
+                fieldMapping.columns().add(column);
+            } else {
+                final boolean basicType = ClassUtils.isBasicType(fieldAccessor.type());
+                final boolean relatedDto = !basicType;
+                FieldAccessor relatedCollectionField = null;
+
+                if (relatedDto) {
+                    final OrmTable reverseMappingOrmTable = tableRegistry.getOrmTableOrThrow(fieldAccessor.type());
+                    final List<FieldAccessor> oneToManyReverseMappings = mappingData.ormTable().getOneToManyReverseMappings();
+
+                    if (oneToManyReverseMappings != null) {
+                        relatedCollectionField = oneToManyReverseMappings.stream()
+                                .filter(collectionField -> collectionField.dtoClass() == fieldAccessor.type())
+                                .map(reverseMappingOrmTable::mappedFieldTargetForField)
+                                .filter(MappedOneToMany.class::isInstance)
+                                .map(MappedOneToMany.class::cast)
+                                .filter(mappedOneToMany -> mappedOneToMany.mappedByField() == fieldAccessor)
+                                .findFirst()
+                                .map(MappedOneToMany::collection)
+                                .orElse(null);
+                    }
                 }
-            }
 
-            mappingData.fieldMappings().add(new FieldMapping(fieldAccessor, column, basicType, relatedDto, relatedCollectionField));
+                fieldMapping = new FieldMapping(fieldAccessor, new ArrayList<>(List.of(column)), basicType, relatedDto, relatedCollectionField);
+                mappingData.fieldMappings().add(fieldMapping);
+            }
 
             // Mark index if its a primary key, for faster retrieval later
             int pkIndex = mappingData.ormTable().getPrimaryKeyFields().indexOf(fieldAccessor);
@@ -128,7 +142,64 @@ public class DtoMapper {
             columnIndex++;
         }
 
+        // Ensure column order for related DTOs matches target PK order
+        for (final MappingData mappingData : mappingDataMap.values()) {
+            for (final FieldMapping fieldMapping : mappingData.fieldMappings()) {
+                if (fieldMapping.isRelatedDto() && fieldMapping.columns().size() > 1) {
+                    sortColumnsForRelatedDto(fieldMapping, mappingData.ormTable());
+                }
+            }
+        }
+
         return mappingDataMap;
+    }
+
+    private void sortColumnsForRelatedDto(final FieldMapping fieldMapping, final OrmTable ormTable) {
+        final Class<?> targetDtoClass = fieldMapping.fieldAccessor().type();
+        final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(targetDtoClass);
+        final List<FieldAccessor> targetPkFields = targetOrmTable.getPrimaryKeyFields();
+
+        if (targetPkFields.size() != fieldMapping.columns().size()) {
+            LOGGER.warn("Number of columns ({}) for field {} does not match target PK size ({}) for DTO {}",
+                    fieldMapping.columns().size(), fieldMapping.fieldAccessor().name(), targetPkFields.size(), targetDtoClass.getName());
+            return;
+        }
+
+        final Column[] sortedColumns = new Column[targetPkFields.size()];
+
+        for (final Column column : fieldMapping.columns()) {
+            final ColumnMetaData columnMetaData = ormTable.getColumnMetaData(column.name());
+            // Find the constraint that points to the target table
+            final ForeignKeyConstraint constraint = columnMetaData.getForeignKeyConstraints().stream()
+                    .filter(c -> {
+                        final Table targetTable = c.foreignKey().table();
+                        return targetOrmTable.getMetaData().name().equalsIgnoreCase(targetTable.name())
+                                && (targetOrmTable.getMetaData().schema() == null || targetTable.schema() == null || targetOrmTable.getMetaData().schema().equalsIgnoreCase(targetTable.schema()));
+                    })
+                    .findFirst()
+                    .orElse(null);
+
+            if (constraint != null) {
+                final FieldAccessor targetPkField = targetOrmTable.getFieldForColumnName(constraint.foreignKey().name());
+                final int pkIndex = targetPkFields.indexOf(targetPkField);
+                if (pkIndex != -1) {
+                    sortedColumns[pkIndex] = column;
+                }
+            }
+        }
+
+        // Verify we found all columns
+        for (int i = 0; i < sortedColumns.length; i++) {
+            if (sortedColumns[i] == null) {
+                LOGGER.warn("Could not find column for PK field {} of DTO {} in columns of field {}",
+                        targetPkFields.get(i).name(), targetDtoClass.getName(), fieldMapping.fieldAccessor().name());
+                // Don't reorder if incomplete
+                return;
+            }
+        }
+
+        fieldMapping.columns().clear();
+        fieldMapping.columns().addAll(Arrays.asList(sortedColumns));
     }
 
     private MappingData createMappingDataIfAbsent(final Map<String, MappingData> mappingDataMap, final Table table) {
@@ -201,16 +272,18 @@ public class DtoMapper {
         // Map DTO field values
         for (FieldMapping fieldMapping : mappingData.fieldMappings()) {
             final FieldAccessor fieldAccessor = fieldMapping.fieldAccessor();
-            final Object dbValue = row.column(fieldMapping.column()).orElseThrow().value();
 
             if (fieldMapping.isBasicType()) {
                 // Basic field
+                final Object dbValue = row.column(fieldMapping.columns().getFirst()).orElseThrow().value();
                 final Object convertedValue = typeConverter.convert(dbValue, fieldAccessor.type());
                 valuesByField.put(fieldAccessor, convertedValue);
             } else {
                 // Related DTO
-                //TODO: composite PK support - remove Collections.singletonList() and base it on the target DTO's primary keys
-                final RelatedDtoDependency relatedDtoDependency = new RelatedDtoDependency(fieldAccessor, fieldAccessor.type(), Collections.singletonList(dbValue), fieldMapping.relatedCollectionField());
+                final List<Object> pkValues = fieldMapping.columns().stream()
+                        .map(col -> row.column(col).orElseThrow().value())
+                        .toList();
+                final RelatedDtoDependency relatedDtoDependency = new RelatedDtoDependency(fieldAccessor, fieldAccessor.type(), pkValues, fieldMapping.relatedCollectionField());
                 relatedDtoDependencies.add(relatedDtoDependency);
             }
         }
@@ -292,7 +365,7 @@ public class DtoMapper {
 
                         if (relatedDtoStrategy == RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN) {
                             // Create a DTO with just the primary key set
-                            relatedDto = createDtoPrimaryKeyOnly(relatedDtoClass, partialDto.mappingData().ormTable().getPrimaryKeyFields(), dependency.primaryKeyValue());
+                            relatedDto = createDtoPrimaryKeyOnly(relatedDtoClass, dependency.primaryKeyValue());
                         } else {
                             relatedDto = null;
                         }
@@ -344,7 +417,7 @@ public class DtoMapper {
         }
     }
 
-    private Object createDtoPrimaryKeyOnly(final Class<?> dtoClass, final List<FieldAccessor> pkFieldAccessors, final List<Object> primaryKey) {
+    private Object createDtoPrimaryKeyOnly(final Class<?> dtoClass, final List<Object> primaryKey) {
         final DtoConstructor.MappingInfo constructorMappingInfo = dtoConstructor.getMappingInfo(dtoClass);
         final Object dto;
 
@@ -371,9 +444,18 @@ public class DtoMapper {
             }
         } else {
             final @Nullable Object[] args = new Object[constructorMappingInfo.canonicalConstructorFieldAccessors().size()];
+            final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
+            final List<FieldAccessor> primaryKeyFields = ormTable.getPrimaryKeyFields();
 
             for (int i = 0; i < args.length; i++) {
-//                args[i] = valuesByField.get(constructorMappingInfo.canonicalConstructorFieldAccessors().get(i));
+                final FieldAccessor fieldAccessor = constructorMappingInfo.canonicalConstructorFieldAccessors().get(i);
+                final int pkIndex = primaryKeyFields.indexOf(fieldAccessor);
+                if (pkIndex != -1) {
+                    final Object dbPkValue = primaryKey.get(pkIndex);
+                    args[i] = typeConverter.convert(dbPkValue, fieldAccessor.type());
+                } else {
+                    args[i] = ClassUtils.getDefaultValue(fieldAccessor.type());
+                }
             }
 
             try {
@@ -522,7 +604,7 @@ public class DtoMapper {
         }
 
     private record FieldMapping(FieldAccessor fieldAccessor,
-                                Column column,
+                                List<Column> columns,
                                 boolean isBasicType,
                                 boolean isRelatedDto,
                                 @Nullable FieldAccessor relatedCollectionField) {
