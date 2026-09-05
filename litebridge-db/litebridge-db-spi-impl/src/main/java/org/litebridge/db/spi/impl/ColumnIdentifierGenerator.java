@@ -55,14 +55,14 @@ public class ColumnIdentifierGenerator {
     public String createColumnRef(final Column column, final Operation operation, final ClauseType clause) {
         if (column.alias() != null && clause != ClauseType.WHERE) {
             //noinspection DataFlowIssue
-            return column.alias();
+            return quoteIdentifier(column.alias());
         }
 
         if (column.table().alias() != null) {
-            return column.table().alias() + "." + column.name();
+            return quoteIdentifier(column.table().alias()) + "." + quoteIdentifier(column.name());
         }
 
-        return column.table().name() + "." + column.name();
+        return quoteIdentifier(column.table().name()) + "." + quoteIdentifier(column.name());
     }
 
     /**

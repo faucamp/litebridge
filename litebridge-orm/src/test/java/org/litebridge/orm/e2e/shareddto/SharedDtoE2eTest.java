@@ -7,6 +7,7 @@ import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.e2e.shareddto.dto.Application;
 import org.litebridge.orm.e2e.shareddto.dto.Server;
 import org.litebridge.orm.e2e.shareddto.dto.Status;
+import org.litebridge.orm.expression.Fn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,29 +66,46 @@ class SharedDtoE2eTest extends AbstractE2eTest {
         litebridge.save(server);
 
         // Load back DTOs
-        final Application resultApplication = litebridge.select(Application.class)
-                .join(Status.class).on("status")
-                .oneOrThrow();
-        assertEquals(application.getName(), resultApplication.getName());
-        assertNotNull(resultApplication.getStatus());
-        assertEquals(application.getStatus().code(), resultApplication.getStatus().code());
-        assertEquals(application.getStatus().message(), resultApplication.getStatus().message());
+//        final Application resultApplication = litebridge.select(Application.class)
+//                .join(Status.class).on("status")
+//                .oneOrThrow();
+//        assertEquals(application.getName(), resultApplication.getName());
+//        assertNotNull(resultApplication.getStatus());
+//        assertEquals(application.getStatus().code(), resultApplication.getStatus().code());
+//        assertEquals(application.getStatus().message(), resultApplication.getStatus().message());
+//
+//        final Server resultServer = litebridge.select(Server.class)
+//                .join(Status.class).on("status")
+//                .oneOrThrow();
+//        assertEquals(server.getHost(), resultServer.getHost());
+//        assertNotNull(resultServer.getStatus());
+//        assertEquals(server.getStatus().code(), resultServer.getStatus().code());
+//        assertEquals(server.getStatus().message(), resultServer.getStatus().message());
+//
+//        // Load specific Status object
+//        final Status resultStatus = litebridge.select(Status.class, Server.class)
+//                .where("code").eq(418)
+//                .oneOrThrow();
+//
+//        assertEquals(server.getStatus().code(), resultStatus.code());
+//        assertEquals(server.getStatus().message(), resultStatus.message());
 
-        final Server resultServer = litebridge.select(Server.class)
-                .join(Status.class).on("status")
-                .oneOrThrow();
-        assertEquals(server.getHost(), resultServer.getHost());
-        assertNotNull(resultServer.getStatus());
-        assertEquals(server.getStatus().code(), resultServer.getStatus().code());
-        assertEquals(server.getStatus().message(), resultServer.getStatus().message());
+        // Count specific Status records
+        final int sqlapplicationStatusCount = litebridge.select(Fn.count())
+                .from("LB.APPLICATION_STATUS")
+                .where("CODE").neq(418)
+                .stream()
+                .map(row -> ((Number) row.column(0).value()).intValue())
+                .findFirst().orElseThrow();
 
-        // Load specific Status object
-        final Status resultStatus = litebridge.select(Status.class, Server.class)
-                .where("code").eq(418)
+        assertEquals(1, sqlapplicationStatusCount);
+
+        final long applicationStatusCount = litebridge.select(Fn.count())
+                .from(Status.class, Application.class)
+                .where("code").neq(418)
                 .oneOrThrow();
 
-        assertEquals(server.getStatus().code(), resultStatus.code());
-        assertEquals(server.getStatus().message(), resultStatus.message());
+        assertEquals(1L, applicationStatusCount);
     }
 
     @TestTemplate

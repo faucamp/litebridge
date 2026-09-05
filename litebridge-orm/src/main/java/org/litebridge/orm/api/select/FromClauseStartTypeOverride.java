@@ -71,12 +71,11 @@ public final class FromClauseStartTypeOverride<ReturnType> {
      *
      * @param dtoClass        the DTO class.
      * @param contextDtoClass the context DTO class.
-     * @param <DTO>           the DTO type.
      * @return the DTO from clause terminal.
      */
-    public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
-//        return fromClauseEngine.from(dtoClass, contextDtoClass);
-        throw new UnsupportedOperationException("Not implemented yet");
+    public DtoFromClauseTerminal<ReturnType> from(final Class<?> dtoClass, final Class<?> contextDtoClass) {
+        final SelectNode selectNode = new SelectNode(null, dtoClass, contextDtoClass, null, expressionSpecs, new Class<?>[]{typeOverride});
+        return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.DTO));
     }
 
     /**
