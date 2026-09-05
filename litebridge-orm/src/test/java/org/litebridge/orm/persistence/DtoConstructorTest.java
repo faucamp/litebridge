@@ -157,8 +157,7 @@ class DtoConstructorTest {
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(ParentWithDefaultConstructorDto.class)).thenReturn(parentTable);
-        when(tableRegistry.getTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class))
-                .thenReturn(Optional.of(relatedContextTable));
+        when(tableRegistry.getTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class)).thenReturn(relatedContextTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
 
@@ -181,8 +180,7 @@ class DtoConstructorTest {
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(ParentWithDefaultConstructorDto.class)).thenReturn(parentTable);
-        when(tableRegistry.getTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class))
-                .thenReturn(Optional.empty());
+        when(tableRegistry.getTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class)).thenReturn(null);
         when(tableRegistry.getOrmTableOrThrow(DependencyDto.class)).thenReturn(relatedGlobalTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);

@@ -54,7 +54,7 @@ class SharedDtoE2eTest extends AbstractE2eTest {
                 .join(Status.class).on("status")
                 .oneOrThrow();
         assertEquals(application.getName(), resultApplication.getName());
-        assertNotNull(application.getStatus());
+        assertNotNull(resultApplication.getStatus());
         assertEquals(application.getStatus().code(), resultApplication.getStatus().code());
         assertEquals(application.getStatus().message(), resultApplication.getStatus().message());
 
@@ -62,7 +62,7 @@ class SharedDtoE2eTest extends AbstractE2eTest {
                 .join(Status.class).on("status")
                 .oneOrThrow();
         assertEquals(server.getHost(), resultServer.getHost());
-        assertNotNull(server.getStatus());
+        assertNotNull(resultServer.getStatus());
         assertEquals(server.getStatus().code(), resultServer.getStatus().code());
         assertEquals(server.getStatus().message(), resultServer.getStatus().message());
 

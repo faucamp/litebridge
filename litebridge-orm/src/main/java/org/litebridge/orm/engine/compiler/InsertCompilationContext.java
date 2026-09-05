@@ -8,13 +8,14 @@ import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.UpdateColumn;
-import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.OrmTable;
+import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,7 +40,8 @@ final class InsertCompilationContext implements CompilationContext {
 
         if (insertNode.dtoClass() != null) {
             if (insertNode.contextDtoClass() != null) {
-                ormTable = litebridgeContext.tableRegistry().getTableInContextOrThrow(insertNode.dtoClass(), insertNode.contextDtoClass());
+                final TableRegistry tableRegistry = litebridgeContext.tableRegistry();
+                ormTable = Objects.requireNonNullElseGet(tableRegistry.getTableInContext(insertNode.dtoClass(), insertNode.contextDtoClass()), () -> tableRegistry.getOrmTableOrThrow(insertNode.dtoClass()));
             } else {
                 ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(insertNode.dtoClass());
             }

@@ -68,14 +68,14 @@ public final class TableRegistry {
      * @return an {@link Optional} containing the {@link OrmTable} associated with the specified DTO class in the context
      * of the given context class, or an empty {@link Optional} if no such table is found
      */
-    public Optional<@Nullable OrmTable> getTableInContext(final Class<?> dtoClass, final Class<?> contextClass) {
+    public @Nullable OrmTable getTableInContext(final Class<?> dtoClass, final Class<?> contextClass) {
         final OrmTable contextOrmTable = getOrmTable(contextClass);
 
         if (contextOrmTable != null) {
-            return Optional.ofNullable(contextOrmTable.getContextTableRegistry().getOrmTable(dtoClass));
-        } else {
-            return Optional.empty();
+            return contextOrmTable.getContextTableRegistry().getOrmTable(dtoClass);
         }
+
+        return null;
     }
 
     /**

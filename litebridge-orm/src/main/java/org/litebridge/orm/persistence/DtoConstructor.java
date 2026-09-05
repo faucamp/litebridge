@@ -57,14 +57,14 @@ public final class DtoConstructor {
         this.tableRegistry = tableRegistry;
     }
 
-    public MappingInfo getMappingInfo(final Class<?> dtoClass) {
-        cacheConstructors(dtoClass, null);
+    public MappingInfo getMappingInfo(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass) {
+        cacheConstructors(dtoClass, contextDtoClass);
         final Optional<MethodHandle> defaultHandle = defaultConstructor(dtoClass);
 
         if (defaultHandle.isPresent()) {
             return new MappingInfo(defaultHandle.get(), true, Collections.emptyList());
         }
-        
+
         final MethodHandle canonicalHandle = canonicalConstructor(dtoClass)
                 .orElseThrow(() -> new IllegalArgumentException("No suitable constructor found for DTO class: " + dtoClass));
         return new MappingInfo(canonicalHandle, false, canonicalConstructorFieldAccessorCache.get(dtoClass));
@@ -145,16 +145,15 @@ public final class DtoConstructor {
         return Optional.of((MethodHandle) cachedHandle);
     }
 
-    private <DTO> void cacheConstructors(final Class<DTO> dtoClass, final @Nullable Class<?> parentDtoClass) {
+    private <DTO> void cacheConstructors(final Class<DTO> dtoClass, final @Nullable Class<?> contextDtoClass) {
         if (defaultConstructorHandleCache.containsKey(dtoClass)) {
             return;
         }
 
         final OrmTable ormTable;
 
-        if (parentDtoClass != null) {
-            ormTable = tableRegistry.getTableInContext(dtoClass, parentDtoClass)
-                    .orElseGet(() -> tableRegistry.getOrmTableOrThrow(dtoClass));
+        if (contextDtoClass != null) {
+            ormTable = Objects.requireNonNullElseGet(tableRegistry.getTableInContext(dtoClass, contextDtoClass), () -> tableRegistry.getOrmTableOrThrow(dtoClass));
         } else {
             ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
         }

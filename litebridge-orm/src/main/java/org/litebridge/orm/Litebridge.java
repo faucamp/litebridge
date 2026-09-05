@@ -530,7 +530,7 @@ public final class Litebridge implements SelectApi {
      */
     public <DTO> DTO toDto(final Row row, final Class<DTO> dtoClass) {
         final DtoMapper dtoMapper = new DtoMapper(dtoConstructor, createDtoLitebridgeContext());
-        final List<DTO> dtos = dtoMapper.toDtos(dtoClass, List.of(row));
+        final List<DTO> dtos = dtoMapper.toDtos(dtoClass, null, List.of(row));
 
         if (dtos.isEmpty()) {
             throw new IllegalArgumentException("No DTO could be created from the given row and DTO class.");

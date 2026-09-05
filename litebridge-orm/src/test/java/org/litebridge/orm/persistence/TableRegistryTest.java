@@ -11,7 +11,6 @@ import java.lang.invoke.MethodHandles;
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -90,11 +89,10 @@ class TableRegistryTest {
         tableRegistry.addTable(ContextDto.class, contextTable);
 
         // When
-        final Optional<OrmTable> result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
+        final OrmTable result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
 
         // Then
-        assertTrue(result.isPresent());
-        assertSame(nestedTable, result.get());
+        assertSame(nestedTable, result);
     }
 
     @Test
@@ -105,10 +103,10 @@ class TableRegistryTest {
         tableRegistry.addTable(ContextDto.class, contextTable);
 
         // When
-        final Optional<OrmTable> result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
+        final OrmTable result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
 
         // Then
-        assertTrue(result.isEmpty());
+        assertNull(result);
     }
 
     @Test
@@ -117,10 +115,10 @@ class TableRegistryTest {
         final TableRegistry tableRegistry = new TableRegistry();
 
         // When
-        final Optional<OrmTable> result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
+        final OrmTable result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
 
         // Then
-        assertTrue(result.isEmpty());
+        assertNull(result);
     }
 
     @Test

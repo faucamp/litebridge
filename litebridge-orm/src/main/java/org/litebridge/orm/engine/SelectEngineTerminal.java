@@ -123,12 +123,19 @@ public class SelectEngineTerminal {
                 dtoClass = (Class<DTO>) selectNode.dtoClass();
             }
 
-            final OrmTable ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(selectNode.dtoClass());
+            final OrmTable ormTable;
+            final Class<?> contextDtoClass = selectNode.contextDtoClass();
+
+            if (contextDtoClass != null) {
+                ormTable = litebridgeContext.tableRegistry().getTableInContextOrThrow(selectNode.dtoClass(), contextDtoClass);
+            } else {
+                ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(selectNode.dtoClass());
+            }
 
             if (dtoClass == ormTable.dtoClass()
                     || ormTable.getDtoClassInterfaces().contains(dtoClass)) {
                 // Selecting the actual DTO
-                return mapDtos(dtoClass, rows, ormTable, litebridgeContext);
+                return mapDtos(dtoClass, contextDtoClass, rows, ormTable, litebridgeContext);
             } else if (dtoClass == Row.class) {
                 // Multipe type overrides
                 return (List<DTO>) rows.stream()
@@ -311,7 +318,7 @@ public class SelectEngineTerminal {
         }
 
         if (ormTable != null) {
-            final List<Object> dtos = (List<Object>) mapDtos(resultClass, rows, ormTable, litebridgeContext);
+            final List<Object> dtos = (List<Object>) mapDtos(resultClass, selectNode.contextDtoClass(), rows, ormTable, litebridgeContext);
 
             if (dtos.size() > 1) {
                 throw new IllegalStateException("Expected exactly one mapped result, but got %d".formatted(dtos.size()));
@@ -324,11 +331,12 @@ public class SelectEngineTerminal {
     }
 
     private <DTO> List<DTO> mapDtos(final Class<DTO> dtoClass,
+                                    final @Nullable Class<?> contextDtoClass,
                                     final List<Row> rows,
                                     final OrmTable ormTable,
                                     final LitebridgeContext litebridgeContext) {
         final DtoMapper dtoMapper = new DtoMapper(dtoConstructor, litebridgeContext);
-        final List<DTO> dtos = dtoMapper.toDtos(dtoClass, rows);
+        final List<DTO> dtos = dtoMapper.toDtos(dtoClass, contextDtoClass, rows);
         dtos.forEach(ormTable::syncPersistedDto);
         return dtos;
     }
