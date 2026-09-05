@@ -96,7 +96,8 @@ public class OrmTable {
             }
 
             processedFieldTargetMap.put(fieldAccessor, preprocessedTarget);
-            fieldNameTargetMap.put(fieldAccessor.name(), preprocessedTarget);
+            final String fieldName = (fieldAccessor instanceof FieldAccessorChain chain) ? chain.fieldPath() : fieldAccessor.name();
+            fieldNameTargetMap.put(fieldName, preprocessedTarget);
 
             if (preprocessedTarget instanceof ColumnMetaData column) {
                 columnMap.put(column.name(), column);
@@ -107,13 +108,13 @@ public class OrmTable {
                     fieldAccessorChain.fieldAccessors().stream()
                             .filter(field -> field.dtoClass() != dtoClass)
                             .forEach(field -> nestedDtoClasses.add(field.dtoClass()));
-                } else {
-                    fieldNameColumnMap.put(fieldAccessor.name(), column);
+                }
 
-                    if (!ClassUtils.isBasicType(fieldAccessor.type())) {
-                        // Related DTO - mark for partial creation later if necessary (e.g. when no JOINs are specified)
-                        relatedDtoClasses.add(fieldAccessor.type());
-                    }
+                fieldNameColumnMap.put(fieldName, column);
+
+                if (!(fieldAccessor instanceof FieldAccessorChain) && !ClassUtils.isBasicType(fieldAccessor.type())) {
+                    // Related DTO - mark for partial creation later if necessary (e.g. when no JOINs are specified)
+                    relatedDtoClasses.add(fieldAccessor.type());
                 }
             }
         }));
@@ -187,11 +188,8 @@ public class OrmTable {
     }
 
     public ColumnMetaData columnMetaDataForField(final FieldAccessor fieldAccessor) {
-        if (fieldAccessor instanceof FieldAccessorChain fieldAccessorChain) {
-            return Objects.requireNonNull(fieldNameColumnMap.get(fieldAccessorChain.fieldAccessors().getFirst().name()), "No parent column for field path '" + fieldAccessorChain.fieldPath() + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
-        } else {
-            return Objects.requireNonNull(fieldNameColumnMap.get(fieldAccessor.name()), "No column for field '" + fieldAccessor.name() + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
-        }
+        final String key = (fieldAccessor instanceof FieldAccessorChain chain) ? chain.fieldPath() : fieldAccessor.name();
+        return Objects.requireNonNull(fieldNameColumnMap.get(key), "No column for field path '" + key + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
     }
 
     /**

@@ -6,6 +6,7 @@ import org.litebridge.commons.ClassUtils;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
@@ -95,7 +96,7 @@ public final class FieldAccessorChain implements FieldAccessor {
 
     @Override
     public String name() {
-        return fieldAccessors.getLast().name();
+        return fieldPath;
     }
 
     @Override
@@ -159,13 +160,14 @@ public final class FieldAccessorChain implements FieldAccessor {
 
     @Override
     public boolean equals(final Object o) {
-        if (!(o instanceof FieldAccessor)) return false;
-        return fieldAccessors.getLast().equals(o);
+        if (this == o) return true;
+        if (!(o instanceof final FieldAccessorChain that)) return false;
+        return Objects.equals(fieldPath, that.fieldPath);
     }
 
     @Override
     public int hashCode() {
-        return fieldAccessors.getLast().hashCode();
+        return Objects.hashCode(fieldPath);
     }
 
     @Override

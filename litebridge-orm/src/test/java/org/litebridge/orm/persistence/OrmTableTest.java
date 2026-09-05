@@ -255,7 +255,7 @@ class OrmTableTest {
     }
 
     @Test
-    void constructor_withNestedFieldAccessorChain_tracksNestedDtoClassAndParentColumn() {
+    void constructor_withNestedFieldAccessorChain_tracksNestedDtoClassAndSpecificColumn() {
         // Given
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final ClassFieldAccessorCache classFieldAccessorCache = changeTracker.classFieldAccessorCache();
@@ -277,12 +277,12 @@ class OrmTableTest {
 
         // Then
         assertEquals(List.of(AddressDto.class), ormTable.getNestedDtoClasses());
-        assertSame(addressColumn, ormTable.columnMetaDataForField("address.city"));
+        assertSame(cityColumn, ormTable.columnMetaDataForField("address.city"));
         assertSame(cityField, ormTable.getFieldForColumnName("city"));
     }
 
     @Test
-    void getColumnForFieldName_nestedFieldWithoutParentColumnMetaDataThrowsNullPointerException() {
+    void getColumnForFieldName_nestedFieldWithoutMappedPathThrowsNullPointerException() {
         // Given
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final ClassFieldAccessorCache classFieldAccessorCache = changeTracker.classFieldAccessorCache();
@@ -292,7 +292,7 @@ class OrmTableTest {
 
         final OrmTable ormTable = new OrmTable(WithAddressDto.class,
                 tableMetaData("with_address_table", cityColumn),
-                Map.of(cityField, cityColumn),
+                Map.of(), // No mappings
                 changeTracker,
                 classFieldAccessorCache);
 

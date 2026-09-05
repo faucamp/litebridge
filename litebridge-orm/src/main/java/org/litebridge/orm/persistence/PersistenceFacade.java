@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 /**
  * The PersistenceFacade class provides an abstraction layer for managing the persistence
@@ -248,8 +249,9 @@ public class PersistenceFacade {
 
         if (trackedDto == null) {
             if (isInsert) {
-                // If it's an insert, we want all fields to be considered changed
-                changeTracker.trackDtoFields(dto, new HashSet<>(classFieldAccessorCache.fieldAccessors(dto.getClass())), true);
+                // If it's an insert, we want all fields that are mapped to the table to be considered changed
+                final Set<FieldAccessor> fieldsToTrack = ormTable.fieldAcessorStream().collect(Collectors.toSet());
+                changeTracker.trackDtoFields(dto, fieldsToTrack, true);
                 trackedDto = changeTracker.getTrackedDto(dto);
             } else {
                 trackedDto = ormTable.ensureTrackedDto(dto);
