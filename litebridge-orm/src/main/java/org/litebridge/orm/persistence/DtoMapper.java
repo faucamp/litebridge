@@ -579,7 +579,7 @@ public class DtoMapper {
                 }
 
                 if (recordUpdates != null && !recordUpdates.isEmpty()) {
-                    // Reconstruct Record once
+                    // Reconstruct record
                     final List<FieldAccessor> accessors = classFieldAccessorCache.fieldAccessors(dto.getClass());
                     final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues = new ArrayList<>(accessors.size());
 
@@ -593,7 +593,7 @@ public class DtoMapper {
                     partialDto.setDto(dto);
                 }
 
-                // Finalize reverse collection updates with the final DTO instance
+                // Finalise reverse collection updates with the final DTO instance
                 for (int i = 0; i < reverseUpdates.size(); i++) {
                     final ReverseCollectionUpdate update = reverseUpdates.get(i);
                     updateReverseCollection(dto, update.relatedDto, update.relatedCollectionField);
@@ -610,6 +610,7 @@ public class DtoMapper {
             currentCollection = dtoCollection;
         } else {
             currentCollection = (Collection<Object>) ClassUtils.newInstance(relatedCollectionField.type());
+            //TODO: records break here since they need to be recreated
             relatedCollectionField.set(relatedDto, currentCollection);
         }
 

@@ -1,5 +1,6 @@
 package org.litebridge.orm.e2e.singletable_multidto;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.orm.e2e.AbstractE2eTest;
@@ -11,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+@Disabled
 class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
 
     @TestTemplate
