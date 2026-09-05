@@ -1,6 +1,7 @@
 package org.litebridge.orm.engine.ast;
 
 import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 /**
@@ -10,46 +11,26 @@ public final class JoinNode implements QueryNode {
     private final @Nullable QueryNode previous;
     private final String type;
     private final @Nullable Class<?> dtoClass;
-    private final @Nullable Class<?> sourceDtoClass;
-    private final @Nullable String tableName;
+    private final @Nullable String rightTable;
     private @Nullable QueryNode condition;
 
     /**
      * Constructs a new {@code JoinNode}.
      *
-     * @param previous       the previous node in the chain
-     * @param type           the type of join (e.g., INNER, LEFT)
-     * @param dtoClass       the DTO class being joined
-     * @param sourceDtoClass the source DTO class
-     * @param tableName      the name of the table being joined
+     * @param previous   the previous node in the chain
+     * @param type       the type of join (e.g., INNER, LEFT)
+     * @param dtoClass   the DTO class being joined
+     * @param rightTable the name of the table being joined
      */
     public JoinNode(@Nullable QueryNode previous,
                     //TODO: switch to enum
                     String type,
                     @Nullable Class<?> dtoClass,
-                    @Nullable Class<?> sourceDtoClass,
-                    @Nullable String tableName) {
+                    @Nullable String rightTable) {
         this.previous = previous;
         this.type = type;
         this.dtoClass = dtoClass;
-        this.sourceDtoClass = sourceDtoClass;
-        this.tableName = tableName;
-    }
-
-    /**
-     * Constructs a new {@code JoinNode} without a source DTO class.
-     *
-     * @param previous  the previous node in the chain
-     * @param type      the type of join
-     * @param dtoClass  the DTO class being joined
-     * @param tableName the name of the table being joined
-     */
-    public JoinNode(@Nullable QueryNode previous,
-                    //TODO: switch to enum
-                    String type,
-                    @Nullable Class<?> dtoClass,
-                    @Nullable String tableName) {
-        this(previous, type, dtoClass, null, tableName);
+        this.rightTable = rightTable;
     }
 
     @Override
@@ -76,21 +57,12 @@ public final class JoinNode implements QueryNode {
     }
 
     /**
-     * Returns the source DTO class.
-     *
-     * @return the source DTO class
-     */
-    public @Nullable Class<?> sourceDtoClass() {
-        return sourceDtoClass;
-    }
-
-    /**
      * Returns the name of the table being joined.
      *
      * @return the table name
      */
-    public @Nullable String tableName() {
-        return tableName;
+    public @Nullable String rightTable() {
+        return rightTable;
     }
 
     /**
@@ -121,14 +93,13 @@ public final class JoinNode implements QueryNode {
         return Objects.equals(this.previous, that.previous) &&
                 Objects.equals(this.type, that.type) &&
                 Objects.equals(this.dtoClass, that.dtoClass) &&
-                Objects.equals(this.sourceDtoClass, that.sourceDtoClass) &&
-                Objects.equals(this.tableName, that.tableName) &&
+                Objects.equals(this.rightTable, that.rightTable) &&
                 Objects.equals(this.condition, that.condition);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(previous, type, dtoClass, sourceDtoClass, tableName, condition);
+        return Objects.hash(previous, type, dtoClass, rightTable, condition);
     }
 
     @Override
@@ -137,8 +108,7 @@ public final class JoinNode implements QueryNode {
                 "previous=" + previous + ", " +
                 "type=" + type + ", " +
                 "dtoClass=" + dtoClass + ", " +
-                "sourceDtoClass=" + sourceDtoClass + ", " +
-                "tableName=" + tableName + ", " +
+                "rightTable=" + rightTable + ", " +
                 "condition=" + condition + ']';
     }
 }

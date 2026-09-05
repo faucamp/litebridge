@@ -17,9 +17,11 @@ import java.util.List;
 final class InsertBuilder extends AbstractStatementBuilder {
 
     private final List<LinkedHashMap<String, @Nullable Object>> rows = new ArrayList<>();
+    private final @Nullable Class<?> contextDtoClass;
 
-    public InsertBuilder(final OrmTable table, final LitebridgeContext litebridgeContext) {
+    public InsertBuilder(final OrmTable table, final @Nullable Class<?> contextDtoClass, final LitebridgeContext litebridgeContext) {
         super(table, litebridgeContext);
+        this.contextDtoClass = contextDtoClass;
     }
 
     public void addRow(final LinkedHashMap<String, @Nullable Object> fieldValues) {
@@ -45,7 +47,7 @@ final class InsertBuilder extends AbstractStatementBuilder {
             final String[] insertFields = rows.getFirst()
                     .sequencedKeySet()
                     .toArray(String[]::new);
-            node = new InsertNode(null, ormTable.dtoClass(), insertFields);
+            node = new InsertNode(ormTable.getMetaData().qualifiedName(), ormTable.dtoClass(), contextDtoClass, insertFields, null);
 
             for (LinkedHashMap<String, @Nullable Object> fieldValues : rows) {
                 final Object[] values = fieldValues.sequencedValues().toArray(Object[]::new);

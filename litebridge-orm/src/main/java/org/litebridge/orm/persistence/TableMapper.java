@@ -3,7 +3,6 @@ package org.litebridge.orm.persistence;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ModuleUtils;
-import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.TableMetaData;
@@ -196,7 +195,7 @@ public final class TableMapper {
                     } catch (Exception ex) {
                         throw new IllegalStateException("Failed to map nested DTO class '" + columnSpec.mappedTable().dtoClass() + "' to table: " + columnSpec.mappedTable().tableSpec(), ex);
                     }
-                } else if (!tableRegistry.containsTable(fieldAccessor.type())
+                } else if (!tableRegistry.containsOrmTable(fieldAccessor.type())
                         && !allDtoClasses.contains(fieldAccessor.type())) {
                     // Nested child DTO, but no table mapping exists
                     throw new IllegalArgumentException(String.format("Referenced DTO not registered: '%s', in field '%s' of DTO '%s'", fieldAccessor.type().getName(), fieldAccessor.name(), dtoClass.getName()));

@@ -58,6 +58,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
     private final TableMetaData tableMetaData;
     private final @Nullable OrmTable ormTable;
     private final List<SelectExpression> selectExpressions;
+    private final TableRegistry tableRegistry;
     private final SelectExpressionMapper selectExpressionMapper;
     private final AliasGenerator aliasGenerator;
     private @Nullable List<JoinSpec> joinSpecs;
@@ -74,7 +75,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         this.selectExpressionMapper = litebridgeContext.selectExpressionMapper();
         this.aliasGenerator = litebridgeContext.aliasGenerator();
         this.selectAll = selectNode.isSelectAll();
-        final TableRegistry tableRegistry = litebridgeContext.tableRegistry();
+        tableRegistry = litebridgeContext.tableRegistry();
 
         if (selectNode.dtoClass() != null) {
             if (selectNode.contextDtoClass() != null) {
@@ -145,13 +146,13 @@ final class SelectCompilationContext extends AbstractCompilationContext {
     }
 
     public void addJoin(final JoinNode joinNode) {
-        addJoin(joinNode.type(), joinNode.dtoClass(), joinNode.tableName());
+        addJoinImpl(joinNode.type(), joinNode.dtoClass(), joinNode.rightTable());
     }
 
-    private JoinSpec addJoin(final String type,
-                         final @Nullable Class<?> dtoClass,
-                         final @Nullable String tableName) {
-        final JoinSpec joinSpec = new JoinSpec(type, dtoClass, tableName);
+    private JoinSpec addJoinImpl(final String type,
+                                 final @Nullable Class<?> dtoClass,
+                                 final @Nullable String rightTable) {
+        final JoinSpec joinSpec = new JoinSpec(type, dtoClass, rightTable);
         joinSpec.conditionGroupStack().newRootInstance();
 
         if (this.joinSpecs == null) {
@@ -279,7 +280,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                         addJoinCondition(firstConditionNode);
 
                         // Second join
-                        joinSpec = addJoin("INNER", mappedManyToMany.targetOrmTable().get().dtoClass(), null);
+                        joinSpec = addJoinImpl("INNER", mappedManyToMany.targetOrmTable().get().dtoClass(), null);
                         final JoinOnSpec secondJoinOnSpec = joinOnSpecs.getLast();
                         final ConditionNode secondConditionNode = new ConditionNode(null, conditionJoinUsingNode.logicOperator(), null, secondJoinOnSpec.leftSelectColumnSpec(), Operator.EQ, secondJoinOnSpec.rightSelectColumnSpec());
                         joinSpec.setAliasedTable(secondJoinOnSpec.rightSelectColumnSpec().getColumn().table());
@@ -410,8 +411,6 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final List<Join> joins;
 
         if (joinSpecs != null) {
-            final TableRegistry tableRegistry = litebridgeContext.tableRegistry();
-
             joins = joinSpecs.stream()
                     .map(joinSpec -> {
                         final Table joinTable;
@@ -581,7 +580,12 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final SelectColumnSpec leftSelectColumnSpec = new SelectColumnSpec(resolveAlias(aliasedTable, leftColumnMetaData));
 
         // Right table & column
-        final OrmTable rightOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(joinDtoClass));
+        OrmTable rightOrmTable = tableRegistry.getOrmTable(Objects.requireNonNull(joinDtoClass));
+
+        if (rightOrmTable == null) {
+            rightOrmTable = ormTable.getContextTableRegistry().getOrmTable(Objects.requireNonNull(joinDtoClass));
+        }
+
         final Table aliasedRightTable = aliasTable(rightOrmTable, true);
         final TableMetaData rightTableMetaData = rightOrmTable.getMetaData();
         final ColumnMetaData rightColumnMetaData = rightTableMetaData.column(leftColumnMetaData.getJoinColumn());

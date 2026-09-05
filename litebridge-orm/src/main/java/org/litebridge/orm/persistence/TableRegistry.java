@@ -148,18 +148,32 @@ public final class TableRegistry {
      *                 must not be null
      * @return {@code true} if a table is mapped to the specified DTO class, {@code false} otherwise
      */
-    public boolean containsTable(final Class<?> dtoClass) {
+    public boolean containsOrmTable(final Class<?> dtoClass) {
         return dtoTableMap.containsKey(dtoClass);
     }
 
     /**
-     * Adds a table to the registry.
+     * Adds an ORM table to the registry.
      *
      * @param dtoClass the DTO class for which the table is to be associated
-     * @param table    the table to register
+     * @param ormTable the ORM table to register
      */
-    public void addTable(final Class<?> dtoClass, final OrmTable table) {
-        dtoTableMap.put(dtoClass, table);
+    public void addTable(final Class<?> dtoClass, final OrmTable ormTable) {
+        dtoTableMap.put(dtoClass, ormTable);
+        addTable(ormTable);
+        ormTable.getContextTableRegistry().getSchemaTableMap()
+                .forEach((schema, tableMap) ->
+                        schemaTableMap.computeIfAbsent(schema, k -> new ConcurrentHashMap<>()).putAll(tableMap));
+    }
+
+    /**
+     * Adds a table to the registry, but do not associate it with a root DTO class.
+     * <p>
+     * The resulting ORM table will only be able to be queried by name from this registry.
+     *
+     * @param table the table to register
+     */
+    public void addTable(final OrmTable table) {
         schemaTableMap.computeIfAbsent(StringUtils.blankIfNull(table.getMetaData().schema()), k -> new ConcurrentHashMap<>())
                 .put(table.getMetaData().name(), table);
     }
@@ -184,6 +198,10 @@ public final class TableRegistry {
     public Table getOrCreateSpiTable(final String table) {
         final String[] catalogSchemaTable = StringUtils.splitArray(table, '.', 3, true);
         return getOrCreateSpiTable(catalogSchemaTable[0], catalogSchemaTable[1], catalogSchemaTable[2]);
+    }
+
+    private Map<String, Map<String, OrmTable>> getSchemaTableMap() {
+        return schemaTableMap;
     }
 
     /**

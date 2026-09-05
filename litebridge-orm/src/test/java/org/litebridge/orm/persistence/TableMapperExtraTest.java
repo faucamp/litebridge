@@ -14,11 +14,9 @@ import org.litebridge.tracking.ChangeTracker;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -115,7 +113,7 @@ class TableMapperExtraTest {
                 new FieldSpec("ref", false), new ColumnSpec("REF_ID", null, "id")
         ));
 
-        when(tableRegistry.containsTable(ReferencedDto.class)).thenReturn(false);
+        when(tableRegistry.containsOrmTable(ReferencedDto.class)).thenReturn(false);
 
         assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), DtoWithRef.class, tableSpec, Collections.emptySet()));
     }
@@ -139,7 +137,7 @@ class TableMapperExtraTest {
                 new FieldSpec("ref", false), new ColumnSpec("REF_ID") // Missing joinOn
         ));
 
-        when(tableRegistry.containsTable(ReferencedDto.class)).thenReturn(true);
+        when(tableRegistry.containsOrmTable(ReferencedDto.class)).thenReturn(true);
 
         assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), DtoWithRef.class, tableSpec, Collections.emptySet()));
     }

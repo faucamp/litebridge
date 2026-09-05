@@ -251,6 +251,14 @@ public class OrmTable {
         changeTracker.trackDtoFields(dto, fieldAccessorTargetMap.keySet());
     }
 
+    public @Nullable MappedFieldTarget mappedFieldTargetForFieldOrNull(final String fieldName) {
+        return fieldNameTargetMap.get(fieldName);
+    }
+
+    public @Nullable MappedFieldTarget mappedFieldTargetForFieldOrNull(final FieldAccessor fieldAccessor) {
+        return fieldAccessorTargetMap.get(fieldAccessor);
+    }
+
     public MappedFieldTarget mappedFieldTargetForField(final String fieldName) {
         return ObjectUtils.requireNonNull(fieldNameTargetMap.get(fieldName), () -> new IllegalArgumentException("No field '" + fieldName + "' in DTO class: " + dtoClass));
     }

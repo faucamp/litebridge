@@ -200,7 +200,7 @@ class TableRegistryTest {
         tableRegistry.addTable(TestDto.class, ormTable(TestDto.class, "public", "test_table"));
 
         // When
-        final boolean result = tableRegistry.containsTable(TestDto.class);
+        final boolean result = tableRegistry.containsOrmTable(TestDto.class);
 
         // Then
         assertTrue(result);
@@ -212,7 +212,7 @@ class TableRegistryTest {
         final TableRegistry tableRegistry = new TableRegistry();
 
         // When
-        final boolean result = tableRegistry.containsTable(TestDto.class);
+        final boolean result = tableRegistry.containsOrmTable(TestDto.class);
 
         // Then
         assertFalse(result);
