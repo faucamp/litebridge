@@ -395,7 +395,6 @@ public class BasicE2eTest extends AbstractE2eTest {
      */
     @TestTemplate
     @DisplayName("Single DTO mapped to multiple tables")
-    @Disabled
     void singleDto_multipleTables(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Create our "original"/unmapped DTO (unmapped since Litebridge expects one table per DTO)
         final PersonAccount personAccount = new PersonAccount();

@@ -10,7 +10,6 @@ import org.litebridge.orm.e2e.singletable_multidto.dto.SingleTableNestedParent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Disabled
 class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
@@ -18,14 +17,17 @@ class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("Nested DTOs mapped to a single table")
     void nestedDtos_singleTable(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        assumeTrue(litebridge.select().from(tableMapper.qualifyName("PERSON")).list().isEmpty());
-        assumeTrue(litebridge.select().from(tableMapper.qualifyName("ACCOUNT")).list().isEmpty());
+        // Set up database-specific column names
+        final String columnNestedDto = tableMapper.qualifyName("NESTED_DTO");
+        final String columnParentValue1 = tableMapper.transformColumnName("PARENT_VALUE1");
+        final String columnChildValue1 = tableMapper.transformColumnName("CHILD_VALUE1");
+        final String columnGrandchildValue1 = tableMapper.transformColumnName("GRANDCHILD_VALUE1");
 
         // Register DTO-table mapping
-        litebridge.register(SingleTableNestedParent.class, rc -> rc.mapToTable(tableMapper.qualifyName("NESTED_DTO"))
-                .with(spec -> spec.mapField("parentValue1").toColumn(tableMapper.transformColumnName("PARENT_VALUE1")))
-                .with(spec -> spec.mapField("nestedChild.childValue1").toColumn(tableMapper.transformColumnName("CHILD_VALUE1")))
-                .with(spec -> spec.mapField("nestedChild.grandChild.grandChildValue1").toColumn(tableMapper.transformColumnName("GRANDCHILD_VALUE1"))));
+        litebridge.register(SingleTableNestedParent.class, rc -> rc.mapToTable(columnNestedDto)
+                .with(spec -> spec.mapField("parentValue1").toColumn(columnParentValue1))
+                .with(spec -> spec.mapField("nestedChild.childValue1").toColumn(columnChildValue1))
+                .with(spec -> spec.mapField("nestedChild.grandChild.grandChildValue1").toColumn(columnGrandchildValue1)));
 
         // Create DTOs and enable change tracking
         final SingleTableNestedParent singleTableNestedParent = litebridge.track(new SingleTableNestedParent());
