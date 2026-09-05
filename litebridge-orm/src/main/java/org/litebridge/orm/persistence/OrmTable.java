@@ -188,8 +188,13 @@ public class OrmTable {
     }
 
     public ColumnMetaData columnMetaDataForField(final FieldAccessor fieldAccessor) {
-        final String key = (fieldAccessor instanceof FieldAccessorChain chain) ? chain.fieldPath() : fieldAccessor.name();
-        return Objects.requireNonNull(fieldNameColumnMap.get(key), "No column for field path '" + key + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
+        ColumnMetaData columnMetaData = fieldNameColumnMap.get(fieldAccessor.name());
+
+        if (columnMetaData == null && fieldAccessor instanceof FieldAccessorChain chain) {
+            columnMetaData = fieldNameColumnMap.get(chain.fieldAccessors().getFirst().name());
+        }
+
+        return Objects.requireNonNull(columnMetaData, () -> "No column for field path '" + fieldAccessor.name() + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
     }
 
     /**
@@ -250,19 +255,31 @@ public class OrmTable {
     }
 
     public @Nullable MappedFieldTarget mappedFieldTargetForFieldOrNull(final String fieldName) {
-        return fieldNameTargetMap.get(fieldName);
+        MappedFieldTarget target = fieldNameTargetMap.get(fieldName);
+
+        if (target == null && fieldName.indexOf('.') != -1) {
+            target = fieldNameTargetMap.get(fieldName.substring(0, fieldName.indexOf('.')));
+        }
+
+        return target;
     }
 
     public @Nullable MappedFieldTarget mappedFieldTargetForFieldOrNull(final FieldAccessor fieldAccessor) {
-        return fieldAccessorTargetMap.get(fieldAccessor);
+        MappedFieldTarget target = fieldAccessorTargetMap.get(fieldAccessor);
+
+        if (target == null && fieldAccessor instanceof FieldAccessorChain chain) {
+            target = fieldAccessorTargetMap.get(chain.fieldAccessors().getFirst());
+        }
+        
+        return target;
     }
 
     public MappedFieldTarget mappedFieldTargetForField(final String fieldName) {
-        return ObjectUtils.requireNonNull(fieldNameTargetMap.get(fieldName), () -> new IllegalArgumentException("No field '" + fieldName + "' in DTO class: " + dtoClass));
+        return ObjectUtils.requireNonNull(mappedFieldTargetForFieldOrNull(fieldName), () -> new IllegalArgumentException("No field '" + fieldName + "' in DTO class: " + dtoClass));
     }
 
     public MappedFieldTarget mappedFieldTargetForField(final FieldAccessor fieldAccessor) {
-        return ObjectUtils.requireNonNull(fieldAccessorTargetMap.get(fieldAccessor), () -> new IllegalArgumentException("No field '" + fieldAccessor.name() + "' in DTO class: " + dtoClass));
+        return ObjectUtils.requireNonNull(mappedFieldTargetForFieldOrNull(fieldAccessor), () -> new IllegalArgumentException("No field '" + fieldAccessor.name() + "' in DTO class: " + dtoClass));
     }
 
     /**

@@ -94,6 +94,13 @@ public final class FieldAccessorChain implements FieldAccessor {
         return fieldAccessors.getLast().equals(fieldAccessor);
     }
 
+    /**
+     * Returns the field path.
+     * <p>
+     * Alias for {@link #fieldPath()}.
+     *
+     * @return the field path.
+     */
     @Override
     public String name() {
         return fieldPath;
