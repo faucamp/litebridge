@@ -53,7 +53,7 @@ public class SelectEngineTerminal {
     }
 
     public <DTO> Optional<DTO> fetchOne(final QueryNode node, final LitebridgeContext litebridgeContext) {
-        return Optional.<DTO>ofNullable(fetchOneOrNull(node, litebridgeContext));
+        return Optional.ofNullable(fetchOneOrNull(node, litebridgeContext));
     }
 
     public <DTO> @Nullable DTO fetchOneOrNull(final QueryNode node, final LitebridgeContext litebridgeContext) {
@@ -75,7 +75,7 @@ public class SelectEngineTerminal {
     }
 
     public <DTO> Optional<DTO> fetchFirst(final QueryNode node, final LitebridgeContext litebridgeContext) {
-        return Optional.<DTO>ofNullable(fetchFirstOrNull(node, litebridgeContext));
+        return Optional.ofNullable(fetchFirstOrNull(node, litebridgeContext));
     }
 
     public <DTO> @Nullable DTO fetchFirstOrNull(final QueryNode node, final LitebridgeContext litebridgeContext) {
@@ -96,6 +96,7 @@ public class SelectEngineTerminal {
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     public <DTO> Stream<DTO> fetchStream(final QueryNode node, final LitebridgeContext litebridgeContext) {
         return (Stream<DTO>) fetchList(node, litebridgeContext).stream();
     }
@@ -107,20 +108,7 @@ public class SelectEngineTerminal {
         final SelectNode selectNode = findSelectNode(node);
 
         if (selectNode.dtoClass() != null) {
-            final Class<DTO> dtoClass;
-
-            if (!CollectionUtils.isEmpty(selectNode.resultTypes())) {
-                if (selectNode.resultTypes().length == 1
-                        && selectNode.resultTypes()[0] != selectNode.dtoClass()) {
-                    // Single type override
-                    dtoClass = (Class<DTO>) selectNode.resultTypes()[0];
-                } else {
-                    dtoClass = (Class<DTO>) Row.class;
-                }
-            } else {
-                dtoClass = (Class<DTO>) selectNode.dtoClass();
-            }
-
+            final Class<DTO> dtoClass = getDtoClass(selectNode);
             final OrmTable ormTable;
             final Class<?> contextDtoClass = selectNode.contextDtoClass();
 
@@ -379,5 +367,24 @@ public class SelectEngineTerminal {
         } while (currentNode != null);
 
         throw new IllegalArgumentException("No SelectNode found in the query AST");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <DTO> Class<DTO> getDtoClass(final SelectNode selectNode) {
+        final Class<DTO> dtoClass;
+
+        if (!CollectionUtils.isEmpty(selectNode.resultTypes())) {
+            if (selectNode.resultTypes().length == 1
+                    && selectNode.resultTypes()[0] != selectNode.dtoClass()) {
+                // Single type override
+                dtoClass = (Class<DTO>) selectNode.resultTypes()[0];
+            } else {
+                dtoClass = (Class<DTO>) Row.class;
+            }
+        } else {
+            dtoClass = (Class<DTO>) selectNode.dtoClass();
+        }
+
+        return Objects.requireNonNull(dtoClass, "Failed to determine DTO class");
     }
 }

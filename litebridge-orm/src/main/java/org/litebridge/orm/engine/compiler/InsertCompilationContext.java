@@ -28,7 +28,6 @@ import java.util.TreeSet;
 final class InsertCompilationContext implements CompilationContext {
 
     private final Table table;
-    private final TableMetaData tableMetaData;
     private final List<ColumnMetaData> columnMetaDataList = new ArrayList<>();
     private final List<String> insertColumns;
     private final Set<String> insertColumnNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
@@ -38,6 +37,7 @@ final class InsertCompilationContext implements CompilationContext {
     InsertCompilationContext(final InsertNode insertNode,
                              final LitebridgeContext litebridgeContext) {
         final OrmTable ormTable;
+        final TableMetaData tableMetaData;
 
         if (insertNode.dtoClass() != null) {
             if (insertNode.contextDtoClass() != null) {
@@ -47,11 +47,11 @@ final class InsertCompilationContext implements CompilationContext {
                 ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(insertNode.dtoClass());
             }
 
-            this.tableMetaData = ormTable.getMetaData();
+            tableMetaData = ormTable.getMetaData();
             this.table = tableMetaData.toTable();
         } else {
             this.table = litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(insertNode.table()));
-            this.tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);
+            tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);
             ormTable = null;
         }
 
@@ -108,7 +108,7 @@ final class InsertCompilationContext implements CompilationContext {
                     insertColumns.add(columnExpressionSpec.getColumn().name());
                 } else if (expressionSpec instanceof QueryField queryField) {
                     final String fieldName = QueryFieldInspector.getFieldName(queryField);
-                    final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(fieldName);
+                    final ColumnMetaData columnMetaData = Objects.requireNonNull(ormTable).columnMetaDataForField(fieldName);
                     insertColumns.add(columnMetaData.name());
                 } else {
                     throw new IllegalArgumentException("Unsupported expression spec type: " + expressionSpec.getClass().getName());
@@ -117,14 +117,10 @@ final class InsertCompilationContext implements CompilationContext {
 
             this.insertColumnNames.addAll(insertColumns);
 
-            final Set<String> unmappedInsertColumns = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-            unmappedInsertColumns.addAll(insertColumns);
-
             for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
                 if (insertColumnNames.contains(columnMetaData.name())) {
                     // Explicit insert
                     this.columnMetaDataList.add(columnMetaData);
-                    unmappedInsertColumns.remove(columnMetaData.name());
                 } else if (!columnMetaData.isNullable() && !columnMetaData.isAutoIncrement()) {
                     // Non-null value omitted from insert columns; see if it can be generated
                     if (columnMetaData.getGenerator() != null) {
