@@ -1,6 +1,5 @@
 package org.litebridge.orm.e2e.basic;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.db.spi.Row;
@@ -529,7 +528,13 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertTrue(litebridge.select(Person.class).where("name").eq("Alice").one().isPresent());
         litebridge.delete(Person.class, p -> p
                 .where("name").eq("Alice")
-                .and("age").eq(20));
+                .and("age").eq(20)
+                .and(q -> q
+                        .where("surname").eq("Jones")
+                        .or("surname").eq("Smith"))
+                .and(q -> q
+                        .where("surname").neq("Doe")
+                        .or("age").lte(0)));
         assertFalse(litebridge.select(Person.class).where("name").eq("Alice").one().isPresent());
 
         // Delete via metamodel
@@ -590,7 +595,10 @@ public class BasicE2eTest extends AbstractE2eTest {
                 .set("name").to("John")
                 .set("surname").to("Doe")
                 .set("age").to(18)
-                .where("age").gt(18));
+                .where("age").gt(18)
+                .or(q -> q
+                        .where("age").lte(0)
+                        .or("age").gte(99)));
 
         assertTrue(litebridge.select(Person.class).stream().allMatch(p -> p.getName().equals("John") && p.getSurname().equals("Doe") && p.getAge() == 18));
 
