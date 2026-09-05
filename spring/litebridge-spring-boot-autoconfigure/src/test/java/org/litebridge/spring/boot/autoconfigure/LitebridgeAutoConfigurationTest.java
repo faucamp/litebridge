@@ -14,7 +14,6 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.config.LitebridgeConfig;
@@ -207,28 +206,13 @@ class LitebridgeAutoConfigurationTest {
         }
 
         @Override
-        public InsertResult insert(final PreparedSql insert, final ConnectionProvider connectionProvider) throws SQLException {
-            return null;
-        }
-
-        @Override
-        public UpdateResult update(final PreparedSql update, final ConnectionProvider connectionProvider) throws SQLException {
+        public <T extends UpdateResult> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 
         @Override
         public List<Row> executeQuery(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
             return List.of();
-        }
-
-        @Override
-        public UpdateResult delete(final PreparedSql delete, final ConnectionProvider connectionProvider) throws SQLException {
-            return null;
-        }
-
-        @Override
-        public UpdateResult merge(final PreparedSql merge, final ConnectionProvider connectionProvider) throws SQLException {
-            return null;
         }
 
         @Override

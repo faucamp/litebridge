@@ -120,26 +120,6 @@ public class FieldAccessorChainTest {
     }
 
     @Test
-    void name_delegatesToLastAccessor() {
-        // Given
-        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
-        final FieldAccessor parent = mock(FieldAccessor.class);
-        final FieldAccessor last = mock(FieldAccessor.class);
-        when(last.name()).thenReturn("child");
-
-        FieldAccessorChain chain = new FieldAccessorChain(parent, "parent.child", classFieldAccessorCache);
-        chain.add(last);
-
-        // When
-        String name = chain.name();
-
-        // Then
-        assertEquals("child", name);
-        verify(last).name();
-        verifyNoMoreInteractions(last);
-    }
-
-    @Test
     void get_traversesAccessorsInOrder() {
         // Given
         final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
@@ -305,24 +285,6 @@ public class FieldAccessorChainTest {
     }
 
     @Test
-    void equals_delegatesToLastAccessorEquals() {
-        // Given
-        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
-        final FieldAccessor parent = mock(FieldAccessor.class);
-        final Field field = ClassUtils.getField(TestDto.class, "myVar");
-        final FieldAccessor last = new DirectFieldAccessor(field, MethodHandles.lookup());
-
-        final FieldAccessorChain chain = new FieldAccessorChain(parent, "parent.child", classFieldAccessorCache);
-        chain.add(last);
-
-        // When
-        final boolean result = chain.equals(last);
-
-        // Then
-        assertTrue(result);
-    }
-
-    @Test
     void equals_differentType() {
         // Given
         final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
@@ -345,10 +307,9 @@ public class FieldAccessorChainTest {
         final FieldAccessor parent = mock(FieldAccessor.class);
         final Field field = ClassUtils.getField(TestDto.class, "myVar");
         final FieldAccessor last = new DirectFieldAccessor(field, MethodHandles.lookup());
-        final int expectedHashCode = last.hashCode();
-
         final FieldAccessorChain chain = new FieldAccessorChain(parent, "parent.child", classFieldAccessorCache);
         chain.add(last);
+        final int expectedHashCode = chain.fieldPath().hashCode();
 
         // When
         final int result = chain.hashCode();
