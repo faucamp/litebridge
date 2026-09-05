@@ -97,6 +97,7 @@ public final class Litebridge implements SelectApi {
     private final SelectEngine selectEngine = new SelectEngine(dtoConstructor);
     private final InsertEngine insertEngine = new InsertEngine(tableRegistry);
     private final UpdateEngine updateEngine = new UpdateEngine();
+    private final MergeEngine mergeEngine = new MergeEngine();
     private final DeleteEngine deleteEngine = new DeleteEngine();
     private final QueryPlanCache queryPlanCache = new QueryPlanCache();
     private final LitebridgeConfig litebridgeConfig;
@@ -499,13 +500,11 @@ public final class Litebridge implements SelectApi {
     }
 
     public UpdateResult mergeInto(final String tableName, final Function<SqlMergeUsingStep, MergeTerminal> merge) {
-        final MergeEngine mergeEngine = new MergeEngine(createSqlLitebridgeContext());
-        return mergeEngine.mergeInto(tableName, merge);
+        return mergeEngine.mergeInto(tableName, merge, createSqlLitebridgeContext());
     }
 
     public <DTO> UpdateResult mergeInto(final Class<DTO> dtoClass, final Function<DtoMergeUsingStep<DTO>, MergeTerminal> merge) {
-        final MergeEngine mergeEngine = new MergeEngine(createDtoLitebridgeContext());
-        return mergeEngine.mergeInto(dtoClass, merge);
+        return mergeEngine.mergeInto(dtoClass, merge, createDtoLitebridgeContext());
     }
 
     /**

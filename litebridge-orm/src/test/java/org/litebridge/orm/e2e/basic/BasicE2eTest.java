@@ -662,9 +662,15 @@ public class BasicE2eTest extends AbstractE2eTest {
             persons[i].setAge(20 + i);
         }
 
+        final Account account = new Account();
+        account.setId(123L);
+        account.setName("Test account");
+        account.setBalance(BigInteger.TEN);
+        persons[0].setAccounts(List.of(account));
+
         litebridge.saveAll(persons);
 
-        // Read and populate specific fields only
+        // Select and populate specific fields only
         final List<Person> result = litebridge.select(Fn.f("id"), Fn.f("surname"))
                 .from(Person.class)
                 .orderBy(Fn.f("id")).asc()
@@ -678,6 +684,9 @@ public class BasicE2eTest extends AbstractE2eTest {
             assertNull(p.getName());
             assertEquals(0, p.getAge());
         }
+
+        // Select and populate specific fields only, with a related DTO strategy
+
     }
 
     @TestTemplate

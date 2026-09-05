@@ -12,28 +12,41 @@ import org.slf4j.Logger;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
-abstract sealed class AbstractUpdateEngine permits DeleteEngine, UpdateEngine {
+abstract sealed class AbstractUpdateEngine permits AbstractInsertEngine, DeleteEngine, UpdateEngine {
 
-    protected static final UpdateMetaData UPDATE_META_DATA = new UpdateMetaData(false, Collections.emptyList(), new String[0]);
+    protected static final UpdateMetaData EMPTY_UPDATE_META_DATA = new UpdateMetaData(false, Collections.emptyList(), new String[0]);
 
     protected abstract String operationTypeName();
 
     protected abstract Logger logger();
 
-    protected UpdateResult execute(final QueryNode node, final LitebridgeContext litebridgeContext) {
+    protected final UpdateResult execute(final QueryNode node,
+                                         final LitebridgeContext litebridgeContext) {
+        return execute(node, () -> EMPTY_UPDATE_META_DATA, UpdateResult.class, litebridgeContext);
+    }
+
+    protected final <T extends UpdateResult> T execute(final QueryNode node,
+                                                       final Supplier<UpdateMetaData> updateMetaDataSupplier,
+                                                       final Class<T> resultType,
+                                                       final LitebridgeContext litebridgeContext) {
         final int nodeHash = node.hashCode();
         final QueryPlanCache.CachedOperation cachedOperation = litebridgeContext.queryPlanCache().get(nodeHash);
 
         if (cachedOperation != null) {
             final List<@Nullable Object> bindValues = QueryBindValueExtractor.extractBindValues(node);
-            return execute(cachedOperation.preparedSql(bindValues), litebridgeContext);
+            return execute(cachedOperation.preparedSql(bindValues), resultType, litebridgeContext);
         } else {
-            return compileAndExecute(nodeHash, node, litebridgeContext);
+            return compileAndExecute(nodeHash, node, updateMetaDataSupplier, resultType, litebridgeContext);
         }
     }
 
-    protected UpdateResult compileAndExecute(final int astCacheKey, final QueryNode node, final LitebridgeContext litebridgeContext) {
+    protected final <T extends UpdateResult> T compileAndExecute(final int astCacheKey,
+                                                                 final QueryNode node,
+                                                                 final Supplier<UpdateMetaData> updateMetaDataSupplier,
+                                                                 final Class<T> resultType,
+                                                                 final LitebridgeContext litebridgeContext) {
         // Compile/prepare SQL query
         final PreparedOperation preparedOperation = litebridgeContext.createQueryCompiler().compile(node);
         // Generate SQL and create type conversion metadata
@@ -42,17 +55,17 @@ abstract sealed class AbstractUpdateEngine permits DeleteEngine, UpdateEngine {
         final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
                 .map(BindValue::sqlDataType)
                 .toList();
-        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, UPDATE_META_DATA));
+        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, EMPTY_UPDATE_META_DATA));
         // Execute SQL query
-        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), null, UPDATE_META_DATA);
-        return execute(executionSql, litebridgeContext);
+        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), null, updateMetaDataSupplier.get());
+        return execute(executionSql, resultType, litebridgeContext);
     }
 
-    protected UpdateResult execute(final PreparedSql preparedSql, final LitebridgeContext litebridgeContext) {
-        final UpdateResult updateResult;
+    protected final <T extends UpdateResult> T execute(final PreparedSql preparedSql, final Class<T> resultType, final LitebridgeContext litebridgeContext) {
+        final T updateResult;
 
         try {
-            updateResult = litebridgeContext.databaseProvider().update(preparedSql, litebridgeContext.transactionManager());
+            updateResult = litebridgeContext.databaseProvider().executeUpdate(preparedSql, resultType, litebridgeContext.transactionManager());
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute %s: %s".formatted(operationTypeName(), preparedSql.sql()), ex);
         }

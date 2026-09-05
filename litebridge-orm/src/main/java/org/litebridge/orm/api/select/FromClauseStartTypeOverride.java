@@ -47,23 +47,7 @@ public final class FromClauseStartTypeOverride<ReturnType> {
      * @return the DTO from clause terminal.
      */
     public DtoFromClauseTerminal<ReturnType> from(final Class<?> dtoClass) {
-        // Check for row column-level type overrides
-        final Class<?>[] expressionReturnTypes = Arrays.stream(expressionSpecs)
-                .filter(TypeOverride.class::isInstance)
-                .map(TypeOverride.class::cast)
-                .map(TypeOverride::returnType)
-                .toArray(Class<?>[]::new);
-
-        final Class<?>[] returnTypes;
-
-        if (expressionReturnTypes.length > 0) {
-            returnTypes = expressionReturnTypes;
-        } else {
-            returnTypes = new Class<?>[]{typeOverride};
-        }
-
-        final SelectNode selectNode = new SelectNode(null, dtoClass, null, null, expressionSpecs, returnTypes);
-        return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.DTO));
+        return from(dtoClass, (RelatedDtoStrategy) null);
     }
 
     /**
@@ -83,12 +67,32 @@ public final class FromClauseStartTypeOverride<ReturnType> {
      *
      * @param dtoClass           the DTO class.
      * @param relatedDtoStrategy the related DTO strategy.
-     * @param <DTO>              the DTO type.
      * @return the DTO from clause terminal.
      */
-    public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-//        return fromClauseEngine.from(node, dtoClass, relatedDtoStrategy);
-        throw new UnsupportedOperationException("Not implemented yet");
+    public DtoFromClauseTerminal<ReturnType> from(final Class<?> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
+        // Check for row column-level type overrides
+        final Class<?>[] expressionReturnTypes = Arrays.stream(expressionSpecs)
+                .filter(TypeOverride.class::isInstance)
+                .map(TypeOverride.class::cast)
+                .map(TypeOverride::returnType)
+                .toArray(Class<?>[]::new);
+
+        final Class<?>[] returnTypes;
+
+        if (expressionReturnTypes.length > 0) {
+            returnTypes = expressionReturnTypes;
+        } else {
+            returnTypes = new Class<?>[]{typeOverride};
+        }
+
+        final SelectNode selectNode = new SelectNode(null, dtoClass, null, null, expressionSpecs, returnTypes);
+        final LitebridgeContext litebridgeContext = litebridgeContextCreator.apply(LitebridgeContext.Mode.DTO);
+
+        if (relatedDtoStrategy != null) {
+            litebridgeContext.setRelatedDtoStrategy(relatedDtoStrategy);
+        }
+
+        return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContext);
     }
 
     /**

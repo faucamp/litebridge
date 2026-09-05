@@ -3,6 +3,7 @@ package org.litebridge.orm.persistence;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.query.UpdateMetaData;
+import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.engine.ast.QueryNode;
 
 /**
@@ -45,4 +46,8 @@ public sealed interface StatementBuilder permits AbstractStatementBuilder, NoOpS
      * @return The built statement.
      */
     PreparedOperation build();
+
+    default Class<? extends UpdateResult> resultType() {
+        return UpdateResult.class;
+    }
 }

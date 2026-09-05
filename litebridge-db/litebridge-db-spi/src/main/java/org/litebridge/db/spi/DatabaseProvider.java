@@ -7,9 +7,7 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.Delete;
 import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
 
 import java.sql.SQLException;
@@ -35,46 +33,25 @@ public interface DatabaseProvider {
     TableMetaData tableMetaData(Table table, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
-     * Execute an INSERT operation in the database using the provided statement.
+     * Execute an modifying SQL operation in the database using the provided statement.
      *
-     * @param insert             the {@link PreparedSql} for the statement.
+     * @param preparedSql        the {@link PreparedSql} for the statement.
+     * @param resultType         the expected resulting {@link UpdateResult} type
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
      * @return an {@link InsertResult} containing the number of rows affected and any generated keys.
-     * @throws SQLException if any SQL error occurs during the execution of the insert operation.
+     * @throws SQLException if any SQL error occurs during the execution of the SELECT operation.
      */
-    InsertResult insert(PreparedSql insert, ConnectionProvider connectionProvider) throws SQLException;
-
-    /**
-     * Execute an UPDATE operation in the database using the provided {@link Update} statement.
-     *
-     * @param update             the {@link PreparedSql} for the statement.
-     * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
-     * @return an {@link UpdateResult} containing the number of rows affected.
-     * @throws SQLException if any SQL error occurs during the execution of the update operation.
-     */
-    UpdateResult update(PreparedSql update, ConnectionProvider connectionProvider) throws SQLException;
-
-    /**
-     * Execute a DELETE operation in the database using the provided {@link Delete} statement.
-     *
-     * @param delete             the {@link PreparedSql} for the statement.
-     * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
-     * @return an {@link UpdateResult} containing the number of rows affected.
-     * @throws SQLException if any SQL error occurs during the execution of the delete operation.
-     */
-    UpdateResult delete(PreparedSql delete, ConnectionProvider connectionProvider) throws SQLException;
-
-    UpdateResult merge(PreparedSql merge, ConnectionProvider connectionProvider) throws SQLException;
+    <T extends UpdateResult> T executeUpdate(PreparedSql preparedSql, Class<T> resultType, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
      * Executes a SELECT operation in the database using a pre-prepared {@link PreparedSql} object.
      *
-     * @param select             the {@link PreparedSql} object containing the SQL query string and bind values.
+     * @param preparedSql        the {@link PreparedSql} object containing the SQL query string and bind values.
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
      * @return a {@link List} of {@link Row} objects representing the results of the SELECT operation.
      * @throws SQLException if any SQL error occurs during the execution of the SELECT operation.
      */
-    List<Row> select(PreparedSql select, ConnectionProvider connectionProvider) throws SQLException;
+    List<Row> executeQuery(PreparedSql preparedSql, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
      * Converts the given {@link Operation} into its corresponding SQL representation.

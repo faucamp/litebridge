@@ -30,8 +30,8 @@ import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.ManagedConnection;
 import org.litebridge.db.spi.update.Delete;
-import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.Insert;
+import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
@@ -135,27 +135,17 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public InsertResult insert(final PreparedSql insert, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeSqlInsert(insert, connectionProvider);
+    @SuppressWarnings("unchecked")
+    public <T extends UpdateResult> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) throws SQLException {
+        if (resultType == InsertResult.class) {
+            return (T) executeSqlInsert(preparedSql, connectionProvider);
+        } else {
+            return (T) executeSqlUpdate(preparedSql, connectionProvider);
+        }
     }
 
     @Override
-    public UpdateResult update(final PreparedSql update, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeSqlUpdate(update, connectionProvider);
-    }
-
-    @Override
-    public UpdateResult delete(final PreparedSql delete, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeSqlUpdate(delete, connectionProvider);
-    }
-
-    @Override
-    public UpdateResult merge(final PreparedSql merge, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeSqlUpdate(merge, connectionProvider);
-    }
-
-    @Override
-    public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+    public List<Row> executeQuery(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
         final Map<String, ColumnMetaData> columnLabelsToColumnMetaData;
         final Map<String, Table> columnAliasesToTable;
         final Class<?>[] typeOverrides;

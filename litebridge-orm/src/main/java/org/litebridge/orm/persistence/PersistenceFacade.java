@@ -15,8 +15,6 @@ import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
-import org.litebridge.db.spi.update.Delete;
-import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateResult;
@@ -718,14 +716,7 @@ public class PersistenceFacade {
         if (cachedOperation != null) {
             final List<@Nullable Object> rawBindValues = QueryBindValueExtractor.extractBindValues(node);
             final PreparedSql preparedSql = cachedOperation.preparedSql(rawBindValues);
-
-            if (statementBuilder instanceof InsertBuilder) {
-                dtoUpdateResult.setUpdateResult(databaseProvider.insert(preparedSql, transactionManager));
-            } else if (statementBuilder instanceof UpdateBuilder) {
-                dtoUpdateResult.setUpdateResult(databaseProvider.update(preparedSql, transactionManager));
-            } else if (statementBuilder instanceof DeleteBuilder) {
-                dtoUpdateResult.setUpdateResult(databaseProvider.delete(preparedSql, transactionManager));
-            }
+            dtoUpdateResult.setUpdateResult(databaseProvider.executeUpdate(preparedSql, statementBuilder.resultType(), transactionManager));
         } else {
             final PreparedOperation preparedOperation = statementBuilder.build();
 
@@ -742,17 +733,8 @@ public class PersistenceFacade {
                 litebridgeContext.queryPlanCache().put(nodeHash, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, updateMetaData));
 
                 // Execute SQL query
-                final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), null, updateMetaData);
-
-                final UpdateResult updateResult = switch (preparedOperation.operation()) {
-                    case Insert insert -> databaseProvider.insert(executionSql, transactionManager);
-                    case Update update -> databaseProvider.update(executionSql, transactionManager);
-                    case Delete delete -> databaseProvider.delete(executionSql, transactionManager);
-                    default ->
-                            throw new IllegalStateException("Unexpected operation type: " + preparedOperation.operation());
-                };
-
-                dtoUpdateResult.setUpdateResult(updateResult);
+                final PreparedSql preparedSql = new PreparedSql(sql, preparedOperation.bindValues(), null, updateMetaData);
+                dtoUpdateResult.setUpdateResult(databaseProvider.executeUpdate(preparedSql, statementBuilder.resultType(), transactionManager));
             }
         }
 

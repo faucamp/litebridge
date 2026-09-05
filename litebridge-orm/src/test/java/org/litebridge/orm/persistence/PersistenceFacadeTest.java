@@ -53,7 +53,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -161,13 +164,14 @@ class PersistenceFacadeTest {
         when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
 
         // When
         facade.insert(dto);
 
         // Then
-        verify(databaseProvider).insert(any(), any());
+        verify(databaseProvider).executeUpdate(any(), eq(InsertResult.class), any());
     }
 
     @Test
@@ -197,13 +201,13 @@ class PersistenceFacadeTest {
 
         when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
-        when(databaseProvider.update(any(), any())).thenReturn(new UpdateResult(1));
+        when(databaseProvider.executeUpdate(any(), eq(UpdateResult.class), any())).thenReturn(new UpdateResult(1));
 
         // When
         facade.update(dto);
 
         // Then
-        verify(databaseProvider).update(any(), any());
+        verify(databaseProvider).executeUpdate(any(), eq(UpdateResult.class), any());
     }
 
     @Test
@@ -228,13 +232,13 @@ class PersistenceFacadeTest {
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
         when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
-        when(databaseProvider.delete(any(), any())).thenReturn(new UpdateResult(1));
+        when(databaseProvider.executeUpdate(any(), eq(UpdateResult.class), any())).thenReturn(new UpdateResult(1));
 
         // When
         facade.delete(dto);
 
         // Then
-        verify(databaseProvider).delete(any(), any());
+        verify(databaseProvider).executeUpdate(any(), eq(UpdateResult.class), any());
     }
 
     @Test
@@ -255,13 +259,13 @@ class PersistenceFacadeTest {
         when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
 
         // When
         facade.save(List.of(c1, c2));
 
         // Then
-        verify(databaseProvider, org.mockito.Mockito.times(2)).insert(any(), any());
+        verify(databaseProvider, times(2)).executeUpdate(any(), eq(InsertResult.class), any());
     }
 
     @Test
@@ -285,13 +289,13 @@ class PersistenceFacadeTest {
 
         final OrmTable table = createOrmTable(changeTracker, ProductDto.class, "products", Map.of("id", numeric("ID"), "name", varchar("NAME"), "relatedProduct", numeric("RELATED_ID")), List.of("ID"));
         when(tableRegistry.getOrmTableOrThrow(ProductDto.class)).thenReturn(table);
-        when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
 
         // When
         facade.save(p1);
 
         // Then
-        verify(databaseProvider, org.mockito.Mockito.atLeastOnce()).insert(any(), any());
+        verify(databaseProvider, times(2)).executeUpdate(any(), eq(InsertResult.class), any());
     }
 
     @Test
@@ -309,13 +313,13 @@ class PersistenceFacadeTest {
 
         final OrmTable table = createOrmTable(changeTracker, PersonRecord.class, "persons", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
         when(tableRegistry.getOrmTableOrThrow(PersonRecord.class)).thenReturn(table);
-        when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1, Map.of(table.getMetaData().column("ID"), 123L)));
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1, Map.of(table.getMetaData().column("ID"), 123L)));
 
         // When
         facade.save(person);
 
         // Then
-        verify(databaseProvider).insert(any(), any());
+        verify(databaseProvider).executeUpdate(any(), eq(InsertResult.class), any());
     }
 
     @Test
@@ -342,7 +346,7 @@ class PersistenceFacadeTest {
         facade.save(dto);
 
         // Then
-        verify(databaseProvider, org.mockito.Mockito.never()).update(any(), any());
+        verify(databaseProvider, never()).executeUpdate(any(), eq(UpdateResult.class), any());
     }
 
     @Test
@@ -363,7 +367,7 @@ class PersistenceFacadeTest {
 
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
         when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
-        when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1, Map.of(table.getMetaData().column("ID"), 1L)));
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1, Map.of(table.getMetaData().column("ID"), 1L)));
 
         final List<Runnable> rollbackCallbacks = new ArrayList<>();
         org.mockito.Mockito.doAnswer(invocation -> {
@@ -406,7 +410,7 @@ class PersistenceFacadeTest {
         when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(customerTable);
         when(tableRegistry.getOrmTableOrThrow(OrderDto.class)).thenReturn(orderTable);
 
-        when(databaseProvider.insert(any(), any())).thenAnswer(invocation -> {
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenAnswer(invocation -> {
             final PreparedSql preparedSql = invocation.getArgument(0);
 
             if (preparedSql.sql().contains("customers")) {
@@ -419,8 +423,8 @@ class PersistenceFacadeTest {
         facade.save(order);
 
         // Then
-        verify(databaseProvider).insert(argThat(i -> i.sql().contains("customers")), any());
-        verify(databaseProvider).insert(argThat(i -> i.sql().contains("orders")), any());
+        verify(databaseProvider).executeUpdate(argThat(i -> i.sql().contains("customers")), eq(InsertResult.class), any());
+        verify(databaseProvider).executeUpdate(argThat(i -> i.sql().contains("orders")), eq(InsertResult.class), any());
     }
 
     @Test
@@ -448,7 +452,7 @@ class PersistenceFacadeTest {
         when(tableRegistry.getOrmTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
         when(tableRegistry.getOrmTableOrThrow(ProductDto.class)).thenReturn(productTable);
 
-        when(databaseProvider.insert(any(), any())).thenAnswer(invocation -> {
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenAnswer(invocation -> {
             final PreparedSql preparedSql = invocation.getArgument(0);
 
             if (preparedSql.sql().contains("categories")) {
@@ -461,8 +465,8 @@ class PersistenceFacadeTest {
         facade.save(category);
 
         // Then
-        verify(databaseProvider).insert(argThat(i -> i.sql().contains("categories")), any());
-        verify(databaseProvider).insert(argThat(i -> i.sql().contains("products")), any());
+        verify(databaseProvider).executeUpdate(argThat(i -> i.sql().contains("categories")), eq(InsertResult.class), any());
+        verify(databaseProvider).executeUpdate(argThat(i -> i.sql().contains("products")), eq(InsertResult.class), any());
     }
 
     @Test
@@ -511,14 +515,14 @@ class PersistenceFacadeTest {
         when(tableRegistry.getOrmTableOrThrow(ProductDto.class)).thenReturn(productTableWithM2M);
         when(tableRegistry.getOrmTableOrThrow(TagDto.class)).thenReturn(tagTable);
 
-        when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
         setupMockSqlFunctions(databaseProvider);
 
         // When
         facade.save(product);
 
         // Then
-        verify(databaseProvider, org.mockito.Mockito.atLeastOnce()).insert(any(), any());
+        verify(databaseProvider, times(2)).executeUpdate(any(), eq(InsertResult.class), any());
     }
 
     @Test
@@ -545,7 +549,7 @@ class PersistenceFacadeTest {
 
         when(tableRegistry.getOrmTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
         when(tableRegistry.getOrmTableOrThrow(ProductDto.class)).thenReturn(productTable);
-        when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
 
         // When
         facade.save(product);
@@ -571,13 +575,13 @@ class PersistenceFacadeTest {
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID")), List.of("ID"));
         when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
-        when(databaseProvider.delete(any(), any())).thenReturn(new UpdateResult(1));
+        when(databaseProvider.executeUpdate(any(), eq(UpdateResult.class), any())).thenReturn(new UpdateResult(1));
 
         // When
         facade.delete(dto);
 
         // Then
-        verify(databaseProvider).delete(argThat(po -> po.sql().contains("IS NULL")), any());
+        verify(databaseProvider).executeUpdate(argThat(po -> po.sql().contains("IS NULL")), eq(UpdateResult.class), any());
     }
 
     @Test
@@ -604,7 +608,7 @@ class PersistenceFacadeTest {
         facade.update(dto);
 
         // Then
-        verify(databaseProvider, org.mockito.Mockito.never()).update(any(), any());
+        verify(databaseProvider, never()).executeUpdate(any(), eq(UpdateResult.class), any());
     }
 
     @Test
@@ -624,13 +628,13 @@ class PersistenceFacadeTest {
         when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
 
         // When
         facade.insert(dto);
 
         // Then
-        verify(databaseProvider).insert(argThat(i -> i.updateMetaData() != null && !i.updateMetaData().returnGeneratedKeys()), any());
+        verify(databaseProvider).executeUpdate(argThat(i -> i.updateMetaData() != null && !i.updateMetaData().returnGeneratedKeys()), eq(InsertResult.class), any());
     }
 
     @Test
@@ -656,13 +660,13 @@ class PersistenceFacadeTest {
         when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1));
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
 
         // When
         facade.save(dto);
 
         // Then
-        verify(databaseProvider).insert(argThat(i -> i.bindValues().size() == 1), any());
+        verify(databaseProvider).executeUpdate(argThat(i -> i.bindValues().size() == 1), eq(InsertResult.class), any());
     }
 
     @Test
@@ -689,7 +693,7 @@ class PersistenceFacadeTest {
         when(tableRegistry.getOrmTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
         when(tableRegistry.getOrmTableOrThrow(ProductDto.class)).thenReturn(productTable);
 
-        when(databaseProvider.insert(any(), any())).thenAnswer(invocation -> {
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenAnswer(invocation -> {
             final PreparedSql preparedSql = invocation.getArgument(0);
             if (preparedSql.sql().contains("categories")) {
                 return new InsertResult(1, Map.of(categoryTable.getMetaData().column("ID"), 10L));

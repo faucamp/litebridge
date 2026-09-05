@@ -2,6 +2,7 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.engine.ast.InsertValuesNode;
@@ -39,6 +40,11 @@ final class InsertBuilder extends AbstractStatementBuilder {
     @Override
     public PreparedOperation build() {
         return litebridgeContext.createQueryCompiler().compile(node());
+    }
+
+    @Override
+    public Class<InsertResult> resultType() {
+        return InsertResult.class;
     }
 
     @Override

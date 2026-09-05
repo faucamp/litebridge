@@ -15,11 +15,10 @@ import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.InsertResult;
+import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.annotation.Column;
 import org.litebridge.orm.annotation.Table;
 import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
-import org.litebridge.orm.api.register.RegistrationContext;
-import org.litebridge.orm.api.register.RegistrationContextTerminal;
 import org.litebridge.orm.api.select.FromClauseStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridge.orm.api.spec.ColumnMapping;
@@ -35,12 +34,13 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.RegistrationEngine;
 import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
 import org.litebridge.orm.expression.TestSelectReference;
 import org.litebridge.orm.expression.TestSelectReferenceExpressionFactory;
-import org.litebridge.orm.expression.TypeOverride;
 import org.litebridge.orm.expression.function.aggregate.CountSpec;
 import org.litebridge.orm.expression.intent.ConvertIntent;
+import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.nativesql.NativeSqlContext;
 import org.litebridge.orm.persistence.EntityDtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
@@ -65,8 +65,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -142,7 +142,7 @@ class LitebridgeTest {
         final TableMetaData tableMetaData = new TableMetaData(tableSpec, List.of("MY_ID"), List.of(columnMetaDataMyId, columnMetaDataMyVar));
         final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
         when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(tableMetaData);
-        when(databaseProvider.insert(any(PreparedSql.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Collections.emptyMap()));
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Collections.emptyMap()));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
@@ -156,7 +156,7 @@ class LitebridgeTest {
 
         // Then
         verify(databaseProvider).tableMetaData(eq(tableSpec), any(ConnectionProvider.class));
-        verify(databaseProvider).insert(any(PreparedSql.class), any(ConnectionProvider.class));
+        verify(databaseProvider).executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any());
     }
 
     @Test
@@ -177,7 +177,7 @@ class LitebridgeTest {
         final TableMetaData tableMetaData = new TableMetaData(tableSpec, List.of("MY_ID"), List.of(columnMetaDataMyId, columnMetaDataMyVar));
         final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
         when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(tableMetaData);
-        when(databaseProvider.insert(any(PreparedSql.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Map.of(columnMetaDataMyId, 123L)));
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Map.of(columnMetaDataMyId, 123L)));
         when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
@@ -191,7 +191,7 @@ class LitebridgeTest {
         // Then
         verify(databaseProvider).tableMetaData(eq(tableSpec), any(ConnectionProvider.class));
         final ArgumentCaptor<PreparedSql> insertArgumentCaptor = ArgumentCaptor.forClass(PreparedSql.class);
-        verify(databaseProvider).insert(insertArgumentCaptor.capture(), any(ConnectionProvider.class));
+        verify(databaseProvider).executeUpdate(insertArgumentCaptor.capture(), eq(InsertResult.class), any());
         assertEquals(123L, testDto.myId);
     }
 
@@ -235,7 +235,7 @@ class LitebridgeTest {
 
         // Then
         verify(databaseProvider).tableMetaData(eq(tableSpec), any(ConnectionProvider.class));
-        verify(databaseProvider).update(any(PreparedSql.class), any(ConnectionProvider.class));
+        verify(databaseProvider).executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class));
     }
 
     @Test
@@ -343,7 +343,7 @@ class LitebridgeTest {
         when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(new TableMetaData(tableSpec, List.of("MY_VAR"), List.of(columnMetaData)));
         litebridge.register(dtoTableSpec);
 
-        final org.litebridge.orm.expression.ExpressionSpec aliased = new org.litebridge.orm.expression.ProtoColumnExpressionSpec(org.litebridge.orm.expression.select.SelectFieldSpec.class, "TEST_COLUMN", "testAlias");
+        final ExpressionSpec aliased = new ProtoColumnExpressionSpec(SelectFieldSpec.class, "TEST_COLUMN", "testAlias");
 
         // When
         final FromClauseStart result = litebridge.select(aliased);
@@ -408,7 +408,7 @@ class LitebridgeTest {
         litebridge.delete(testDto);
 
         // Then
-        verify(databaseProvider).delete(any(), any());
+        verify(databaseProvider).executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class));
     }
 
     @Test
@@ -430,7 +430,7 @@ class LitebridgeTest {
         litebridge.delete(TestDto.class);
 
         // Then
-        verify(databaseProvider).delete(any(), any());
+        verify(databaseProvider).executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class));
     }
 
     @Test
@@ -777,7 +777,7 @@ class LitebridgeTest {
         litebridge.update(TestDto.class, u -> u.set("myVar").to("newVal"));
 
         // Then
-        verify(databaseProvider).update(any(), any());
+        verify(databaseProvider).executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class));
     }
 
     @Test
@@ -807,7 +807,7 @@ class LitebridgeTest {
         litebridge.delete("MY_TABLE", q -> q.where("COL").eq("VAL"));
 
         // Then
-        verify(databaseProvider, atLeastOnce()).delete(any(), any());
+        verify(databaseProvider, times(2)).executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class));
     }
 
     @Test
@@ -836,7 +836,7 @@ class LitebridgeTest {
         litebridge.mergeInto("MY_TABLE", m -> m.using("OTHER_TABLE").on("ID").eq(1).whenMatched(u -> u.update(us -> us.set("COL").to("VAL"))));
 
         // Then
-        verify(databaseProvider).merge(any(), any());
+        verify(databaseProvider).executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class));
     }
 
     @Test
@@ -870,7 +870,7 @@ class LitebridgeTest {
         litebridge.mergeInto(TestDto.class, m -> m.using(TestDto.class).on("myVar").eq("VAL").whenMatched(u -> u.update(us -> us.set("myVar").to("newVal"))));
 
         // Then
-        verify(databaseProvider).merge(any(), any());
+        verify(databaseProvider).executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class));
     }
 
     @Test
@@ -887,13 +887,13 @@ class LitebridgeTest {
         when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(new TableMetaData(tableSpec, List.of("MY_VAR"), List.of(columnMetaData)));
         final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
         litebridge.register(dtoTableSpec);
-        when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1, Map.of()));
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Map.of()));
 
         // When
         litebridge.insert(TestDto.class, i -> i.into("myVar").values("val"));
 
         // Then
-        verify(databaseProvider).insert(any(PreparedSql.class), any());
+        verify(databaseProvider).executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any());
     }
 
     @Test
@@ -909,13 +909,13 @@ class LitebridgeTest {
         when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
-        when(databaseProvider.insert(any(), any())).thenReturn(new InsertResult(1, Map.of()));
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Map.of()));
 
         // When
         litebridge.insert("MY_TABLE", i -> i.into("COL").values("val"));
 
         // Then
-        verify(databaseProvider).insert(any(PreparedSql.class), any());
+        verify(databaseProvider).executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any());
     }
 
     @Test
@@ -945,7 +945,7 @@ class LitebridgeTest {
         litebridge.delete(TestDto.class, d -> d.where("myVar").eq("val"));
 
         // Then
-        verify(databaseProvider).delete(any(), any());
+        verify(databaseProvider).executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class));
     }
 
     @Test
@@ -972,7 +972,7 @@ class LitebridgeTest {
         litebridge.delete("MY_TABLE", d -> d.where("COL").eq("VAL"));
 
         // Then
-        verify(databaseProvider).delete(any(), any());
+        verify(databaseProvider).executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class));
     }
 
     @Test

@@ -12,10 +12,8 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.UpdateResult;
 
-import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -29,48 +27,62 @@ import java.util.List;
  */
 final class PlaceHolderDatabaseProvider implements DatabaseProvider {
 
+    /**
+     * Throws {@link UnsupportedOperationException}.
+     *
+     * @param table              Not used
+     * @param connectionProvider Not used
+     * @return this implementation always throws {@link UnsupportedOperationException}
+     */
     @Override
-    public TableMetaData tableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {
+    public TableMetaData tableMetaData(final Table table, final ConnectionProvider connectionProvider) {
         throw new UnsupportedOperationException("N/A");
     }
 
+    /**
+     * Throws {@link UnsupportedOperationException}.
+     *
+     * @param preparedSql        Not used
+     * @param resultType         Not used
+     * @param connectionProvider Not used
+     * @return this implementation always throws {@link UnsupportedOperationException}
+     */
     @Override
-    public InsertResult insert(final PreparedSql insert, final ConnectionProvider connectionProvider) throws SQLException {
+    public <T extends UpdateResult> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) {
         throw new UnsupportedOperationException("N/A");
     }
 
+    /**
+     * Throws {@link UnsupportedOperationException}.
+     *
+     * @param preparedSql        Not used
+     * @param connectionProvider Not used
+     * @return this implementation always throws {@link UnsupportedOperationException}
+     */
     @Override
-    public UpdateResult update(final PreparedSql update, final ConnectionProvider connectionProvider) throws SQLException {
+    public List<Row> executeQuery(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) {
         throw new UnsupportedOperationException("N/A");
     }
 
-    @Override
-    public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
-        throw new UnsupportedOperationException("N/A");
-    }
-
+    /**
+     * Throws {@link UnsupportedOperationException}.
+     *
+     * @param operation          Not used
+     * @param connectionProvider Not used
+     * @return this implementation always throws {@link UnsupportedOperationException}
+     */
     @Override
     public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
         throw new UnsupportedOperationException("N/A");
     }
 
     @Override
-    public UpdateResult delete(final PreparedSql delete, final ConnectionProvider connectionProvider) throws SQLException {
+    public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) {
         throw new UnsupportedOperationException("N/A");
     }
 
     @Override
-    public UpdateResult merge(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
-        throw new UnsupportedOperationException("N/A");
-    }
-
-    @Override
-    public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
-        throw new UnsupportedOperationException("N/A");
-    }
-
-    @Override
-    public UpdateResult nativeSqlUpdate(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
+    public UpdateResult nativeSqlUpdate(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) {
         throw new UnsupportedOperationException("N/A");
     }
 

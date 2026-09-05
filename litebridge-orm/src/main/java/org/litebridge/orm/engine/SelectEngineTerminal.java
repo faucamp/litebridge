@@ -23,9 +23,7 @@ import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -251,7 +249,7 @@ public class SelectEngineTerminal {
         final List<Row> result;
 
         try {
-            result = litebridgeContext.databaseProvider().select(preparedSql, litebridgeContext.transactionManager());
+            result = litebridgeContext.databaseProvider().executeQuery(preparedSql, litebridgeContext.transactionManager());
         } catch (final SQLException ex) {
             throw new IllegalStateException("Failed to execute query: " + preparedSql.sql(), ex);
         }

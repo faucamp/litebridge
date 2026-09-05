@@ -1,16 +1,20 @@
 package org.litebridge.orm.engine;
 
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.query.UpdateMetaData;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
-abstract sealed class AbstractInsertEngine permits InsertEngine, MergeEngine {
+abstract sealed class AbstractInsertEngine extends AbstractUpdateEngine permits InsertEngine, MergeEngine {
 
-    protected static UpdateMetaData createUpdateMetaData(final TableMetaData tableMetaData) {
+    protected static UpdateMetaData createUpdateMetaData(final Supplier<Table> tableSupplier, final LitebridgeContext litebridgeContext) {
+        final Table table = tableSupplier.get();
+        final TableMetaData tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);
         final List<ColumnMetaData> generatedPrimaryKeyColumns = getGeneratedPrimaryKeyColumns(tableMetaData);
 
         if (generatedPrimaryKeyColumns.isEmpty()) {
