@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -64,11 +65,13 @@ public final class TableMetaData {
         this.schema = schema;
         this.name = table;
         this.columns = Collections.unmodifiableList(columns);
-        this.columnMap = columns.stream()
+        this.columnMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        this.columnMap.putAll(columns.stream()
                 .collect(Collectors.toMap(ColumnMetaData::name,
-                        Function.identity()));
+                        Function.identity())));
+        final List<String> primaryKeyNames = primaryKey.stream().map(String::toLowerCase).toList();
         this.primaryKey = columns.stream()
-                .filter(column -> primaryKey.contains(column.name()))
+                .filter(column -> primaryKeyNames.contains(column.name().toLowerCase()))
                 .toList();
 
         if (this.primaryKey.size() != primaryKey.size()) {

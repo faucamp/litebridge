@@ -187,6 +187,22 @@ public final class StringUtils {
     }
 
     /**
+     * Checks if two strings are equal, ignoring case considerations.
+     *
+     * @param str1 the first string to check; may be null
+     * @param str2 the second string to check; may be null
+     * @return true if the strings are equal, ignoring case; false otherwise.
+     * If both are null, returns true.
+     */
+    public static boolean equalsIgnoreCase(@Nullable final String str1, @Nullable final String str2) {
+        if (str1 == null) {
+            return str2 == null;
+        }
+
+        return str1.equalsIgnoreCase(str2);
+    }
+
+    /**
      * Returns a lowercase string consisting of:
      * <ul>
      *     <li>the first letter of each "word" (a letter that follows a non-letter/digit),</li>

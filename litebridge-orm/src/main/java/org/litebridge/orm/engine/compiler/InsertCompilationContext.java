@@ -20,10 +20,10 @@ import org.litebridge.orm.persistence.TableRegistry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 
 final class InsertCompilationContext implements CompilationContext {
 
@@ -31,6 +31,7 @@ final class InsertCompilationContext implements CompilationContext {
     private final TableMetaData tableMetaData;
     private final List<ColumnMetaData> columnMetaDataList = new ArrayList<>();
     private final List<String> insertColumns;
+    private final Set<String> insertColumnNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
     private int rows = 0;
     private @Nullable List<BindValue> bindValues;
 
@@ -66,6 +67,8 @@ final class InsertCompilationContext implements CompilationContext {
                     this.insertColumns = List.of(insertNode.columns());
                 }
 
+                this.insertColumnNames.addAll(insertColumns);
+
                 // Process insert columns in the order provided
                 for (final String insertColumnName : insertColumns) {
                     final ColumnMetaData columnMetaData = tableMetaData.column(insertColumnName);
@@ -74,7 +77,7 @@ final class InsertCompilationContext implements CompilationContext {
 
                 // Process any remaining non-nullable columns
                 tableMetaData.columns().stream()
-                        .filter(columnMetaData -> !insertColumns.contains(columnMetaData.name()) && !columnMetaData.isNullable() && !columnMetaData.isAutoIncrement())
+                        .filter(columnMetaData -> !insertColumnNames.contains(columnMetaData.name()) && !columnMetaData.isNullable() && !columnMetaData.isAutoIncrement())
                         .forEach(columnMetaData -> {
                             // Non-null value omitted from insert columns; see if it can be generated
                             if (columnMetaData.getGenerator() != null) {
@@ -93,6 +96,8 @@ final class InsertCompilationContext implements CompilationContext {
                     this.columnMetaDataList.add(columnMetaData);
                     this.insertColumns.add(columnMetaData.name());
                 }
+
+                this.insertColumnNames.addAll(insertColumns);
             }
         } else {
             final ExpressionSpec[] expressionSpecs = Objects.requireNonNull(insertNode.expressionSpecs());
@@ -110,10 +115,13 @@ final class InsertCompilationContext implements CompilationContext {
                 }
             }
 
-            final Set<String> unmappedInsertColumns = new HashSet<>(insertColumns);
+            this.insertColumnNames.addAll(insertColumns);
+
+            final Set<String> unmappedInsertColumns = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+            unmappedInsertColumns.addAll(insertColumns);
 
             for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
-                if (insertColumns.contains(columnMetaData.name())) {
+                if (insertColumnNames.contains(columnMetaData.name())) {
                     // Explicit insert
                     this.columnMetaDataList.add(columnMetaData);
                     unmappedInsertColumns.remove(columnMetaData.name());
@@ -148,7 +156,7 @@ final class InsertCompilationContext implements CompilationContext {
             if (value == null && !columnMetaData.isNullable()) {
                 if (columnMetaData.getGenerator() != null) {
                     // Value will be generated; drop the NULL
-                    this.insertColumns.remove(columnMetaData.name());
+                    this.insertColumnNames.remove(columnMetaData.name());
                     continue;
                 } else {
                     throw new IllegalArgumentException("NULL value not allowed for non-nullable column: " + columnMetaData.name());
@@ -171,7 +179,7 @@ final class InsertCompilationContext implements CompilationContext {
                 .map(columnMetaData -> {
                     final ColumnValueGenerator columnValueGenerator = columnMetaData.getGenerator();
 
-                    if (!insertColumns.contains(columnMetaData.name()) && columnValueGenerator != null) {
+                    if (!insertColumnNames.contains(columnMetaData.name()) && columnValueGenerator != null) {
                         final Object generatedValue = columnValueGenerator.generate(columnMetaData);
                         return new UpdateColumn(columnMetaData.name(), generatedValue);
                     } else {

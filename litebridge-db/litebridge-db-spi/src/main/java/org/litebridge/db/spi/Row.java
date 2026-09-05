@@ -1,6 +1,7 @@
 package org.litebridge.db.spi;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.StringUtils;
 import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.query.Result;
 
@@ -84,7 +85,7 @@ public final class Row implements Result {
      */
     public Optional<RowColumn> column(final String column) {
         return columnStream()
-                .filter(rc -> Objects.equals(rc.column().name(), column))
+                .filter(rc -> StringUtils.equalsIgnoreCase(rc.column().name(), column))
                 .findFirst();
     }
 
@@ -114,7 +115,7 @@ public final class Row implements Result {
         int index = 0;
 
         for (Column col : columns.keySet()) {
-            if (Objects.equals(col.name(), columnName)) {
+            if (StringUtils.equalsIgnoreCase(col.name(), columnName)) {
                 return index;
             }
             index++;
@@ -133,7 +134,7 @@ public final class Row implements Result {
         int index = 0;
 
         for (Column col : columns.keySet()) {
-            if (Objects.equals(col.alias(), alias)) {
+            if (StringUtils.equalsIgnoreCase(col.alias(), alias)) {
                 return index;
             }
             index++;
@@ -172,7 +173,7 @@ public final class Row implements Result {
     public Optional<RowColumn> columnForAlias(final String alias) {
         final String aliasToCheck = Objects.requireNonNull(alias, "Alias cannot be null");
         return columnStream()
-                .filter(rc -> Objects.equals(rc.column().alias(), aliasToCheck))
+                .filter(rc -> StringUtils.equalsIgnoreCase(rc.column().alias(), aliasToCheck))
                 .findFirst();
     }
 

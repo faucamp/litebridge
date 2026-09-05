@@ -239,7 +239,7 @@ public class SelectEngineTerminal {
         final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
                 .map(BindValue::sqlDataType)
                 .toList();
-        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, null));
+        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, typeConversionMetaData, null));
         // Execute SQL query
         final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), typeConversionMetaData, null);
         return execute(executionSql, litebridgeContext);

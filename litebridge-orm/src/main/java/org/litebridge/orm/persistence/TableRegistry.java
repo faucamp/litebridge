@@ -134,7 +134,22 @@ public final class TableRegistry {
      * @return the {@link OrmTable} associated with the specified table, or {@code null} if not found
      */
     public @Nullable OrmTable getOrmTable(final Table table) {
-        return getOrmTable(StringUtils.blankIfNull(table.schema()), table.name());
+        final OrmTable ormTable = getOrmTable(StringUtils.blankIfNull(table.schema()), table.name());
+
+        if (ormTable != null) {
+            return ormTable;
+        }
+
+        if (table.schema() == null) {
+            // Try to find a table with this name in ANY schema
+            return schemaTableMap.values().stream()
+                    .map(tableMap -> tableMap.get(table.name()))
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        return null;
     }
 
     public OrmTable getOrmTableOrThrow(final Table table) {

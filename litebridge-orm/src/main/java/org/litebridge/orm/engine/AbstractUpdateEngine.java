@@ -55,9 +55,10 @@ abstract sealed class AbstractUpdateEngine permits AbstractInsertEngine, DeleteE
         final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
                 .map(BindValue::sqlDataType)
                 .toList();
-        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, EMPTY_UPDATE_META_DATA));
+        final UpdateMetaData updateMetaData = updateMetaDataSupplier.get();
+        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, updateMetaData));
         // Execute SQL query
-        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), null, updateMetaDataSupplier.get());
+        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), null, updateMetaData);
         return execute(executionSql, resultType, litebridgeContext);
     }
 
