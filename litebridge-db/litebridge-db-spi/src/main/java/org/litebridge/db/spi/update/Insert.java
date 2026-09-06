@@ -32,5 +32,4 @@ public record Insert(Table table,
                      int rows,
                      boolean returnGeneratedKeys)
         implements UpdateStatement {
-
 }

@@ -2,6 +2,7 @@ package org.litebridge.db.oracle.sql;
 
 import org.litebridge.db.oracle.OracleColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.impl.sql.DefaultSqlGenerator;
 import org.litebridge.db.spi.impl.sql.InsertSqlGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
@@ -14,6 +15,10 @@ import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
  * {@link ColumnIdentifierGenerator}.
  */
 public class OracleSqlGenerator extends DefaultSqlGenerator {
+
+    public OracleSqlGenerator(final MetaDataEngine metaDataEngine) {
+        super(metaDataEngine);
+    }
 
     @Override
     protected SelectSqlGenerator createSelectSqlGenerator() {

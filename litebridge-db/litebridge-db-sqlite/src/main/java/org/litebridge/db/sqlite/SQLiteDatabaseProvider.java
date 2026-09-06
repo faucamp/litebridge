@@ -1,29 +1,27 @@
 package org.litebridge.db.sqlite;
 
 import org.litebridge.convert.DefaultTypeConverter;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
+import org.litebridge.db.spi.alias.AliasTransformer;
+import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
+import org.litebridge.db.spi.impl.ContextBuilder;
+import org.litebridge.db.spi.impl.DatabaseProviderContext;
 import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
-import org.litebridge.db.spi.impl.sql.DefaultSqlGenerator;
 import org.litebridge.db.sqlite.engine.SQLiteExecutionEngine;
 import org.litebridge.db.sqlite.engine.SQLiteMetaDataEngine;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * SQLite Database Provider for Litebridge.
- * <p>
- * This class provides SQLite-specific implementations for database interactions.
+ * SQLite database provider for Litebridge.
  */
 public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SQLiteDatabaseProvider.class);
-
+    /**
+     * Constructs a new instance of {@code SQLiteDatabaseProvider}.
+     */
     public SQLiteDatabaseProvider() {
-        super(new DefaultSqlGenerator(new SQLiteMetaDataEngine()),
-                new SQLiteExecutionEngine(
-                        new DefaultTypeConverter(),
-                        new UppercaseAliasTransformer()));
+        super(databaseProviderContext());
     }
 
     /**
@@ -38,8 +36,21 @@ public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
         throw new UnsupportedOperationException("SQLite does not support sequences");
     }
 
-    @Override
-    protected Logger getLogger() {
-        return LOGGER;
+    private static DatabaseProviderContext databaseProviderContext() {
+        final DatabaseProviderMetaData databaseProviderMetaData =
+                new DatabaseProviderMetaData(false,
+                        DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
+
+        final TypeConverter typeConverter = new DefaultTypeConverter();
+        final AliasTransformer aliasTransformer = new UppercaseAliasTransformer();
+        final SQLiteExecutionEngine executionEngine = new SQLiteExecutionEngine(typeConverter, aliasTransformer);
+
+        return ContextBuilder.newContext()
+                .withAliasTransformer(aliasTransformer)
+                .withDatabaseProviderMetaData(databaseProviderMetaData)
+                .withExecutionEngine(executionEngine)
+                .withMetaDataEngine(new SQLiteMetaDataEngine())
+                .withTypeConverter(typeConverter)
+                .build();
     }
 }

@@ -1,6 +1,5 @@
 package org.litebridge.db.spi.impl.engine;
 
-import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.commons.type.ConcurrentLazyFunction;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
@@ -25,17 +24,25 @@ public class DefaultMetaDataEngine implements MetaDataEngine {
 
     private static final String[] TYPES_TABLE = {"TABLE"};
 
-    private final ConcurrentLazy<DatabaseProviderMetaData> databaseProviderMetaData = new ConcurrentLazy<>(this::createDatabaseProviderMetaData);
     private final ConcurrentLazyFunction<ConnectionProvider, DatabaseMetaData> databaseMetaData = new ConcurrentLazyFunction<>(this::createDatabaseMetaData);
 
     /**
      * Map of qualified table name -> table metadata.
      */
     private final Map<String, TableMetaData> tableMetaDataCache = new ConcurrentHashMap<>();
+    private final DatabaseProviderMetaData databaseProviderMetaData;
+
+    public DefaultMetaDataEngine(final DatabaseProviderMetaData databaseProviderMetaData) {
+        this.databaseProviderMetaData = databaseProviderMetaData;
+    }
+
+    public DefaultMetaDataEngine() {
+        databaseProviderMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+    }
 
     @Override
     public DatabaseProviderMetaData metaData() {
-        return databaseProviderMetaData.getOrThrow();
+        return databaseProviderMetaData;
     }
 
     @Override
@@ -228,10 +235,6 @@ public class DefaultMetaDataEngine implements MetaDataEngine {
 
             return primaryKeyColumnNames;
         }
-    }
-
-    protected DatabaseProviderMetaData createDatabaseProviderMetaData() {
-        return new DatabaseProviderMetaData(true);
     }
 
     protected DatabaseMetaData createDatabaseMetaData(final ConnectionProvider connectionProvider) {

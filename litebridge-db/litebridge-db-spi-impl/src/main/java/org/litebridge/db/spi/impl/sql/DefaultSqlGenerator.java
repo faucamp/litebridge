@@ -3,7 +3,6 @@ package org.litebridge.db.spi.impl.sql;
 import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.engine.DefaultMetaDataEngine;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.tx.ConnectionProvider;
@@ -25,10 +24,6 @@ public class DefaultSqlGenerator implements SqlGenerator {
 
     public DefaultSqlGenerator(final MetaDataEngine metaDataEngine) {
         this.metaDataEngine = metaDataEngine;
-    }
-
-    public DefaultSqlGenerator() {
-        this.metaDataEngine = new DefaultMetaDataEngine();
     }
 
     @Override
