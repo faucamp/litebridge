@@ -7,7 +7,6 @@ import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.ConditionNode;
-import org.litebridge.orm.engine.ast.ConditionQueryNode;
 import org.litebridge.orm.engine.ast.ConditionWithIdNode;
 import org.litebridge.orm.engine.ast.HavingNode;
 import org.litebridge.orm.engine.ast.InsertValuesNode;
@@ -36,13 +35,11 @@ public final class QueryBindValueExtractor {
     }
 
     private static void extractBindValues(final QueryNode node, final List<@Nullable Object> bindValues) {
-        final QueryNode prevNode = node.previous();
+        final List<QueryNode> nodes = chainInSourceOrder(node);
 
-        if (prevNode != null) {
-            extractBindValues(prevNode, bindValues);
-        }
+        for (final QueryNode currentNode : nodes) {
 
-        switch (node) {
+            switch (currentNode) {
             case JoinNode joinNode -> {
                 if (joinNode.condition() != null) {
                     extractBindValuesAtLevel(joinNode.condition(), bindValues);
@@ -59,35 +56,23 @@ public final class QueryBindValueExtractor {
                     }
                 }
             }
-            case InsertValuesNode insertValuesNode -> {
-                for (final Object value : insertValuesNode.values()) {
-                    bindValues.add(value);
-                }
-            }
+            case InsertValuesNode insertValuesNode -> Collections.addAll(bindValues, insertValuesNode.values());
             default -> {
                 // Ignore other node types in main chain
+            }
             }
         }
     }
 
     private static void extractBindValuesAtLevel(final QueryNode lastNode, final List<@Nullable Object> bindValues) {
-        final List<QueryNode> nodes = flatten(lastNode);
-
-        // Separate conditions and subgroups to match ConditionGroupSpec.toConditionGroup order
-        final List<ConditionQueryNode> conditions = new ArrayList<>();
+        final List<QueryNode> nodes = chainInSourceOrder(lastNode);
         final List<ConditionGroupNode> subgroups = new ArrayList<>();
 
-        for (QueryNode node : nodes) {
-            if (node instanceof ConditionGroupNode conditionGroupNode) {
+        // Process conditions before subgroups to match ConditionGroupSpec.toConditionGroup order.
+        for (final QueryNode node : nodes) {
+            if (node instanceof final ConditionGroupNode conditionGroupNode) {
                 subgroups.add(conditionGroupNode);
-            } else if (node instanceof ConditionQueryNode conditionQueryNode) {
-                conditions.add(conditionQueryNode);
-            }
-        }
-
-        // Process conditions first
-        for (ConditionQueryNode conditionQueryNode : conditions) {
-            if (conditionQueryNode instanceof ConditionNode conditionNode) {
+            } else if (node instanceof final ConditionNode conditionNode) {
                 final Operator operator = conditionNode.operator();
 
                 if (operator == Operator.IS_NULL || operator == Operator.IS_NOT_NULL || operator == Operator.USING) {
@@ -115,18 +100,17 @@ public final class QueryBindValueExtractor {
                 } else {
                     bindValues.add(rhs);
                 }
-            } else if (conditionQueryNode instanceof ConditionWithIdNode conditionWithIdNode) {
+            } else if (node instanceof final ConditionWithIdNode conditionWithIdNode) {
                 bindValues.add(conditionWithIdNode.id());
             }
         }
 
-        // Then process subgroups
-        for (ConditionGroupNode groupNode : subgroups) {
+        for (final ConditionGroupNode groupNode : subgroups) {
             extractBindValuesAtLevel(groupNode.lastChild(), bindValues);
         }
     }
 
-    private static List<QueryNode> flatten(final QueryNode node) {
+    private static List<QueryNode> chainInSourceOrder(final QueryNode node) {
         final List<QueryNode> nodes = new ArrayList<>();
         QueryNode current = node;
 
@@ -135,7 +119,12 @@ public final class QueryBindValueExtractor {
             current = current.previous();
         }
 
-        Collections.reverse(nodes);
+        for (int left = 0, right = nodes.size() - 1; left < right; left++, right--) {
+            final QueryNode nodeAtLeft = nodes.get(left);
+            nodes.set(left, nodes.get(right));
+            nodes.set(right, nodeAtLeft);
+        }
+
         return nodes;
     }
 }
