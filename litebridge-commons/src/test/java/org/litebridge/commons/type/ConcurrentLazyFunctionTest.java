@@ -131,7 +131,7 @@ class ConcurrentLazyFunctionTest {
                 fail(ex.getMessage(), ex);
             }
 
-            assertEquals("hello " + i, threadResults[i]);
+            assertEquals("hello 0", threadResults[i]);
         }
 
         assertEquals("hello 0", concurrentLazy.getOrNull(0));
@@ -159,7 +159,7 @@ class ConcurrentLazyFunctionTest {
         final String result = concurrentLazy.peek();
 
         // Then
-        assertEquals("hello", result);
+        assertEquals("hello 123", result);
     }
 
     @Test
@@ -168,7 +168,7 @@ class ConcurrentLazyFunctionTest {
         final ConcurrentLazyFunction<Integer, String> concurrentLazy = new ConcurrentLazyFunction<>(value -> "hello " + value);
         concurrentLazy.get(123);
         // Sanity check
-        assertEquals("hello", concurrentLazy.peek());
+        assertEquals("hello 123", concurrentLazy.peek());
 
         // When
         concurrentLazy.reset();
