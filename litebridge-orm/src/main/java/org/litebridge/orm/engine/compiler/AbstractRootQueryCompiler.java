@@ -1,7 +1,7 @@
 package org.litebridge.orm.engine.compiler;
 
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
 
 import java.util.ArrayList;
 import java.util.Collections;

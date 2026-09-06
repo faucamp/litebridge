@@ -1,4 +1,4 @@
-package org.litebridge.orm.engine;
+package org.litebridge.orm.engine.compiler;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.ColumnMetaData;
@@ -16,6 +16,7 @@ import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.ast.InsertNode;
@@ -26,7 +27,6 @@ import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.UpdateNode;
 import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.engine.ast.WhereNode;
-import org.litebridge.orm.engine.compiler.QueryCompiler;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;

@@ -138,13 +138,13 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return switch (operator) {
             case USING -> {
                 final LiteralExpression literalExpression = litebridgeContext.sqlFunctionRegistry().select().literal().create(value, true);
-                yield  new Condition(lhsSelectExpression, operator, literalExpression);
+                yield new Condition(lhsSelectExpression, operator, literalExpression);
             }
             case IS_NULL, IS_NOT_NULL -> new Condition(lhsSelectExpression, operator, null);
             default -> {
                 final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size());
                 bindValues.addAll(createBindValues(lhsSelectExpression, value, litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter()));
-                yield  new Condition(lhsSelectExpression, operator, bindValueExpression);
+                yield new Condition(lhsSelectExpression, operator, bindValueExpression);
             }
         };
     }

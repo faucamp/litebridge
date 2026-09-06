@@ -12,8 +12,8 @@ final class JoinSpec {
     private final @Nullable String tableName;
     private final @Nullable OrmTable ormTable;
     private final JoinNode joinNode;
-    private @Nullable Table aliasedTable;
     private final ConditionGroupSpecStack conditionGroupSpecStack = new ConditionGroupSpecStack();
+    private @Nullable Table aliasedTable;
 
     JoinSpec(final String type,
              final @Nullable Class<?> dtoClass,

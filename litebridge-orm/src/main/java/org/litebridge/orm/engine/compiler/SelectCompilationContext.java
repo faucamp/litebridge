@@ -153,6 +153,38 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         }
     }
 
+    private static @Nullable ColumnExpressionSpec findColumnExpressionSpec(final ExpressionSpec expressionSpec) {
+        final ExpressionSpec targetExpressionSpec;
+
+        if (expressionSpec instanceof ConvertSpec<?> convertSpec) {
+            targetExpressionSpec = convertSpec.target();
+        } else {
+            targetExpressionSpec = expressionSpec;
+        }
+
+        if (targetExpressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
+            return columnExpressionSpec;
+        } else {
+            return null;
+        }
+    }
+
+    private static @Nullable Column findColumn(final SelectExpression selectExpression) {
+        final SelectExpression targetExpression;
+
+        if (selectExpression instanceof ConvertExpression convertExpression) {
+            targetExpression = convertExpression.target();
+        } else {
+            targetExpression = selectExpression;
+        }
+
+        if (targetExpression instanceof ColumnExpression columnExpression) {
+            return columnExpression.column();
+        } else {
+            return null;
+        }
+    }
+
     public void addJoin(final JoinNode joinNode) {
         final OrmTable targetOrmTable;
 
@@ -481,7 +513,6 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         return resolveAlias(table, columnMetaData.name(), columnMetaData::toColumn);
     }
 
-
     @Override
     protected Column resolveAlias(final Table table, final Column column) {
         return resolveAlias(table, column.name(), () -> column);
@@ -564,38 +595,6 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         }
 
         return expressionSpec;
-    }
-
-    private static @Nullable ColumnExpressionSpec findColumnExpressionSpec(final ExpressionSpec expressionSpec) {
-        final ExpressionSpec targetExpressionSpec;
-
-        if (expressionSpec instanceof ConvertSpec<?> convertSpec) {
-            targetExpressionSpec = convertSpec.target();
-        } else {
-            targetExpressionSpec = expressionSpec;
-        }
-
-        if (targetExpressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
-            return columnExpressionSpec;
-        } else {
-            return null;
-        }
-    }
-
-    private static @Nullable Column findColumn(final SelectExpression selectExpression) {
-        final SelectExpression targetExpression;
-
-        if (selectExpression instanceof ConvertExpression convertExpression) {
-            targetExpression = convertExpression.target();
-        } else {
-            targetExpression = selectExpression;
-        }
-
-        if (targetExpression instanceof ColumnExpression columnExpression) {
-            return columnExpression.column();
-        } else {
-            return null;
-        }
     }
 
     private QueryNode findSourceNodeForField(final JoinNode joinNode, final String fieldName) {
