@@ -1,19 +1,12 @@
 package org.litebridge.db.postgres;
 
 import org.litebridge.convert.DefaultTypeConverter;
-import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
-import org.litebridge.db.spi.query.UpdateMetaData;
-import org.litebridge.db.spi.sql.PreparedSql;
-import org.litebridge.db.spi.tx.ManagedConnection;
+import org.litebridge.db.spi.impl.engine.ExecutionEngineReturnedKeysAuto;
+import org.litebridge.db.spi.impl.sql.DefaultSqlGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
 
 /**
  * PostgresqlDatabaseProvider is a concrete implementation of AbstractDatabaseProvider
@@ -27,33 +20,15 @@ public final class PostgresDatabaseProvider extends AbstractDatabaseProvider {
      * Constructs a new {@code PostgresDatabaseProvider} using a default type converter.
      */
     public PostgresDatabaseProvider() {
-        super(new DefaultTypeConverter());
+        super(new DefaultSqlGenerator(),
+                new ExecutionEngineReturnedKeysAuto(
+                        new DefaultTypeConverter(),
+                        new PostgresAliasTransformer()));
     }
 
     @Override
-    protected PreparedStatement createPreparedStatementUsingConnection(final PreparedSql preparedSql,
-                                                                       final ManagedConnection connection) throws SQLException {
-        final UpdateMetaData updateMetaData = preparedSql.updateMetaData();
-
-        if (updateMetaData == null) {
-            return connection.prepareStatement(preparedSql.sql());
-        }
-
-        if (updateMetaData.returnGeneratedKeys()) {
-            return connection.prepareStatement(preparedSql.sql(), Statement.RETURN_GENERATED_KEYS);
-        } else {
-            return connection.prepareStatement(preparedSql.sql());
-        }
-    }
-
-    @Override
-    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
+    public SequenceColumnValueGenerator sequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
         return new PostgresSequenceColumnValueGenerator(sequence);
-    }
-
-    @Override
-    protected AliasTransformer createAliasTransformer() {
-        return new PostgresAliasTransformer();
     }
 
     @Override

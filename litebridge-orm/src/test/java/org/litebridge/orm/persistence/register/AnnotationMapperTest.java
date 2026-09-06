@@ -122,7 +122,7 @@ class AnnotationMapperTest {
         // Given
         final DatabaseProvider dbProvider = Mockito.mock(DatabaseProvider.class);
         final SequenceColumnValueGenerator seqGen = Mockito.mock(SequenceColumnValueGenerator.class);
-        when(dbProvider.getSequenceColumnValueGenerator(anyString())).thenReturn(seqGen);
+        when(dbProvider.sequenceColumnValueGenerator(anyString())).thenReturn(seqGen);
 
         // When
         DtoTableSpec result = AnnotationMapper.createDtoTableSpec(SpecialColumnEntity.class, dbProvider, MethodHandles.lookup());

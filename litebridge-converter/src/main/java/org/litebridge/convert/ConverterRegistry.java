@@ -37,7 +37,7 @@ final class ConverterRegistry {
             LOGGER.warn("Overriding existing converter for type '{}': {}", converter.type(), classConverterMap.get(converter.type()));
         }
 
-        LOGGER.debug("Registering converter for type '{}': {}", converter.type(), converter);
+        LOGGER.trace("Registering converter for type '{}': {}", converter.type(), converter);
         classConverterMap.put(converter.type(), converter);
         final Class<?> primitiveType = converter.primitiveType();
 
@@ -46,13 +46,13 @@ final class ConverterRegistry {
                 LOGGER.warn("Overriding existing converter for primitive type '{}': {}", converter.type(), classConverterMap.get(primitiveType));
             }
 
-            LOGGER.debug("Registering converter for primitive type '{}': {}", primitiveType, converter);
+            LOGGER.trace("Registering converter for primitive type '{}': {}", primitiveType, converter);
             classConverterMap.put(primitiveType, converter);
         }
 
         if (converter instanceof SqlConverter<?> sqlConverter) {
             for (final int sqlType : sqlConverter.sqlTypes()) {
-                LOGGER.debug("Registering converter for SQL type '{}': {}", sqlType, converter);
+                LOGGER.trace("Registering converter for SQL type '{}': {}", sqlType, converter);
 
                 if (sqlDataTypeConverterMap.containsKey(sqlType)) {
                     LOGGER.warn("Overriding existing converter for SQL type '{}': {}", converter.type(), sqlDataTypeConverterMap.get(sqlType));

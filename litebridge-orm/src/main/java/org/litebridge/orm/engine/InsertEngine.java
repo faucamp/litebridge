@@ -42,7 +42,10 @@ public final class InsertEngine extends AbstractInsertEngine {
     }
 
     private InsertResult execute(final QueryNode node, final LitebridgeContext litebridgeContext, final Supplier<Table> tableSupplier) {
-        return execute(node, () -> createUpdateMetaData(tableSupplier, litebridgeContext), InsertResult.class, litebridgeContext);
+        return execute(node,
+                preparedOperation -> createUpdateMetaData(preparedOperation, tableSupplier, litebridgeContext),
+                InsertResult.class,
+                litebridgeContext);
     }
 
     @Override

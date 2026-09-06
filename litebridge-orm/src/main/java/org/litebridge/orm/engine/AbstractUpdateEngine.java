@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 abstract sealed class AbstractUpdateEngine permits AbstractInsertEngine, DeleteEngine, UpdateEngine {
@@ -24,11 +25,11 @@ abstract sealed class AbstractUpdateEngine permits AbstractInsertEngine, DeleteE
 
     protected final UpdateResult execute(final QueryNode node,
                                          final LitebridgeContext litebridgeContext) {
-        return execute(node, () -> EMPTY_UPDATE_META_DATA, UpdateResult.class, litebridgeContext);
+        return execute(node, preparedOperation -> EMPTY_UPDATE_META_DATA, UpdateResult.class, litebridgeContext);
     }
 
     protected final <T extends UpdateResult> T execute(final QueryNode node,
-                                                       final Supplier<UpdateMetaData> updateMetaDataSupplier,
+                                                       final Function<PreparedOperation, UpdateMetaData> updateMetaDataCreator,
                                                        final Class<T> resultType,
                                                        final LitebridgeContext litebridgeContext) {
         final int nodeHash = node.hashCode();
@@ -38,25 +39,28 @@ abstract sealed class AbstractUpdateEngine permits AbstractInsertEngine, DeleteE
             final List<@Nullable Object> bindValues = QueryBindValueExtractor.extractBindValues(node);
             return execute(cachedOperation.preparedSql(bindValues), resultType, litebridgeContext);
         } else {
-            return compileAndExecute(nodeHash, node, updateMetaDataSupplier, resultType, litebridgeContext);
+            return compileAndExecute(nodeHash, node, updateMetaDataCreator, resultType, litebridgeContext);
         }
     }
 
     protected final <T extends UpdateResult> T compileAndExecute(final int astCacheKey,
                                                                  final QueryNode node,
-                                                                 final Supplier<UpdateMetaData> updateMetaDataSupplier,
+                                                                 final Function<PreparedOperation, UpdateMetaData> updateMetaDataCreator,
                                                                  final Class<T> resultType,
                                                                  final LitebridgeContext litebridgeContext) {
         // Compile/prepare SQL query
         final PreparedOperation preparedOperation = litebridgeContext.createQueryCompiler().compile(node);
+
         // Generate SQL and create type conversion metadata
         final String sql = litebridgeContext.databaseProvider().toSql(preparedOperation.operation(), litebridgeContext.transactionManager());
+        final UpdateMetaData updateMetaData = updateMetaDataCreator.apply(preparedOperation);
+
         // Cache compiled SQL for this AST
         final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
                 .map(BindValue::sqlDataType)
                 .toList();
-        final UpdateMetaData updateMetaData = updateMetaDataSupplier.get();
         litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, null, updateMetaData));
+
         // Execute SQL query
         final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), null, updateMetaData);
         return execute(executionSql, resultType, litebridgeContext);

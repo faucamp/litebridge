@@ -137,7 +137,7 @@ public final class AnnotationMapper {
         } else if (!StringUtils.isBlank(columnAnnotation.joinOn())) {
             columnMapping = new ColumnSpec(columnAnnotation.value(), null, columnAnnotation.joinOn());
         } else if (!StringUtils.isBlank(columnAnnotation.generateUsingSequence())) {
-            final SequenceColumnValueGenerator generator = databaseProvider.getSequenceColumnValueGenerator(columnAnnotation.generateUsingSequence());
+            final SequenceColumnValueGenerator generator = databaseProvider.sequenceColumnValueGenerator(columnAnnotation.generateUsingSequence());
             columnMapping = new ColumnSpec(columnAnnotation.value(), generator);
         } else if (columnAnnotation.generator() != ColumnValueGenerator.class) {
             try {

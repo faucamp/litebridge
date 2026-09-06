@@ -1,7 +1,8 @@
 package org.litebridge.orm.api.register;
 
-import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
@@ -14,6 +15,7 @@ import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.UpdateResult;
 
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -26,6 +28,27 @@ import java.util.List;
  * purely as a placeholder which is overridden by the actual database provider during registration.
  */
 final class PlaceHolderDatabaseProvider implements DatabaseProvider {
+
+    /**
+     * Throws {@link UnsupportedOperationException}.
+     *
+     * @return this implementation always throws {@link UnsupportedOperationException}
+     */
+    @Override
+    public DatabaseProviderMetaData metaData() {
+        throw new UnsupportedOperationException("N/A");
+    }
+
+    /**
+     * Throws {@link UnsupportedOperationException}.
+     *
+     * @param connectionProvider Not used
+     * @return this implementation always throws {@link UnsupportedOperationException}
+     */
+    @Override
+    public DatabaseMetaData databaseMetaData(final ConnectionProvider connectionProvider) throws SQLException {
+        throw new UnsupportedOperationException("N/A");
+    }
 
     /**
      * Throws {@link UnsupportedOperationException}.
@@ -77,32 +100,22 @@ final class PlaceHolderDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) {
+    public TypeConverter typeConverter() {
         throw new UnsupportedOperationException("N/A");
     }
 
     @Override
-    public UpdateResult nativeSqlUpdate(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) {
-        throw new UnsupportedOperationException("N/A");
-    }
-
-    @Override
-    public TypeConverter getTypeConverter() {
-        throw new UnsupportedOperationException("N/A");
-    }
-
-    @Override
-    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
+    public SequenceColumnValueGenerator sequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
         return new PlaceholderSequenceColumnValueGenerator(sequence);
     }
 
     @Override
-    public SqlFunctionRegistry getSqlFunctionRegistry() {
+    public SqlFunctionRegistry sqlFunctionRegistry() {
         throw new UnsupportedOperationException("N/A");
     }
 
     @Override
-    public AliasTransformer getAliasTransformer() {
+    public AliasTransformer aliasTransformer() {
         throw new UnsupportedOperationException("N/A");
     }
 }

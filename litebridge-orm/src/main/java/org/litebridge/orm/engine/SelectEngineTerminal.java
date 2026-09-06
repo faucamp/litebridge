@@ -331,7 +331,7 @@ public class SelectEngineTerminal {
         final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.expressions().size());
         final Map<String, Table> columnAliasesToTable = new HashMap<>();
         final Class<?>[] typeOverrides = new Class<?>[select.expressions().size()];
-        final AliasTransformer aliasTransformer = litebridgeContext.databaseProvider().getAliasTransformer();
+        final AliasTransformer aliasTransformer = litebridgeContext.databaseProvider().aliasTransformer();
 
         for (int i = 0; i < select.expressions().size(); i++) {
             SelectExpression expression = select.expressions().get(i);

@@ -66,7 +66,7 @@ public final class RegistrationContextTerminal {
                 String joinColumn,
                 TableMapping mappedTable
         ) && generator instanceof PlaceholderSequenceColumnValueGenerator placeholderGenerator) {
-            final SequenceColumnValueGenerator resolvedSequenceGenerator = databaseProvider.getSequenceColumnValueGenerator(placeholderGenerator.sequence());
+            final SequenceColumnValueGenerator resolvedSequenceGenerator = databaseProvider.sequenceColumnValueGenerator(placeholderGenerator.sequence());
             final ColumnSpec resolvedColumnSpec = new ColumnSpec(name, resolvedSequenceGenerator, joinColumn, mappedTable);
             this.fieldColumnMap.put(fieldColumnSpec.field(), resolvedColumnSpec);
         } else {

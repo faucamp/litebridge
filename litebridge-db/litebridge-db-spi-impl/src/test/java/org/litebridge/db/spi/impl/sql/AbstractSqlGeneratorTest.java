@@ -29,13 +29,11 @@ import org.litebridge.db.spi.tx.TransactionManager;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.litebridge.db.spi.impl.sql.TestUtil.createSelectColumn;
 import static org.litebridge.db.spi.impl.sql.TestUtil.createTestColumn;
 import static org.mockito.ArgumentMatchers.any;
@@ -435,19 +433,6 @@ class AbstractSqlGeneratorTest {
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN = ?", result);
-    }
-
-    @Test
-    void getExpressionValue_unsupported() {
-        // Given
-        final SelectExpression unsupported = mock(SelectExpression.class);
-
-        // When & Then
-        try {
-            sqlGenerator.getExpressionValue(unsupported, Collections.emptyList());
-        } catch (UnsupportedOperationException e) {
-            assertTrue(e.getMessage().contains("Unsupported select expression"));
-        }
     }
 
     @Test

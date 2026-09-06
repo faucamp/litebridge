@@ -3,7 +3,6 @@ package org.litebridge.db.spi.impl.sql;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
@@ -26,14 +25,12 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
     /**
      * Creates a new {@code SelectSqlGenerator}.
      *
-     * @param typeConverter             the type converter
      * @param columnIdentifierGenerator the column identifier generator
      * @param ensureTableMetaData       a function to ensure table metadata
      */
-    public SelectSqlGenerator(final TypeConverter typeConverter,
-                              final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public SelectSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(typeConverter, columnIdentifierGenerator, ensureTableMetaData);
+        super(columnIdentifierGenerator, ensureTableMetaData);
     }
 
     /**

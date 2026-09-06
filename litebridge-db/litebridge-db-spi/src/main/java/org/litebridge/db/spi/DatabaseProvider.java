@@ -1,6 +1,5 @@
 package org.litebridge.db.spi;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
@@ -20,6 +19,22 @@ import java.util.List;
  * data within a specific database backend.
  */
 public interface DatabaseProvider {
+
+    /**
+     * Retrieve metadata/capabilities of this database provider.
+     *
+     * @return metadata for this database provider.
+     */
+    DatabaseProviderMetaData metaData();
+
+    /**
+     * Retrieve metadata for the connected database.
+     *
+     * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
+     * @return a {@link DatabaseMetaData} object containing information about the connected database.
+     * @throws SQLException if any SQL error occurs while retrieving the metadata.
+     */
+    DatabaseMetaData databaseMetaData(ConnectionProvider connectionProvider) throws SQLException;
 
     /**
      * Retrieve metadata for the specified table.
@@ -67,30 +82,6 @@ public interface DatabaseProvider {
     String toSql(final Operation operation, final ConnectionProvider connectionProvider);
 
     /**
-     * Executes a SQL query with the given SQL string and a list of positional bind parameters.
-     *
-     * @param sql                the SQL query string to be executed; must not be {@code null}
-     * @param bindParameters     the list of parameters to bind to the query
-     * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
-     * @return a list of {@code Row} objects representing the result set of the query
-     * @throws SQLException if an error occurs during query execution
-     */
-    List<Row> nativeSqlQuery(String sql, final List<@Nullable Object> bindParameters, ConnectionProvider connectionProvider) throws SQLException;
-
-    /**
-     * Executes a SQL update statement with the given SQL string and a list of positional bind parameters.
-     * <p>
-     * This method delegates to the overloaded execute method that accepts a list of bind parameters.
-     *
-     * @param sql                the SQL update statement to execute; must not be {@code null}
-     * @param bindParameters     the list of named parameters to bind to the statement
-     * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
-     * @return an {@code UpdateResult} object that encapsulates the outcome of the update operation
-     * @throws SQLException if an error occurs while executing the update statement
-     */
-    UpdateResult nativeSqlUpdate(String sql, final List<@Nullable Object> bindParameters, ConnectionProvider connectionProvider) throws SQLException;
-
-    /**
      * Retrieve the {@link TypeConverter} instance associated with the database provider.
      * <p>
      * The {@code TypeConverter} is used for converting objects between different types,
@@ -98,7 +89,7 @@ public interface DatabaseProvider {
      *
      * @return the {@link TypeConverter} instance for handling data type conversions
      */
-    TypeConverter getTypeConverter();
+    TypeConverter typeConverter();
 
     /**
      * Retrieves a {@link SequenceColumnValueGenerator} instance for generating SQL fragments that
@@ -110,7 +101,7 @@ public interface DatabaseProvider {
      * @return a {@link SequenceColumnValueGenerator} instance that generates SQL fragments for retrieving sequence values.
      * @throws UnsupportedOperationException if the database provider does not support sequence-based value generation.
      */
-    SequenceColumnValueGenerator getSequenceColumnValueGenerator(String sequence) throws UnsupportedOperationException;
+    SequenceColumnValueGenerator sequenceColumnValueGenerator(String sequence) throws UnsupportedOperationException;
 
     /**
      * Retrieve the {@link SqlFunctionRegistry} instance associated with the database provider.
@@ -120,12 +111,12 @@ public interface DatabaseProvider {
      *
      * @return the {@link SqlFunctionRegistry} instance for managing SQL functions
      */
-    SqlFunctionRegistry getSqlFunctionRegistry();
+    SqlFunctionRegistry sqlFunctionRegistry();
 
     /**
      * Retrieve the {@link AliasTransformer} instance associated with the database provider.
      *
      * @return the {@link AliasTransformer} instance for transforming aliases
      */
-    AliasTransformer getAliasTransformer();
+    AliasTransformer aliasTransformer();
 }

@@ -35,7 +35,7 @@ class PostgresDatabaseProviderTest {
         when(mockConnection.prepareStatement(mockPreparedSql.sql())).thenReturn(mockPreparedStatement);
 
         // When
-        final PreparedStatement result = provider.createPreparedStatementUsingConnection(mockPreparedSql, mockConnection);
+        final PreparedStatement result = provider.prepareJdbcStatement(mockPreparedSql, mockConnection);
 
         // Then
         assertNotNull(result);
@@ -55,7 +55,7 @@ class PostgresDatabaseProviderTest {
         when(mockConnection.prepareStatement(mockPreparedSql.sql(), Statement.RETURN_GENERATED_KEYS)).thenReturn(mockPreparedStatement);
 
         // When
-        final PreparedStatement result = provider.createPreparedStatementUsingConnection(mockPreparedSql, mockConnection);
+        final PreparedStatement result = provider.prepareJdbcStatement(mockPreparedSql, mockConnection);
 
         // Then
         assertNotNull(result);
@@ -74,7 +74,7 @@ class PostgresDatabaseProviderTest {
         when(mockConnection.prepareStatement(mockPreparedSql.sql())).thenReturn(mockPreparedStatement);
 
         // When
-        final PreparedStatement result = provider.createPreparedStatementUsingConnection(mockPreparedSql, mockConnection);
+        final PreparedStatement result = provider.prepareJdbcStatement(mockPreparedSql, mockConnection);
 
         // Then
         assertNotNull(result);
@@ -88,7 +88,7 @@ class PostgresDatabaseProviderTest {
         final PostgresDatabaseProvider databaseProvider = new PostgresDatabaseProvider();
 
         // When
-        final SequenceColumnValueGenerator result = databaseProvider.getSequenceColumnValueGenerator("test_sequence");
+        final SequenceColumnValueGenerator result = databaseProvider.sequenceColumnValueGenerator("test_sequence");
 
         // Then
         assertInstanceOf(PostgresSequenceColumnValueGenerator.class, result);

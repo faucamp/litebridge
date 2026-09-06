@@ -67,7 +67,7 @@ public final class DirectFieldAccessor implements FieldAccessor {
 
     @Override
     public Class<?>[] genericTypes() {
-        return genericTypes.orThrow();
+        return genericTypes.getOrThrow();
     }
 
     @Override

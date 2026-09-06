@@ -1,6 +1,7 @@
 package org.litebridge.orm;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
@@ -223,8 +224,21 @@ public final class Litebridge implements SelectApi {
         this.registrationEngine = new RegistrationEngine(this.databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
         this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor, createLitebridgeContext(LitebridgeContext.Mode.DTO));
 
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Litebridge initialised with databaseProvider: {}, config: {}", databaseProvider.getClass().getName(), litebridgeConfig);
+        if (LOGGER.isDebugEnabled()) {
+            try {
+                final DatabaseMetaData databaseMetaData = this.databaseProvider.databaseMetaData(transactionManager);
+                LOGGER.debug("Connected to database: {} [{}], using driver: {} [{}]",
+                        databaseMetaData.database().name(),
+                        databaseMetaData.database().version(),
+                        databaseMetaData.driver().name(),
+                        databaseMetaData.driver().version());
+            } catch (SQLException ex) {
+                throw new IllegalStateException("Failed to retrieve database metadata", ex);
+            }
+
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Litebridge initialised with databaseProvider: {}, config: {}", databaseProvider.getClass().getName(), litebridgeConfig);
+            }
         }
     }
 
@@ -576,7 +590,7 @@ public final class Litebridge implements SelectApi {
     }
 
     private LitebridgeContext createLitebridgeContext(final LitebridgeContext.Mode mode) {
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.getAliasTransformer());
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.aliasTransformer());
         return new LitebridgeContext(mode,
                 litebridgeConfig,
                 databaseProvider,

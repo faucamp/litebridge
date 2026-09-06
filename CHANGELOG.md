@@ -3,8 +3,11 @@
 ## [Unreleased]
 
 ### Added
+- Commons:
+  - `ConcurrentLazyFunction` class for lazy functional initialisation of values in a thread-safe manner.
+  - `BooleanUtils.requireTrue` and `BooleanUtils.requireFalse` methods for asserting boolean conditions.
 - ORM:
-  - Implement `Litebridge.mergeInto()` method for performing SQL `MERGE` operations.
+  - `MERGE INTO` support: Implement `Litebridge.mergeInto()` method for performing SQL `MERGE` operations.
   - New `saveAll()` overloads in `Litebridge` class for persisting multiple DTOs.
   - New query-based `insert()` API in `Litebridge` class, returning `InsertResult`.
   - Return `UpdateResult` and `InsertResult` classes for mutating operations, providing details on rows affected and generated keys.
@@ -12,15 +15,26 @@
 ### Changed
 - ORM:
   - Refactor `QueryCompiler` to delegate specific query types to specialised sub-compilers.
+  - Reimplement and optimise the query compilation process.
   - Simplify node compilation; drop `SelectSpec`, `InsertSpec` etc.
+  - Standardised AST cache handling.
+  - Optimise and greatly simplify fluent API implementation due to full shift to AST compiler.  
   - Reimplent the default DTO mapper (now called `DtoMapper`) to be simpler and more performant and handle non-ORM generated query results better.
   - `Litebridge.save()` now accepts a single DTO instead of varargs to improve clarity and type safety.
   - Query-based `update()` and `delete()` APIs now return `UpdateResult` instead of `void`.
+- Database Provider SPI:
+  - Standardised and simplified the `DatabaseProvider` SPI  interface. This breaks backward compatibility.
+  - Massive refactor of `AbstractDatabaseProvider` to separate concerns make it more modular.
+  - Split SQL generation and execution into distinct engine components for improved flexibility and maintainability.
+  - Native SQL and ORM-generated SQL now follow the same exeuction path.
 
 ### Removed
 - ORM:
   - `Litebridge.save(Object... dtos)` has been removed in favour of `saveAll()`.
   - `SelectSpecDtoMapper`: replaced by `DtoMapper`
+  - Legacy query-building specifications: `SelectSpec`, `InsertSpec`, `UpdateSpec`, `DeleteSpec`
+- Database Provider SPI:
+  - Legacy SPI interfaces have been removed, such as operation-specific execution methods (`select()`, `insert()`, `nativeQuery()`, etc.).
 
 ## [0.4.0] - 2026-08-10
 

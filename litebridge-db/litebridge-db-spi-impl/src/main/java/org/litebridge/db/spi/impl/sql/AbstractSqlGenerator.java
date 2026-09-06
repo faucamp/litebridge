@@ -8,13 +8,10 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.convert.TypeConverter;
-import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ConnectionProviderExpression;
 import org.litebridge.db.spi.expression.LiteralExpression;
-import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SelectReference;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
@@ -24,12 +21,9 @@ import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.LogicConditionGroup;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
-import java.sql.Types;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
@@ -37,11 +31,6 @@ import java.util.function.BiFunction;
  * Abstract base class for SQL generators.
  */
 public abstract class AbstractSqlGenerator {
-
-    /**
-     * The type converter used for mapping between database and Java types.
-     */
-    protected final TypeConverter typeConverter;
 
     /**
      * The generator for column identifiers.
@@ -56,14 +45,11 @@ public abstract class AbstractSqlGenerator {
     /**
      * Constructs a new {@code AbstractSqlGenerator}.
      *
-     * @param typeConverter             The type converter to use.
      * @param columnIdentifierGenerator The column identifier generator to use.
      * @param ensureTableMetaData       The function to ensure table metadata is available.
      */
-    public AbstractSqlGenerator(final TypeConverter typeConverter,
-                                final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public AbstractSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
                                 final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        this.typeConverter = typeConverter;
         this.columnIdentifierGenerator = columnIdentifierGenerator;
         this.ensureTableMetaData = ensureTableMetaData;
     }
@@ -154,7 +140,6 @@ public abstract class AbstractSqlGenerator {
      *
      * @param sql   The SQL builder.
      * @param table The table to append.
-     * @return The SQL builder.
      */
     protected StringBuilder appendTable(final StringBuilder sql, final Table table) {
         return appendTable(sql, table.schema(), table.name());
@@ -166,9 +151,8 @@ public abstract class AbstractSqlGenerator {
      * @param sql    The SQL builder.
      * @param schema The schema name.
      * @param table  The table name.
-     * @return The SQL builder.
      */
-    protected StringBuilder appendTable(final StringBuilder sql, @Nullable final String schema, final String table) {
+    protected StringBuilder appendTable(final StringBuilder sql, final @Nullable String schema, final String table) {
         final ColumnIdentifierGenerator cig = columnIdentifierGenerator;
 
         if (!StringUtils.isBlank(schema)) {
@@ -177,23 +161,6 @@ public abstract class AbstractSqlGenerator {
 
         sql.append(cig.quoteIdentifier(table));
         return sql;
-    }
-
-    /**
-     * Extracts the value from a select expression.
-     *
-     * @param selectExpression The select expression.
-     * @param bindValues       The bind values.
-     * @return The extracted value.
-     */
-    protected @Nullable Object getExpressionValue(final SelectExpression selectExpression, final List<@Nullable Object> bindValues) {
-        if (selectExpression instanceof BindValueExpression bindValueExpression) {
-            return bindValues.get(bindValueExpression.index());
-        } else if (selectExpression instanceof LiteralExpression literalExpression) {
-            return literalExpression.value();
-        } else {
-            throw new UnsupportedOperationException("Unsupported select expression for RHS: " + selectExpression);
-        }
     }
 
     /**
@@ -216,30 +183,6 @@ public abstract class AbstractSqlGenerator {
      */
     protected ColumnMetaData ensureColumnMetaData(final Column column, final ConnectionProvider connectionProvider) {
         return ensureTableMetaData.apply(column.table(), connectionProvider).column(column.name());
-    }
-
-    /**
-     * Creates a bind value for a column and raw value.
-     *
-     * @param column             The column.
-     * @param rawValue           The raw value.
-     * @param connectionProvider The connection provider.
-     * @return The bind value.
-     */
-    protected BindValue createBindValue(final @Nullable Column column, final @Nullable Object rawValue, final ConnectionProvider connectionProvider) {
-        final BindValue bindValue;
-
-        if (column != null) {
-            final ColumnMetaData columnMetaData = ensureTableMetaData(column.table(), connectionProvider).column(column.name());
-            final Object convertedValue = typeConverter.convert(rawValue, columnMetaData.getDataType());
-            bindValue = new BindValue(convertedValue, columnMetaData.getDataType());
-        } else if (rawValue != null) {
-            bindValue = new BindValue(rawValue, typeConverter.getSqlDataType(rawValue.getClass()));
-        } else {
-            bindValue = new BindValue(null, Types.NULL);
-        }
-
-        return bindValue;
     }
 
     /**

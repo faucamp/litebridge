@@ -10,7 +10,6 @@ import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.tracking.ChangeTracker;
-import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
@@ -21,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.litebridge.orm.util.DatabaseProviderTestUtil.mockDatabaseProviderWithMetaData;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -31,8 +31,8 @@ class TableMapperTest {
     private TableMapper tableMapper;
 
     @BeforeEach
-    void setUp() throws SQLException {
-        databaseProvider = mock(DatabaseProvider.class);
+    void setUp() {
+        databaseProvider = mockDatabaseProviderWithMetaData();
         DataSource dataSource = mock(DataSource.class);
         litebridge = new Litebridge(databaseProvider, dataSource);
 

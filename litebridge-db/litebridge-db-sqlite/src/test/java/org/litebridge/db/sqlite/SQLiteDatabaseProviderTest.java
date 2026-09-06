@@ -46,7 +46,7 @@ class SQLiteDatabaseProviderTest {
         when(mockConnection.prepareStatement(mockPreparedSql.sql())).thenReturn(mockPreparedStatement);
 
         // When
-        final PreparedStatement result = provider.createPreparedStatementUsingConnection(mockPreparedSql, mockConnection);
+        final PreparedStatement result = provider.prepareJdbcStatement(mockPreparedSql, mockConnection);
 
         // Then
         assertNotNull(result);
@@ -66,7 +66,7 @@ class SQLiteDatabaseProviderTest {
         when(mockConnection.prepareStatement(mockPreparedSql.sql(), Statement.RETURN_GENERATED_KEYS)).thenReturn(mockPreparedStatement);
 
         // When
-        final PreparedStatement result = provider.createPreparedStatementUsingConnection(mockPreparedSql, mockConnection);
+        final PreparedStatement result = provider.prepareJdbcStatement(mockPreparedSql, mockConnection);
 
         // Then
         assertNotNull(result);
@@ -85,7 +85,7 @@ class SQLiteDatabaseProviderTest {
         when(mockConnection.prepareStatement(mockPreparedSql.sql())).thenReturn(mockPreparedStatement);
 
         // When
-        final PreparedStatement result = provider.createPreparedStatementUsingConnection(mockPreparedSql, mockConnection);
+        final PreparedStatement result = provider.prepareJdbcStatement(mockPreparedSql, mockConnection);
 
         // Then
         assertNotNull(result);
@@ -261,7 +261,7 @@ class SQLiteDatabaseProviderTest {
         // When
         UnsupportedOperationException exception = assertThrows(
                 UnsupportedOperationException.class,
-                () -> provider.getSequenceColumnValueGenerator("test_sequence")
+                () -> provider.sequenceColumnValueGenerator("test_sequence")
         );
 
         // Then

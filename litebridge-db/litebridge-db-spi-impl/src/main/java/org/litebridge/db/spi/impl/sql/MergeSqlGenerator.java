@@ -2,11 +2,10 @@ package org.litebridge.db.spi.impl.sql;
 
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.db.spi.update.Merge;
+import org.litebridge.db.spi.update.UpdateColumn;
 
 import java.util.List;
 import java.util.Objects;
@@ -18,13 +17,12 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
     private final UpdateSqlGenerator updateSqlGenerator;
     private final DeleteSqlGenerator deleteSqlGenerator;
 
-    public MergeSqlGenerator(final TypeConverter typeConverter,
-                             final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public MergeSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
                              final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData,
                              final InsertSqlGenerator insertSqlGenerator,
                              final UpdateSqlGenerator updateSqlGenerator,
                              final DeleteSqlGenerator deleteSqlGenerator) {
-        super(typeConverter, columnIdentifierGenerator, ensureTableMetaData);
+        super(columnIdentifierGenerator, ensureTableMetaData);
         this.insertSqlGenerator = insertSqlGenerator;
         this.updateSqlGenerator = updateSqlGenerator;
         this.deleteSqlGenerator = deleteSqlGenerator;

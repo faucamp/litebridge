@@ -439,7 +439,7 @@ class SqlE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Select LIKE")
+    @DisplayName("Native SQL tests")
     void nativeSql(final DbEnvDtoTableMapper tableMapper) throws Exception {
         final String tableName = tableMapper.qualifyName("PERSON");
         final String personIdColumn = tableMapper.transformColumnName("PERSON_ID");

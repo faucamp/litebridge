@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.litebridge.orm.util.DatabaseProviderTestUtil.mockDatabaseProviderWithMetaData;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.argThat;
@@ -34,10 +35,10 @@ class PersistenceFacadeCascadingTest {
     private Litebridge litebridge;
 
     @BeforeEach
-    void setUp() throws SQLException {
-        databaseProvider = mock(DatabaseProvider.class);
+    void setUp() {
+        databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         litebridge = new Litebridge(databaseProvider, dataSource);
     }
 
@@ -108,7 +109,7 @@ class PersistenceFacadeCascadingTest {
 
         parent.children = new ArrayList<>(List.of(child1, child2));
 
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any(ConnectionProvider.class)))
                 .thenReturn(new InsertResult(1, Collections.emptyMap()));
 
@@ -183,7 +184,7 @@ class PersistenceFacadeCascadingTest {
 
         group.users = new ArrayList<>(List.of(user1));
 
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any(ConnectionProvider.class)))
                 .thenReturn(new InsertResult(1, Collections.emptyMap()));
 

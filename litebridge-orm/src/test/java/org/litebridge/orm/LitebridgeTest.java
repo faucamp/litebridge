@@ -69,13 +69,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.litebridge.orm.util.DatabaseProviderTestUtil.mockDatabaseProviderWithMetaData;
 
 class LitebridgeTest {
 
     @Test
     void register() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final TransactionManager transactionManager = new DefaultTransactionManager(dataSource);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
@@ -100,7 +101,7 @@ class LitebridgeTest {
     @Test
     void track() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final TransactionManager transactionManager = new DefaultTransactionManager(dataSource);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
@@ -127,7 +128,7 @@ class LitebridgeTest {
     @Test
     void save() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final FieldSpec fieldSpecMyId = new FieldSpec("myId", false);
         final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
@@ -143,7 +144,7 @@ class LitebridgeTest {
         final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
         when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(tableMetaData);
         when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Collections.emptyMap()));
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
         litebridge.register(dtoTableSpec);
@@ -162,7 +163,7 @@ class LitebridgeTest {
     @Test
     void insert() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final FieldSpec fieldSpecMyId = new FieldSpec("myId", false);
         final ColumnSpec columnSpecMyId = new ColumnSpec("MY_ID", new DefaultSequenceColumnValueGenerator("LB.TEST_SEQ"), null);
@@ -178,7 +179,7 @@ class LitebridgeTest {
         final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
         when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(tableMetaData);
         when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Map.of(columnMetaDataMyId, 123L)));
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
         litebridge.register(dtoTableSpec);
@@ -198,15 +199,15 @@ class LitebridgeTest {
     @Test
     void update() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpecMyId = new FieldSpec("myId", false);
@@ -241,14 +242,14 @@ class LitebridgeTest {
     @Test
     void select_dto() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(databaseProvider.getAliasTransformer()).thenReturn(new DefaultAliasTransformer());
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.aliasTransformer()).thenReturn(new DefaultAliasTransformer());
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
@@ -270,13 +271,13 @@ class LitebridgeTest {
     @Test
     void select_columns() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
@@ -298,13 +299,13 @@ class LitebridgeTest {
     @Test
     void select_allColumns() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
@@ -326,12 +327,12 @@ class LitebridgeTest {
     @Test
     void select_aliased() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select select = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(select);
         when(select.column()).thenReturn(new org.litebridge.orm.expression.TestColumnExpressionFactory());
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
@@ -355,7 +356,7 @@ class LitebridgeTest {
     @Test
     void toDto() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
@@ -366,7 +367,7 @@ class LitebridgeTest {
         when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(new TableMetaData(tableSpec, List.of("MY_VAR"), List.of(columnMetaData)));
         final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
         litebridge.register(dtoTableSpec);
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
 
         final Row row = new Row().withColumn(columnMetaData.toColumn(), "testValue");
 
@@ -381,15 +382,15 @@ class LitebridgeTest {
     @Test
     void delete() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(selectRegistry.reference()).thenReturn(TestSelectReference::new);
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         final DataSource dataSource = mock(DataSource.class);
         final FieldSpec fieldSpec = new FieldSpec("myId", false);
         final ColumnSpec columnSpec = new ColumnSpec("MY_ID");
@@ -414,7 +415,7 @@ class LitebridgeTest {
     @Test
     void delete_class() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
@@ -436,7 +437,7 @@ class LitebridgeTest {
     @Test
     void nativeSql() {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
@@ -450,7 +451,7 @@ class LitebridgeTest {
     @Test
     void transaction() {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
@@ -463,7 +464,7 @@ class LitebridgeTest {
 
     @Test
     void constructors() {
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final TransactionManager transactionManager = mock(TransactionManager.class);
         final DataSource dataSource = mock(DataSource.class);
         final LitebridgeConfig config = new LitebridgeConfig();
@@ -481,7 +482,7 @@ class LitebridgeTest {
     @Test
     void register_entityClasses() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final RegistrationEngine registrationEngine = mock(RegistrationEngine.class);
@@ -498,7 +499,7 @@ class LitebridgeTest {
     @Test
     void register_dtoTableSpecs() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final RegistrationEngine registrationEngine = mock(RegistrationEngine.class);
@@ -515,7 +516,7 @@ class LitebridgeTest {
     @Test
     void register_lambda() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final RegistrationEngine registrationEngine = mock(RegistrationEngine.class);
@@ -531,7 +532,7 @@ class LitebridgeTest {
     @Test
     void track_notRegistered() {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final TestDto dto = new TestDto();
@@ -544,7 +545,7 @@ class LitebridgeTest {
     @Test
     void saveAll_varargs() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
@@ -563,7 +564,7 @@ class LitebridgeTest {
     @Test
     void save_collection() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
@@ -581,7 +582,7 @@ class LitebridgeTest {
     @Test
     void save_exception() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
@@ -595,7 +596,7 @@ class LitebridgeTest {
     @Test
     void save_collection_exception() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
@@ -609,7 +610,7 @@ class LitebridgeTest {
     @Test
     void insert_exception() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
@@ -623,7 +624,7 @@ class LitebridgeTest {
     @Test
     void update_exception() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
@@ -637,7 +638,7 @@ class LitebridgeTest {
     @Test
     void delete_exception() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);
@@ -651,7 +652,7 @@ class LitebridgeTest {
     @Test
     void select_dto_context() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final SelectEngine selectEngine = mock(SelectEngine.class);
@@ -667,7 +668,7 @@ class LitebridgeTest {
     @Test
     void select_expressions() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final ExpressionSpec expression = new org.litebridge.orm.meta.QueryField(TestDto.class, "myVar");
@@ -682,7 +683,7 @@ class LitebridgeTest {
     @Test
     void select_typeOverride() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
@@ -698,7 +699,7 @@ class LitebridgeTest {
     @Test
     void select_convertIntent() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
@@ -714,7 +715,7 @@ class LitebridgeTest {
     @Test
     void toDto_empty() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
@@ -726,7 +727,7 @@ class LitebridgeTest {
         when(databaseProvider.tableMetaData(eq(tableSpec), any(ConnectionProvider.class))).thenReturn(new TableMetaData(tableSpec, List.of("MY_VAR"), List.of(columnMetaData)));
         final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
         litebridge.register(dtoTableSpec);
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
 
         final Row row = new Row(); // Empty row
 
@@ -737,7 +738,7 @@ class LitebridgeTest {
     @Test
     void entityDtoMapper() {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
@@ -751,7 +752,7 @@ class LitebridgeTest {
     @Test
     void update_lambda() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
@@ -769,9 +770,9 @@ class LitebridgeTest {
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(databaseProvider.getAliasTransformer()).thenReturn(new DefaultAliasTransformer());
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.aliasTransformer()).thenReturn(new DefaultAliasTransformer());
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
 
         // When
         litebridge.update(TestDto.class, u -> u.set("myVar").to("newVal"));
@@ -783,15 +784,15 @@ class LitebridgeTest {
     @Test
     void delete_overloads() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(databaseProvider.tableMetaData(any(org.litebridge.db.spi.Table.class), any(TransactionManager.class))).thenReturn(tableMetaData);
@@ -813,15 +814,15 @@ class LitebridgeTest {
     @Test
     void mergeInto_sql() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         when(databaseProvider.tableMetaData(any(), any())).thenReturn(tableMetaData);
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
@@ -842,15 +843,15 @@ class LitebridgeTest {
     @Test
     void mergeInto_dto() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
@@ -876,7 +877,7 @@ class LitebridgeTest {
     @Test
     void insert_dto_lambda() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
@@ -899,7 +900,7 @@ class LitebridgeTest {
     @Test
     void insert_sql_lambda() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(databaseProvider.tableMetaData(any(), any())).thenReturn(tableMetaData);
@@ -921,15 +922,15 @@ class LitebridgeTest {
     @Test
     void delete_dto_lambda() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
@@ -951,15 +952,15 @@ class LitebridgeTest {
     @Test
     void delete_sql_lambda() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
-        when(databaseProvider.getSqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(databaseProvider.tableMetaData(any(org.litebridge.db.spi.Table.class), any())).thenReturn(tableMetaData);
@@ -978,7 +979,7 @@ class LitebridgeTest {
     @Test
     void select_relatedDtoStrategy() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final SelectEngine selectEngine = mock(SelectEngine.class);
@@ -994,7 +995,7 @@ class LitebridgeTest {
     @Test
     void saveAll_array() throws Exception {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final PersistenceFacade persistenceFacade = mock(PersistenceFacade.class);

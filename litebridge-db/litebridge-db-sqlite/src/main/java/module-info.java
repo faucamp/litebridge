@@ -15,4 +15,5 @@ module litebridge.db.sqlite {
     provides org.litebridge.db.spi.DatabaseProvider with org.litebridge.db.sqlite.SQLiteDatabaseProvider;
 
     exports org.litebridge.db.sqlite;
+    exports org.litebridge.db.sqlite.engine;
 }

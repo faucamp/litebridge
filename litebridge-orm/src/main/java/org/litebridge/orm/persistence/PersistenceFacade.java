@@ -567,7 +567,7 @@ public class PersistenceFacade {
 
             if (Objects.equals(currentPkValue, ClassUtils.getDefaultValue(field.type()))) {
                 final Object generatedKey = generatedKeys.get(pkColumn);
-                final Object convertedValue = Objects.requireNonNull(databaseProvider.getTypeConverter().convert(generatedKey, field.type()));
+                final Object convertedValue = Objects.requireNonNull(databaseProvider.typeConverter().convert(generatedKey, field.type()));
                 generatedPkValues.put(field, convertedValue);
             } else {
                 LOGGER.trace("Generated key for DTO '{}' already set - ignoring; current value: {}", dto, currentPkValue);
@@ -725,7 +725,7 @@ public class PersistenceFacade {
             } else {
                 // Generate SQL and create type conversion metadata
                 final String sql = databaseProvider.toSql(preparedOperation.operation(), databaseProvider.transactionManager());
-                final UpdateMetaData updateMetaData = statementBuilder.createUpdateMetaData();
+                final UpdateMetaData updateMetaData = statementBuilder.createUpdateMetaData(preparedOperation);
                 // Cache compiled SQL for this AST
                 final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
                         .map(BindValue::sqlDataType)

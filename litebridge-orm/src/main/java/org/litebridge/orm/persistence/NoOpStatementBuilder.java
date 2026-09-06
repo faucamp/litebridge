@@ -47,7 +47,7 @@ public final class NoOpStatementBuilder implements StatementBuilder {
      * @throws UnsupportedOperationException Always thrown as this operation is not supported in the {@code NoOpStatementBuilder} implementation.
      */
     @Override
-    public UpdateMetaData createUpdateMetaData() {
+    public UpdateMetaData createUpdateMetaData(final PreparedOperation preparedOperation) {
         throw new UnsupportedOperationException();
     }
 

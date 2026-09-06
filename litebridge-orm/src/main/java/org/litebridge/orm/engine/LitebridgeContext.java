@@ -60,7 +60,7 @@ public final class LitebridgeContext {
         this.mode = mode;
         this.config = config;
         this.databaseProvider = databaseProvider;
-        this.sqlFunctionRegistry = databaseProvider.getSqlFunctionRegistry();
+        this.sqlFunctionRegistry = databaseProvider.sqlFunctionRegistry();
         this.queryPlanCache = queryPlanCache;
         this.aliasGenerator = aliasGenerator;
         this.relatedDtoStrategy = config.relatedDtoStrategy();
@@ -68,7 +68,7 @@ public final class LitebridgeContext {
         this.tableMetaDataCache = tableMetaDataCache;
         this.classFieldAccessorCache = classFieldAccessorCache;
         this.transactionManager = transactionManager;
-        this.typeConverter = databaseProvider.getTypeConverter();
+        this.typeConverter = databaseProvider.typeConverter();
         this.selectExpressionMapper = createSelectExpressionMapper();
         this.selectEngine = selectEngine;
     }
@@ -146,7 +146,7 @@ public final class LitebridgeContext {
             protoExpressionResolver = new SqlProtoExpressionResolver();
         }
 
-        return new SelectExpressionMapper(databaseProvider.getSqlFunctionRegistry(), protoExpressionResolver, tableMetaDataCache, databaseProvider.getTypeConverter());
+        return new SelectExpressionMapper(databaseProvider.sqlFunctionRegistry(), protoExpressionResolver, tableMetaDataCache, databaseProvider.typeConverter());
     }
 
     public enum Mode {

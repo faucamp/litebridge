@@ -257,6 +257,18 @@ public final class StringUtils {
         return sb.toString();
     }
 
+    public static int countMatches(final String input, final char searchChar) {
+        int count = 0;
+
+        for (int i = 0; i < input.length(); i++) {
+            if (input.charAt(i) == searchChar) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
     private static String abbreviateAscii(final String str, final int len) {
         final StringBuilder sb = new StringBuilder(len);
 

@@ -1,13 +1,10 @@
 package org.litebridge.db.spi.impl.sql;
 
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.math.MathOperation;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateColumn;
 
@@ -21,14 +18,12 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
     /**
      * Creates a new {@code UpdateSqlGenerator}.
      *
-     * @param typeConverter             the type converter
      * @param columnIdentifierGenerator the column identifier generator
      * @param ensureTableMetaData       a function to ensure table metadata
      */
-    public UpdateSqlGenerator(final TypeConverter typeConverter,
-                              final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public UpdateSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(typeConverter, columnIdentifierGenerator, ensureTableMetaData);
+        super(columnIdentifierGenerator, ensureTableMetaData);
     }
 
     /**

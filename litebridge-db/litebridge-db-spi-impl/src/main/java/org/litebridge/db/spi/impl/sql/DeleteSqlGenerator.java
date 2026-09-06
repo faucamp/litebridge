@@ -1,17 +1,11 @@
 package org.litebridge.db.spi.impl.sql;
 
-import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Delete;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BiFunction;
 
 /**
@@ -22,14 +16,12 @@ public class DeleteSqlGenerator extends AbstractSqlGenerator {
     /**
      * Constructs a {@code DeleteSqlGenerator} with the specified components.
      *
-     * @param typeConverter             the converter to use for SQL types
      * @param columnIdentifierGenerator the generator for column identifiers
      * @param ensureTableMetaData       the function to retrieve table metadata
      */
-    public DeleteSqlGenerator(final TypeConverter typeConverter,
-                              final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public DeleteSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(typeConverter, columnIdentifierGenerator, ensureTableMetaData);
+        super(columnIdentifierGenerator, ensureTableMetaData);
     }
 
     /**

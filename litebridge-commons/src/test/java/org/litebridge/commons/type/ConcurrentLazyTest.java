@@ -15,12 +15,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 class ConcurrentLazyTest {
 
     @Test
-    void optional() {
+    void get() {
         // Given
         final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> "hello");
 
         // When
-        final Optional<String> result = concurrentLazy.optional();
+        final Optional<String> result = concurrentLazy.get();
 
         // Then
         assertTrue(result.isPresent());
@@ -28,61 +28,61 @@ class ConcurrentLazyTest {
     }
 
     @Test
-    void orNull() {
+    void getOrNull() {
         // Given
         final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> "hello");
 
         // When
-        final String result = concurrentLazy.orNull();
+        final String result = concurrentLazy.getOrNull();
 
         // Then
         assertEquals("hello", result);
     }
 
     @Test
-    void orThrow() {
+    void getOrThrow() {
         // Given
         final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> "hello");
 
         // When
-        final String result = concurrentLazy.orThrow();
+        final String result = concurrentLazy.getOrThrow();
 
         // Then
         assertEquals("hello", result);
     }
 
     @Test
-    void orThrow_null() {
+    void getOrThrow_null() {
         // Given
         final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> null);
 
         // When / Then
-        assertThrows(java.util.NoSuchElementException.class, concurrentLazy::orThrow);
+        assertThrows(java.util.NoSuchElementException.class, concurrentLazy::getOrThrow);
     }
 
     @Test
-    void orThrow_exceptionSupplier() throws Exception {
+    void getOrThrow_exceptionSupplier() throws Exception {
         // Given
         final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> "hello");
 
         // When
-        final String result = concurrentLazy.orThrow(() -> new Exception("test"));
+        final String result = concurrentLazy.getOrThrow(() -> new Exception("test"));
 
         // Then
         assertEquals("hello", result);
     }
 
     @Test
-    void orThrow_exceptionSupplier_null() {
+    void getOrThrow_exceptionSupplier_null() {
         // Given
         final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> null);
 
         // When / Then
-        assertThrows(Exception.class, () -> concurrentLazy.orThrow(() -> new Exception("test")));
+        assertThrows(Exception.class, () -> concurrentLazy.getOrThrow(() -> new Exception("test")));
     }
 
     @Test
-    void orNull_concurrent() {
+    void getOrNull_concurrent() {
         // Given
         final int threadCount = 5;
         final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> {
@@ -100,7 +100,7 @@ class ConcurrentLazyTest {
 
         for (int i = 0; i < threadCount; i++) {
             final int index = i;
-            threads[i] = new Thread(() -> threadResults[index] = concurrentLazy.orNull());
+            threads[i] = new Thread(() -> threadResults[index] = concurrentLazy.getOrNull());
         }
 
         for (int i = 0; i < threadCount; i++) {
@@ -127,7 +127,7 @@ class ConcurrentLazyTest {
             assertEquals("hello", threadResults[i]);
         }
 
-        assertEquals("hello", concurrentLazy.orNull());
+        assertEquals("hello", concurrentLazy.getOrNull());
     }
 
     @Test
@@ -146,7 +146,7 @@ class ConcurrentLazyTest {
     void peek_initialised() {
         // Given
         final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> "hello");
-        concurrentLazy.optional();
+        concurrentLazy.get();
 
         // When
         final String result = concurrentLazy.peek();
@@ -159,7 +159,7 @@ class ConcurrentLazyTest {
     void reset() {
         // Given
         final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> "hello");
-        concurrentLazy.optional();
+        concurrentLazy.get();
         // Sanity check
         assertEquals("hello", concurrentLazy.peek());
 
@@ -174,7 +174,7 @@ class ConcurrentLazyTest {
     void isInitialised_true() {
         // Given
         final ConcurrentLazy<String> concurrentLazy = new ConcurrentLazy<>(() -> "hello");
-        concurrentLazy.optional();
+        concurrentLazy.get();
 
         // When
         final boolean result = concurrentLazy.isInitialised();

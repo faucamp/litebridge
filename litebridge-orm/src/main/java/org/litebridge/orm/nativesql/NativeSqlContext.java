@@ -2,11 +2,11 @@ package org.litebridge.orm.nativesql;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +45,9 @@ public final class NativeSqlContext {
      * @throws IllegalStateException if an error occurs during query execution
      */
     public List<Row> query(final String sql, final Object... bindParameters) {
-        return query(sql, Arrays.stream(bindParameters).toList());
+        final ParsedSql parsedSql = nativeSqlCache.getCachedSql(sql);
+        final PreparedSql preparedSql = parsedSql.prepareSql(bindParameters);
+        return query(preparedSql);
     }
 
     /**
@@ -57,11 +59,9 @@ public final class NativeSqlContext {
      * @throws IllegalStateException if an error occurs during query execution
      */
     public List<Row> query(final String sql, final List<@Nullable Object> bindParameters) {
-        try {
-            return databaseProvider.nativeSqlQuery(sql, bindParameters, databaseProvider.transactionManager());
-        } catch (SQLException ex) {
-            throw new IllegalStateException("Failed to execute raw SQL: " + sql, ex);
-        }
+        final ParsedSql parsedSql = nativeSqlCache.getCachedSql(sql);
+        final PreparedSql preparedSql = parsedSql.prepareSql(bindParameters);
+        return query(preparedSql);
     }
 
     /**
@@ -73,11 +73,9 @@ public final class NativeSqlContext {
      * @throws IllegalStateException if an error occurs during query execution
      */
     public List<Row> query(final String sql, final Map<String, @Nullable Object> bindParameters) {
-        final ParsedSql parsedSql = SqlParser.parseSql(sql);
-        final List<@Nullable Object> positionalParameters = parsedSql.bindParameterNames().stream()
-                .map(bindParameters::get)
-                .toList();
-        return query(parsedSql.sql(), positionalParameters);
+        final ParsedSql parsedSql = nativeSqlCache.getCachedSql(sql);
+        final PreparedSql preparedSql = parsedSql.prepareSql(bindParameters);
+        return query(preparedSql);
     }
 
     /**
@@ -91,7 +89,9 @@ public final class NativeSqlContext {
      * @throws IllegalStateException if an error occurs while executing the update statement
      */
     public UpdateResult execute(final String sql, final Object... bindParameters) {
-        return execute(sql, Arrays.stream(bindParameters).toList());
+        final ParsedSql parsedSql = nativeSqlCache.getCachedSql(sql);
+        final PreparedSql preparedSql = parsedSql.prepareSql(bindParameters);
+        return execute(preparedSql);
     }
 
     /**
@@ -103,11 +103,9 @@ public final class NativeSqlContext {
      * @throws IllegalStateException if an error occurs while executing the update statement
      */
     public UpdateResult execute(final String sql, final List<@Nullable Object> bindParameters) {
-        try {
-            return databaseProvider.nativeSqlUpdate(sql, bindParameters, databaseProvider.transactionManager());
-        } catch (SQLException ex) {
-            throw new IllegalStateException("Failed to execute raw SQL: " + sql, ex);
-        }
+        final ParsedSql parsedSql = nativeSqlCache.getCachedSql(sql);
+        final PreparedSql preparedSql = parsedSql.prepareSql(bindParameters);
+        return execute(preparedSql);
     }
 
     /**
@@ -120,9 +118,23 @@ public final class NativeSqlContext {
      */
     public UpdateResult execute(final String sql, final Map<String, @Nullable Object> bindParameters) {
         final ParsedSql parsedSql = nativeSqlCache.getCachedSql(sql);
-        final List<@Nullable Object> positionalParameters = parsedSql.bindParameterNames().stream()
-                .map(bindParameters::get)
-                .toList();
-        return execute(parsedSql.sql(), positionalParameters);
+        final PreparedSql preparedSql = parsedSql.prepareSql(bindParameters);
+        return execute(preparedSql);
+    }
+
+    private UpdateResult execute(final PreparedSql preparedSql) {
+        try {
+            return databaseProvider.executeUpdate(preparedSql, UpdateResult.class, databaseProvider.transactionManager());
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to execute raw SQL: " + preparedSql.sql(), ex);
+        }
+    }
+
+    private List<Row> query(final PreparedSql preparedSql) {
+        try {
+            return databaseProvider.executeQuery(preparedSql, databaseProvider.transactionManager());
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to execute raw SQL: " + preparedSql.sql(), ex);
+        }
     }
 }

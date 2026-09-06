@@ -17,7 +17,7 @@ class NativeSqlCacheTest {
         // Then
         assertNotNull(parsedSql);
         assertEquals("SELECT * FROM schema.table WHERE id = ?", parsedSql.sql());
-        assertEquals(1, parsedSql.bindParameterNames().size());
-        assertEquals("id", parsedSql.bindParameterNames().getFirst());
+        assertEquals(1, parsedSql.bindValueNames().size());
+        assertEquals("id", parsedSql.bindValueNames().getFirst());
     }
 }

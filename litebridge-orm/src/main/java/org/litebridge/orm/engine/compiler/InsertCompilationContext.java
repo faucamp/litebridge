@@ -171,18 +171,20 @@ final class InsertCompilationContext implements CompilationContext {
 
     @Override
     public Insert toOperation() {
-        final List<UpdateColumn> columns = columnMetaDataList.stream()
-                .map(columnMetaData -> {
-                    final ColumnValueGenerator columnValueGenerator = columnMetaData.getGenerator();
+        boolean returnGeneratedColumns = false;
+        final List<UpdateColumn> columns = new ArrayList<>(columnMetaDataList.size());
 
-                    if (!insertColumnNames.contains(columnMetaData.name()) && columnValueGenerator != null) {
-                        final Object generatedValue = columnValueGenerator.generate(columnMetaData);
-                        return new UpdateColumn(columnMetaData.name(), generatedValue);
-                    } else {
-                        return new UpdateColumn(columnMetaData.name());
-                    }
-                })
-                .toList();
-        return new Insert(table, columns, rows, true);
+        for (final ColumnMetaData columnMetaData : columnMetaDataList) {
+            final ColumnValueGenerator columnValueGenerator = columnMetaData.getGenerator();
+
+            if (!insertColumnNames.contains(columnMetaData.name()) && columnValueGenerator != null) {
+                returnGeneratedColumns = true;
+                columns.add(new UpdateColumn(columnMetaData.name(), columnValueGenerator.generate(columnMetaData)));
+            } else {
+                columns.add(new UpdateColumn(columnMetaData.name()));
+            }
+        }
+
+        return new Insert(table, columns, rows, returnGeneratedColumns);
     }
 }

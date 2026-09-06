@@ -12,6 +12,8 @@ import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.Select;
 
+import java.util.List;
+
 /**
  * Oracle-specific implementation of {@link ColumnIdentifierGenerator}.
  * <p>
@@ -60,10 +62,14 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
     }
 
     private static boolean shouldApplyTableQualifier(final Column column, final Select select) {
-        boolean applyTableQualifier = true;
+        final List<Join> joins = select.joins();
+
+        if (joins == null) {
+            return true;
+        }
 
         // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the column
-        for (Join join : select.joins()) {
+        for (Join join : joins) {
 
             if (join.conditions().conditions().size() != 1
                     && join.conditions().subgroups().isEmpty()) {
@@ -82,16 +88,11 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
                         || (columnExpression.column().equalsColumnOnlyIgnoreAlias(column)
                         && (select.table().equalsIgnoreAlias(column.table()) || join.table().equalsIgnoreAlias(column.table()))))) {
                     // Don't include table qualifiers
-                    applyTableQualifier = false;
-                    break;
+                    return false;
                 }
-            }
-
-            if (!applyTableQualifier) {
-                break;
             }
         }
 
-        return applyTableQualifier;
+        return true;
     }
 }

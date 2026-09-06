@@ -25,12 +25,10 @@ class PlaceHolderDatabaseProviderTest {
         assertThrows(UnsupportedOperationException.class, () -> provider.executeUpdate(preparedSql, UpdateResult.class, connectionProvider));
         assertThrows(UnsupportedOperationException.class, () -> provider.executeQuery(preparedSql, connectionProvider));
         assertThrows(UnsupportedOperationException.class, () -> provider.toSql(mock(org.litebridge.db.spi.query.Select.class), connectionProvider));
-        assertThrows(UnsupportedOperationException.class, () -> provider.nativeSqlQuery("SELECT 1", Collections.emptyList(), connectionProvider));
-        assertThrows(UnsupportedOperationException.class, () -> provider.nativeSqlUpdate("UPDATE TEST SET COL = 1", Collections.emptyList(), connectionProvider));
-        assertThrows(UnsupportedOperationException.class, provider::getTypeConverter);
-        assertThrows(UnsupportedOperationException.class, provider::getSqlFunctionRegistry);
-        assertThrows(UnsupportedOperationException.class, provider::getAliasTransformer);
+        assertThrows(UnsupportedOperationException.class, provider::typeConverter);
+        assertThrows(UnsupportedOperationException.class, provider::sqlFunctionRegistry);
+        assertThrows(UnsupportedOperationException.class, provider::aliasTransformer);
 
-        assertNotNull(provider.getSequenceColumnValueGenerator("SEQ"));
+        assertNotNull(provider.sequenceColumnValueGenerator("SEQ"));
     }
 }

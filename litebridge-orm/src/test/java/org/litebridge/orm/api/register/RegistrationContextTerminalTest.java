@@ -39,7 +39,7 @@ class RegistrationContextTerminalTest {
         // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SequenceColumnValueGenerator realGenerator = mock(SequenceColumnValueGenerator.class);
-        when(databaseProvider.getSequenceColumnValueGenerator("TEST_SEQ")).thenReturn(realGenerator);
+        when(databaseProvider.sequenceColumnValueGenerator("TEST_SEQ")).thenReturn(realGenerator);
         
         final RegistrationContextTerminal context = new RegistrationContextTerminal(TestDto.class, "TEST_TABLE", databaseProvider, null);
         

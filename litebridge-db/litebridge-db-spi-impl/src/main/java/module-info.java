@@ -20,4 +20,5 @@ module litebridge.db.spi.impl {
     exports org.litebridge.db.spi.impl.function.aggregate;
     exports org.litebridge.db.spi.impl.function.scalar;
     exports org.litebridge.db.spi.impl.sql;
+    exports org.litebridge.db.spi.impl.engine;
 }

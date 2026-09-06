@@ -64,7 +64,7 @@ public final class Row implements Result {
      * @return a list of {@code RowColumn} objects
      */
     public List<RowColumn> columns() {
-        return columnList.orThrow();
+        return columnList.getOrThrow();
     }
 
     /**

@@ -11,19 +11,14 @@ import java.util.function.Supplier;
  * A thread-safe, lazily initialized value holder that allows resetting the value.
  * <p>
  * This class ensures that the value is initialized only once, using the provided {@link Supplier},
- * and that subsequent calls to {@link #optional()} or {@link #orNull()} return the cached value.
+ * and that subsequent calls to {@link #get()} or {@link #getOrNull()} return the cached value.
  * <p>
  * The value can be reset using {@link #reset()}, which clears the cached value and allows it to be recomputed
  * on the next access.
  *
  * @param <T> the type of the lazily initialized value
  */
-public final class ConcurrentLazy<T> {
-
-    private static final Object UNINITIALIZED = new Object();
-
-    @Nullable
-    private volatile Object value = UNINITIALIZED;
+public final class ConcurrentLazy<T> extends AbstractConcurrentLazy<T> {
 
     private final Supplier<T> initializer;
 
@@ -42,8 +37,8 @@ public final class ConcurrentLazy<T> {
      *
      * @return the value wrapped in an {@link Optional}
      */
-    public Optional<T> optional() {
-        return Optional.ofNullable(orNull());
+    public Optional<T> get() {
+        return Optional.ofNullable(getOrNull());
     }
 
 
@@ -53,8 +48,8 @@ public final class ConcurrentLazy<T> {
      * @return the value
      * @throws NoSuchElementException if the value is null
      */
-    public T orThrow() {
-        return orThrow(NoSuchElementException::new);
+    public T getOrThrow() {
+        return getOrThrow(NoSuchElementException::new);
     }
 
     /**
@@ -65,8 +60,8 @@ public final class ConcurrentLazy<T> {
      * @return the value
      * @throws X if the value is null
      */
-    public <X extends Exception> T orThrow(Supplier<X> exceptionSupplier) throws X {
-        final T result = orNull();
+    public <X extends Exception> T getOrThrow(Supplier<X> exceptionSupplier) throws X {
+        final T result = getOrNull();
 
         if (result == null) {
             throw exceptionSupplier.get();
@@ -83,14 +78,14 @@ public final class ConcurrentLazy<T> {
      */
     @SuppressWarnings("unchecked")
     @Nullable
-    public T orNull() {
+    public T getOrNull() {
         Object result = value;
 
-        if (result == UNINITIALIZED) {
+        if (result == UNINITIALISED) {
             synchronized (this) {
                 result = value;
 
-                if (result == UNINITIALIZED) {
+                if (result == UNINITIALISED) {
                     result = initializer.get();
                     value = result;
                 }
@@ -98,37 +93,5 @@ public final class ConcurrentLazy<T> {
         }
 
         return (T) result;
-    }
-
-    /**
-     * Returns the current value without triggering initialization.
-     * Useful for logging or debugging where you don't want to force a side-effect.
-     *
-     * @return the current value, or {@code null} if not yet initialized
-     */
-    @Nullable
-    @SuppressWarnings("unchecked")
-    public T peek() {
-        Object result = value;
-        return (result == UNINITIALIZED) ? null : (T) result;
-    }
-
-    /**
-     * Resets the cached value, allowing it to be recomputed on the next call to {@link #optional()} or {@link #orNull()}.
-     * This method is thread-safe.
-     */
-    public void reset() {
-        synchronized (this) {
-            value = UNINITIALIZED;
-        }
-    }
-
-    /**
-     * Returns {@code true} if the value has already been initialised, or {@code false} otherwise.
-     *
-     * @return {@code true} if the value is initialised; {@code false} if it is still uninitialised
-     */
-    public boolean isInitialised() {
-        return value != UNINITIALIZED;
     }
 }

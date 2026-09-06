@@ -212,22 +212,22 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         }
 
         @Override
-        public TypeConverter getTypeConverter() {
+        public TypeConverter typeConverter() {
             return null;
         }
 
         @Override
-        public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
+        public SequenceColumnValueGenerator sequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public SqlFunctionRegistry getSqlFunctionRegistry() {
+        public SqlFunctionRegistry sqlFunctionRegistry() {
             return null;
         }
 
         @Override
-        public AliasTransformer getAliasTransformer() {
+        public AliasTransformer aliasTransformer() {
             return null;
         }
     }

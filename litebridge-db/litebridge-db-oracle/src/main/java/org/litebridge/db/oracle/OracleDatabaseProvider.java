@@ -1,23 +1,16 @@
 package org.litebridge.db.oracle;
 
 import org.litebridge.convert.DefaultTypeConverter;
+import org.litebridge.db.oracle.engine.OracleExecutionEngine;
 import org.litebridge.db.oracle.function.OracleSqlFunctionRegistryFactory;
-import org.litebridge.db.oracle.sql.OracleSelectSqlGenerator;
-import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.function.SqlFunctionRegistryFactory;
-import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
+import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
+import org.litebridge.db.spi.impl.sql.DefaultSqlGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Oracle Database Provider for Litebridge.
@@ -36,11 +29,15 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider {
      * Constructs a new {@code OracleDatabaseProvider} using a default type converter.
      */
     public OracleDatabaseProvider() {
-        super(new DefaultTypeConverter());
+        super(new DefaultSqlGenerator(),
+                new OracleExecutionEngine(
+                        new DefaultTypeConverter(),
+                        new UppercaseAliasTransformer()
+                ));
     }
 
     @Override
-    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
+    public SequenceColumnValueGenerator sequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
         return new OracleSequenceColumnValueGenerator(sequence);
     }
 
@@ -50,32 +47,8 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider {
     }
 
     @Override
-    protected SqlFunctionRegistryFactory createSqlFunctionRegistryFactory() {
-        return new OracleSqlFunctionRegistryFactory(columnIdentifierGenerator.orThrow(), selectSqlGenerator.orThrow());
-    }
-
-    @Override
-    protected SelectSqlGenerator createSelectSqlGenerator() {
-        return new OracleSelectSqlGenerator(typeConverter, columnIdentifierGenerator.orThrow(), this::ensureTableMetaData);
-    }
-
-    @Override
-    protected Map<ColumnMetaData, Object> extractGeneratedKeys(final List<ColumnMetaData> generatedPrimaryKeys, final PreparedStatement preparedStatement) throws SQLException {
-        final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(generatedPrimaryKeys.size());
-        final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys();
-
-        if (generatedKeysResultSet.next()) {
-            int generatedKeyIndex = 1;
-
-            for (ColumnMetaData pkColumn : generatedPrimaryKeys) {
-                final Object generatedId = generatedKeysResultSet.getObject(generatedKeyIndex++);
-                getLogger().debug("Generated ID for column '{}': {}", pkColumn.name(), generatedId);
-                generatedKeys.put(pkColumn, generatedId);
-            }
-        }
-
-        generatedKeysResultSet.close();
-        return generatedKeys;
+    protected SqlFunctionRegistry createSqlFunctionRegistry() {
+        return new OracleSqlFunctionRegistryFactory(columnIdentifierGenerator.getOrThrow(), sqlGenerator.selectSqlGenerator()).create();
     }
 
     @Override

@@ -49,6 +49,6 @@ public final class MergeEngine extends AbstractInsertEngine {
 
     private UpdateResult execute(final MergeTerminal mergeTerminal, final Supplier<Table> tableSupplier, final LitebridgeContext litebridgeContext) {
         final QueryNode node = MergeTerminalInspector.getNode(mergeTerminal);
-        return execute(node, () -> createUpdateMetaData(tableSupplier, litebridgeContext), UpdateResult.class, litebridgeContext);
+        return execute(node, preparedOperation -> createUpdateMetaData(preparedOperation, tableSupplier, litebridgeContext), UpdateResult.class, litebridgeContext);
     }
 }

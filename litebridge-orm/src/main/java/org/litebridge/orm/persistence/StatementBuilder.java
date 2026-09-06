@@ -30,7 +30,7 @@ public sealed interface StatementBuilder permits AbstractStatementBuilder, NoOpS
      *
      * @return the update metadata
      */
-    UpdateMetaData createUpdateMetaData();
+    UpdateMetaData createUpdateMetaData(final PreparedOperation preparedOperation);
 
     /**
      * Sets a field value on the statement.
