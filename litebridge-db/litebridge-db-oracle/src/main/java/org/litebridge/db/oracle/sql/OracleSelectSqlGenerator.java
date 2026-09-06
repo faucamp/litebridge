@@ -9,8 +9,24 @@ import org.litebridge.db.spi.tx.ConnectionProvider;
 
 import java.util.function.BiFunction;
 
+/**
+ * A specialised SQL generator for SELECT statements targeting Oracle databases.
+ * <p>
+ * This class extends the {@code SelectSqlGenerator} to provide Oracle-specific
+ * SQL syntax for operations such as limiting and offsetting query results.
+ * <p>
+ * The primary distinction of this generator is its handling of the LIMIT clause
+ * by translating it into Oracle-compatible pagination syntax using "OFFSET" and
+ * "FETCH FIRST N ROWS ONLY".
+ */
 public class OracleSelectSqlGenerator extends SelectSqlGenerator {
 
+    /**
+     * Constructs a new {@code OracleSelectSqlGenerator}.
+     *
+     * @param columnIdentifierGenerator The generator for column identifiers.
+     * @param ensureTableMetaData       A function to ensure table metadata.
+     */
     public OracleSelectSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator, final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
         super(columnIdentifierGenerator, ensureTableMetaData);
     }

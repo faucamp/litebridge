@@ -2,7 +2,6 @@ package org.litebridge.db.spi.impl.sql;
 
 import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.Operation;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.engine.DefaultMetaDataEngine;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
@@ -15,10 +14,9 @@ import org.litebridge.db.spi.update.Update;
 
 public class DefaultSqlGenerator implements SqlGenerator {
 
-    private final MetaDataEngine metaDataEngine;
+    protected final MetaDataEngine metaDataEngine;
 
     protected final ConcurrentLazy<ColumnIdentifierGenerator> columnIdentifierGenerator = new ConcurrentLazy<>(this::createColumnIdentifierGenerator);
-
     protected final ConcurrentLazy<SelectSqlGenerator> selectSqlGenerator = new ConcurrentLazy<>(this::createSelectSqlGenerator);
     protected final ConcurrentLazy<InsertSqlGenerator> insertSqlGenerator = new ConcurrentLazy<>(this::createInsertSqlGenerator);
     protected final ConcurrentLazy<UpdateSqlGenerator> updateSqlGenerator = new ConcurrentLazy<>(this::createUpdateSqlGenerator);

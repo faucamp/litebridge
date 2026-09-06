@@ -3,6 +3,7 @@ package org.litebridge.db.oracle;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.oracle.engine.OracleExecutionEngine;
 import org.litebridge.db.oracle.function.OracleSqlFunctionRegistryFactory;
+import org.litebridge.db.oracle.sql.OracleSqlGenerator;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
@@ -29,7 +30,7 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider {
      * Constructs a new {@code OracleDatabaseProvider} using a default type converter.
      */
     public OracleDatabaseProvider() {
-        super(new DefaultSqlGenerator(),
+        super(new OracleSqlGenerator(),
                 new OracleExecutionEngine(
                         new DefaultTypeConverter(),
                         new UppercaseAliasTransformer()
