@@ -13,6 +13,8 @@
   - Return `UpdateResult` and `InsertResult` classes for mutating operations, providing details on rows affected and generated keys.
 
 ### Changed
+- Commons:
+  - `ConcurrentLazy` API updated to be more natural; `optional()` becomes `get()`, and similar renames.
 - ORM:
   - Refactor `QueryCompiler` to delegate specific query types to specialised sub-compilers.
   - Reimplement and optimise the query compilation process.
