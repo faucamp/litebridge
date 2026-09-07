@@ -66,12 +66,17 @@ class SqlE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Select with limit/offset")
+    @DisplayName("Select with limit/offset and order by")
     void select_limitOffset(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personIdColumn = tableMapper.transformColumnName("PERSON_ID");
+        final String firstNameColumn = tableMapper.transformColumnName("FIRST_NAME");
+        final String surnameColumn = tableMapper.transformColumnName("SURNAME");
+        final String ageColumn = tableMapper.transformColumnName("AGE");
+        final String eyeColourColumn = tableMapper.transformColumnName("EYE_COLOUR");
+
         litebridge.insert(personTableName, i -> i
-                .into("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE", "EYE_COLOUR")
+                .into(personIdColumn, firstNameColumn, surnameColumn, ageColumn, eyeColourColumn)
                 .values(1L, "Alice", "Smith", 20, "brown")
                 .values(2L, "Bob", "Johnson", 30, null)
                 .values(3L, "Charlie", "Brown", 20, "blue")
@@ -80,37 +85,46 @@ class SqlE2eTest extends AbstractE2eTest {
         // No offset/limit
         final List<Row> result1 =
                 litebridge.select().from(personTableName)
-                        .orderBy(tableMapper.transformColumnName("PERSON_ID")).asc()
+                        .orderBy(personIdColumn).asc()
                         .list();
         assertEquals(3, result1.size());
 
         // Offset only
         final List<Row> result2 =
                 litebridge.select().from(personTableName)
-                        .orderBy(tableMapper.transformColumnName("PERSON_ID")).asc()
+                        .orderBy(personIdColumn).asc()
                         .offset(1)
                         .list();
         assertEquals(2, result2.size());
-        assertNumberEquals(2L, result2.getFirst().column("PERSON_ID").orElseThrow().value());
-        assertNumberEquals(3L, result2.getLast().column("PERSON_ID").orElseThrow().value());
+        assertNumberEquals(2L, result2.getFirst().column(personIdColumn).orElseThrow().value());
+        assertNumberEquals(3L, result2.getLast().column(personIdColumn).orElseThrow().value());
 
         // Limit only
         final List<Row> result3 =
                 litebridge.select().from(personTableName)
-                        .orderBy(tableMapper.transformColumnName("PERSON_ID")).asc()
+                        .orderBy(personIdColumn).asc()
                         .limit(1)
                         .list();
         assertEquals(1, result3.size());
-        assertNumberEquals(1L, result3.getFirst().column("PERSON_ID").orElseThrow().value());
+        assertNumberEquals(1L, result3.getFirst().column(personIdColumn).orElseThrow().value());
 
         // Limit and offset
         final List<Row> result4 =
                 litebridge.select().from(personTableName)
-                        .orderBy(tableMapper.transformColumnName("PERSON_ID")).asc()
+                        .orderBy(personIdColumn).asc()
                         .limit(1).offset(1)
                         .list();
         assertEquals(1, result4.size());
-        assertNumberEquals(2L, result4.getFirst().column("PERSON_ID").orElseThrow().value());
+        assertNumberEquals(2L, result4.getFirst().column(personIdColumn).orElseThrow().value());
+
+        // Order by multiple columns
+        final List<Row> result5 =
+                litebridge.select().from(personTableName)
+                        .orderBy(ageColumn).desc().then(surnameColumn).asc()
+                        .list();
+        assertEquals(3, result5.size());
+        assertNumberEquals(2L, result5.getFirst().column(personIdColumn).orElseThrow().value());
+        assertNumberEquals(1L, result5.getLast().column(personIdColumn).orElseThrow().value());
     }
 
     @TestTemplate
