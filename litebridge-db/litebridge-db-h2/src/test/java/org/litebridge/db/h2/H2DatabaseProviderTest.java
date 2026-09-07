@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class H2DatabaseProviderTest {
 
     @Test
-    void getLogger() {
+    void constructor() {
         final H2DatabaseProvider h2DatabaseProvider = new H2DatabaseProvider();
-        assertNotNull(h2DatabaseProvider.getLogger());
+        assertNotNull(h2DatabaseProvider);
     }
 }

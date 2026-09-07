@@ -1,4 +1,4 @@
-package org.litebridge.db.oracle.engine;
+package org.litebridge.db.sqlite.engine;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.convert.DefaultTypeConverter;
@@ -23,11 +23,33 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class OracleExecutionEngineTest {
+class SQLiteExecutionEngineTest {
 
     private final TypeConverter typeConverter = new DefaultTypeConverter();
     private final AliasTransformer aliasTransformer = new UppercaseAliasTransformer();
-    private final OracleExecutionEngine executionEngine = new OracleExecutionEngine(typeConverter, aliasTransformer);
+    private final SQLiteExecutionEngine executionEngine = new SQLiteExecutionEngine(typeConverter, aliasTransformer);
+
+    @Test
+    void extractGeneratedKeys() throws SQLException {
+        // Given
+        final PreparedStatement mockPreparedStatement = mock(PreparedStatement.class);
+        final ResultSet mockResultSet = mock(ResultSet.class);
+        final ColumnMetaData mockColumnMetaData = mock(ColumnMetaData.class);
+
+        when(mockPreparedStatement.getGeneratedKeys()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true);
+        when(mockResultSet.getObject(1)).thenReturn(123L);
+        when(mockColumnMetaData.isAutoIncrement()).thenReturn(true);
+        when(mockColumnMetaData.name()).thenReturn("id");
+
+        // When
+        final Map<ColumnMetaData, Object> result = executionEngine.extractGeneratedKeys(List.of(mockColumnMetaData), mockPreparedStatement);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(123L, result.get(mockColumnMetaData));
+    }
 
     @Test
     void extractGeneratedKeys_withGeneratedKeys() throws SQLException {
@@ -87,6 +109,25 @@ class OracleExecutionEngineTest {
         } catch (NullPointerException e) {
             // Expected if JDBC driver returns null and we call .next() on it
         }
+    }
+
+    @Test
+    void extractGeneratedKeys_whenNoGeneratedKeysRow_returnsEmptyMap() throws SQLException {
+        // Given
+        final PreparedStatement mockPreparedStatement = mock(PreparedStatement.class);
+        final ResultSet mockResultSet = mock(ResultSet.class);
+        final ColumnMetaData mockColumnMetaData = mock(ColumnMetaData.class);
+
+        when(mockPreparedStatement.getGeneratedKeys()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(false);
+
+        // When
+        final Map<ColumnMetaData, Object> result = executionEngine.extractGeneratedKeys(List.of(mockColumnMetaData), mockPreparedStatement);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(mockResultSet, times(1)).close();
     }
 
     @Test
