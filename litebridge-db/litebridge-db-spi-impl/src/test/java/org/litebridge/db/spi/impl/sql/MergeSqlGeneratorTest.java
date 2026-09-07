@@ -70,7 +70,7 @@ class MergeSqlGeneratorTest {
                 Operator.EQ,
                 1));
         final Merge.MergeInsert insert = new Merge.MergeInsert(
-                List.of(new UpdateColumn("TEST_ID", "DEFAULT"), new UpdateColumn("TEST_COLUMN")),
+                List.of(new UpdateColumn("TEST_ID", "DEFAULT", null), new UpdateColumn("TEST_COLUMN")),
                 2);
         final Merge merge = new Merge(createTestTable(), null, null, on, null, List.of(new Merge.WhenMatched<>(null, insert)));
 

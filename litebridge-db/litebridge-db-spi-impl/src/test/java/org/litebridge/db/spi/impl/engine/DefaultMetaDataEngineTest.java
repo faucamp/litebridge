@@ -2,6 +2,7 @@ package org.litebridge.db.spi.impl.engine;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.DatabaseMetaData;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.tx.ConnectionProvider;
@@ -33,7 +34,7 @@ class DefaultMetaDataEngineTest {
 
         // Then
         assertSame(first, second);
-        assertEquals(new org.litebridge.db.spi.DatabaseProviderMetaData(true), first);
+        assertEquals(new DatabaseProviderMetaData(true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW), first);
     }
 
     @Test

@@ -13,15 +13,15 @@ import org.litebridge.db.spi.impl.engine.ExecutionEngine;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.impl.sql.SqlGenerator;
+import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.UpdateResult;
-import org.litebridge.db.spi.query.Select;
-import org.slf4j.Logger;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
@@ -33,12 +33,12 @@ class AbstractDatabaseProviderTest {
     @Test
     void metaData() {
         // Given
-        final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         final MetaDataEngine metaDataEngine = mock(MetaDataEngine.class);
-        final DatabaseProviderMetaData expected = new DatabaseProviderMetaData(true);
+        final DatabaseProviderMetaData expected = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         when(sqlGenerator.metaDataEngine()).thenReturn(metaDataEngine);
         when(metaDataEngine.metaData()).thenReturn(expected);
-        final TestProvider provider = new TestProvider(sqlGenerator, mock(ExecutionEngine.class));
+        final TestProvider provider = new TestProvider(sqlGenerator, metaDataEngine, mock(ExecutionEngine.class));
 
         // When
         final DatabaseProviderMetaData result = provider.metaData();
@@ -51,13 +51,13 @@ class AbstractDatabaseProviderTest {
     @Test
     void databaseMetaData() throws Exception {
         // Given
-        final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         final MetaDataEngine metaDataEngine = mock(MetaDataEngine.class);
+        final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         final ConnectionProvider connectionProvider = mock(ConnectionProvider.class);
         when(sqlGenerator.metaDataEngine()).thenReturn(metaDataEngine);
         final org.litebridge.db.spi.DatabaseMetaData expected = mock(org.litebridge.db.spi.DatabaseMetaData.class);
         when(metaDataEngine.databaseMetaData(connectionProvider)).thenReturn(expected);
-        final TestProvider provider = new TestProvider(sqlGenerator, mock(ExecutionEngine.class));
+        final TestProvider provider = new TestProvider(sqlGenerator, metaDataEngine, mock(ExecutionEngine.class));
 
         // When
         final org.litebridge.db.spi.DatabaseMetaData result = provider.databaseMetaData(connectionProvider);
@@ -70,14 +70,14 @@ class AbstractDatabaseProviderTest {
     @Test
     void tableMetaData() throws Exception {
         // Given
-        final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         final MetaDataEngine metaDataEngine = mock(MetaDataEngine.class);
+        final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         final Table table = new Table("TEST_TABLE");
         final ConnectionProvider connectionProvider = mock(ConnectionProvider.class);
         final TableMetaData expected = mock(TableMetaData.class);
         when(sqlGenerator.metaDataEngine()).thenReturn(metaDataEngine);
         when(metaDataEngine.ensureTableMetaData(table, connectionProvider)).thenReturn(expected);
-        final TestProvider provider = new TestProvider(sqlGenerator, mock(ExecutionEngine.class));
+        final TestProvider provider = new TestProvider(sqlGenerator, metaDataEngine, mock(ExecutionEngine.class));
 
         // When
         final TableMetaData result = provider.tableMetaData(table, connectionProvider);
@@ -90,14 +90,15 @@ class AbstractDatabaseProviderTest {
     @Test
     void executeUpdate_insertResult() throws Exception {
         // Given
+        final MetaDataEngine metaDataEngine = mock(MetaDataEngine.class);
         final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         final ExecutionEngine executionEngine = mock(ExecutionEngine.class);
         final ConnectionProvider connectionProvider = mock(ConnectionProvider.class);
         final PreparedSql preparedSql = new PreparedSql("INSERT");
         final InsertResult expected = mock(InsertResult.class);
-        when(sqlGenerator.metaDataEngine()).thenReturn(mock(MetaDataEngine.class));
+        when(sqlGenerator.metaDataEngine()).thenReturn(metaDataEngine);
         when(executionEngine.executeInsert(preparedSql, connectionProvider)).thenReturn(expected);
-        final TestProvider provider = new TestProvider(sqlGenerator, executionEngine);
+        final TestProvider provider = new TestProvider(sqlGenerator, metaDataEngine, executionEngine);
 
         // When
         final InsertResult result = provider.executeUpdate(preparedSql, InsertResult.class, connectionProvider);
@@ -110,14 +111,15 @@ class AbstractDatabaseProviderTest {
     @Test
     void executeUpdate_updateResult() throws Exception {
         // Given
+        final MetaDataEngine metaDataEngine = mock(MetaDataEngine.class);
         final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         final ExecutionEngine executionEngine = mock(ExecutionEngine.class);
         final ConnectionProvider connectionProvider = mock(ConnectionProvider.class);
         final PreparedSql preparedSql = new PreparedSql("UPDATE");
         final UpdateResult expected = mock(UpdateResult.class);
-        when(sqlGenerator.metaDataEngine()).thenReturn(mock(MetaDataEngine.class));
+        when(sqlGenerator.metaDataEngine()).thenReturn(metaDataEngine);
         when(executionEngine.executeUpdate(preparedSql, connectionProvider)).thenReturn(expected);
-        final TestProvider provider = new TestProvider(sqlGenerator, executionEngine);
+        final TestProvider provider = new TestProvider(sqlGenerator, metaDataEngine, executionEngine);
 
         // When
         final UpdateResult result = provider.executeUpdate(preparedSql, UpdateResult.class, connectionProvider);
@@ -130,14 +132,15 @@ class AbstractDatabaseProviderTest {
     @Test
     void executeQuery() throws Exception {
         // Given
+        final MetaDataEngine metaDataEngine = mock(MetaDataEngine.class);
         final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         final ExecutionEngine executionEngine = mock(ExecutionEngine.class);
         final ConnectionProvider connectionProvider = mock(ConnectionProvider.class);
         final PreparedSql preparedSql = new PreparedSql("SELECT");
         final List<Row> expected = List.of(mock(Row.class));
-        when(sqlGenerator.metaDataEngine()).thenReturn(mock(MetaDataEngine.class));
+        when(sqlGenerator.metaDataEngine()).thenReturn(metaDataEngine);
         when(executionEngine.executeQuery(preparedSql, connectionProvider)).thenReturn(expected);
-        final TestProvider provider = new TestProvider(sqlGenerator, executionEngine);
+        final TestProvider provider = new TestProvider(sqlGenerator, metaDataEngine, executionEngine);
 
         // When
         final List<Row> result = provider.executeQuery(preparedSql, connectionProvider);
@@ -150,12 +153,13 @@ class AbstractDatabaseProviderTest {
     @Test
     void typeConverter() {
         // Given
+        final MetaDataEngine metaDataEngine = mock(MetaDataEngine.class);
         final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         final ExecutionEngine executionEngine = mock(ExecutionEngine.class);
         final TypeConverter expected = mock(TypeConverter.class);
-        when(sqlGenerator.metaDataEngine()).thenReturn(mock(MetaDataEngine.class));
+        when(sqlGenerator.metaDataEngine()).thenReturn(metaDataEngine);
         when(executionEngine.typeConverter()).thenReturn(expected);
-        final TestProvider provider = new TestProvider(sqlGenerator, executionEngine);
+        final TestProvider provider = new TestProvider(sqlGenerator, metaDataEngine, executionEngine);
 
         // When
         final TypeConverter result = provider.typeConverter();
@@ -167,12 +171,13 @@ class AbstractDatabaseProviderTest {
     @Test
     void aliasTransformer() {
         // Given
+        final MetaDataEngine metaDataEngine = mock(MetaDataEngine.class);
         final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         final ExecutionEngine executionEngine = mock(ExecutionEngine.class);
         final AliasTransformer expected = mock(AliasTransformer.class);
-        when(sqlGenerator.metaDataEngine()).thenReturn(mock(MetaDataEngine.class));
+        when(sqlGenerator.metaDataEngine()).thenReturn(metaDataEngine);
         when(executionEngine.aliasTransformer()).thenReturn(expected);
-        final TestProvider provider = new TestProvider(sqlGenerator, executionEngine);
+        final TestProvider provider = new TestProvider(sqlGenerator, metaDataEngine, executionEngine);
 
         // When
         final AliasTransformer result = provider.aliasTransformer();
@@ -190,24 +195,25 @@ class AbstractDatabaseProviderTest {
         final String result = provider.sequenceColumnValueGenerator("TEST_SEQUENCE").generate(null);
 
         // Then
-        org.junit.jupiter.api.Assertions.assertEquals("NEXT VALUE FOR TEST_SEQUENCE", result);
+        assertEquals("NEXT VALUE FOR TEST_SEQUENCE", result);
     }
 
     @Test
     void toSql() {
         // Given
+        final MetaDataEngine metaDataEngine = mock(MetaDataEngine.class);
         final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         final Operation operation = new Select(new Table("TEST_TABLE"), List.of(), null, null, null, null, null, null);
         final ConnectionProvider connectionProvider = mock(ConnectionProvider.class);
-        when(sqlGenerator.metaDataEngine()).thenReturn(mock(MetaDataEngine.class));
+        when(sqlGenerator.metaDataEngine()).thenReturn(metaDataEngine);
         when(sqlGenerator.generateSql(operation, connectionProvider)).thenReturn("SQL");
-        final TestProvider provider = new TestProvider(sqlGenerator, mock(ExecutionEngine.class));
+        final TestProvider provider = new TestProvider(sqlGenerator, metaDataEngine, mock(ExecutionEngine.class));
 
         // When
         final String result = provider.toSql(operation, connectionProvider);
 
         // Then
-        org.junit.jupiter.api.Assertions.assertEquals("SQL", result);
+        assertEquals("SQL", result);
     }
 
     @Test
@@ -225,20 +231,21 @@ class AbstractDatabaseProviderTest {
     }
 
     private static TestProvider newProvider() {
+        final MetaDataEngine metaDataEngine = mock(MetaDataEngine.class);
         final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
-        when(sqlGenerator.metaDataEngine()).thenReturn(mock(MetaDataEngine.class));
+        when(sqlGenerator.metaDataEngine()).thenReturn(metaDataEngine);
         when(sqlGenerator.selectSqlGenerator()).thenReturn(mock(SelectSqlGenerator.class));
-        return new TestProvider(sqlGenerator, mock(ExecutionEngine.class));
+        return new TestProvider(sqlGenerator, metaDataEngine, mock(ExecutionEngine.class));
     }
 
     private static final class TestProvider extends AbstractDatabaseProvider {
-        private TestProvider(final SqlGenerator sqlGenerator, final ExecutionEngine executionEngine) {
-            super(sqlGenerator, executionEngine);
-        }
-
-        @Override
-        protected Logger getLogger() {
-            return mock(Logger.class);
+        private TestProvider(final SqlGenerator sqlGenerator, final MetaDataEngine metaDataEngine, final ExecutionEngine executionEngine) {
+            super(new DatabaseProviderContext(sqlGenerator,
+                    metaDataEngine,
+                    executionEngine,
+                    mock(SqlFunctionRegistry.class),
+                    new ColumnIdentifierGenerator(),
+                    DefaultSequenceColumnValueGenerator::new));
         }
     }
 }

@@ -1,6 +1,7 @@
 package org.litebridge.db.spi.impl.sql;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.impl.engine.DefaultMetaDataEngine;
 import org.litebridge.db.spi.impl.function.SelectColumn;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.query.ConditionGroup;
@@ -40,7 +41,7 @@ class DefaultSqlGeneratorTest {
     @Test
     void generateSql_dispatchesEveryOperationVariant() {
         // Given
-        final DefaultSqlGenerator sqlGenerator = new DefaultSqlGenerator();
+        final DefaultSqlGenerator sqlGenerator = new DefaultSqlGenerator(new DefaultMetaDataEngine());
         final ConditionGroup where = new ConditionGroup(new LogicCondition(
                 new SelectColumn(createTestColumn(), sqlGenerator.selectSqlGenerator().columnIdentifierGenerator),
                 Operator.EQ,

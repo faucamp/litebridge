@@ -7,7 +7,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.math.XMathOperation;
+import org.litebridge.db.spi.math.MathOperator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,10 +33,10 @@ class UpdateSqlGeneratorTest {
     void createMathOperation() {
         // Given
         final Column column = createTestColumn();
-        final XMathOperation mathOperation = new XMathOperation(XMathOperation.MathOperator.ADD, 10);
+        final MathOperator mathOperator = MathOperator.ADD;
 
         // When
-        final String result = updateSqlGenerator.createMathOperation(column.name(), mathOperation);
+        final String result = updateSqlGenerator.createMathOperation(column.name(), mathOperator);
 
         // Then
         assertEquals("TEST_COLUMN + ?", result);
