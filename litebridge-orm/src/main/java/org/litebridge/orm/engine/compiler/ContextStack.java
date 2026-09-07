@@ -7,6 +7,14 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
+/**
+ * An abstract stack used to manage a hierarchical context structure.
+ * <p>
+ * This class provides mechanisms to maintain a stack of context objects and
+ * their associated hierarchical relationships.
+ *
+ * @param <T> the type of the context objects managed by this stack
+ */
 abstract class ContextStack<T> {
 
     private final List<T> all = new ArrayList<>();

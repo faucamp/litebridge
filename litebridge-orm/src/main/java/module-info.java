@@ -1,7 +1,9 @@
 import org.jspecify.annotations.NullMarked;
 
 /**
- * Litebridge ORM
+ * Litebridge Object Relational Mapper
+ * <p>
+ * This module contains the core Litebridge ORM implementation.
  */
 @NullMarked
 module litebridge.orm {

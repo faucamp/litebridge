@@ -7,6 +7,9 @@ import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 
+/**
+ * Specialised query node compiler for DELETE statements.
+ */
 final class DeleteQueryCompiler extends AbstractQueryCompiler<DeleteCompilationContext> {
 
     DeleteQueryCompiler(final LitebridgeContext litebridgeContext) {

@@ -7,6 +7,9 @@ import org.litebridge.orm.engine.ast.QueryNode;
 
 import java.util.Arrays;
 
+/**
+ * Specialised query node compiler for INSERT statements.
+ */
 final class InsertQueryCompiler extends AbstractQueryCompiler<InsertCompilationContext> {
 
     InsertQueryCompiler(final LitebridgeContext litebridgeContext) {

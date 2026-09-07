@@ -8,6 +8,9 @@ import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.UpdateNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 
+/**
+ * Specialised query node compiler for UPDATE statements.
+ */
 final class UpdateQueryCompiler extends AbstractQueryCompiler<UpdateCompilationContext> {
 
     UpdateQueryCompiler(final LitebridgeContext litebridgeContext) {

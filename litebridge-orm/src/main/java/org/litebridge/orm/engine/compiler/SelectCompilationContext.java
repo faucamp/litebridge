@@ -51,6 +51,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+/**
+ * Compilation context for SELECT statements.
+ */
 final class SelectCompilationContext extends AbstractCompilationContext {
 
     private final boolean selectAll;

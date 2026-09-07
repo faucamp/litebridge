@@ -25,6 +25,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
+/**
+ * Compilation context for INSERT statements.
+ */
 final class InsertCompilationContext implements CompilationContext {
 
     private final Table table;

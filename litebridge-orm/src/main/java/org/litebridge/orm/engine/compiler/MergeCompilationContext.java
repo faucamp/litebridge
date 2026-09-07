@@ -32,6 +32,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Compilation context for MERGE INTO statements.
+ */
 final class MergeCompilationContext extends AbstractCompilationContext {
 
     private final MergeNode mergeNode;

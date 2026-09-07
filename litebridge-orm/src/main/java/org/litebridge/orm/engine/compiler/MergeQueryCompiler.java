@@ -13,6 +13,9 @@ import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.engine.ast.WhenMatchedNode;
 import org.litebridge.orm.engine.ast.WhenNotMatchedNode;
 
+/**
+ * Specialised query node compiler for MERGE INTO statements.
+ */
 final class MergeQueryCompiler extends AbstractQueryCompiler<MergeCompilationContext> {
 
     MergeQueryCompiler(final LitebridgeContext litebridgeContext) {

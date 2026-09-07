@@ -14,6 +14,9 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 
+/**
+ * Specialised query node compiler for SELECT statements.
+ */
 final class SelectQueryCompiler extends AbstractQueryCompiler<SelectCompilationContext> {
 
     SelectQueryCompiler(final LitebridgeContext litebridgeContext) {

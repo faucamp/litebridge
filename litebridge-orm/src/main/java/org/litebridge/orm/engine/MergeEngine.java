@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * Engine for processing MERGE statements.
+ */
 public final class MergeEngine extends AbstractInsertEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MergeEngine.class);

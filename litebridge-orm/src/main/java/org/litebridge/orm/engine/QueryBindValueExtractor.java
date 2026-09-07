@@ -22,11 +22,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Extracts bind values from a query node abstract syntax tree.
+ */
 public final class QueryBindValueExtractor {
 
     private QueryBindValueExtractor() {
     }
 
+    /**
+     * Extracts and collects bind values from the provided {@link QueryNode} into a list.
+     * <p>
+     * This method processes the given query chain starting from the provided node and
+     * extracts bindable values such as conditions or set values into a resulting list.
+     *
+     * @param node the root {@link QueryNode} representing the start of the query chain
+     * @return a list of bind values extracted from the query chain, which may include
+     * nullable objects, depending on the query structure
+     */
     public static List<@Nullable Object> extractBindValues(final QueryNode node) {
         final List<@Nullable Object> bindValues = new ArrayList<>();
         extractBindValues(node, bindValues);

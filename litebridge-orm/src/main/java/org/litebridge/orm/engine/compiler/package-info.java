@@ -1,5 +1,5 @@
 /**
- * Query compiler for AST query nodes.
+ * Compiler for AST query nodes.
  *
  * @see QueryCompiler
  */

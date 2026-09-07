@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Function;
 
+/**
+ * Engine for processing DELETE statements.
+ */
 public final class DeleteEngine extends AbstractUpdateEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteEngine.class);

@@ -14,6 +14,9 @@ import org.slf4j.LoggerFactory;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * Engine for processing INSERT statements.
+ */
 public final class InsertEngine extends AbstractInsertEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InsertEngine.class);

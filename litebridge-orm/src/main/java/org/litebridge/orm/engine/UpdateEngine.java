@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Function;
 
+/**
+ * Engine for processing UPDATE statements.
+ */
 public final class UpdateEngine extends AbstractUpdateEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateEngine.class);

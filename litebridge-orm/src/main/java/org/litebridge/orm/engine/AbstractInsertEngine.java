@@ -11,11 +11,14 @@ import org.litebridge.db.spi.update.Insert;
 import java.util.List;
 import java.util.function.Supplier;
 
+/**
+ * Provides common functionality for creating update metadata.
+ */
 public abstract sealed class AbstractInsertEngine extends AbstractUpdateEngine permits InsertEngine, MergeEngine {
 
-    public static UpdateMetaData createUpdateMetaData(final PreparedOperation preparedOperation,
-                                                      final Supplier<Table> tableSupplier,
-                                                      final LitebridgeContext litebridgeContext) {
+    protected static UpdateMetaData createUpdateMetaData(final PreparedOperation preparedOperation,
+                                                         final Supplier<Table> tableSupplier,
+                                                         final LitebridgeContext litebridgeContext) {
         if (preparedOperation.operation() instanceof Insert insert
                 && !insert.returnGeneratedKeys()) {
             return EMPTY_UPDATE_META_DATA;

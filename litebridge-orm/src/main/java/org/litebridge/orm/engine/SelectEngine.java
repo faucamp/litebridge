@@ -13,10 +13,7 @@ import org.litebridge.orm.persistence.DtoConstructor;
 import java.util.function.Function;
 
 /**
- * Provides methods for constructing SQL SELECT statements in a fluent, object-oriented manner.
- * <p>
- * This class supports the selection of data transfer objects (DTOs), raw fields/columns, and custom expressions with optional
- * support for related DTO strategies and contextual mappings.
+ * Initiates the fluent API for creating SELECT statements.
  */
 public class SelectEngine {
 

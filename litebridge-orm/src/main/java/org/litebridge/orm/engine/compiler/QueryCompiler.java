@@ -14,6 +14,19 @@ import org.litebridge.orm.engine.ast.UpdateNode;
 
 import java.util.List;
 
+/**
+ * Compiler for AST query nodes.
+ * <p>
+ * The compiler processes query node chains and producing {@link PreparedOperation} instances from them.
+ * <p>
+ * This class acts as a root-level query compiler that delegates responsibility to
+ * specialised compilers for different query types.
+ * <p>
+ * Specialised compilers are lazily initialised and maintained as
+ * private fields to ensure their reuse and improve performance.
+ * <p>
+ * This class is thread-safe.
+ */
 public final class QueryCompiler extends AbstractRootQueryCompiler {
 
     private @Nullable SelectQueryCompiler selectQueryCompiler;
@@ -31,6 +44,17 @@ public final class QueryCompiler extends AbstractRootQueryCompiler {
         super(litebridgeContext);
     }
 
+    /**
+     * Compiles a given query node into a prepared operation.
+     * <p>
+     * This method resolves the appropriate query compiler for the root query node type
+     * and applies all nodes in the query chain to create a structured database operation
+     * along with its associated bind values.
+     *
+     * @param node the query node to be compiled
+     * @return a {@code PreparedOperation} containing the structured operation and bind values
+     * @throws IllegalArgumentException if the root query node type is unsupported
+     */
     public PreparedOperation compile(final QueryNode node) {
         final List<QueryNode> nodes = flatten(node);
 

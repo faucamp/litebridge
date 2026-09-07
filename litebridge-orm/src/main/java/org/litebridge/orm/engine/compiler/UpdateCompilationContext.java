@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Compilation context for UPDATE statements.
+ */
 final class UpdateCompilationContext extends AbstractCompilationContext {
 
     private static final ConditionGroup EMPTY_CONDITION_GROUP = new ConditionGroup(List.of());

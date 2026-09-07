@@ -12,6 +12,9 @@ import org.litebridge.orm.persistence.OrmTable;
 import java.util.Collections;
 import java.util.Objects;
 
+/**
+ * Compilation context for DELETE statements.
+ */
 final class DeleteCompilationContext extends AbstractCompilationContext {
 
     private static final ConditionGroup EMPTY_CONDITION_GROUP = new ConditionGroup(Collections.emptyList());
