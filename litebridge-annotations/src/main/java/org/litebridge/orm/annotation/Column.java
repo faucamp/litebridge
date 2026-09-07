@@ -8,28 +8,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used to define mapping between a Java field or method and a database column.
- * It provides metadata for ORM frameworks to map the annotated entity field or property
- * to the corresponding column in the database table.
+ * Maps a Java field or property to a database column.
  * <p>
- * This annotation can be applied to fields or methods in an entity class.
- * <p>
- * Attributes:
- * - `value`: Specifies the name of the column this field or method maps to in the database.
- * - `joinOn`: Indicates the condition used when performing a join operation on another table.
- * - `joinUsing`: Specifies whether the join should use the field's value as part of a "using" clause.
- * - `generator`: References a custom {@code ColumnValueGenerator} implementation to dynamically compute or fetch the column value.
- * - `generateUsingSequence`: Specifies the name of a database sequence to use for generating the column value.
- * <p>
- * Example Use Cases:
- * - Static column mapping using the `value` attribute for straightforward entity-table mapping.
- * - Dynamic column value generation through the `generator` attribute.
- * - Sequence-based value generation for primary key fields using the `generateUsingSequence` attribute.
- * <p>
- * Note:
- * - The `ColumnValueGenerator` referenced in the `generator` attribute provides a functional interface
- * for computing the column's value at runtime using metadata information.
- * - A blank or default value for an attribute signals that the feature is not applicable or disabled.
+ * This may be applied to a Java field for direct field updates/reads,
+ * or to a Java property method for property-based access column values.
  */
 @Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

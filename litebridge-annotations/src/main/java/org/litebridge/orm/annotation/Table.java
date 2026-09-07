@@ -6,16 +6,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation that designates a class as corresponding to a database table (i.e. an entity).
+ * Maps a Java class to a database table.
  * <p>
- * It is used in the context of Object-Relational Mapping (ORM) to specify
- * the table name in the database to which the annotated class maps.
+ * This annotation identifes the class as a Litebridge entity.
  * <p>
- * Attributes:
- * - `value`: Represents the name of the database table that the entity class maps to.
- * <p>
- * Usage of this annotation allows ORM frameworks to identify and bind
- * the annotated class to the specific table for data persistence operations.
+ * The entity needs to be registered with a Litebridge instance before use;
+ * either explicitly or automatically via an entity package scanner.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
