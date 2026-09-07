@@ -1,7 +1,7 @@
 package org.litebridge.orm.api.update;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.math.MathOperation;
+import org.litebridge.db.spi.math.MathOperator;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -43,7 +43,7 @@ public abstract sealed class UpdateSetStep<DTO,
     }
 
     public US to(final Object value) {
-        return addSetNode(value);
+        return addSetNode(null, value);
     }
 
     public US increment() {
@@ -51,27 +51,27 @@ public abstract sealed class UpdateSetStep<DTO,
     }
 
     public US add(final Object value) {
-        return addSetNode(new MathOperation(MathOperation.Operator.ADD, value));
+        return addSetNode(MathOperator.ADD, value);
     }
 
     public US minus(final Object value) {
-        return addSetNode(new MathOperation(MathOperation.Operator.SUBTRACT, value));
+        return addSetNode(MathOperator.SUBTRACT, value);
     }
 
     public US multiply(final Object value) {
-        return addSetNode(new MathOperation(MathOperation.Operator.MULTIPLY, value));
+        return addSetNode(MathOperator.MULTIPLY, value);
     }
 
     public US divide(final Object value) {
-        return addSetNode(new MathOperation(MathOperation.Operator.DIVIDE, value));
+        return addSetNode(MathOperator.DIVIDE, value);
     }
 
     public US mod(final Object value) {
-        return addSetNode(new MathOperation(MathOperation.Operator.MOD, value));
+        return addSetNode(MathOperator.MOD, value);
     }
 
-    private US addSetNode(final Object value) {
-        final SetNode setNode = new SetNode(node, column, expressionSpec, value, true);
+    private US addSetNode(final @Nullable MathOperator mathOperator, final Object value) {
+        final SetNode setNode = new SetNode(node, column, expressionSpec, value, mathOperator);
         return updateStepCreator.apply(setNode);
     }
 }

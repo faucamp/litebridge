@@ -2,9 +2,9 @@ package org.litebridge.orm.engine;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.math.MathOperation;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.SelectTerminal;
+import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.ConditionWithIdNode;
@@ -14,7 +14,6 @@ import org.litebridge.orm.engine.ast.JoinNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.WhereNode;
-import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.ArrayList;
@@ -40,26 +39,21 @@ public final class QueryBindValueExtractor {
         for (final QueryNode currentNode : nodes) {
 
             switch (currentNode) {
-            case JoinNode joinNode -> {
-                if (joinNode.condition() != null) {
-                    extractBindValuesAtLevel(joinNode.condition(), bindValues);
-                }
-            }
-            case WhereNode whereNode -> extractBindValuesAtLevel(whereNode.condition(), bindValues);
-            case HavingNode havingNode -> extractBindValuesAtLevel(havingNode.condition(), bindValues);
-            case SetNode setNode -> {
-                if (setNode.bindValue()) {
-                    final Object value = setNode.value();
-
-                    if (!(value instanceof Column) && !(value instanceof ExpressionSpec) && !(value instanceof MathOperation)) {
-                        bindValues.add(value);
+                case JoinNode joinNode -> {
+                    if (joinNode.condition() != null) {
+                        extractBindValuesAtLevel(joinNode.condition(), bindValues);
                     }
                 }
-            }
-            case InsertValuesNode insertValuesNode -> Collections.addAll(bindValues, insertValuesNode.values());
-            default -> {
-                // Ignore other node types in main chain
-            }
+                case WhereNode whereNode -> extractBindValuesAtLevel(whereNode.condition(), bindValues);
+                case HavingNode havingNode -> extractBindValuesAtLevel(havingNode.condition(), bindValues);
+                case SetNode setNode -> {
+                    final Object value = setNode.value();
+                    bindValues.add(value);
+                }
+                case InsertValuesNode insertValuesNode -> Collections.addAll(bindValues, insertValuesNode.values());
+                default -> {
+                    // Ignore other node types in main chain
+                }
             }
         }
     }

@@ -620,7 +620,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         assertTrue(litebridge.select(Person.class).stream().allMatch(p -> p.getName().equals("John") && p.getSurname().equals("Doe") && p.getAge() == 18));
 
-        // Adjust the age of all persons
+        // Adjust the age of all persons using a math operation
         litebridge.update(Person.class, p ->
                 p.set("age").increment()
                         .where("surname").eq("Doe"));
@@ -633,6 +633,33 @@ public class BasicE2eTest extends AbstractE2eTest {
                         .where(tableMapper.transformColumnName("EYE_COLOUR")).eq("green"));
 
         assertEquals(1, litebridge.select(Person.class).stream().filter(p -> p.getEyeColour().equals("unknown")).count());
+
+        // Different math operations
+        assertEquals(19, litebridge.select(Fn.convert(Fn.f("age"), int.class)).from(Person.class).where("id").eq(1).oneOrThrow());
+        litebridge.update(Person.class, p -> p
+                .set(PersonMeta.age).multiply(2)
+                .where(PersonMeta.id).eq(1));
+        assertEquals(38, litebridge.select(Fn.convert(Fn.f("age"), int.class)).from(Person.class).where("id").eq(1).oneOrThrow());
+
+        litebridge.update(Person.class, p -> p
+                .set(PersonMeta.age).add(5)
+                .where(PersonMeta.id).eq(1));
+        assertEquals(43, litebridge.select(Fn.convert(Fn.f("age"), int.class)).from(Person.class).where("id").eq(1).oneOrThrow());
+
+        litebridge.update(Person.class, p -> p
+                .set(PersonMeta.age).minus(1)
+                .where(PersonMeta.id).eq(1));
+        assertEquals(42, litebridge.select(Fn.convert(Fn.f("age"), int.class)).from(Person.class).where("id").eq(1).oneOrThrow());
+
+        litebridge.update(Person.class, p -> p
+                .set(PersonMeta.age).divide(2)
+                .where(PersonMeta.id).eq(1));
+        assertEquals(21, litebridge.select(Fn.convert(Fn.f("age"), int.class)).from(Person.class).where("id").eq(1).oneOrThrow());
+
+        litebridge.update(Person.class, p -> p
+                .set(PersonMeta.age).mod(2)
+                .where(PersonMeta.id).eq(1));
+        assertEquals(1, litebridge.select(Fn.convert(Fn.f("age"), int.class)).from(Person.class).where("id").eq(1).oneOrThrow());
     }
 
     @TestTemplate

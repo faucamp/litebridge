@@ -140,13 +140,12 @@ final class MergeCompilationContext extends AbstractCompilationContext {
 
         whenMatchedSpec.addUpdateColumn(columnMetaData);
 
-        if (setNode.bindValue()) {
-            whenMatchedSpec.addBindValue(new BindValue(setNode.value(), columnMetaData.getDataType()));
-        } else {
+        if (setNode.mathOperator() != null) {
+            //TODO: implement generated values
             throw new UnsupportedOperationException("Not yet implemented");
+        } else {
+            whenMatchedSpec.addBindValue(new BindValue(setNode.value(), columnMetaData.getDataType()));
         }
-
-        //TODO: implement generated values
     }
 
     public void whenNotMatchedInsert(final InsertNode insertNode) {
@@ -292,14 +291,14 @@ final class MergeCompilationContext extends AbstractCompilationContext {
         public void addUpdateColumns(final List<ColumnMetaData> columnMetaDataList) {
             ensureColumnMetaDataList().addAll(columnMetaDataList);
             final List<UpdateColumn> updateColumns = columnMetaDataList.stream()
-                    .map(columnMetaData -> new UpdateColumn(columnMetaData.name(), null))
+                    .map(columnMetaData -> new UpdateColumn(columnMetaData.name()))
                     .toList();
             ensureUpdateColumns().addAll(updateColumns);
         }
 
         public void addUpdateColumn(final ColumnMetaData column) {
             ensureColumnMetaDataList().add(column);
-            ensureUpdateColumns().add(new UpdateColumn(column.name(), null));
+            ensureUpdateColumns().add(new UpdateColumn(column.name()));
         }
 
         public @Nullable List<UpdateColumn> getUpdateColumns() {

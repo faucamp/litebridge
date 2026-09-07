@@ -4,7 +4,6 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.math.MathOperation;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.Update;
@@ -77,16 +76,8 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
                     .map(setNode -> {
                         final String fieldName = getColumn(setNode);
                         final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(fieldName);
-
-                        if (setNode.value() instanceof MathOperation mathOperation) {
-                            final BindValue bindValue = new BindValue(mathOperation.value(), columnMetaData.getDataType());
-                            bindValues.add(bindValue);
-                            return new UpdateColumn(columnMetaData.name(), null, mathOperation);
-                        } else {
-                            final BindValue bindValue = new BindValue(setNode.value(), columnMetaData.getDataType());
-                            bindValues.add(bindValue);
-                            return new UpdateColumn(columnMetaData.name());
-                        }
+                        bindValues.add(new BindValue(setNode.value(), columnMetaData.getDataType()));
+                        return new UpdateColumn(columnMetaData.name(), null, setNode.mathOperator());
                     })
                     .toList();
         } else {
@@ -94,16 +85,8 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
                     .map(setNode -> {
                         final String columnName = getColumn(setNode);
                         final ColumnMetaData columnMetaData = tableMetaData.column(columnName);
-
-                        if (setNode.value() instanceof MathOperation mathOperation) {
-                            final BindValue bindValue = new BindValue(mathOperation.value(), columnMetaData.getDataType());
-                            bindValues.add(bindValue);
-                            return new UpdateColumn(columnName, null, mathOperation);
-                        } else {
-                            final BindValue bindValue = new BindValue(setNode.value(), columnMetaData.getDataType());
-                            bindValues.add(bindValue);
-                            return new UpdateColumn(columnName, null);
-                        }
+                        bindValues.add(new BindValue(setNode.value(), columnMetaData.getDataType()));
+                        return new UpdateColumn(columnName, null, setNode.mathOperator());
                     })
                     .toList();
         }

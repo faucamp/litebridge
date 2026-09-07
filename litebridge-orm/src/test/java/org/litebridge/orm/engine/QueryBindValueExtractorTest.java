@@ -2,7 +2,6 @@ package org.litebridge.orm.engine;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.math.MathOperation;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.SelectTerminal;
@@ -14,16 +13,13 @@ import org.litebridge.orm.engine.ast.HavingNode;
 import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.engine.ast.InsertValuesNode;
 import org.litebridge.orm.engine.ast.JoinNode;
-import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.WhereNode;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.mockito.MockedStatic;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 
@@ -57,33 +53,6 @@ class QueryBindValueExtractorTest {
 
         // Then
         assertEquals(List.of("having", "join"), result);
-    }
-
-    @Test
-    void extractBindValues_skipNonBindableSetValues() {
-        // Given
-        final SetNode column = new SetNode(null, "column", mock(Column.class));
-        final SetNode expression = new SetNode(column, "column", mock(SelectColumnSpec.class));
-        final SetNode math = new SetNode(expression, "column", mock(MathOperation.class));
-        final SetNode value = new SetNode(math, "column", "bound");
-
-        // When
-        final List<Object> result = QueryBindValueExtractor.extractBindValues(value);
-
-        // Then
-        assertEquals(List.of("bound"), result);
-    }
-
-    @Test
-    void extractBindValues_skipUnboundSetValues() {
-        // Given
-        final SetNode set = new SetNode(null, "column", null, "not-bound", false);
-
-        // When
-        final List<Object> result = QueryBindValueExtractor.extractBindValues(set);
-
-        // Then
-        assertTrue(result.isEmpty());
     }
 
     @Test

@@ -3,7 +3,7 @@ package org.litebridge.db.spi.impl.sql;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.math.MathOperation;
+import org.litebridge.db.spi.math.MathOperator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateColumn;
@@ -63,8 +63,8 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
             sql.append(columnIdentifierGenerator.quoteIdentifier(updateColumn.name())).append(" = ");
             //final ColumnMetaData columnMetaData = ensureColumnMetaData(columnValue.column(), connectionProvider);
 
-            if (updateColumn.mathOperation() != null) {
-                sql.append(createMathOperation(updateColumn.name(), updateColumn.mathOperation()));
+            if (updateColumn.mathOperator() != null) {
+                sql.append(createMathOperation(updateColumn.name(), updateColumn.mathOperator()));
             } else {
                 sql.append('?');
             }
@@ -81,11 +81,11 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
     /**
      * Creates a SQL representation of a math operation.
      *
-     * @param column        the column
-     * @param mathOperation the math operation
+     * @param column       the column
+     * @param mathOperator the math operation
      * @return the SQL representation of the math operation
      */
-    protected String createMathOperation(final String column, final MathOperation mathOperation) {
-        return "%s %s ?".formatted(columnIdentifierGenerator.quoteIdentifier(column), mathOperation.operator().symbol());
+    protected String createMathOperation(final String column, final MathOperator mathOperator) {
+        return "%s %s ?".formatted(columnIdentifierGenerator.quoteIdentifier(column), mathOperator.symbol());
     }
 }
