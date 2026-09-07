@@ -1,9 +1,10 @@
 package org.litebridge.spring.boot3.test;
 
 import org.flywaydb.core.Flyway;
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
@@ -182,6 +183,16 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         }
 
         @Override
+        public DatabaseProviderMetaData metaData() {
+            return null;
+        }
+
+        @Override
+        public DatabaseMetaData databaseMetaData(final ConnectionProvider connectionProvider) throws SQLException {
+            return null;
+        }
+
+        @Override
         public TableMetaData tableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
@@ -199,16 +210,6 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         @Override
         public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
             return "";
-        }
-
-        @Override
-        public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
-            return null;
-        }
-
-        @Override
-        public UpdateResult nativeSqlUpdate(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
-            return null;
         }
 
         @Override
