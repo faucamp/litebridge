@@ -9,10 +9,11 @@ import java.util.Objects;
 /**
  * Represents a SET clause in an UPDATE statement in the query AST.
  *
- * @param previous     the previous node in the chain
- * @param column       the column to update
- * @param value        the value to set (or use in the math operation, if specified)
- * @param mathOperator optional math operator to use when setting the value
+ * @param previous       the previous node in the chain
+ * @param column         the column to update
+ * @param expressionSpec the expression to use instead of the column
+ * @param value          the value to set (or use in the math operation, if specified)
+ * @param mathOperator   optional math operator to use when setting the value
  */
 public record SetNode(@Nullable QueryNode previous,
                       @Nullable String column,

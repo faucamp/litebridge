@@ -8,9 +8,15 @@ import java.util.Objects;
 
 /**
  * Represents a SELECT clause in the query AST.
+ * <p>
+ * This is a root node.
  *
- * @param expressions the expressions to select
- * @param resultTypes the target result types, if overridden
+ * @param table           name of the table to select from
+ * @param dtoClass        class of the DTO to select from
+ * @param contextDtoClass The parent/context DTO class for determining the correct {@code dtoClass} table mapping (for shared DTOs mapped to multiple distinct tables)
+ * @param columns         names of the columns to select
+ * @param expressions     the expressions to select
+ * @param resultTypes     the target result types, if overridden
  */
 public record SelectNode(@Nullable String table,
                          @Nullable Class<?> dtoClass,

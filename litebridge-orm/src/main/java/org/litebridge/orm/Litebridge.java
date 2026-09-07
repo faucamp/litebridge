@@ -405,6 +405,7 @@ public final class Litebridge implements SelectApi {
      * @param <DTO>    The type of the Data Transfer Object (DTO) to be updated.
      * @param dtoClass The class of the DTO that determines the table to be updated.
      * @param update   A function that builds the update query using the provided {@link DtoUpdateStart}.
+     * @return The result of the update operation
      */
     public <DTO> UpdateResult update(final Class<DTO> dtoClass, final Function<DtoUpdateStart<DTO>, UpdateQuery> update) {
         return updateEngine.update(dtoClass, update, createDtoLitebridgeContext());
@@ -416,6 +417,7 @@ public final class Litebridge implements SelectApi {
      * @param tableName the name of the table to update
      * @param update    a function that defines the update query, transforming a {@code SqlUpdateStart}
      *                  instance into an {@code UpdateQuery}
+     * @return The result of the update operation
      */
     public UpdateResult update(final String tableName, final Function<SqlUpdateStart, UpdateQuery> update) {
         return updateEngine.update(tableName, update, createSqlLitebridgeContext());
@@ -499,6 +501,7 @@ public final class Litebridge implements SelectApi {
      * @param tableName the name of the table from which records will be deleted
      * @param delete    a function that takes an instance of {@code SqlDeleteWhereClause} and returns a {@code DeleteQuery},
      *                  specifying the conditions for deleting the records
+     * @return the result of the delete operation
      */
     public UpdateResult delete(final String tableName, final Function<SqlDeleteStart, DeleteTerminal> delete) {
         return deleteEngine.delete(tableName, delete, createSqlLitebridgeContext());
@@ -513,10 +516,27 @@ public final class Litebridge implements SelectApi {
         delete(tableName, sqlDeleteStart -> sqlDeleteStart);
     }
 
+    /**
+     * Performs a merge operation into the specified table.
+     *
+     * @param tableName the name of the table into which to merge data
+     * @param merge     a function that takes an instance of {@link SqlMergeUsingStep} and returns a {@code MergeTerminal},
+     *                  specifying the conditions and actions for merging records
+     * @return the result of the merge operation
+     */
     public UpdateResult mergeInto(final String tableName, final Function<SqlMergeUsingStep, MergeTerminal> merge) {
         return mergeEngine.mergeInto(tableName, merge, createSqlLitebridgeContext());
     }
 
+    /**
+     * Performs a merge operation into the specified mapped DTO type.
+     *
+     * @param dtoClass the class of the DTO to merge
+     * @param merge    a function that takes an instance of {@link DtoMergeUsingStep} and returns a {@code MergeTerminal},
+     *                 specifying the conditions and actions for merging records
+     * @param <DTO>    the type of the DTO
+     * @return the result of the merge operation
+     */
     public <DTO> UpdateResult mergeInto(final Class<DTO> dtoClass, final Function<DtoMergeUsingStep<DTO>, MergeTerminal> merge) {
         return mergeEngine.mergeInto(dtoClass, merge, createDtoLitebridgeContext());
     }
@@ -577,6 +597,11 @@ public final class Litebridge implements SelectApi {
         return transactionContext;
     }
 
+    /**
+     * Provides access to the query plan cache.
+     *
+     * @return the {@link QueryPlanCache} instance associated with this Litebridge instance
+     */
     QueryPlanCache queryPlanCache() {
         return queryPlanCache;
     }

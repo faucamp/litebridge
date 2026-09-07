@@ -7,6 +7,7 @@ import org.jspecify.annotations.Nullable;
  *
  * @param previous the previous node in the chain
  * @param table    the table to update
+ * @param dtoClass class of the DTO to update
  */
 public record UpdateNode(@Nullable QueryNode previous,
                          @Nullable String table,

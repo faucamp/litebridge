@@ -8,6 +8,7 @@ import java.util.Objects;
  * Represents a JOIN clause metadata in the query AST.
  */
 public final class JoinNode implements QueryNode {
+
     private final @Nullable QueryNode previous;
     private final String type;
     private final @Nullable Class<?> dtoClass;

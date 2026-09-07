@@ -7,16 +7,17 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import java.util.Objects;
 
 /**
- * Represents a condition within a JOIN, WHERE or HAVING clause in the query AST.
+ * Represents a JOIN USING condition in the query AST.
  *
- * @param previous      the previous node in the chain
- * @param logicOperator the logic operator (AND/OR)
+ * @param previous        the previous node in the chain
+ * @param logicOperator   the logic operator (AND/OR)
+ * @param usingColumn     the column to join on
+ * @param usingExpression the expression to join on
  */
 public record ConditionJoinUsingNode(@Nullable QueryNode previous,
                                      LogicOperator logicOperator,
                                      @Nullable String usingColumn,
                                      @Nullable ExpressionSpec usingExpression) implements ConditionQueryNode {
-
 
     @Override
     public boolean equals(final Object o) {

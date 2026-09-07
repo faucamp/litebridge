@@ -6,13 +6,15 @@ import java.util.Objects;
 
 /**
  * Represents a WHERE clause condition in the query AST.
- *
  */
 public final class WhereNode implements QueryNode {
+
     private final @Nullable QueryNode previous;
     private QueryNode condition;
 
     /**
+     * Constructs a new {@code WhereNode} instance.
+     *
      * @param previous  the previous node in the chain
      * @param condition the last embedded condition node for this node
      */
@@ -26,6 +28,13 @@ public final class WhereNode implements QueryNode {
         return previous;
     }
 
+    /**
+     * Returns the conditions associated with the WHERE clause.
+     * <p>
+     * This is represented as a chained link of query nodes; the last node in the chain is returned.
+     *
+     * @return the last condition node
+     */
     public QueryNode condition() {
         return condition;
     }
@@ -51,6 +60,12 @@ public final class WhereNode implements QueryNode {
                 "condition=" + condition + ']';
     }
 
+    /**
+     * Sets the conditions for this WHERE clause, by replacing the current condition.
+     *
+     * @param condition the new condition node
+     * @return this node, for method chaining
+     */
     public WhereNode withCondition(QueryNode condition) {
         this.condition = condition;
         return this;

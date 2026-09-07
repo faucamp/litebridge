@@ -7,6 +7,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
  * Represents an ORDER BY clause in the query AST.
  *
  * @param previous   the previous node in the chain
+ * @param column     the column to order by
  * @param expression the expression to order by
  * @param ascending  whether to sort in ascending order
  */

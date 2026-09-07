@@ -6,9 +6,8 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
-import java.sql.SQLException;
-
 public interface MetaDataEngine {
+
     /**
      * Retrieve metadata/capabilities of this database provider.
      *
@@ -21,7 +20,6 @@ public interface MetaDataEngine {
      *
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
      * @return a {@link DatabaseMetaData} object containing information about the connected database.
-     * @throws SQLException if any SQL error occurs while retrieving the metadata.
      */
     DatabaseMetaData databaseMetaData(ConnectionProvider connectionProvider);
 

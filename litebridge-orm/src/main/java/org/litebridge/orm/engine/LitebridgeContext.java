@@ -18,9 +18,6 @@ import org.litebridge.tracking.ClassFieldAccessorCache;
 
 /**
  * A context object that provides access to core Litebridge components and configuration.
- * <p>
- * This record provides the core configuration and utility components required for
- * query generation, function resolution, and execution.
  */
 public final class LitebridgeContext {
 
@@ -81,58 +78,128 @@ public final class LitebridgeContext {
         return config;
     }
 
+    /**
+     * Provides access to the SQL function registry.
+     *
+     * @return the {@link SqlFunctionRegistry} instance for the context
+     */
     public SqlFunctionRegistry sqlFunctionRegistry() {
         return sqlFunctionRegistry;
     }
 
+    /**
+     * Provides access to the query plan cache.
+     *
+     * @return the {@link QueryPlanCache} instance for the context
+     */
     public QueryPlanCache queryPlanCache() {
         return queryPlanCache;
     }
 
+    /**
+     * Provides access to the alias generator.
+     *
+     * @return the {@link AliasGenerator} instance for the context
+     */
     public AliasGenerator aliasGenerator() {
         return aliasGenerator;
     }
 
+    /**
+     * Provides access to the table metadata cache.
+     *
+     * @return the {@link TableMetaDataCache} instance for the context
+     */
     public TableMetaDataCache tableMetaDataCache() {
         return tableMetaDataCache;
     }
 
+    /**
+     * Provides access to the table registry.
+     *
+     * @return the {@link TableRegistry} instance for the context
+     */
     public TableRegistry tableRegistry() {
         return tableRegistry;
     }
 
+    /**
+     * Provides access to the database provider.
+     *
+     * @return the {@link DatabaseProvider} instance for the context
+     */
     public DatabaseProvider databaseProvider() {
         return databaseProvider;
     }
 
+    /**
+     * Provides access to the transaction manager.
+     *
+     * @return the {@link TransactionManager} instance for the context
+     */
     public TransactionManager transactionManager() {
         return transactionManager;
     }
 
+    /**
+     * Provides access to the class field accessor cache.
+     *
+     * @return the {@link ClassFieldAccessorCache} instance for the context
+     */
     public ClassFieldAccessorCache classFieldAccessorCache() {
         return classFieldAccessorCache;
     }
 
+    /**
+     * Provides access to the type converter.
+     *
+     * @return the {@link TypeConverter} instance for the context
+     */
     public TypeConverter typeConverter() {
         return typeConverter;
     }
 
+    /**
+     * Provides access to the select expression mapper.
+     *
+     * @return the {@link SelectExpressionMapper} instance for the context
+     */
     public SelectExpressionMapper selectExpressionMapper() {
         return selectExpressionMapper;
     }
 
+    /**
+     * Provides access to the select engine.
+     *
+     * @return the {@link SelectEngine} instance for the context
+     */
     public SelectEngine selectEngine() {
         return selectEngine;
     }
 
+    /**
+     * Gets the context's related DTO retrieval strategy.
+     *
+     * @return the context's related DTO retrieval strategy
+     */
     public RelatedDtoStrategy getRelatedDtoStrategy() {
         return relatedDtoStrategy;
     }
 
+    /**
+     * Sets the context's related DTO retrieval strategy.
+     *
+     * @param relatedDtoStrategy the related DTO retrieval strategy to set
+     */
     public void setRelatedDtoStrategy(final RelatedDtoStrategy relatedDtoStrategy) {
         this.relatedDtoStrategy = relatedDtoStrategy;
     }
 
+    /**
+     * Creates a new query compiler for the context.
+     *
+     * @return the new query compiler
+     */
     public QueryCompiler createQueryCompiler() {
         return new QueryCompiler(this);
     }

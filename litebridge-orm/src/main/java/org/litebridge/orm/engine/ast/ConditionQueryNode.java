@@ -1,7 +1,7 @@
 package org.litebridge.orm.engine.ast;
 
 /**
- * A node in a lightweight AST representing a step in a fluent query chain.
+ * An AST node representing a condition.
  */
 public sealed interface ConditionQueryNode
         extends QueryNode

@@ -2,10 +2,13 @@ package org.litebridge.orm.engine.ast;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.Objects;
+
 /**
  * HAVING clause condition in the query AST.
  */
 public final class HavingNode implements QueryNode {
+
     private final @Nullable QueryNode previous;
     private QueryNode condition;
 
@@ -15,7 +18,7 @@ public final class HavingNode implements QueryNode {
      * @param previous  the previous node in the chain
      * @param condition the last embedded condition node for this node
      */
-    public HavingNode(@Nullable QueryNode previous, QueryNode condition) {
+    public HavingNode(final @Nullable QueryNode previous, final QueryNode condition) {
         this.previous = previous;
         this.condition = condition;
     }
@@ -35,7 +38,7 @@ public final class HavingNode implements QueryNode {
     }
 
     @Override
-    public boolean equals(@Nullable Object obj) {
+    public boolean equals(final @Nullable Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (HavingNode) obj;
@@ -45,7 +48,7 @@ public final class HavingNode implements QueryNode {
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(previous, condition);
+        return Objects.hash(previous, condition);
     }
 
     @Override
@@ -61,7 +64,7 @@ public final class HavingNode implements QueryNode {
      * @param condition the condition node to set
      * @return this having node instance
      */
-    public HavingNode withCondition(QueryNode condition) {
+    public HavingNode withCondition(final QueryNode condition) {
         this.condition = condition;
         return this;
     }

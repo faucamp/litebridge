@@ -8,9 +8,12 @@ import java.util.Objects;
 
 /**
  * Represents an INSERT statement in the query AST.
+ * <p>
+ * This is a root node.
  *
  * @param table           name of the table to insert into
  * @param dtoClass        class of the DTO to insert
+ * @param contextDtoClass The parent/context DTO class for determining the correct {@code dtoClass} table mapping (for shared DTOs mapped to multiple distinct tables)
  * @param columns         names of the columns to insert into
  * @param expressionSpecs expressions to use instead of columns
  */

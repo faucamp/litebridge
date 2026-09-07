@@ -12,11 +12,13 @@ import static org.litebridge.orm.engine.ast.ConditionNodeUtil.valueStructuralKey
 /**
  * Represents a condition within a JOIN, WHERE or HAVING clause in the query AST.
  *
- * @param previous          the previous node in the chain
- * @param logicOperator     the logic operator (AND/OR)
- * @param lhs               the left-hand side expression
- * @param operator          the operator (EQ, USING, etc.)
- * @param rhs               the right-hand side value
+ * @param previous      the previous node in the chain
+ * @param logicOperator the logic operator (AND/OR)
+ * @param lhsColumn     the left-hand side column name
+ * @param lhsExpression the left-hand side expression
+ * @param operator      the operator (EQ, USING, etc.)
+ * @param rhs           the right-hand side value
+ * @param rhsColumn     the right-hand side column name
  */
 public record ConditionNode(@Nullable QueryNode previous,
                             LogicOperator logicOperator,
