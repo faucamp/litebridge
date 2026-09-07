@@ -26,12 +26,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class LitebridgeSpringBoot3AutoConfigurationTest {
 
@@ -109,8 +111,17 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
 
     static class MockDataSourceConfig {
         @Bean
-        public DataSource dataSource() {
-            return mock(DataSource.class);
+        public DataSource dataSource() throws SQLException {
+            final DataSource dataSource = mock(DataSource.class);
+            final Connection connection = mock(Connection.class);
+            final java.sql.DatabaseMetaData metaData = mock(java.sql.DatabaseMetaData.class);
+            when(dataSource.getConnection()).thenReturn(connection);
+            when(connection.getMetaData()).thenReturn(metaData);
+            when(metaData.getDatabaseProductName()).thenReturn("H2");
+            when(metaData.getDatabaseProductVersion()).thenReturn("2.3.232");
+            when(metaData.getDriverName()).thenReturn("H2 JDBC Driver");
+            when(metaData.getDriverVersion()).thenReturn("2.3.232");
+            return dataSource;
         }
     }
 
