@@ -47,6 +47,7 @@ public class MergeE2eTest extends AbstractE2eTest {
         litebridge.saveAll(persons);
         litebridge.saveAll(accounts);
 
+        // Merge with: "USING <dto>", "WHEN MATCHED AND <update>", "WHEN MATHED <delete>", "WHEN NOT MATCHED <insert values directly>"
         final UpdateResult updateResult = litebridge.mergeInto(Account.class, m -> m
                 .using(Person.class)
                 .on(AccountMeta.id).eq(PersonMeta.id)

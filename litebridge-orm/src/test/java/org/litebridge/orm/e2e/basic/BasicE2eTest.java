@@ -850,6 +850,69 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
+    @DisplayName("Select with limit/offset and order by")
+    void select_limitOrderBy_orderBy(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+
+        // Setup data
+        final Person[] persons = new Person[10];
+        for (int i = 0; i < 10; i++) {
+            persons[i] = new Person();
+            persons[i].setId(1L + i);
+            persons[i].setName("Name" + i);
+            persons[i].setSurname("Surname" + i);
+            persons[i].setAge((i % 3) * 5 + 20);
+        }
+
+        litebridge.saveAll(persons);
+
+        // No offset/limit
+        final List<Person> result1 =
+                litebridge.select().from(Person.class)
+                        .orderBy(PersonMeta.id).asc()
+                        .list();
+        assertEquals(10, result1.size());
+
+        // Offset only
+        final List<Person> result2 =
+                litebridge.select().from(Person.class)
+                        .orderBy(PersonMeta.id).asc()
+                        .offset(1)
+                        .list();
+        assertEquals(9, result2.size());
+        assertEquals(2L, result2.getFirst().getId());
+        assertEquals(10L, result2.getLast().getId());
+
+        // Limit only
+        final List<Person> result3 =
+                litebridge.select().from(Person.class)
+                        .orderBy(PersonMeta.id).asc()
+                        .limit(1)
+                        .list();
+        assertEquals(1, result3.size());
+        assertEquals(1L, result3.getFirst().getId());
+
+        // Limit and offset
+        final List<Person> result4 =
+                litebridge.select().from(Person.class)
+                        .orderBy(PersonMeta.id).asc()
+                        .limit(1).offset(4)
+                        .list();
+        assertEquals(1, result4.size());
+        assertEquals(5L, result4.getFirst().getId());
+
+        // Order by multiple columns
+        final List<Person> result5 =
+                litebridge.select(Person.class)
+                        .orderBy(PersonMeta.age).desc().then(PersonMeta.surname).asc()
+                        .list();
+        assertEquals(10, result5.size());
+        assertEquals(3L, result5.getFirst().getId());
+        assertEquals(10L, result5.getLast().getId());
+    }
+
+    @TestTemplate
     @DisplayName("Verify QueryPlanCache hits for DTO operations")
     void cacheHits_dtoOperations(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings

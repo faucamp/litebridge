@@ -25,13 +25,11 @@ public final class DtoOrderByClauseChain<DTO>
 
     @Override
     public DtoOrderByClause<DTO> then(final String... fields) {
-//        return new DtoOrderByClause<>(((DtoSelector<DTO>) delegate).createSelectFieldSpecs(fields).toArray(ExpressionSpec[]::new), (DtoSelector<DTO>) delegate);
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoOrderByClause<DTO> then(final ExpressionSpec... fields) {
-//        return new DtoOrderByClause<>(fields, (DtoSelector<DTO>) delegate);
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
     }
 }
