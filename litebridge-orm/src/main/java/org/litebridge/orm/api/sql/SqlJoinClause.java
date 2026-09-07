@@ -2,12 +2,8 @@ package org.litebridge.orm.api.sql;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
-import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
@@ -58,21 +54,6 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
             case SelectColumnSpec selectColumnSpec -> on(selectColumnSpec.getColumn().name());
             default -> throw new IllegalArgumentException("Unsupported JOIN ON expression: " + expression);
         };
-    }
-
-    /**
-     * Adds a join ON condition based on a query condition builder.
-     *
-     * @param builder the builder for the join condition
-     * @return an instance of the join condition clause to allow further configuration
-     */
-    public SqlJoinConditionClauseTerminal on(final QueryConditionBuilder<Row> builder) {
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectedTable, node, litebridgeContext);
-        final AbstractCbConditionClauseTerminal<Row> terminal = builder.apply(conditionClauseStart);
-        final QueryNode conditionNode = terminal.node();
-
-        final ConditionGroupNode groupNode = new ConditionGroupNode(null, LogicOperator.NOOP, conditionNode);
-        return terminalCreator.apply(groupNode);
     }
 
     /**

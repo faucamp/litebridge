@@ -2,17 +2,18 @@ package org.litebridge.orm.api.dto;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.select.JoinClauseTerminal;
-import org.litebridge.orm.engine.ast.JoinNode;
-import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.ConditionGroupNode;
+import org.litebridge.orm.engine.ast.JoinNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
-
-import java.util.function.Function;
 
 /**
  * Represents the terminal part of a JOIN condition clause in a DTO-based query.
@@ -56,14 +57,12 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoJoinConditionClause<DTO> and(final String field) {
-//        final Column column = ormTable.getColumnForFieldName(field).toColumn();
-//        return and(new SelectColumnSpec(column));
-        throw new UnsupportedOperationException("Not implemented yet");
+        return joinImpl(LogicOperator.AND, field, null);
     }
 
     @Override
     public DtoJoinConditionClause<DTO> and(final ExpressionSpec expression) {
-        return joinImpl(LogicOperator.AND, expression);
+        return joinImpl(LogicOperator.AND, null, expression);
     }
 
     @Override
@@ -73,14 +72,12 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoJoinConditionClause<DTO> or(final String field) {
-//        final Column column = ormTable.getColumnForFieldName(field).toColumn();
-//        return or(new SelectColumnSpec(column));
-        throw new UnsupportedOperationException("Not implemented yet");
+        return joinImpl(LogicOperator.OR, field, null);
     }
 
     @Override
     public DtoJoinConditionClause<DTO> or(final ExpressionSpec expression) {
-        return joinImpl(LogicOperator.OR, expression);
+        return joinImpl(LogicOperator.OR, null, expression);
     }
 
     @Override
@@ -101,26 +98,9 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoJoinClause<DTO> join(final Class<?> dtoClass) {
-//        final OrmTable joinOrmTable;
-//
-//        // First check for inline/contextually-registered tables
-//        final OrmTable contextScopedTable = ormTable.getContextTableRegistry().getOrmTable(dtoClass);
-//
-//        if (contextScopedTable != null) {
-//            joinOrmTable = contextScopedTable;
-//        } else {
-//            joinOrmTable = tableRegistry.getTableOrThrow(dtoClass);
-//        }
-
-//        return new DtoJoinClause<>((DtoSelector<DTO>) delegate, joinOrmTable, node -> {
-//            final JoinNode joinNode = new JoinNode(delegate.node(), "INNER", joinOrmTable.dtoClass(), ormTable.dtoClass(), null);
-//            joinNode.withCondition(node);
-//            delegate.withNode(joinNode);
-//            return new DtoJoinConditionClauseTerminal<>(joinNode, (DtoSelector<DTO>) delegate);
-//        });
         return new DtoJoinClause<>(null, litebridgeContext, conditionNode -> {
             final JoinNode joinNode = new JoinNode(node, "INNER", dtoClass, null);
-            joinNode.withCondition(conditionNode);
+            joinNode.setCondition(conditionNode);
             return new DtoJoinConditionClauseTerminal(joinNode, selectEngineTerminal, litebridgeContext);
         });
     }
@@ -145,26 +125,28 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
     }
 
-    private DtoJoinConditionClause<DTO> joinImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> recreator = n -> {
-            joinNode.withCondition(n);
-            return this;
-        };
-
-//        return new DtoJoinConditionClause<>(delegate.litebridgeContext(), logicOperator, expression, Objects.requireNonNull(joinNode.condition()), recreator);
-        throw new UnsupportedOperationException("Not implemented yet");
+    private DtoJoinConditionClause<DTO> joinImpl(final LogicOperator logicOperator, final @Nullable String field, final @Nullable ExpressionSpec expression) {
+        return new DtoJoinConditionClause<>(
+                litebridgeContext,
+                logicOperator,
+                field,
+                expression,
+                node,
+                conditionNode -> {
+                    joinNode.setCondition(conditionNode);
+                    return this;
+                });
     }
 
     private DtoJoinConditionClauseTerminal<DTO> joinImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-//        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(ormTable, delegate.litebridgeContext().fromClauseEngine(), null);
-//        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
-//        final QueryNode conditionNode = terminal.node();
-//
-//        final ConditionGroupNode groupNode = new ConditionGroupNode(joinNode.condition(), logicOperator, conditionNode);
-//        joinNode.withCondition(groupNode);
-//
-//        return this;
-        throw new UnsupportedOperationException("Not implemented yet");
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
+        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        final QueryNode conditionNode = terminal.node();
+
+        final ConditionGroupNode groupNode = new ConditionGroupNode(joinNode.condition(), logicOperator, conditionNode);
+        joinNode.setCondition(groupNode);
+
+        return this;
     }
 
     private DtoWhereConditionClause<DTO> whereImpl(final LogicOperator logicOperator, final @Nullable String field, final @Nullable ExpressionSpec expression) {

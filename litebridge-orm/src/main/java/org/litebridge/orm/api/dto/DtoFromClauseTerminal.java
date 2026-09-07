@@ -119,7 +119,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     public DtoJoinClause<DTO> join(final Class<?> dtoClass) {
         return new DtoJoinClause<>(null, litebridgeContext, conditionNode -> {
             final JoinNode joinNode = new JoinNode(node, "INNER", dtoClass, null);
-            joinNode.withCondition(conditionNode);
+            joinNode.setCondition(conditionNode);
             return new DtoJoinConditionClauseTerminal(joinNode, selectEngineTerminal, litebridgeContext);
         });
     }

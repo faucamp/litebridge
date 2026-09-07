@@ -199,6 +199,7 @@ class SqlE2eTest extends AbstractE2eTest {
         final String accountId = tableMapper.transformColumnName("ACCOUNT_ID");
         final String accountName = tableMapper.transformColumnName("ACCOUNT_NAME");
         final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
         insertTestPersonRecords(personTableName);
         insertTestAccountRecords(accountTableName);
 
@@ -232,6 +233,7 @@ class SqlE2eTest extends AbstractE2eTest {
             assertNumberEquals(2, row2.column(accountId).orElseThrow().value());
             assertEquals("Bob's Account", row2.column(accountName).orElseThrow().value());
         }
+
         // Join on
         {
             // When
@@ -262,6 +264,24 @@ class SqlE2eTest extends AbstractE2eTest {
             assertNumberEquals(30, row2.column(age).orElseThrow().value());
             assertNumberEquals(2, row2.column(accountId).orElseThrow().value());
             assertEquals("Bob's Account", row2.column(accountName).orElseThrow().value());
+        }
+
+        // Join with subquery in ON clause
+        {
+            final List<Row> result =
+                    litebridge.select(
+                                    c(personTableName, firstName),
+                                    c(personTableName, surname),
+                                    c(personTableName, age),
+                                    c(accountTableName, accountId),
+                                    c(accountTableName, accountName))
+                            .from(personTableName)
+                            .join(accountTableName).on(c(personTableName, personId)).eq(c(accountTableName, personId))
+                            .and(c(personTableName, personId)).in(q -> q
+                                    .select(personId)
+                                    .from(personTableName)
+                                    .where(c(personTableName, eyeColour)).eq("brown"))
+                            .list();
         }
     }
 

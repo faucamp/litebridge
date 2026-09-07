@@ -3,11 +3,15 @@ package org.litebridge.orm.api.sql;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
+import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.JoinNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
@@ -66,7 +70,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     public SqlJoinClause join(final String table) {
         return new SqlJoinClause(table, null, litebridgeContext, conditionNode -> {
             final JoinNode joinNode = new JoinNode(node, "INNER", null, table);
-            joinNode.withCondition(conditionNode);
+            joinNode.setCondition(conditionNode);
             return new SqlJoinConditionClauseTerminal(table, joinNode, selectEngineTerminal, litebridgeContext);
         });
     }
@@ -124,22 +128,21 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
                 logicOperator,
                 column,
                 expression,
-                null,
+                joinNode.condition(),
                 conditionNode -> {
-                    joinNode.withCondition(conditionNode);
+                    joinNode.setCondition(conditionNode);
                     return this;
                 });
     }
 
     private SqlJoinConditionClauseTerminal joinImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-//        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(((SqlSelector) delegate).table(), delegate.litebridgeContext().fromClauseEngine(), null);
-//        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
-//        final QueryNode conditionNode = terminal.node();
-//
-//        final ConditionGroupNode groupNode = new ConditionGroupNode(joinNode.condition(), logicOperator, conditionNode);
-//        joinNode.withCondition(groupNode);
-//
-//        return this;
-        throw new UnsupportedOperationException("Not implemented yet");
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectedTable, null, litebridgeContext);
+        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+        final QueryNode conditionNode = terminal.node();
+
+        final ConditionGroupNode groupNode = new ConditionGroupNode(joinNode.condition(), logicOperator, conditionNode);
+        joinNode.setCondition(groupNode);
+
+        return this;
     }
 }

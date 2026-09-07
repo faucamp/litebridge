@@ -78,11 +78,9 @@ public final class JoinNode implements QueryNode {
      * Sets the join condition node.
      *
      * @param condition the condition node to set
-     * @return this join node instance
      */
-    public JoinNode withCondition(@Nullable QueryNode condition) {
+    public void setCondition(@Nullable QueryNode condition) {
         this.condition = condition;
-        return this;
     }
 
     @Override

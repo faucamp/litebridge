@@ -49,10 +49,11 @@ class QueryBindValueExtractorTest {
         final HavingNode having = new HavingNode(null, havingCondition);
         final JoinNode joinWithoutCondition = new JoinNode(having, "INNER", Object.class, "other");
         final ConditionNode joinCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, "join");
-        final JoinNode join = new JoinNode(joinWithoutCondition, "INNER", Object.class, "other").withCondition(joinCondition);
+        final JoinNode joinNode = new JoinNode(joinWithoutCondition, "INNER", Object.class, "other");
+        joinNode.setCondition(joinCondition);
 
         // When
-        final List<Object> result = QueryBindValueExtractor.extractBindValues(join);
+        final List<Object> result = QueryBindValueExtractor.extractBindValues(joinNode);
 
         // Then
         assertEquals(List.of("having", "join"), result);

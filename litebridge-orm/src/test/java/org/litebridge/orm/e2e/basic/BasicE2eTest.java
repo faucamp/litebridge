@@ -64,34 +64,52 @@ public class BasicE2eTest extends AbstractE2eTest {
         litebridge.save(account);
 
         // Retrieve the account record and associated owner
-        final Account result = litebridge.select(Account.class)
-                .join(Person.class).on("owner")
-                .where("id").eq(person.getId())
-                .oneOrThrow();
+        {
+            final Account result = litebridge.select(Account.class)
+                    .join(Person.class).on("owner")
+                    .where("id").eq(person.getId())
+                    .oneOrThrow();
 
-        // Then
-        assertEquals(account, result);
-        assertEquals(person, result.getOwner());
+            assertEquals(account, result);
+            assertEquals(person, result.getOwner());
+        }
+
+        // Retrieve the account record and associated owner with a subquery in the join condition
+        {
+            final Account result = litebridge.select(Account.class)
+                    .join(Person.class).on("owner")
+                    .and(q -> q
+                            .where("balance").lt(1000)
+                            .or(PersonMeta.eyeColour).eq("blue"))
+                    .oneOrThrow();
+
+            assertEquals(account, result);
+            assertEquals(person, result.getOwner());
+        }
 
         // Retrieve the person record using a type-safe metamodel
-        final Account result2 = litebridge.select(Account.class)
-                .join(Person.class).on(AccountMeta.owner)
-                .where(AccountMeta.id).eq(person.getId())
-                .oneOrThrow();
+        {
+            final Account result = litebridge.select(Account.class)
+                    .join(Person.class).on(AccountMeta.owner)
+                    .where(AccountMeta.id).eq(person.getId())
+                    .oneOrThrow();
 
-        assertEquals(account, result2);
-        assertEquals(person, result2.getOwner());
+            assertEquals(account, result);
+            assertEquals(person, result.getOwner());
+        }
 
         // Reverse the join
-        final Person resultPerson = litebridge.select(Person.class)
-                .join(Account.class).on(PersonMeta.accounts)
-                .where(PersonMeta.name).eq("Alice")
-                .oneOrThrow();
+        {
+            final Person result = litebridge.select(Person.class)
+                    .join(Account.class).on(PersonMeta.accounts)
+                    .where(PersonMeta.name).eq("Alice")
+                    .oneOrThrow();
 
-        assertEquals(person.getName(), resultPerson.getName());
-        assertNotNull(resultPerson.getAccounts());
-        assertEquals(1, resultPerson.getAccounts().size());
-        assertEquals(account, resultPerson.getAccounts().getFirst());
+            assertEquals(person.getName(), result.getName());
+            assertNotNull(result.getAccounts());
+            assertEquals(1, result.getAccounts().size());
+            assertEquals(account, result.getAccounts().getFirst());
+        }
     }
 
     @TestTemplate
