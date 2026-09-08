@@ -2,6 +2,7 @@ package org.litebridge.db.spi.impl.sql;
 
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Insert;
@@ -58,11 +59,7 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
                     sql.append(", ");
                 }
 
-                if (insertColumn.generatedValue() != null) {
-                    sql.append(insertColumn.generatedValue());
-                } else {
-                    sql.append('?');
-                }
+                sql.append(getColumnValueFragment(insertColumn));
             }
 
             sql.append(')');

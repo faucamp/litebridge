@@ -2,13 +2,13 @@ package org.litebridge.db.spi.impl.sql;
 
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateColumn;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.function.BiFunction;
 
 public class MergeSqlGenerator extends AbstractSqlGenerator {
@@ -88,18 +88,10 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
 
             sql.append(columnIdentifierGenerator.quoteIdentifier(updateColumn.name()));
             sql.append(" = ");
-            sql.append(getColumnValue(updateColumn));
+            sql.append(getColumnValueFragment(updateColumn));
         }
 
         return sql.toString();
-    }
-
-    private static String getColumnValue(final UpdateColumn updateColumn) {
-        if (updateColumn.generatedValue() != null) {
-            return Objects.requireNonNull(updateColumn.generatedValue()).toString();
-        } else {
-            return "?";
-        }
     }
 
     protected void appendInsert(final StringBuilder sql, final Merge.MergeInsert insert) {
@@ -122,7 +114,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
                     sql.append(", ");
                 }
 
-                sql.append(getColumnValue(insertColumn));
+                sql.append(getColumnValueFragment(insertColumn));
             }
 
             sql.append(')');

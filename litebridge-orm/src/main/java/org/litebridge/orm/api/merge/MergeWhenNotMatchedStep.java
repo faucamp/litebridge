@@ -1,11 +1,9 @@
 package org.litebridge.orm.api.merge;
 
-import org.litebridge.orm.api.insert.InsertValuesStep;
-import org.litebridge.orm.api.insert.InsertValuesStepInspector;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.InsertValuesNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhenNotMatchedNode;
-import org.litebridge.orm.engine.LitebridgeContext;
 
 import java.util.function.Function;
 
@@ -25,13 +23,13 @@ public sealed class MergeWhenNotMatchedStep extends MergeTerminal permits MergeW
         this.litebridgeContext = litebridgeContext;
     }
 
-    public MergeWhenNotMatchedStep whenNotMatched(final Function<MergeInsertStep, InsertValuesStep> insert) {
+    public MergeWhenNotMatchedStep whenNotMatched(final Function<MergeInsertStep, MergeTerminal> insert) {
         final MergeInsertStep mergeInsertStep = new MergeInsertStep(targetTable, litebridgeContext);
-        final InsertValuesStep insertValuesStep = insert.apply(mergeInsertStep);
-        final QueryNode terminalNode = InsertValuesStepInspector.getNode(insertValuesStep);
+        final MergeTerminal mergeTerminal = insert.apply(mergeInsertStep);
+        final QueryNode terminalNode = MergeTerminalInspector.getNode(mergeTerminal);
         return new MergeWhenNotMatchedStep(targetTable,
                 usingTable,
-                new WhenNotMatchedNode(node, null, (InsertValuesNode) terminalNode),
+                new WhenNotMatchedNode(node, null, terminalNode),
                 litebridgeContext);
     }
 }

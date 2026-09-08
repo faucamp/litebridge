@@ -49,11 +49,7 @@ public final class OracleInsertSqlGenerator extends InsertSqlGenerator {
                     sql.append(", ");
                 }
 
-                if (insertColumn.generatedValue() != null) {
-                    sql.append(insertColumn.generatedValue());
-                } else {
-                    sql.append('?');
-                }
+                sql.append(getColumnValueFragment(insertColumn));
             }
 
             sql.append(") ");

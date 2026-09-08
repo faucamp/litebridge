@@ -14,6 +14,7 @@ import org.litebridge.db.spi.expression.ConnectionProviderExpression;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectReference;
 import org.litebridge.db.spi.expression.SubselectExpression;
+import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
@@ -23,6 +24,7 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
+import org.litebridge.db.spi.update.UpdateColumn;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -215,6 +217,16 @@ public abstract class AbstractSqlGenerator {
             sql.append(" (");
             appendConditionsAndSubgroups(sql, logicConditionGroup.conditionGroup(), operation, connectionProvider);
             sql.append(')');
+        }
+    }
+
+    protected static String getColumnValueFragment(final UpdateColumn updateColumn) {
+        final ColumnValueGenerator columnValueGenerator = updateColumn.generator();
+
+        if (columnValueGenerator != null) {
+            return columnValueGenerator.generate();
+        } else {
+            return "?";
         }
     }
 }

@@ -1,8 +1,9 @@
 package org.litebridge.orm.api.merge;
 
 import org.litebridge.orm.api.insert.InsertValuesStep;
-import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.InsertDtoValuesNode;
+import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 public class MergeInsertStep {
@@ -16,7 +17,9 @@ public class MergeInsertStep {
     }
 
     public MergeTerminal insert(final Object dto) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        final InsertNode insertNode = new InsertNode(null, dto.getClass(), null, null, null);
+        final InsertDtoValuesNode insertDtoValuesNode = new InsertDtoValuesNode(insertNode, dto);
+        return new MergeTerminal(insertDtoValuesNode);
     }
 
     public InsertValuesStep insert(final ExpressionSpec... expressions) {

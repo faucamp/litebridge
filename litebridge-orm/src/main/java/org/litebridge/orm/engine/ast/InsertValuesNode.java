@@ -5,7 +5,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Represents the VALUES clause of an INSERT STATEMENT in the query AST.
+ * Represents a VALUES clause of an INSERT STATEMENT in the query AST.
  *
  * @param previous the previous node in the chain
  * @param values   values to insert

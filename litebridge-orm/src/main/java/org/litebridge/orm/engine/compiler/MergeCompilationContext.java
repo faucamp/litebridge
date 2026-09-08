@@ -1,7 +1,9 @@
 package org.litebridge.orm.engine.compiler;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -14,6 +16,7 @@ import org.litebridge.orm.api.select.model.ConditionGroupSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.InsertDtoValuesNode;
 import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.engine.ast.InsertValuesNode;
 import org.litebridge.orm.engine.ast.MergeNode;
@@ -26,6 +29,7 @@ import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.tracking.FieldAccessor;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -188,7 +192,8 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 }
             }
         } else {
-            throw new IllegalArgumentException("No columns or expressions specified");
+            // Update columns will be supplied via an InsertDtoValueNode
+            return;
         }
 
         whenMatchedSpec.addUpdateColumns(columnMetaDataList);
@@ -196,7 +201,6 @@ final class MergeCompilationContext extends AbstractCompilationContext {
 
     public void addInsertValues(final InsertValuesNode insertValuesNode) {
         final WhenMatchedSpec whenMatchedSpec = getWhenMatchedSpec();
-
         final List<ColumnMetaData> columnMetaDataList = getWhenMatchedSpec().getColumnMetaDataList();
         final Object[] values = insertValuesNode.values();
 
@@ -204,6 +208,51 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             //TODO: fix datatype detection
             final int sqlDataType = columnMetaDataList != null ? columnMetaDataList.get(i).getDataType() : 0;
             whenMatchedSpec.addBindValue(new BindValue(values[i], sqlDataType));
+        }
+    }
+
+    public void addInsertDtoValues(final InsertDtoValuesNode insertDtoValuesNode) {
+        final OrmTable targetOrmTable = Objects.requireNonNull(this.targetOrmTable);
+        final List<ColumnMetaData> columnMetaDataList = targetOrmTable.mappedColumns();
+        final WhenMatchedSpec whenMatchedSpec = getWhenMatchedSpec();
+        final Object dto = insertDtoValuesNode.dto();
+
+        for (ColumnMetaData columnMetaData : columnMetaDataList) {
+            final FieldAccessor fieldAccessor = targetOrmTable.fieldForColumnNameOrNull(columnMetaData.name());
+
+            if (fieldAccessor == null) {
+                continue;
+            }
+
+            final Object value = fieldAccessor.get(dto);
+
+            if (value != null) {
+                final List<ForeignKeyConstraint> foreignKeyConstraints = columnMetaData.getForeignKeyConstraints();
+
+                if (!foreignKeyConstraints.isEmpty() && !ClassUtils.isBasicType(fieldAccessor.type())) {
+                    final OrmTable fkOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(value.getClass());
+
+                    for (final ForeignKeyConstraint fkc : foreignKeyConstraints) {
+                        final FieldAccessor fkFieldAccessor = fkOrmTable.getFieldForColumnName(fkc.foreignKey().name());
+                        final Object pkValue = fkFieldAccessor.get(value);
+                        whenMatchedSpec.addUpdateColumn(columnMetaData);
+                        whenMatchedSpec.addBindValue(new BindValue(pkValue, columnMetaData.getDataType()));
+                        return;
+                    }
+                }
+            } else {
+                if (!columnMetaData.isNullable()
+                        && (columnMetaData.isAutoIncrement() || columnMetaData.getGenerator() != null)) {
+                    // Just add the insert column definition, not a bind value (generator will be used)
+                    whenMatchedSpec.addUpdateColumn(columnMetaData);
+                    continue;
+                }
+
+                throw new IllegalArgumentException("Column " + columnMetaData.name() + " is not nullable and has no generator");
+            }
+
+            whenMatchedSpec.addUpdateColumn(columnMetaData);
+            whenMatchedSpec.addBindValue(new BindValue(value, columnMetaData.getDataType()));
         }
     }
 
@@ -269,6 +318,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
         private @Nullable List<ColumnMetaData> columnMetaDataList;
         private @Nullable List<UpdateColumn> updateColumns;
         private boolean delete;
+        private @Nullable List<String> bindValueUpdateColumnNames;
         private @Nullable List<BindValue> bindValues;
 
         WhenMatchedSpec(final boolean matched) {
@@ -299,9 +349,9 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             ensureUpdateColumns().addAll(updateColumns);
         }
 
-        public void addUpdateColumn(final ColumnMetaData column) {
-            ensureColumnMetaDataList().add(column);
-            ensureUpdateColumns().add(new UpdateColumn(column.name()));
+        public void addUpdateColumn(final ColumnMetaData columnMetaData) {
+            ensureColumnMetaDataList().add(columnMetaData);
+            ensureUpdateColumns().add(new UpdateColumn(columnMetaData.name(), columnMetaData.getGenerator(), null));
         }
 
         public @Nullable List<UpdateColumn> getUpdateColumns() {
@@ -330,6 +380,10 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             }
 
             bindValues.add(bindValue);
+        }
+
+        public void addUpdateColumn(final UpdateColumn updateColumn) {
+            ensureUpdateColumns().add(updateColumn);
         }
 
         private List<UpdateColumn> ensureUpdateColumns() {

@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.insert;
 
+import org.litebridge.orm.api.merge.MergeTerminalInspector;
 import org.litebridge.orm.engine.ast.QueryNode;
 
 public final class InsertValuesStepInspector {
@@ -8,6 +9,6 @@ public final class InsertValuesStepInspector {
     }
 
     public static QueryNode getNode(final InsertValuesStep insertValuesStep) {
-        return insertValuesStep.node();
+        return MergeTerminalInspector.getNode(insertValuesStep);
     }
 }

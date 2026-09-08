@@ -292,7 +292,7 @@ class AnnotationMapperTest {
 
     public static class CustomGenerator implements ColumnValueGenerator {
         @Override
-        public Object generate(org.litebridge.db.spi.ColumnMetaData columnMetaData) {
+        public String generate() {
             return "generated";
         }
     }
@@ -309,7 +309,7 @@ class AnnotationMapperTest {
         }
 
         @Override
-        public Object generate(org.litebridge.db.spi.ColumnMetaData columnMetaData) {
+        public String generate() {
             return null;
         }
     }

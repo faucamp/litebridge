@@ -182,7 +182,7 @@ final class InsertCompilationContext implements CompilationContext {
 
             if (!insertColumnNames.contains(columnMetaData.name()) && columnValueGenerator != null) {
                 returnGeneratedColumns = true;
-                columns.add(new UpdateColumn(columnMetaData.name(), columnValueGenerator.generate(columnMetaData), null));
+                columns.add(new UpdateColumn(columnMetaData.name(), columnValueGenerator, null));
             } else {
                 columns.add(new UpdateColumn(columnMetaData.name()));
             }

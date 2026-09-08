@@ -3,6 +3,7 @@ package org.litebridge.orm.engine.compiler;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.InsertDtoValuesNode;
 import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.engine.ast.InsertValuesNode;
 import org.litebridge.orm.engine.ast.MergeNode;
@@ -64,6 +65,7 @@ final class MergeQueryCompiler extends AbstractQueryCompiler<MergeCompilationCon
             }
             case InsertNode insertNode -> compilationContext.whenNotMatchedInsert(insertNode);
             case InsertValuesNode insertValuesNode -> compilationContext.addInsertValues(insertValuesNode);
+            case InsertDtoValuesNode insertDtoValuesNode -> compilationContext.addInsertDtoValues(insertDtoValuesNode);
             case MergeNode mergeNode -> { /* Ignore */ }
             case UpdateNode updateNode -> { /* Ignore */ }
             case SetNode setNode -> compilationContext.whenMatchedUpdateSet(setNode);
