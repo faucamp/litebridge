@@ -477,7 +477,7 @@ class OracleColumnIdentifierGeneratorTest {
                 null);
 
         // When
-        final String result = generator.createColumnRef(column, select, ClauseType.WHERE);
+        final String result = generator.createColumnRef(column, select, ClauseType.JOIN);
 
         // Then
         assertEquals("TEST_COLUMN", result);

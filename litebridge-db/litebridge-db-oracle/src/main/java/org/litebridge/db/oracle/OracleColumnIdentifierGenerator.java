@@ -32,7 +32,6 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
         final StringBuilder columnSql = new StringBuilder(quoteIdentifier(column.name()));
 
         if (clause == ClauseType.SELECT && !StringUtils.isBlank(column.alias())) {
-            //noinspection DataFlowIssue
             columnSql.append(' ').append(createAliasDeclaration(quoteIdentifier(column.alias())));
         }
 
@@ -50,7 +49,13 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
         return switch (clause) {
             case WHERE, GROUP_BY, HAVING ->
                     quoteIdentifier(column.table().aliasOrName()) + '.' + quoteIdentifier(column.name());
-            default -> super.createColumnRef(column, operation, clause);
+            default -> {
+                if (shouldApplyTableQualifier(column, select)) {
+                    yield super.createColumnRef(column, operation, clause);
+                }
+
+                yield quoteIdentifier(column.name());
+            }
         };
     }
 

@@ -25,7 +25,9 @@ class OracleSelectSqlGeneratorTest {
 
     @BeforeEach
     void beforeEach() {
-        oracleSelectSqlGenerator = new OracleSelectSqlGenerator(new OracleColumnIdentifierGenerator(), ensureTableMetaData);
+        final OracleColumnIdentifierGenerator columnIdentifierGenerator = new OracleColumnIdentifierGenerator();
+        final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(columnIdentifierGenerator);
+        oracleSelectSqlGenerator = new OracleSelectSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     @Test
