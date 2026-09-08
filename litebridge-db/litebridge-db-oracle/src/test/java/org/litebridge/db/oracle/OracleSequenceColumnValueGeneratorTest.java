@@ -1,10 +1,8 @@
 package org.litebridge.db.oracle;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.ColumnMetaData;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class OracleSequenceColumnValueGeneratorTest {
 
@@ -14,7 +12,7 @@ class OracleSequenceColumnValueGeneratorTest {
         final OracleSequenceColumnValueGenerator generator = new OracleSequenceColumnValueGenerator("test_sequence");
 
         // When
-        final String result = generator.generate(mock(ColumnMetaData.class));
+        final String result = generator.generate();
 
         // Then
         assertEquals("test_sequence.NEXTVAL", result);

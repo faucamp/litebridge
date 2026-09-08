@@ -28,7 +28,7 @@ class InsertSqlGeneratorTest {
         // Given
         final Insert insert = new Insert(
                 createTestTable(),
-                List.of(new UpdateColumn("TEST_ID", "DEFAULT", null), new UpdateColumn("TEST_COLUMN")),
+                List.of(new UpdateColumn("TEST_ID", () -> "DEFAULT", null), new UpdateColumn("TEST_COLUMN")),
                 1,
                 false);
 

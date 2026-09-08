@@ -2,10 +2,8 @@ package org.litebridge.db.spi.generator;
 
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.ColumnMetaData;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
 
 class SequenceColumnValueGeneratorTest {
 
@@ -15,7 +13,7 @@ class SequenceColumnValueGeneratorTest {
         final SequenceColumnValueGenerator generator = new TestSequenceColumnValueGenerator("test_sequence");
 
         // When
-        final String result = generator.generate(mock(ColumnMetaData.class));
+        final String result = generator.generate();
 
         // Then
         assertEquals("TEST", result);
@@ -28,7 +26,7 @@ class SequenceColumnValueGeneratorTest {
         }
 
         @Override
-        public String generate(final ColumnMetaData columnMetaData) {
+        public String generate() {
             return "TEST";
         }
     }

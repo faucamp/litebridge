@@ -192,7 +192,7 @@ class AbstractDatabaseProviderTest {
         final TestProvider provider = newProvider();
 
         // When
-        final String result = provider.sequenceColumnValueGenerator("TEST_SEQUENCE").generate(null);
+        final String result = provider.sequenceColumnValueGenerator("TEST_SEQUENCE").generate();
 
         // Then
         assertEquals("NEXT VALUE FOR TEST_SEQUENCE", result);

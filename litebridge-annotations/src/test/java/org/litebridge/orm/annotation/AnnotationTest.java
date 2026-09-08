@@ -1,7 +1,6 @@
 package org.litebridge.orm.annotation;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
 
 import java.lang.annotation.ElementType;
@@ -214,7 +213,7 @@ class AnnotationTest {
     public static final class TestColumnValueGenerator implements ColumnValueGenerator {
 
         @Override
-        public Object generate(final ColumnMetaData columnMetaData) {
+        public String generate() {
             return "generated";
         }
     }
