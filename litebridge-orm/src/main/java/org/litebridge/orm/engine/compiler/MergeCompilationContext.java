@@ -52,6 +52,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
     private final ConditionGroupSpecStack on = new ConditionGroupSpecStack();
     private final List<WhenMatchedSpec> whenMatchedSpecs = new ArrayList<>();
     private @Nullable UsingNode usingNode;
+    private @Nullable ConditionContext conditionContext;
 
     MergeCompilationContext(final MergeNode mergeNode,
                             final LitebridgeContext litebridgeContext) {
@@ -84,6 +85,11 @@ final class MergeCompilationContext extends AbstractCompilationContext {
      */
     public void setUsingNode(final UsingNode usingNode) {
         this.usingNode = usingNode;
+        this.conditionContext = ConditionContext.ON;
+    }
+
+    public ConditionContext conditionContext() {
+        return Objects.requireNonNull(conditionContext, "Condition context not set");
     }
 
     /**
@@ -103,10 +109,10 @@ final class MergeCompilationContext extends AbstractCompilationContext {
         return whenMatchedSpecs.getLast();
     }
 
-    public WhenMatchedSpec addWhenMatchedSpec(final boolean matched) {
+    public void addWhenMatchedSpec(final boolean matched) {
+        this.conditionContext = matched ? ConditionContext.WHEN_MATCHED : ConditionContext.WHEN_NOT_MATCHED;
         final WhenMatchedSpec whenMatchedSpec = new WhenMatchedSpec(matched);
         whenMatchedSpecs.add(whenMatchedSpec);
-        return whenMatchedSpec;
     }
 
     /**
@@ -409,5 +415,11 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 conditionNode.lhsExpression(),
                 conditionNode.operator(),
                 conditionNode.rhs());
+    }
+
+    enum ConditionContext {
+        ON,
+        WHEN_MATCHED,
+        WHEN_NOT_MATCHED
     }
 }

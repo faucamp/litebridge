@@ -3,6 +3,7 @@ package org.litebridge.orm.engine.compiler;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.ast.InsertDtoValuesNode;
 import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.engine.ast.InsertValuesNode;
@@ -13,6 +14,7 @@ import org.litebridge.orm.engine.ast.UpdateNode;
 import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.engine.ast.WhenMatchedNode;
 import org.litebridge.orm.engine.ast.WhenNotMatchedNode;
+import org.litebridge.orm.engine.ast.WhereNode;
 
 /**
  * Specialised query node compiler for MERGE INTO statements.
@@ -35,75 +37,56 @@ final class MergeQueryCompiler extends AbstractQueryCompiler<MergeCompilationCon
     @Override
     protected void applyNode(final QueryNode node, final MergeCompilationContext compilationContext) {
         switch (node) {
+            case MergeNode mergeNode -> { /* Ignore */ }
             case UsingNode usingNode -> {
                 compilationContext.setUsingNode(usingNode);
-                flattenAndApplyConditionNode(usingNode.on(), compilationContext, ConditionClauseType.ON);
+                flattenAndApplyConditionNode(usingNode.on(), compilationContext);
             }
             case WhenMatchedNode whenMatchedNode -> {
-                final MergeCompilationContext.WhenMatchedSpec whenMatchedSpec = compilationContext.addWhenMatchedSpec(true);
-
-                // "AND" condition
-                if (whenMatchedNode.and() != null) {
-                    flattenAndApplyConditionNode(whenMatchedNode.and(), compilationContext, ConditionClauseType.WHEN_MATCHED);
-                }
-
-                if (whenMatchedNode.update() != null) {
-                    flattenAndApplyNodes(whenMatchedNode.update(), compilationContext);
-                } else if (whenMatchedNode.delete()) {
-                    whenMatchedSpec.setDelete(true);
-                }
+                compilationContext.addWhenMatchedSpec(true);
+                flattenAndApplyNodes(whenMatchedNode.update(), compilationContext);
             }
+            case UpdateNode updateNode -> { /* Ignore */ }
+            case SetNode setNode -> compilationContext.whenMatchedUpdateSet(setNode);
+            case DeleteNode deleteNode -> compilationContext.getWhenMatchedSpec().setDelete(true);
+            case WhereNode whereNode -> flattenAndApplyConditionNode(whereNode.condition(), compilationContext);
             case WhenNotMatchedNode whenNotMatchedNode -> {
-                final MergeCompilationContext.WhenMatchedSpec whenMatchedSpec = compilationContext.addWhenMatchedSpec(false);
-
-                // "AND" condition
-                if (whenNotMatchedNode.and() != null) {
-                    flattenAndApplyConditionNode(whenNotMatchedNode.and(), compilationContext, ConditionClauseType.WHEN_NOT_MATCHED);
-                }
-
+                compilationContext.addWhenMatchedSpec(false);
                 flattenAndApplyNodes(whenNotMatchedNode.insert(), compilationContext);
             }
             case InsertNode insertNode -> compilationContext.whenNotMatchedInsert(insertNode);
             case InsertValuesNode insertValuesNode -> compilationContext.addInsertValues(insertValuesNode);
             case InsertDtoValuesNode insertDtoValuesNode -> compilationContext.addInsertDtoValues(insertDtoValuesNode);
-            case MergeNode mergeNode -> { /* Ignore */ }
-            case UpdateNode updateNode -> { /* Ignore */ }
-            case SetNode setNode -> compilationContext.whenMatchedUpdateSet(setNode);
             default -> throw new UnsupportedOperationException("Unsupported node type: " + node.getClass().getName());
         }
     }
 
-    private void flattenAndApplyConditionNode(final QueryNode node, final MergeCompilationContext compilationContext, ConditionClauseType conditionClauseType) {
-        flattenAndApplyNodes(node, conditionNode -> applyConditionNode(conditionNode, compilationContext, conditionClauseType));
+    private void flattenAndApplyConditionNode(final QueryNode node, final MergeCompilationContext compilationContext) {
+        flattenAndApplyNodes(node, conditionNode -> applyConditionNode(conditionNode, compilationContext));
     }
 
     private void applyConditionNode(final QueryNode node,
-                                    final MergeCompilationContext compilationContext,
-                                    final ConditionClauseType conditionClauseType) {
+                                    final MergeCompilationContext compilationContext) {
+        final MergeCompilationContext.ConditionContext conditionContext = compilationContext.conditionContext();
+
         switch (node) {
             case ConditionNode conditionNode -> {
-                switch (conditionClauseType) {
+                switch (conditionContext) {
                     case ON -> compilationContext.addOnCondition(conditionNode);
                     case WHEN_MATCHED, WHEN_NOT_MATCHED -> compilationContext.addMatchAndCondition(conditionNode);
                 }
             }
             case ConditionGroupNode conditionGroupNode -> {
-                final ConditionGroupSpecStack conditionGroupSpecStack = switch (conditionClauseType) {
+                final ConditionGroupSpecStack conditionGroupSpecStack = switch (conditionContext) {
                     case ON -> compilationContext.onConditionGroupStack();
                     case WHEN_MATCHED, WHEN_NOT_MATCHED -> compilationContext.matchAndConditionGroupStack();
                 };
 
                 conditionGroupSpecStack.push(conditionGroupNode.logicOperator());
-                flattenAndApplyConditionNode(conditionGroupNode.lastChild(), compilationContext, conditionClauseType);
+                flattenAndApplyConditionNode(conditionGroupNode.lastChild(), compilationContext);
                 conditionGroupSpecStack.pop();
             }
             default -> throw new IllegalArgumentException("Unsupported condition node type: " + node);
         }
-    }
-
-    private enum ConditionClauseType {
-        ON,
-        WHEN_MATCHED,
-        WHEN_NOT_MATCHED
     }
 }

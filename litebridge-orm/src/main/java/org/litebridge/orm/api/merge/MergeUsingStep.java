@@ -2,13 +2,14 @@ package org.litebridge.orm.api.merge;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngine;
+import org.litebridge.orm.engine.ast.MergeNode;
 
 import java.util.function.Function;
 
-public abstract sealed class MergeUsingStep<DTO, MUS extends MergeUpdateStep<DTO>> permits DtoMergeUsingStep, SqlMergeUsingStep {
+public abstract sealed class MergeUsingStep<DTO, MUS extends MergeUpdateStep, MIS extends MergeInsertStep>
+        permits DtoMergeUsingStep, SqlMergeUsingStep {
 
     protected final MergeNode mergeNode;
     protected final LitebridgeContext litebridgeContext;
@@ -23,7 +24,7 @@ public abstract sealed class MergeUsingStep<DTO, MUS extends MergeUpdateStep<DTO
         this.litebridgeContext = litebridgeContext;
     }
 
-    public MergeOnConditionClauseTerminal<DTO, MUS> using(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public MergeOnConditionClauseTerminal<DTO, MUS, MIS> using(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 }

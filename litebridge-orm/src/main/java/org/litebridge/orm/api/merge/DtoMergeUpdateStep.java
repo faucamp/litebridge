@@ -1,15 +1,15 @@
 package org.litebridge.orm.api.merge;
 
-import org.litebridge.orm.engine.ast.DeleteNode;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.update.DtoUpdateStart;
 import org.litebridge.orm.api.update.UpdateQuery;
 import org.litebridge.orm.api.update.UpdateQueryInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.DeleteNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 
 import java.util.function.Function;
 
-public final class DtoMergeUpdateStep<DTO> extends MergeUpdateStep<DTO> {
+public final class DtoMergeUpdateStep<DTO> extends MergeUpdateStep {
 
     private final Class<DTO> dtoClass;
 
@@ -26,7 +26,7 @@ public final class DtoMergeUpdateStep<DTO> extends MergeUpdateStep<DTO> {
     }
 
     public MergeTerminal delete() {
-        final DeleteNode deleteNode = new DeleteNode(node, null, dtoClass);
+        final DeleteNode deleteNode = new DeleteNode(null, null, dtoClass);
         return new MergeTerminal(deleteNode);
     }
 }

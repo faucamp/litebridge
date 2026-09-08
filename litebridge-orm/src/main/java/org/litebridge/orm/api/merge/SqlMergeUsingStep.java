@@ -3,13 +3,28 @@ package org.litebridge.orm.api.merge;
 import org.litebridge.db.spi.Row;
 import org.litebridge.orm.engine.LitebridgeContext;
 
-public final class SqlMergeUsingStep extends MergeUsingStep<Row, SqlMergeUpdateStep> {
+/**
+ * Step to specify the table to use for a {@code USING} clause in a {@code MERGE} statement.
+ */
+public final class SqlMergeUsingStep extends MergeUsingStep<Row, SqlMergeUpdateStep, MergeInsertStep> {
 
-    public SqlMergeUsingStep(final String destinationTable, final LitebridgeContext litebridgeContext) {
-        super(destinationTable, litebridgeContext);
+    /**
+     * Creates a new {@code SqlMergeUsingStep} instance.
+     *
+     * @param targetTable       the merge target table
+     * @param litebridgeContext the Litebridge context
+     */
+    public SqlMergeUsingStep(final String targetTable, final LitebridgeContext litebridgeContext) {
+        super(targetTable, litebridgeContext);
     }
 
-    public MergeOnStep<Row, SqlMergeUpdateStep> using(final String usingTableName) {
+    /**
+     * Sets the {@code USING} table for the merge operation.
+     *
+     * @param usingTableName name of the table to use for the {@code USING} clause
+     * @return step to specify the {@code ON} condition
+     */
+    public MergeOnStep<Row, SqlMergeUpdateStep, MergeInsertStep> using(final String usingTableName) {
         return new MergeOnStep<>(usingTableName, mergeNode, litebridgeContext);
     }
 }

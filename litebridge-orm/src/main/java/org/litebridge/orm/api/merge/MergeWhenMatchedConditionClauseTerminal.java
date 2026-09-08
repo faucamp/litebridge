@@ -2,11 +2,11 @@ package org.litebridge.orm.api.merge;
 
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
-public final class MergeWhenMatchedConditionClauseTerminal<DTO, MUS extends MergeUpdateStep<DTO>>
+public final class MergeWhenMatchedConditionClauseTerminal<DTO, MUS extends MergeUpdateStep>
         extends MergeAndStep<DTO, MUS>
         implements ConditionClauseTerminal<DTO,
         MergeConditionClause<DTO, MUS, MergeWhenMatchedConditionClauseTerminal<DTO, MUS>>,

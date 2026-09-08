@@ -5,7 +5,7 @@ import org.litebridge.orm.engine.ast.QueryNode;
 
 public sealed class MergeTerminal permits InsertValuesStep, MergeWhenNotMatchedStep {
 
-    protected final QueryNode node;
+    protected QueryNode node;
 
     public MergeTerminal(final QueryNode node) {
         this.node = node;

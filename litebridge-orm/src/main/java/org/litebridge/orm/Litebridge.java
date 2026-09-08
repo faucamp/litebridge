@@ -517,7 +517,7 @@ public final class Litebridge implements SelectApi {
     }
 
     /**
-     * Performs a merge operation into the specified table.
+     * Performs a {@code MERGE INTO} operation targeting the specified database table.
      *
      * @param tableName the name of the table into which to merge data
      * @param merge     a function that takes an instance of {@link SqlMergeUsingStep} and returns a {@code MergeTerminal},
@@ -529,7 +529,7 @@ public final class Litebridge implements SelectApi {
     }
 
     /**
-     * Performs a merge operation into the specified mapped DTO type.
+     * Performs a {@code MERGE INTO} operation targeting the specified mapped DTO type.
      *
      * @param dtoClass the class of the DTO to merge
      * @param merge    a function that takes an instance of {@link DtoMergeUsingStep} and returns a {@code MergeTerminal},

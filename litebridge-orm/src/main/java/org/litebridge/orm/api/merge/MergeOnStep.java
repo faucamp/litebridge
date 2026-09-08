@@ -9,7 +9,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Objects;
 
-public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep<DTO>>
+public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends MergeInsertStep>
         extends MergeStepBase
         permits DtoMergeOnStep {
 
@@ -25,15 +25,15 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep<DTO>>
         this.mergeNode = mergeNode;
     }
 
-    public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS>> on(final String column) {
+    public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> on(final String column) {
         return onImpl(column, null);
     }
 
-    public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS>> on(final ExpressionSpec expression) {
+    public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> on(final ExpressionSpec expression) {
         return onImpl(null, expression);
     }
 
-    private MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS>> onImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {
+    private MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> onImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {
         return new MergeConditionClause<>(litebridgeContext,
                 LogicOperator.NOOP,
                 column,
