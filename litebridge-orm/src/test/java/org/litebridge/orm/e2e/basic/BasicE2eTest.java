@@ -3,6 +3,7 @@ package org.litebridge.orm.e2e.basic;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.LitebridgeInspector;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.e2e.AbstractE2eTest;
@@ -966,7 +967,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         final QueryPlanCache cache = LitebridgeInspector.getQueryPlanCache(litebridge);
         cache.clear();
 
-        // 1. Insert
+        // Insert
         final Person person1 = new Person();
         person1.setName("Alice");
         person1.setSurname("Smith");
@@ -980,17 +981,35 @@ public class BasicE2eTest extends AbstractE2eTest {
         litebridge.insert(person2);
         assertEquals(sizeAfterInsert, cache.size(), "Cache size should not increase for second similar insert");
 
-        // 2. Update
+        // Generate SQL - does not use cache
+        final PreparedSql preparedSql = litebridge.select(Person.class).where("surname").neq("Doe").toSql();
+        assertEquals(sizeAfterInsert, cache.size());
+        assertNotNull(preparedSql.sql());
+        assertEquals(1, preparedSql.bindValues().size());
+
+        litebridge.select(Person.class).where("surname").neq("Doe").toSql();
+        assertEquals(sizeAfterInsert, cache.size());
+        assertEquals(1, preparedSql.bindValues().size());
+
+        // Select
+        litebridge.select(Person.class).where("surname").neq("Doe").list();
+        final int sizeAfterSelect = cache.size();
+        assertTrue(sizeAfterSelect > sizeAfterInsert);
+
+        litebridge.select(Person.class).where("surname").neq("Doe").list();
+        assertEquals(sizeAfterSelect, cache.size());
+
+        // Update
         person1.setName("Alice Updated");
         litebridge.update(person1);
         final int sizeAfterUpdate = cache.size();
-        assertTrue(sizeAfterUpdate > sizeAfterInsert, "Cache size should increase after first update");
+        assertTrue(sizeAfterUpdate > sizeAfterSelect, "Cache size should increase after first update");
 
         person2.setName("Bob Updated");
         litebridge.update(person2);
         assertEquals(sizeAfterUpdate, cache.size(), "Cache size should not increase for second similar update");
 
-        // 3. Delete
+        // Delete
         litebridge.delete(person1);
         final int sizeAfterDelete = cache.size();
         assertTrue(sizeAfterDelete > sizeAfterUpdate, "Cache size should increase after first delete");

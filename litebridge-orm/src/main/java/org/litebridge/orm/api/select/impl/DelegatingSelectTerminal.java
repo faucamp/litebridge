@@ -3,9 +3,9 @@ package org.litebridge.orm.api.select.impl;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.exception.NonUniqueResultException;
 
 import java.util.List;
@@ -81,7 +81,7 @@ public abstract class DelegatingSelectTerminal<DTO> implements SelectTerminal<DT
 
     @Override
     public PreparedSql toSql() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return selectEngineTerminal.generateSql(node(), litebridgeContext);
     }
 
     QueryNode node() {

@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
@@ -146,6 +147,10 @@ public class SelectEngineTerminal {
         }
     }
 
+    public PreparedSql generateSql(final QueryNode node, final LitebridgeContext litebridgeContext) {
+        return generateSqlImpl(null, node, litebridgeContext);
+    }
+
     private @Nullable Row fetchOneRecord(final boolean first, final QueryNode node, final LitebridgeContext litebridgeContext) {
         final List<Row> resultList;
 
@@ -217,20 +222,11 @@ public class SelectEngineTerminal {
     }
 
     private List<Row> compileAndExecute(final int astCacheKey, final QueryNode node, final LitebridgeContext litebridgeContext) {
-        // Compile/prepare SQL query
-        final PreparedOperation preparedOperation = litebridgeContext.createQueryCompiler().compile(node);
-        final Select select = (Select) preparedOperation.operation();
-        final TypeConversionMetaData typeConversionMetaData = createTypeConversionMetaData(select, litebridgeContext);
-        // Generate SQL and create type conversion metadata
-        final String sql = litebridgeContext.databaseProvider().toSql(select, litebridgeContext.transactionManager());
-        // Cache compiled SQL for this AST
-        final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
-                .map(BindValue::sqlDataType)
-                .toList();
-        litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, typeConversionMetaData, null));
+        // Compile nodes, generate and cache SQL
+        final PreparedSql preparedSql = generateSqlImpl(astCacheKey, node, litebridgeContext);
+
         // Execute SQL query
-        final PreparedSql executionSql = new PreparedSql(sql, preparedOperation.bindValues(), typeConversionMetaData, null);
-        return execute(executionSql, litebridgeContext);
+        return execute(preparedSql, litebridgeContext);
     }
 
     private List<Row> execute(final PreparedSql preparedSql, final LitebridgeContext litebridgeContext) {
@@ -245,6 +241,31 @@ public class SelectEngineTerminal {
         LOGGER.debug("Row count: {}", result.size());
         LOGGER.trace("Query result: {}", result);
         return result;
+    }
+
+    private PreparedSql generateSqlImpl(final @Nullable Integer astCacheKey,
+                                        final QueryNode node,
+                                        final LitebridgeContext litebridgeContext) {
+        // Compile/prepare SQL query
+        final PreparedOperation preparedOperation = litebridgeContext.createQueryCompiler().compile(node);
+        final Operation operation = preparedOperation.operation();
+
+        // Generate SQL and create type conversion metadata
+        final String sql = litebridgeContext.databaseProvider().toSql(operation, litebridgeContext.transactionManager());
+        final TypeConversionMetaData typeConversionMetaData;
+
+        // Cache compiled SQL for this AST
+        if (astCacheKey != null) {
+            final List<Integer> bindValueSqlTypes = preparedOperation.bindValues().stream()
+                    .map(BindValue::sqlDataType)
+                    .toList();
+            typeConversionMetaData = createTypeConversionMetaData((Select) operation, litebridgeContext);
+            litebridgeContext.queryPlanCache().put(astCacheKey, new QueryPlanCache.CachedOperation(sql, bindValueSqlTypes, typeConversionMetaData, null));
+        } else {
+            typeConversionMetaData = null;
+        }
+
+        return new PreparedSql(sql, preparedOperation.bindValues(), typeConversionMetaData, null);
     }
 
     private <DTO> @Nullable DTO fetchOneOrNullImpl(final boolean first, final QueryNode node, final LitebridgeContext litebridgeContext) {
