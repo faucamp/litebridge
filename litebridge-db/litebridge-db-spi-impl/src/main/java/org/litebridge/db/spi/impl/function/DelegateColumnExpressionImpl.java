@@ -2,12 +2,12 @@ package org.litebridge.db.spi.impl.function;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Operation;
-import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.DelegateColumnExpression;
 import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.query.Select;
 
 /**
  * A nestable column expression with support for SQL aliasing.
@@ -46,8 +46,8 @@ public class DelegateColumnExpressionImpl extends DelegateColumnExpression {
      */
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
-        if (clause == ClauseType.SELECT) {
-            return columnIdentifierGenerator.createSelectColumn(column, operation, clause, (parent != null));
+        if (clause == ClauseType.SELECT && operation instanceof Select select) {
+            return columnIdentifierGenerator.createSelectColumn(column, select, clause, (parent != null));
         } else {
             return columnIdentifierGenerator.createColumnRef(column, operation, clause);
         }

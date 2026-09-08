@@ -7,6 +7,7 @@ import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpressionImpl;
 import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.query.Select;
 
 /**
  * Expression to select a database column.
@@ -39,8 +40,8 @@ public class SelectColumn extends ColumnExpressionImpl {
      */
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
-        if (clause == ClauseType.SELECT) {
-            return columnIdentifierGenerator.createSelectColumn(column, operation, clause, (parent != null));
+        if (clause == ClauseType.SELECT && operation instanceof Select select) {
+            return columnIdentifierGenerator.createSelectColumn(column, select, clause, (parent != null));
         } else {
             return columnIdentifierGenerator.createColumnRef(column, operation, clause);
         }

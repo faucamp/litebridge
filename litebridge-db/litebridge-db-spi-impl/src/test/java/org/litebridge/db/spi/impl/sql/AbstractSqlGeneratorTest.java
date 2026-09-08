@@ -488,7 +488,7 @@ class AbstractSqlGeneratorTest {
 
     private class TestSqlGenerator extends AbstractSqlGenerator {
         public TestSqlGenerator(final TypeConverter typeConverter) {
-            super(new ColumnIdentifierGenerator(), (table, connectionProvider) -> tableMetaData);
+            super(new ColumnIdentifierGenerator(), new MathOperationGenerator(new ColumnIdentifierGenerator()), (table, connectionProvider) -> tableMetaData);
         }
     }
 }

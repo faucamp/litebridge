@@ -125,7 +125,7 @@ public class DtoMapper {
             if (column.hasTable()) {
                 table = column.table();
             } else {
-                table = parseTargetColumn(column.name(), dtoClassTableMetaData.schema()).table();
+                table = parseTargetColumn(column.name(), dtoClassTableMetaData.schema(), dtoClassTableMetaData).table();
             }
 
             final MappingData mappingData = createMappingDataIfAbsent(mappingDataMap, table, contextDtoClass);
@@ -700,7 +700,7 @@ public class DtoMapper {
         return dto;
     }
 
-    private Column parseTargetColumn(String sqlFunction, final String defaultSchema) {
+    private Column parseTargetColumn(String sqlFunction, final @Nullable String defaultSchema, final TableMetaData rootTableMetaData) {
         final Matcher matcher = FUNCTION_SQL_COLUMN_PATTERN.matcher(sqlFunction);
 
         if (matcher.find()) {
@@ -715,6 +715,10 @@ public class DtoMapper {
                 final Table table = tableRegistry.getOrCreateSpiTable(tableName);
                 return new Column(table, columnName);
             } else {
+                if (rootTableMetaData.hasColumn(columnName)) {
+                    return new Column(rootTableMetaData.toTable(), columnName);
+                }
+
                 throw new IllegalStateException("Cannot infer target table from label: " + sqlFunction);
             }
         } else {
@@ -1147,6 +1151,7 @@ public class DtoMapper {
                                          boolean reverseUpdateOnly) {
     }
 
-    private record LateReverseCollectionUpdate(PartiallyConstructedDto hostPartialDto, Object relatedDto, FieldAccessor relatedCollectionField) {
+    private record LateReverseCollectionUpdate(PartiallyConstructedDto hostPartialDto, Object relatedDto,
+                                               FieldAccessor relatedCollectionField) {
     }
 }

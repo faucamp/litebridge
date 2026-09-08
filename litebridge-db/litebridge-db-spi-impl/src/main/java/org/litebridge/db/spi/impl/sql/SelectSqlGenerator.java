@@ -26,11 +26,13 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
      * Creates a new {@code SelectSqlGenerator}.
      *
      * @param columnIdentifierGenerator the column identifier generator
+     * @param mathOperationGenerator    the math operation generator
      * @param ensureTableMetaData       a function to ensure table metadata
      */
     public SelectSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+                              final MathOperationGenerator mathOperationGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, ensureTableMetaData);
+        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     /**

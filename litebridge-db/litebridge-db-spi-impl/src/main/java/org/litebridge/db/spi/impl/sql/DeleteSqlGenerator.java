@@ -17,11 +17,13 @@ public class DeleteSqlGenerator extends AbstractSqlGenerator {
      * Constructs a {@code DeleteSqlGenerator} with the specified components.
      *
      * @param columnIdentifierGenerator the generator for column identifiers
+     * @param mathOperationGenerator    the math operation generator
      * @param ensureTableMetaData       the function to retrieve table metadata
      */
     public DeleteSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+                              final MathOperationGenerator mathOperationGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, ensureTableMetaData);
+        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     /**

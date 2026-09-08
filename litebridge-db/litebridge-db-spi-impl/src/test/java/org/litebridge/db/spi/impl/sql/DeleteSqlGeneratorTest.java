@@ -24,7 +24,9 @@ class DeleteSqlGeneratorTest {
 
     @BeforeEach
     void beforeEach() {
-        deleteSqlGenerator = new DeleteSqlGenerator(new ColumnIdentifierGenerator(), (table, connectionProvider) -> mock(TableMetaData.class));
+        final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
+        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(columnIdentifierGenerator);
+        deleteSqlGenerator = new DeleteSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, (table, connectionProvider) -> mock(TableMetaData.class));
     }
 
     @Test

@@ -5,6 +5,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.ClauseType;
+import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.util.SqlReservedWords;
 
 /**
@@ -17,13 +18,13 @@ public class ColumnIdentifierGenerator {
     /**
      * Creates a SQL identifier for a column to be used in a SELECT clause.
      *
-     * @param column    the column for which to create the identifier
-     * @param operation the current database operation
-     * @param clause    the SQL clause where the identifier will be used
-     * @param nested    whether the column is part of a nested expression
+     * @param column the column for which to create the identifier
+     * @param select the current SELECT database operation
+     * @param clause the SQL clause where the identifier will be used
+     * @param nested whether the column is part of a nested expression
      * @return the generated SQL column identifier
      */
-    public String createSelectColumn(final Column column, final Operation operation, final ClauseType clause, final boolean nested) {
+    public String createSelectColumn(final Column column, final Select select, final ClauseType clause, final boolean nested) {
         final StringBuilder sb = new StringBuilder();
         final Table table = column.table();
 
@@ -37,7 +38,6 @@ public class ColumnIdentifierGenerator {
         sb.append('.').append(quoteIdentifier(column.name()));
 
         if (!nested && column.alias() != null) {
-            //noinspection DataFlowIssue
             sb.append(' ').append(createAliasDeclaration(column.alias()));
         }
 

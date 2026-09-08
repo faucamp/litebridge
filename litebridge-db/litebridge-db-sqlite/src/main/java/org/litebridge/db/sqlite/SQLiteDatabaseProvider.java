@@ -6,11 +6,15 @@ import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
+import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.ContextBuilder;
 import org.litebridge.db.spi.impl.DatabaseProviderContext;
 import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
+import org.litebridge.db.spi.impl.engine.MetaDataEngine;
+import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.sqlite.engine.SQLiteExecutionEngine;
 import org.litebridge.db.sqlite.engine.SQLiteMetaDataEngine;
+import org.litebridge.db.sqlite.sql.SQLiteSqlGenerator;
 
 /**
  * SQLite database provider for Litebridge.
@@ -44,12 +48,19 @@ public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider {
         final TypeConverter typeConverter = new DefaultTypeConverter();
         final AliasTransformer aliasTransformer = new UppercaseAliasTransformer();
         final SQLiteExecutionEngine executionEngine = new SQLiteExecutionEngine(typeConverter, aliasTransformer);
+        final MetaDataEngine metaDataEngine = new SQLiteMetaDataEngine();
+        final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
+        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(columnIdentifierGenerator);
+        final SQLiteSqlGenerator sqlGenerator = new SQLiteSqlGenerator(metaDataEngine, columnIdentifierGenerator, mathOperationGenerator);
 
         return ContextBuilder.newContext()
                 .withAliasTransformer(aliasTransformer)
+                .withColumnIdentifierGenerator(columnIdentifierGenerator)
                 .withDatabaseProviderMetaData(databaseProviderMetaData)
                 .withExecutionEngine(executionEngine)
-                .withMetaDataEngine(new SQLiteMetaDataEngine())
+                .withMathOperationGenerator(mathOperationGenerator)
+                .withMetaDataEngine(metaDataEngine)
+                .withSqlGenerator(sqlGenerator)
                 .withTypeConverter(typeConverter)
                 .build();
     }

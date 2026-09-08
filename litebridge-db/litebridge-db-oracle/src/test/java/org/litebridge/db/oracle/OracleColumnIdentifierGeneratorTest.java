@@ -18,8 +18,6 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.update.Delete;
-import org.litebridge.db.spi.update.Insert;
-import org.litebridge.db.spi.update.Update;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,20 +29,6 @@ import static org.mockito.Mockito.when;
 class OracleColumnIdentifierGeneratorTest {
 
     private final OracleColumnIdentifierGenerator generator = new OracleColumnIdentifierGenerator();
-
-    @Test
-    void createSelectColumn_withoutSelect_usesDefaultTableQualifier() {
-        // Given
-        final Table table = new Table("TEST_TABLE", null);
-        final Column column = new Column(table, "TEST_COLUMN");
-        final Operation operation = new Insert(table, Collections.emptyList(), 1, false);
-
-        // When
-        final String result = generator.createSelectColumn(column, operation, ClauseType.SELECT, false);
-
-        // Then
-        assertEquals("TEST_TABLE.TEST_COLUMN", result);
-    }
 
     @Test
     void createColumnRef_withoutSelect_usesDefaultTableQualifier() {
@@ -766,20 +750,6 @@ class OracleColumnIdentifierGeneratorTest {
 
         // Then
         // Should keep qualifier
-        assertEquals("TEST_TABLE.TEST_COLUMN", result);
-    }
-
-    @Test
-    void createSelectColumn_withUpdateOperation_usesSuper() {
-        // Given
-        final Table table = new Table("TEST_TABLE", null);
-        final Column column = new Column(table, "TEST_COLUMN");
-        final Update update = new Update(table, Collections.emptyList(), new ConditionGroup(Collections.emptyList()));
-
-        // When
-        final String result = generator.createSelectColumn(column, update, ClauseType.SELECT, false);
-
-        // Then
         assertEquals("TEST_TABLE.TEST_COLUMN", result);
     }
 

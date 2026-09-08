@@ -19,11 +19,13 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
      * Creates a new {@code UpdateSqlGenerator}.
      *
      * @param columnIdentifierGenerator the column identifier generator
+     * @param mathOperationGenerator    the math operation generator
      * @param ensureTableMetaData       a function to ensure table metadata
      */
     public UpdateSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+                              final MathOperationGenerator mathOperationGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, ensureTableMetaData);
+        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     /**
@@ -61,13 +63,7 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
             }
 
             sql.append(columnIdentifierGenerator.quoteIdentifier(updateColumn.name())).append(" = ");
-            //final ColumnMetaData columnMetaData = ensureColumnMetaData(columnValue.column(), connectionProvider);
-
-            if (updateColumn.mathOperator() != null) {
-                sql.append(createMathOperation(updateColumn.name(), updateColumn.mathOperator()));
-            } else {
-                sql.append('?');
-            }
+            sql.append(getColumnValueFragment(updateColumn));
         }
 
         if (!update.where().isEmpty()) {
@@ -76,16 +72,5 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
         }
 
         return sql.toString();
-    }
-
-    /**
-     * Creates a SQL representation of a math operation.
-     *
-     * @param column       the column
-     * @param mathOperator the math operation
-     * @return the SQL representation of the math operation
-     */
-    protected String createMathOperation(final String column, final MathOperator mathOperator) {
-        return "%s %s ?".formatted(columnIdentifierGenerator.quoteIdentifier(column), mathOperator.symbol());
     }
 }

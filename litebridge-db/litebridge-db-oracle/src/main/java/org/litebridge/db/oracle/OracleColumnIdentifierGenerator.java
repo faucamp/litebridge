@@ -24,13 +24,9 @@ import java.util.List;
 public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGenerator {
 
     @Override
-    public String createSelectColumn(final Column column, final Operation operation, final ClauseType clause, final boolean nested) {
-        if (!(operation instanceof final Select select)) {
-            return super.createSelectColumn(column, operation, clause, nested);
-        }
-
+    public String createSelectColumn(final Column column, final Select select, final ClauseType clause, final boolean nested) {
         if (shouldApplyTableQualifier(column, select)) {
-            return super.createSelectColumn(column, operation, clause, nested);
+            return super.createSelectColumn(column, select, clause, nested);
         }
 
         final StringBuilder columnSql = new StringBuilder(quoteIdentifier(column.name()));
@@ -49,11 +45,13 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
             return super.createColumnRef(column, operation, clause);
         }
 
-        if (shouldApplyTableQualifier(column, select)) {
-            return super.createColumnRef(column, operation, clause);
-        }
-
-        return quoteIdentifier(column.name());
+        // Oracle processes SELECT clauses in order: FROM, WHERE, GROUP BY, HAVING, SELECT (and the rest)
+        // - this means that full column aliases are not available in WHERE, GROUP BY and HAVING clauses
+        return switch (clause) {
+            case WHERE, GROUP_BY, HAVING ->
+                    quoteIdentifier(column.table().aliasOrName()) + '.' + quoteIdentifier(column.name());
+            default -> super.createColumnRef(column, operation, clause);
+        };
     }
 
     @Override

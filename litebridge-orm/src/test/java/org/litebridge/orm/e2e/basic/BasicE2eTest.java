@@ -228,7 +228,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select, join multiple tables")
-    void nestedDtos_multiJoin(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    void nestedDtos_joinMultiple(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
         registerAddressTableMapping(tableMapper);

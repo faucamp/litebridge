@@ -16,4 +16,5 @@ module litebridge.db.sqlite {
 
     exports org.litebridge.db.sqlite;
     exports org.litebridge.db.sqlite.engine;
+    exports org.litebridge.db.sqlite.sql;
 }

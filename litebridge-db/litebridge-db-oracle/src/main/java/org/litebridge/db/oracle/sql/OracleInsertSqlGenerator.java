@@ -5,6 +5,7 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.sql.InsertSqlGenerator;
+import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.UpdateColumn;
@@ -17,11 +18,13 @@ public final class OracleInsertSqlGenerator extends InsertSqlGenerator {
      * Creates a new {@code OracleInsertSqlGenerator}.
      *
      * @param columnIdentifierGenerator the column identifier generator
+     * @param mathOperationGenerator    the math operation generator
      * @param ensureTableMetaData       a function to ensure table metadata
      */
     public OracleInsertSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+                                    final MathOperationGenerator mathOperationGenerator,
                                     final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, ensureTableMetaData);
+        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     @Override

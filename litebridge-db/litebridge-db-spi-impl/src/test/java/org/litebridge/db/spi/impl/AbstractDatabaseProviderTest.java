@@ -11,6 +11,7 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.impl.engine.ExecutionEngine;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
+import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.impl.sql.SqlGenerator;
 import org.litebridge.db.spi.query.Select;
@@ -240,11 +241,13 @@ class AbstractDatabaseProviderTest {
 
     private static final class TestProvider extends AbstractDatabaseProvider {
         private TestProvider(final SqlGenerator sqlGenerator, final MetaDataEngine metaDataEngine, final ExecutionEngine executionEngine) {
-            super(new DatabaseProviderContext(sqlGenerator,
+            super(new DatabaseProviderContext(
+                    sqlGenerator,
                     metaDataEngine,
                     executionEngine,
                     mock(SqlFunctionRegistry.class),
                     new ColumnIdentifierGenerator(),
+                    new MathOperationGenerator(new ColumnIdentifierGenerator()),
                     DefaultSequenceColumnValueGenerator::new));
         }
     }

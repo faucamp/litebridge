@@ -27,11 +27,13 @@ class MergeSqlGeneratorTest {
     @BeforeEach
     void beforeEach() {
         final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
-        final InsertSqlGenerator insertSqlGenerator = new InsertSqlGenerator(columnIdentifierGenerator, (table, connectionProvider) -> mock(TableMetaData.class));
-        final UpdateSqlGenerator updateSqlGenerator = new UpdateSqlGenerator(columnIdentifierGenerator, (table, connectionProvider) -> mock(TableMetaData.class));
-        final DeleteSqlGenerator deleteSqlGenerator = new DeleteSqlGenerator(columnIdentifierGenerator, (table, connectionProvider) -> mock(TableMetaData.class));
+        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(columnIdentifierGenerator);
+        final InsertSqlGenerator insertSqlGenerator = new InsertSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, (table, connectionProvider) -> mock(TableMetaData.class));
+        final UpdateSqlGenerator updateSqlGenerator = new UpdateSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, (table, connectionProvider) -> mock(TableMetaData.class));
+        final DeleteSqlGenerator deleteSqlGenerator = new DeleteSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, (table, connectionProvider) -> mock(TableMetaData.class));
         mergeSqlGenerator = new MergeSqlGenerator(
                 columnIdentifierGenerator,
+                mathOperationGenerator,
                 (table, connectionProvider) -> mock(TableMetaData.class),
                 insertSqlGenerator,
                 updateSqlGenerator,

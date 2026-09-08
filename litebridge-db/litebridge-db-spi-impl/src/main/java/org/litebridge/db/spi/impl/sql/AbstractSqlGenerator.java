@@ -16,6 +16,7 @@ import org.litebridge.db.spi.expression.SelectReference;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.math.MathOperator;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
@@ -34,10 +35,8 @@ import java.util.function.BiFunction;
  */
 public abstract class AbstractSqlGenerator {
 
-    /**
-     * The generator for column identifiers.
-     */
     protected final ColumnIdentifierGenerator columnIdentifierGenerator;
+    protected final MathOperationGenerator mathOperationGenerator;
 
     /**
      * Function to ensure table metadata is available.
@@ -51,8 +50,10 @@ public abstract class AbstractSqlGenerator {
      * @param ensureTableMetaData       The function to ensure table metadata is available.
      */
     public AbstractSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+                                final MathOperationGenerator mathOperationGenerator,
                                 final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
         this.columnIdentifierGenerator = columnIdentifierGenerator;
+        this.mathOperationGenerator = mathOperationGenerator;
         this.ensureTableMetaData = ensureTableMetaData;
     }
 
@@ -138,6 +139,17 @@ public abstract class AbstractSqlGenerator {
     }
 
     /**
+     * Creates a SQL representation of a math operation.
+     *
+     * @param column       the column
+     * @param mathOperator the math operation
+     * @return the SQL representation of the math operation
+     */
+    protected String createMathOperation(final String column, final MathOperator mathOperator) {
+        return "%s %s ?".formatted(columnIdentifierGenerator.quoteIdentifier(column), mathOperator.symbol());
+    }
+
+    /**
      * Appends a table name to the SQL builder, quoting identifiers.
      *
      * @param sql   The SQL builder.
@@ -220,11 +232,13 @@ public abstract class AbstractSqlGenerator {
         }
     }
 
-    protected static String getColumnValueFragment(final UpdateColumn updateColumn) {
+    protected String getColumnValueFragment(final UpdateColumn updateColumn) {
         final ColumnValueGenerator columnValueGenerator = updateColumn.generator();
 
         if (columnValueGenerator != null) {
             return columnValueGenerator.generate();
+        } else if (updateColumn.mathOperator() != null) {
+            return mathOperationGenerator.createMathOperation(updateColumn.name(), updateColumn.mathOperator());
         } else {
             return "?";
         }

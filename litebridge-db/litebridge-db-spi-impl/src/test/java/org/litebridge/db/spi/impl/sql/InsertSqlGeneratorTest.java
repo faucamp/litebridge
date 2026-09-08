@@ -20,7 +20,9 @@ class InsertSqlGeneratorTest {
 
     @BeforeEach
     void beforeEach() {
-        insertSqlGenerator = new InsertSqlGenerator(new ColumnIdentifierGenerator(), (table, connectionProvider) -> mock(TableMetaData.class));
+        final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
+        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(columnIdentifierGenerator);
+        insertSqlGenerator = new InsertSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, (table, connectionProvider) -> mock(TableMetaData.class));
     }
 
     @Test

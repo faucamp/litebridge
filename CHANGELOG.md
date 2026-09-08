@@ -15,6 +15,8 @@
       generated keys.
 - Database Provider SPI
     - New APIs for retrieving database and database provider metadata.
+- Oracle Database Provider:
+  - Add custom mathematical operation SQL generator
 
 ### Changed
 
@@ -26,16 +28,26 @@
     - Simplify node compilation; drop `SelectSpec`, `InsertSpec` etc.
     - Standardised AST cache handling.
     - Optimise and greatly simplify fluent API implementation due to full shift to AST compiler.
-    - Reimplent the default DTO mapper (now called `DtoMapper`) to be simpler and more performant and handle non-ORM
+    - Reimplement the default DTO mapper (now called `DtoMapper`) to be simpler and more performant and handle non-ORM
       generated query results better.
     - `Litebridge.save()` now accepts a single DTO instead of varargs to improve clarity and type safety.
     - Query-based `update()` and `delete()` APIs now return `UpdateResult` instead of `void`.
 - Database Provider SPI:
     - Standardised and simplified the `DatabaseProvider` SPI interface. This breaks backward compatibility.
-    - Massive refactor of `AbstractDatabaseProvider` to separate concerns make it more modular.
+    - Massive refactor of `AbstractDatabaseProvider` to separate concerns make it more modular
     - Simplify `AbstractDatabaseProvider` configuration; remove boilerplate.
     - Split SQL generation and execution into distinct engine components for improved flexibility and maintainability.
     - Native SQL and ORM-generated SQL now follow the same execution path.
+    - Mathematical operations can now be overridden more simply in database providers
+- Oracle Database Provider:
+    - Improve aliasing behaviour by enforcing Oracle's SELECT clause processing order
+
+### Fixed
+
+- Oracle Database Provider:
+    - Fixed the modulus math operation
+- SQLite Database Provider:
+  - Use correct `LIMIT -1` when a SELECT statement is generated with an offset but not limit
 
 ### Removed
 

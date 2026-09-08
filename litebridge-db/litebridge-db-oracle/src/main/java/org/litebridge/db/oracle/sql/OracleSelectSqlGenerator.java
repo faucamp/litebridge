@@ -3,6 +3,7 @@ package org.litebridge.db.oracle.sql;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.tx.ConnectionProvider;
@@ -10,7 +11,7 @@ import org.litebridge.db.spi.tx.ConnectionProvider;
 import java.util.function.BiFunction;
 
 /**
- * A specialised SQL generator for SELECT statements targeting Oracle databases.
+ * Specialised SQL generator for SELECT statements targeting Oracle databases.
  * <p>
  * This class extends the {@code SelectSqlGenerator} to provide Oracle-specific
  * SQL syntax for operations such as limiting and offsetting query results.
@@ -19,16 +20,19 @@ import java.util.function.BiFunction;
  * by translating it into Oracle-compatible pagination syntax using "OFFSET" and
  * "FETCH FIRST N ROWS ONLY".
  */
-public class OracleSelectSqlGenerator extends SelectSqlGenerator {
+public final class OracleSelectSqlGenerator extends SelectSqlGenerator {
 
     /**
      * Constructs a new {@code OracleSelectSqlGenerator}.
      *
      * @param columnIdentifierGenerator The generator for column identifiers.
+     * @param mathOperationGenerator    The generator for math operations.
      * @param ensureTableMetaData       A function to ensure table metadata.
      */
-    public OracleSelectSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator, final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, ensureTableMetaData);
+    public OracleSelectSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+                                    final MathOperationGenerator mathOperationGenerator,
+                                    final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
+        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     @Override

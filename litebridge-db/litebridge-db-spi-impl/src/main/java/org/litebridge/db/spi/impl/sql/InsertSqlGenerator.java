@@ -22,8 +22,9 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
      * @param ensureTableMetaData       a function to ensure table metadata
      */
     public InsertSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+                              final MathOperationGenerator mathOperationGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, ensureTableMetaData);
+        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     /**

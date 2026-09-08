@@ -35,6 +35,7 @@ final class InsertCompilationContext implements CompilationContext {
     private final List<String> insertColumns;
     private final Set<String> insertColumnNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
     private int rows = 0;
+    private boolean returnGeneratedColumns;
     private @Nullable List<BindValue> bindValues;
 
     InsertCompilationContext(final InsertNode insertNode,
@@ -80,8 +81,14 @@ final class InsertCompilationContext implements CompilationContext {
 
                 // Process any remaining non-nullable columns
                 tableMetaData.columns().stream()
-                        .filter(columnMetaData -> !insertColumnNames.contains(columnMetaData.name()) && !columnMetaData.isNullable() && !columnMetaData.isAutoIncrement())
+                        .filter(columnMetaData -> !insertColumnNames.contains(columnMetaData.name()) && !columnMetaData.isNullable())
                         .forEach(columnMetaData -> {
+                            returnGeneratedColumns = true;
+
+                            if (columnMetaData.isAutoIncrement()) {
+                                return;
+                            }
+
                             // Non-null value omitted from insert columns; see if it can be generated
                             if (columnMetaData.getGenerator() != null) {
                                 // Implicit/generated value insert
@@ -174,14 +181,12 @@ final class InsertCompilationContext implements CompilationContext {
 
     @Override
     public Insert toOperation() {
-        boolean returnGeneratedColumns = false;
         final List<UpdateColumn> columns = new ArrayList<>(columnMetaDataList.size());
 
         for (final ColumnMetaData columnMetaData : columnMetaDataList) {
             final ColumnValueGenerator columnValueGenerator = columnMetaData.getGenerator();
 
             if (!insertColumnNames.contains(columnMetaData.name()) && columnValueGenerator != null) {
-                returnGeneratedColumns = true;
                 columns.add(new UpdateColumn(columnMetaData.name(), columnValueGenerator, null));
             } else {
                 columns.add(new UpdateColumn(columnMetaData.name()));

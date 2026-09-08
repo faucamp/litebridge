@@ -26,7 +26,9 @@ class UpdateSqlGeneratorTest {
 
     @BeforeEach
     void beforeEach() {
-        updateSqlGenerator = new UpdateSqlGenerator(new ColumnIdentifierGenerator(), ensureTableMetaData);
+        final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
+        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(columnIdentifierGenerator);
+        updateSqlGenerator = new UpdateSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     @Test

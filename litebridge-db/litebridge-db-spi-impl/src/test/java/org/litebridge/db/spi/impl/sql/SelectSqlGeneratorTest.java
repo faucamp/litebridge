@@ -45,7 +45,9 @@ class SelectSqlGeneratorTest {
 
     @BeforeEach
     void beforeEach() {
-        selectSqlGenerator = new SelectSqlGenerator(new ColumnIdentifierGenerator(), ensureTableMetaData);
+        final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
+        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(columnIdentifierGenerator);
+        selectSqlGenerator = new SelectSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     @Test

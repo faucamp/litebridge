@@ -18,11 +18,12 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
     private final DeleteSqlGenerator deleteSqlGenerator;
 
     public MergeSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+                             final MathOperationGenerator mathOperationGenerator,
                              final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData,
                              final InsertSqlGenerator insertSqlGenerator,
                              final UpdateSqlGenerator updateSqlGenerator,
                              final DeleteSqlGenerator deleteSqlGenerator) {
-        super(columnIdentifierGenerator, ensureTableMetaData);
+        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
         this.insertSqlGenerator = insertSqlGenerator;
         this.updateSqlGenerator = updateSqlGenerator;
         this.deleteSqlGenerator = deleteSqlGenerator;

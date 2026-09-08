@@ -27,6 +27,7 @@ public final class SQLiteExecutionEngine extends ExecutionEngineReturnedKeysAuto
     @Override
     protected Map<ColumnMetaData, Object> extractGeneratedKeys(final List<ColumnMetaData> generatedPrimaryKeys, final PreparedStatement preparedStatement) throws SQLException {
         final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(generatedPrimaryKeys.size());
+
         try (final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys()) {
             if (generatedKeysResultSet.next()) {
                 // SQLite usually returns one generated key (rowid)
@@ -38,6 +39,7 @@ public final class SQLiteExecutionEngine extends ExecutionEngineReturnedKeysAuto
                 }
             }
         }
+
         return generatedKeys;
     }
 

@@ -14,16 +14,21 @@ import org.litebridge.db.spi.update.Update;
 public class DefaultSqlGenerator implements SqlGenerator {
 
     protected final MetaDataEngine metaDataEngine;
+    protected final ColumnIdentifierGenerator columnIdentifierGenerator;
+    protected final MathOperationGenerator mathOperationGenerator;
 
-    protected final ConcurrentLazy<ColumnIdentifierGenerator> columnIdentifierGenerator = new ConcurrentLazy<>(this::createColumnIdentifierGenerator);
     protected final ConcurrentLazy<SelectSqlGenerator> selectSqlGenerator = new ConcurrentLazy<>(this::createSelectSqlGenerator);
     protected final ConcurrentLazy<InsertSqlGenerator> insertSqlGenerator = new ConcurrentLazy<>(this::createInsertSqlGenerator);
     protected final ConcurrentLazy<UpdateSqlGenerator> updateSqlGenerator = new ConcurrentLazy<>(this::createUpdateSqlGenerator);
     protected final ConcurrentLazy<DeleteSqlGenerator> deleteSqlGenerator = new ConcurrentLazy<>(this::createDeleteSqlGenerator);
     protected final ConcurrentLazy<MergeSqlGenerator> mergeSqlGenerator = new ConcurrentLazy<>(this::createMergeSqlGenerator);
 
-    public DefaultSqlGenerator(final MetaDataEngine metaDataEngine) {
+    public DefaultSqlGenerator(final MetaDataEngine metaDataEngine,
+                               final ColumnIdentifierGenerator columnIdentifierGenerator,
+                               final MathOperationGenerator mathOperationGenerator) {
         this.metaDataEngine = metaDataEngine;
+        this.columnIdentifierGenerator = columnIdentifierGenerator;
+        this.mathOperationGenerator = mathOperationGenerator;
     }
 
     @Override
@@ -53,7 +58,10 @@ public class DefaultSqlGenerator implements SqlGenerator {
      * @return a {@link SelectSqlGenerator} instance
      */
     protected SelectSqlGenerator createSelectSqlGenerator() {
-        return new SelectSqlGenerator(columnIdentifierGenerator.getOrThrow(), metaDataEngine::ensureTableMetaData);
+        return new SelectSqlGenerator(
+                columnIdentifierGenerator,
+                mathOperationGenerator,
+                metaDataEngine::ensureTableMetaData);
     }
 
     /**
@@ -62,7 +70,10 @@ public class DefaultSqlGenerator implements SqlGenerator {
      * @return an {@link InsertSqlGenerator} instance
      */
     protected InsertSqlGenerator createInsertSqlGenerator() {
-        return new InsertSqlGenerator(columnIdentifierGenerator.getOrThrow(), metaDataEngine::ensureTableMetaData);
+        return new InsertSqlGenerator(
+                columnIdentifierGenerator,
+                mathOperationGenerator,
+                metaDataEngine::ensureTableMetaData);
     }
 
     /**
@@ -71,7 +82,10 @@ public class DefaultSqlGenerator implements SqlGenerator {
      * @return an {@link UpdateSqlGenerator} instance
      */
     protected UpdateSqlGenerator createUpdateSqlGenerator() {
-        return new UpdateSqlGenerator(columnIdentifierGenerator.getOrThrow(), metaDataEngine::ensureTableMetaData);
+        return new UpdateSqlGenerator(
+                columnIdentifierGenerator,
+                mathOperationGenerator,
+                metaDataEngine::ensureTableMetaData);
     }
 
     /**
@@ -80,7 +94,10 @@ public class DefaultSqlGenerator implements SqlGenerator {
      * @return a {@link DeleteSqlGenerator} instance
      */
     protected DeleteSqlGenerator createDeleteSqlGenerator() {
-        return new DeleteSqlGenerator(columnIdentifierGenerator.getOrThrow(), metaDataEngine::ensureTableMetaData);
+        return new DeleteSqlGenerator(
+                columnIdentifierGenerator,
+                mathOperationGenerator,
+                metaDataEngine::ensureTableMetaData);
     }
 
     /**
@@ -90,19 +107,11 @@ public class DefaultSqlGenerator implements SqlGenerator {
      */
     protected MergeSqlGenerator createMergeSqlGenerator() {
         return new MergeSqlGenerator(
-                columnIdentifierGenerator.getOrThrow(),
+                columnIdentifierGenerator,
+                mathOperationGenerator,
                 metaDataEngine::ensureTableMetaData,
                 insertSqlGenerator.getOrThrow(),
                 updateSqlGenerator.getOrThrow(),
                 deleteSqlGenerator.getOrThrow());
-    }
-
-    /**
-     * Create a {@link ColumnIdentifierGenerator} instance for the database provider.
-     *
-     * @return a {@link ColumnIdentifierGenerator} instance
-     */
-    protected ColumnIdentifierGenerator createColumnIdentifierGenerator() {
-        return new ColumnIdentifierGenerator();
     }
 }
