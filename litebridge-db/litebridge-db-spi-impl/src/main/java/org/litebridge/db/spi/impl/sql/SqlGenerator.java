@@ -1,7 +1,6 @@
 package org.litebridge.db.spi.impl.sql;
 
 import org.litebridge.db.spi.Operation;
-import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
 /**
@@ -16,18 +15,11 @@ public interface SqlGenerator {
     /**
      * Generates SQL for the given operation using the provided connection provider.
      *
-     * @param operation The operation to generate SQL for.
+     * @param operation          The operation to generate SQL for.
      * @param connectionProvider The connection provider to use.
      * @return The generated SQL.
      */
     String generateSql(final Operation operation, final ConnectionProvider connectionProvider);
-
-    /**
-     * Returns the metadata engine used by this SQL generator.
-     *
-     * @return The metadata engine.
-     */
-    MetaDataEngine metaDataEngine();
 
     /**
      * Returns the `SELECT`-query SQL generator used by this SQL generator.

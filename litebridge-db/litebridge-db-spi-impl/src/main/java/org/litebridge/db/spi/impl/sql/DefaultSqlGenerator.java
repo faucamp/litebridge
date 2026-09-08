@@ -43,11 +43,6 @@ public class DefaultSqlGenerator implements SqlGenerator {
     }
 
     @Override
-    public MetaDataEngine metaDataEngine() {
-        return metaDataEngine;
-    }
-
-    @Override
     public SelectSqlGenerator selectSqlGenerator() {
         return selectSqlGenerator.getOrThrow();
     }

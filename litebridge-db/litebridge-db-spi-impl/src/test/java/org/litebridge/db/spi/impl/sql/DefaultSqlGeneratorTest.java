@@ -1,9 +1,9 @@
 package org.litebridge.db.spi.impl.sql;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.engine.DefaultMetaDataEngine;
 import org.litebridge.db.spi.impl.function.SelectColumn;
-import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.Operator;
@@ -18,7 +18,6 @@ import org.litebridge.db.spi.update.UpdateColumn;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.litebridge.db.spi.impl.sql.TestUtil.createTestColumn;
 import static org.litebridge.db.spi.impl.sql.TestUtil.createTestTable;
 import static org.mockito.Mockito.mock;
@@ -26,22 +25,11 @@ import static org.mockito.Mockito.mock;
 class DefaultSqlGeneratorTest {
 
     @Test
-    void metaDataEngine_returnsConfiguredEngine() {
-        // Given
-        final MetaDataEngine expected = mock(MetaDataEngine.class);
-        final DefaultSqlGenerator sqlGenerator = new DefaultSqlGenerator(expected);
-
-        // When
-        final MetaDataEngine result = sqlGenerator.metaDataEngine();
-
-        // Then
-        assertSame(expected, result);
-    }
-
-    @Test
     void generateSql_dispatchesEveryOperationVariant() {
         // Given
-        final DefaultSqlGenerator sqlGenerator = new DefaultSqlGenerator(new DefaultMetaDataEngine());
+        final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
+        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(columnIdentifierGenerator);
+        final DefaultSqlGenerator sqlGenerator = new DefaultSqlGenerator(new DefaultMetaDataEngine(), columnIdentifierGenerator, mathOperationGenerator);
         final ConditionGroup where = new ConditionGroup(new LogicCondition(
                 new SelectColumn(createTestColumn(), sqlGenerator.selectSqlGenerator().columnIdentifierGenerator),
                 Operator.EQ,

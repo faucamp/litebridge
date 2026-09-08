@@ -39,8 +39,6 @@ class ContextBuilderTest {
         assertNotNull(result);
         assertNotNull(result.executionEngine());
         assertNotNull(result.metaDataEngine());
-        assertNotNull(result.columnIdentifierGenerator());
-        assertNotNull(result.mathOperationGenerator());
         assertNotNull(result.sequenceColumnValueGeneratorCreator());
         assertNotNull(result.sqlGenerator());
     }
@@ -76,10 +74,8 @@ class ContextBuilderTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(columnIdentifierGenerator, result.columnIdentifierGenerator());
         assertEquals(executionEngine, result.executionEngine());
         assertEquals(metaDataEngine, result.metaDataEngine());
-        assertEquals(mathOperationGenerator, result.mathOperationGenerator());
         assertNotNull(result.sequenceColumnValueGeneratorCreator());
         assertNull(result.sqlFunctionRegistry()); // null because of mock
         assertEquals(sqlGenerator, result.sqlGenerator());
