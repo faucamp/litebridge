@@ -31,14 +31,15 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
 
     public String prepareSql(final Merge merge, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = appendTable(new StringBuilder("MERGE INTO "), merge.table());
-        sql.append(" USING (");
+        sql.append(" USING ");
 
         if (merge.usingTable() != null) {
             appendTable(sql, merge.usingTable());
         }
 
-        sql.append(") ON ");
+        sql.append(" ON (");
         appendConditionsAndSubgroups(sql, merge.on(), merge, connectionProvider);
+        sql.append(')');
 
         final List<Merge.WhenMatched<Merge.WhenMatchedOperation>> whenMatchedList = merge.whenMatched();
 
