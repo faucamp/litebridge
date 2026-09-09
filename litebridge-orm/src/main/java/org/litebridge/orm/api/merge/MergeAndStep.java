@@ -36,8 +36,4 @@ public sealed class MergeAndStep<DTO, MUS extends MergeUpdateStep>
                 node,
                 conditionNode -> new MergeWhenMatchedConditionClauseTerminal<>(targetTable, usingTable, conditionNode, litebridgeContext));
     }
-
-    QueryNode node() {
-        return node;
-    }
 }
