@@ -6,7 +6,10 @@ import org.litebridge.db.spi.query.ConditionGroup;
 import java.util.List;
 
 /**
- * A SQL UPDATE statement targeting a specific table, with associated columns and conditions.
+ * Logical representation of a SQL {@code UPDATE} statement.
+ * <p>
+ * It is used by {@link org.litebridge.db.spi.DatabaseProvider} implementations
+ * to generate SQL {@code UPDATE} statement strings.
  *
  * @param table   The table being updated
  * @param columns list of columns to update

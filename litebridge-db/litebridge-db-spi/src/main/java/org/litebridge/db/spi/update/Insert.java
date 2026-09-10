@@ -1,26 +1,14 @@
 package org.litebridge.db.spi.update;
 
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
 
 import java.util.List;
 
 /**
- * A SQL INSERT statement targeting specific table metadata with associated columns and rows of values.
+ * Logical representation of a SQL {@code INSERT} statement.
  * <p>
- * This class is a record that combines:
- * <ul>
- *  <li>A target {@link TableMetaData} for the insertion</li>
- *  <li>A list of {@link ColumnMetaData} representing the columns involved in the insertion</li>
- *  <li>A list of {@link RowValue} representing the rows to be inserted</li>
- * </ul>
- * <p>
- * This class also provides constructors for creating instances with either a single row
- * or multiple rows of data, automatically populating column information based on the rows provided.
- * <p>
- * Instances of this class are immutable and serve as part of the structure for building SQL
- * update operations targeting a database.
+ * It is used by {@link org.litebridge.db.spi.DatabaseProvider} implementations
+ * to generate SQL {@code INSERT} statement strings.
  *
  * @param table               The target table for the insertion operation.
  * @param columns             The list of columns involved in the insertion operation.
