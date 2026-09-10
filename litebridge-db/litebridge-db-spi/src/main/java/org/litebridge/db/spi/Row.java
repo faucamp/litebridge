@@ -3,7 +3,6 @@ package org.litebridge.db.spi;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.commons.type.ConcurrentLazy;
-import org.litebridge.db.spi.query.Result;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,7 +17,7 @@ import java.util.stream.Stream;
  * This class provides methods to add expressions with associated values,
  * retrieve specific expressions, and stream through all expressions in the row.
  */
-public final class Row implements Result {
+public final class Row {
 
     private final LinkedHashMap<Column, @Nullable Object> columns = new LinkedHashMap<>();
     private final ConcurrentLazy<List<RowColumn>> columnList = new ConcurrentLazy<>(() -> columnStream().toList());
