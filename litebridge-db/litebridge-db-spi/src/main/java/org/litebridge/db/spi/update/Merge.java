@@ -38,18 +38,42 @@ public record Merge(Table table,
         }
     }
 
+    /**
+     * Logical representation of a merge {@code WHEN MATCHED}/{@code WHEN NOT MATCHED} clause.
+     *
+     * @param and       the {@code AND} condition for the match clause
+     * @param operation the operation to perform when the match clause is satisfied
+     * @param <T>       the type of operation
+     */
     public record WhenMatched<T>(@Nullable ConditionGroup and, T operation) {
     }
 
+    /**
+     * Marker interface for merge {@code WHEN MATCHED} update operations.
+     */
     public interface WhenMatchedOperation {
     }
 
+    /**
+     * Logical representation of an {@code UPDATE} in a merge {@code WHEN MATCHED} clause.
+     *
+     * @param columns the columns to update
+     */
     public record MergeUpdate(List<UpdateColumn> columns) implements WhenMatchedOperation {
     }
 
+    /**
+     * Logical representation of a {@code DELETE} in a merge {@code WHEN MATCHED} clause.
+     */
     public record MergeDelete() implements WhenMatchedOperation {
     }
 
+    /**
+     * Logical representation of an {@code INSERT} in a merge {@code WHEN NOT MATCHED} clause.
+     *
+     * @param columns the columns to insert
+     * @param rows    the number of rows to insert
+     */
     public record MergeInsert(List<UpdateColumn> columns, int rows) {
     }
 }
