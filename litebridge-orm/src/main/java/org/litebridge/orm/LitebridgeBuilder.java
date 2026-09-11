@@ -51,8 +51,18 @@ public final class LitebridgeBuilder<LB extends LitebridgeCore> {
         final LitebridgeConfig finalLitebridgeConfig = config != null ? config : new LitebridgeConfig();
         final MethodHandles.Lookup finalLookup = lookup != null ? lookup : MethodHandles.lookup();
 
-        // Basic Litebridge (no merge support)
+        if (litebridgeClass.equals(Litebridge.class)) {
+            // Default Litebridge
+            return (LB) new Litebridge(
+                    databaseProvider,
+                    finalTransactionManager,
+                    finalLitebridgeConfig,
+                    finalLookup);
+
+        }
+
         if (litebridgeClass.equals(LitebridgeCore.class)) {
+            // Basic Litebridge (no merge support)
             return (LB) new LitebridgeCore(
                     databaseProvider,
                     finalTransactionManager,
@@ -60,11 +70,15 @@ public final class LitebridgeBuilder<LB extends LitebridgeCore> {
                     finalLookup);
         }
 
-        // Default Litebridge
-        return (LB) new Litebridge(
+        // Custom database-specific Litebridge instance; Let the database provider instantiate it
+        final LitebridgeOverrideDatabaseProvider<LB> litebridgeOverrideDatabaseProvider = (LitebridgeOverrideDatabaseProvider<LB>) databaseProvider;
+
+        final Object[] constructorArgs = new Object[]{
                 databaseProvider,
                 finalTransactionManager,
                 finalLitebridgeConfig,
-                finalLookup);
+                finalLookup};
+
+        return litebridgeOverrideDatabaseProvider.createLitebridge(constructorArgs);
     }
 }

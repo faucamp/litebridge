@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 /**
  * Provides common functionality for creating update metadata.
  */
-public abstract sealed class AbstractInsertEngine extends AbstractUpdateEngine permits InsertEngine, MergeEngine {
+public non-sealed abstract class AbstractInsertEngine extends AbstractUpdateEngine {
 
     public static @Nullable UpdateMetaData createUpdateMetaData(final PreparedOperation preparedOperation,
                                                                 final Supplier<Table> tableSupplier,

@@ -32,7 +32,7 @@ public class H2Example {
     }
 
     private static void runExamples(final DataSource dataSource) {
-        // Initialise litebridgedb and register DTO-table mappings
+        // Initialise Litebridge and register DTO-table mappings
         final Litebridge litebridge = Litebridge.withDatabase(new H2DatabaseProvider(), dataSource).build();
         CommonDtoRegistration.registerPersonAndAccount(litebridge);
 

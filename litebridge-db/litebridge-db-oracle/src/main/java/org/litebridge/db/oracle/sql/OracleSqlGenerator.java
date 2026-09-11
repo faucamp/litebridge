@@ -1,5 +1,6 @@
 package org.litebridge.db.oracle.sql;
 
+import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.impl.sql.DefaultSqlGenerator;
@@ -18,6 +19,11 @@ import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
  */
 public final class OracleSqlGenerator extends DefaultSqlGenerator {
 
+    private final ConcurrentLazy<OracleInsertSqlGenerator> oracleInsertSqlGenerator = new ConcurrentLazy<>(() -> new OracleInsertSqlGenerator(
+            columnIdentifierGenerator,
+            mathOperationGenerator,
+            metaDataEngine::ensureTableMetaData));
+
     public OracleSqlGenerator(final MetaDataEngine metaDataEngine,
                               final ColumnIdentifierGenerator columnIdentifierGenerator,
                               final MathOperationGenerator mathOperationGenerator) {
@@ -34,9 +40,10 @@ public final class OracleSqlGenerator extends DefaultSqlGenerator {
 
     @Override
     protected InsertSqlGenerator createInsertSqlGenerator() {
-        return new OracleInsertSqlGenerator(
-                columnIdentifierGenerator,
-                mathOperationGenerator,
-                metaDataEngine::ensureTableMetaData);
+        return oracleInsertSqlGenerator.getOrThrow();
+    }
+
+    public OracleInsertSqlGenerator oracleInsertSqlGenerator() {
+        return oracleInsertSqlGenerator.getOrThrow();
     }
 }

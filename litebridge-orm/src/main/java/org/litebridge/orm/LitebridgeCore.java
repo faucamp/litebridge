@@ -605,7 +605,7 @@ public class LitebridgeCore implements SelectApi {
         return createLitebridgeContext(LitebridgeContext.Mode.SQL);
     }
 
-    private LitebridgeContext createLitebridgeContext(final LitebridgeContext.Mode mode) {
+    protected LitebridgeContext createLitebridgeContext(final LitebridgeContext.Mode mode) {
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.aliasTransformer());
         return new LitebridgeContext(mode,
                 litebridgeConfig,

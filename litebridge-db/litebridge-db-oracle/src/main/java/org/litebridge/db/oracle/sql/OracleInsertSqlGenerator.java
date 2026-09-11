@@ -11,6 +11,7 @@ import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.UpdateColumn;
 
+import java.util.List;
 import java.util.function.BiFunction;
 
 public final class OracleInsertSqlGenerator extends InsertSqlGenerator {
@@ -28,26 +29,28 @@ public final class OracleInsertSqlGenerator extends InsertSqlGenerator {
         super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData, DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
     }
 
-    private String createInsertAllClause(final Insert insert) {
-        BooleanUtils.requireFalse(insert.returnGeneratedKeys(), "INSERT ALL cannot return generated keys");
-
+    public String createInsertAllClause(final List<Insert> inserts) {
         final StringBuilder sql = new StringBuilder("INSERT ALL ");
-        final String intoClause = createInsertIntoClause(insert);
 
-        for (int i = 0; i < insert.rows(); i++) {
-            sql.append(intoClause).append('(');
+        for (Insert insert : inserts) {
+            BooleanUtils.requireFalse(insert.returnGeneratedKeys(), "INSERT ALL cannot return generated keys");
+            final String intoClause = createInsertIntoClause(insert);
 
-            for (int j = 0; j < insert.columns().size(); j++) {
-                final UpdateColumn insertColumn = insert.columns().get(j);
+            for (int i = 0; i < insert.rows(); i++) {
+                sql.append(intoClause).append('(');
 
-                if (j > 0) {
-                    sql.append(", ");
+                for (int j = 0; j < insert.columns().size(); j++) {
+                    final UpdateColumn insertColumn = insert.columns().get(j);
+
+                    if (j > 0) {
+                        sql.append(", ");
+                    }
+
+                    sql.append(getColumnValueFragment(insertColumn));
                 }
 
-                sql.append(getColumnValueFragment(insertColumn));
+                sql.append(") ");
             }
-
-            sql.append(") ");
         }
 
         sql.append("SELECT * FROM DUAL");

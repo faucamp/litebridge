@@ -13,7 +13,9 @@
     - New query-based `insert()` API in `Litebridge` class, returning `InsertResult`.
     - Return `UpdateResult` and `InsertResult` classes for mutating operations, providing details on rows affected and
       generated keys.
-    - Added batch update operations for native SQL.
+    - Add batch update operations for native SQL.
+    - Add `LitebridgeBuilder` for instantiating dynamic Litebridge instances with ease.
+      This allows database providers to "inject" additional `Litebridge` APIs for database-specific functionality.
 - Database Provider SPI
     - New APIs for retrieving database and database provider metadata.
     - New `executeBatch()` method for explicit batch update operations.
@@ -25,7 +27,8 @@
 - Oracle Database Provider:
     - Add custom mathematical operation SQL generator
     - Multi-row inserts are now supported via batched insert statements
-    - `INSERT ALL` SQL generation support added (not yet used/for future use)
+    - Add custom `LitebridgeOracle` class for Oracle-specific Litebridge APIs
+    - Add `INSERT ALL` support via `LitebridgeOracle.insertAll()`
 - SQLite Database Provider:
     - Specify limited capabilities: Override the Litebridge instance created by `LitebridgeBuilder` to `LitebridgeCore`
 
@@ -61,6 +64,7 @@
 
 - Oracle Database Provider:
     - Fixed the modulus math operation
+    - Fixed multi-row inserts; now uses batched insert statements
 - SQLite Database Provider:
     - Use correct `LIMIT -1` when a SELECT statement is generated with an offset but not limit
 
