@@ -13,10 +13,15 @@
     - New query-based `insert()` API in `Litebridge` class, returning `InsertResult`.
     - Return `UpdateResult` and `InsertResult` classes for mutating operations, providing details on rows affected and
       generated keys.
+    - Added batch update operations for native SQL.
 - Database Provider SPI
     - New APIs for retrieving database and database provider metadata.
+    - New `executeBatch()` method for explicit batch update operations.
+    - `Result` and `BatchUpdateResult` result models added.
 - Oracle Database Provider:
   - Add custom mathematical operation SQL generator
+  - Multi-row inserts are now supported via batched insert statements
+  - `INSERT ALL` SQL generation support added (not yet used/for future use) 
 
 ### Changed
 
@@ -31,7 +36,9 @@
     - Reimplement the default DTO mapper (now called `DtoMapper`) to be simpler and more performant and handle non-ORM
       generated query results better.
     - `Litebridge.save()` now accepts a single DTO instead of varargs to improve clarity and type safety.
-    - Query-based `update()` and `delete()` APIs now return `UpdateResult` instead of `void`.
+    - Query-based `update()` and `delete()` APIs now return a result instead of `void`.
+    - `UpdateResult` class hierarchy extended; update results can now be `BatchUpdateResult`.
+    - `InsertResult` now supports multi-row insert operation results by default; this changes how generated keys are accessed.
 - Database Provider SPI:
     - Standardised and simplified the `DatabaseProvider` SPI interface. This breaks backward compatibility.
     - Massive refactor of `AbstractDatabaseProvider` to separate concerns make it more modular
