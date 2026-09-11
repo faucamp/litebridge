@@ -2,7 +2,9 @@ package org.litebridge.orm.e2e.basic;
 
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.litebridge.commons.ClassUtils;
 import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.LitebridgeCore;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.e2e.setup.MultiDbTestExtension;
@@ -47,8 +49,8 @@ public class SubselectCacheTest extends AbstractE2eTest {
         assertEquals(2, size3, "Should have 2 cached queries (miss)");
     }
 
-    private QueryPlanCache getCache(Litebridge lb) throws Exception {
-        Field field = Litebridge.class.getDeclaredField("queryPlanCache");
+    private QueryPlanCache getCache(LitebridgeCore lb) throws Exception {
+        final Field field = ClassUtils.getField(LitebridgeCore.class, "queryPlanCache");
         field.setAccessible(true);
         return (QueryPlanCache) field.get(lb);
     }
