@@ -4,6 +4,7 @@ import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.alias.AliasTransformer;
@@ -13,6 +14,7 @@ import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.ManagedConnection;
+import org.litebridge.db.spi.update.BatchUpdateResult;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.slf4j.Logger;
@@ -35,10 +37,14 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
 
     private final TypeConverter typeConverter;
     private final AliasTransformer aliasTransformer;
+    private final DatabaseProviderMetaData.InsertCapability insertCapability;
 
-    public AbstractExecutionEngine(final TypeConverter typeConverter, final AliasTransformer aliasTransformer) {
+    public AbstractExecutionEngine(final TypeConverter typeConverter,
+                                   final AliasTransformer aliasTransformer,
+                                   final DatabaseProviderMetaData.InsertCapability insertCapability) {
         this.typeConverter = typeConverter;
         this.aliasTransformer = aliasTransformer;
+        this.insertCapability = insertCapability;
     }
 
     protected abstract Logger getLogger();
@@ -50,14 +56,38 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
     @Override
     public InsertResult executeInsert(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
         try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, connectionProvider)) {
-            final int affectedRows = preparedStatement.executeUpdate();
             final UpdateMetaData updateMetaData = Objects.requireNonNull(preparedSql.updateMetaData());
 
-            if (updateMetaData.returnGeneratedKeys() && affectedRows > 0) {
-                final Map<ColumnMetaData, Object> generatedKeys = extractGeneratedKeys(updateMetaData.generatedKeys(), preparedStatement);
-                return new InsertResult(affectedRows, generatedKeys);
+            // Process multi-row inserts in batches if the database doesn't support single-statement multi-row inserts
+            if (updateMetaData.rows() > 1
+                    && insertCapability == DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS) {
+                final int bindValueColumns = updateMetaData.bindValueColumns();
+
+                for (int i = 0; i < updateMetaData.rows(); i++) {
+                    final int offset = i * bindValueColumns;
+                    final List<BindValue> rowBindValues = preparedSql.bindValues().subList(offset, offset + bindValueColumns);
+                    addPreparedStatementBindValues(preparedStatement, rowBindValues);
+                    preparedStatement.addBatch();
+                }
+
+                final int[] affectedRowsArray = preparedStatement.executeBatch();
+
+                if (!updateMetaData.returnGeneratedKeys()) {
+                    return new InsertResult(affectedRowsArray.length, Collections.emptyList());
+                }
+
+                final List<Map<ColumnMetaData, Object>> generatedKeysPerAffectedRow = extractGeneratedKeysBatch(updateMetaData.generatedKeys(), affectedRowsArray.length, preparedStatement);
+                return new InsertResult(affectedRowsArray.length, generatedKeysPerAffectedRow);
             } else {
-                return new InsertResult(affectedRows);
+                addPreparedStatementBindValues(preparedStatement, preparedSql.bindValues());
+                final int affectedRows = preparedStatement.executeUpdate();
+
+                if (updateMetaData.returnGeneratedKeys() && affectedRows > 0) {
+                    final Map<ColumnMetaData, Object> generatedKeys = extractGeneratedKeys(updateMetaData.generatedKeys(), preparedStatement);
+                    return new InsertResult(affectedRows, generatedKeys);
+                } else {
+                    return new InsertResult(affectedRows);
+                }
             }
         }
     }
@@ -65,8 +95,27 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
     @Override
     public UpdateResult executeUpdate(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
         try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, connectionProvider)) {
+            addPreparedStatementBindValues(preparedStatement, preparedSql.bindValues());
             final int affectedRows = preparedStatement.executeUpdate();
             return new UpdateResult(affectedRows);
+        }
+    }
+
+    @Override
+    public BatchUpdateResult executeBatch(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, connectionProvider)) {
+            final UpdateMetaData updateMetaData = Objects.requireNonNull(preparedSql.updateMetaData());
+            final int bindValueColumns = updateMetaData.bindValueColumns();
+
+            for (int i = 0; i < updateMetaData.rows(); i++) {
+                final int offset = i * bindValueColumns;
+                final List<BindValue> rowBindValues = preparedSql.bindValues().subList(offset, offset + bindValueColumns);
+                addPreparedStatementBindValues(preparedStatement, rowBindValues);
+                preparedStatement.addBatch();
+            }
+
+            final int[] affectedRows = preparedStatement.executeBatch();
+            return new BatchUpdateResult(affectedRows);
         }
     }
 
@@ -87,6 +136,8 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
         }
 
         try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, connectionProvider)) {
+            addPreparedStatementBindValues(preparedStatement, preparedSql.bindValues());
+
             // Execute SQL query
             final ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -191,44 +242,43 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
         }
 
         try (ManagedConnection connection = connectionProvider.connection()) {
-            final PreparedStatement preparedStatement = prepareJdbcStatement(preparedSql, connection);
+            return prepareJdbcStatement(preparedSql, connection);
+        }
+    }
 
-            final int[] ordinal = {1};
+    protected static void addPreparedStatementBindValues(final PreparedStatement preparedStatement, final List<BindValue> bindValues) throws SQLException {
+        final int[] ordinal = {1};
 
-            if (!CollectionUtils.isEmpty(preparedSql.bindValues())) {
-                for (BindValue bindValue : preparedSql.bindValues()) {
-                    if (bindValue == null) {
-                        preparedStatement.setString(ordinal[0]++, null);
-                        continue;
-                    } else if (bindValue.value() == null) {
-                        preparedStatement.setNull(ordinal[0]++, bindValue.sqlDataType());
-                        continue;
-                    }
+        if (!CollectionUtils.isEmpty(bindValues)) {
+            for (BindValue bindValue : bindValues) {
+                if (bindValue == null) {
+                    preparedStatement.setString(ordinal[0]++, null);
+                    continue;
+                } else if (bindValue.value() == null) {
+                    preparedStatement.setNull(ordinal[0]++, bindValue.sqlDataType());
+                    continue;
+                }
 
-                    if (bindValue.sqlDataType() == Types.BLOB
-                            && bindValue.value() instanceof byte[] bytes) {
-                        preparedStatement.setBinaryStream(ordinal[0]++, new ByteArrayInputStream(bytes));
-                        continue;
-                    }
+                if (bindValue.sqlDataType() == Types.BLOB
+                        && bindValue.value() instanceof byte[] bytes) {
+                    preparedStatement.setBinaryStream(ordinal[0]++, new ByteArrayInputStream(bytes));
+                    continue;
+                }
 
-                    switch (bindValue.value()) {
-                        case Integer integer -> preparedStatement.setInt(ordinal[0]++, integer);
-                        case Long longValue -> preparedStatement.setLong(ordinal[0]++, longValue);
-                        case Short shortValue -> preparedStatement.setShort(ordinal[0]++, shortValue);
-                        case Double doubleValue -> preparedStatement.setDouble(ordinal[0]++, doubleValue);
-                        case Float floatValue -> preparedStatement.setFloat(ordinal[0]++, floatValue);
-                        case BigDecimal bigDecimal -> preparedStatement.setBigDecimal(ordinal[0]++, bigDecimal);
-                        case Boolean bool -> preparedStatement.setBoolean(ordinal[0]++, bool);
-                        case String string -> preparedStatement.setString(ordinal[0]++, string);
-                        case Timestamp timestamp -> preparedStatement.setTimestamp(ordinal[0]++, timestamp);
-                        case byte[] bytes -> preparedStatement.setBytes(ordinal[0]++, bytes);
-                        default ->
-                                preparedStatement.setObject(ordinal[0]++, bindValue.value(), bindValue.sqlDataType());
-                    }
+                switch (bindValue.value()) {
+                    case Integer integer -> preparedStatement.setInt(ordinal[0]++, integer);
+                    case Long longValue -> preparedStatement.setLong(ordinal[0]++, longValue);
+                    case Short shortValue -> preparedStatement.setShort(ordinal[0]++, shortValue);
+                    case Double doubleValue -> preparedStatement.setDouble(ordinal[0]++, doubleValue);
+                    case Float floatValue -> preparedStatement.setFloat(ordinal[0]++, floatValue);
+                    case BigDecimal bigDecimal -> preparedStatement.setBigDecimal(ordinal[0]++, bigDecimal);
+                    case Boolean bool -> preparedStatement.setBoolean(ordinal[0]++, bool);
+                    case String string -> preparedStatement.setString(ordinal[0]++, string);
+                    case Timestamp timestamp -> preparedStatement.setTimestamp(ordinal[0]++, timestamp);
+                    case byte[] bytes -> preparedStatement.setBytes(ordinal[0]++, bytes);
+                    default -> preparedStatement.setObject(ordinal[0]++, bindValue.value(), bindValue.sqlDataType());
                 }
             }
-
-            return preparedStatement;
         }
     }
 
@@ -276,6 +326,37 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
             }
 
             return generatedKeys;
+        }
+    }
+
+    /**
+     * Extract the generated primary key values from the provided prepared batch statement.
+     *
+     * @param generatedPrimaryKeys the list of {@link ColumnMetaData} objects representing the generated primary key columns
+     * @param preparedStatement    the executed {@link PreparedStatement} containing any generated keys
+     * @return a list of maps of {@link ColumnMetaData} to the generated key value, one list entry per row
+     * @throws SQLException if an error occurs while retrieving the generated keys
+     */
+    protected List<Map<ColumnMetaData, Object>> extractGeneratedKeysBatch(final List<ColumnMetaData> generatedPrimaryKeys, final int rows, final PreparedStatement preparedStatement) throws SQLException {
+        final List<Map<ColumnMetaData, Object>> generatedKeysList = new ArrayList<>(rows);
+
+        try (final ResultSet generatedKeysResultSet = preparedStatement.getGeneratedKeys()) {
+            final Map<ColumnMetaData, Object> generatedKeys = new HashMap<>(generatedPrimaryKeys.size());
+            int row = 0;
+
+            while (generatedKeysResultSet.next()) {
+                row++;
+
+                for (ColumnMetaData pkColumn : generatedPrimaryKeys) {
+                    final Object generatedId = generatedKeysResultSet.getObject(pkColumn.name());
+                    getLogger().debug("Generated ID for row {}, column '{}': {}", row, pkColumn.name(), generatedId);
+                    generatedKeys.put(pkColumn, generatedId);
+                }
+
+                generatedKeysList.add(generatedKeys);
+            }
+
+            return generatedKeysList;
         }
     }
 }

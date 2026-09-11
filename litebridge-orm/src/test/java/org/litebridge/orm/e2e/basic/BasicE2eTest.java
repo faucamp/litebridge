@@ -1035,8 +1035,7 @@ public class BasicE2eTest extends AbstractE2eTest {
                 .values(76, "Alice", "Smith", 25)
                 .values(101, "Bob", "Jones", 30));
 
-        // Insert multiple rows of specific fields using DTO and metamodel using sequence-generated columns
-        // The Oracle database provider handles these differently from the previous insert
+        // Insert multiple rows of specific fields using DTO and metamodel using autoincrement/sequence-generated columns (PERSON_ID)
         litebridge.insert(Person.class, i -> i
                 .into(PersonMeta.name, PersonMeta.surname, PersonMeta.age)
                 .values("Alice", "Smith", 25)

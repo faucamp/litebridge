@@ -1,6 +1,5 @@
 package org.litebridge.orm.persistence;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
@@ -15,7 +14,8 @@ import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.TransactionManager;
-import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.db.spi.update.BatchUpdateResult;
+import org.litebridge.db.spi.update.Result;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -94,8 +94,13 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public <T extends UpdateResult> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) throws SQLException {
+    public <T extends Result> T executeUpdate(PreparedSql preparedSql, Class<T> resultType, ConnectionProvider connectionProvider) throws SQLException {
         return executeAndCleanupIfNeeded(() -> databaseProvider.executeUpdate(preparedSql, resultType, transactionManager));
+    }
+
+    @Override
+    public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeAndCleanupIfNeeded(() -> databaseProvider.executeBatch(preparedSql, transactionManager));
     }
 
     @Override

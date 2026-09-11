@@ -1,6 +1,7 @@
 package org.litebridge.db.oracle.sql;
 
 import org.litebridge.commons.BooleanUtils;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
@@ -24,16 +25,7 @@ public final class OracleInsertSqlGenerator extends InsertSqlGenerator {
     public OracleInsertSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
                                     final MathOperationGenerator mathOperationGenerator,
                                     final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
-    }
-
-    @Override
-    public String prepareSql(final Insert insert, final ConnectionProvider connectionProvider) {
-        if (insert.rows() == 1) {
-            return super.prepareSql(insert, connectionProvider);
-        }
-
-        return createInsertAllClause(insert);
+        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData, DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
     }
 
     private String createInsertAllClause(final Insert insert) {

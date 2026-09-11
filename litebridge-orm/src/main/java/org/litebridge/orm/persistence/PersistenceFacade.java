@@ -16,7 +16,9 @@ import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.InsertResult;
+import org.litebridge.db.spi.update.Result;
 import org.litebridge.db.spi.update.Update;
+import org.litebridge.db.spi.update.UpdateOpResult;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryBindValueExtractor;
@@ -64,7 +66,7 @@ import java.util.stream.Collectors;
 public class PersistenceFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PersistenceFacade.class);
-    private static final UpdateResult EMPTY_UPDATE_RESULT = new UpdateResult(0);
+    private static final UpdateOpResult EMPTY_UPDATE_RESULT = new UpdateResult(0);
     private static final NoOpStatementBuilder NO_OP_STATEMENT_BUILDER = new NoOpStatementBuilder();
 
     private final TableRegistry tableRegistry;
@@ -134,10 +136,11 @@ public class PersistenceFacade {
 
         compositeUpdateResult.results().forEach(dtoUpdateResult -> {
             updateOneToManyReverseMappings(dtoUpdateResult, tableProvider);
+            final Result result = dtoUpdateResult.getResult();
 
-            if (dtoUpdateResult.getUpdateResult() instanceof InsertResult insertResult
+            if (result instanceof InsertResult insertResult
                     && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-                dtoUpdateResult.setDto(updateDtoPrimaryKey(dtoUpdateResult.getDto(), insertResult.generatedKeys(), tableProvider));
+                dtoUpdateResult.setDto(updateDtoPrimaryKey(dtoUpdateResult.getDto(), insertResult.generatedKeys().getFirst(), tableProvider));
             } else {
                 tableProvider.getTableOrThrow(dtoUpdateResult.getDto().getClass()).syncPersistedDto(dtoUpdateResult.getDto());
             }
@@ -162,11 +165,11 @@ public class PersistenceFacade {
 
         compositeUpdateResult.results().forEach(dtoUpdateResult -> {
             updateOneToManyReverseMappings(dtoUpdateResult, tableProvider);
+            final Result result = dtoUpdateResult.getResult();
 
-            if (dtoUpdateResult.getUpdateResult() instanceof InsertResult insertResult) {
-                if (!CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-                    updateDtoPrimaryKey(dtoUpdateResult.getDto(), insertResult.generatedKeys(), tableProvider);
-                }
+            if (result instanceof InsertResult insertResult
+                    && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
+                updateDtoPrimaryKey(dtoUpdateResult.getDto(), insertResult.generatedKeys().getFirst(), tableProvider);
             } else {
                 tableProvider.getTableOrThrow(dtoUpdateResult.getDto().getClass()).syncPersistedDto(dtoUpdateResult.getDto());
             }
@@ -334,7 +337,7 @@ public class PersistenceFacade {
                                         if (updateResult instanceof InsertResult insertResult
                                                 && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
 
-                                            insertResult.generatedKeys().forEach((pkColumn, pkValue) -> {
+                                            insertResult.generatedKeys().getFirst().forEach((pkColumn, pkValue) -> {
 
                                                 if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
                                                     if (statementBuilder instanceof UpdateBuilder updateBuilder) {
@@ -344,7 +347,8 @@ public class PersistenceFacade {
                                                     }
                                                 }
                                             });
-                                            updateDtoPrimaryKey(value, insertResult.generatedKeys(), tableProvider);
+
+                                            updateDtoPrimaryKey(value, insertResult.generatedKeys().getFirst(), tableProvider);
                                         }
                                     });
 
@@ -374,7 +378,7 @@ public class PersistenceFacade {
                                         if (updateResult instanceof InsertResult insertResult
                                                 && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
 
-                                            insertResult.generatedKeys().forEach((pkColumn, pkValue) -> {
+                                            insertResult.generatedKeys().getFirst().forEach((pkColumn, pkValue) -> {
                                                 if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
                                                     if (statementBuilder instanceof UpdateBuilder updateBuilder) {
                                                         updateBuilder.setField(fieldAccessor.name(), pkValue);
@@ -384,7 +388,7 @@ public class PersistenceFacade {
                                                 }
                                             });
 
-                                            updateDtoPrimaryKey(value, insertResult.generatedKeys(), tableProvider);
+                                            updateDtoPrimaryKey(value, insertResult.generatedKeys().getFirst(), tableProvider);
                                         }
                                     });
 
@@ -480,8 +484,9 @@ public class PersistenceFacade {
                                 }
 
                                 if (parentUpdateResult instanceof InsertResult insertResult
-                                        && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-                                    final Object pkValue = insertResult.generatedKeys().values().iterator().next();
+                                        && !CollectionUtils.isEmpty(insertResult.generatedKeys())
+                                        && !insertResult.generatedKeys().getFirst().isEmpty()) {
+                                    final Object pkValue = insertResult.generatedKeys().getFirst().values().iterator().next();
 
                                     if (mappedOneToMany.mappedByField() != null) {
                                         dependantStatementBuilder.setField(mappedOneToMany.mappedByField().name(), pkValue);
@@ -536,7 +541,7 @@ public class PersistenceFacade {
                             statementChain.addDependency(value, new PipedStatement(dependantStatementBuilder, value, updateResult -> {
                                 if (updateResult instanceof InsertResult insertResult
                                         && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-                                    updateDtoPrimaryKey(value, insertResult.generatedKeys(), tableProvider);
+                                    updateDtoPrimaryKey(value, insertResult.generatedKeys().getFirst(), tableProvider);
                                 }
 
                                 // Add join table entry
@@ -673,7 +678,7 @@ public class PersistenceFacade {
      *
      * @param statementBuilder the builder for the update statement to be executed,
      *                         including any dependencies that need to be resolved beforehand
-     * @return an {@code UpdateResult} representing the outcome of the executed statement,
+     * @return an {@code UpdateOpResult} representing the outcome of the executed statement,
      * including the number of rows affected
      * @throws SQLException if a database access error occurs during statement execution
      */
@@ -684,7 +689,7 @@ public class PersistenceFacade {
         final DtoUpdateResult dtoUpdateResult = new DtoUpdateResult(dto, parentResult);
 
         if (statementBuilder instanceof NoOpStatementBuilder) {
-            dtoUpdateResult.setUpdateResult(EMPTY_UPDATE_RESULT);
+            dtoUpdateResult.setResult(EMPTY_UPDATE_RESULT);
             result.add(dtoUpdateResult);
             return result;
         }
@@ -696,7 +701,7 @@ public class PersistenceFacade {
                 final DtoUpdateResult existing = result.getDtoUpdateResult(pipedStatement.dto());
 
                 if (existing != null) {
-                    pipedStatement.valuePipe().accept(existing.getUpdateResult());
+                    pipedStatement.valuePipe().accept(existing.getResult());
                     continue;
                 }
             }
@@ -705,7 +710,7 @@ public class PersistenceFacade {
             final DtoUpdateResult dependencyResult = result.getDtoUpdateResult(pipedStatement.dto());
 
             if (dependencyResult != null) {
-                pipedStatement.valuePipe().accept(dependencyResult.getUpdateResult());
+                pipedStatement.valuePipe().accept(dependencyResult.getResult());
             }
         }
 
@@ -716,12 +721,12 @@ public class PersistenceFacade {
         if (cachedOperation != null) {
             final List<@Nullable Object> rawBindValues = QueryBindValueExtractor.extractBindValues(node);
             final PreparedSql preparedSql = cachedOperation.preparedSql(rawBindValues);
-            dtoUpdateResult.setUpdateResult(databaseProvider.executeUpdate(preparedSql, statementBuilder.resultType(), transactionManager));
+            dtoUpdateResult.setResult(databaseProvider.executeUpdate(preparedSql, statementBuilder.resultType(), transactionManager));
         } else {
             final PreparedOperation preparedOperation = statementBuilder.build();
 
             if (preparedOperation.operation() instanceof Update update && update.columns().isEmpty()) {
-                dtoUpdateResult.setUpdateResult(new UpdateResult(0));
+                dtoUpdateResult.setResult(new UpdateResult(0));
             } else {
                 // Generate SQL and create type conversion metadata
                 final String sql = databaseProvider.toSql(preparedOperation.operation(), databaseProvider.transactionManager());
@@ -734,7 +739,8 @@ public class PersistenceFacade {
 
                 // Execute SQL query
                 final PreparedSql preparedSql = new PreparedSql(sql, preparedOperation.bindValues(), null, updateMetaData);
-                dtoUpdateResult.setUpdateResult(databaseProvider.executeUpdate(preparedSql, statementBuilder.resultType(), transactionManager));
+                final Result updateResult = databaseProvider.executeUpdate(preparedSql, statementBuilder.resultType(), transactionManager);
+                dtoUpdateResult.setResult(updateResult);
             }
         }
 
@@ -742,7 +748,7 @@ public class PersistenceFacade {
 
         for (Map.Entry<Object, PipedStatement> entry : statementBuilder.statementChain().getDependants().entrySet()) {
             final PipedStatement pipedStatement = entry.getValue();
-            pipedStatement.valuePipe().accept(dtoUpdateResult.getUpdateResult());
+            pipedStatement.valuePipe().accept(dtoUpdateResult.getResult());
             executeUpdateStatement(pipedStatement.dto(), dtoUpdateResult, pipedStatement.statementBuilder(), result);
         }
 

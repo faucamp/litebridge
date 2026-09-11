@@ -106,7 +106,7 @@ public final class ContextBuilder {
         final AliasTransformer finalAliasTransformer =
                 Objects.requireNonNullElseGet(aliasTransformer, DefaultAliasTransformer::new);
         final ExecutionEngine finalExecutionEngine =
-                Objects.requireNonNullElseGet(executionEngine, () -> new ExecutionEngineReturnedKeysAuto(finalTypeConverter, finalAliasTransformer));
+                Objects.requireNonNullElseGet(executionEngine, () -> new ExecutionEngineReturnedKeysAuto(finalTypeConverter, finalAliasTransformer, finalDatabaseProviderMetaData.insertCapability()));
         final Function<String, SequenceColumnValueGenerator> finalSequenceColumnValueGenerator =
                 Objects.requireNonNullElseGet(sequenceColumnValueGeneratorCreator, () -> DefaultSequenceColumnValueGenerator::new);
 

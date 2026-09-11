@@ -13,7 +13,8 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.db.spi.update.BatchUpdateResult;
+import org.litebridge.db.spi.update.Result;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -71,7 +72,12 @@ final class PlaceHolderDatabaseProvider implements DatabaseProvider {
      * @return this implementation always throws {@link UnsupportedOperationException}
      */
     @Override
-    public <T extends UpdateResult> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) {
+    public <T extends Result> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) {
+        throw new UnsupportedOperationException("N/A");
+    }
+
+    @Override
+    public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
         throw new UnsupportedOperationException("N/A");
     }
 

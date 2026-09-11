@@ -1,8 +1,8 @@
 package org.litebridge.db.spi.impl.sql;
 
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Insert;
@@ -15,6 +15,8 @@ import java.util.function.BiFunction;
  */
 public class InsertSqlGenerator extends AbstractSqlGenerator {
 
+    private final DatabaseProviderMetaData.InsertCapability insertCapability;
+
     /**
      * Creates a new {@code InsertSqlGenerator}.
      *
@@ -23,8 +25,10 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
      */
     public InsertSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
                               final MathOperationGenerator mathOperationGenerator,
-                              final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
+                              final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData,
+                              final DatabaseProviderMetaData.InsertCapability insertCapability) {
         super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+        this.insertCapability = insertCapability;
     }
 
     /**
@@ -46,7 +50,16 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
                         .toList()))
                 .append(") VALUES ");
 
-        for (int i = 0; i < insert.rows(); i++) {
+        final int rows;
+
+        if (insertCapability == DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS) {
+            // Only insert a single row at a time (will be batched by the execution engine)
+            rows = 1;
+        } else {
+            rows = insert.rows();
+        }
+
+        for (int i = 0; i < rows; i++) {
             if (i > 0) {
                 sql.append(", ");
             }

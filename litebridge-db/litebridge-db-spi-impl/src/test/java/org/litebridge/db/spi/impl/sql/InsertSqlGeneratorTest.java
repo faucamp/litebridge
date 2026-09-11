@@ -2,6 +2,7 @@ package org.litebridge.db.spi.impl.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
@@ -22,7 +23,7 @@ class InsertSqlGeneratorTest {
     void beforeEach() {
         final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
         final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(columnIdentifierGenerator);
-        insertSqlGenerator = new InsertSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, (table, connectionProvider) -> mock(TableMetaData.class));
+        insertSqlGenerator = new InsertSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, (table, connectionProvider) -> mock(TableMetaData.class), DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
     }
 
     @Test

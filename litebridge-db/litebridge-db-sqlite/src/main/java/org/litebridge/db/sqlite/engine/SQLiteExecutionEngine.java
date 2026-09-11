@@ -2,6 +2,7 @@ package org.litebridge.db.sqlite.engine;
 
 
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.engine.ExecutionEngineReturnedKeysAuto;
@@ -14,14 +15,14 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 public final class SQLiteExecutionEngine extends ExecutionEngineReturnedKeysAuto {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SQLiteExecutionEngine.class);
 
-    public SQLiteExecutionEngine(final TypeConverter typeConverter, final AliasTransformer aliasTransformer) {
-        super(typeConverter, aliasTransformer);
+    public SQLiteExecutionEngine(final TypeConverter typeConverter,
+                                 final AliasTransformer aliasTransformer) {
+        super(typeConverter, aliasTransformer, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
     }
 
     @Override

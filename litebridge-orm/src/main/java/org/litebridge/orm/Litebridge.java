@@ -408,7 +408,7 @@ public final class Litebridge implements SelectApi {
      * @return The result of the update operation
      */
     public <DTO> UpdateResult update(final Class<DTO> dtoClass, final Function<DtoUpdateStart<DTO>, UpdateQuery> update) {
-        return updateEngine.update(dtoClass, update, createDtoLitebridgeContext());
+        return (UpdateResult) updateEngine.update(dtoClass, update, createDtoLitebridgeContext());
     }
 
     /**
@@ -420,7 +420,7 @@ public final class Litebridge implements SelectApi {
      * @return The result of the update operation
      */
     public UpdateResult update(final String tableName, final Function<SqlUpdateStart, UpdateQuery> update) {
-        return updateEngine.update(tableName, update, createSqlLitebridgeContext());
+        return (UpdateResult) updateEngine.update(tableName, update, createSqlLitebridgeContext());
     }
 
     @Override

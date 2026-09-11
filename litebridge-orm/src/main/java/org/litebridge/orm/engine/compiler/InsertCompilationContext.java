@@ -127,6 +127,7 @@ final class InsertCompilationContext implements CompilationContext {
 
             this.insertColumnNames.addAll(insertColumns);
 
+            // Ensure all NOT NULL columns are accounted for
             for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
                 if (insertColumnNames.contains(columnMetaData.name())) {
                     // Explicit insert
@@ -136,6 +137,7 @@ final class InsertCompilationContext implements CompilationContext {
                     if (columnMetaData.getGenerator() != null) {
                         // Implicit/generated value insert
                         this.columnMetaDataList.add(columnMetaData);
+                        this.returnGeneratedColumns = true;
                     } else {
                         throw new IllegalArgumentException("NOT NULL column " + columnMetaData.name() + " omitted from insert into table " + table.qualifiedName() + ", and no value generator present");
                     }

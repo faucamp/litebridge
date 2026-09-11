@@ -14,7 +14,6 @@ public record DatabaseProviderMetaData(
 
     public enum InsertCapability {
         NATIVE_MULTIROW,
-        BATCHED_INSERTS,
-        SINGLE_INSERTS
+        BATCHED_INSERTS
     }
 }

@@ -1,6 +1,7 @@
 package org.litebridge.db.spi.impl.sql;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.engine.DefaultMetaDataEngine;
 import org.litebridge.db.spi.impl.function.SelectColumn;
@@ -37,7 +38,8 @@ class DefaultSqlGeneratorTest {
         final Insert insert = new Insert(createTestTable(), List.of(new UpdateColumn("TEST_COLUMN")), 1, false);
         final Update update = new Update(createTestTable(), List.of(new UpdateColumn("TEST_COLUMN")), where);
         final Delete delete = new Delete(createTestTable(), where);
-        final Merge merge = new Merge(createTestTable(), null, null, where, null, null);
+        final Merge.WhenMatched whenMatched = new Merge.WhenMatched(where, new Merge.MergeUpdate(List.of(new UpdateColumn("TEST_COLUMN"))));
+        final Merge merge = new Merge(createTestTable(), new Table("SOURCE_TABLE"), null, where, List.of(whenMatched), null);
         final Select select = new Select(createTestTable(), List.of(), List.of(), null, List.of(), null, List.of(), null);
         final ConnectionProvider connectionProvider = mock(ConnectionProvider.class);
 
@@ -46,6 +48,6 @@ class DefaultSqlGeneratorTest {
         assertEquals("INSERT INTO TEST_SCHEMA.TEST_TABLE (TEST_COLUMN) VALUES (?)", sqlGenerator.generateSql(insert, connectionProvider));
         assertEquals("UPDATE TEST_SCHEMA.TEST_TABLE SET TEST_COLUMN = ? WHERE TEST_TABLE.TEST_COLUMN = ?", sqlGenerator.generateSql(update, connectionProvider));
         assertEquals("DELETE FROM TEST_SCHEMA.TEST_TABLE WHERE TEST_TABLE.TEST_COLUMN = ?", sqlGenerator.generateSql(delete, connectionProvider));
-        assertEquals("MERGE INTO TEST_SCHEMA.TEST_TABLE USING () ON TEST_TABLE.TEST_COLUMN = ?", sqlGenerator.generateSql(merge, connectionProvider));
+        assertEquals("MERGE INTO TEST_SCHEMA.TEST_TABLE USING SOURCE_TABLE ON (TEST_TABLE.TEST_COLUMN = ?) WHEN MATCHED AND TEST_TABLE.TEST_COLUMN = ? THEN UPDATE SET TEST_COLUMN = ?", sqlGenerator.generateSql(merge, connectionProvider));
     }
 }

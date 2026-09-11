@@ -2,7 +2,7 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
-import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.db.spi.update.Result;
 
 /**
  * Represents the result of an update operation on a Data Transfer Object (DTO).
@@ -14,7 +14,7 @@ public final class DtoUpdateResult {
 
     private Object dto;
     @Nullable
-    private UpdateResult updateResult;
+    private Result result;
     @Nullable
     private final DtoUpdateResult parentResult;
 
@@ -52,17 +52,17 @@ public final class DtoUpdateResult {
      *
      * @return the update result
      */
-    public UpdateResult getUpdateResult() {
-        return ObjectUtils.requireNonNull(updateResult, () -> new IllegalStateException("Update result not set"));
+    public Result getResult() {
+        return ObjectUtils.requireNonNull(result, () -> new IllegalStateException("Operation result not set"));
     }
 
     /**
      * Sets the underlying update result.
      *
-     * @param updateResult the update result
+     * @param result the update result
      */
-    public void setUpdateResult(final UpdateResult updateResult) {
-        this.updateResult = updateResult;
+    public void setResult(final Result result) {
+        this.result = result;
     }
 
     /**

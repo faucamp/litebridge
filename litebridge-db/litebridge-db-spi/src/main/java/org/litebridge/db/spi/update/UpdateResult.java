@@ -6,15 +6,13 @@ import java.util.StringJoiner;
  * Result of an update operation performed on the database.
  * <p>
  * It encapsulates the number of rows affected by the operation.
- * <p>
- * This class is a sealed type and only permits a specific subclass: {@link InsertResult}.
  */
-public sealed class UpdateResult permits InsertResult {
+public sealed class UpdateResult implements UpdateOpResult permits InsertResult {
 
     private final int rowsAffected;
 
     /**
-     * Constructs an {@code UpdateResult} instance representing the result of an update
+     * Constructs an {@code UpdateOpResult} instance representing the result of an update
      * operation performed on the database.
      *
      * @param rowsAffected The number of rows affected by the update operation.

@@ -14,8 +14,9 @@ import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.engine.ExecutionEngine;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
+import org.litebridge.db.spi.update.BatchUpdateResult;
 import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.db.spi.update.Result;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -58,7 +59,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends UpdateResult> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) throws SQLException {
+    public <T extends Result> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) throws SQLException {
         final ExecutionEngine executionEngine = context.executionEngine();
 
         if (resultType == InsertResult.class) {
@@ -66,6 +67,11 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
         } else {
             return (T) executionEngine.executeUpdate(preparedSql, connectionProvider);
         }
+    }
+
+    @Override
+    public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        return null;
     }
 
     @Override

@@ -6,8 +6,9 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.db.spi.update.BatchUpdateResult;
+import org.litebridge.db.spi.update.Result;
+import org.litebridge.db.spi.update.UpdateOpResult;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -48,15 +49,25 @@ public interface DatabaseProvider {
     TableMetaData tableMetaData(Table table, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
-     * Execute an modifying SQL operation in the database using the provided statement.
+     * Execute a modifying SQL operation in the database using the provided statement.
      *
      * @param preparedSql        the {@link PreparedSql} for the statement.
-     * @param resultType         the expected resulting {@link UpdateResult} type
+     * @param resultType         the expected resulting {@link UpdateOpResult} type
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
-     * @return an {@link InsertResult} containing the number of rows affected and any generated keys.
+     * @return an {@link Result} containing e.g. the number of rows affected and any generated keys.
      * @throws SQLException if any SQL error occurs during the execution of the SELECT operation.
      */
-    <T extends UpdateResult> T executeUpdate(PreparedSql preparedSql, Class<T> resultType, ConnectionProvider connectionProvider) throws SQLException;
+    <T extends Result> T executeUpdate(PreparedSql preparedSql, Class<T> resultType, ConnectionProvider connectionProvider) throws SQLException;
+
+    /**
+     * Execute a batch of modifying SQL operations in the database using the provided statement.
+     *
+     * @param preparedSql        the {@link PreparedSql} for the statement.
+     * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
+     * @return an {@link Result} containing e.g. the number of rows affected and any generated keys.
+     * @throws SQLException if any SQL error occurs during the execution of the SELECT operation.
+     */
+    BatchUpdateResult executeBatch(List<PreparedSql> preparedSql, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
      * Executes a SELECT operation in the database using a pre-prepared {@link PreparedSql} object.

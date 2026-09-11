@@ -68,7 +68,8 @@ public class DefaultSqlGenerator implements SqlGenerator {
         return new InsertSqlGenerator(
                 columnIdentifierGenerator,
                 mathOperationGenerator,
-                metaDataEngine::ensureTableMetaData);
+                metaDataEngine::ensureTableMetaData,
+                metaDataEngine.metaData().insertCapability());
     }
 
     /**

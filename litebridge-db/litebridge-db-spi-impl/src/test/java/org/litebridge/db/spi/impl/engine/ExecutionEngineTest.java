@@ -2,11 +2,12 @@ package org.litebridge.db.spi.impl.engine;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
-import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.query.TypeConversionMetaData;
+import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
@@ -28,13 +29,13 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class ExecutionEngineTest {
@@ -74,7 +75,7 @@ class ExecutionEngineTest {
         when(resultSet.getObject(1)).thenReturn("Alice");
         final TypeConverter typeConverter = mock(TypeConverter.class);
         when(typeConverter.convert("Alice", Types.VARCHAR)).thenReturn("converted");
-        final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(typeConverter, String::toLowerCase);
+        final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(typeConverter, String::toLowerCase, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
         final Connection connection = connection(statement);
 
         // When
@@ -106,7 +107,7 @@ class ExecutionEngineTest {
         when(typeConverter.convert("Alice", Integer.class)).thenReturn(7);
         final TypeConversionMetaData conversionMetaData = new TypeConversionMetaData(
                 Map.of("name", columnMetaData), new Class<?>[]{Integer.class}, Map.of("name", aliasedTable));
-        final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(typeConverter, String::toLowerCase);
+        final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(typeConverter, String::toLowerCase, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
         final Connection connection = connection(statement);
 
         // When
@@ -126,7 +127,7 @@ class ExecutionEngineTest {
 
         // When
         final PreparedSql preparedSql = new PreparedSql("insert into test values (1)", List.of(), null,
-                new UpdateMetaData(false, List.of(), new String[0]));
+                new UpdateMetaData(false, null, null, 1, 0));
         final InsertResult result = engine.executeInsert(preparedSql, provider(connection(statement)));
 
         // Then
@@ -206,15 +207,15 @@ class ExecutionEngineTest {
         when(generatedKeys.next()).thenReturn(true, false);
         when(generatedKeys.getObject("ID")).thenReturn(42);
         final Connection connection = connection(statement);
-        final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(mock(TypeConverter.class), String::toLowerCase);
+        final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(mock(TypeConverter.class), String::toLowerCase, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
         final PreparedSql preparedSql = new PreparedSql("insert", List.of(), null,
-                new UpdateMetaData(true, List.of(key), new String[]{"ID"}));
+                new UpdateMetaData(true, List.of(key), new String[]{"ID"}, 1, 0));
 
         // When
         final InsertResult result = engine.executeInsert(preparedSql, provider(connection));
 
         // Then
-        assertEquals(42, result.generatedKeys().get(key));
+        assertEquals(42, result.generatedKeys().getFirst().get(key));
         verify(connection).prepareStatement("insert", Statement.RETURN_GENERATED_KEYS);
     }
 
@@ -229,15 +230,15 @@ class ExecutionEngineTest {
         when(generatedKeys.next()).thenReturn(true, false);
         when(generatedKeys.getObject("ID")).thenReturn(84);
         final Connection connection = connection(statement);
-        final ExecutionEngine engine = new ExecutionEngineReturnedKeysNamed(mock(TypeConverter.class), String::toLowerCase);
+        final ExecutionEngine engine = new ExecutionEngineReturnedKeysNamed(mock(TypeConverter.class), String::toLowerCase, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
         final PreparedSql preparedSql = new PreparedSql("insert", List.of(), null,
-                new UpdateMetaData(true, List.of(key), new String[]{"ID"}));
+                new UpdateMetaData(true, List.of(key), new String[]{"ID"}, 1, 0));
 
         // When
         final InsertResult result = engine.executeInsert(preparedSql, provider(connection));
 
         // Then
-        assertEquals(84, result.generatedKeys().get(key));
+        assertEquals(84, result.generatedKeys().getFirst().get(key));
         final var generatedKeyNames = forClass(String[].class);
         verify(connection).prepareStatement(eq("insert"), generatedKeyNames.capture());
         assertArrayEquals(new String[]{"ID"}, generatedKeyNames.getValue());
@@ -248,10 +249,10 @@ class ExecutionEngineTest {
         // Given
         final PreparedStatement statement = mock(PreparedStatement.class);
         when(statement.executeUpdate()).thenReturn(0);
-        final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(mock(TypeConverter.class), String::toLowerCase);
+        final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(mock(TypeConverter.class), String::toLowerCase, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
         final ColumnMetaData key = key("ID");
         final PreparedSql preparedSql = new PreparedSql("insert", List.of(), null,
-                new UpdateMetaData(true, List.of(key), new String[]{"ID"}));
+                new UpdateMetaData(true, List.of(key), new String[]{"ID"}, 1, 0));
 
         // When
         final InsertResult result = engine.executeInsert(preparedSql, provider(connection(statement)));
@@ -262,7 +263,7 @@ class ExecutionEngineTest {
     }
 
     private static ExecutionEngine engine() {
-        return new ExecutionEngineReturnedKeysAuto(mock(TypeConverter.class), String::toLowerCase);
+        return new ExecutionEngineReturnedKeysAuto(mock(TypeConverter.class), String::toLowerCase, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
     }
 
     private static Connection connection(final PreparedStatement statement) throws Exception {

@@ -15,7 +15,8 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.db.spi.update.BatchUpdateResult;
+import org.litebridge.db.spi.update.Result;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.spring.LitebridgeTransactionManager;
 import org.litebridge.spring.boot.autoconfigure.LitebridgeAutoConfiguration;
@@ -209,7 +210,12 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         }
 
         @Override
-        public <T extends UpdateResult> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) throws SQLException {
+        public <T extends Result> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) throws SQLException {
+            return null;
+        }
+
+        @Override
+        public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 

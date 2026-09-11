@@ -17,6 +17,7 @@ import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.InsertResult;
+import org.litebridge.db.spi.update.UpdateOpResult;
 import org.litebridge.db.spi.update.UpdateResult;
 
 import java.util.List;
