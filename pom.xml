@@ -64,6 +64,7 @@
         <maven-failsafe-plugin.version>3.5.6</maven-failsafe-plugin.version>
         <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
         <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
+        <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
         <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
         <maven-plugin-annotations.version>3.15.2</maven-plugin-annotations.version>
         <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
@@ -89,6 +90,7 @@
         <module>litebridge-commons</module>
         <module>litebridge-converter</module>
         <module>litebridge-db</module>
+        <module>litebridge-e2e-tests</module>
         <module>litebridge-maven-plugin</module>
         <module>litebridge-orm</module>
         <module>litebridge-orm-support</module>
@@ -222,11 +224,6 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-install-plugin</artifactId>
-                    <version>${maven-install-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-deploy-plugin</artifactId>
                     <version>${maven-deploy-plugin.version}</version>
                 </plugin>
@@ -237,13 +234,23 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>${maven-javadoc-plugin.version}</version>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>${maven-gpg-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-gpg-plugin</artifactId>
-                    <version>${maven-gpg-plugin.version}</version>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>${maven-install-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${maven-jar-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven-javadoc-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -347,16 +354,6 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.litebridgedb</groupId>
-                <artifactId>litebridge-orm</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.litebridgedb</groupId>
-                <artifactId>litebridge-orm-support</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.litebridgedb.db</groupId>
                 <artifactId>litebridge-db-spi</artifactId>
                 <version>${project.version}</version>
@@ -394,6 +391,16 @@
             <dependency>
                 <groupId>org.litebridgedb.maven</groupId>
                 <artifactId>litebridge-maven-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.litebridgedb</groupId>
+                <artifactId>litebridge-orm</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.litebridgedb</groupId>
+                <artifactId>litebridge-orm-support</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

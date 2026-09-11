@@ -8,10 +8,11 @@ import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.e2e.setup.DbEnvironment;
 import org.litebridge.orm.e2e.setup.MultiDbTestExtension;
-import org.litebridge.orm.tx.DefaultTransactionManager;
 import org.litebridge.orm.tx.LitebridgeDriverManagerDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.invoke.MethodHandles;
 
 @ExtendWith(MultiDbTestExtension.class)
 public abstract class AbstractE2eTest {
@@ -33,11 +34,10 @@ public abstract class AbstractE2eTest {
         LitebridgeDriverManagerDataSource ds = dbEnv.getDataSource();
         this.litebridgeConfig = new LitebridgeConfig();
 
-        this.litebridge = new Litebridge(
-                dbEnv.getDatabaseProvider(),
-                new DefaultTransactionManager(ds),
-                litebridgeConfig
-        );
+        this.litebridge = Litebridge.withDatabase(dbEnv.getDatabaseProvider(), ds)
+                .withConfig(litebridgeConfig)
+                .withLookup(MethodHandles.lookup())
+                .build();
     }
 
     @AfterEach

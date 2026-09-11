@@ -1,7 +1,6 @@
 package org.litebridge.orm.e2e.setup;
 
 import org.litebridge.db.spi.DatabaseProvider;
-import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.tx.LitebridgeDriverManagerDataSource;
 
 public interface DbEnvironment {

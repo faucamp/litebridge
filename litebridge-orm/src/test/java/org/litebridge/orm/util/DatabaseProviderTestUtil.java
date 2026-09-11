@@ -29,7 +29,7 @@ public final class DatabaseProviderTestUtil {
     }
 
     public static DatabaseProviderMetaData createMetaData() {
-        return new DatabaseProviderMetaData(true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        return new DatabaseProviderMetaData(true, true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
     }
 
     public static DatabaseMetaData createDatabaseMetaData() {
