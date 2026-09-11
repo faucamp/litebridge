@@ -34,7 +34,7 @@ class DefaultMetaDataEngineTest {
 
         // Then
         assertSame(first, second);
-        assertEquals(new DatabaseProviderMetaData(true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW), first);
+        assertEquals(new DatabaseProviderMetaData(true, true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW), first);
     }
 
     @Test

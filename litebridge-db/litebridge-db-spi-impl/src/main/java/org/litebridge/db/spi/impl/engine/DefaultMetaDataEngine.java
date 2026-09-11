@@ -37,7 +37,7 @@ public class DefaultMetaDataEngine implements MetaDataEngine {
     }
 
     public DefaultMetaDataEngine() {
-        databaseProviderMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        databaseProviderMetaData = new DatabaseProviderMetaData(true, true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
     }
 
     @Override

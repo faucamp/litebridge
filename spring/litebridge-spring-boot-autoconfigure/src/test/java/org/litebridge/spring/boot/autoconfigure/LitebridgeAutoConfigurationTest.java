@@ -2,6 +2,7 @@ package org.litebridge.spring.boot.autoconfigure;
 
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
+import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
@@ -201,7 +202,7 @@ class LitebridgeAutoConfigurationTest {
                     final Litebridge litebridge = context.getBean(Litebridge.class);
 
                     // Verify via reflection since it's not exposed
-                    final java.lang.reflect.Field configField = Litebridge.class.getDeclaredField("litebridgeConfig");
+                    final java.lang.reflect.Field configField = ClassUtils.getField(Litebridge.class, "litebridgeConfig");
                     configField.setAccessible(true);
                     final LitebridgeConfig config = (LitebridgeConfig) configField.get(litebridge);
                     assertThat(config.relatedDtoStrategy()).isEqualTo(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);

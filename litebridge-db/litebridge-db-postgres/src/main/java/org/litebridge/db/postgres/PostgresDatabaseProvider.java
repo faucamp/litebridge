@@ -21,6 +21,7 @@ public final class PostgresDatabaseProvider extends AbstractDatabaseProvider {
     private static DatabaseProviderContext databaseProviderContext() {
         final DatabaseProviderMetaData databaseProviderMetaData =
                 new DatabaseProviderMetaData(true,
+                        true,
                         DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
 
         return ContextBuilder.newContext()

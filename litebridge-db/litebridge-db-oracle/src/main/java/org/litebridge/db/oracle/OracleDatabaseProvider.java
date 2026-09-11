@@ -35,6 +35,7 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider {
     private static DatabaseProviderContext databaseProviderContext() {
         final DatabaseProviderMetaData databaseProviderMetaData =
                 new DatabaseProviderMetaData(true,
+                        true,
                         DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
 
         final MetaDataEngine metaDataEngine = new DefaultMetaDataEngine(databaseProviderMetaData);

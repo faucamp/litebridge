@@ -18,10 +18,16 @@
     - New APIs for retrieving database and database provider metadata.
     - New `executeBatch()` method for explicit batch update operations.
     - `Result` and `BatchUpdateResult` result models added.
+    - Add `LitebridgeOverrideDatabaseProvider` interface for allowing the Database Provider to specify what Litebridge
+      APIs are available at compile time,
+      thus making the `Litebridge` instance database-specific. This allows future expansion to expose unique database
+      vendor capabilities via the main Litebridge API.
 - Oracle Database Provider:
-  - Add custom mathematical operation SQL generator
-  - Multi-row inserts are now supported via batched insert statements
-  - `INSERT ALL` SQL generation support added (not yet used/for future use) 
+    - Add custom mathematical operation SQL generator
+    - Multi-row inserts are now supported via batched insert statements
+    - `INSERT ALL` SQL generation support added (not yet used/for future use)
+- SQLite Database Provider:
+    - Specify limited capabilities: Override the Litebridge instance created by `LitebridgeBuilder` to `LitebridgeCore`
 
 ### Changed
 
@@ -38,7 +44,9 @@
     - `Litebridge.save()` now accepts a single DTO instead of varargs to improve clarity and type safety.
     - Query-based `update()` and `delete()` APIs now return a result instead of `void`.
     - `UpdateResult` class hierarchy extended; update results can now be `BatchUpdateResult`.
-    - `InsertResult` now supports multi-row insert operation results by default; this changes how generated keys are accessed.
+    - `InsertResult` now supports multi-row insert operation results by default; this changes how generated keys are
+      accessed.
+    - Split the `Litebridge` class into `LitebridgeCore` (all methods except merge) and `Litebridge` (merge-capable).
 - Database Provider SPI:
     - Standardised and simplified the `DatabaseProvider` SPI interface. This breaks backward compatibility.
     - Massive refactor of `AbstractDatabaseProvider` to separate concerns make it more modular
@@ -54,7 +62,7 @@
 - Oracle Database Provider:
     - Fixed the modulus math operation
 - SQLite Database Provider:
-  - Use correct `LIMIT -1` when a SELECT statement is generated with an offset but not limit
+    - Use correct `LIMIT -1` when a SELECT statement is generated with an offset but not limit
 
 ### Removed
 

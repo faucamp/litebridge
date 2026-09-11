@@ -34,21 +34,6 @@ public class OracleDbEnvironment implements DbEnvironment {
     }
 
     @Override
-    public String getJdbcUrl() {
-        return containerManager.getContainer().getJdbcUrl();
-    }
-
-    @Override
-    public String getUsername() {
-        return containerManager.getContainer().getUsername();
-    }
-
-    @Override
-    public String getPassword() {
-        return containerManager.getContainer().getPassword();
-    }
-
-    @Override
     public DatabaseProvider getDatabaseProvider() {
         return new OracleDatabaseProvider();
     }

@@ -35,7 +35,7 @@ class AbstractDatabaseProviderTest {
     void metaData() {
         // Given
         final MetaDataEngine metaDataEngine = mock(MetaDataEngine.class);
-        final DatabaseProviderMetaData expected = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        final DatabaseProviderMetaData expected = new DatabaseProviderMetaData(true, true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
         final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         when(metaDataEngine.metaData()).thenReturn(expected);
         final TestProvider provider = new TestProvider(sqlGenerator, metaDataEngine, mock(ExecutionEngine.class));

@@ -18,7 +18,7 @@ public class SubselectCacheTest extends AbstractE2eTest {
 
     @TestTemplate
     public void testSubselectCaching(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        final Litebridge lb = litebridge;
+        final Litebridge lb = (Litebridge) litebridge;
         final QueryPlanCache cache = getCache(lb);
 
         // Clear cache if needed (usually fresh context anyway)

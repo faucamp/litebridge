@@ -3,6 +3,7 @@ package org.litebridge.example.common;
 import org.litebridge.example.common.dto.Account;
 import org.litebridge.example.common.dto.Person;
 import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.LitebridgeCore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +11,7 @@ public class PersistenceExample extends AbstractExample {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PersistenceExample.class);
 
-    public PersistenceExample(final Litebridge litebridge) {
+    public PersistenceExample(final LitebridgeCore litebridge) {
         super(litebridge);
     }
 

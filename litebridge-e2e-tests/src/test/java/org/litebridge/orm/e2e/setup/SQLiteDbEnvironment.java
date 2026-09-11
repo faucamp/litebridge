@@ -52,21 +52,6 @@ public class SQLiteDbEnvironment implements DbEnvironment {
     }
 
     @Override
-    public String getJdbcUrl() {
-        return url;
-    }
-
-    @Override
-    public String getUsername() {
-        return user;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
     public DatabaseProvider getDatabaseProvider() {
         return new SQLiteDatabaseProvider();
     }

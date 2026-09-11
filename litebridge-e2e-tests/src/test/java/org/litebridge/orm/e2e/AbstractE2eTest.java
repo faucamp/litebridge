@@ -4,7 +4,7 @@ import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.LitebridgeCore;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.e2e.setup.DbEnvironment;
 import org.litebridge.orm.e2e.setup.MultiDbTestExtension;
@@ -12,19 +12,17 @@ import org.litebridge.orm.tx.LitebridgeDriverManagerDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.invoke.MethodHandles;
-
 @ExtendWith(MultiDbTestExtension.class)
 public abstract class AbstractE2eTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractE2eTest.class);
-    protected Litebridge litebridge;
+    protected LitebridgeCore litebridge;
     protected DbEnvironment dbEnv;
     protected LitebridgeConfig litebridgeConfig;
     private Flyway flyway;
 
     @BeforeEach
-    public void beforeEach(DbEnvironment env) throws Exception {
+    public void beforeEach(final DbEnvironment env) throws Exception {
         this.dbEnv = env;
         this.dbEnv.start(); // If not already started
 
@@ -33,11 +31,8 @@ public abstract class AbstractE2eTest {
 
         LitebridgeDriverManagerDataSource ds = dbEnv.getDataSource();
         this.litebridgeConfig = new LitebridgeConfig();
-
-        this.litebridge = Litebridge.withDatabase(dbEnv.getDatabaseProvider(), ds)
-                .withConfig(litebridgeConfig)
-                .withLookup(MethodHandles.lookup())
-                .build();
+        this.litebridge = dbEnv.createLitebridge(litebridgeConfig, ds);
+        LOGGER.debug("Litebridge class: {}", litebridge.getClass().getName());
     }
 
     @AfterEach

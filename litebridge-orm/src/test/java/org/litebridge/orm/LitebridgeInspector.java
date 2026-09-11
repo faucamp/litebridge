@@ -7,7 +7,7 @@ public final class LitebridgeInspector {
     private LitebridgeInspector() {
     }
 
-    public static QueryPlanCache getQueryPlanCache(final Litebridge litebridge) {
+    public static QueryPlanCache getQueryPlanCache(final LitebridgeCore litebridge) {
         return litebridge.queryPlanCache();
     }
 }

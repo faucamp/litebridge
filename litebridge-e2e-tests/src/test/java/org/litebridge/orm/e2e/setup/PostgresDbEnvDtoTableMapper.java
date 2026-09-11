@@ -1,6 +1,6 @@
 package org.litebridge.orm.e2e.setup;
 
-import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.LitebridgeCore;
 import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.basic.dto.Person;
 
@@ -24,7 +24,7 @@ public class PostgresDbEnvDtoTableMapper implements DbEnvDtoTableMapper {
     }
 
     @Override
-    public void registerPersonDtoTableMapping(final Litebridge litebridge) {
+    public void registerPersonDtoTableMapping(final LitebridgeCore litebridge) {
         litebridge.register(Person.class, rc -> rc.mapToTable("lb.person")
                 .with(spec -> spec.mapField("id").toColumn("person_id").generateUsingSequence("lb.person_seq"))
                 .with(spec -> spec.mapField("name").toColumn("first_name"))
@@ -36,7 +36,7 @@ public class PostgresDbEnvDtoTableMapper implements DbEnvDtoTableMapper {
     }
 
     @Override
-    public void registerAccountDtoTableMapping(final Litebridge litebridge) {
+    public void registerAccountDtoTableMapping(final LitebridgeCore litebridge) {
         litebridge.register(Account.class, rc -> rc.mapToTable("lb.account")
                 .with(spec -> spec.mapField("id").toColumn("account_id").generateUsingSequence("lb.account_seq"))
                 .with(spec -> spec.mapField("name").toColumn("account_name"))

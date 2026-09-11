@@ -1,6 +1,7 @@
 package org.litebridge.orm;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
@@ -51,6 +52,7 @@ import org.mockito.ArgumentCaptor;
 
 import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collection;
@@ -62,6 +64,7 @@ import java.util.function.Function;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.litebridge.orm.util.DatabaseProviderTestUtil.mockDatabaseProviderWithMetaData;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -69,7 +72,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.litebridge.orm.util.DatabaseProviderTestUtil.mockDatabaseProviderWithMetaData;
 
 class LitebridgeTest {
 
@@ -1011,7 +1013,7 @@ class LitebridgeTest {
     }
 
     private static void setFieldValue(final Object obj, final String fieldName, final Object value) throws Exception {
-        final java.lang.reflect.Field field = obj.getClass().getDeclaredField(fieldName);
+        final Field field = ClassUtils.getField(obj.getClass(), fieldName);
         field.setAccessible(true);
         field.set(obj, value);
     }

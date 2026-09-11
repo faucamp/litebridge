@@ -92,7 +92,7 @@ public final class ContextBuilder {
 
     public DatabaseProviderContext build() {
         final DatabaseProviderMetaData finalDatabaseProviderMetaData =
-                Objects.requireNonNullElseGet(databaseProviderMetaData, () -> new DatabaseProviderMetaData(true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW));
+                Objects.requireNonNullElseGet(databaseProviderMetaData, () -> new DatabaseProviderMetaData(true, true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW));
         final MetaDataEngine finalMetaDataEngine =
                 Objects.requireNonNullElseGet(metaDataEngine, () -> new DefaultMetaDataEngine(finalDatabaseProviderMetaData));
         final ColumnIdentifierGenerator finalColumnIdentifierGenerator =

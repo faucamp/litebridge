@@ -2,7 +2,7 @@ package org.litebridge.example.common;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.example.common.dto.Person;
-import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.LitebridgeCore;
 import org.litebridge.orm.expression.Fn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,7 @@ public class SqlExample extends AbstractExample {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SqlExample.class);
 
-    public SqlExample(final Litebridge litebridge) {
+    public SqlExample(final LitebridgeCore litebridge) {
         super(litebridge);
     }
 

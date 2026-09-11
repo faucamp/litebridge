@@ -3,6 +3,7 @@ package org.litebridge.orm.e2e.basic;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.api.merge.MergeUpdateStep;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Account;
@@ -17,12 +18,17 @@ import java.math.BigInteger;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @ExtendWith(MultiDbTestExtension.class)
 public class MergeE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     public void merge(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Don't run test for databases that do not support MERGE INTO
+        assumeTrue(litebridge instanceof Litebridge);
+        final Litebridge litebridge = (Litebridge) this.litebridge;
+
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
         final Person[] persons = new Person[10];

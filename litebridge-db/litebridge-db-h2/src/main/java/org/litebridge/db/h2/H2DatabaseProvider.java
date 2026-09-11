@@ -22,6 +22,7 @@ public final class H2DatabaseProvider extends AbstractDatabaseProvider {
     private static DatabaseProviderContext databaseProviderContext() {
         final DatabaseProviderMetaData databaseProviderMetaData =
                 new DatabaseProviderMetaData(true,
+                        true,
                         DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
 
         return ContextBuilder.newContext()
