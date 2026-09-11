@@ -56,16 +56,16 @@ public class SubselectCacheTest extends AbstractE2eTest {
     }
 
     private int getCacheSize(QueryPlanCache cache) throws Exception {
-        Field field = QueryPlanCache.class.getDeclaredField("cache");
+        final Field field = ClassUtils.getField(QueryPlanCache.class, "cache");
         field.setAccessible(true);
-        Map<?, ?> map = (Map<?, ?>) field.get(cache);
+        final Map<?, ?> map = (Map<?, ?>) field.get(cache);
         return map.size();
     }
 
     private void clearCache(QueryPlanCache cache) throws Exception {
-        Field field = QueryPlanCache.class.getDeclaredField("cache");
+        final Field field = ClassUtils.getField(QueryPlanCache.class, "cache");
         field.setAccessible(true);
-        Map<?, ?> map = (Map<?, ?>) field.get(cache);
+        final Map<?, ?> map = (Map<?, ?>) field.get(cache);
         map.clear();
     }
 }
