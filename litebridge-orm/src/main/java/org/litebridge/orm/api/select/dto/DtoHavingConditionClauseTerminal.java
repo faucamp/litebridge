@@ -31,8 +31,11 @@ public final class DtoHavingConditionClauseTerminal<DTO>
         DtoOrderByClauseChain<DTO>> {
 
     /**
-     * Creates a new DtoHavingConditionClauseTerminal.
+     * Creates a new {@code DtoHavingConditionClauseTerminal} instance.
      *
+     * @param node                 the current query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
      */
     public DtoHavingConditionClauseTerminal(final QueryNode node, final SelectEngineTerminal selectEngineTerminal, final LitebridgeContext litebridgeContext) {
         super(node, selectEngineTerminal, litebridgeContext);

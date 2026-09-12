@@ -20,10 +20,12 @@ public class CbDtoConditionClause<DTO> extends AbstractCbConditionClause<DTO> {
     /**
      * Constructs a new {@code CbDtoConditionClause}.
      *
-     * @param logicOperator   The logical operator (AND/OR).
-     * @param lhsExpression   The left-hand side expression.
-     * @param node            The previous node in the chain.
-     * @param terminalCreator The function to create the terminal clause.
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logical operator (AND/OR)
+     * @param lhsColumn         the left-hand side column name
+     * @param lhsExpression     the left-hand side expression
+     * @param node              the previous node in the chain
+     * @param terminalCreator   the function to create the terminal clause
      */
     public CbDtoConditionClause(final LitebridgeContext litebridgeContext,
                                 final LogicOperator logicOperator,

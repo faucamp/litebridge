@@ -4,6 +4,8 @@ import org.litebridge.orm.engine.LitebridgeContext;
 
 /**
  * Step to specify the DTO/entity class to use for a {@code USING} clause in a {@code MERGE} statement.
+ *
+ * @param <DTO> the mapped DTO/entity type
  */
 public final class DtoMergeUsingStep<DTO> extends MergeUsingStep<DTO, DtoMergeUpdateStep<DTO>, DtoMergeInsertStep> {
 

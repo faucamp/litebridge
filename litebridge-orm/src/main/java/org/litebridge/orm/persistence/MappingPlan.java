@@ -37,6 +37,16 @@ public record MappingPlan(Class<?> dtoClass,
                           List<MappedOneToMany> oneToManyMappings,
                           List<MappedManyToMany> manyToManyMappings) {
 
+    /**
+     * Mapping metadata for an individual DTO field.
+     *
+     * @param index             the column index in the database row
+     * @param accessor          the field accessor for the DTO property
+     * @param fieldType         the Java type of the field
+     * @param isRelatedDto      whether the field represents a related DTO
+     * @param isNestedDto       whether the field represents a nested DTO
+     * @param relatedPkAccessor primary key accessor of the related DTO, or {@code null}
+     */
     public record FieldMapping(int index,
                                FieldAccessor accessor,
                                Class<?> fieldType,

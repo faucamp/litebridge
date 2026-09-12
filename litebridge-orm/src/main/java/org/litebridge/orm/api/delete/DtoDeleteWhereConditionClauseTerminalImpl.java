@@ -26,7 +26,11 @@ public final class DtoDeleteWhereConditionClauseTerminalImpl<DTO>
     private QueryNode node;
 
     /**
-     * Creates a new DtoDeleteWhereConditionClauseTerminalImpl.
+     * Creates a new {@code DtoDeleteWhereConditionClauseTerminalImpl} instance.
+     *
+     * @param dtoClass          the mapped DTO/entity class
+     * @param node              the current query node
+     * @param litebridgeContext the Litebridge context
      */
     public DtoDeleteWhereConditionClauseTerminalImpl(final Class<DTO> dtoClass,
                                                      final QueryNode node,

@@ -26,7 +26,11 @@ public final class DtoUpdateWhereConditionClauseTerminalImpl<DTO>
     private QueryNode node;
 
     /**
-     * Creates a new DtoUpdateWhereConditionClauseTerminalImpl.
+     * Creates a new {@code DtoUpdateWhereConditionClauseTerminalImpl} instance.
+     *
+     * @param dtoClass          the mapped DTO/entity class
+     * @param node              the current query node
+     * @param litebridgeContext the Litebridge context
      */
     public DtoUpdateWhereConditionClauseTerminalImpl(final Class<DTO> dtoClass,
                                                      final QueryNode node,

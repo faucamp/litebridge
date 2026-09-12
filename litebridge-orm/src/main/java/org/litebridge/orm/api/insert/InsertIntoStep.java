@@ -8,6 +8,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
  */
 public abstract sealed class InsertIntoStep permits DtoInsertIntoStep, SqlInsertIntoStep {
 
+    /**
+     * The Litebridge context.
+     */
     protected final LitebridgeContext litebridgeContext;
 
     /**

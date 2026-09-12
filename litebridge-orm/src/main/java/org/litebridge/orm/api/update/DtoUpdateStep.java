@@ -7,6 +7,11 @@ import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * DTO-mode step for specifying SET assignments or WHERE conditions in an {@code UPDATE} statement.
+ *
+ * @param <DTO> the mapped DTO/entity type
+ */
 public final class DtoUpdateStep<DTO> extends UpdateStepBase
         implements UpdateStep<DTO,
         DtoUpdateWhereConditionClause<DTO>,
@@ -15,6 +20,13 @@ public final class DtoUpdateStep<DTO> extends UpdateStepBase
     private final Class<DTO> dtoClass;
     private QueryNode node;
 
+    /**
+     * Creates a new {@code DtoUpdateStep} instance.
+     *
+     * @param dtoClass          the mapped DTO/entity class
+     * @param node              the current query node
+     * @param litebridgeContext the Litebridge context
+     */
     public DtoUpdateStep(final Class<DTO> dtoClass,
                          final QueryNode node,
                          final LitebridgeContext litebridgeContext) {

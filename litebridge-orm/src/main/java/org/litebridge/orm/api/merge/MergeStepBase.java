@@ -12,11 +12,26 @@ import java.util.Objects;
 
 abstract sealed class MergeStepBase permits MergeAndStep, MergeOnStep {
 
+    /**
+     * The target table name in SQL mode.
+     */
     protected final @Nullable String targetTable;
+    /**
+     * The using table name in SQL mode.
+     */
     protected final @Nullable String usingTable;
+    /**
+     * The target DTO class in DTO mode.
+     */
     protected final @Nullable Class<?> targetDtoClass;
+    /**
+     * The using DTO class in DTO mode.
+     */
     protected final @Nullable Class<?> usingDtoClass;
 
+    /**
+     * The Litebridge context.
+     */
     protected final LitebridgeContext litebridgeContext;
 
     MergeStepBase(final String targetTable, final String usingTable, final LitebridgeContext litebridgeContext) {
@@ -35,6 +50,12 @@ abstract sealed class MergeStepBase permits MergeAndStep, MergeOnStep {
         this.litebridgeContext = litebridgeContext;
     }
 
+    /**
+     * Resolves a column name to an SPI {@link Column} by checking target and using tables.
+     *
+     * @param column the column name to resolve
+     * @return the resolved SPI column
+     */
     protected final Column createSpiColumn(final String column) {
         final TableRegistry tableRegistry = litebridgeContext.tableRegistry();
         final Table targetTable = tableRegistry.getOrCreateSpiTable(Objects.requireNonNull(this.targetTable));

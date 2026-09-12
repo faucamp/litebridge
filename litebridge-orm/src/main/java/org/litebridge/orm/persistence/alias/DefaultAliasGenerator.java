@@ -7,7 +7,6 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,11 +34,14 @@ public final class DefaultAliasGenerator implements AliasGenerator {
      */
     private final Map<String, Integer> aliasCount = new HashMap<>();
 
-
+    /**
+     * Clears internal alias maps and usage counts.
+     */
     public void clear() {
         aliasMap.clear();
         aliasCount.clear();
     }
+
     /**
      * Constructs a {@code DefaultAliasGenerator} with the specified {@link AliasTransformer}.
      *

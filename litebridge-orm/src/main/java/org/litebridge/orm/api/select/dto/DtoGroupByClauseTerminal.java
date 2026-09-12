@@ -20,6 +20,14 @@ public final class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTe
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 
+    /**
+     * Creates a new {@code DtoGroupByClauseTerminal} instance using expressions.
+     *
+     * @param expressions          the group-by expressions
+     * @param node                 the current query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     public DtoGroupByClauseTerminal(final ExpressionSpec[] expressions,
                                     final QueryNode node,
                                     final SelectEngineTerminal selectEngineTerminal,
@@ -27,6 +35,14 @@ public final class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTe
         super(expressions, new GroupByNode(node, null, expressions), selectEngineTerminal, litebridgeContext);
     }
 
+    /**
+     * Creates a new {@code DtoGroupByClauseTerminal} instance using field names.
+     *
+     * @param fields               the group-by field names
+     * @param node                 the current query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     public DtoGroupByClauseTerminal(final String[] fields,
                                     final QueryNode node,
                                     final SelectEngineTerminal selectEngineTerminal,

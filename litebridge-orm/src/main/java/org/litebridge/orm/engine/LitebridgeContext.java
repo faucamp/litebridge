@@ -39,10 +39,16 @@ public final class LitebridgeContext {
     /**
      * Create a new Litebridge context with the specified components.
      *
-     * @param mode           The mode of operation for the Litebridge context.
-     * @param config         Configuration for managing runtime behaviour
-     * @param queryPlanCache A cache for storing execution plans based on query structure.
-     * @param aliasGenerator An alias generator for creating unique table and column aliases.
+     * @param mode                    The mode of operation for the Litebridge context.
+     * @param config                  Configuration for managing runtime behaviour
+     * @param databaseProvider        The database provider.
+     * @param queryPlanCache          A cache for storing execution plans based on query structure.
+     * @param aliasGenerator          An alias generator for creating unique table and column aliases.
+     * @param tableRegistry           The table registry.
+     * @param tableMetaDataCache      The table metadata cache.
+     * @param classFieldAccessorCache The class field accessor cache.
+     * @param transactionManager      The transaction manager.
+     * @param selectEngine            The select engine.
      */
     public LitebridgeContext(final Mode mode,
                              final LitebridgeConfig config,
@@ -70,10 +76,20 @@ public final class LitebridgeContext {
         this.selectEngine = selectEngine;
     }
 
+    /**
+     * Returns the context mode.
+     *
+     * @return the mode
+     */
     public Mode mode() {
         return mode;
     }
 
+    /**
+     * Returns the Litebridge configuration.
+     *
+     * @return the configuration
+     */
     public LitebridgeConfig config() {
         return config;
     }
@@ -216,9 +232,21 @@ public final class LitebridgeContext {
         return new SelectExpressionMapper(databaseProvider.sqlFunctionRegistry(), protoExpressionResolver, tableMetaDataCache, databaseProvider.typeConverter());
     }
 
+    /**
+     * The operational mode of Litebridge.
+     */
     public enum Mode {
+        /**
+         * DTO-mapping mode.
+         */
         DTO,
+        /**
+         * SQL row mode.
+         */
         SQL,
+        /**
+         * Native SQL mode.
+         */
         NATIVE_SQL;
     }
 }

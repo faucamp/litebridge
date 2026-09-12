@@ -24,6 +24,15 @@ public final class DtoDeleteWhereConditionClause<DTO>
         DtoDeleteWhereConditionClause<DTO>,
         DtoDeleteWhereConditionClauseTerminal<DTO>> {
 
+    /**
+     * Creates a new {@code DtoDeleteWhereConditionClause} instance.
+     *
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logical operator (AND/OR)
+     * @param lhsColumn         the left-hand side column name
+     * @param lhsExpression     the left-hand side expression
+     * @param terminalRecreator the function to create the terminal clause
+     */
     public DtoDeleteWhereConditionClause(final LitebridgeContext litebridgeContext,
                                          final LogicOperator logicOperator,
                                          final @Nullable String lhsColumn,

@@ -35,6 +35,14 @@ public class ConditionSpec {
     private @Nullable Operator operator;
     private @Nullable Object value;
 
+    /**
+     * Constructs a new {@code ConditionSpec} with specified components.
+     *
+     * @param lhsColumn     the left-hand side column name
+     * @param lhsExpression the left-hand side expression
+     * @param operator      the condition operator
+     * @param rawValue      the raw right-hand side value
+     */
     public ConditionSpec(final @Nullable String lhsColumn,
                          final @Nullable ExpressionSpec lhsExpression,
                          final @Nullable Operator operator,
@@ -45,13 +53,26 @@ public class ConditionSpec {
         this.value = rawValue;
     }
 
+    /**
+     * Constructs an empty {@code ConditionSpec}.
+     */
     public ConditionSpec() {
     }
 
+    /**
+     * Gets the left-hand side column name of the condition.
+     *
+     * @return the LHS column name, or {@code null}
+     */
     public @Nullable String getLhsColumn() {
         return lhsColumn;
     }
 
+    /**
+     * Sets the left-hand side column name of the condition.
+     *
+     * @param lhsColumn the LHS column name to set
+     */
     public void setLhsColumn(final String lhsColumn) {
         this.lhsColumn = lhsColumn;
     }

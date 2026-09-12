@@ -21,6 +21,9 @@ import java.util.function.Function;
  */
 abstract sealed class AbstractUpdateEngine permits AbstractInsertEngine, DeleteEngine, UpdateEngine {
 
+    /**
+     * Default empty update metadata instance.
+     */
     protected static final UpdateMetaData EMPTY_UPDATE_META_DATA = new UpdateMetaData(false, Collections.emptyList(), new String[0], 1, 0);
 
     /**

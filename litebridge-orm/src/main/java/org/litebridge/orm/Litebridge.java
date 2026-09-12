@@ -38,30 +38,79 @@ public class Litebridge extends LitebridgeCore {
 
     private final MergeEngine mergeEngine = new MergeEngine();
 
+    /**
+     * Constructs a Litebridge instance with the specified database provider and data source.
+     *
+     * @param databaseProvider the database provider
+     * @param dataSource       the data source
+     */
     public Litebridge(final DatabaseProvider databaseProvider, final DataSource dataSource) {
         super(databaseProvider, dataSource);
     }
 
+    /**
+     * Constructs a Litebridge instance with the specified database provider, data source, and configuration.
+     *
+     * @param databaseProvider the database provider
+     * @param dataSource       the data source
+     * @param litebridgeConfig the configuration, or {@code null}
+     */
     public Litebridge(final DatabaseProvider databaseProvider, final DataSource dataSource, final @Nullable LitebridgeConfig litebridgeConfig) {
         super(databaseProvider, dataSource, litebridgeConfig);
     }
 
+    /**
+     * Constructs a Litebridge instance with the specified database provider, data source, configuration, and lookup.
+     *
+     * @param databaseProvider the database provider
+     * @param dataSource       the data source
+     * @param litebridgeConfig the configuration, or {@code null}
+     * @param lookup           the method handles lookup
+     */
     public Litebridge(final DatabaseProvider databaseProvider, final DataSource dataSource, final @Nullable LitebridgeConfig litebridgeConfig, final MethodHandles.Lookup lookup) {
         super(databaseProvider, dataSource, litebridgeConfig, lookup);
     }
 
+    /**
+     * Constructs a Litebridge instance with the specified database provider and transaction manager.
+     *
+     * @param databaseProvider   the database provider
+     * @param transactionManager the transaction manager
+     */
     public Litebridge(final DatabaseProvider databaseProvider, final TransactionManager transactionManager) {
         super(databaseProvider, transactionManager);
     }
 
+    /**
+     * Constructs a Litebridge instance with the specified database provider, transaction manager, and configuration.
+     *
+     * @param databaseProvider   the database provider
+     * @param transactionManager the transaction manager
+     * @param litebridgeConfig   the configuration
+     */
     public Litebridge(final DatabaseProvider databaseProvider, final TransactionManager transactionManager, final LitebridgeConfig litebridgeConfig) {
         super(databaseProvider, transactionManager, litebridgeConfig);
     }
 
+    /**
+     * Constructs a Litebridge instance with the specified database provider, transaction manager, and lookup.
+     *
+     * @param databaseProvider   the database provider
+     * @param transactionManager the transaction manager
+     * @param lookup             the method handles lookup
+     */
     public Litebridge(final DatabaseProvider databaseProvider, final TransactionManager transactionManager, final MethodHandles.Lookup lookup) {
         super(databaseProvider, transactionManager, lookup);
     }
 
+    /**
+     * Constructs a Litebridge instance with the specified database provider, transaction manager, configuration, and lookup.
+     *
+     * @param databaseProvider   the database provider
+     * @param transactionManager the transaction manager
+     * @param litebridgeConfig   the configuration, or {@code null}
+     * @param lookup             the method handles lookup
+     */
     public Litebridge(final DatabaseProvider databaseProvider, final TransactionManager transactionManager, final @Nullable LitebridgeConfig litebridgeConfig, final MethodHandles.Lookup lookup) {
         super(databaseProvider, transactionManager, litebridgeConfig, lookup);
     }

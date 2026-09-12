@@ -28,7 +28,10 @@ public final class FromClauseStartTypeOverride<ReturnType> {
     /**
      * Constructs a new {@code FromClauseStartTypeOverride}.
      *
-     * @param typeOverride the type override class.
+     * @param typeOverride             the type override class.
+     * @param expressionSpecs          the expression specifications
+     * @param selectEngineTerminal     the terminal select engine
+     * @param litebridgeContextCreator the context creator function
      */
     public FromClauseStartTypeOverride(final Class<ReturnType> typeOverride,
                                        final ExpressionSpec[] expressionSpecs,

@@ -51,6 +51,12 @@ public class DtoMapper {
     private final DtoConstructor dtoConstructor;
     private final LitebridgeContext litebridgeContext;
 
+    /**
+     * Creates a new {@code DtoMapper} instance.
+     *
+     * @param dtoConstructor   the DTO constructor helper
+     * @param litebridgeContext the Litebridge context
+     */
     public DtoMapper(final DtoConstructor dtoConstructor,
                      final LitebridgeContext litebridgeContext) {
         this.typeConverter = litebridgeContext.typeConverter();
@@ -59,6 +65,15 @@ public class DtoMapper {
         this.litebridgeContext = litebridgeContext;
     }
 
+    /**
+     * Maps database rows to a list of DTO instances of the specified type.
+     *
+     * @param <DTO>           the target DTO type
+     * @param dtoClass        the class of the DTO to map to
+     * @param contextDtoClass the context DTO class, or {@code null}
+     * @param rows            the database rows to map
+     * @return the list of mapped DTO instances
+     */
     public <DTO> List<DTO> toDtos(final Class<DTO> dtoClass, final @Nullable Class<?> contextDtoClass, final List<Row> rows) {
         if (rows.isEmpty()) {
             return Collections.emptyList();
@@ -829,6 +844,15 @@ public class DtoMapper {
         }
     }
 
+    /**
+     * Constructs a DTO instance from the provided field accessor values.
+     *
+     * @param <DTO>               the target DTO type
+     * @param dtoClass            the class of the DTO to construct
+     * @param fieldAccessorValues the list of field accessor values
+     * @param dtoConstructor      the DTO constructor helper
+     * @return the constructed DTO instance
+     */
     public static <DTO> DTO constructDto(final Class<DTO> dtoClass, final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues, final DtoConstructor dtoConstructor) {
         final DtoConstructor.ConstructionResult<DTO> constructionResult = dtoConstructor.newInstance(dtoClass, fieldAccessorValues);
         final DTO dto = constructionResult.dto();

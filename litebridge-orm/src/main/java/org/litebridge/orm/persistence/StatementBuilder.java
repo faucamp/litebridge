@@ -29,6 +29,7 @@ public sealed interface StatementBuilder permits AbstractStatementBuilder, NoOpS
     /**
      * Creates the update metadata for the statement.
      *
+     * @param preparedOperation the prepared database operation
      * @return the update metadata
      */
     UpdateMetaData createUpdateMetaData(final PreparedOperation preparedOperation);

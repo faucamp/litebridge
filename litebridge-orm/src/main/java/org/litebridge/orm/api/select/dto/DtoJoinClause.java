@@ -31,7 +31,9 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
     /**
      * Creates a new instance of {@code DtoJoinClause}.
      *
-     * @param terminalCreator the function to create the terminal clause
+     * @param node              the current query node
+     * @param litebridgeContext the Litebridge context
+     * @param terminalCreator   the function to create the terminal clause
      */
     public DtoJoinClause(final QueryNode node,
                          final LitebridgeContext litebridgeContext,

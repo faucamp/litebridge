@@ -47,7 +47,9 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     /**
      * Creates a new instance of {@code DtoJoinConditionClauseTerminal}.
      *
-     * @param joinNode
+     * @param joinNode             the join query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
      */
     public DtoJoinConditionClauseTerminal(final JoinNode joinNode,
                                           final SelectEngineTerminal selectEngineTerminal,

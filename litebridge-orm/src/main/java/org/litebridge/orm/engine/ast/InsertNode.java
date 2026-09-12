@@ -23,10 +23,24 @@ public record InsertNode(@Nullable String table,
                          String @Nullable [] columns,
                          ExpressionSpec @Nullable [] expressionSpecs) implements QueryNode {
 
+    /**
+     * Creates a new {@code InsertNode} instance with column names.
+     *
+     * @param table    the target table name, or {@code null}
+     * @param dtoClass the target DTO class, or {@code null}
+     * @param columns  the column names to insert into
+     */
     public InsertNode(final @Nullable String table, final @Nullable Class<?> dtoClass, final String[] columns) {
         this(table, dtoClass, null, columns, null);
     }
 
+    /**
+     * Creates a new {@code InsertNode} instance with expression specifications.
+     *
+     * @param table           the target table name, or {@code null}
+     * @param dtoClass        the target DTO class, or {@code null}
+     * @param expressionSpecs the expression specifications to insert
+     */
     public InsertNode(final @Nullable String table, final @Nullable Class<?> dtoClass, final ExpressionSpec[] expressionSpecs) {
         this(table, dtoClass, null, null, expressionSpecs);
     }

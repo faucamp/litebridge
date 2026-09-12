@@ -7,10 +7,20 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * Implementation of a terminal condition clause for SQL-based queries.
+ */
 public final class CbSqlConditionClauseTerminal extends AbstractCbConditionClauseTerminal<Row> {
 
     private final String table;
 
+    /**
+     * Constructs a new {@code CbSqlConditionClauseTerminal}.
+     *
+     * @param table             the target table name
+     * @param node              the current query node
+     * @param litebridgeContext the Litebridge context
+     */
     public CbSqlConditionClauseTerminal(final String table,
                                         final QueryNode node,
                                         final LitebridgeContext litebridgeContext) {

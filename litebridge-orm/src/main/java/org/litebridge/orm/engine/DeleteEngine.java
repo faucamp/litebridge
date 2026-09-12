@@ -21,6 +21,7 @@ public final class DeleteEngine extends AbstractUpdateEngine {
     /**
      * Executes a SQL {@code DELETE} statement targeting a mapped DTO/entity class.
      *
+     * @param <DTO>             the mapped DTO/entity type
      * @param dtoClass          the mapped DTO/entity type to delete
      * @param delete            delete logic; a function that takes a {@link DtoDeleteStart} and returns a {@link DeleteTerminal}
      * @param litebridgeContext Litebridge context
@@ -51,6 +52,7 @@ public final class DeleteEngine extends AbstractUpdateEngine {
     /**
      * Creates a chain of update nodes for the specified mapped DTO/entity type and delete logic.
      *
+     * @param <DTO>             the mapped DTO/entity type
      * @param dtoClass          the mapped DTO/entity type to update
      * @param delete            delete logic; a function defining the update operation, which consumes a {@link DtoDeleteStart}
      *                          instance and returns an {@link DeleteTerminal}

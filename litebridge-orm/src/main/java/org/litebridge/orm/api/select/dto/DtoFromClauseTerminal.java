@@ -39,7 +39,11 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         implements DtoJoinClassTerminal<DTO> {
 
     /**
-     * Creates a new DtoFromClauseTerminal.
+     * Creates a new {@code DtoFromClauseTerminal} instance.
+     *
+     * @param selectNode           the SELECT query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
      */
     public DtoFromClauseTerminal(final SelectNode selectNode,
                                  final SelectEngineTerminal selectEngineTerminal,

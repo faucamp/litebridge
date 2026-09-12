@@ -24,6 +24,15 @@ public final class DtoUpdateWhereConditionClause<DTO>
         DtoUpdateWhereConditionClause<DTO>,
         DtoUpdateWhereConditionClauseTerminal<DTO>> {
 
+    /**
+     * Creates a new {@code DtoUpdateWhereConditionClause} instance.
+     *
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logical operator (AND/OR)
+     * @param lhsField          the left-hand side field name
+     * @param lhsExpression     the left-hand side expression
+     * @param terminalRecreator the function to create the terminal clause
+     */
     public DtoUpdateWhereConditionClause(final LitebridgeContext litebridgeContext,
                                          final LogicOperator logicOperator,
                                          final @Nullable String lhsField,

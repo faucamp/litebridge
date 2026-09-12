@@ -39,6 +39,10 @@ public final class DtoWhereConditionClauseTerminal<DTO>
 
     /**
      * Constructs a new {@code DtoWhereConditionClauseTerminal}.
+     *
+     * @param node                 the current query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
      */
     public DtoWhereConditionClauseTerminal(final QueryNode node, final SelectEngineTerminal selectEngineTerminal, final LitebridgeContext litebridgeContext) {
         super(node, selectEngineTerminal, litebridgeContext);

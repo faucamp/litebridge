@@ -9,10 +9,24 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
+/**
+ * Implementation of a condition clause for SQL-based queries.
+ */
 public class CbSqlConditionClause extends AbstractCbConditionClause<Row> {
 
     private final String table;
 
+    /**
+     * Constructs a new {@code CbSqlConditionClause}.
+     *
+     * @param table             the target table name
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logical operator (AND/OR)
+     * @param lhsColumn         the left-hand side column name
+     * @param lhsExpression     the left-hand side expression
+     * @param node              the previous node in the chain
+     * @param terminalCreator   the function to create the terminal clause
+     */
     public CbSqlConditionClause(final String table,
                                 final LitebridgeContext litebridgeContext,
                                 final LogicOperator logicOperator,

@@ -17,6 +17,9 @@ package org.litebridge.orm.config;
  */
 public record LitebridgeConfig(RelatedDtoStrategy relatedDtoStrategy) {
 
+    /**
+     * Creates a new {@code LitebridgeConfig} instance with default settings.
+     */
     public LitebridgeConfig() {
         this(RelatedDtoStrategy.NULL_IF_NO_JOIN);
     }

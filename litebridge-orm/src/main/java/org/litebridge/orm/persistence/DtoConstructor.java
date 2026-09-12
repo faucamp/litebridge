@@ -57,6 +57,13 @@ public final class DtoConstructor {
         this.tableRegistry = tableRegistry;
     }
 
+    /**
+     * Resolves and returns the mapping information for instantiating the specified DTO class.
+     *
+     * @param dtoClass        the DTO class to inspect
+     * @param contextDtoClass the context DTO class, or {@code null}
+     * @return the resolved {@link MappingInfo}
+     */
     public MappingInfo getMappingInfo(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass) {
         cacheConstructors(dtoClass, contextDtoClass);
         final Optional<MethodHandle> defaultHandle = defaultConstructor(dtoClass);

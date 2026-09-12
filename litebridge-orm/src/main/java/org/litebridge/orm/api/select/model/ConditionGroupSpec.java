@@ -65,6 +65,8 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
      * Adds a new condition to the group and returns its specification.
      *
      * @param logicOperator the logic operator for the condition
+     * @param lhsColumn     the left-hand side column name
+     * @param lhsExpression the left-hand side expression
      * @return the newly created {@link ConditionSpec}
      */
     public ConditionSpec newCondition(final LogicOperator logicOperator,
@@ -77,7 +79,10 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
      * Adds a new condition to the group and returns its specification.
      *
      * @param logicOperator  the logic operator for the condition
+     * @param fieldOrColumn  the field or column name for the condition
      * @param expressionSpec the expression specification for the condition
+     * @param operator       the operator for the condition
+     * @param rawValue       the raw value for the condition
      * @return the newly created {@link ConditionSpec}
      */
     public ConditionSpec newCondition(final LogicOperator logicOperator,

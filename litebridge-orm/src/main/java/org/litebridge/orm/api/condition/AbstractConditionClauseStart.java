@@ -12,9 +12,21 @@ import org.litebridge.orm.expression.ExpressionSpec;
  */
 public abstract class AbstractConditionClauseStart<DTO> {
 
+    /**
+     * The current query node.
+     */
     protected final @Nullable QueryNode node;
+    /**
+     * The Litebridge context.
+     */
     protected final LitebridgeContext litebridgeContext;
 
+    /**
+     * Constructs a new {@code AbstractConditionClauseStart}.
+     *
+     * @param node              the current query node
+     * @param litebridgeContext the Litebridge context
+     */
     public AbstractConditionClauseStart(@Nullable final QueryNode node, final LitebridgeContext litebridgeContext) {
         this.node = node;
         this.litebridgeContext = litebridgeContext;

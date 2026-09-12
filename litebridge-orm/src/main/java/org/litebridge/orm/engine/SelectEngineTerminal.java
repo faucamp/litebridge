@@ -120,7 +120,7 @@ public class SelectEngineTerminal {
     /**
      * Executes the query and returns the first row if present.
      * <p>
-     * Unlike {@link #fetchOne(QueryNode, LitebridgeContext)()}, this method does not require uniqueness; if multiple rows match,
+     * Unlike {@link #fetchOne(QueryNode, LitebridgeContext)}, this method does not require uniqueness; if multiple rows match,
      * only the first is returned (according to the effective ordering, if any).
      *
      * @return an {@link Optional} with the first result, if present

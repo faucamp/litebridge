@@ -11,6 +11,12 @@ public abstract sealed class MergeUpdateStep permits DtoMergeUpdateStep, SqlMerg
     protected final QueryNode node;
     protected final LitebridgeContext litebridgeContext;
 
+    /**
+     * Creates a new {@code MergeUpdateStep} instance.
+     *
+     * @param node              current query node
+     * @param litebridgeContext Litebridge context
+     */
     protected MergeUpdateStep(final QueryNode node, final LitebridgeContext litebridgeContext) {
         this.node = node;
         this.litebridgeContext = litebridgeContext;

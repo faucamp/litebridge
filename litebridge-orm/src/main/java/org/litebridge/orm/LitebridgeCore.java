@@ -112,6 +112,7 @@ public class LitebridgeCore implements SelectApi {
      * Crucially, this allows the database provider to dynamically alter the available Litebridge APIs
      * by determining the implemention of Litebridge returned.
      *
+     * @param <LB>              the type of LitebridgeCore
      * @param databaseProvider the provider managing database interactions
      * @param dataSource       the data source for database connections
      * @return a new instance of LitebridgeBuilder configured with the provided database provider and data source
@@ -120,6 +121,13 @@ public class LitebridgeCore implements SelectApi {
         return new LitebridgeBuilder<>((LitebridgeOverrideDatabaseProvider<LB>) databaseProvider, dataSource);
     }
 
+    /**
+     * Create a builder for default Litebridge instances.
+     *
+     * @param databaseProvider the provider managing database interactions
+     * @param dataSource       the data source for database connections
+     * @return a new instance of LitebridgeBuilder configured with the provided database provider and data source
+     */
     public static LitebridgeBuilder<Litebridge> withDatabase(final DatabaseProvider databaseProvider, final DataSource dataSource) {
         return new LitebridgeBuilder<>(databaseProvider, dataSource);
     }
@@ -500,6 +508,7 @@ public class LitebridgeCore implements SelectApi {
      * @param <DTO>    The type of the Data Transfer Object (DTO) representing the table.
      * @param dtoClass The class of the DTO to identify the table for deletion.
      * @param query    A function that builds the delete query using a {@link DtoDeleteStart}.
+     * @return the result of the delete operation
      */
     public <DTO> UpdateResult delete(final Class<DTO> dtoClass, final Function<DtoDeleteStart<DTO>, DeleteTerminal> query) {
         return deleteEngine.delete(dtoClass, query, createDtoLitebridgeContext());

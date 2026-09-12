@@ -21,16 +21,36 @@ public final class FromClauseStart {
     private final SelectEngineTerminal selectEngineTerminal;
     private final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator;
 
+    /**
+     * Creates a new {@code FromClauseStart} instance with expression specifications.
+     *
+     * @param expressionSpecs          the expression specifications
+     * @param selectEngineTerminal     the terminal select engine
+     * @param litebridgeContextCreator the context creator function
+     */
     public FromClauseStart(final ExpressionSpec[] expressionSpecs,
                            final SelectEngineTerminal selectEngineTerminal,
                            final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
         this(null, expressionSpecs, selectEngineTerminal, litebridgeContextCreator);
     }
 
+    /**
+     * Creates a new {@code FromClauseStart} instance with column names.
+     *
+     * @param columns                  the column names
+     * @param selectEngineTerminal     the terminal select engine
+     * @param litebridgeContextCreator the context creator function
+     */
     public FromClauseStart(final String[] columns, final SelectEngineTerminal selectEngineTerminal, final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
         this(columns, null, selectEngineTerminal, litebridgeContextCreator);
     }
 
+    /**
+     * Creates a new {@code FromClauseStart} instance.
+     *
+     * @param selectEngineTerminal     the terminal select engine
+     * @param litebridgeContextCreator the context creator function
+     */
     public FromClauseStart(final SelectEngineTerminal selectEngineTerminal, final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
         this(null, null, selectEngineTerminal, litebridgeContextCreator);
     }

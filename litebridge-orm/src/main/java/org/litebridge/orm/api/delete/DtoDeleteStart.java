@@ -9,6 +9,11 @@ import org.litebridge.orm.api.update.UpdateStepBase;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * DTO-mode entry step for constructing a {@code DELETE} statement.
+ *
+ * @param <DTO> the mapped DTO/entity type
+ */
 public final class DtoDeleteStart<DTO> extends UpdateStepBase
 
         implements DeleteStart<DTO,
@@ -19,6 +24,12 @@ public final class DtoDeleteStart<DTO> extends UpdateStepBase
     private final Class<DTO> dtoClass;
     private final DeleteNode deleteNode;
 
+    /**
+     * Creates a new {@code DtoDeleteStart} instance.
+     *
+     * @param dtoClass          the mapped DTO/entity class to delete
+     * @param litebridgeContext the Litebridge context
+     */
     public DtoDeleteStart(final Class<DTO> dtoClass,
                           final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);

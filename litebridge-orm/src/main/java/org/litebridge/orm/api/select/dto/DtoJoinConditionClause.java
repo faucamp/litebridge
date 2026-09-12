@@ -22,6 +22,16 @@ public final class DtoJoinConditionClause<DTO> extends ConditionClauseImpl<DTO,
         implements JoinConditionClause<DTO, DtoJoinConditionClause<DTO>,
         DtoJoinConditionClauseTerminal<DTO>> {
 
+    /**
+     * Creates a new {@code DtoJoinConditionClause} instance.
+     *
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logical operator (AND/OR)
+     * @param lhsColumn         the left-hand side column name
+     * @param lhsExpression     the left-hand side expression
+     * @param node              the previous query node in the chain
+     * @param terminalRecreator the function to create the terminal clause
+     */
     public DtoJoinConditionClause(final LitebridgeContext litebridgeContext,
                                   final LogicOperator logicOperator,
                                   final @Nullable String lhsColumn,

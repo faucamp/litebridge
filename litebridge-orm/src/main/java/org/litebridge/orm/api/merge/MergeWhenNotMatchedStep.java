@@ -16,7 +16,13 @@ public sealed class MergeWhenNotMatchedStep<MIS extends MergeInsertStep>
         extends MergeTerminal
         permits MergeWhenMatchedStep {
 
+    /**
+     * The root merge AST node.
+     */
     protected final MergeNode mergeNode;
+    /**
+     * The Litebridge context.
+     */
     protected final LitebridgeContext litebridgeContext;
 
     /**

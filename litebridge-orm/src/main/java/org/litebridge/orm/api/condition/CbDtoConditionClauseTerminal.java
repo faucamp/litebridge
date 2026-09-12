@@ -17,7 +17,8 @@ public final class CbDtoConditionClauseTerminal<DTO> extends AbstractCbCondition
     /**
      * Constructs a new {@code CbDtoConditionClauseTerminal}.
      *
-     * @param node The current query node.
+     * @param node              The current query node.
+     * @param litebridgeContext The Litebridge context.
      */
     public CbDtoConditionClauseTerminal(final QueryNode node,
                                         final LitebridgeContext litebridgeContext) {

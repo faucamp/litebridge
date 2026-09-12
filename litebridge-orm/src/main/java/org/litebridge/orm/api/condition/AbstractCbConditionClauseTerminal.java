@@ -17,6 +17,9 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
 
         permits CbDtoConditionClauseTerminal, CbSqlConditionClauseTerminal {
 
+    /**
+     * The Litebridge context.
+     */
     protected final LitebridgeContext litebridgeContext;
     /**
      * The current query node in the AST.
@@ -26,7 +29,8 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
     /**
      * Constructs a new {@code AbstractCbConditionClauseTerminal}.
      *
-     * @param node The current query node.
+     * @param node              The current query node.
+     * @param litebridgeContext The Litebridge context.
      */
     public AbstractCbConditionClauseTerminal(final QueryNode node, final LitebridgeContext litebridgeContext) {
         this.node = node;

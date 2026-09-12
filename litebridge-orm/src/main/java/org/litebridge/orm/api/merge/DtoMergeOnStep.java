@@ -13,6 +13,13 @@ import org.litebridge.tracking.FieldAccessor;
  */
 public final class DtoMergeOnStep<DTO> extends MergeOnStep<DTO, DtoMergeUpdateStep<DTO>, DtoMergeInsertStep> {
 
+    /**
+     * Creates a new {@code DtoMergeOnStep} instance.
+     *
+     * @param usingDtoClass     the DTO/entity class used in the {@code USING} clause
+     * @param mergeNode         the current merge node
+     * @param litebridgeContext the Litebridge context
+     */
     public DtoMergeOnStep(final Class<?> usingDtoClass, final MergeNode mergeNode, final LitebridgeContext litebridgeContext) {
         super(usingDtoClass, mergeNode, litebridgeContext);
     }

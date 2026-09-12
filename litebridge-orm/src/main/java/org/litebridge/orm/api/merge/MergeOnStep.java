@@ -20,6 +20,9 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
         extends MergeStepBase
         permits DtoMergeOnStep {
 
+    /**
+     * The root merge AST node.
+     */
     protected final MergeNode mergeNode;
 
     /**
@@ -34,6 +37,13 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
         this.mergeNode = mergeNode;
     }
 
+    /**
+     * Creates a new {@code MergeOnStep} instance for DTO mode.
+     *
+     * @param usingDtoClass     the using DTO class
+     * @param mergeNode         the root merge node
+     * @param litebridgeContext the Litebridge context
+     */
     protected MergeOnStep(final Class<?> usingDtoClass, final MergeNode mergeNode, final LitebridgeContext litebridgeContext) {
         super(Objects.requireNonNull(mergeNode.dtoClass()), usingDtoClass, litebridgeContext);
         this.mergeNode = mergeNode;

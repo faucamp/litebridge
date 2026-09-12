@@ -31,16 +31,20 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     private final @Nullable String lhsColumn;
     private final @Nullable ExpressionSpec lhsExpression;
     private final @Nullable QueryNode node;
+    /**
+     * The Litebridge context.
+     */
     protected final LitebridgeContext litebridgeContext;
 
     /**
      * Constructs a new {@code AbstractCbConditionClause}.
      *
-     * @param logicOperator   The logic operator (AND/OR).
-     * @param lhsColumn       The left-hand side column name.
-     * @param lhsExpression   The left-hand side expression.
-     * @param node            The previous node in the chain.
-     * @param terminalCreator The function to create the terminal clause.
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logic operator (AND/OR)
+     * @param lhsColumn         the left-hand side column name
+     * @param lhsExpression     the left-hand side expression
+     * @param node              the previous node in the chain
+     * @param terminalCreator   the function to create the terminal clause
      */
     public AbstractCbConditionClause(final LitebridgeContext litebridgeContext,
                                      final LogicOperator logicOperator,

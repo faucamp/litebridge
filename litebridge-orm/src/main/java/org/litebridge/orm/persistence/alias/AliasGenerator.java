@@ -18,6 +18,12 @@ public sealed interface AliasGenerator permits DefaultAliasGenerator, NoOpAliasG
      */
     Table aliasTable(OrmTable ormTable);
 
+    /**
+     * Generates an aliased table for the specified SPI table.
+     *
+     * @param table The table.
+     * @return The aliased table.
+     */
     Table aliasTable(Table table);
 
     /**

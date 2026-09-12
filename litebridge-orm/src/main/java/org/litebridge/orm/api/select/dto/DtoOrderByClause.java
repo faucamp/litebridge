@@ -25,9 +25,12 @@ public final class DtoOrderByClause<DTO>
     private final LitebridgeContext litebridgeContext;
 
     /**
-     * Creates a new instance of {@code DtoOrderByClause}.
+     * Creates a new instance of {@code DtoOrderByClause} with expressions.
      *
-     * @param expressions the expressions to order by
+     * @param expressions          the expressions to order by
+     * @param node                 the current query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
      */
     public DtoOrderByClause(final ExpressionSpec[] expressions,
                             final QueryNode node,
@@ -36,6 +39,14 @@ public final class DtoOrderByClause<DTO>
         this(null, expressions, node, selectEngineTerminal, litebridgeContext);
     }
 
+    /**
+     * Creates a new instance of {@code DtoOrderByClause} with column names.
+     *
+     * @param columns              the column names to order by
+     * @param node                 the current query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     public DtoOrderByClause(final String[] columns,
                             final QueryNode node,
                             final SelectEngineTerminal selectEngineTerminal,

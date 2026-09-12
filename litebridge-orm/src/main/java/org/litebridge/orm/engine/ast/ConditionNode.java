@@ -28,6 +28,16 @@ public record ConditionNode(@Nullable QueryNode previous,
                             @Nullable Object rhs,
                             @Nullable String rhsColumn) implements ConditionQueryNode {
 
+    /**
+     * Creates a new {@code ConditionNode} instance without a right-hand side column.
+     *
+     * @param previous      the previous node in the chain
+     * @param logicOperator the logic operator (AND/OR)
+     * @param lhsColumn     the left-hand side column name
+     * @param lhsExpression the left-hand side expression
+     * @param operator      the operator (EQ, USING, etc.)
+     * @param rhs           the right-hand side value
+     */
     public ConditionNode(@Nullable QueryNode previous,
                          LogicOperator logicOperator,
                          @Nullable String lhsColumn,

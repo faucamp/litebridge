@@ -29,6 +29,16 @@ public final class DtoWhereConditionClause<DTO>
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 
+    /**
+     * Creates a new {@code DtoWhereConditionClause} instance.
+     *
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logical operator (AND/OR)
+     * @param lhsField          the left-hand side field name
+     * @param lhsExpression     the left-hand side expression
+     * @param node              the previous query node in the chain
+     * @param terminalRecreator the function to create the terminal clause
+     */
     public DtoWhereConditionClause(final LitebridgeContext litebridgeContext,
                                    final LogicOperator logicOperator,
                                    final @Nullable String lhsField,

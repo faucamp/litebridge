@@ -23,6 +23,7 @@ public final class MergeEngine extends AbstractInsertEngine {
     /**
      * Executes a SQL {@code MERGE INTO} statement targeting a mapped DTO/entity class.
      *
+     * @param <DTO>             the mapped DTO/entity type
      * @param dtoClass          the mapped DTO/entity type to merge into
      * @param merge             merge logic; a function that takes a {@link DtoMergeUsingStep} and returns a {@link MergeTerminal}
      * @param litebridgeContext Litebridge context
