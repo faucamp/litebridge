@@ -52,6 +52,9 @@ final class MergeQueryCompiler extends AbstractQueryCompiler<MergeCompilationCon
             case WhereNode whereNode -> flattenAndApplyConditionNode(whereNode.condition(), compilationContext);
             case WhenNotMatchedNode whenNotMatchedNode -> {
                 compilationContext.addWhenMatchedSpec(false);
+                if (whenNotMatchedNode.and() != null) {
+                    flattenAndApplyConditionNode(whenNotMatchedNode.and(), compilationContext);
+                }
                 flattenAndApplyNodes(whenNotMatchedNode.insert(), compilationContext);
             }
             case InsertNode insertNode -> compilationContext.whenNotMatchedInsert(insertNode);

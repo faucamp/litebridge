@@ -1,8 +1,14 @@
 package org.litebridge.db.spi.impl.sql;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.query.Condition;
+import org.litebridge.db.spi.query.ConditionGroup;
+import org.litebridge.db.spi.query.LogicCondition;
+import org.litebridge.db.spi.query.LogicConditionGroup;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateColumn;
@@ -139,6 +145,31 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
             }
 
             sql.append(')');
+        }
+    }
+
+    /**
+     * Collects parameter bind indices from the given condition group in traversal order.
+     *
+     * @param conditionGroup the condition group
+     * @param parameterIndices the list to collect parameter indices into
+     */
+    protected void collectConditionGroupIndices(final @Nullable ConditionGroup conditionGroup, final List<Integer> parameterIndices) {
+        if (conditionGroup == null) {
+            return;
+        }
+
+        for (final LogicCondition logicCondition : conditionGroup.conditions()) {
+            final Condition condition = logicCondition.condition();
+            if (condition.rhs() instanceof BindValueExpression bve) {
+                for (int i = 0; i < bve.size(); i++) {
+                    parameterIndices.add(bve.index() + i);
+                }
+            }
+        }
+
+        for (final LogicConditionGroup logicConditionGroup : conditionGroup.subgroups()) {
+            collectConditionGroupIndices(logicConditionGroup.conditionGroup(), parameterIndices);
         }
     }
 }

@@ -243,14 +243,15 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                         final Object pkValue = fkFieldAccessor.get(value);
                         whenMatchedSpec.addUpdateColumn(columnMetaData);
                         whenMatchedSpec.addBindValue(new BindValue(pkValue, columnMetaData.getDataType()));
-                        return;
+                        break;
                     }
+                    continue;
                 }
             } else {
                 if (!columnMetaData.isNullable()
                         && (columnMetaData.isAutoIncrement() || columnMetaData.getGenerator() != null)) {
                     // Just add the insert column definition, not a bind value (generator will be used)
-                    whenMatchedSpec.addUpdateColumn(columnMetaData);
+                    whenMatchedSpec.addUpdateColumn(columnMetaData, true);
                     continue;
                 }
 
@@ -275,6 +276,8 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                     .getMetaData().toTable();
         }
 
+        final ConditionGroup onConditionGroup = toConditionGroup(on.current(), null, usingTable);
+
         final List<Merge.WhenMatched<Merge.WhenMatchedOperation>> whenMatchedList = new ArrayList<>();
         final List<Merge.WhenMatched<Merge.MergeInsert>> whenNotMatchedList = new ArrayList<>();
 
@@ -288,6 +291,21 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 andConditionGroup = null;
             }
 
+            final List<UpdateColumn> updatedColumns;
+            if (whenMatchedSpec.getUpdateColumns() != null) {
+                updatedColumns = new ArrayList<>(whenMatchedSpec.getUpdateColumns().size());
+                int currentBindIndex = bindValues.size();
+                for (UpdateColumn col : whenMatchedSpec.getUpdateColumns()) {
+                    if (col.generator() == null && col.mathOperator() == null) {
+                        updatedColumns.add(new UpdateColumn(col.name(), col.generator(), col.mathOperator(), currentBindIndex++));
+                    } else {
+                        updatedColumns.add(col);
+                    }
+                }
+            } else {
+                updatedColumns = null;
+            }
+
             if (whenMatchedSpec.isMatched()) {
                 // When matched
                 final Merge.WhenMatchedOperation operation;
@@ -295,20 +313,18 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 if (whenMatchedSpec.isDelete()) {
                     operation = new Merge.MergeDelete();
                 } else {
-                    operation = new Merge.MergeUpdate(whenMatchedSpec.getUpdateColumns());
+                    operation = new Merge.MergeUpdate(updatedColumns);
                 }
 
                 whenMatchedList.add(new Merge.WhenMatched<>(andConditionGroup, operation));
             } else {
                 // When not matched
-                final Merge.WhenMatched<Merge.MergeInsert> whenNotMatched = new Merge.WhenMatched<>(null, new Merge.MergeInsert(whenMatchedSpec.getUpdateColumns(), 1));
+                final Merge.WhenMatched<Merge.MergeInsert> whenNotMatched = new Merge.WhenMatched<>(andConditionGroup, new Merge.MergeInsert(updatedColumns, 1));
                 whenNotMatchedList.add(whenNotMatched);
             }
 
             bindValues.addAll(whenMatchedSpec.getBindValues());
         }
-
-        final ConditionGroup onConditionGroup = toConditionGroup(on.current(), null, usingTable);
 
         return new Merge(targetTable,
                 usingTable,
@@ -356,8 +372,12 @@ final class MergeCompilationContext extends AbstractCompilationContext {
         }
 
         public void addUpdateColumn(final ColumnMetaData columnMetaData) {
+            addUpdateColumn(columnMetaData, false);
+        }
+
+        public void addUpdateColumn(final ColumnMetaData columnMetaData, final boolean useGenerator) {
             ensureColumnMetaDataList().add(columnMetaData);
-            ensureUpdateColumns().add(new UpdateColumn(columnMetaData.name(), columnMetaData.getGenerator(), null));
+            ensureUpdateColumns().add(new UpdateColumn(columnMetaData.name(), useGenerator ? columnMetaData.getGenerator() : null, null));
         }
 
         public @Nullable List<UpdateColumn> getUpdateColumns() {

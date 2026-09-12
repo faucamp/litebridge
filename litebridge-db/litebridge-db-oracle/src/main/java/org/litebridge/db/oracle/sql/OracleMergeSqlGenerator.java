@@ -1,5 +1,7 @@
 package org.litebridge.db.oracle.sql;
 
+import org.litebridge.commons.CollectionUtils;
+import org.litebridge.db.oracle.engine.OracleExecutionEngine;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
@@ -12,6 +14,7 @@ import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateColumn;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -97,7 +100,71 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
             }
         }
 
-        return sql.toString();
+        final String sqlString = sql.toString();
+        final int[] permutation = computeParameterPermutation(merge);
+
+        if (permutation.length > 0 && !isIdentityPermutation(permutation)) {
+            OracleExecutionEngine.registerParameterPermutation(sqlString, permutation);
+        }
+
+        return sqlString;
+    }
+
+    /**
+     * Computes the parameter permutation index mapping for an Oracle MERGE statement.
+     *
+     * @param merge the merge operation
+     * @return an array of bind parameter indices in the order corresponding to the SQL placeholders
+     */
+    public int[] computeParameterPermutation(final Merge merge) {
+        final List<Integer> indices = new ArrayList<>();
+        collectConditionGroupIndices(merge.on(), indices);
+
+        final List<Merge.WhenMatched<Merge.WhenMatchedOperation>> whenMatchedList = merge.whenMatched();
+
+        if (whenMatchedList != null) {
+            for (final Merge.WhenMatched<Merge.WhenMatchedOperation> whenMatched : whenMatchedList) {
+                if (whenMatched.operation() instanceof Merge.MergeUpdate update) {
+                    for (final UpdateColumn column : update.columns()) {
+                        if (column.bindValueIndex() != null) {
+                            indices.add(column.bindValueIndex());
+                        }
+                    }
+
+                    collectConditionGroupIndices(whenMatched.and(), indices);
+                } else if (whenMatched.operation() instanceof Merge.MergeDelete) {
+                    collectConditionGroupIndices(whenMatched.and(), indices);
+                }
+            }
+        }
+
+        final List<Merge.WhenMatched<Merge.MergeInsert>> whenNotMatchedList = merge.whenNotMatched();
+
+        if (whenNotMatchedList != null) {
+            for (final Merge.WhenMatched<Merge.MergeInsert> whenNotMatched : whenNotMatchedList) {
+                collectConditionGroupIndices(whenNotMatched.and(), indices);
+                final Merge.MergeInsert insert = whenNotMatched.operation();
+
+                for (int i = 0; i < insert.rows(); i++) {
+                    for (final UpdateColumn column : insert.columns()) {
+                        if (column.bindValueIndex() != null) {
+                            indices.add(column.bindValueIndex());
+                        }
+                    }
+                }
+            }
+        }
+
+        return indices.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    private static boolean isIdentityPermutation(final int[] permutation) {
+        for (int i = 0; i < permutation.length; i++) {
+            if (permutation[i] != i) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void appendUpdate(final StringBuilder sql,

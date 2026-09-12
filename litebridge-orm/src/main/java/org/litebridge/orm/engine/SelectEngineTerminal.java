@@ -334,7 +334,7 @@ public class SelectEngineTerminal {
         final QueryPlanCache.CachedOperation cachedOperation = litebridgeContext.queryPlanCache().get(nodeHash);
 
         if (cachedOperation != null) {
-            final List<@Nullable Object> bindValues = QueryBindValueExtractor.extractBindValues(node);
+            final List<@Nullable Object> bindValues = QueryBindValueExtractor.extractBindValues(node, litebridgeContext);
             return execute(cachedOperation.preparedSql(bindValues), litebridgeContext);
         } else {
             return compileAndExecute(nodeHash, node, litebridgeContext);

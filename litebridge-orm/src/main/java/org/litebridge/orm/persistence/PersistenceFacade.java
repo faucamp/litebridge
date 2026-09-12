@@ -719,7 +719,7 @@ public class PersistenceFacade {
         final QueryPlanCache.CachedOperation cachedOperation = litebridgeContext.queryPlanCache().get(nodeHash);
 
         if (cachedOperation != null) {
-            final List<@Nullable Object> rawBindValues = QueryBindValueExtractor.extractBindValues(node);
+            final List<@Nullable Object> rawBindValues = QueryBindValueExtractor.extractBindValues(node, litebridgeContext);
             final PreparedSql preparedSql = cachedOperation.preparedSql(rawBindValues);
             dtoUpdateResult.setResult(databaseProvider.executeUpdate(preparedSql, statementBuilder.resultType(), transactionManager));
         } else {
