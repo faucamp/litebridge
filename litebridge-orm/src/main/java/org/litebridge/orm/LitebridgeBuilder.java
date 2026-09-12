@@ -2,9 +2,9 @@ package org.litebridge.orm;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.DatabaseProvider;
-import org.litebridge.db.spi.LitebridgeOverrideDatabaseProvider;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.config.LitebridgeConfig;
+import org.litebridge.orm.spi.LitebridgeOverrideDatabaseProvider;
 import org.litebridge.orm.tx.DefaultTransactionManager;
 
 import javax.sql.DataSource;
@@ -130,12 +130,25 @@ public final class LitebridgeBuilder<LB extends LitebridgeCore> {
         // Custom database-specific Litebridge instance; Let the database provider instantiate it
         final LitebridgeOverrideDatabaseProvider<LB> litebridgeOverrideDatabaseProvider = (LitebridgeOverrideDatabaseProvider<LB>) databaseProvider;
 
-        final Object[] constructorArgs = new Object[]{
+        final ConstructorArgs constructorArgs = new ConstructorArgs(
                 databaseProvider,
                 finalTransactionManager,
                 finalLitebridgeConfig,
-                finalLookup};
+                finalLookup);
 
         return litebridgeOverrideDatabaseProvider.createLitebridge(constructorArgs);
+    }
+
+    /**
+     * Constructor arguments for a custom database provider-provided Litebridge instance.
+     * <p>
+     * This allows the database provider to instantiate a custom Litebridge instance,
+     * allowing it to extend the core Litebridge API.
+     */
+    public record ConstructorArgs(DatabaseProvider databaseProvider,
+                                  TransactionManager transactionManager,
+                                  LitebridgeConfig litebridgeConfig,
+                                  MethodHandles.Lookup lookup) {
+
     }
 }

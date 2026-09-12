@@ -3,7 +3,7 @@ package org.litebridge.orm;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
-import org.litebridge.db.spi.LitebridgeOverrideDatabaseProvider;
+import org.litebridge.orm.spi.LitebridgeOverrideDatabaseProvider;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.tx.TransactionManager;

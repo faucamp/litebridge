@@ -1,6 +1,5 @@
 package org.litebridge.db.oracle;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.oracle.api.LitebridgeOracle;
 import org.litebridge.db.oracle.engine.OracleExecutionEngine;
@@ -8,9 +7,7 @@ import org.litebridge.db.oracle.engine.OracleInsertAllEngine;
 import org.litebridge.db.oracle.function.OracleSqlFunctionRegistryFactory;
 import org.litebridge.db.oracle.sql.OracleMathOperationGenerator;
 import org.litebridge.db.oracle.sql.OracleSqlGenerator;
-import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
-import org.litebridge.db.spi.LitebridgeOverrideDatabaseProvider;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
@@ -24,11 +21,8 @@ import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.impl.function.SqlFunctionRegistryFactory;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.SqlGenerator;
-import org.litebridge.db.spi.tx.TransactionManager;
-import org.litebridge.orm.config.LitebridgeConfig;
-
-import java.lang.invoke.MethodHandles;
-import java.util.Objects;
+import org.litebridge.orm.LitebridgeBuilder;
+import org.litebridge.orm.spi.LitebridgeOverrideDatabaseProvider;
 
 /**
  * Oracle Database Provider for Litebridge.
@@ -76,19 +70,15 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider imple
     }
 
     @Override
-    public LitebridgeOracle createLitebridge(final @Nullable Object[] constructorArgs) {
-        final DatabaseProvider databaseProvider = (DatabaseProvider) Objects.requireNonNull(constructorArgs[0]);
-        final TransactionManager transactionManager = (TransactionManager) Objects.requireNonNull(constructorArgs[1]);
-        final LitebridgeConfig litebridgeConfig = (LitebridgeConfig) constructorArgs[2];
-        final MethodHandles.Lookup lookup = (MethodHandles.Lookup) Objects.requireNonNull(constructorArgs[3]);
+    public LitebridgeOracle createLitebridge(final LitebridgeBuilder.ConstructorArgs constructorArgs) {
         final OracleSqlGenerator oracleSqlGenerator = (OracleSqlGenerator) context.sqlGenerator();
         final OracleInsertAllEngine oracleInsertAllEngine = new OracleInsertAllEngine(oracleSqlGenerator.oracleInsertSqlGenerator());
 
         return new LitebridgeOracle(
-                databaseProvider,
-                transactionManager,
-                litebridgeConfig,
-                lookup,
+                constructorArgs.databaseProvider(),
+                constructorArgs.transactionManager(),
+                constructorArgs.litebridgeConfig(),
+                constructorArgs.lookup(),
                 oracleInsertAllEngine);
     }
 }

@@ -16,14 +16,14 @@
     - Add batch update operations for native SQL.
     - Add `LitebridgeBuilder` for instantiating dynamic Litebridge instances with ease.
       This allows database providers to "inject" additional `Litebridge` APIs for database-specific functionality.
+    - Add `LitebridgeOverrideDatabaseProvider` interface in new ORM SPI package. This allows the Database Provider 
+      to specify what Litebridge APIs are available at compile time,
+      thus making the `Litebridge` instance database-specific. This allows future expansion to expose unique database
+      vendor capabilities via the main Litebridge API.
 - Database Provider SPI
     - New APIs for retrieving database and database provider metadata.
     - New `executeBatch()` method for explicit batch update operations.
     - `Result` and `BatchUpdateResult` result models added.
-    - Add `LitebridgeOverrideDatabaseProvider` interface for allowing the Database Provider to specify what Litebridge
-      APIs are available at compile time,
-      thus making the `Litebridge` instance database-specific. This allows future expansion to expose unique database
-      vendor capabilities via the main Litebridge API.
 - Oracle Database Provider:
     - Add custom mathematical operation SQL generator
     - Multi-row inserts are now supported via batched insert statements

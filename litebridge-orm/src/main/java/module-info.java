@@ -46,6 +46,7 @@ module litebridge.orm {
     exports org.litebridge.orm.nativesql;
     exports org.litebridge.orm.persistence;
     exports org.litebridge.orm.persistence.alias;
+    exports org.litebridge.orm.spi;
     exports org.litebridge.orm.tx;
 
     opens org.litebridge.orm to litebridge.tracking;

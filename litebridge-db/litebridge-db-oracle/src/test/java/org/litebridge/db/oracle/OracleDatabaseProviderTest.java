@@ -6,6 +6,7 @@ import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.tx.TransactionManager;
+import org.litebridge.orm.LitebridgeBuilder;
 import org.litebridge.orm.config.LitebridgeConfig;
 
 import java.lang.invoke.MethodHandles;
@@ -13,7 +14,6 @@ import java.lang.invoke.MethodHandles;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -52,7 +52,7 @@ class OracleDatabaseProviderTest {
         final TransactionManager transactionManager = mock(TransactionManager.class);
         final LitebridgeConfig config = new LitebridgeConfig();
         final MethodHandles.Lookup lookup = MethodHandles.lookup();
-        final Object[] args = new Object[]{databaseProvider, transactionManager, config, lookup};
+        final LitebridgeBuilder.ConstructorArgs args = new LitebridgeBuilder.ConstructorArgs(databaseProvider, transactionManager, config, lookup);
 
         // When
         final LitebridgeOracle litebridge = oracleDatabaseProvider.createLitebridge(args);
@@ -60,16 +60,6 @@ class OracleDatabaseProviderTest {
         // Then
         assertNotNull(litebridge);
         assertInstanceOf(LitebridgeOracle.class, litebridge);
-    }
-
-    @Test
-    void createLitebridge_withNullArg_throwsNullPointerException() {
-        // Given
-        final OracleDatabaseProvider oracleDatabaseProvider = new OracleDatabaseProvider();
-        final Object[] args = new Object[]{null, null, null, null};
-
-        // When / Then
-        assertThrows(NullPointerException.class, () -> oracleDatabaseProvider.createLitebridge(args));
     }
 
     @Test

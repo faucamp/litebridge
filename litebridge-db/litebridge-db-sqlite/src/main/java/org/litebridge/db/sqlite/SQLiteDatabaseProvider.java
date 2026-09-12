@@ -2,7 +2,7 @@ package org.litebridge.db.sqlite;
 
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
-import org.litebridge.db.spi.LitebridgeOverrideDatabaseProvider;
+import org.litebridge.orm.spi.LitebridgeOverrideDatabaseProvider;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;

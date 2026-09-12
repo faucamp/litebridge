@@ -1,7 +1,7 @@
 package org.litebridge.orm.e2e.setup;
 
 import org.litebridge.db.spi.DatabaseProvider;
-import org.litebridge.db.spi.LitebridgeOverrideDatabaseProvider;
+import org.litebridge.orm.spi.LitebridgeOverrideDatabaseProvider;
 import org.litebridge.orm.LitebridgeCore;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.LitebridgeBuilder;
