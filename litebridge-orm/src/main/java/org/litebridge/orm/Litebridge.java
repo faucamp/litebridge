@@ -14,6 +14,26 @@ import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
 import java.util.function.Function;
 
+/**
+ * Default primary entry point for Litebridge.
+ * <p>
+ * Litebridge is responsible for managing database interactions,
+ * including mapping Data Transfer Objects (DTOs) to tables,
+ * registering tables, change tracking, and executing query operations.
+ * <p>
+ * It provides a mechanism to translate between DTOs and database tables,
+ * facilitating CRUD operations while maintaining consistency and integrity.
+ * <p>
+ * Litebridge ensures thread safety by using immutable internal structures and
+ * leveraging the {@code DatabaseProvider} and {@code PersistenceFacade} for
+ * database interactions, ensuring that operations are performed safely and
+ * efficiently.
+ * <p>
+ * This extends {@link LitebridgeCore} and provides additional methods for
+ * performing {@code MERGE INTO} operations if the database provider supports merge operations.
+ *
+ * @see LitebridgeCore for a more basic set of Litebridge features
+ */
 public class Litebridge extends LitebridgeCore {
 
     private final MergeEngine mergeEngine = new MergeEngine();

@@ -66,7 +66,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
- * Primary entry point for Litebridge.
+ * Basic primary entry point for Litebridge.
  * <p>
  * Litebridge is responsible for managing database interactions,
  * including mapping Data Transfer Objects (DTOs) to tables,
@@ -79,6 +79,10 @@ import java.util.stream.Stream;
  * leveraging the {@code DatabaseProvider} and {@code PersistenceFacade} for
  * database interactions, ensuring that operations are performed safely and
  * efficiently.
+ * <p>
+ * This class does not support SQL {@code MERGE INTO} operations.
+ *
+ * @see Litebridge for the default set of Litebridge features
  */
 public class LitebridgeCore implements SelectApi {
 

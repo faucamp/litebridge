@@ -4,20 +4,28 @@ This document provides essential context and guidelines for AI agents working on
 
 ## Project Overview
 
-Litebridge is a fast, lightweight Object-Relational Mapper (ORM) for Java 21+. 
+Litebridge is a fast, lightweight Object-Relational Mapper (ORM) for Java 21+.
 
-It focuses on a SQL-like fluent API and ease of use, which can be used in a entity/DTO mode (clasic ORM) or a "raw SQL"-mode.
+It focuses on a SQL-like fluent API and ease of use, which can be used in 2 modes:
 
-It supports annotated entity classes as well as unannotated, plain DTOs as database entities.
+- **DTO mode** (clasic ORM): statements are constructed using DTO/entity classes and/or metadata. It supports annotated
+  entity classes as well as unannotated, plain DTOs as database entities.
+- **SQL mode**: does not use entity/DTO mapping; statements are constructed using table/column names and/or SQL
+  expressions
 
 ## Project Structure
 
 Litebridge is modular and uses JPMS (`module-info.java`).
 
-- `docs`: Documentation and guides for users and contributors. It contains subsections detailing various aspects, logically grouped.
-- `litebridge-orm`: The core engine and primary entry point. Contains the `Litebridge` class.
-- `litebridge-orm-support`: Supporting utilities for Litebridge ORM, allowing classpath scanning for entities/DTO-table mappings.
-- `litebridge-db`: Contains the `DatabaseProvider` SPI and its implementations (e.g. `litebridge-db-h2`, `litebridge-db-postgres`, etc.).
+- `docs`: Documentation and guides for users and contributors. It contains subsections detailing various aspects,
+  logically grouped.
+- `litebridge-orm`: The core engine and primary entry point. Contains the `Litebridge` class, which is the main end-user
+  API entry point.
+- `litebridge-e2e-tests`: End-to-end integration tests for Litebridge.
+- `litebridge-orm-support`: Supporting utilities for Litebridge ORM, allowing classpath scanning for entities/DTO-table
+  mappings.
+- `litebridge-db`: Contains the `DatabaseProvider` SPI and its implementations (e.g. `litebridge-db-h2`,
+  `litebridge-db-postgres`, etc.).
 - `litebridge-annotations`: Entity annotation definitions.
 - `litebridge-tracking`: An independent change tracking API for arbitrary Java objects.
 - `litebridge-converter`: Type conversion utilities for translating between Java and SQL types.
@@ -25,13 +33,14 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 - `spring/litebridge-spring`: Integration library for Spring projects.
 - `spring/litebridge-spring-boot-autoconfigure`: Auto-configuration for Spring Boot applications.
 - `spring/litebridge-spring-boot-starter`: Starter for Spring Boot applications to simplify setup.
-- `litebridge-maven-plugin`: Maven plugin for reverse engineering database tables to Litebridge ORM entities, and entity metamodel creation. 
+- `litebridge-maven-plugin`: Maven plugin for reverse engineering database tables to Litebridge ORM entities, and entity
+  metamodel creation.
 - `example`: Contains example applications demonstrating Litebridge usage.
 - `web`: Contains the project's web site.
 
 ## Technical Stack
 
-- **Java**: 21+ (Modular)
+- **Java**: 21+ with JPMS
 - **Build System**: Maven
 - **Null Safety**: JSpecify (`@NullMarked`, `@Nullable`).
 - **Access Control**: Uses `java.lang.invoke.MethodHandles.Lookup` for efficient DTO field/property access.
@@ -43,10 +52,11 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 ### 1. Code Style
 
 - Follow the existing project style: 4-space indentation, standard Java naming conventions.
-- **Null Safety**: Always use JSpecify annotations on public APIs. The project is generally `@NullMarked`.
+- **Null Safety**: Always use JSpecify annotations on public APIs. Modules must be `@NullMarked`.
 - **Modularity**: Respect module boundaries defined in `module-info.java`.
 - **API Design**: Favour fluent builders and functional interfaces for configuration and queries.
-- **Variables and parameters**: Declare variables and parameters as `final` wherever possible, including when writing tests.
+- **Variables and parameters**: Declare variables and parameters as `final` wherever possible, including when writing
+  tests.
 
 ### 2. Entity/DTO Mappings
 
@@ -57,44 +67,81 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 
 ### 3. How Litebridge Works
 
-- The `Litebridge` class exposes various methods for querying and updating data.
-- There are two main "modes" of operation: DTO/entity-based, and SQL-based. 
-  - In **DTO mode**, the API refers to class fields in expressions and returns a mapped DTO (or other type, dependent on the query). 
-  - In **SQL-mode**, "raw" row data is returned. The API changes this based on what is provided as input for the various steps in the API chain, notably the `from()` part.
-- The fluent API separates user-facing query construction from the internal representation (AST) and execution specifications.
+- In general, the `org.litebridge.orm.Litebridge` class is the main entry point for the API, and exposes various methods
+  for querying and updating data.
+- Litebridge instances are built using the `org.litebridge.orm.LitebridgeBuilder`. Database providers are allowed to
+  specify the type of Litebridge instance to be constructed,
+  which allows for dynamic additional API methods for vendor-specific operations. These are:
+    - `org.litebridge.orm.Litebridge`: Default Litebridge instance
+    - `org.litebridge.orm.LitebridgeCore`: Basic/limited functionality Litebridge instance (no merge support)
+    - custom database provider-specific extension of either `Litebridge` or `LitebridgeCore`
+
+#### Query API
+
+- The query API is a fluent API that allows for expressive and concise queries.
+- There are two main "modes" of operation: DTO/entity-based, and SQL-based.
+    - In **DTO mode**, the API refers to class fields in expressions and returns a mapped DTO (or other type, dependent
+      on the query).
+    - In **SQL-mode**, "raw" row data is returned. The API changes this based on what is provided as input for the
+      various steps in the API chain, notably the `from()` part.
+- The fluent API separates user-facing query construction from the internal representation (AST) and execution
+  specifications.
+- The `Litebridge` class is the main entry point for the API,
 
 #### Query Expressions
-- Query expressions are the primary component of the query API. They represent SQL functions, columns, literal expressions, and specialized Java-side conversions. They are typically created using static methods in the `org.litebridge.orm.expression.Fn` utility class, or through metamodel fields. 
+
+- Query expressions are the primary component of the query API. They represent SQL functions, columns, literal
+  expressions, and specialized Java-side conversions. They are typically created using static methods in the
+  `org.litebridge.orm.expression.Fn` utility class, or through metamodel fields.
 - There are 3 main phases of query expressions:
-  - **Proto-query expressions**: Used in the initial fluent API steps before a target table or context is fully known.
-  - **Expression specifications**: A non-ambiguous representation of intent (e.g., a specific column in a specific table).
-  - **Select Expressions**: The final expression provided by the database provider, capable of rendering SQL.
+    - **Proto-query expressions**: Used in the initial fluent API steps before a target table or context is fully known.
+    - **Expression specifications**: A non-ambiguous representation of intent (e.g., a specific column in a specific
+      table).
+    - **Select Expressions**: The final expression provided by the database provider, capable of rendering SQL.
 
 #### Internal Query Representation (AST)
-- Litebridge uses a lightweight Abstract Syntax Tree (AST) to represent queries. Each step in the fluent API (e.g., `where()`, `join()`, `set()`) adds a `QueryNode` to a linked list chain.
-- The `QueryNode` sealed interface (implemented by `SelectNode`, `DeleteNode`, `UpdateNode`, `WhereNode`, `JoinNode`, `SetNode`, etc.) captures the query structure independently of the database provider or the final SQL.
-- **Nested Conditions**: Complex logic is supported via `QueryConditionBuilder`, which allows building sub-trees of conditions (e.g., `q -> q.where(...).and(...)`) that are represented as `ConditionGroupNode` instances.
+
+- Litebridge uses a lightweight Abstract Syntax Tree (AST) to represent queries. Each step in the fluent API (e.g.,
+  `where()`, `join()`, `set()`) adds a `QueryNode` to a linked list chain.
+- The `QueryNode` sealed interface (implemented by `SelectNode`, `DeleteNode`, `UpdateNode`, `WhereNode`, `JoinNode`,
+  `SetNode`, etc.) captures the query structure independently of the database provider or the final SQL.
+- **Nested Conditions**: Complex logic is supported via `QueryConditionBuilder`, which allows building sub-trees of
+  conditions (e.g., `q -> q.where(...).and(...)`) that are represented as `ConditionGroupNode` instances.
 
 #### Query Compilation
-- When a terminal method like `list()` or `execute()` is called, the generic `QueryCompiler` flattens the `QueryNode` chain and compiles the query using a specialised delegate compiler for the particular query type.
-- It first computes a hash of the query node chain and checks its cache for the corresponding previously-compiled SQL statement.
-- If no cache entry is found, the resulting compiled operation is then passed to the `DatabaseProvider` to be converted into dialect-specific SQL. The result of this step is cached for future invocations.
+
+- When a terminal method like `list()` or `execute()` is called, the generic `QueryCompiler` flattens the `QueryNode`
+  chain and compiles the query using a specialised delegate compiler for the particular query type.
+- It first computes a hash of the query node chain and checks its cache for the corresponding previously-compiled SQL
+  statement.
+- If no cache entry is found, the resulting compiled operation is then passed to the `DatabaseProvider` to be converted
+  into dialect-specific SQL. The result of this step is cached for future invocations.
 - The dialect-specific SQL string is passed to the `DatabaseProvider` for execution along with bind parameters.
 
 #### Terminal Recreator Pattern
-- Condition clauses use a "terminal recreator" pattern (`Function<QueryNode, T>`) to return to the correct fluent API step after a condition is added to the AST. 
+
+- Condition clauses use a "terminal recreator" pattern (`Function<QueryNode, T>`) to return to the correct fluent API
+  step after a condition is added to the AST.
 - This ensures that the fluent chain remains type-safe and consistent, even as the underlying AST is extended.
 
 #### Metamodels
-- Metamodels of entities/DTOs provide static query expressions with the same name as the entity/DTO's fields, enabling type-safe queries. They can be created via the Maven plugin or hand-crafted.
+
+- Metamodels of entities/DTOs provide static query expressions with the same name as the entity/DTO's fields, enabling
+  type-safe queries. They can be created via the Maven plugin or hand-crafted.
 
 #### DTO Mapping
+
 - The `DtoMapper` class handles the conversion of `Row` result sets to DTO instances.
-- **High Performance**: It uses a compiled mapping plan that resolves column indices once per result set, bypassing metadata lookups during row iteration.
-- **Identity Map**: A `DtoCache` ensures that each unique database record (identified by its primary key) is mapped to exactly one DTO instance per `toDtos` call.
-- **PK Representation**: Specialized `Pk` implementations (`SinglePk`, `CompositePk`) are used to minimize object allocations during primary key resolution.
-- **Relationship Handling**: It automatically resolves one-to-one, one-to-many (reverse collection injection), and many-to-many relationships.
-- **Record Support**: Java Records are reconstructed at most once per row, even when multiple dependencies are being injected.
+- **High Performance**: It uses a compiled mapping plan that resolves column indices once per result set, bypassing
+  metadata lookups during row iteration.
+- **Identity Map**: A `DtoCache` ensures that each unique database record (identified by its primary key) is mapped to
+  exactly one DTO instance per `toDtos` call.
+- **PK Representation**: Specialized `Pk` implementations (`SinglePk`, `CompositePk`) are used to minimize object
+  allocations during primary key resolution.
+- **Relationship Handling**: It automatically resolves one-to-one, one-to-many (reverse collection injection), and
+  many-to-many relationships.
+- **Record Support**: Java Records are reconstructed at most once per row, even when multiple dependencies are being
+  injected.
 
 ### 4. Database Support
 
@@ -102,11 +149,13 @@ Litebridge is modular and uses JPMS (`module-info.java`).
 - New database support should be added as a new module in the `litebridge-db` directory.
 - The `AbstractDatabaseProvider` class in module `litebridge-db-spi-impl provides a starting point for implementing the
   SPI, but is not strictly required. It can also be modified to accommodate specific database requirements if needed.
+- Certain database providers limit or extend the capabilities of Litebridge API by specifying a custom/specific
+  Litebridge instance, such as SQLite and Oracle.
 
 ### 5. Testing
 
-- **E2E Tests**: Found in `litebridge-orm/src/test/java/.../e2e/`. Use these for verifying full feature integration. 
-They are bound to Maven's `integration-test` phase and thus executed using `mvn verify` by default.
+- **E2E Tests**: Found in the `litebridge-e2e-tests` Maven module. Use these for verifying full feature integration.
+  They are bound to Maven's `integration-test` phase and thus executed using `mvn verify` by default.
 - **Database Environments**: Use the `MultiDbTestExtension` to run tests against multiple database providers (H2,
   Oracle, etc.). These can be set via command line/Maven by using the `lb.e2e.env` property. Valid values are:
     - `all` - Run against all supported databases (this is the default no `lb.e2e.env` property is provided)
@@ -123,17 +172,26 @@ They are bound to Maven's `integration-test` phase and thus executed using `mvn 
 
 ## Key Classes and APIs
 
-- `org.litebridge.orm.Litebridge`: The main entry point for `save`, `select`, `update`, `delete`.
+- `org.litebridge.orm.Litebridge`: The general main entry point for `save`, `select`, `update`, `delete` and `merge`;
+  extends `LitebridgeCore`.
+- `org.litebridge.orm.LitebridgeCore`: Limited base API entry point for databases that do not support `merge`, such as
+  SQLite.
+- `org.litebridge.orm.LitebridgeBuilder`: Builder for Litebridge instances.
 - `org.litebridge.db.spi.DatabaseProvider`: The SPI that must be implemented for each supported database.
-- `org.litebridge.orm.persistence.TransactionalDatabaseProvider`: A wrapper around `DatabaseProvider` that handles transactions and provides access to the `TransactionManager`.
-- `org.litebridge.orm.engine.LitebridgeContext`: A shared context object containing configuration, table registry, and engine instances.
-- `org.litebridge.orm.engine.compiler.QueryCompiler`: The centralized compiler that translates the fluent API's AST into executable specifications.
+- `org.litebridge.orm.persistence.TransactionalDatabaseProvider`: A wrapper around `DatabaseProvider` that handles
+  transactions and provides access to the `TransactionManager`.
+- `org.litebridge.orm.engine.LitebridgeContext`: A shared context object containing configuration, table registry, and
+  engine instances.
+- `org.litebridge.orm.engine.compiler.QueryCompiler`: The centralized compiler that translates the fluent API's AST into
+  executable specifications.
 - `org.litebridge.orm.persistence.DtoMapper`: The high-performance engine for mapping database rows to DTO instances.
 
 ## Common Agent Tasks
 
-- **Write Documentation**: Follow the same style as existing documentation. Use a formal tone; avoid using words like "you". Documentation is found in the `docs`
+- **Write Documentation**: Follow the same style as existing documentation. Use a formal tone; avoid using words like
+  "you". Documentation is found in the `docs`
   directory. Ensure that all relevant pages are updated when adding/extending a specific topic.
 - **Adding a DB Provider**: Implement the `DatabaseProvider` SPI in a new module and ensure it passes the SPI TCK/common
   tests. Update relevant documentation to reflect the new provider. Add unit tests and E2E tests for the new provider.
-- **Creating tests**: Implement unit tests for new features or bug fixes. Follow the style detailed under section 5, "Testing".
+- **Creating tests**: Implement unit tests for new features or bug fixes. Follow the style detailed under section 5,
+  "Testing".
