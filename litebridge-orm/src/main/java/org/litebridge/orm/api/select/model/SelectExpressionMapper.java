@@ -3,7 +3,6 @@ package org.litebridge.orm.api.select.model;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
@@ -11,7 +10,6 @@ import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ConvertExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
-import org.litebridge.db.spi.query.Select;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.DelegateExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -63,10 +61,6 @@ public final class SelectExpressionMapper {
         this.typeConverter = typeConverter;
     }
 
-    SqlFunctionRegistry sqlFunctionRegistry() {
-        return sqlFunctionRegistry;
-    }
-
     /**
      * Resolves a proto-expression into one or more concrete expression specifications.
      *
@@ -78,10 +72,6 @@ public final class SelectExpressionMapper {
      */
     public List<ExpressionSpec> resolveProtoExpression(final ExpressionSpec expressionSpec, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
         return protoExpressionResolver.resolveExpression(expressionSpec, ormTable, table, clause).toList();
-    }
-
-    List<ExpressionSpec> resolveProtoExpressions(final List<ExpressionSpec> expressionSpecs, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
-        return protoExpressionResolver.resolveExpressions(expressionSpecs, ormTable, table, clause);
     }
 
     /**
@@ -151,9 +141,5 @@ public final class SelectExpressionMapper {
             return sqlFunctionRegistry.select().column().create(column);
         }
 
-    }
-
-    private ColumnExpression toSelectReference(final ColumnExpressionSpec selectColumnSpec) {
-        return sqlFunctionRegistry.select().reference().create(selectColumnSpec.getColumn());
     }
 }
