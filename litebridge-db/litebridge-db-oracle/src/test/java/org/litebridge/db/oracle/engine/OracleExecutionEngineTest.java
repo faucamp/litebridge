@@ -21,8 +21,10 @@ import java.sql.Types;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -165,5 +167,83 @@ class OracleExecutionEngineTest {
     @Test
     void getLogger() {
         assertNotNull(executionEngine.getLogger());
+    }
+
+    @Test
+    void extractGeneratedKeysBatch_withGeneratedKeys() throws SQLException {
+        // Given
+        final PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        final ResultSet resultSet = mock(ResultSet.class);
+        final Table table = new Table("TEST_TABLE", null);
+        final ColumnMetaData idColumn = new ColumnMetaData(table, "ID", false, Types.INTEGER);
+        final ColumnMetaData otherIdColumn = new ColumnMetaData(table, "OTHER_ID", false, Types.INTEGER);
+
+        when(preparedStatement.getGeneratedKeys()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(true, true, false);
+        when(resultSet.getObject(1)).thenReturn(10, 20);
+        when(resultSet.getObject(2)).thenReturn(100, 200);
+
+        // When
+        final List<Map<ColumnMetaData, Object>> result = executionEngine.extractGeneratedKeysBatch(
+                List.of(idColumn, otherIdColumn), 2, preparedStatement);
+
+        // Then
+        assertEquals(2, result.size());
+        assertSame(result.get(0), result.get(1));
+        assertEquals(20, result.get(0).get(idColumn));
+        assertEquals(200, result.get(0).get(otherIdColumn));
+        verify(resultSet).close();
+    }
+
+    @Test
+    void extractGeneratedKeysBatch_withoutGeneratedKeys() throws SQLException {
+        // Given
+        final PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        final ResultSet resultSet = mock(ResultSet.class);
+        final Table table = new Table("TEST_TABLE", null);
+        final ColumnMetaData idColumn = new ColumnMetaData(table, "ID", false, Types.INTEGER);
+
+        when(preparedStatement.getGeneratedKeys()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(false);
+
+        // When
+        final List<Map<ColumnMetaData, Object>> result = executionEngine.extractGeneratedKeysBatch(
+                List.of(idColumn), 1, preparedStatement);
+
+        // Then
+        assertTrue(result.isEmpty());
+        verify(resultSet).close();
+    }
+
+    @Test
+    void getParameterPermutation_returnsRegisteredOrNull() {
+        // Given
+        final String sql = "MERGE INTO TEST_TABLE ...";
+        final int[] permutation = new int[]{1, 0};
+
+        // When / Then
+        assertNull(OracleExecutionEngine.getParameterPermutation(sql));
+
+        OracleExecutionEngine.registerParameterPermutation(sql, permutation);
+        assertArrayEquals(permutation, OracleExecutionEngine.getParameterPermutation(sql));
+    }
+
+    @Test
+    void reorderPreparedSqlIfNecessary_withMismatchedLength_returnsOriginal() {
+        // Given
+        final String sql = "MERGE INTO TEST_TABLE ...";
+        final int[] permutation = new int[]{1, 0}; // length 2
+        OracleExecutionEngine.registerParameterPermutation(sql, permutation);
+
+        final BindValue bv0 = new BindValue(5, Types.INTEGER);
+        final BindValue bv1 = new BindValue(500, Types.INTEGER);
+        final BindValue bv2 = new BindValue(123, Types.INTEGER);
+        final PreparedSql preparedSql = new PreparedSql(sql, List.of(bv0, bv1, bv2)); // length 3
+
+        // When
+        final PreparedSql result = executionEngine.reorderBindValuesIfNecessary(preparedSql);
+
+        // Then
+        assertSame(preparedSql, result);
     }
 }

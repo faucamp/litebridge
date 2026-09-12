@@ -780,4 +780,139 @@ class OracleColumnIdentifierGeneratorTest {
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN", result);
     }
+
+    @Test
+    void shouldApplyTableQualifier_withNullJoins_returnsTrue() {
+        // Given
+        final Table table = new Table("TEST_TABLE", null);
+        final Column column = new Column(table, "TEST_COLUMN");
+        final Select select = new Select(
+                table,
+                List.of(new SelectColumn(column, generator)),
+                null,
+                null,
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null);
+
+        // When
+        final String result = generator.createSelectColumn(column, select, ClauseType.SELECT, false);
+
+        // Then
+        assertEquals("TEST_TABLE.TEST_COLUMN", result);
+    }
+
+    @Test
+    void shouldApplyTableQualifier_withMultipleConditionsInJoinAndNoSubgroups_skipsJoin() {
+        // Given
+        final Table table = new Table("TEST_TABLE", null);
+        final Column column = new Column(table, "TEST_COLUMN");
+        final LogicCondition cond1 = new LogicCondition(new SelectColumn(column, generator), Operator.EQ, "V1");
+        final LogicCondition cond2 = new LogicCondition(new SelectColumn(column, generator), Operator.EQ, "V2");
+        final Join join = new Join(new Table("OTHER", null), new ConditionGroup(List.of(cond1, cond2)));
+        final Select select = new Select(
+                table,
+                List.of(new SelectColumn(column, generator)),
+                List.of(join),
+                null,
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null);
+
+        // When
+        final String result = generator.createSelectColumn(column, select, ClauseType.SELECT, false);
+
+        // Then
+        assertEquals("TEST_TABLE.TEST_COLUMN", result);
+    }
+
+    @Test
+    void createSelectColumn_whenShouldNotApplyTableQualifier_andClauseNotSelect_omitsAlias() {
+        // Given
+        final Table table = new Table("TEST_TABLE", null);
+        final Column column = new Column(table, "TEST_COLUMN", "MY_ALIAS");
+        final LogicCondition cond = new LogicCondition(new SelectColumn(column, generator), Operator.USING, null);
+        final Join join = new Join(new Table("OTHER", null), new ConditionGroup(List.of(cond)));
+        final Select select = new Select(
+                table,
+                List.of(new SelectColumn(column, generator)),
+                List.of(join),
+                null,
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null);
+
+        // When
+        final String result = generator.createSelectColumn(column, select, ClauseType.WHERE, false);
+
+        // Then
+        assertEquals("TEST_COLUMN", result);
+    }
+
+    @Test
+    void createSelectColumn_whenShouldNotApplyTableQualifier_andBlankAlias_omitsAlias() {
+        // Given
+        final Table table = new Table("TEST_TABLE", null);
+        final Column column = new Column(table, "TEST_COLUMN", "   ");
+        final LogicCondition cond = new LogicCondition(new SelectColumn(column, generator), Operator.USING, null);
+        final Join join = new Join(new Table("OTHER", null), new ConditionGroup(List.of(cond)));
+        final Select select = new Select(
+                table,
+                List.of(new SelectColumn(column, generator)),
+                List.of(join),
+                null,
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null);
+
+        // When
+        final String result = generator.createSelectColumn(column, select, ClauseType.SELECT, false);
+
+        // Then
+        assertEquals("TEST_COLUMN", result);
+    }
+
+    @Test
+    void createColumnRef_withGroupByAndHaving_returnsQualifiedColumn() {
+        // Given
+        final Table table = new Table("TEST_TABLE", null);
+        final Column column = new Column(table, "TEST_COLUMN");
+        final Select select = mock(Select.class);
+
+        // When
+        final String groupByResult = generator.createColumnRef(column, select, ClauseType.GROUP_BY);
+        final String havingResult = generator.createColumnRef(column, select, ClauseType.HAVING);
+
+        // Then
+        assertEquals("TEST_TABLE.TEST_COLUMN", groupByResult);
+        assertEquals("TEST_TABLE.TEST_COLUMN", havingResult);
+    }
+
+    @Test
+    void createColumnRef_withOrderByWhenShouldNotApplyTableQualifier_returnsUnqualifiedColumn() {
+        // Given
+        final Table table = new Table("TEST_TABLE", null);
+        final Column column = new Column(table, "TEST_COLUMN");
+        final LogicCondition cond = new LogicCondition(new SelectColumn(column, generator), Operator.USING, null);
+        final Join join = new Join(new Table("OTHER", null), new ConditionGroup(List.of(cond)));
+        final Select select = new Select(
+                table,
+                List.of(new SelectColumn(column, generator)),
+                List.of(join),
+                null,
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null);
+
+        // When
+        final String result = generator.createColumnRef(column, select, ClauseType.ORDER_BY);
+
+        // Then
+        assertEquals("TEST_COLUMN", result);
+    }
 }
