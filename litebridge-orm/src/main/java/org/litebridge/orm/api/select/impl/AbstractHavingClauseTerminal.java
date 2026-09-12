@@ -9,6 +9,13 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.QueryNode;
 
+/**
+ * Abstract base class for HAVING clause terminals.
+ *
+ * @param <DTO>  the mapped DTO/entity type or row type
+ * @param <OBC>  the order by clause type
+ * @param <OBCC> the order by clause chain type
+ */
 public sealed abstract class AbstractHavingClauseTerminal<DTO,
         OBC extends OrderByClause<DTO, OBC, OBCC>,
         OBCC extends OrderByClauseChain<DTO, OBC, OBCC>>
@@ -18,6 +25,13 @@ public sealed abstract class AbstractHavingClauseTerminal<DTO,
 
         permits DtoHavingConditionClauseTerminal, SqlHavingConditionClauseTerminal {
 
+    /**
+     * Creates a new {@code AbstractHavingClauseTerminal} instance.
+     *
+     * @param node                 the query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     public AbstractHavingClauseTerminal(final QueryNode node, final SelectEngineTerminal selectEngineTerminal, final LitebridgeContext litebridgeContext) {
         super(node, selectEngineTerminal, litebridgeContext);
     }

@@ -8,6 +8,9 @@ import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * SQL-mode step for specifying SET assignments or WHERE conditions in an {@code UPDATE} statement.
+ */
 public final class SqlUpdateStep extends UpdateStepBase
         implements UpdateStep<Row,
         SqlUpdateWhereConditionClause,
@@ -16,6 +19,13 @@ public final class SqlUpdateStep extends UpdateStepBase
     private final String tableName;
     private QueryNode node;
 
+    /**
+     * Creates a new {@code SqlUpdateStep} instance.
+     *
+     * @param tableName         the table name to update
+     * @param node              the current query node
+     * @param litebridgeContext the Litebridge context
+     */
     public SqlUpdateStep(final String tableName,
                          final QueryNode node,
                          final LitebridgeContext litebridgeContext) {

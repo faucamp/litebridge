@@ -49,6 +49,11 @@ public sealed interface StatementBuilder permits AbstractStatementBuilder, NoOpS
      */
     PreparedOperation build();
 
+    /**
+     * Returns the expected {@link Result} type produced when executing the built statement.
+     *
+     * @return the expected result class
+     */
     default Class<? extends Result> resultType() {
         return UpdateResult.class;
     }

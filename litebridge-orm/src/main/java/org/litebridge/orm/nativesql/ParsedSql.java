@@ -27,6 +27,12 @@ public record ParsedSql(String sql, int bindValueCount, List<String> bindValueNa
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ParsedSql.class);
 
+    /**
+     * Prepares the SQL statement with a list of positional bind values.
+     *
+     * @param rawBindValues the list of raw bind values matching positional parameters
+     * @return the prepared SQL instance
+     */
     public PreparedSql prepareSql(final List<@Nullable Object> rawBindValues) {
         validateBindValueCount(rawBindValues.size());
 
@@ -37,6 +43,12 @@ public record ParsedSql(String sql, int bindValueCount, List<String> bindValueNa
         return createPreparedSql(bindValues);
     }
 
+    /**
+     * Prepares the SQL statement with an array of positional bind values.
+     *
+     * @param rawBindValues the array of raw bind values matching positional parameters
+     * @return the prepared SQL instance
+     */
     public PreparedSql prepareSql(final @Nullable Object[] rawBindValues) {
         validateBindValueCount(rawBindValues.length);
         final List<BindValue> bindValues = new ArrayList<>(rawBindValues.length);
@@ -48,6 +60,12 @@ public record ParsedSql(String sql, int bindValueCount, List<String> bindValueNa
         return createPreparedSql(bindValues);
     }
 
+    /**
+     * Prepares the SQL statement with a map of named bind parameters.
+     *
+     * @param bindParameters the map of named parameter values
+     * @return the prepared SQL instance
+     */
     public PreparedSql prepareSql(final Map<String, @Nullable Object> bindParameters) {
         validateBindValueCount(bindParameters.size());
 

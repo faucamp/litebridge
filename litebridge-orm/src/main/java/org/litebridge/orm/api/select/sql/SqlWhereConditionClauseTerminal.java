@@ -15,6 +15,9 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * SQL-mode where condition clause terminal.
+ */
 public final class SqlWhereConditionClauseTerminal
         extends AbstractWhereClauseTerminal<Row,
         SqlGroupByClauseTerminal,
@@ -34,6 +37,14 @@ public final class SqlWhereConditionClauseTerminal
 
     private final String table;
 
+    /**
+     * Constructs a new {@code SqlWhereConditionClauseTerminal}.
+     *
+     * @param table                the table name
+     * @param node                 the current query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     public SqlWhereConditionClauseTerminal(final String table,
                                            final QueryNode node,
                                            final SelectEngineTerminal selectEngineTerminal,

@@ -35,6 +35,9 @@ import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.List;
 
+/**
+ * Maps high-level {@link ExpressionSpec} query expressions to dialect-specific {@link SelectExpression} instances.
+ */
 public final class SelectExpressionMapper {
 
     private final SqlFunctionRegistry sqlFunctionRegistry;
@@ -42,6 +45,14 @@ public final class SelectExpressionMapper {
     private final TableMetaDataCache tableMetaDataCache;
     private final TypeConverter typeConverter;
 
+    /**
+     * Creates a new {@code SelectExpressionMapper} instance.
+     *
+     * @param sqlFunctionRegistry     the SQL function registry
+     * @param protoExpressionResolver the proto expression resolver
+     * @param tableMetaDataCache      the table metadata cache
+     * @param typeConverter           the type converter
+     */
     public SelectExpressionMapper(final SqlFunctionRegistry sqlFunctionRegistry,
                                   final ProtoExpressionResolver protoExpressionResolver,
                                   final TableMetaDataCache tableMetaDataCache,
@@ -56,6 +67,15 @@ public final class SelectExpressionMapper {
         return sqlFunctionRegistry;
     }
 
+    /**
+     * Resolves a proto-expression into one or more concrete expression specifications.
+     *
+     * @param expressionSpec the expression specification to resolve
+     * @param ormTable       the ORM table metadata, or {@code null}
+     * @param table          the SQL table
+     * @param clause         the clause type where the expression is used
+     * @return the list of resolved expression specifications
+     */
     public List<ExpressionSpec> resolveProtoExpression(final ExpressionSpec expressionSpec, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
         return protoExpressionResolver.resolveExpression(expressionSpec, ormTable, table, clause).toList();
     }
@@ -64,6 +84,13 @@ public final class SelectExpressionMapper {
         return protoExpressionResolver.resolveExpressions(expressionSpecs, ormTable, table, clause);
     }
 
+    /**
+     * Converts an {@link ExpressionSpec} into a dialect-specific {@link SelectExpression}.
+     *
+     * @param expressionSpec      the expression specification to convert
+     * @param useSelectReferences whether to use column references rather than direct column names
+     * @return the converted {@link SelectExpression}
+     */
     public SelectExpression toSelectExpression(final ExpressionSpec expressionSpec, final boolean useSelectReferences) {
         return switch (expressionSpec) {
             // Select targets

@@ -11,6 +11,15 @@ import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * Abstract base class for GROUP BY clause terminals.
+ *
+ * @param <DTO>  the mapped DTO/entity type or row type
+ * @param <HCC>  the having condition clause type
+ * @param <HCCT> the having condition clause terminal type
+ * @param <OBC>  the order by clause type
+ * @param <OBCC> the order by clause chain type
+ */
 public abstract class AbstractGroupByClauseTerminal<DTO,
         HCC extends HavingConditionClause<DTO, HCC, HCCT, OBC, OBCC>,
         HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
@@ -20,9 +29,24 @@ public abstract class AbstractGroupByClauseTerminal<DTO,
         extends OrderByClauseTerminalImpl<DTO>
         implements GroupByClauseTerminal<DTO, HCC, HCCT, OBC, OBCC> {
 
+    /**
+     * Group-by column names, or {@code null} if expressions are used.
+     */
     protected final String @Nullable [] columns;
+
+    /**
+     * Group-by expressions, or {@code null} if column names are used.
+     */
     protected final ExpressionSpec @Nullable [] expressions;
 
+    /**
+     * Creates a new instance using column names.
+     *
+     * @param columns              the column names
+     * @param node                 the query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     protected AbstractGroupByClauseTerminal(final String @Nullable [] columns,
                                             final QueryNode node,
                                             final SelectEngineTerminal selectEngineTerminal,
@@ -30,6 +54,14 @@ public abstract class AbstractGroupByClauseTerminal<DTO,
         this(columns, null, node, selectEngineTerminal, litebridgeContext);
     }
 
+    /**
+     * Creates a new instance using expressions.
+     *
+     * @param expressions          the expressions
+     * @param node                 the query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     protected AbstractGroupByClauseTerminal(final ExpressionSpec @Nullable [] expressions,
                                             final QueryNode node,
                                             final SelectEngineTerminal selectEngineTerminal,

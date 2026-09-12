@@ -25,6 +25,11 @@ public record SelectNode(@Nullable String table,
                          ExpressionSpec @Nullable [] expressions,
                          @Nullable Class<?> @Nullable [] resultTypes) implements QueryNode {
 
+    /**
+     * Checks whether this node represents selecting all columns/fields.
+     *
+     * @return {@code true} if all columns/fields are selected; {@code false} otherwise
+     */
     public boolean isSelectAll() {
         return columns == null && expressions == null;
     }

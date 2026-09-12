@@ -14,6 +14,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
+/**
+ * Implementation of {@link SqlDeleteWhereConditionClauseTerminal} for SQL delete operations.
+ */
 public final class SqlDeleteWhereConditionClauseTerminalImpl
 
         implements
@@ -24,6 +27,13 @@ public final class SqlDeleteWhereConditionClauseTerminalImpl
     private final LitebridgeContext litebridgeContext;
     private QueryNode node;
 
+    /**
+     * Creates a new {@code SqlDeleteWhereConditionClauseTerminalImpl} instance.
+     *
+     * @param tableName         the table name
+     * @param node              the current query node
+     * @param litebridgeContext the Litebridge context
+     */
     public SqlDeleteWhereConditionClauseTerminalImpl(final String tableName,
                                                      final QueryNode node,
                                                      final LitebridgeContext litebridgeContext) {

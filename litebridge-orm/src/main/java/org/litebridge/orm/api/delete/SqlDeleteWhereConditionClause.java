@@ -10,6 +10,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
+/**
+ * SQL-mode WHERE condition clause for delete operations.
+ */
 public final class SqlDeleteWhereConditionClause
 
         extends ConditionClauseImpl<Row,
@@ -20,6 +23,15 @@ public final class SqlDeleteWhereConditionClause
         SqlDeleteWhereConditionClause,
         SqlDeleteWhereConditionClauseTerminal> {
 
+    /**
+     * Creates a new {@code SqlDeleteWhereConditionClause} instance.
+     *
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logical operator (AND/OR)
+     * @param lhsColumn         the left-hand side column name
+     * @param lhsExpression     the left-hand side expression
+     * @param terminalRecreator the function to create the terminal clause
+     */
     public SqlDeleteWhereConditionClause(final LitebridgeContext litebridgeContext,
                                          final LogicOperator logicOperator,
                                          final @Nullable String lhsColumn,

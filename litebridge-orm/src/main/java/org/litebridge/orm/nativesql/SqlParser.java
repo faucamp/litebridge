@@ -26,6 +26,13 @@ public final class SqlParser {
     private SqlParser() {
     }
 
+    /**
+     * Parses a SQL string with named parameters (e.g. {@code :id}) into a {@link ParsedSql} object
+     * with positional placeholders and extracted parameter names.
+     *
+     * @param sql the raw SQL string containing named parameters
+     * @return a {@link ParsedSql} instance containing the transformed SQL and parameter metadata
+     */
     public static ParsedSql parseSql(final String sql) {
         final StringBuilder outputSql = new StringBuilder();
         final List<String> bindValueNames = new ArrayList<>();

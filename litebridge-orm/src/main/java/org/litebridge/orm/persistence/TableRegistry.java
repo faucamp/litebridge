@@ -111,6 +111,13 @@ public final class TableRegistry {
         return getOrmTable(catalogSchemaTable[1], catalogSchemaTable[2]);
     }
 
+    /**
+     * Retrieves the {@link OrmTable} associated with the specified table name, throwing an exception if not found.
+     *
+     * @param table the table name, optionally schema-qualified
+     * @return the associated {@link OrmTable}
+     * @throws NullPointerException if the table is not found
+     */
     public OrmTable getOrmTableOrThrow(final String table) {
         return Objects.requireNonNull(getOrmTable(table), "ORM table not found for: " + table);
     }
@@ -152,6 +159,13 @@ public final class TableRegistry {
         return null;
     }
 
+    /**
+     * Retrieves the {@link OrmTable} associated with the specified SPI table, throwing an exception if not found.
+     *
+     * @param table the SPI table
+     * @return the associated {@link OrmTable}
+     * @throws NullPointerException if the table is not found
+     */
     public OrmTable getOrmTableOrThrow(final Table table) {
         return Objects.requireNonNull(getOrmTable(table), "ORM table not found for: " + table);
     }

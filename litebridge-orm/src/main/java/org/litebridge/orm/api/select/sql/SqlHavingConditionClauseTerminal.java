@@ -15,6 +15,9 @@ import org.litebridge.orm.engine.ast.HavingNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * Terminal clause for SQL HAVING conditions.
+ */
 public final class SqlHavingConditionClauseTerminal
         extends AbstractHavingClauseTerminal<Row,
         SqlOrderByClause,
@@ -28,6 +31,14 @@ public final class SqlHavingConditionClauseTerminal
 
     private final String table;
 
+    /**
+     * Creates a new {@code SqlHavingConditionClauseTerminal} instance.
+     *
+     * @param table                the table name
+     * @param node                 the current query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     public SqlHavingConditionClauseTerminal(final String table,
                                             final QueryNode node,
                                             final SelectEngineTerminal selectEngineTerminal,

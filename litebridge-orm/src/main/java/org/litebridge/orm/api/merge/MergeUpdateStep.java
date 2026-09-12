@@ -8,7 +8,14 @@ import org.litebridge.orm.engine.ast.QueryNode;
  */
 public abstract sealed class MergeUpdateStep permits DtoMergeUpdateStep, SqlMergeUpdateStep {
 
+    /**
+     * The current query node in the AST chain.
+     */
     protected final QueryNode node;
+
+    /**
+     * The Litebridge context.
+     */
     protected final LitebridgeContext litebridgeContext;
 
     /**

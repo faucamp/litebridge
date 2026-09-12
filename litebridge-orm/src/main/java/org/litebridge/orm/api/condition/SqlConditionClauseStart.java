@@ -7,10 +7,20 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * Start of a SQL-based condition clause.
+ */
 public class SqlConditionClauseStart extends AbstractConditionClauseStart<Row> {
 
     private final String table;
 
+    /**
+     * Creates a new SQL condition clause start.
+     *
+     * @param table             the target table name
+     * @param node              the current query node
+     * @param litebridgeContext the Litebridge context
+     */
     public SqlConditionClauseStart(final String table,
                                    final @Nullable QueryNode node,
                                    final LitebridgeContext litebridgeContext) {

@@ -1,4 +1,4 @@
 /**
- * Fluent API for constructing INSERT statements.
+ * Fluent API for constructing {@code INSERT} statements.
  */
 package org.litebridge.orm.api.insert;

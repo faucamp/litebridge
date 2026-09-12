@@ -21,10 +21,24 @@ public record SetNode(@Nullable QueryNode previous,
                       @Nullable Object value,
                       @Nullable MathOperator mathOperator) implements QueryNode {
 
+    /**
+     * Creates a new {@code SetNode} instance targeting a column by name.
+     *
+     * @param previous the previous node in the query node chain
+     * @param column   the column name to set
+     * @param value    the value to set
+     */
     public SetNode(@Nullable QueryNode previous, String column, @Nullable Object value) {
         this(previous, column, null, value, null);
     }
 
+    /**
+     * Creates a new {@code SetNode} instance targeting a column by expression specification.
+     *
+     * @param previous       the previous node in the query node chain
+     * @param expressionSpec the expression specification
+     * @param value          the value to set
+     */
     public SetNode(@Nullable QueryNode previous, ExpressionSpec expressionSpec, @Nullable Object value) {
         this(previous, null, expressionSpec, value, null);
     }

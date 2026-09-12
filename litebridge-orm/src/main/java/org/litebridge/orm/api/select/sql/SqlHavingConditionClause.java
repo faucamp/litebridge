@@ -11,6 +11,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
+/**
+ * Represents a HAVING condition clause for SQL queries.
+ */
 public final class SqlHavingConditionClause
         extends ConditionClauseImpl<Row,
         SqlHavingConditionClause,
@@ -22,6 +25,16 @@ public final class SqlHavingConditionClause
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
+    /**
+     * Creates a new {@code SqlHavingConditionClause} instance.
+     *
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logical operator (AND/OR)
+     * @param lhsColumn         the left-hand side column name
+     * @param lhsExpression     the left-hand side expression
+     * @param node              the previous query node in the chain
+     * @param terminalRecreator the function to create the terminal clause
+     */
     public SqlHavingConditionClause(final LitebridgeContext litebridgeContext,
                                     final LogicOperator logicOperator,
                                     final @Nullable String lhsColumn,

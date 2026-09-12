@@ -14,8 +14,19 @@ import org.litebridge.orm.tx.Transaction;
  */
 public sealed class TransactionContextTerminal permits TransactionContext {
 
+    /**
+     * The transaction manager used to control transaction lifecycle.
+     */
     protected final TransactionManager transactionManager;
+
+    /**
+     * Whether the transaction is marked as read-only.
+     */
     protected boolean readOnly = false;
+
+    /**
+     * The isolation level for the transaction.
+     */
     protected Isolation isolation = Isolation.DEFAULT;
 
     TransactionContextTerminal(TransactionManager transactionManager) {

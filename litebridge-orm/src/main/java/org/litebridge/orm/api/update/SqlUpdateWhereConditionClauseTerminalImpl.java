@@ -14,12 +14,22 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
+/**
+ * Implementation of {@link SqlUpdateWhereConditionClauseTerminal} for SQL update operations.
+ */
 public final class SqlUpdateWhereConditionClauseTerminalImpl implements SqlUpdateWhereConditionClauseTerminal {
 
     private final String tableName;
     private final LitebridgeContext litebridgeContext;
     private QueryNode node;
 
+    /**
+     * Creates a new {@code SqlUpdateWhereConditionClauseTerminalImpl} instance.
+     *
+     * @param tableName         the table name
+     * @param node              the current query node
+     * @param litebridgeContext the Litebridge context
+     */
     public SqlUpdateWhereConditionClauseTerminalImpl(final String tableName,
                                                      final QueryNode node,
                                                      final LitebridgeContext litebridgeContext) {

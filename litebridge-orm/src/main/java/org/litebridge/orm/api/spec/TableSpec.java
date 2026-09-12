@@ -23,6 +23,14 @@ public final class TableSpec extends Table {
      */
     private final Map<FieldMapping, ColumnMapping> fieldColumnMap;
 
+    /**
+     * Creates a new {@code TableSpec} instance with explicit catalog, schema, and table names.
+     *
+     * @param catalog        the database catalog, or {@code null}
+     * @param schema         the database schema, or {@code null}
+     * @param table          the table name
+     * @param fieldColumnMap the mapping between DTO fields and database columns
+     */
     public TableSpec(@Nullable final String catalog,
                      @Nullable final String schema,
                      final String table,
@@ -33,6 +41,12 @@ public final class TableSpec extends Table {
         this.fieldColumnMap = Collections.unmodifiableMap(CollectionUtils.requireNonEmpty(fieldColumnMap, "Field-column map cannot be null or empty"));
     }
 
+    /**
+     * Creates a new {@code TableSpec} instance by parsing a qualified or unqualified table name.
+     *
+     * @param name           the table name, optionally qualified with catalog and/or schema (e.g. {@code "schema.table"})
+     * @param fieldColumnMap the mapping between DTO fields and database columns
+     */
     public TableSpec(final String name, final Map<FieldMapping, ColumnMapping> fieldColumnMap) {
         this(StringUtils.splitArray(name, '.', 3, true), fieldColumnMap);
     }

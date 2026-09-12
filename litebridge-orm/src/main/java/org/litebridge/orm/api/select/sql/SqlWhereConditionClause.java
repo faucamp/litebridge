@@ -11,6 +11,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
+/**
+ * SQL-mode where condition clause.
+ */
 public final class SqlWhereConditionClause
         extends ConditionClauseImpl<Row,
         SqlWhereConditionClause,
@@ -25,6 +28,16 @@ public final class SqlWhereConditionClause
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
+    /**
+     * Creates a new {@code SqlWhereConditionClause} instance.
+     *
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logical operator (AND/OR)
+     * @param lhsField          the left-hand side column or field name
+     * @param lhsExpression     the left-hand side expression
+     * @param node              the previous query node in the chain
+     * @param terminalRecreator the function to create the terminal clause
+     */
     public SqlWhereConditionClause(final LitebridgeContext litebridgeContext,
                                    final LogicOperator logicOperator,
                                    final @Nullable String lhsField,

@@ -12,6 +12,9 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
 
+/**
+ * Resolves proto-expressions into SQL-based select expressions.
+ */
 public final class SqlProtoExpressionResolver extends ProtoExpressionResolver {
 
     @Override

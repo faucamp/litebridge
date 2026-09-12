@@ -51,6 +51,14 @@ public final class TableMapper {
     private final ClassFieldAccessorCache classFieldAccessorCache;
     private final TableMetaDataCache tableMetaDataCache;
 
+    /**
+     * Creates a new {@code TableMapper} instance.
+     *
+     * @param databaseProvider   the transactional database provider
+     * @param tableRegistry      the table registry
+     * @param changeTracker      the change tracker
+     * @param tableMetaDataCache the table metadata cache
+     */
     public TableMapper(final TransactionalDatabaseProvider databaseProvider,
                        final TableRegistry tableRegistry,
                        final ChangeTracker changeTracker,

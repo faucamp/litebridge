@@ -14,6 +14,12 @@ import org.litebridge.orm.expression.ProtoNestableTOExpr;
  */
 public final class StringQueryField extends QueryField {
 
+    /**
+     * Creates a new {@code StringQueryField} instance for the specified DTO class and field name.
+     *
+     * @param dtoClass  the DTO class
+     * @param fieldName the field name
+     */
     public StringQueryField(final Class<?> dtoClass, final String fieldName) {
         super(dtoClass, fieldName);
     }

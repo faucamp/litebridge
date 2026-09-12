@@ -14,6 +14,11 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+/**
+ * Abstract terminal implementation delegating select execution methods to {@link SelectEngineTerminal}.
+ *
+ * @param <DTO> the mapped DTO/entity type or row type
+ */
 public abstract class DelegatingSelectTerminal<DTO> implements SelectTerminal<DTO> {
 
     protected final SelectEngineTerminal selectEngineTerminal;
@@ -21,6 +26,13 @@ public abstract class DelegatingSelectTerminal<DTO> implements SelectTerminal<DT
     protected QueryNode node;
     protected @Nullable Supplier<QueryNode> pendingNode;
 
+    /**
+     * Creates a new {@code DelegatingSelectTerminal} instance.
+     *
+     * @param node                 the query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     protected DelegatingSelectTerminal(final QueryNode node,
                                        final SelectEngineTerminal selectEngineTerminal,
                                        final LitebridgeContext litebridgeContext) {

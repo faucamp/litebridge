@@ -10,6 +10,9 @@ import org.litebridge.orm.api.update.UpdateStepBase;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * SQL-mode entry step for constructing a {@code DELETE} statement.
+ */
 public final class SqlDeleteStart extends UpdateStepBase
 
         implements DeleteStart<Row,
@@ -20,6 +23,12 @@ public final class SqlDeleteStart extends UpdateStepBase
     private final String tableName;
     private final DeleteNode deleteNode;
 
+    /**
+     * Creates a new {@code SqlDeleteStart} instance.
+     *
+     * @param table             the table to delete from
+     * @param litebridgeContext the Litebridge context
+     */
     public SqlDeleteStart(final String table,
                           final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);

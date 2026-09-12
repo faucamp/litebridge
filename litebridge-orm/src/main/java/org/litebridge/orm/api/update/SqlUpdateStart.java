@@ -5,6 +5,9 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.UpdateNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * SQL-mode entry step for constructing an {@code UPDATE} statement.
+ */
 public final class SqlUpdateStart extends UpdateStepBase
 
         implements UpdateStart<Row,
@@ -15,6 +18,12 @@ public final class SqlUpdateStart extends UpdateStepBase
     private final UpdateNode updateNode;
     private final String tableName;
 
+    /**
+     * Creates a new {@code SqlUpdateStart} instance.
+     *
+     * @param table             the table to update
+     * @param litebridgeContext the Litebridge context
+     */
     public SqlUpdateStart(final String table,
                           final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);

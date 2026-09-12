@@ -7,11 +7,19 @@ import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverride;
 
+/**
+ * Implementation of {@link SelectApi} providing entry points for SELECT queries.
+ */
 public class SelectApiImpl implements SelectApi {
 
     private final SelectEngine selectEngine;
     private final LitebridgeContext litebridgeContext;
 
+    /**
+     * Creates a new {@code SelectApiImpl} instance.
+     *
+     * @param litebridgeContext the Litebridge context
+     */
     public SelectApiImpl(final LitebridgeContext litebridgeContext) {
         this.selectEngine = litebridgeContext.selectEngine();
         this.litebridgeContext = litebridgeContext;

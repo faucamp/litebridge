@@ -401,10 +401,24 @@ public class LitebridgeCore implements SelectApi {
         }
     }
 
+    /**
+     * Executes an insert operation for the specified DTO class using the provided insert builder function.
+     *
+     * @param dtoClass the DTO class representing the table to insert into
+     * @param insert   a function that specifies the columns and values to insert
+     * @return the result of the insert operation
+     */
     public InsertResult insert(final Class<?> dtoClass, final Function<DtoInsertIntoStep, InsertValuesStep> insert) {
         return insertEngine.insert(dtoClass, insert, createDtoLitebridgeContext());
     }
 
+    /**
+     * Executes an insert operation on the specified table using the provided insert builder function.
+     *
+     * @param tableName the name of the table to insert into
+     * @param insert    a function that specifies the columns and values to insert
+     * @return the result of the insert operation
+     */
     public InsertResult insert(final String tableName, final Function<SqlInsertIntoStep, InsertValuesStep> insert) {
         return insertEngine.insert(tableName, insert, createSqlLitebridgeContext());
     }
@@ -610,14 +624,30 @@ public class LitebridgeCore implements SelectApi {
         return queryPlanCache;
     }
 
+    /**
+     * Creates a new DTO-mode {@link LitebridgeContext}.
+     *
+     * @return a new DTO-mode Litebridge context
+     */
     protected LitebridgeContext createDtoLitebridgeContext() {
         return createLitebridgeContext(LitebridgeContext.Mode.DTO);
     }
 
+    /**
+     * Creates a new SQL-mode {@link LitebridgeContext}.
+     *
+     * @return a new SQL-mode Litebridge context
+     */
     protected LitebridgeContext createSqlLitebridgeContext() {
         return createLitebridgeContext(LitebridgeContext.Mode.SQL);
     }
 
+    /**
+     * Creates a new {@link LitebridgeContext} configured for the specified mode.
+     *
+     * @param mode the context mode (DTO or SQL)
+     * @return a new Litebridge context
+     */
     protected LitebridgeContext createLitebridgeContext(final LitebridgeContext.Mode mode) {
         final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.aliasTransformer());
         return new LitebridgeContext(mode,

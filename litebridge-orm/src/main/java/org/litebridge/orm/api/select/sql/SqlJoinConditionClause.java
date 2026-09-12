@@ -11,6 +11,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
 
+/**
+ * Represents a condition within a JOIN clause in a SQL-based query.
+ */
 public final class SqlJoinConditionClause extends ConditionClauseImpl<Row,
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal>
@@ -19,6 +22,16 @@ public final class SqlJoinConditionClause extends ConditionClauseImpl<Row,
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal> {
 
+    /**
+     * Creates a new {@code SqlJoinConditionClause} instance.
+     *
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logical operator (AND/OR)
+     * @param lhsField          the left-hand side column name
+     * @param lhsExpression     the left-hand side expression
+     * @param node              the previous query node in the chain
+     * @param terminalRecreator the function to create the terminal clause
+     */
     public SqlJoinConditionClause(final LitebridgeContext litebridgeContext,
                                   final LogicOperator logicOperator,
                                   final @Nullable String lhsField,

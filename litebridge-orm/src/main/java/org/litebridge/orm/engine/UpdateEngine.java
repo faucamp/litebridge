@@ -21,6 +21,7 @@ public final class UpdateEngine extends AbstractUpdateEngine {
     /**
      * Executes a SQL {@code UPDATE} statement targeting a mapped DTO/entity class.
      *
+     * @param <DTO>             the mapped DTO/entity type
      * @param dtoClass          the mapped DTO/entity type to update
      * @param update            update logic; a function that takes a {@link DtoUpdateStart} and returns a {@link UpdateQuery}
      * @param litebridgeContext Litebridge context
@@ -51,8 +52,9 @@ public final class UpdateEngine extends AbstractUpdateEngine {
     /**
      * Creates a chain of update nodes for the specified mapped DTO/entity type and update logic.
      *
+     * @param <DTO>             the mapped DTO/entity type
      * @param dtoClass          the mapped DTO/entity type to update
-     * @param update            update logic; a function defining the update operation, which consumes a {@link SqlUpdateStart}
+     * @param update            update logic; a function defining the update operation, which consumes a {@link DtoUpdateStart}
      *                          instance and returns an {@link UpdateQuery}
      * @param litebridgeContext Litebridge context
      * @return the terminal {@link QueryNode} of the constructed update query chain

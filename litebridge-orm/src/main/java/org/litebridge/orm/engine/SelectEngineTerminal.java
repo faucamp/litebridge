@@ -62,6 +62,9 @@ public class SelectEngineTerminal {
      * The returned {@link Optional} is empty when no row matches.
      * If more than one row matches, an {@code IllegalStateException} is thrown.
      *
+     * @param <DTO>             the result type
+     * @param node              the AST query node representing the query
+     * @param litebridgeContext the Litebridge context
      * @return an {@link Optional} containing the single result, if present
      * @throws NonUniqueResultException if the query returns more than one result
      */
@@ -74,6 +77,9 @@ public class SelectEngineTerminal {
      * <p>
      * If more than one row matches, an {@link NonUniqueResultException} is thrown.
      *
+     * @param <DTO>             the result type
+     * @param node              the AST query node representing the query
+     * @param litebridgeContext the Litebridge context
      * @return the single result, or {@code null} when no row matches
      * @throws NonUniqueResultException if more than one row matches
      */
@@ -87,6 +93,9 @@ public class SelectEngineTerminal {
      * If no row matches, an {@link NoSuchElementException} is thrown.
      * If more than one row matches, an {@link NonUniqueResultException} is thrown.
      *
+     * @param <DTO>             the result type
+     * @param node              the AST query node representing the query
+     * @param litebridgeContext the Litebridge context
      * @return the single result
      * @throws NoSuchElementException   if no row matches
      * @throws NonUniqueResultException if more than one row matches
@@ -101,6 +110,9 @@ public class SelectEngineTerminal {
      * If no row matches, the supplied exception is thrown.
      * If more than one row matches, an {@link NonUniqueResultException} is thrown.
      *
+     * @param <DTO>             the result type
+     * @param node              the AST query node representing the query
+     * @param litebridgeContext the Litebridge context
      * @param exceptionSupplier supplier used to create the exception to throw when the result is not exactly one row
      * @param <X>               exception type
      * @return the single result
@@ -123,6 +135,9 @@ public class SelectEngineTerminal {
      * Unlike {@link #fetchOne(QueryNode, LitebridgeContext)}, this method does not require uniqueness; if multiple rows match,
      * only the first is returned (according to the effective ordering, if any).
      *
+     * @param <DTO>             the result type
+     * @param node              the AST query node representing the query
+     * @param litebridgeContext the Litebridge context
      * @return an {@link Optional} with the first result, if present
      */
     public <DTO> Optional<DTO> fetchFirst(final QueryNode node, final LitebridgeContext litebridgeContext) {
@@ -132,6 +147,9 @@ public class SelectEngineTerminal {
     /**
      * Executes the query and returns the first row if present, or {@code null} if no row matches.
      *
+     * @param <DTO>             the result type
+     * @param node              the AST query node representing the query
+     * @param litebridgeContext the Litebridge context
      * @return the first result, or {@code null} if no row matches
      */
     public <DTO> @Nullable DTO fetchFirstOrNull(final QueryNode node, final LitebridgeContext litebridgeContext) {
@@ -143,6 +161,9 @@ public class SelectEngineTerminal {
      * <p>
      * If no row matches, an {@link NoSuchElementException} is thrown.
      *
+     * @param <DTO>             the result type
+     * @param node              the AST query node representing the query
+     * @param litebridgeContext the Litebridge context
      * @return the first result
      * @throws NoSuchElementException if no row matches
      */
@@ -155,6 +176,9 @@ public class SelectEngineTerminal {
      * <p>
      * If no row matches, the supplied exception is thrown.
      *
+     * @param <DTO>             the result type
+     * @param node              the AST query node representing the query
+     * @param litebridgeContext the Litebridge context
      * @param exceptionSupplier supplier used to create the exception to throw when no row matches
      * @param <X>               exception type
      * @return the first result
@@ -173,6 +197,9 @@ public class SelectEngineTerminal {
     /**
      * Executes the query and returns results as a {@link Stream}.
      *
+     * @param <DTO>             the result type
+     * @param node              the AST query node representing the query
+     * @param litebridgeContext the Litebridge context
      * @return a stream of results
      */
     @SuppressWarnings("unchecked")
@@ -183,6 +210,9 @@ public class SelectEngineTerminal {
     /**
      * Executes the query and returns a list of results.
      *
+     * @param <DTO>             the result type
+     * @param node              the AST query node representing the query
+     * @param litebridgeContext the Litebridge context
      * @return list of all matching results (possibly empty)
      */
     @SuppressWarnings("unchecked")
@@ -233,6 +263,8 @@ public class SelectEngineTerminal {
     /**
      * Generates SQL for the query without executing it.
      *
+     * @param node              the AST query node representing the query
+     * @param litebridgeContext the Litebridge context
      * @return The generated SQL, bind values and query metadata.
      */
     public PreparedSql generateSql(final QueryNode node, final LitebridgeContext litebridgeContext) {

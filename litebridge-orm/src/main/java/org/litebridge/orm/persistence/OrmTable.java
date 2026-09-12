@@ -154,6 +154,12 @@ public class OrmTable {
         return dtoClass;
     }
 
+    /**
+     * Get the primary key field accessors for this table.
+     *
+     * @return the list of primary key field accessors
+     * @throws IllegalStateException if the table has no primary key
+     */
     public List<FieldAccessor> getPrimaryKeyFields() {
         final List<ColumnMetaData> pkColumns = getMetaData().primaryKey();
 
@@ -187,6 +193,12 @@ public class OrmTable {
         return columnMetaDataForField(fieldAccessor);
     }
 
+    /**
+     * Get the column metadata for the specified field accessor.
+     *
+     * @param fieldAccessor the field accessor to retrieve the column metadata for
+     * @return the column metadata for the specified field accessor
+     */
     public ColumnMetaData columnMetaDataForField(final FieldAccessor fieldAccessor) {
         ColumnMetaData columnMetaData = fieldNameColumnMap.get(fieldAccessor.name());
 
@@ -254,6 +266,12 @@ public class OrmTable {
         changeTracker.trackDtoFields(dto, fieldAccessorTargetMap.keySet());
     }
 
+    /**
+     * Get the mapped field target for the specified field name, or {@code null} if not found.
+     *
+     * @param fieldName the field name to retrieve the mapped target for
+     * @return the mapped field target, or {@code null} if not found
+     */
     public @Nullable MappedFieldTarget mappedFieldTargetForFieldOrNull(final String fieldName) {
         MappedFieldTarget target = fieldNameTargetMap.get(fieldName);
 
@@ -264,6 +282,12 @@ public class OrmTable {
         return target;
     }
 
+    /**
+     * Get the mapped field target for the specified field accessor, or {@code null} if not found.
+     *
+     * @param fieldAccessor the field accessor to retrieve the mapped target for
+     * @return the mapped field target, or {@code null} if not found
+     */
     public @Nullable MappedFieldTarget mappedFieldTargetForFieldOrNull(final FieldAccessor fieldAccessor) {
         MappedFieldTarget target = fieldAccessorTargetMap.get(fieldAccessor);
 
@@ -274,10 +298,24 @@ public class OrmTable {
         return target;
     }
 
+    /**
+     * Get the mapped field target for the specified field name, throwing an exception if not found.
+     *
+     * @param fieldName the field name to retrieve the mapped target for
+     * @return the mapped field target
+     * @throws IllegalArgumentException if no mapping exists for the field name
+     */
     public MappedFieldTarget mappedFieldTargetForField(final String fieldName) {
         return ObjectUtils.requireNonNull(mappedFieldTargetForFieldOrNull(fieldName), () -> new IllegalArgumentException("No field '" + fieldName + "' in DTO class: " + dtoClass));
     }
 
+    /**
+     * Get the mapped field target for the specified field accessor, throwing an exception if not found.
+     *
+     * @param fieldAccessor the field accessor to retrieve the mapped target for
+     * @return the mapped field target
+     * @throws IllegalArgumentException if no mapping exists for the field accessor
+     */
     public MappedFieldTarget mappedFieldTargetForField(final FieldAccessor fieldAccessor) {
         return ObjectUtils.requireNonNull(mappedFieldTargetForFieldOrNull(fieldAccessor), () -> new IllegalArgumentException("No field '" + fieldAccessor.name() + "' in DTO class: " + dtoClass));
     }
@@ -411,6 +449,11 @@ public class OrmTable {
         return fieldTargetEntries;
     }
 
+    /**
+     * Get the list of mapped column metadata for this table.
+     *
+     * @return the list of mapped column metadata
+     */
     public List<ColumnMetaData> mappedColumns() {
         return fieldTargetEntries.stream()
                 .map(Map.Entry::getValue)
@@ -477,6 +520,11 @@ public class OrmTable {
         return relatedDtoClasses;
     }
 
+    /**
+     * Check whether this table is a many-to-many join table.
+     *
+     * @return {@code true} if this table is a many-to-many join table; {@code false} otherwise
+     */
     public boolean isManyToManyJoinTable() {
         return manyToManyJoinTable;
     }

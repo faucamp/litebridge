@@ -15,6 +15,9 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * Represents the terminal part of a JOIN condition clause in a SQL-based query.
+ */
 public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionClauseTerminal<Row,
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal,
@@ -28,6 +31,14 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     private final String selectedTable;
 
+    /**
+     * Creates a new instance of {@code SqlJoinConditionClauseTerminal}.
+     *
+     * @param selectedTable        the selected table name
+     * @param joinNode             the join query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     public SqlJoinConditionClauseTerminal(final String selectedTable,
                                           final JoinNode joinNode,
                                           final SelectEngineTerminal selectEngineTerminal,

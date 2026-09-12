@@ -10,6 +10,9 @@ import org.litebridge.orm.engine.ast.HavingNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+/**
+ * SQL-mode terminal clause for GROUP BY clauses.
+ */
 public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
@@ -18,6 +21,15 @@ public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTermina
 
     private final String table;
 
+    /**
+     * Creates a new {@code SqlGroupByClauseTerminal} instance using expressions.
+     *
+     * @param table                the table name
+     * @param expressions          the group-by expressions
+     * @param node                 the current query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     public SqlGroupByClauseTerminal(final String table,
                                     final ExpressionSpec[] expressions,
                                     final QueryNode node,
@@ -27,6 +39,15 @@ public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTermina
         this.table = table;
     }
 
+    /**
+     * Creates a new {@code SqlGroupByClauseTerminal} instance using column names.
+     *
+     * @param table                the table name
+     * @param columns              the group-by column names
+     * @param node                 the current query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     public SqlGroupByClauseTerminal(final String table,
                                     final String[] columns,
                                     final QueryNode node,

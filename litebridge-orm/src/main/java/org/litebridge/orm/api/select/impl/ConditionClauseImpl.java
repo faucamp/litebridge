@@ -19,6 +19,13 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+/**
+ * Common implementation class for condition clauses providing relational and comparison operators.
+ *
+ * @param <DTO>  the mapped DTO/entity type or row type
+ * @param <SELF> the self-referencing condition clause type
+ * @param <CCT>  the condition clause terminal type
+ */
 public class ConditionClauseImpl<DTO,
         SELF extends ConditionClause<DTO, SELF, CCT>,
         CCT extends ConditionClauseTerminal<DTO, SELF, CCT>>
@@ -32,6 +39,16 @@ public class ConditionClauseImpl<DTO,
     private final @Nullable ExpressionSpec lhsExpression;
     private final @Nullable QueryNode node;
 
+    /**
+     * Creates a new {@code ConditionClauseImpl} instance.
+     *
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logical operator (AND/OR/NOOP)
+     * @param lhsColumn         the left-hand side column or field name
+     * @param lhsExpression     the left-hand side expression
+     * @param node              the current query node
+     * @param terminalCreator   the function to create the terminal clause
+     */
     protected ConditionClauseImpl(final LitebridgeContext litebridgeContext,
                                   final LogicOperator logicOperator,
                                   final @Nullable String lhsColumn,

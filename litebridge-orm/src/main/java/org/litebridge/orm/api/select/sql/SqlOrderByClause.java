@@ -11,6 +11,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Objects;
 
+/**
+ * Represents an ORDER BY clause in a SQL-based query.
+ */
 public final class SqlOrderByClause implements OrderByClause<Row, SqlOrderByClause, SqlOrderByClauseChain> {
 
     private final String @Nullable [] columns;
@@ -19,6 +22,14 @@ public final class SqlOrderByClause implements OrderByClause<Row, SqlOrderByClau
     private final SelectEngineTerminal selectEngineTerminal;
     private final LitebridgeContext litebridgeContext;
 
+    /**
+     * Creates a new instance of {@code SqlOrderByClause} with expressions.
+     *
+     * @param expressions          the expressions to order by
+     * @param node                 the current query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     public SqlOrderByClause(final ExpressionSpec[] expressions,
                             final QueryNode node,
                             final SelectEngineTerminal selectEngineTerminal,
@@ -26,6 +37,14 @@ public final class SqlOrderByClause implements OrderByClause<Row, SqlOrderByClau
         this(null, expressions, node, selectEngineTerminal, litebridgeContext);
     }
 
+    /**
+     * Creates a new instance of {@code SqlOrderByClause} with column names.
+     *
+     * @param columns              the column names to order by
+     * @param node                 the current query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     public SqlOrderByClause(final String[] columns,
                             final QueryNode node,
                             final SelectEngineTerminal selectEngineTerminal,

@@ -17,6 +17,11 @@ import org.litebridge.db.spi.tx.TransactionManager;
  */
 public final class TransactionContext extends TransactionContextTerminal {
 
+    /**
+     * Creates a new {@code TransactionContext} instance.
+     *
+     * @param transactionManager the transaction manager
+     */
     public TransactionContext(TransactionManager transactionManager) {
         super(transactionManager);
     }
@@ -40,6 +45,7 @@ public final class TransactionContext extends TransactionContextTerminal {
      * for transactions, affecting how changes made by one transaction
      * are visible to other transactions.
      *
+     * @param level the isolation level to set
      * @return Available clauses for transaction configuration chaining
      */
     public IsolationClause isolation(final Isolation level) {

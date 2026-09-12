@@ -15,6 +15,21 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 
+/**
+ * Abstract base class for FROM clause terminals.
+ *
+ * @param <DTO>  the mapped DTO/entity type or row type
+ * @param <JC>   the join clause type
+ * @param <JCC>  the join condition clause type
+ * @param <JCCT> the join condition clause terminal type
+ * @param <WCC>  the where condition clause type
+ * @param <WCCT> the where condition clause terminal type
+ * @param <GBCT> the group by clause terminal type
+ * @param <HCC>  the having condition clause type
+ * @param <HCCT> the having condition clause terminal type
+ * @param <OBC>  the order by clause type
+ * @param <OBCC> the order by clause chain type
+ */
 public abstract class AbstractFromClauseTerminal<DTO,
         JC extends JoinClause<DTO, JCC, JCCT>,
         JCC extends JoinConditionClause<DTO, JCC, JCCT>,
@@ -30,6 +45,13 @@ public abstract class AbstractFromClauseTerminal<DTO,
         extends AbstractJoinClauseTerminal<DTO, JC, JCC, JCCT, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC>
         implements FromClauseTerminal<DTO, JC, JCC, JCCT, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC> {
 
+    /**
+     * Creates a new {@code AbstractFromClauseTerminal} instance.
+     *
+     * @param node                 the query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     public AbstractFromClauseTerminal(final QueryNode node, final SelectEngineTerminal selectEngineTerminal, final LitebridgeContext litebridgeContext) {
         super(node, selectEngineTerminal, litebridgeContext);
     }

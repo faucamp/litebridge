@@ -13,6 +13,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Objects;
 
+/**
+ * SQL-mode terminal clause for FROM clauses.
+ */
 public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
         SqlJoinClause,
         SqlJoinConditionClause,
@@ -29,6 +32,13 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
 
     private final String table;
 
+    /**
+     * Creates a new {@code SqlFromClauseTerminal} instance.
+     *
+     * @param selectNode           the SELECT query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
     public SqlFromClauseTerminal(final SelectNode selectNode,
                                  final SelectEngineTerminal selectEngineTerminal,
                                  final LitebridgeContext litebridgeContext) {

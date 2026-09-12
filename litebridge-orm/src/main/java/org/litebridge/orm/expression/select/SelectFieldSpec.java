@@ -21,6 +21,11 @@ public final class SelectFieldSpec extends SelectColumnSpec {
         this.field = field;
     }
 
+    /**
+     * Returns the field accessor for the DTO field.
+     *
+     * @return the field accessor
+     */
     public FieldAccessor field() {
         return field;
     }
