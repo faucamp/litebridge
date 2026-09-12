@@ -6,6 +6,7 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Insert;
+import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateColumn;
 
 import java.util.function.BiFunction;
@@ -32,16 +33,13 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
     }
 
     /**
-     * Prepare a SQL INSERT statement along with its bind values for execution.
-     * <p>
-     * This method constructs the SQL query string based on the provided {@link Insert} object,
-     * which contains the table's metadata, expressions, and rows to be inserted.
+     * Generates a SQL {@code INSERT} statement string from the provided logical {@link Insert} object.
      *
-     * @param insert             the {@link Insert} object containing the table metadata, expressions, and rows for the SQL INSERT operation
+     * @param insert             the {@link Insert} object representing the logical insert operation
      * @param connectionProvider the connection provider
-     * @return the generated SQL query string
+     * @return the generated SQL statement string
      */
-    public String prepareSql(final Insert insert, final ConnectionProvider connectionProvider) {
+    public String generateSql(final Insert insert, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = appendTable(new StringBuilder("INSERT INTO "), insert.table())
                 .append(" (")
                 .append(String.join(", ", insert.columns().stream()

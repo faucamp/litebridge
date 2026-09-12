@@ -46,7 +46,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
      *
      * @param merge              the {@link Merge} object representing the logical merge operation
      * @param connectionProvider the connection provider
-     * @return the generated SQL query string
+     * @return the generated SQL statement string
      */
     public String generateSql(final Merge merge, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = appendTable(new StringBuilder("MERGE INTO "), merge.table());

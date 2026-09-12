@@ -34,10 +34,10 @@ public class DefaultSqlGenerator implements SqlGenerator {
     @Override
     public String generateSql(final Operation operation, final ConnectionProvider connectionProvider) {
         return switch (operation) {
-            case Select select -> selectSqlGenerator.getOrThrow().prepareSql(select, connectionProvider);
-            case Insert insert -> insertSqlGenerator.getOrThrow().prepareSql(insert, connectionProvider);
-            case Update update -> updateSqlGenerator.getOrThrow().prepareSql(update, connectionProvider);
-            case Delete delete -> deleteSqlGenerator.getOrThrow().prepareSql(delete, connectionProvider);
+            case Select select -> selectSqlGenerator.getOrThrow().generateSql(select, connectionProvider);
+            case Insert insert -> insertSqlGenerator.getOrThrow().generateSql(insert, connectionProvider);
+            case Update update -> updateSqlGenerator.getOrThrow().generateSql(update, connectionProvider);
+            case Delete delete -> deleteSqlGenerator.getOrThrow().generateSql(delete, connectionProvider);
             case Merge merge -> mergeSqlGenerator.getOrThrow().generateSql(merge, connectionProvider);
         };
     }

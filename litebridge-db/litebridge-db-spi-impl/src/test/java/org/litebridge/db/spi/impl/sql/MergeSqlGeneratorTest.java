@@ -42,7 +42,7 @@ class MergeSqlGeneratorTest {
     }
 
     @Test
-    void prepareSql_matchedUpdateAndDelete() {
+    void generateSql_matchedUpdateAndDelete() {
         // Given
         final ConditionGroup on = new ConditionGroup(new LogicCondition(
                 new SelectColumn(createTestColumn("TEST_ID"), mergeSqlGenerator.columnIdentifierGenerator),
@@ -66,7 +66,7 @@ class MergeSqlGeneratorTest {
     }
 
     @Test
-    void prepareSql_notMatchedInsertGeneratedValueAndMultipleRows() {
+    void generateSql_notMatchedInsertGeneratedValueAndMultipleRows() {
         // Given
         final ConditionGroup on = new ConditionGroup(new LogicCondition(
                 new SelectColumn(createTestColumn("TEST_ID"), mergeSqlGenerator.columnIdentifierGenerator),

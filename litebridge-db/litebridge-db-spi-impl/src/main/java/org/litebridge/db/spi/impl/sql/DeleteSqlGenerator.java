@@ -27,13 +27,13 @@ public class DeleteSqlGenerator extends AbstractSqlGenerator {
     }
 
     /**
-     * Prepares the SQL statement for a DELETE operation.
+     * Generates a SQL {@code DELETE} statement string from the provided logical {@link Delete} object.
      *
-     * @param delete             the delete operation metadata
-     * @param connectionProvider the provider for database connections
-     * @return the prepared SQL statement with bind values
+     * @param delete             the {@link Delete} object representing the logical delete operation
+     * @param connectionProvider the connection provider
+     * @return the generated SQL statement string
      */
-    public String prepareSql(final Delete delete, final ConnectionProvider connectionProvider) {
+    public String generateSql(final Delete delete, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = appendTable(new StringBuilder("DELETE FROM "), delete.table());
 
         if (!delete.where().isEmpty()) {

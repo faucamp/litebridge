@@ -21,7 +21,7 @@ class SubselectTest {
         final Operation operation = mock(Select.class);
         final ConnectionProvider connectionProvider = mock(ConnectionProvider.class);
         final Subselect subselect = new Subselect(select, selectSqlGenerator);
-        when(selectSqlGenerator.prepareSql(select, connectionProvider)).thenReturn("SELECT * FROM TEST");
+        when(selectSqlGenerator.generateSql(select, connectionProvider)).thenReturn("SELECT * FROM TEST");
 
         // When
         final String result = subselect.toSql(operation, connectionProvider);

@@ -4,7 +4,6 @@ import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.query.Select;
-import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
 /**
@@ -30,6 +29,6 @@ public class Subselect extends SubselectExpression {
 
     @Override
     public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
-        return selectSqlGenerator.prepareSql(subselect, connectionProvider);
+        return selectSqlGenerator.generateSql(subselect, connectionProvider);
     }
 }

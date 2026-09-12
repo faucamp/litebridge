@@ -131,7 +131,7 @@ class SelectSqlGeneratorTest {
     }
 
     @Test
-    void prepareSql_complex() {
+    void generateSql_complex() {
         // Given
         final Table table = new Table("TEST_TABLE", "t1");
         final Column col1 = new Column(table, "COL1");
@@ -169,14 +169,14 @@ class SelectSqlGeneratorTest {
         when(select.expressions().get(1).toSql(any(Operation.class), any(ClauseType.class))).thenReturn("1");
 
         // When
-        final String result = selectSqlGenerator.prepareSql(select, mock(ConnectionProvider.class));
+        final String result = selectSqlGenerator.generateSql(select, mock(ConnectionProvider.class));
 
         // Then
         assertEquals("SELECT t1.COL1, 1 FROM TEST_TABLE AS t1 JOIN JOIN_TABLE AS j1 ON j1.JCOL = ? WHERE t1.COL2 > ? GROUP BY t1.COL1 HAVING t1.COL1 <> ? ORDER BY t1.COL1 DESC LIMIT 10 OFFSET 5", result);
     }
 
     @Test
-    void prepareSql_emptyExpressions() {
+    void generateSql_emptyExpressions() {
         // Given
         final Table table = new Table("TEST_TABLE");
         final Select select = new Select(
@@ -190,7 +190,7 @@ class SelectSqlGeneratorTest {
                 null);
 
         // When
-        final String result = selectSqlGenerator.prepareSql(select, mock(ConnectionProvider.class));
+        final String result = selectSqlGenerator.generateSql(select, mock(ConnectionProvider.class));
 
         // Then
         assertEquals("SELECT * FROM TEST_TABLE", result);

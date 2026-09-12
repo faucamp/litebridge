@@ -11,7 +11,6 @@ import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
-import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
 import java.util.Objects;
@@ -36,13 +35,13 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
     }
 
     /**
-     * Prepares a SQL SELECT statement along with its bind values for execution.
+     * Generates a SQL {@code SELECT} query string from the provided logical {@link Select} object.
      *
-     * @param select             the select operation
+     * @param select             the {@link Select} object representing the logical select query
      * @param connectionProvider the connection provider
-     * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values
+     * @return the generated SQL query string
      */
-    public String prepareSql(final Select select, final ConnectionProvider connectionProvider) {
+    public String generateSql(final Select select, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = new StringBuilder("SELECT ");
 
         boolean first = true;

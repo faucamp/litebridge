@@ -3,7 +3,6 @@ package org.litebridge.db.spi.impl.sql;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.math.MathOperator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateColumn;
@@ -29,28 +28,15 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
     }
 
     /**
-     * Prepare a SQL UPDATE statement along with its bind values for execution.
-     * <p>
-     * This method constructs the SQL query string based on the provided {@link Update} object,
-     * which contains the table's metadata, column-value pairs, and conditions for the WHERE clause.
-     * It ensures proper formatting of the SQL query and converts values as needed using a type converter.
+     * Generates a SQL {@code UPDATE} statement string from the provided logical {@link Update} object.
      *
-     * @param update             the {@link Update} object containing table metadata, column-value pairs for the SET clause,
-     *                           and conditions for the WHERE clause to specify target rows.
+     * @param update             the {@link Update} object representing the logical update operation
      * @param connectionProvider the connection provider
-     * @return the generated SQL query string.
+     * @return the generated SQL statement string
      */
-    public String prepareSql(final Update update, final ConnectionProvider connectionProvider) {
-        return prepareSql(update, false, connectionProvider);
-    }
-
-    public String prepareSql(final Update update, final boolean columnsOnly, final ConnectionProvider connectionProvider) {
+    public String generateSql(final Update update, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = new StringBuilder("UPDATE ");
-
-        if (!columnsOnly) {
-            appendTable(sql, update.table());
-        }
-
+        appendTable(sql, update.table());
         sql.append(" SET ");
 
         boolean first = true;

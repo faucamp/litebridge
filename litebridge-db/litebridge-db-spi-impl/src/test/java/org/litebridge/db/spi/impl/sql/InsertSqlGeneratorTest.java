@@ -27,7 +27,7 @@ class InsertSqlGeneratorTest {
     }
 
     @Test
-    void prepareSql_generatedValueAndBindPlaceholder() {
+    void generateSql_generatedValueAndBindPlaceholder() {
         // Given
         final Insert insert = new Insert(
                 createTestTable(),
@@ -36,14 +36,14 @@ class InsertSqlGeneratorTest {
                 false);
 
         // When
-        final String result = insertSqlGenerator.prepareSql(insert, mock(ConnectionProvider.class));
+        final String result = insertSqlGenerator.generateSql(insert, mock(ConnectionProvider.class));
 
         // Then
         assertEquals("INSERT INTO TEST_SCHEMA.TEST_TABLE (TEST_ID, TEST_COLUMN) VALUES (DEFAULT, ?)", result);
     }
 
     @Test
-    void prepareSql_multipleRows() {
+    void generateSql_multipleRows() {
         // Given
         final Insert insert = new Insert(
                 createTestTable(),
@@ -52,7 +52,7 @@ class InsertSqlGeneratorTest {
                 false);
 
         // When
-        final String result = insertSqlGenerator.prepareSql(insert, mock(ConnectionProvider.class));
+        final String result = insertSqlGenerator.generateSql(insert, mock(ConnectionProvider.class));
 
         // Then
         assertEquals("INSERT INTO TEST_SCHEMA.TEST_TABLE (TEST_COLUMN) VALUES (?), (?)", result);

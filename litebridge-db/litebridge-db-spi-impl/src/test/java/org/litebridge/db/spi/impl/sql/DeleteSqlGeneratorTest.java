@@ -30,19 +30,19 @@ class DeleteSqlGeneratorTest {
     }
 
     @Test
-    void prepareSql_emptyWhere() {
+    void generateSql_emptyWhere() {
         // Given
         final Delete delete = new Delete(createTestTable(), new ConditionGroup(List.of()));
 
         // When
-        final String result = deleteSqlGenerator.prepareSql(delete, mock(ConnectionProvider.class));
+        final String result = deleteSqlGenerator.generateSql(delete, mock(ConnectionProvider.class));
 
         // Then
         assertEquals("DELETE FROM TEST_SCHEMA.TEST_TABLE", result);
     }
 
     @Test
-    void prepareSql_nonEmptyWhere() {
+    void generateSql_nonEmptyWhere() {
         // Given
         final LogicCondition condition = new LogicCondition(
                 new SelectColumn(createTestColumn(), deleteSqlGenerator.columnIdentifierGenerator),
@@ -51,7 +51,7 @@ class DeleteSqlGeneratorTest {
         final Delete delete = new Delete(createTestTable(), new ConditionGroup(condition));
 
         // When
-        final String result = deleteSqlGenerator.prepareSql(delete, mock(ConnectionProvider.class));
+        final String result = deleteSqlGenerator.generateSql(delete, mock(ConnectionProvider.class));
 
         // Then
         assertEquals("DELETE FROM TEST_SCHEMA.TEST_TABLE WHERE TEST_TABLE.TEST_COLUMN = ?", result);
