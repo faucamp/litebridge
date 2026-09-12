@@ -16,8 +16,8 @@ class InsertAllStepTest {
     @Test
     void intoTable_sqlAndDtoModes_addsInsertValuesNodes() {
         // Given
-        final LitebridgeContext context = mock(LitebridgeContext.class);
-        final InsertAllStep insertAllStep = new InsertAllStep(mode -> context);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+        final InsertAllStep insertAllStep = new InsertAllStep(litebridgeContext);
 
         // When
         insertAllStep.intoTable("ACCOUNT", step -> step.into("ID", "NAME").values(1, "Alice"));

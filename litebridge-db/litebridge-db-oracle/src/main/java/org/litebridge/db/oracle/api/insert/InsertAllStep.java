@@ -13,15 +13,15 @@ import java.util.function.Function;
 
 public final class InsertAllStep {
 
-    private final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator;
+    private final LitebridgeContext litebridgeContext;
     private final List<InsertValuesNode> insertValuesNodes = new ArrayList<>();
 
-    public InsertAllStep(final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
-        this.litebridgeContextCreator = litebridgeContextCreator;
+    public InsertAllStep(final LitebridgeContext litebridgeContext) {
+        this.litebridgeContext = litebridgeContext;
     }
 
     public InsertAllStep intoTable(final Class<?> dtoClass, Function<DtoInsertIntoStep, InsertValuesStep> insert) {
-        final DtoInsertIntoStep dtoInsertIntoStep = new DtoInsertIntoStep(dtoClass, litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
+        final DtoInsertIntoStep dtoInsertIntoStep = new DtoInsertIntoStep(dtoClass, litebridgeContext);
         final InsertValuesStep terminal = insert.apply(dtoInsertIntoStep);
         final InsertValuesNode insertValuesNode = (InsertValuesNode) InsertValuesStepInspector.getNode(terminal);
         insertValuesNodes.add(insertValuesNode);
@@ -29,7 +29,7 @@ public final class InsertAllStep {
     }
 
     public InsertAllStep intoTable(final String table, Function<SqlInsertIntoStep, InsertValuesStep> insert) {
-        final SqlInsertIntoStep sqlInsertIntoStep = new SqlInsertIntoStep(table, litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
+        final SqlInsertIntoStep sqlInsertIntoStep = new SqlInsertIntoStep(table, litebridgeContext);
         final InsertValuesStep terminal = insert.apply(sqlInsertIntoStep);
         final InsertValuesNode insertValuesNode = (InsertValuesNode) InsertValuesStepInspector.getNode(terminal);
         insertValuesNodes.add(insertValuesNode);
