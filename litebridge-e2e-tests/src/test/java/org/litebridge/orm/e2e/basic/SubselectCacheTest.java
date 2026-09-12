@@ -2,16 +2,12 @@ package org.litebridge.orm.e2e.basic;
 
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.litebridge.commons.ClassUtils;
 import org.litebridge.orm.Litebridge;
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.LitebridgeInspector;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.e2e.setup.MultiDbTestExtension;
 import org.litebridge.orm.engine.QueryPlanCache;
-
-import java.lang.reflect.Field;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -21,51 +17,31 @@ public class SubselectCacheTest extends AbstractE2eTest {
     @TestTemplate
     public void testSubselectCaching(final DbEnvDtoTableMapper tableMapper) throws Exception {
         final Litebridge lb = (Litebridge) litebridge;
-        final QueryPlanCache cache = getCache(lb);
+        final QueryPlanCache cache = LitebridgeInspector.getQueryPlanCache(lb);
 
         // Clear cache if needed (usually fresh context anyway)
-        clearCache(cache);
+        cache.clear();
 
-        String personTable = tableMapper.qualifyName("PERSON");
-        String idCol = tableMapper.transformColumnName("PERSON_ID");
-        String nameCol = tableMapper.transformColumnName("FIRST_NAME");
-        String ageCol = tableMapper.transformColumnName("AGE");
+        final String personTable = tableMapper.qualifyName("PERSON");
+        final String idCol = tableMapper.transformColumnName("PERSON_ID");
+        final String nameCol = tableMapper.transformColumnName("FIRST_NAME");
+        final String ageCol = tableMapper.transformColumnName("AGE");
 
         // Given
         // Query 1
         lb.select(idCol).from(personTable).where(idCol).eq(q -> q.select(idCol).from(personTable).where(nameCol).eq("Name1")).list();
-        int size1 = getCacheSize(cache);
+        final int size1 = cache.size();
         assertEquals(1, size1, "Should have 1 cached query");
 
         // When
         // Query 2: Same structure, different bind value in subquery
         lb.select(idCol).from(personTable).where(idCol).eq(q -> q.select(idCol).from(personTable).where(nameCol).eq("Name2")).list();
-        int size2 = getCacheSize(cache);
+        final int size2 = cache.size();
         assertEquals(1, size2, "Should still have 1 cached query (hit)");
 
         // Query 3: Different structure in subquery
         lb.select(idCol).from(personTable).where(idCol).eq(q -> q.select(idCol).from(personTable).where(nameCol).eq("Name1").and(ageCol).gt(20)).list();
-        int size3 = getCacheSize(cache);
+        final int size3 = cache.size();
         assertEquals(2, size3, "Should have 2 cached queries (miss)");
-    }
-
-    private QueryPlanCache getCache(LitebridgeCore lb) throws Exception {
-        final Field field = ClassUtils.getField(LitebridgeCore.class, "queryPlanCache");
-        field.setAccessible(true);
-        return (QueryPlanCache) field.get(lb);
-    }
-
-    private int getCacheSize(QueryPlanCache cache) throws Exception {
-        final Field field = ClassUtils.getField(QueryPlanCache.class, "cache");
-        field.setAccessible(true);
-        final Map<?, ?> map = (Map<?, ?>) field.get(cache);
-        return map.size();
-    }
-
-    private void clearCache(QueryPlanCache cache) throws Exception {
-        final Field field = ClassUtils.getField(QueryPlanCache.class, "cache");
-        field.setAccessible(true);
-        final Map<?, ?> map = (Map<?, ?>) field.get(cache);
-        map.clear();
     }
 }

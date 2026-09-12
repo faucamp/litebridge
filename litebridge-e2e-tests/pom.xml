@@ -143,14 +143,6 @@
             <type>jar</type>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.litebridgedb</groupId>
-            <artifactId>litebridge-orm</artifactId>
-            <version>${project.version}</version>
-            <type>test-jar</type>
-            <classifier>tests</classifier>
-            <scope>test</scope>
-        </dependency>
 
         <!-- Database providers -->
         <dependency>
