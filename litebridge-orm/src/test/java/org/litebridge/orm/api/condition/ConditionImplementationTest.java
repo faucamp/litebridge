@@ -5,12 +5,12 @@
 //import org.litebridge.db.spi.Table;
 //import org.litebridge.db.spi.query.LogicOperator;
 //import org.litebridge.db.spi.query.Operator;
-//import org.litebridge.orm.api.dto.condition.CbDtoConditionClause;
-//import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
+//import org.litebridge.orm.api.condition.CbDtoConditionClause;
+//import org.litebridge.orm.api.condition.DtoConditionClauseStart;
 //import org.litebridge.orm.engine.ast.ConditionGroupNode;
 //import org.litebridge.orm.engine.ast.ConditionNode;
-//import org.litebridge.orm.api.sql.condition.CbSqlConditionClause;
-//import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
+//import org.litebridge.orm.api.condition.CbSqlConditionClause;
+//import org.litebridge.orm.api.condition.SqlConditionClauseStart;
 //import org.litebridge.orm.engine.FromClauseEngine;
 //import org.litebridge.orm.persistence.OrmTable;
 //

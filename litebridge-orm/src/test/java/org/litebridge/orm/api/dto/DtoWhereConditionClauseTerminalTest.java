@@ -3,7 +3,7 @@
 //import org.junit.jupiter.api.Test;
 //import org.litebridge.db.spi.Table;
 //import org.litebridge.db.spi.TableMetaData;
-//import org.litebridge.orm.api.dto.condition.CbDtoConditionClauseTerminal;
+//import org.litebridge.orm.api.condition.CbDtoConditionClauseTerminal;
 //import org.litebridge.orm.engine.ast.ConditionGroupNode;
 //import org.litebridge.orm.engine.ast.WhereNode;
 //import org.litebridge.orm.api.select.impl.DelegatingSelectorInspector;

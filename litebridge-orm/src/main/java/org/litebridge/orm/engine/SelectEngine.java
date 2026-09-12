@@ -1,6 +1,6 @@
 package org.litebridge.orm.engine;
 
-import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
+import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.select.FromClauseStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridge.orm.engine.ast.SelectNode;

@@ -9,7 +9,7 @@
 //import org.litebridge.orm.engine.ast.ConditionNode;
 //import org.litebridge.orm.engine.ast.QueryNode;
 //import org.litebridge.orm.api.sql.SqlSelector;
-//import org.litebridge.orm.api.sql.SqlWhereConditionClauseTerminal;
+//import org.litebridge.orm.api.select.sql.SqlWhereConditionClauseTerminal;
 //import org.litebridge.orm.engine.LitebridgeContext;
 //import org.litebridge.orm.engine.SelectEngine;
 //import org.litebridge.orm.expression.select.SelectColumnSpec;

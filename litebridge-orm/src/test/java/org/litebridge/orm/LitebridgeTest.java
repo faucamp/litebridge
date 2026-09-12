@@ -19,7 +19,7 @@ import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.annotation.Column;
 import org.litebridge.orm.annotation.Table;
-import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
+import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.select.FromClauseStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridge.orm.api.spec.ColumnMapping;

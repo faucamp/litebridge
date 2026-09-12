@@ -12,7 +12,7 @@ import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.api.delete.DeleteTerminal;
 import org.litebridge.orm.api.delete.DtoDeleteStart;
 import org.litebridge.orm.api.delete.SqlDeleteStart;
-import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
+import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.insert.DtoInsertIntoStep;
 import org.litebridge.orm.api.insert.InsertValuesStep;
 import org.litebridge.orm.api.insert.SqlInsertIntoStep;

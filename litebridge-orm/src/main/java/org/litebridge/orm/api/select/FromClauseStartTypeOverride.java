@@ -1,8 +1,8 @@
 package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
-import org.litebridge.orm.api.sql.SqlFromClauseTerminal;
+import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
+import org.litebridge.orm.api.select.sql.SqlFromClauseTerminal;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;

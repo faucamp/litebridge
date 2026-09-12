@@ -1,7 +1,6 @@
 package org.litebridge.orm.api.select;
 
-import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
+import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverride;

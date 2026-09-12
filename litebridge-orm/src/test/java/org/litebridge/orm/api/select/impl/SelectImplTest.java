@@ -8,7 +8,7 @@
 //import org.litebridge.orm.api.select.SelectTerminal;
 //import org.litebridge.orm.engine.ast.QueryNode;
 //import org.litebridge.orm.engine.ast.SelectNode;
-//import org.litebridge.orm.api.sql.SqlProtoExpressionResolver;
+//import org.litebridge.orm.api.select.sql.SqlProtoExpressionResolver;
 //import org.litebridge.orm.api.sql.SqlSelectSpec;
 //import org.litebridge.orm.config.LitebridgeConfig;
 //import org.litebridge.orm.engine.FromClauseEngine;
