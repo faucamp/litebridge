@@ -46,8 +46,8 @@ public record SelectNode(@Nullable String table,
                 && Objects.equals(dtoClass, that.dtoClass)
                 && Objects.equals(contextDtoClass, that.contextDtoClass)
                 && Arrays.deepEquals(resultTypes, that.resultTypes)
-                && Objects.deepEquals(columns, that.columns)
-                && Objects.deepEquals(expressions, that.expressions);
+                && Arrays.deepEquals(columns, that.columns)
+                && Arrays.deepEquals(expressions, that.expressions);
     }
 
     @Override

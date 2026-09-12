@@ -2,6 +2,7 @@ package org.litebridge.orm.engine.ast;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -15,7 +16,7 @@ public record InsertValuesNode(@Nullable QueryNode previous, @Nullable Object[] 
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof InsertValuesNode(QueryNode previous1, Object[] values1))) return false;
-        return Objects.equals(previous, previous1) && Objects.deepEquals(values, values1);
+        return Objects.equals(previous, previous1) && Arrays.deepEquals(values, values1);
     }
 
     @Override

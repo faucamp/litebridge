@@ -30,7 +30,9 @@ public record InsertNode(@Nullable String table,
      * @param dtoClass the target DTO class, or {@code null}
      * @param columns  the column names to insert into
      */
-    public InsertNode(final @Nullable String table, final @Nullable Class<?> dtoClass, final String[] columns) {
+    public InsertNode(final @Nullable String table,
+                      final @Nullable Class<?> dtoClass,
+                      final String[] columns) {
         this(table, dtoClass, null, columns, null);
     }
 
@@ -41,7 +43,9 @@ public record InsertNode(@Nullable String table,
      * @param dtoClass        the target DTO class, or {@code null}
      * @param expressionSpecs the expression specifications to insert
      */
-    public InsertNode(final @Nullable String table, final @Nullable Class<?> dtoClass, final ExpressionSpec[] expressionSpecs) {
+    public InsertNode(final @Nullable String table,
+                      final @Nullable Class<?> dtoClass,
+                      final ExpressionSpec[] expressionSpecs) {
         this(table, dtoClass, null, null, expressionSpecs);
     }
 
@@ -53,7 +57,10 @@ public record InsertNode(@Nullable String table,
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof final InsertNode that)) return false;
-        return Objects.equals(table, that.table) && Objects.deepEquals(columns, that.columns) && Objects.equals(dtoClass, that.dtoClass) && Objects.deepEquals(expressionSpecs, that.expressionSpecs);
+        return Objects.equals(table, that.table)
+                && Arrays.deepEquals(columns, that.columns)
+                && Objects.equals(dtoClass, that.dtoClass)
+                && Arrays.deepEquals(expressionSpecs, that.expressionSpecs);
     }
 
     @Override
