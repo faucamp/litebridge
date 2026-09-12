@@ -60,6 +60,8 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
         sql.append(')');
 
         final List<Merge.WhenMatched<Merge.WhenMatchedOperation>> whenMatchedList = merge.whenMatched();
+        boolean updateMatched = false;
+        boolean deleteMatched = false;
 
         if (whenMatchedList != null) {
             sql.append(" WHEN MATCHED THEN ");
@@ -67,9 +69,19 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
             for (Merge.WhenMatched<Merge.WhenMatchedOperation> whenMatched : whenMatchedList) {
 
                 if (whenMatched.operation() instanceof Merge.MergeUpdate update) {
+                    if (deleteMatched) {
+                        throw new IllegalArgumentException("DELETE must be the last operation in a WHEN MATCHED clause for Oracle databases");
+                    }
+
                     appendUpdate(sql, update, whenMatched, merge, connectionProvider);
+                    updateMatched = true;
                 } else if (whenMatched.operation() instanceof Merge.MergeDelete) {
-                    sql.append("DELETE");
+                    if (!updateMatched) {
+                        throw new IllegalArgumentException("DELETE must follow an UPDATE in a WHEN MATCHED clause for Oracle databases");
+                    }
+
+                    appendDelete(sql, whenMatched, merge, connectionProvider);
+                    deleteMatched = true;
                 } else {
                     throw new IllegalArgumentException("Unsupported operation type: " + whenMatched.operation().getClass().getName());
                 }
@@ -113,5 +125,18 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
             sql.append(" WHERE ");
             appendConditionsAndSubgroups(sql, whenMatched.and(), merge, connectionProvider);
         }
+    }
+
+    private void appendDelete(final StringBuilder sql,
+                              final Merge.WhenMatched<Merge.WhenMatchedOperation> whenMatched,
+                              final Merge merge,
+                              final ConnectionProvider connectionProvider) {
+        sql.append(" DELETE WHERE ");
+
+        if (whenMatched.and() == null) {
+            throw new IllegalArgumentException("DELETE must have a WHERE clause for Oracle databases");
+        }
+
+        appendConditionsAndSubgroups(sql, whenMatched.and(), merge, connectionProvider);
     }
 }
