@@ -23,8 +23,18 @@ abstract sealed class AbstractUpdateEngine permits AbstractInsertEngine, DeleteE
 
     protected static final UpdateMetaData EMPTY_UPDATE_META_DATA = new UpdateMetaData(false, Collections.emptyList(), new String[0], 1, 0);
 
+    /**
+     * Returns the engine's operation type name, for logging.
+     *
+     * @return The name of the engine's operation type.
+     */
     protected abstract String operationTypeName();
 
+    /**
+     * Returns the logger for the engine.
+     *
+     * @return the engine's logger instance
+     */
     protected abstract Logger logger();
 
     /**

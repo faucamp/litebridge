@@ -6,7 +6,7 @@ import org.litebridge.orm.engine.ast.InsertDtoValuesNode;
 import org.litebridge.orm.engine.ast.InsertNode;
 
 /**
- * Merge step for setting up a DTO-mode {@code WHEN NOT MATCHED INSERT} clause.
+ * DTO-mode merge step for setting up {@code WHEN NOT MATCHED INSERT} clause.
  */
 public class DtoMergeInsertStep extends MergeInsertStep {
 

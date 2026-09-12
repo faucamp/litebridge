@@ -21,6 +21,7 @@ import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.engine.ast.LimitNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
+import org.litebridge.orm.exception.NonUniqueResultException;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
@@ -39,32 +40,73 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
- * Provides methods for constructing SQL SELECT statements in a fluent, object-oriented manner.
- * <p>
- * This class supports the selection of data transfer objects (DTOs), raw fields/columns, and custom expressions with optional
- * support for related DTO strategies and contextual mappings.
+ * Executes SQL {@code SELECT} statements.
  */
 public class SelectEngineTerminal {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SelectEngineTerminal.class);
     private final DtoConstructor dtoConstructor;
 
+    /**
+     * Creates a new {@link SelectEngineTerminal} instance.
+     *
+     * @param dtoConstructor the {@link DtoConstructor} used to construct DTOs
+     */
     public SelectEngineTerminal(final DtoConstructor dtoConstructor) {
         this.dtoConstructor = dtoConstructor;
     }
 
-    public <DTO> Optional<DTO> fetchOne(final QueryNode node, final LitebridgeContext litebridgeContext) {
+    /**
+     * Executes the query and returns exactly one result.
+     * <p>
+     * The returned {@link Optional} is empty when no row matches.
+     * If more than one row matches, an {@code IllegalStateException} is thrown.
+     *
+     * @return an {@link Optional} containing the single result, if present
+     * @throws NonUniqueResultException if the query returns more than one result
+     */
+    public <DTO> Optional<DTO> fetchOne(final QueryNode node, final LitebridgeContext litebridgeContext) throws NonUniqueResultException {
         return Optional.ofNullable(fetchOneOrNull(node, litebridgeContext));
     }
 
-    public <DTO> @Nullable DTO fetchOneOrNull(final QueryNode node, final LitebridgeContext litebridgeContext) {
+    /**
+     * Executes the query and returns exactly one result, or {@code null} if no row matches.
+     * <p>
+     * If more than one row matches, an {@link NonUniqueResultException} is thrown.
+     *
+     * @return the single result, or {@code null} when no row matches
+     * @throws NonUniqueResultException if more than one row matches
+     */
+    public <DTO> @Nullable DTO fetchOneOrNull(final QueryNode node, final LitebridgeContext litebridgeContext) throws NonUniqueResultException {
         return fetchOneOrNullImpl(false, node, litebridgeContext);
     }
 
+    /**
+     * Executes the query and returns exactly one result.
+     * <p>
+     * If no row matches, an {@link NoSuchElementException} is thrown.
+     * If more than one row matches, an {@link NonUniqueResultException} is thrown.
+     *
+     * @return the single result
+     * @throws NoSuchElementException   if no row matches
+     * @throws NonUniqueResultException if more than one row matches
+     */
     public <DTO> DTO fetchOneOrThrow(final QueryNode node, final LitebridgeContext litebridgeContext) {
         return fetchOneOrThrow(node, litebridgeContext, () -> new NoSuchElementException("No record found for query"));
     }
 
+    /**
+     * Executes the query and returns exactly one result.
+     * <p>
+     * If no row matches, the supplied exception is thrown.
+     * If more than one row matches, an {@link NonUniqueResultException} is thrown.
+     *
+     * @param exceptionSupplier supplier used to create the exception to throw when the result is not exactly one row
+     * @param <X>               exception type
+     * @return the single result
+     * @throws X                        if no row matches or more than one row matches
+     * @throws NonUniqueResultException if more than one row matches
+     */
     public <DTO, X extends Throwable> DTO fetchOneOrThrow(final QueryNode node, final LitebridgeContext litebridgeContext, final Supplier<? extends X> exceptionSupplier) throws X {
         final DTO result = fetchOneOrNull(node, litebridgeContext);
 
@@ -75,18 +117,49 @@ public class SelectEngineTerminal {
         return result;
     }
 
+    /**
+     * Executes the query and returns the first row if present.
+     * <p>
+     * Unlike {@link #fetchOne(QueryNode, LitebridgeContext)()}, this method does not require uniqueness; if multiple rows match,
+     * only the first is returned (according to the effective ordering, if any).
+     *
+     * @return an {@link Optional} with the first result, if present
+     */
     public <DTO> Optional<DTO> fetchFirst(final QueryNode node, final LitebridgeContext litebridgeContext) {
         return Optional.ofNullable(fetchFirstOrNull(node, litebridgeContext));
     }
 
+    /**
+     * Executes the query and returns the first row if present, or {@code null} if no row matches.
+     *
+     * @return the first result, or {@code null} if no row matches
+     */
     public <DTO> @Nullable DTO fetchFirstOrNull(final QueryNode node, final LitebridgeContext litebridgeContext) {
         return fetchOneOrNullImpl(true, node, litebridgeContext);
     }
 
+    /**
+     * Executes the query and returns the first row.
+     * <p>
+     * If no row matches, an {@link NoSuchElementException} is thrown.
+     *
+     * @return the first result
+     * @throws NoSuchElementException if no row matches
+     */
     public <DTO> DTO fetchFirstOrThrow(final QueryNode node, final LitebridgeContext litebridgeContext) {
         return fetchFirstOrThrow(node, litebridgeContext, () -> new NoSuchElementException("No record found for query"));
     }
 
+    /**
+     * Executes the query and returns the first row.
+     * <p>
+     * If no row matches, the supplied exception is thrown.
+     *
+     * @param exceptionSupplier supplier used to create the exception to throw when no row matches
+     * @param <X>               exception type
+     * @return the first result
+     * @throws X if no row matches
+     */
     public <DTO, X extends Throwable> DTO fetchFirstOrThrow(final QueryNode node, final LitebridgeContext litebridgeContext, final Supplier<? extends X> exceptionSupplier) throws X {
         final DTO result = fetchFirstOrNull(node, litebridgeContext);
 
@@ -97,11 +170,21 @@ public class SelectEngineTerminal {
         return result;
     }
 
+    /**
+     * Executes the query and returns results as a {@link Stream}.
+     *
+     * @return a stream of results
+     */
     @SuppressWarnings("unchecked")
     public <DTO> Stream<DTO> fetchStream(final QueryNode node, final LitebridgeContext litebridgeContext) {
         return (Stream<DTO>) fetchList(node, litebridgeContext).stream();
     }
 
+    /**
+     * Executes the query and returns a list of results.
+     *
+     * @return list of all matching results (possibly empty)
+     */
     @SuppressWarnings("unchecked")
     public <DTO> List<DTO> fetchList(final QueryNode node, final LitebridgeContext litebridgeContext) {
         final TypeConverter typeConverter = litebridgeContext.typeConverter();
@@ -147,6 +230,11 @@ public class SelectEngineTerminal {
         }
     }
 
+    /**
+     * Generates SQL for the query without executing it.
+     *
+     * @return The generated SQL, bind values and query metadata.
+     */
     public PreparedSql generateSql(final QueryNode node, final LitebridgeContext litebridgeContext) {
         return generateSqlImpl(null, node, litebridgeContext);
     }
@@ -268,7 +356,7 @@ public class SelectEngineTerminal {
         return new PreparedSql(sql, preparedOperation.bindValues(), typeConversionMetaData, null);
     }
 
-    private <DTO> @Nullable DTO fetchOneOrNullImpl(final boolean first, final QueryNode node, final LitebridgeContext litebridgeContext) {
+    private <DTO> @Nullable DTO fetchOneOrNullImpl(final boolean first, final QueryNode node, final LitebridgeContext litebridgeContext) throws NonUniqueResultException {
         final SelectNode selectNode = findSelectNode(node);
 
         if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
@@ -278,7 +366,7 @@ public class SelectEngineTerminal {
             if (dtos.isEmpty()) {
                 return null;
             } else if (!first && dtos.size() > 1) {
-                throw new IllegalStateException("Expected exactly one mapped result, but got %d".formatted(dtos.size()));
+                throw new NonUniqueResultException("Expected exactly one mapped result, but got %d".formatted(dtos.size()));
             }
 
             return dtos.getFirst();

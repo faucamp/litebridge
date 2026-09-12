@@ -17,6 +17,20 @@ import java.util.function.Supplier;
  */
 public non-sealed abstract class AbstractInsertEngine extends AbstractUpdateEngine {
 
+    /**
+     * Creates an instance of {@link UpdateMetaData} based on the provided operation details, table supplier,
+     * and context.
+     * <p>
+     * This method focuses on handling insert operations and determines whether generated keys
+     * should be included in the metadata.
+     *
+     * @param preparedOperation the prepared database operation containing the structured operation
+     *                          and associated bind values
+     * @param tableSupplier     a supplier that provides the current {@link Table} instance
+     * @param litebridgeContext the context containing metadata cache and database-related utilities
+     * @return an {@link UpdateMetaData} instance with the details of the update operation, or {@code null}
+     * if the provided operation is not an insert
+     */
     public static @Nullable UpdateMetaData createUpdateMetaData(final PreparedOperation preparedOperation,
                                                                 final Supplier<Table> tableSupplier,
                                                                 final LitebridgeContext litebridgeContext) {

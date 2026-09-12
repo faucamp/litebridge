@@ -13,7 +13,7 @@ import org.litebridge.orm.persistence.DtoConstructor;
 import java.util.function.Function;
 
 /**
- * Initiates the fluent API for creating SELECT statements.
+ * Initiates the fluent API for creating {@code SELECT} statements.
  */
 public class SelectEngine {
 

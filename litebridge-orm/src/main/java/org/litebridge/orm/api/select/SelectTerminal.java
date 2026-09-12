@@ -22,17 +22,20 @@ import java.util.stream.Stream;
 public interface SelectTerminal<DTO> {
 
     /**
-     * Executes the query and expects exactly one result.
+     * Executes the query and returns exactly one result.
      * <p>
-     * The returned {@link Optional} is empty when no row matches. If more than one row matches,
-     * the underlying implementation is expected to fail (typically by throwing an exception).
+     * The returned {@link Optional} is empty when no row matches.
+     * If more than one row matches, an {@link NonUniqueResultException} is thrown.
      *
      * @return an {@link Optional} containing the single result, if present
+     * @throws NonUniqueResultException if the query returns more than one result
      */
-    Optional<DTO> one();
+    Optional<DTO> one() throws NonUniqueResultException;
 
     /**
-     * Executes the query and expects exactly one result.
+     * Executes the query and returns exactly one result, or {@code null} if no row matches.
+     * <p>
+     * If more than one row matches, an {@link NonUniqueResultException} is thrown.
      *
      * @return the single result, or {@code null} when no row matches
      * @throws NonUniqueResultException if more than one row matches
@@ -41,24 +44,30 @@ public interface SelectTerminal<DTO> {
     DTO oneOrNull() throws NonUniqueResultException;
 
     /**
-     * Executes the query and expects exactly one result.
+     * Executes the query and returns exactly one result.
+     * <p>
+     * If no row matches, an {@link NoSuchElementException} is thrown.
+     * If more than one row matches, an {@link NonUniqueResultException} is thrown.
      *
      * @return the single result
-     * @throws NoSuchElementException if no row matches or more than one row matches
+     * @throws NoSuchElementException   if no row matches
+     * @throws NonUniqueResultException if more than one row matches
      */
-    DTO oneOrThrow() throws NoSuchElementException;
+    DTO oneOrThrow() throws NoSuchElementException, NonUniqueResultException;
 
     /**
-     * Executes the query and expects exactly one result.
+     * Executes the query and returns exactly one result.
      * <p>
-     * When the result is not exactly one row, the supplied exception is thrown.
+     * If no row matches, the supplied exception is thrown.
+     * If more than one row matches, an {@link NonUniqueResultException} is thrown.
      *
      * @param exceptionSupplier supplier used to create the exception to throw when the result is not exactly one row
      * @param <X>               exception type
      * @return the single result
-     * @throws X if no row matches or more than one row matches
+     * @throws X                        if no row matches or more than one row matches
+     * @throws NonUniqueResultException if more than one row matches
      */
-    <X extends Throwable> DTO oneOrThrow(final Supplier<? extends X> exceptionSupplier) throws X;
+    <X extends Throwable> DTO oneOrThrow(final Supplier<? extends X> exceptionSupplier) throws X, NonUniqueResultException;
 
     /**
      * Executes the query and returns the first row if present.
@@ -71,15 +80,17 @@ public interface SelectTerminal<DTO> {
     Optional<DTO> first();
 
     /**
-     * Executes the query and returns the first row if present.
+     * Executes the query and returns the first row if present, or {@code null} if no row matches.
      *
-     * @return the first result, or {@code null} when no row matches
+     * @return the first result, or {@code null} if no row matches
      */
     @Nullable
     DTO firstOrNull();
 
     /**
      * Executes the query and returns the first row.
+     * <p>
+     * If no row matches, an {@link NoSuchElementException} is thrown.
      *
      * @return the first result
      * @throws NoSuchElementException if no row matches
@@ -89,7 +100,7 @@ public interface SelectTerminal<DTO> {
     /**
      * Executes the query and returns the first row.
      * <p>
-     * When no row matches, the supplied exception is thrown.
+     * If no row matches, the supplied exception is thrown.
      *
      * @param exceptionSupplier supplier used to create the exception to throw when no row matches
      * @param <X>               exception type
@@ -100,21 +111,22 @@ public interface SelectTerminal<DTO> {
 
     /**
      * Executes the query and returns results as a {@link Stream}.
-     * <p>
-     * Implementations may tie the stream to underlying resources (for example a JDBC {@code ResultSet}).
-     * Prefer using try-with-resources (or otherwise ensuring the stream is closed) if the returned
-     * stream is {@link AutoCloseable} via {@link Stream#close()}.
      *
      * @return a stream of results
      */
     Stream<DTO> stream();
 
     /**
-     * Executes the query and materializes all results into a {@link List}.
+     * Executes the query and returns a list of results.
      *
      * @return list of all matching results (possibly empty)
      */
     List<DTO> list();
 
+    /**
+     * Generates SQL for the query without executing it.
+     *
+     * @return The generated SQL, bind values and query metadata.
+     */
     PreparedSql toSql();
 }

@@ -14,12 +14,20 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Engine for processing MERGE statements.
+ * Engine for processing {@code MERGE INTO} statements.
  */
 public final class MergeEngine extends AbstractInsertEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MergeEngine.class);
 
+    /**
+     * Executes a SQL {@code MERGE INTO} statement targeting a mapped DTO/entity class.
+     *
+     * @param dtoClass          the mapped DTO/entity type to merge into
+     * @param merge             merge logic; a function that takes a {@link DtoMergeUsingStep} and returns a {@link MergeTerminal}
+     * @param litebridgeContext Litebridge context
+     * @return the result of the merge operation
+     */
     public <DTO> UpdateResult mergeInto(final Class<DTO> dtoClass,
                                         final Function<DtoMergeUsingStep<DTO>, MergeTerminal> merge,
                                         final LitebridgeContext litebridgeContext) {
@@ -30,6 +38,14 @@ public final class MergeEngine extends AbstractInsertEngine {
                 litebridgeContext);
     }
 
+    /**
+     * Executes a SQL {@code MERGE INTO} statement targeting a specific table.
+     *
+     * @param tableName         the name of the table to merge into
+     * @param merge             merge logic; a function that takes a {@link SqlMergeUsingStep} and returns a {@link MergeTerminal}
+     * @param litebridgeContext Litebridge context
+     * @return the result of the merge operation
+     */
     public UpdateResult mergeInto(final String tableName,
                                   final Function<SqlMergeUsingStep, MergeTerminal> merge,
                                   final LitebridgeContext litebridgeContext) {

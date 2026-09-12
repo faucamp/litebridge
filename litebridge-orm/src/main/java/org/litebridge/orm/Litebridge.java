@@ -61,7 +61,7 @@ public class Litebridge extends LitebridgeCore {
     /**
      * Performs a {@code MERGE INTO} operation targeting the specified mapped DTO type.
      *
-     * @param dtoClass the class of the DTO to merge
+     * @param dtoClass the class of the DTO/entity to merge
      * @param merge    a function that takes an instance of {@link DtoMergeUsingStep} and returns a {@code MergeTerminal},
      *                 specifying the conditions and actions for merging records
      * @param <DTO>    the type of the DTO

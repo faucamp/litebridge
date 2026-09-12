@@ -4,7 +4,6 @@ import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
-import org.litebridge.orm.api.merge.MergeUpdateStep;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.basic.dto.Person;
@@ -52,7 +51,7 @@ public class MergeE2eTest extends AbstractE2eTest {
         litebridge.saveAll(persons);
         litebridge.saveAll(accounts);
 
-        // Merge with: "USING <dto>", "WHEN MATCHED AND <update>", "WHEN MATHED <delete>", "WHEN NOT MATCHED <insert values directly>"
+        // Merge with: "USING <dto>", "WHEN MATCHED AND <update>", "WHEN MATHED AND <delete>", "WHEN NOT MATCHED <insert values directly>"
         {
             final UpdateResult result = litebridge.mergeInto(Account.class, m -> m
                     .using(Person.class)
@@ -61,7 +60,9 @@ public class MergeE2eTest extends AbstractE2eTest {
                             .update(account -> account
                                     .set(AccountMeta.balance).to(500)
                                     .where(AccountMeta.id).lt(5)))
-                    .whenMatched(MergeUpdateStep::delete)
+                    .whenMatched(account -> account
+                            .delete(d -> d
+                                    .where(AccountMeta.id).gte(5)))
                     .whenNotMatched(i -> i
                             .insert(AccountMeta.id, AccountMeta.name, AccountMeta.balance, AccountMeta.owner)
                             .values(123L, "Default Account", 0, 1L)));

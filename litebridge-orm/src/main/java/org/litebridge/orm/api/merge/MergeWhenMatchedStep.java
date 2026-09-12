@@ -18,8 +18,6 @@ public sealed class MergeWhenMatchedStep<DTO, MUS extends MergeUpdateStep, MIS e
         extends MergeWhenNotMatchedStep<MIS>
         permits MergeOnConditionClauseTerminal {
 
-    protected final MergeNode mergeNode;
-
     /**
      * Creates a new {@code MergeWhenMatchedStep} instance.
      *
@@ -30,8 +28,7 @@ public sealed class MergeWhenMatchedStep<DTO, MUS extends MergeUpdateStep, MIS e
     public MergeWhenMatchedStep(final MergeNode mergeNode,
                                 final QueryNode node,
                                 final LitebridgeContext litebridgeContext) {
-        super(mergeNode.table(), node, litebridgeContext);
-        this.mergeNode = mergeNode;
+        super(mergeNode, node, litebridgeContext);
     }
 
     /**
@@ -40,7 +37,7 @@ public sealed class MergeWhenMatchedStep<DTO, MUS extends MergeUpdateStep, MIS e
      * A {@code WHEN MATCHED AND} conditional clause can be added by including
      * a {@code WHERE} clause in the specified update function.
      * <p>
-     * The update function defines the behaviour to take when a match occurs in the {@code MERGE} operation.
+     * The update function defines the {@code WHEN MATCHED THEN} behaviour to take when a match occurs in the {@code MERGE} operation.
      * This method allows specifying the action to perform, typically an update or delete,
      * through a provided function that operates on a {@code MergeUpdateStep}.
      * Any {@code WHERE} conditions added to the {@code MergeUpdateStep} will be applied
@@ -48,7 +45,7 @@ public sealed class MergeWhenMatchedStep<DTO, MUS extends MergeUpdateStep, MIS e
      *
      * @param update a {@code Function} that accepts a {@code MergeUpdateStep} and produces a {@code MergeTerminal}.
      *               The function is used to define the specific update or delete operation to be executed for matched rows.
-     * @return a new instance of {@code MergeWhenMatchedStep} that includes the specified action to take when rows are matched.
+     * @return this instance of {@code MergeWhenMatchedStep} for further chaining of merge match clauses.
      */
     public MergeWhenMatchedStep<DTO, MUS, MIS> whenMatched(final Function<MUS, MergeTerminal> update) {
         final MUS mergeUpdateStep = createMergeUpdateStep();

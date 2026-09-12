@@ -24,6 +24,7 @@ module litebridge.orm {
     exports org.litebridge.orm.api.dto;
     exports org.litebridge.orm.api.dto.condition;
     exports org.litebridge.orm.api.insert;
+    exports org.litebridge.orm.api.merge;
     exports org.litebridge.orm.api.register;
     exports org.litebridge.orm.api.select;
     exports org.litebridge.orm.engine.ast;

@@ -6,6 +6,7 @@ import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.impl.sql.DefaultSqlGenerator;
 import org.litebridge.db.spi.impl.sql.InsertSqlGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
+import org.litebridge.db.spi.impl.sql.MergeSqlGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 
 /**
@@ -41,6 +42,17 @@ public final class OracleSqlGenerator extends DefaultSqlGenerator {
     @Override
     protected InsertSqlGenerator createInsertSqlGenerator() {
         return oracleInsertSqlGenerator.getOrThrow();
+    }
+
+    @Override
+    protected MergeSqlGenerator createMergeSqlGenerator() {
+        return new OracleMergeSqlGenerator(
+                columnIdentifierGenerator,
+                mathOperationGenerator,
+                metaDataEngine::ensureTableMetaData,
+                createInsertSqlGenerator(),
+                createUpdateSqlGenerator(),
+                createDeleteSqlGenerator());
     }
 
     public OracleInsertSqlGenerator oracleInsertSqlGenerator() {

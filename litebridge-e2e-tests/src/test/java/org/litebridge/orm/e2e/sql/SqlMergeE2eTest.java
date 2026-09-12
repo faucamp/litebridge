@@ -5,7 +5,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
-import org.litebridge.orm.api.merge.MergeUpdateStep;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
@@ -60,7 +59,9 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
                         .update(account -> account
                                 .set(balance).to(500)
                                 .where(accountId).lt(5)))
-                .whenMatched(MergeUpdateStep::delete)
+                .whenMatched(account -> account
+                        .delete(d -> d
+                                .where(accountId).gte(5)))
                 .whenNotMatched(i -> i
                         .insert(accountId, accountName, balance, personId)
                         .values(123L, "Default Account", 0, 1L)));

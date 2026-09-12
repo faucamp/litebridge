@@ -15,17 +15,30 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Engine for processing INSERT statements.
+ * Engine for processing {@code INSERT} statements.
  */
 public final class InsertEngine extends AbstractInsertEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InsertEngine.class);
     private final TableRegistry tableRegistry;
 
+    /**
+     * Creates a new {@code InsertEngine} instance.
+     *
+     * @param tableRegistry Litebridge table registry
+     */
     public InsertEngine(final TableRegistry tableRegistry) {
         this.tableRegistry = tableRegistry;
     }
 
+    /**
+     * Executes a SQL {@code INSERT} statement targeting a mapped DTO/entity class.
+     *
+     * @param dtoClass          the mapped DTO/entity type to insert into
+     * @param insert            insert logic; a function that takes a {@link DtoInsertIntoStep} and returns a {@link InsertValuesStep}
+     * @param litebridgeContext Litebridge context
+     * @return the result of the insert operation
+     */
     public InsertResult insert(final Class<?> dtoClass,
                                final Function<DtoInsertIntoStep, InsertValuesStep> insert,
                                final LitebridgeContext litebridgeContext) {
@@ -35,6 +48,14 @@ public final class InsertEngine extends AbstractInsertEngine {
         return execute(node, litebridgeContext, () -> tableRegistry.getOrmTableOrThrow(dtoClass).getMetaData().toTable());
     }
 
+    /**
+     * Executes a SQL {@code INSERT} statement targeting a specific table.
+     *
+     * @param tableName         the name of the table to insert into
+     * @param insert            insert logic; a function that takes a {@link SqlInsertIntoStep} and returns a {@link InsertValuesStep}
+     * @param litebridgeContext Litebridge context
+     * @return the result of the insert operation
+     */
     public InsertResult insert(final String tableName,
                                final Function<SqlInsertIntoStep, InsertValuesStep> insert,
                                final LitebridgeContext litebridgeContext) {
