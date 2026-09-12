@@ -210,6 +210,9 @@ public final class StringUtils {
      *     <li>and all digits found anywhere in the input.</li>
      * </ul>
      * Non-letter/digit characters act as separators and are otherwise ignored.
+     *
+     * @param str the string to abbreviate; may be null
+     * @return the abbreviated string, or an empty string if {@code str} is null or empty
      */
     public static String abbreviate(final @Nullable String str) {
         if (isEmpty(str)) {
@@ -257,6 +260,13 @@ public final class StringUtils {
         return sb.toString();
     }
 
+    /**
+     * Counts the number of occurrences of the specified character in the given string.
+     *
+     * @param input      the string to search
+     * @param searchChar the character to count
+     * @return the number of occurrences of {@code searchChar} in {@code input}
+     */
     public static int countMatches(final String input, final char searchChar) {
         int count = 0;
 

@@ -4,8 +4,14 @@ import org.jspecify.annotations.Nullable;
 
 sealed class AbstractConcurrentLazy<T> permits ConcurrentLazy, ConcurrentLazyFunction {
 
+    /**
+     * Sentinel object indicating that the lazy value has not yet been initialised.
+     */
     protected static final Object UNINITIALISED = new Object();
 
+    /**
+     * The cached value, or {@code UNINITIALISED} if not yet initialised.
+     */
     @Nullable
     protected volatile Object value = UNINITIALISED;
 

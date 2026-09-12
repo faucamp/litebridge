@@ -20,6 +20,11 @@ public final class ConcurrentLazyFunction<T, R> extends AbstractConcurrentLazy<R
 
     private final Function<T, R> initialiser;
 
+    /**
+     * Constructs a new {@code ConcurrentLazyFunction} with the given initialiser.
+     *
+     * @param initialiser a {@link Function} that computes the value from the given input when it is first needed
+     */
     public ConcurrentLazyFunction(final Function<T, R> initialiser) {
         this.initialiser = initialiser;
     }
@@ -27,6 +32,7 @@ public final class ConcurrentLazyFunction<T, R> extends AbstractConcurrentLazy<R
     /**
      * The primary accessor. Returns the value wrapped in an {@link Optional}.
      *
+     * @param input the input required to compute the value
      * @return the value wrapped in an {@link Optional}
      */
     public Optional<R> get(final T input) {
@@ -37,6 +43,7 @@ public final class ConcurrentLazyFunction<T, R> extends AbstractConcurrentLazy<R
     /**
      * Returns the value, or throws a {@link NoSuchElementException} if the value is null.
      *
+     * @param input the input required to compute the value
      * @return the value
      * @throws NoSuchElementException if the value is null
      */
@@ -48,6 +55,7 @@ public final class ConcurrentLazyFunction<T, R> extends AbstractConcurrentLazy<R
      * Returns the value, or throws an exception provided by the supplier if the value is null.
      *
      * @param <X>               the type of the exception to be thrown
+     * @param input             the input required to compute the value
      * @param exceptionSupplier the supplier of the exception to be thrown
      * @return the value
      * @throws X if the value is null
@@ -66,6 +74,7 @@ public final class ConcurrentLazyFunction<T, R> extends AbstractConcurrentLazy<R
      * Returns the lazily initialised value. If the value has not yet been initialised,
      * it will be computed using the provided initialiser in a thread-safe manner.
      *
+     * @param input the input required to compute the value
      * @return the initialised value
      */
     @SuppressWarnings("unchecked")

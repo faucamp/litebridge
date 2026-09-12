@@ -17,6 +17,9 @@ public final class WeakIdentitySet<E> extends AbstractSet<E> {
 
     private final WeakIdentityMap<E, Boolean> map;
 
+    /**
+     * Constructs a new, empty {@code WeakIdentitySet}.
+     */
     public WeakIdentitySet() {
         map = new WeakIdentityMap<>();
     }
