@@ -49,8 +49,9 @@ public final class TrackedDto<DTO> {
     /**
      * Construct a {@code TrackedDto} instance that tracks all fields of the given DTO object.
      *
-     * @param dto              the data transfer object (DTO) to be wrapped and tracked; must not be null
-     * @param trackDtoCallback the callback function to be triggered when tracking changes
+     * @param dto                      the data transfer object (DTO) to be wrapped and tracked; must not be null
+     * @param classFieldAccessorCache the cache of field accessors used for tracking fields; must not be null
+     * @param trackDtoCallback         the callback function to be triggered when tracking changes
      */
     public TrackedDto(final DTO dto, final ClassFieldAccessorCache classFieldAccessorCache, final Consumer<Object> trackDtoCallback) {
         this(dto, classFieldAccessorCache.fieldAccessors(dto.getClass()), classFieldAccessorCache, trackDtoCallback);
@@ -59,10 +60,11 @@ public final class TrackedDto<DTO> {
     /**
      * Construct a {@code TrackedDto} instance that wraps and tracks a given data transfer object (DTO).
      *
-     * @param dto              the data transfer object (DTO) to be wrapped and tracked; must not be null
-     * @param fields           the collection of {@code FieldAccessor} objects representing the fields to be tracked; must not be null
-     * @param trackDtoCallback the callback function to be triggered when tracking changes; must not be null
-     * @throws IllegalArgumentException if any of the parameters are null
+     * @param dto                      the data transfer object (DTO) to be wrapped and tracked; must not be null
+     * @param fields                   the collection of {@code FieldAccessor} objects representing the fields to be tracked; must not be null
+     * @param classFieldAccessorCache the cache of field accessors used for tracking fields; must not be null
+     * @param trackDtoCallback         the callback function to be triggered when tracking changes; must not be null
+     * @throws NullPointerException if any of the parameters are null
      */
     public TrackedDto(final DTO dto, final Collection<FieldAccessor> fields, final ClassFieldAccessorCache classFieldAccessorCache, final Consumer<Object> trackDtoCallback) {
         this.dtoRef = new WeakReference<>(Objects.requireNonNull(dto, "DTO cannot be null"));
