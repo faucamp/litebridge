@@ -38,7 +38,7 @@ public class DefaultSqlGenerator implements SqlGenerator {
             case Insert insert -> insertSqlGenerator.getOrThrow().prepareSql(insert, connectionProvider);
             case Update update -> updateSqlGenerator.getOrThrow().prepareSql(update, connectionProvider);
             case Delete delete -> deleteSqlGenerator.getOrThrow().prepareSql(delete, connectionProvider);
-            case Merge merge -> mergeSqlGenerator.getOrThrow().prepareSql(merge, connectionProvider);
+            case Merge merge -> mergeSqlGenerator.getOrThrow().generateSql(merge, connectionProvider);
         };
     }
 

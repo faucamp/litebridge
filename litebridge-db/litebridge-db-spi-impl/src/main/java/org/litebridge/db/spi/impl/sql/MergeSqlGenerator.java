@@ -2,7 +2,6 @@ package org.litebridge.db.spi.impl.sql;
 
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Merge;
@@ -11,12 +10,25 @@ import org.litebridge.db.spi.update.UpdateColumn;
 import java.util.List;
 import java.util.function.BiFunction;
 
+/**
+ * SQL generator for {@code MERGE} statements.
+ */
 public class MergeSqlGenerator extends AbstractSqlGenerator {
 
     private final InsertSqlGenerator insertSqlGenerator;
     private final UpdateSqlGenerator updateSqlGenerator;
     private final DeleteSqlGenerator deleteSqlGenerator;
 
+    /**
+     * Creates a new {@code MergeSqlGenerator}.
+     *
+     * @param columnIdentifierGenerator column identifier generator
+     * @param mathOperationGenerator    math operation generator
+     * @param ensureTableMetaData       function that creates/retrieves table metadata
+     * @param insertSqlGenerator        SQL generator for {@code INSERT} statements
+     * @param updateSqlGenerator        SQL generator for {@code UPDATE} statements
+     * @param deleteSqlGenerator        SQL generator for {@code DELETE} statements
+     */
     public MergeSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
                              final MathOperationGenerator mathOperationGenerator,
                              final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData,
@@ -29,7 +41,14 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
         this.deleteSqlGenerator = deleteSqlGenerator;
     }
 
-    public String prepareSql(final Merge merge, final ConnectionProvider connectionProvider) {
+    /**
+     * Generates a SQL {@code MERGE INTO} statement string from the provided logical {@link Merge} object.
+     *
+     * @param merge              the {@link Merge} object representing the logical merge operation
+     * @param connectionProvider the connection provider
+     * @return the generated SQL query string
+     */
+    public String generateSql(final Merge merge, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = appendTable(new StringBuilder("MERGE INTO "), merge.table());
         sql.append(" USING ");
 

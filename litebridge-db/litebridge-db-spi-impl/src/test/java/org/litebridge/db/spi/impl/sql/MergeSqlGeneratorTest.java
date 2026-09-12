@@ -59,7 +59,7 @@ class MergeSqlGeneratorTest {
                 null);
 
         // When
-        final String result = mergeSqlGenerator.prepareSql(merge, mock(ConnectionProvider.class));
+        final String result = mergeSqlGenerator.generateSql(merge, mock(ConnectionProvider.class));
 
         // Then
         assertEquals("MERGE INTO TEST_SCHEMA.TEST_TABLE USING SOURCE_TABLE ON (TEST_TABLE.TEST_ID = ?) WHEN MATCHED THEN UPDATE SET TEST_COLUMN = ? WHEN MATCHED THEN DELETE", result);
@@ -78,7 +78,7 @@ class MergeSqlGeneratorTest {
         final Merge merge = new Merge(createTestTable(), new Table("SOURCE_TABLE"), null, on, null, List.of(new Merge.WhenMatched<>(null, insert)));
 
         // When
-        final String result = mergeSqlGenerator.prepareSql(merge, mock(ConnectionProvider.class));
+        final String result = mergeSqlGenerator.generateSql(merge, mock(ConnectionProvider.class));
 
         // Then
         assertEquals("MERGE INTO TEST_SCHEMA.TEST_TABLE USING SOURCE_TABLE ON (TEST_TABLE.TEST_ID = ?) WHEN NOT MATCHED THEN INSERT (TEST_ID, TEST_COLUMN) VALUES (DEFAULT, ?), (DEFAULT, ?)", result);

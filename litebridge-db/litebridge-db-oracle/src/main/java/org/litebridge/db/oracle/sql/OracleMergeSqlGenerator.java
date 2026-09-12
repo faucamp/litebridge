@@ -15,8 +15,21 @@ import org.litebridge.db.spi.update.UpdateColumn;
 import java.util.List;
 import java.util.function.BiFunction;
 
+/**
+ * SQL generator for {@code MERGE} statements using Oracle syntax.
+ */
 public class OracleMergeSqlGenerator extends MergeSqlGenerator {
 
+    /**
+     * Creates a new {@code OracleMergeSqlGenerator}.
+     *
+     * @param columnIdentifierGenerator column identifier generator
+     * @param mathOperationGenerator    math operation generator
+     * @param ensureTableMetaData       function that creates/retrieves table metadata
+     * @param insertSqlGenerator        SQL generator for {@code INSERT} statements
+     * @param updateSqlGenerator        SQL generator for {@code UPDATE} statements
+     * @param deleteSqlGenerator        SQL generator for {@code DELETE} statements
+     */
     public OracleMergeSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
                                    final MathOperationGenerator mathOperationGenerator,
                                    final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData,
@@ -26,8 +39,15 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
         super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData, insertSqlGenerator, updateSqlGenerator, deleteSqlGenerator);
     }
 
+    /**
+     * Generates an Oracle-syntax {@code MERGE INTO} SQL statement string from the provided logical {@link Merge} object.
+     *
+     * @param merge              the {@link Merge} object representing the logical merge operation
+     * @param connectionProvider the connection provider
+     * @return the generated SQL query string
+     */
     @Override
-    public String prepareSql(final Merge merge, final ConnectionProvider connectionProvider) {
+    public String generateSql(final Merge merge, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = appendTable(new StringBuilder("MERGE INTO "), merge.table());
         sql.append(" USING ");
 
@@ -68,11 +88,11 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
         return sql.toString();
     }
 
-    private String appendUpdate(final StringBuilder sql,
-                                final Merge.MergeUpdate update,
-                                final Merge.WhenMatched<Merge.WhenMatchedOperation> whenMatched,
-                                final Merge merge,
-                                final ConnectionProvider connectionProvider) {
+    private void appendUpdate(final StringBuilder sql,
+                              final Merge.MergeUpdate update,
+                              final Merge.WhenMatched<Merge.WhenMatchedOperation> whenMatched,
+                              final Merge merge,
+                              final ConnectionProvider connectionProvider) {
         sql.append("UPDATE SET ");
 
         boolean first = true;
@@ -93,7 +113,5 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
             sql.append(" WHERE ");
             appendConditionsAndSubgroups(sql, whenMatched.and(), merge, connectionProvider);
         }
-
-        return sql.toString();
     }
 }
