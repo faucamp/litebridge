@@ -5,15 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.db.oracle.OracleColumnIdentifierGenerator;
 import org.litebridge.db.oracle.engine.OracleExecutionEngine;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.impl.function.SelectColumn;
 import org.litebridge.db.spi.impl.function.SelectReferenceImpl;
-import org.litebridge.db.spi.impl.sql.DeleteSqlGenerator;
-import org.litebridge.db.spi.impl.sql.InsertSqlGenerator;
-import org.litebridge.db.spi.impl.sql.UpdateSqlGenerator;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
@@ -43,17 +39,11 @@ class OracleMergeSqlGeneratorTest {
 
         columnIdentifierGenerator = new OracleColumnIdentifierGenerator();
         final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(columnIdentifierGenerator);
-        final InsertSqlGenerator insertSqlGenerator = new InsertSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, (t, c) -> mock(TableMetaData.class), DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
-        final UpdateSqlGenerator updateSqlGenerator = new UpdateSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, (t, c) -> mock(TableMetaData.class));
-        final DeleteSqlGenerator deleteSqlGenerator = new DeleteSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, (t, c) -> mock(TableMetaData.class));
 
         generator = new OracleMergeSqlGenerator(
                 columnIdentifierGenerator,
                 mathOperationGenerator,
-                (t, c) -> mock(TableMetaData.class),
-                insertSqlGenerator,
-                updateSqlGenerator,
-                deleteSqlGenerator);
+                (t, c) -> mock(TableMetaData.class));
     }
 
     @Test

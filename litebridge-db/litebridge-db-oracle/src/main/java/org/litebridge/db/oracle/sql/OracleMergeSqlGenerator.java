@@ -4,11 +4,8 @@ import org.litebridge.db.oracle.engine.OracleExecutionEngine;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.sql.DeleteSqlGenerator;
-import org.litebridge.db.spi.impl.sql.InsertSqlGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.MergeSqlGenerator;
-import org.litebridge.db.spi.impl.sql.UpdateSqlGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateColumn;
@@ -28,17 +25,11 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
      * @param columnIdentifierGenerator column identifier generator
      * @param mathOperationGenerator    math operation generator
      * @param ensureTableMetaData       function that creates/retrieves table metadata
-     * @param insertSqlGenerator        SQL generator for {@code INSERT} statements
-     * @param updateSqlGenerator        SQL generator for {@code UPDATE} statements
-     * @param deleteSqlGenerator        SQL generator for {@code DELETE} statements
      */
     public OracleMergeSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
                                    final MathOperationGenerator mathOperationGenerator,
-                                   final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData,
-                                   final InsertSqlGenerator insertSqlGenerator,
-                                   final UpdateSqlGenerator updateSqlGenerator,
-                                   final DeleteSqlGenerator deleteSqlGenerator) {
-        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData, insertSqlGenerator, updateSqlGenerator, deleteSqlGenerator);
+                                   final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
+        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     /**

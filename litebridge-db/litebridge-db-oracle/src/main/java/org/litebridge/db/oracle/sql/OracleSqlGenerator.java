@@ -49,10 +49,7 @@ public final class OracleSqlGenerator extends DefaultSqlGenerator {
         return new OracleMergeSqlGenerator(
                 columnIdentifierGenerator,
                 mathOperationGenerator,
-                metaDataEngine::ensureTableMetaData,
-                createInsertSqlGenerator(),
-                createUpdateSqlGenerator(),
-                createDeleteSqlGenerator());
+                metaDataEngine::ensureTableMetaData);
     }
 
     public OracleInsertSqlGenerator oracleInsertSqlGenerator() {
