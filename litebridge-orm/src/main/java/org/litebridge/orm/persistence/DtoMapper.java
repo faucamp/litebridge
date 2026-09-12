@@ -107,6 +107,7 @@ public class DtoMapper {
                     if (pd != null && pd.getDto() != null) {
                         final Object dto = pd.getDto();
                         if (seenDtos.add(dto)) {
+                            //noinspection unchecked
                             result.add((DTO) dto);
                         }
                     }
@@ -547,6 +548,7 @@ public class DtoMapper {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private Object instantiateDto(final PartiallyConstructedDto partialDto) {
         if (partialDto.getDto() != null) {
             return partialDto.getDto();
@@ -559,11 +561,13 @@ public class DtoMapper {
 
         if (constructorMappingInfo.defaultConstructorUsed()) {
             final Object dto;
+
             try {
                 dto = constructorMappingInfo.constructor().invoke();
             } catch (Throwable e) {
                 throw new IllegalStateException("Failed to construct DTO: " + dtoClass, e);
             }
+
             partialDto.setDto(dto);
 
             // Populate fields
@@ -644,6 +648,7 @@ public class DtoMapper {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void updateReverseCollection(final Object hostDto, final Object relatedDto, final FieldAccessor relatedCollectionField) {
         if (relatedDto instanceof Record) {
             // Records are immutable; we can only populate their collections during construction if they are part of the join.
@@ -893,6 +898,7 @@ public class DtoMapper {
             return values.get(accessor);
         }
 
+        @SuppressWarnings("unchecked")
         public void addToCollection(FieldAccessor accessor, Object value) {
             collections.computeIfAbsent(accessor, a -> (Collection<Object>) ClassUtils.newInstance(a.type()))
                     .add(value);

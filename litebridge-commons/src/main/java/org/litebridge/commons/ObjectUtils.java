@@ -79,6 +79,7 @@ public final class ObjectUtils {
      * @return the object cast to the expected type
      * @throws X if {@code obj} is not an instance of {@code type}
      */
+    @SuppressWarnings("unchecked")
     public static <X extends Throwable, T> T requireInstanceOf(@Nullable final Object obj, final Class<T> type, final Supplier<? extends X> exceptionSupplier) throws X {
         if (type.isInstance(obj)) {
             return (T) obj;

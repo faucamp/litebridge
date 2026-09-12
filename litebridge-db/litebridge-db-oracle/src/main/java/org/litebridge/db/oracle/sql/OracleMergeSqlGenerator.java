@@ -1,6 +1,5 @@
 package org.litebridge.db.oracle.sql;
 
-import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.oracle.engine.OracleExecutionEngine;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -124,8 +123,8 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
 
         if (whenMatchedList != null) {
             for (final Merge.WhenMatched<Merge.WhenMatchedOperation> whenMatched : whenMatchedList) {
-                if (whenMatched.operation() instanceof Merge.MergeUpdate update) {
-                    for (final UpdateColumn column : update.columns()) {
+                if (whenMatched.operation() instanceof Merge.MergeUpdate(List<UpdateColumn> columns)) {
+                    for (final UpdateColumn column : columns) {
                         if (column.bindValueIndex() != null) {
                             indices.add(column.bindValueIndex());
                         }

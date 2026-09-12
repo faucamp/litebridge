@@ -105,9 +105,6 @@ public class DefaultSqlGenerator implements SqlGenerator {
         return new MergeSqlGenerator(
                 columnIdentifierGenerator,
                 mathOperationGenerator,
-                metaDataEngine::ensureTableMetaData,
-                insertSqlGenerator.getOrThrow(),
-                updateSqlGenerator.getOrThrow(),
-                deleteSqlGenerator.getOrThrow());
+                metaDataEngine::ensureTableMetaData);
     }
 }

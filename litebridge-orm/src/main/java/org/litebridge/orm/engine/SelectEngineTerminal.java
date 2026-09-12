@@ -388,6 +388,7 @@ public class SelectEngineTerminal {
         return new PreparedSql(sql, preparedOperation.bindValues(), typeConversionMetaData, null);
     }
 
+    @SuppressWarnings("unchecked")
     private <DTO> @Nullable DTO fetchOneOrNullImpl(final boolean first, final QueryNode node, final LitebridgeContext litebridgeContext) throws NonUniqueResultException {
         final SelectNode selectNode = findSelectNode(node);
 

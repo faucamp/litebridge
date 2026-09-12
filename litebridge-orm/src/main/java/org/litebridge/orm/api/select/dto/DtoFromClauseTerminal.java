@@ -4,8 +4,8 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.condition.DtoConditionClauseStart;
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
@@ -124,7 +124,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         return new DtoJoinClause<>(null, litebridgeContext, conditionNode -> {
             final JoinNode joinNode = new JoinNode(node, "INNER", dtoClass, null);
             joinNode.setCondition(conditionNode);
-            return new DtoJoinConditionClauseTerminal(joinNode, selectEngineTerminal, litebridgeContext);
+            return new DtoJoinConditionClauseTerminal<>(joinNode, selectEngineTerminal, litebridgeContext);
         });
     }
 

@@ -3,8 +3,8 @@ package org.litebridge.orm.api.select.dto;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.condition.DtoConditionClauseStart;
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.JoinClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -103,7 +103,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         return new DtoJoinClause<>(null, litebridgeContext, conditionNode -> {
             final JoinNode joinNode = new JoinNode(node, "INNER", dtoClass, null);
             joinNode.setCondition(conditionNode);
-            return new DtoJoinConditionClauseTerminal(joinNode, selectEngineTerminal, litebridgeContext);
+            return new DtoJoinConditionClauseTerminal<>(joinNode, selectEngineTerminal, litebridgeContext);
         });
     }
 

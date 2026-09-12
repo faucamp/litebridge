@@ -12,7 +12,6 @@ import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.api.delete.DeleteTerminal;
 import org.litebridge.orm.api.delete.DtoDeleteStart;
 import org.litebridge.orm.api.delete.SqlDeleteStart;
-import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.insert.DtoInsertIntoStep;
 import org.litebridge.orm.api.insert.InsertValuesStep;
 import org.litebridge.orm.api.insert.SqlInsertIntoStep;
@@ -21,6 +20,7 @@ import org.litebridge.orm.api.register.RegistrationContextTerminal;
 import org.litebridge.orm.api.select.FromClauseStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridge.orm.api.select.SelectApi;
+import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.spec.DtoTableSpec;
 import org.litebridge.orm.api.tx.TransactionContext;
 import org.litebridge.orm.api.update.DtoUpdateStart;
@@ -86,7 +86,7 @@ import java.util.stream.Stream;
  */
 public class LitebridgeCore implements SelectApi {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Litebridge.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LitebridgeCore.class);
 
     private final TableRegistry tableRegistry = new TableRegistry();
     private final TransactionalDatabaseProvider databaseProvider;
@@ -112,7 +112,7 @@ public class LitebridgeCore implements SelectApi {
      * Crucially, this allows the database provider to dynamically alter the available Litebridge APIs
      * by determining the implemention of Litebridge returned.
      *
-     * @param <LB>              the type of LitebridgeCore
+     * @param <LB>             the type of LitebridgeCore
      * @param databaseProvider the provider managing database interactions
      * @param dataSource       the data source for database connections
      * @return a new instance of LitebridgeBuilder configured with the provided database provider and data source

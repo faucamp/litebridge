@@ -21,30 +21,17 @@ import java.util.function.BiFunction;
  */
 public class MergeSqlGenerator extends AbstractSqlGenerator {
 
-    private final InsertSqlGenerator insertSqlGenerator;
-    private final UpdateSqlGenerator updateSqlGenerator;
-    private final DeleteSqlGenerator deleteSqlGenerator;
-
     /**
      * Creates a new {@code MergeSqlGenerator}.
      *
      * @param columnIdentifierGenerator column identifier generator
      * @param mathOperationGenerator    math operation generator
      * @param ensureTableMetaData       function that creates/retrieves table metadata
-     * @param insertSqlGenerator        SQL generator for {@code INSERT} statements
-     * @param updateSqlGenerator        SQL generator for {@code UPDATE} statements
-     * @param deleteSqlGenerator        SQL generator for {@code DELETE} statements
      */
     public MergeSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
                              final MathOperationGenerator mathOperationGenerator,
-                             final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData,
-                             final InsertSqlGenerator insertSqlGenerator,
-                             final UpdateSqlGenerator updateSqlGenerator,
-                             final DeleteSqlGenerator deleteSqlGenerator) {
+                             final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
         super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
-        this.insertSqlGenerator = insertSqlGenerator;
-        this.updateSqlGenerator = updateSqlGenerator;
-        this.deleteSqlGenerator = deleteSqlGenerator;
     }
 
     /**
@@ -151,7 +138,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
     /**
      * Collects parameter bind indices from the given condition group in traversal order.
      *
-     * @param conditionGroup the condition group
+     * @param conditionGroup   the condition group
      * @param parameterIndices the list to collect parameter indices into
      */
     protected void collectConditionGroupIndices(final @Nullable ConditionGroup conditionGroup, final List<Integer> parameterIndices) {

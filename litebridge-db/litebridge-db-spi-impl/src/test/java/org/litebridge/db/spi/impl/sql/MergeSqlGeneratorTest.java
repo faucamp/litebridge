@@ -2,7 +2,6 @@ package org.litebridge.db.spi.impl.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
@@ -29,16 +28,10 @@ class MergeSqlGeneratorTest {
     void beforeEach() {
         final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
         final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(columnIdentifierGenerator);
-        final InsertSqlGenerator insertSqlGenerator = new InsertSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, (table, connectionProvider) -> mock(TableMetaData.class), DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
-        final UpdateSqlGenerator updateSqlGenerator = new UpdateSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, (table, connectionProvider) -> mock(TableMetaData.class));
-        final DeleteSqlGenerator deleteSqlGenerator = new DeleteSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, (table, connectionProvider) -> mock(TableMetaData.class));
         mergeSqlGenerator = new MergeSqlGenerator(
                 columnIdentifierGenerator,
                 mathOperationGenerator,
-                (table, connectionProvider) -> mock(TableMetaData.class),
-                insertSqlGenerator,
-                updateSqlGenerator,
-                deleteSqlGenerator);
+                (table, connectionProvider) -> mock(TableMetaData.class));
     }
 
     @Test
