@@ -18,7 +18,7 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -170,7 +170,9 @@ class ConditionClauseImplTest {
 
         ConditionNode node = (ConditionNode) capturedNode[0];
         assertEquals(expectedOperator, node.operator());
-        assertInstanceOf(SelectTerminal.class, node.rhs());
+        Function<SelectEngine, SelectTerminal<?>> rhs = (Function<SelectEngine, SelectTerminal<?>>) node.rhs();
+        final SelectTerminal<?> selectTerminal = rhs.apply(mock(SelectEngine.class));
+        assertNotNull(selectTerminal);
     }
 
     @FunctionalInterface
