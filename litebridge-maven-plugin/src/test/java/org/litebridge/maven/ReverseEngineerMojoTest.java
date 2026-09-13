@@ -647,7 +647,6 @@ class ReverseEngineerMojoTest {
      * Setup H2 in-memory database
      */
     private void setupH2() {
-        //
         final String url = "jdbc:h2:mem:lb;DB_CLOSE_DELAY=-1";
         final String user = "sa";
         final String password = "";
