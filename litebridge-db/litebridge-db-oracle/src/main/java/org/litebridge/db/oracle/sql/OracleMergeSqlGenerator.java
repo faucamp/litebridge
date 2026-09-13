@@ -12,6 +12,7 @@ import org.litebridge.db.spi.update.UpdateColumn;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 /**
@@ -41,11 +42,22 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
      */
     @Override
     public String generateSql(final Merge merge, final ConnectionProvider connectionProvider) {
-        final StringBuilder sql = appendTable(new StringBuilder("MERGE INTO "), merge.table());
-        sql.append(" USING ");
+        final Table targetTable = merge.table();
+        final StringBuilder sql = appendTable(new StringBuilder("MERGE INTO "), targetTable);
 
-        if (merge.usingTable() != null) {
-            appendTable(sql, merge.usingTable());
+        if (targetTable.alias() != null) {
+            sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(merge.table().alias())));
+        }
+
+        sql.append(" USING ");
+        final Table usingTable = merge.usingTable();
+
+        if (usingTable != null) {
+            appendTable(sql, usingTable);
+
+            if (usingTable.alias() != null) {
+                sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(usingTable.alias())));
+            }
         }
 
         sql.append(" ON (");

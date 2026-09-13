@@ -127,7 +127,8 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
                 throw new IllegalArgumentException("Expected exactly one RHS expression spec, but got " + rhsResolvedExpressionSpecs.size());
             }
 
-            return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(rhsResolvedExpressionSpecs.getFirst(), true));
+            final ExpressionSpec rhsExpressionSpec = resolveAlias(rhsResolvedExpressionSpecs.getFirst());
+            return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(rhsExpressionSpec, true));
         } else if (value instanceof Column referencedColumn) {
             // Reference to a selected column
             final SelectReference selectReference = litebridgeContext.sqlFunctionRegistry().select().reference().create(referencedColumn);

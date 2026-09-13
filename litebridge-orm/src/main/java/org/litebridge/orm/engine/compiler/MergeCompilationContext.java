@@ -2,18 +2,17 @@ package org.litebridge.orm.engine.compiler;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateColumn;
 import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.InsertDtoValuesNode;
@@ -24,16 +23,20 @@ import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.intent.ConvertSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -41,27 +44,25 @@ import java.util.Objects;
  */
 final class MergeCompilationContext extends AbstractCompilationContext {
 
-    private final MergeNode mergeNode;
     private final TableMetaData targetTableMetaData;
     private final @Nullable OrmTable targetOrmTable;
     private final Table targetTable;
-    private final SelectExpressionMapper selectExpressionMapper;
     private final TableMetaDataCache tableMetaDataCache;
     private final TableRegistry tableRegistry;
-    private final TypeConverter typeConverter;
+    private final AliasGenerator aliasGenerator;
     private final ConditionGroupSpecStack on = new ConditionGroupSpecStack();
     private final List<WhenMatchedSpec> whenMatchedSpecs = new ArrayList<>();
-    private @Nullable UsingNode usingNode;
+    private final Map<String, Table> aliasedTables = new HashMap<>();
+    private final List<Column> aliasedColumns = new ArrayList<>();
+    private @Nullable Table usingTable;
     private @Nullable ConditionContext conditionContext;
 
     MergeCompilationContext(final MergeNode mergeNode,
                             final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
-        this.mergeNode = mergeNode;
-        this.selectExpressionMapper = litebridgeContext.selectExpressionMapper();
         this.tableRegistry = litebridgeContext.tableRegistry();
         this.tableMetaDataCache = litebridgeContext.tableMetaDataCache();
-        this.typeConverter = litebridgeContext.typeConverter();
+        this.aliasGenerator = litebridgeContext.aliasGenerator();
 
         if (mergeNode.table() != null) {
             this.targetOrmTable = tableRegistry.getOrmTable(mergeNode.table());
@@ -71,11 +72,11 @@ final class MergeCompilationContext extends AbstractCompilationContext {
 
         if (targetOrmTable != null) {
             this.targetTableMetaData = targetOrmTable.getMetaData();
+            this.targetTable = aliasTable(targetOrmTable);
         } else {
             this.targetTableMetaData = this.tableMetaDataCache.ensureTableMetaData(tableRegistry.getOrCreateSpiTable(mergeNode.table()));
+            this.targetTable = aliasTable(targetTableMetaData.toTable());
         }
-
-        this.targetTable = targetTableMetaData.toTable();
     }
 
     /**
@@ -84,7 +85,12 @@ final class MergeCompilationContext extends AbstractCompilationContext {
      * @param usingNode The USING node to apply.
      */
     public void setUsingNode(final UsingNode usingNode) {
-        this.usingNode = usingNode;
+        if (usingNode.table() != null) {
+            usingTable = aliasTable(tableRegistry.getOrCreateSpiTable(usingNode.table()));
+        } else {
+            usingTable = aliasTable(Objects.requireNonNull(tableRegistry.getOrmTable(Objects.requireNonNull(usingNode.dtoClass()))));
+        }
+
         this.conditionContext = ConditionContext.ON;
     }
 
@@ -265,17 +271,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
 
     @Override
     public Operation toOperation() {
-        final UsingNode usingNode = Objects.requireNonNull(this.usingNode);
-        final Table usingTable;
-
-        if (usingNode.table() != null) {
-            usingTable = tableRegistry.getOrCreateSpiTable(usingNode.table());
-        } else {
-            usingTable = Objects.requireNonNull(tableRegistry
-                            .getOrmTable(Objects.requireNonNull(usingNode.dtoClass())))
-                    .getMetaData().toTable();
-        }
-
+        final Table usingTable = Objects.requireNonNull(this.usingTable);
         final ConditionGroup onConditionGroup = toConditionGroup(on.current(), null, usingTable);
 
         final List<Merge.WhenMatched<Merge.WhenMatchedOperation>> whenMatchedList = new ArrayList<>();
@@ -332,6 +328,107 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 onConditionGroup,
                 whenMatchedList,
                 whenNotMatchedList);
+    }
+
+    @Override
+    protected Column resolveAlias(final Table table, final ColumnMetaData columnMetaData) {
+        return resolveAlias(table, columnMetaData.toColumn());
+    }
+
+    @Override
+    protected Column resolveAlias(final Table table, final Column column) {
+        final Column aliasedColumn = aliasedColumns.stream()
+                .filter(col -> col.equalsIgnoreAlias(column))
+                .findFirst()
+                .orElse(null);
+
+        if (aliasedColumn != null) {
+            return aliasedColumn;
+        }
+
+        final Table aliasedTable = aliasedTables.get(table.qualifiedName());
+
+        if (aliasedTable != null) {
+            column.setTable(aliasedTable);
+        }
+
+        return column;
+    }
+
+    @Override
+    protected ExpressionSpec resolveAlias(final ExpressionSpec expressionSpec) {
+        final ColumnExpressionSpec columnExpressionSpec = findColumnExpressionSpec(expressionSpec);
+
+        if (columnExpressionSpec != null) {
+            final Column column = columnExpressionSpec.getColumn();
+            final Column aliasedColumn = resolveAlias(column.table(), column);
+            columnExpressionSpec.setColumn(aliasedColumn);
+        }
+
+        return expressionSpec;
+    }
+
+    private Table aliasTable(final Table table) {
+        if (table == targetTable) {
+            return table;
+        } else if (table.equalsIgnoreAlias(targetTable)) {
+            return targetTable;
+        }
+
+        return aliasedTables.computeIfAbsent(table.qualifiedName(), tableName -> aliasGenerator.aliasTable(table));
+    }
+
+    private Table aliasTable(final OrmTable ormTable) {
+        final TableMetaData tableMetaData = ormTable.getMetaData();
+        return aliasedTables.computeIfAbsent(tableMetaData.qualifiedName(), tableName -> aliasGenerator.aliasTable(ormTable));
+    }
+
+    private Column resolveAlias(final Table table, final String columnName) {
+        return resolveAlias(table, new Column(table, columnName));
+    }
+
+    private ExpressionSpec aliasExpression(final ExpressionSpec expressionSpec) {
+        final ColumnExpressionSpec columnExpressionSpec = findColumnExpressionSpec(expressionSpec);
+
+        if (columnExpressionSpec != null) {
+            final Column column = columnExpressionSpec.getColumn();
+            final Column aliasedColumn;
+
+            if (column.table().equalsIgnoreAlias(targetTable)) {
+                aliasedColumn = aliasGenerator.aliasColumn(targetTable, column);
+            } else {
+                //TODO: may need to alias the table itself
+                aliasedColumn = aliasGenerator.aliasColumn(column.table(), column);
+            }
+
+            columnExpressionSpec.setColumn(aliasedColumn);
+        }
+
+        return expressionSpec;
+    }
+
+    private static @Nullable ColumnExpressionSpec findColumnExpressionSpec(final ExpressionSpec expressionSpec) {
+        final ExpressionSpec targetExpressionSpec;
+
+        if (expressionSpec instanceof ConvertSpec<?> convertSpec) {
+            targetExpressionSpec = convertSpec.target();
+        } else {
+            targetExpressionSpec = expressionSpec;
+        }
+
+        if (targetExpressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
+            return columnExpressionSpec;
+        } else {
+            return null;
+        }
+    }
+
+    private static void addConditionToGroup(final ConditionNode conditionNode, final ConditionGroupSpec conditionGroupSpec) {
+        conditionGroupSpec.newCondition(conditionNode.logicOperator(),
+                conditionNode.lhsColumn(),
+                conditionNode.lhsExpression(),
+                conditionNode.operator(),
+                conditionNode.rhs());
     }
 
     static final class WhenMatchedSpec {
@@ -427,14 +524,6 @@ final class MergeCompilationContext extends AbstractCompilationContext {
 
             return columnMetaDataList;
         }
-    }
-
-    private static void addConditionToGroup(final ConditionNode conditionNode, final ConditionGroupSpec conditionGroupSpec) {
-        conditionGroupSpec.newCondition(conditionNode.logicOperator(),
-                conditionNode.lhsColumn(),
-                conditionNode.lhsExpression(),
-                conditionNode.operator(),
-                conditionNode.rhs());
     }
 
     enum ConditionContext {
