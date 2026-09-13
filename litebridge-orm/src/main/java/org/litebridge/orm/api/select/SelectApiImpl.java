@@ -10,7 +10,7 @@ import org.litebridge.orm.expression.TypeOverride;
 /**
  * Implementation of {@link SelectApi} providing entry points for SELECT queries.
  */
-public class SelectApiImpl implements SelectApi {
+public final class SelectApiImpl implements SelectApi {
 
     private final SelectEngine selectEngine;
     private final LitebridgeContext litebridgeContext;
@@ -32,8 +32,23 @@ public class SelectApiImpl implements SelectApi {
 
     @Override
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final RelatedDtoStrategy relatedDtoStrategy) {
-        //TODO: check if related DTO strategy is different
-        return selectEngine.select(dtoClass, litebridgeContext);
+        RelatedDtoStrategy prevStrategy = litebridgeContext.getRelatedDtoStrategy();
+
+        if (relatedDtoStrategy != prevStrategy) {
+            // The subselect uses a different related DTO strategy; override the context
+            litebridgeContext.setRelatedDtoStrategy(relatedDtoStrategy);
+        } else {
+            prevStrategy = null;
+        }
+
+        final DtoFromClauseTerminal<DTO> result = selectEngine.select(dtoClass, litebridgeContext);
+
+        // Restore the original related DTO strategy
+        if (prevStrategy != null) {
+            litebridgeContext.setRelatedDtoStrategy(prevStrategy);
+        }
+
+        return result;
     }
 
     @Override
