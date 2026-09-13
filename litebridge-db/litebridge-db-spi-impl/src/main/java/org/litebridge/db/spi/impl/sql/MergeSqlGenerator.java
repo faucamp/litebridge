@@ -1,6 +1,7 @@
 package org.litebridge.db.spi.impl.sql;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.expression.BindValueExpression;
@@ -67,7 +68,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
 
         final List<Merge.WhenMatched<Merge.WhenMatchedOperation>> whenMatchedList = merge.whenMatched();
 
-        if (whenMatchedList != null) {
+        if (!CollectionUtils.isEmpty(whenMatchedList)) {
             for (Merge.WhenMatched<Merge.WhenMatchedOperation> whenMatched : whenMatchedList) {
                 sql.append(" WHEN MATCHED");
 
@@ -90,7 +91,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
 
         final List<Merge.WhenMatched<Merge.MergeInsert>> whenNotMatchedList = merge.whenNotMatched();
 
-        if (whenNotMatchedList != null) {
+        if (!CollectionUtils.isEmpty(whenNotMatchedList)) {
             for (Merge.WhenMatched<Merge.MergeInsert> whenNotMatched : whenNotMatchedList) {
                 sql.append(" WHEN NOT MATCHED THEN ");
                 appendInsert(sql, whenNotMatched.operation());

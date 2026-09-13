@@ -1,5 +1,6 @@
 package org.litebridge.db.oracle.sql;
 
+import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.oracle.engine.OracleExecutionEngine;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -68,7 +69,7 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
         boolean updateMatched = false;
         boolean deleteMatched = false;
 
-        if (whenMatchedList != null) {
+        if (!CollectionUtils.isEmpty(whenMatchedList)) {
             sql.append(" WHEN MATCHED THEN ");
 
             for (Merge.WhenMatched<Merge.WhenMatchedOperation> whenMatched : whenMatchedList) {
@@ -95,7 +96,7 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
 
         final List<Merge.WhenMatched<Merge.MergeInsert>> whenNotMatchedList = merge.whenNotMatched();
 
-        if (whenNotMatchedList != null) {
+        if (!CollectionUtils.isEmpty(whenNotMatchedList)) {
             for (Merge.WhenMatched<Merge.MergeInsert> whenNotMatched : whenNotMatchedList) {
                 sql.append(" WHEN NOT MATCHED THEN ");
                 appendInsert(sql, whenNotMatched.operation());
