@@ -88,8 +88,17 @@ public final class SqlHavingConditionClauseTerminal
     }
 
     private SqlHavingConditionClause havingImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {
+        if (node instanceof HavingNode havingNode) {
+            return new SqlHavingConditionClause(litebridgeContext,
+                    logicOperator,
+                    column,
+                    expression,
+                    havingNode.condition(),
+                    conditionNode -> new SqlHavingConditionClauseTerminal(table, havingNode.withCondition(conditionNode), selectEngineTerminal, litebridgeContext));
+        }
+
         return new SqlHavingConditionClause(litebridgeContext,
-                LogicOperator.NOOP,
+                logicOperator,
                 column,
                 expression,
                 null,

@@ -165,9 +165,13 @@ Litebridge is modular and uses JPMS (`module-info.java`).
     - `sqlite` - Run against an in-memory SQLite database
     - `none` - Disable E2E integration tests. This is useful when making targeted changes that need quick testing.
 - **Mocking**: Use Mockito for unit tests that don't require a live database.
-- **Style**: Use JUnit 6 conventions for test classes and methods, and use the existing "Given-When-Then" pattern for
+- **Style**: 
+- Use JUnit 6 conventions for test classes and methods.
+- Use the existing "Given-When-Then" pattern for
   test setup where possible (E2E tests are mostly exempt from this). Use `// Given`, `// When` and `// Then` comments to
   document test steps when following this pattern.
+- If static methods are added to to test class, place them at the end of the test class, but before any nested classes.
+- If static nested classes (such as test DTOs) are created, place them at the very end of the parent class.
 - **Coverage**: Aim for 100% test coverage in unit tests, and that E2E tests cover the majority of use cases.
 
 ## Key Classes and APIs

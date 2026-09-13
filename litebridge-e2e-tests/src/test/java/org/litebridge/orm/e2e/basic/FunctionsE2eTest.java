@@ -215,7 +215,45 @@ public class FunctionsE2eTest extends AbstractE2eTest {
 
         assertEquals(1, results.size());
         assertEquals(25, results.get(0).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
-        assertEquals(2L, results.get(0).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
+        final String countColumn = tableMapper.transformColumnName("COUNT(*)");
+        assertEquals(2L, results.get(0).column(countColumn).orElseThrow().value());
+    }
+
+    @TestTemplate
+    @DisplayName("Select row, group by with chained HAVING (AND / OR)")
+    void row_groupingByHaving_chainedConditions(final DbEnvDtoTableMapper tableMapper) {
+        // Setup data: 1 record with age 20, 2 records with age 25
+        litebridge.update(Person.class, update -> update
+                .set("age").to(25)
+                .where("id").eq(3L));
+
+        // Chained HAVING with AND: count > 0 AND count <= 10 matches both groups (age 20 and age 25)
+        final List<Row> andResults = litebridge.select(Fn.row(
+                        Fn.convert(Fn.f("age"), Integer.class),
+                        Fn.convert(Fn.count(), Long.class)))
+                .from(Person.class)
+                .groupBy("age")
+                .having(Fn.count()).gt(0)
+                .and(Fn.count()).lte(10)
+                .orderBy("age").asc()
+                .list();
+
+        assertEquals(2, andResults.size());
+        assertEquals(20, andResults.get(0).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+        assertEquals(25, andResults.get(1).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+
+        // Chained HAVING with OR: count > 5 OR count == 2 matches only age 25
+        final List<Row> orResults = litebridge.select(Fn.row(
+                        Fn.convert(Fn.f("age"), Integer.class),
+                        Fn.convert(Fn.count(), Long.class)))
+                .from(Person.class)
+                .groupBy("age")
+                .having(Fn.count()).gt(5)
+                .or(Fn.count()).eq(2)
+                .list();
+
+        assertEquals(1, orResults.size());
+        assertEquals(25, orResults.get(0).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
     }
 
     @TestTemplate

@@ -117,15 +117,6 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     }
 
     private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {
-        if (node instanceof WhereNode whereNode) {
-            return new SqlWhereConditionClause(litebridgeContext,
-                    logicOperator,
-                    column,
-                    expression,
-                    whereNode.condition(),
-                    node -> new SqlWhereConditionClauseTerminal(selectedTable, whereNode.withCondition(node), selectEngineTerminal, litebridgeContext));
-        }
-
         return new SqlWhereConditionClause(litebridgeContext,
                 logicOperator,
                 column,

@@ -207,6 +207,51 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
+    @DisplayName("Select row, group by with chained HAVING (AND / OR)")
+    void row_groupingByHaving_chainedConditions(final DbEnvDtoTableMapper tableMapper) {
+        final String age = tableMapper.transformColumnName("AGE");
+
+        // Setup data: 1 record with age 20, 2 records with age 25
+        litebridge.update(tableMapper.qualifyName("PERSON"), update -> update
+                .set(tableMapper.transformColumnName("AGE")).to(25)
+                .where(tableMapper.transformColumnName("PERSON_ID")).eq(2L));
+
+        // Chained HAVING with AND: count > 0 AND count <= 10 matches both groups (age 20 and age 25)
+        final List<Row> andResults = litebridge.select(Fn.convert(Fn.c(age), Integer.class), Fn.convert(Fn.count(), Long.class))
+                .from(tableMapper.qualifyName("PERSON"))
+                .groupBy(tableMapper.transformColumnName("AGE"))
+                .having(Fn.count()).gt(0)
+                .and(Fn.count()).lte(10)
+                .orderBy(tableMapper.transformColumnName("AGE")).asc()
+                .list();
+
+        assertEquals(2, andResults.size());
+        assertEquals(20, andResults.get(0).column(age).orElseThrow().value());
+        assertEquals(25, andResults.get(1).column(age).orElseThrow().value());
+
+        // Chained HAVING with AND: count > 1 AND count < 2 matches no groups
+        final List<Row> andEmptyResults = litebridge.select(Fn.convert(Fn.c(age), Integer.class), Fn.convert(Fn.count(), Long.class))
+                .from(tableMapper.qualifyName("PERSON"))
+                .groupBy(tableMapper.transformColumnName("AGE"))
+                .having(Fn.count()).gt(1)
+                .and(Fn.count()).lt(2)
+                .list();
+
+        assertEquals(0, andEmptyResults.size());
+
+        // Chained HAVING with OR: count > 5 OR count == 2 matches only age 25
+        final List<Row> orResults = litebridge.select(Fn.convert(Fn.c(age), Integer.class), Fn.convert(Fn.count(), Long.class))
+                .from(tableMapper.qualifyName("PERSON"))
+                .groupBy(tableMapper.transformColumnName("AGE"))
+                .having(Fn.count()).gt(5)
+                .or(Fn.count()).eq(2)
+                .list();
+
+        assertEquals(1, orResults.size());
+        assertEquals(25, orResults.get(0).column(age).orElseThrow().value());
+    }
+
+    @TestTemplate
     @DisplayName("CURRENT_TIMESTAMP")
     void currentTimestamp(final DbEnvDtoTableMapper tableMapper) throws Exception {
         final Row sysdate = litebridge.select(Fn.currentTimestamp()).from(personTableName).firstOrThrow();
