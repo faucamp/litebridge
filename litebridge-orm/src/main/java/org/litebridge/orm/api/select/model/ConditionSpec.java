@@ -1,23 +1,9 @@
 package org.litebridge.orm.api.select.model;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.convert.TypeConverter;
-import org.litebridge.db.spi.expression.BindValueExpression;
-import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.expression.SelectExpression;
-import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.persistence.TableMetaDataCache;
 
-import java.sql.Types;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.StringJoiner;
 
 /**
@@ -131,82 +117,6 @@ public class ConditionSpec {
         this.value = value;
     }
 
-    /**
-     * Converts this specification into a {@link Condition}.
-     *
-     * @param selectExpressionMapper the mapper to use for expressions
-     * @param selectedTables         the collection of tables included in the query
-     * @param bindValues             the list of bind values for the query
-     * @param tableMetaDataCache     the cache for table metadata
-     * @param typeConverter          the type converter to use
-     * @return the resulting {@link Condition}
-     */
-    @Deprecated(forRemoval = true)
-    public Condition toCondition(final SelectExpressionMapper selectExpressionMapper,
-                                 final Collection<Table> selectedTables,
-                                 final List<BindValue> bindValues,
-                                 final TableMetaDataCache tableMetaDataCache,
-                                 final TypeConverter typeConverter) {
-//        //TODO: rework table setting
-//        final Table table = selectedTables.iterator().next();
-//        final List<ExpressionSpec> lhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(lhsExpression, table, ClauseType.WHERE).stream()
-//                .peek(expressionSpec -> {
-//                    if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
-//                        final Table expressionTable = columnExpressionSpec.getColumn().table();
-//
-//                        // Override condtion column/table references to inherit the aliases from selected/joined tables if necessary
-//                        if (expressionTable.alias() == null) {
-//                            for (Table selectedTable : selectedTables) {
-//                                if (selectedTable.equalsIgnoreAlias(expressionTable)
-//                                        && !selectedTable.equals(expressionTable)) {
-//                                    columnExpressionSpec.setColumn(new Column(selectedTable, columnExpressionSpec.getColumn().name(), columnExpressionSpec.getColumn().alias()));
-//                                }
-//                            }
-//                        }
-//                    }
-//                })
-//                .toList();
-//
-//        if (lhsResolvedExpressionSpecs.size() != 1) {
-//            throw new IllegalArgumentException("Expected exactly one LHS expression spec, but got " + lhsResolvedExpressionSpecs.size());
-//        }
-//
-//        final SelectExpression lhsSelectExpression = selectExpressionMapper.toSelectExpression(lhsResolvedExpressionSpecs.getFirst(), true);
-//
-//        if (value instanceof SelectSpec selectSpec) {
-//            final PreparedOperation subselect = selectSpec.toSelect(tableMetaDataCache, typeConverter);
-//            bindValues.addAll(subselect.bindValues());
-//            final SubselectExpression subselectExpression = selectExpressionMapper.sqlFunctionRegistry().select().subselect().create((Select) subselect.operation());
-//            return new Condition(lhsSelectExpression, operator, subselectExpression);
-//        } else if (value instanceof ExpressionSpec expressionSpec) {
-//            final List<ExpressionSpec> rhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(expressionSpec, table, ClauseType.WHERE);
-//
-//            if (rhsResolvedExpressionSpecs.size() != 1) {
-//                throw new IllegalArgumentException("Expected exactly one RHS expression spec, but got " + rhsResolvedExpressionSpecs.size());
-//            }
-//
-//            return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(rhsResolvedExpressionSpecs.getFirst(), true));
-//        } else if (value instanceof Column referencedColumn) {
-//            // Reference to a selected column
-//            final SelectReference selectReference = selectExpressionMapper.sqlFunctionRegistry().select().reference().create(referencedColumn);
-//            return new Condition(lhsSelectExpression, operator, selectReference);
-//        }
-//
-//        // Setup bind value creators
-//        switch (operator) {
-//            case USING -> {
-//                final LiteralExpression literalExpression = selectExpressionMapper.sqlFunctionRegistry().select().literal().create(value, true);
-//                return new Condition(lhsSelectExpression, operator, literalExpression);
-//            }
-//            default -> {
-//                final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size());
-//                bindValues.addAll(createBindValues(lhsSelectExpression, value, tableMetaDataCache, typeConverter));
-//                return new Condition(lhsSelectExpression, operator, bindValueExpression);
-//            }
-//        }
-        throw new UnsupportedOperationException("Deprecated");
-    }
-
     @Override
     public String toString() {
         return new StringJoiner(", ", ConditionSpec.class.getSimpleName() + "[", "]")
@@ -215,53 +125,5 @@ public class ConditionSpec {
                 .add("operator=" + operator)
                 .add("value=" + value)
                 .toString();
-    }
-
-    /**
-     * Creates a bind value for a column and raw value.
-     *
-     * @param lhsSelectExpression LHS select expression for the condition.
-     * @param rawValue            The raw value.
-     * @param tableMetaDataCache  Table metadata cache.
-     * @return The bind value.
-     */
-    private List<BindValue> createBindValues(final SelectExpression lhsSelectExpression, final @Nullable Object rawValue, final TableMetaDataCache tableMetaDataCache, final TypeConverter typeConverter) {
-        final Column column;
-
-        if (lhsSelectExpression instanceof ColumnExpression columnExpression) {
-            column = columnExpression.column();
-        } else {
-            column = null;
-        }
-
-        if (column != null) {
-            final ColumnMetaData columnMetaData = tableMetaDataCache.ensureTableMetaData(column.table()).column(column.name());
-
-            if (rawValue instanceof Collection<?> collection) {
-                return collection.stream()
-                        .map(value -> typeConverter.convert(value, columnMetaData.getDataType()))
-                        .map(convertedValue -> new BindValue(convertedValue, columnMetaData.getDataType()))
-                        .toList();
-            } else {
-                final Object convertedValue = typeConverter.convert(rawValue, columnMetaData.getDataType());
-                return Collections.singletonList(new BindValue(convertedValue, columnMetaData.getDataType()));
-            }
-        } else if (rawValue != null) {
-            return Collections.singletonList(new BindValue(rawValue, typeConverter.getSqlDataType(rawValue.getClass())));
-        } else {
-            return Collections.singletonList(new BindValue(null, Types.NULL));
-        }
-    }
-
-    private static BindValueExpression createBindValueExpression(final @Nullable Object value, final int index) {
-        final int valueSize;
-
-        if (value instanceof Collection<?> collection) {
-            valueSize = collection.size();
-        } else {
-            valueSize = 1;
-        }
-
-        return new BindValueExpression(index, valueSize);
     }
 }
