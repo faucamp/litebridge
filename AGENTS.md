@@ -75,7 +75,8 @@ Litebridge is modular and uses JPMS (`module-info.java`).
     - `org.litebridge.orm.Litebridge`: Default Litebridge instance
     - `org.litebridge.orm.LitebridgeCore`: Basic/limited functionality Litebridge instance (no merge support)
     - custom database provider-specific extension of either `Litebridge` or `LitebridgeCore`
-- A high-level component diagram of Litebridge is provided in the [architecture documentation](docs/dev/architecture.md).
+- A high-level component diagram of Litebridge is provided in
+  the [architecture documentation](docs/dev/architecture.md).
 
 #### Query API
 
@@ -166,13 +167,15 @@ Litebridge is modular and uses JPMS (`module-info.java`).
     - `sqlite` - Run against an in-memory SQLite database
     - `none` - Disable E2E integration tests. This is useful when making targeted changes that need quick testing.
 - **Mocking**: Use Mockito for unit tests that don't require a live database.
-- **Style**: 
-- Use JUnit 6 conventions for test classes and methods.
-- Use the existing "Given-When-Then" pattern for
-  test setup where possible (E2E tests are mostly exempt from this). Use `// Given`, `// When` and `// Then` comments to
-  document test steps when following this pattern.
-- If static methods are added to to test class, place them at the end of the test class, but before any nested classes.
-- If static nested classes (such as test DTOs) are created, place them at the very end of the parent class.
+- **Style**:
+    - Use JUnit 6 conventions for test classes and methods.
+    - Use the existing "Given-When-Then" pattern for
+      test setup where possible (E2E tests are mostly exempt from this). Use `// Given`, `// When` and `// Then`
+      comments to
+      document test steps when following this pattern.
+    - If static methods are added to to test class, place them at the end of the test class, but before any nested
+      classes.
+    - If static nested classes (such as test DTOs) are created, place them at the very end of the parent class.
 - **Coverage**: Aim for 100% test coverage in unit tests, and that E2E tests cover the majority of use cases.
 
 ## Key Classes and APIs
@@ -189,14 +192,23 @@ Litebridge is modular and uses JPMS (`module-info.java`).
   engine instances.
 - `org.litebridge.orm.engine.compiler.QueryCompiler`: The centralized compiler that translates the fluent API's AST into
   executable specifications.
+- `org.litebridge.orm.engine.ast.QueryNode`: Root AST node interface used by the `QueryCompiler`; subclasses implement
+  specific SQL statement fragment information.
 - `org.litebridge.orm.persistence.DtoMapper`: The high-performance engine for mapping database rows to DTO instances.
 
 ## Common Agent Tasks
 
-- **Write Documentation**: Follow the same style as existing documentation. Use a formal tone; avoid using words like
-  "you". Documentation is found in the `docs`
-  directory. Ensure that all relevant pages are updated when adding/extending a specific topic.
-- **Adding a DB Provider**: Implement the `DatabaseProvider` SPI in a new module and ensure it passes the SPI TCK/common
-  tests. Update relevant documentation to reflect the new provider. Add unit tests and E2E tests for the new provider.
-- **Creating tests**: Implement unit tests for new features or bug fixes. Follow the style detailed under section 5,
-  "Testing".
+- **Write Documentation**:
+    - Documentation is found in the `docs` directory.
+    - Follow the same style as existing documentation.
+    - Use a formal tone; avoid using words like "you".
+    - Ensure that all relevant pages are updated when adding/extending a specific topic.
+- **Adding a DB Provider**:
+    - A user guide for implementing database providers is provided in
+      the [documentation](docs/dev/new-database-provider.md).
+    - Implement the `DatabaseProvider` SPI in a new module.
+    - Update relevant documentation to reflect the new provider.
+    - Add unit tests and support for the new provider in E2E tests.
+- **Creating tests**:
+    - Implement unit tests for new features or bug fixes.
+    - Follow the style detailed under section 5, "Testing".
