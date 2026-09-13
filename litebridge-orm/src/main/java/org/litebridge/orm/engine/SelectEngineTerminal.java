@@ -422,42 +422,6 @@ public class SelectEngineTerminal {
         }
     }
 
-    private Object mapDto(final SelectNode selectNode,
-                          final List<Row> rows,
-                          final LitebridgeContext litebridgeContext) {
-        final TableRegistry tableRegistry = litebridgeContext.tableRegistry();
-        final OrmTable ormTable;
-        final Class<?> resultClass;
-
-        if (selectNode.resultTypes() != null) {
-            resultClass = selectNode.resultTypes()[0];
-
-            if (selectNode.dtoClass() != null) {
-                ormTable = tableRegistry.getOrmTableOrThrow(selectNode.dtoClass());
-            } else {
-                ormTable = tableRegistry.getOrmTable(Objects.requireNonNull(selectNode.table(), "No DTO class or table name specified"));
-            }
-        } else if (selectNode.dtoClass() != null) {
-            resultClass = selectNode.dtoClass();
-            ormTable = tableRegistry.getOrmTableOrThrow(resultClass);
-        } else {
-            // No mapping required
-            return rows;
-        }
-
-        if (ormTable != null) {
-            final List<Object> dtos = (List<Object>) mapDtos(resultClass, selectNode.contextDtoClass(), rows, ormTable, litebridgeContext);
-
-            if (dtos.size() > 1) {
-                throw new IllegalStateException("Expected exactly one mapped result, but got %d".formatted(dtos.size()));
-            }
-
-            return dtos.getFirst();
-        } else {
-            return unwrap(resultClass, rows, litebridgeContext.typeConverter());
-        }
-    }
-
     private <DTO> List<DTO> mapDtos(final Class<DTO> dtoClass,
                                     final @Nullable Class<?> contextDtoClass,
                                     final List<Row> rows,
