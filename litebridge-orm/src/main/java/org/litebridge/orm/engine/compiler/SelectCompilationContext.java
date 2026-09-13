@@ -518,6 +518,11 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
     @Override
     protected Column resolveAlias(final Table table, final Column column) {
+        // Don't re-alias the column if it already has an alias
+        if (column.alias() != null) {
+            return column;
+        }
+
         return resolveAlias(table, column.name(), () -> column);
     }
 
@@ -527,6 +532,12 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
         if (columnExpressionSpec != null) {
             final Column column = columnExpressionSpec.getColumn();
+
+            // Don't re-alias the column if it already has an alias
+            if (column.alias() != null) {
+                return expressionSpec;
+            }
+
             final Column aliasedColumn = resolveAlias(column.table(), column);
             columnExpressionSpec.setColumn(aliasedColumn);
         }

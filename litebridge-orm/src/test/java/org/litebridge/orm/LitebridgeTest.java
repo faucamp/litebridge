@@ -19,9 +19,9 @@ import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.annotation.Column;
 import org.litebridge.orm.annotation.Table;
-import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.select.FromClauseStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
+import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.spec.ColumnMapping;
 import org.litebridge.orm.api.spec.ColumnSpec;
 import org.litebridge.orm.api.spec.DtoTableSpec;
@@ -825,6 +825,7 @@ class LitebridgeTest {
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.aliasTransformer()).thenReturn(new DefaultAliasTransformer());
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         when(databaseProvider.tableMetaData(any(), any())).thenReturn(tableMetaData);
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
@@ -854,6 +855,7 @@ class LitebridgeTest {
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.aliasTransformer()).thenReturn(new DefaultAliasTransformer());
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 

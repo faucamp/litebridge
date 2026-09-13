@@ -5,6 +5,7 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.alias.DefaultAliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.query.LogicOperator;
@@ -32,6 +33,7 @@ import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 
 import java.sql.Types;
@@ -265,6 +267,7 @@ class QueryCompilerTest {
         final LitebridgeContext context = mock(LitebridgeContext.class);
         when(context.tableRegistry()).thenReturn(tableRegistry);
         when(context.tableMetaDataCache()).thenReturn(metadataCache);
+        when(context.aliasGenerator()).thenReturn(new DefaultAliasGenerator(new DefaultAliasTransformer()));
         return context;
     }
 }
