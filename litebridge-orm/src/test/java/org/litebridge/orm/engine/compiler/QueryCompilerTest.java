@@ -252,6 +252,96 @@ class QueryCompilerTest {
     }
 
     @Test
+    void compile_select_reuseLazyCompiler() {
+        // Given
+        final Table table = new Table("items");
+        final TableMetaData metadata = new TableMetaData(table, List.of(), List.of());
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final TableMetaDataCache metadataCache = mock(TableMetaDataCache.class);
+        when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
+        when(metadataCache.ensureTableMetaData(table)).thenReturn(metadata);
+        final LitebridgeContext context = context(tableRegistry, metadataCache);
+        when(context.aliasGenerator()).thenReturn(new NoOpAliasGenerator());
+        when(context.selectExpressionMapper()).thenReturn(mock(SelectExpressionMapper.class));
+        final QueryCompiler compiler = new QueryCompiler(context);
+        final SelectNode root = new SelectNode("items", null, null, null, new ExpressionSpec[0], null);
+
+        // When
+        final PreparedOperation first = compiler.compile(root);
+        final PreparedOperation second = compiler.compile(root);
+
+        // Then
+        assertInstanceOf(Select.class, first.operation());
+        assertInstanceOf(Select.class, second.operation());
+    }
+
+    @Test
+    void compile_insert_reuseLazyCompiler() {
+        // Given
+        final Table table = new Table("items");
+        final TableMetaData metadata = new TableMetaData(table, List.of(), List.of());
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final TableMetaDataCache metadataCache = mock(TableMetaDataCache.class);
+        when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
+        when(metadataCache.ensureTableMetaData(table)).thenReturn(metadata);
+        final QueryCompiler compiler = new QueryCompiler(context(tableRegistry, metadataCache));
+        final InsertNode root = new InsertNode("items", null, new String[0]);
+
+        // When
+        final PreparedOperation first = compiler.compile(root);
+        final PreparedOperation second = compiler.compile(root);
+
+        // Then
+        assertInstanceOf(Insert.class, first.operation());
+        assertInstanceOf(Insert.class, second.operation());
+    }
+
+    @Test
+    void compile_update_reuseLazyCompiler() {
+        // Given
+        final Table table = new Table("items");
+        final TableMetaData metadata = new TableMetaData(table, List.of(), List.of());
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final TableMetaDataCache metadataCache = mock(TableMetaDataCache.class);
+        when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
+        when(metadataCache.ensureTableMetaData(table)).thenReturn(metadata);
+        final QueryCompiler compiler = new QueryCompiler(context(tableRegistry, metadataCache));
+        final UpdateNode root = new UpdateNode(null, "items", null);
+
+        // When
+        final PreparedOperation first = compiler.compile(root);
+        final PreparedOperation second = compiler.compile(root);
+
+        // Then
+        assertInstanceOf(Update.class, first.operation());
+        assertInstanceOf(Update.class, second.operation());
+    }
+
+    @Test
+    void compile_merge_reuseLazyCompiler() {
+        // Given
+        final Table table = new Table("items");
+        final TableMetaData metadata = new TableMetaData(table, List.of(), List.of());
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final TableMetaDataCache metadataCache = mock(TableMetaDataCache.class);
+        when(tableRegistry.getOrmTable("items")).thenReturn(null);
+        when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
+        when(metadataCache.ensureTableMetaData(table)).thenReturn(metadata);
+        final LitebridgeContext context = context(tableRegistry, metadataCache);
+        final QueryCompiler compiler = new QueryCompiler(context);
+        final MergeNode root = new MergeNode("items", null);
+        final UsingNode using = new UsingNode(root, "items", null, null);
+
+        // When
+        final PreparedOperation first = compiler.compile(using);
+        final PreparedOperation second = compiler.compile(using);
+
+        // Then
+        assertInstanceOf(Merge.class, first.operation());
+        assertInstanceOf(Merge.class, second.operation());
+    }
+
+    @Test
     void compile_unsupportedRootQueryNode() {
         // Given
         final QueryCompiler compiler = new QueryCompiler(mock(LitebridgeContext.class));

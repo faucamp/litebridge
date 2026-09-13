@@ -28,9 +28,26 @@ class JoinSpecTest {
         assertEquals(ormTable, joinSpec.ormTable());
         assertEquals(joinNode, joinSpec.joinNode());
         assertNotNull(joinSpec.conditionGroupStack());
+        assertNull(joinSpec.getAliasedTable());
 
         // When / Then
         joinSpec.setAliasedTable(table);
         assertEquals(table, joinSpec.getAliasedTable());
+    }
+
+    @Test
+    void tableNameBasedJoinSpec() {
+        // Given
+        final JoinNode joinNode = new JoinNode(null, "LEFT", null, "users");
+
+        // When
+        final JoinSpec joinSpec = new JoinSpec(joinNode.type(), null, "users", null, joinNode);
+
+        // Then
+        assertNull(joinSpec.dtoClass());
+        assertEquals("users", joinSpec.tableName());
+        assertNull(joinSpec.ormTable());
+        assertEquals(joinNode, joinSpec.joinNode());
+        assertNotNull(joinSpec.conditionGroupStack());
     }
 }
