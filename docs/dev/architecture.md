@@ -1,5 +1,7 @@
 # Litebridge Architecture
 
+## Component diagram
+
 A high-level component diagram of Litebridge is provided below:
 
 ```mermaid
@@ -74,18 +76,18 @@ flowchart TB
     DataSource[Data Source]
     style DataSource fill:#e6e6e6
     
-    RegistrationApi --> RegistrationEngine
-    MergeApi --> MergeEngine ---> DatabaseProvider
-    SelectApi --> SelectEngine --> DatabaseProvider
-    InsertApi --> InsertEngine --> DatabaseProvider
-    InsertApi --> PersistenceFacade --> InsertStatementBuilder --> InsertEngine
-    UpdateApi --> PersistenceFacade --> UpdateStatementBuilder --> UpdateEngine
-    UpdateApi --> PersistenceFacade --> DeleteStatementBuilder --> DeleteEngine
-    DeleteApi --> PersistenceFacade --> DeleteEngine --> DatabaseProvider
+    RegistrationApi -->|Creates DTO-table mappings| RegistrationEngine
+    MergeApi --> MergeEngine --->|Generates & executes SQL| DatabaseProvider
+    SelectApi --> SelectEngine -->|Generates & executes SQL| DatabaseProvider
+    InsertApi --> InsertEngine -->|Generates & executes SQL| DatabaseProvider
+    InsertApi --> PersistenceFacade --> InsertStatementBuilder -->|Models statement| InsertEngine
+    UpdateApi --> PersistenceFacade --> UpdateStatementBuilder -->|Models statement| UpdateEngine
+    UpdateApi --> PersistenceFacade --> DeleteStatementBuilder -->|Models statement| DeleteEngine
+    DeleteApi --> PersistenceFacade --> DeleteEngine -->|Generates SQL & executes| DatabaseProvider
     PersistenceFacade --> ChangeTracker
-    UpdateApi --> UpdateEngine --> DatabaseProvider
-    DeleteApi --> DeleteEngine --> DatabaseProvider
-    NativeSqlApi --> NativeSqlEngine --> DatabaseProvider
+    UpdateApi --> UpdateEngine -->|Generates & executes SQL| DatabaseProvider
+    DeleteApi --> DeleteEngine -->|Generates & executes SQL| DatabaseProvider
+    NativeSqlApi --> NativeSqlEngine -->|Executes SQL| DatabaseProvider
     TransactionsApi --> TransactionManager
     EngineGroup --> QueryCompilerGroup
     NativeSqlEngine --> NativeSqlCache
@@ -95,3 +97,18 @@ flowchart TB
     DatabaseProviderMetadata --> DataSource
     ExecutionEngine --> DataSource
 ```
+
+## Basic API flow
+
+The `Litebridge` instance is the primary entry point to accessing Litebridge's functionality. 
+Its actual implementation is dependent on the `DatabaseProvider` instance used, allowing 
+the database provider to limit or extend the Litebridge API to support vendor-specific features.
+All custom instances of Litebridge must extend `LitebridgeCore` at a minimum.
+
+The API itself is a lightweight, fluent API that generates a chain of `QueryNode` instances which are evaluated
+against a query structure cache before SQL generation. If the query's hash isn't found in the cache, one of the 
+core ORM's statement engines will compile the query node chain into a logical model of the SQL operation
+(e.g. a `Select`, `Insert`, etc) using the `QueryCompiler`. The result is passed to the `DatabaseProvider` for SQL string generation. 
+The generated SQL string is cached with metadata, and the statement is executed with extract bind parameters.
+Subsequent executions of the same structural query skip the query compilation and SQL generation phases due to the cached data.
+
