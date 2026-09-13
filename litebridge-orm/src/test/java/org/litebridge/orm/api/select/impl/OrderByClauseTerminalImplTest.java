@@ -1,32 +1,31 @@
-//package org.litebridge.orm.api.select.impl;
-//
-//import org.junit.jupiter.api.Test;
-//import org.litebridge.orm.engine.ast.LimitNode;
-//import org.litebridge.orm.api.select.model.SelectSpec;
-//
-//import java.util.Optional;
-//
-//import static org.mockito.ArgumentMatchers.any;
-//import static org.mockito.ArgumentMatchers.argThat;
-//import static org.mockito.Mockito.mock;
-//import static org.mockito.Mockito.verify;
-//import static org.mockito.Mockito.when;
-//
-//class OrderByClauseTerminalImplTest {
-//
-//    @Test
-//    void limit() {
-//        // Given
-//        final AbstractSelector<String, SelectSpec> delegate = mock(AbstractSelector.class);
-//        when(delegate.withNode(any())).thenReturn(delegate);
-//        final OrderByClauseTerminalImpl<String, SelectSpec> terminal = new OrderByClauseTerminalImpl<>(delegate);
-//
-//        // When
-//        terminal.limit(10);
-//
-//        // Then
-//        verify(delegate).withNode(argThat(node ->
-//                node instanceof LimitNode limitNode
-//                        && limitNode.limit().equals(Optional.of(10))));
-//    }
-//}
+package org.litebridge.orm.api.select.impl;
+
+import org.junit.jupiter.api.Test;
+import org.litebridge.orm.api.select.SelectTerminal;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SelectNode;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.mock;
+
+class OrderByClauseTerminalImplTest {
+
+    @Test
+    void limit() {
+        // Given
+        final int limit = 10;
+        final QueryNode node = mock(SelectNode.class);
+        final SelectEngineTerminal selectEngineTerminal = mock(SelectEngineTerminal.class);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+
+        final OrderByClauseTerminalImpl<String> terminal = new OrderByClauseTerminalImpl<>(node, selectEngineTerminal, litebridgeContext);
+
+        // When
+        final SelectTerminal<String> result = terminal.limit(10);
+
+        // Then
+        assertNotNull(result);
+    }
+}
