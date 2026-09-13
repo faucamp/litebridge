@@ -75,6 +75,7 @@ Litebridge is modular and uses JPMS (`module-info.java`).
     - `org.litebridge.orm.Litebridge`: Default Litebridge instance
     - `org.litebridge.orm.LitebridgeCore`: Basic/limited functionality Litebridge instance (no merge support)
     - custom database provider-specific extension of either `Litebridge` or `LitebridgeCore`
+- A high-level component diagram of Litebridge is provided in the [architecture documentation](docs/dev/architecture.md).
 
 #### Query API
 
