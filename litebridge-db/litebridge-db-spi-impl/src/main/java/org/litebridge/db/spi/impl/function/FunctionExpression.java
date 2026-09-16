@@ -5,7 +5,8 @@ import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.DelegateExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+
+import static org.litebridge.db.spi.impl.ColumnIdentifierGenerator.quoteIdentifier;
 
 /**
  * Base class for function expressions operating on a column.
@@ -15,11 +16,11 @@ public abstract class FunctionExpression extends DelegateColumnExpressionImpl {
     /**
      * Constructor.
      *
-     * @param target                    Target column expression to encapsulate.
-     * @param columnIdentifierGenerator Database provider-specific column identifier generator.
+     * @param target Target column expression to encapsulate.
+     * @param alias  The alias for the column expression
      */
-    public FunctionExpression(final ColumnExpression target, final ColumnIdentifierGenerator columnIdentifierGenerator) {
-        super(target, columnIdentifierGenerator);
+    public FunctionExpression(final ColumnExpression target, final @Nullable String alias) {
+        super(target, alias);
     }
 
     /**
@@ -37,9 +38,8 @@ public abstract class FunctionExpression extends DelegateColumnExpressionImpl {
 
         if (clause == ClauseType.SELECT
                 && parent == null
-                && target.column().alias() != null) {
-            //noinspection DataFlowIssue
-            return "%s %s".formatted(sql, columnIdentifierGenerator.createAliasDeclaration(target.column().alias()));
+                && alias != null) {
+            return "%s AS %s".formatted(sql, quoteIdentifier(alias));
         } else {
             return sql;
         }

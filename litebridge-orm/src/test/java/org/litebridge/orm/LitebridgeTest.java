@@ -37,7 +37,7 @@ import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
-import org.litebridge.orm.expression.TestSelectReference;
+import org.litebridge.orm.expression.TestColumnReference;
 import org.litebridge.orm.expression.TestSelectReferenceExpressionFactory;
 import org.litebridge.orm.expression.function.aggregate.CountSpec;
 import org.litebridge.orm.expression.intent.ConvertIntent;
@@ -390,7 +390,7 @@ class LitebridgeTest {
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-        when(selectRegistry.reference()).thenReturn(TestSelectReference::new);
+        when(selectRegistry.reference()).thenReturn(TestColumnReference::new);
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         final DataSource dataSource = mock(DataSource.class);

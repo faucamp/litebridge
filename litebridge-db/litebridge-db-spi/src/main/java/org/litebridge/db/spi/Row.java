@@ -1,91 +1,98 @@
 package org.litebridge.db.spi;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.StringUtils;
-import org.litebridge.commons.type.ConcurrentLazy;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.StringJoiner;
-import java.util.stream.Stream;
 
 /**
- * A row of data returned by a query. Holds a collection of column-value pairs.
+ * A row of data returned from a database query.
  * <p>
- * This class provides methods to add expressions with associated values,
- * retrieve specific expressions, and stream through all expressions in the row.
+ * Represents a row within a dataset, containing a collection of {@link RowColumn} objects.
+ * Each column in the row can be accessed either by its index or by its label/alias.
  */
 public final class Row {
 
-    private final LinkedHashMap<Column, @Nullable Object> columns = new LinkedHashMap<>();
-    private final ConcurrentLazy<List<RowColumn>> columnList = new ConcurrentLazy<>(() -> columnStream().toList());
+    private final List<RowColumn> columns;
+    private @Nullable LinkedHashMap<String, RowColumn> columnMap;
 
-    /**
-     * Add a new column-value pair to the row and return the updated instance.
-     * <p>
-     * If the column already exists, its value will be replaced with the new value provided.
-     *
-     * @param column the column to add or update within the row; must not be null
-     * @param value  the value associated with the specified column; may be null
-     * @return the updated {@code Row} instance with the new column-value pair added
-     */
-    public Row withColumn(final Column column, final @Nullable Object value) {
-        columns.put(column, value);
-        return this;
+    public Row(final List<RowColumn> columns) {
+        this.columns = columns;
     }
 
     /**
-     * Updates the value of an existing column in the row.
+     * Returns the list of columns in this row.
      *
-     * @param column the column to update
-     * @param value  the new value for the column
-     */
-    public void updateColumn(final Column column, final @Nullable Object value) {
-        columns.put(column, value);
-    }
-
-    /**
-     * Return a stream of {@link Row.RowColumn} objects, each representing a column in the current row
-     * along with its associated value.
-     *
-     * @return a stream of {@code RowColumn} objects for all columns in the row
-     */
-    public Stream<RowColumn> columnStream() {
-        return columns.sequencedKeySet().stream()
-                .map(RowColumn::new);
-    }
-
-    /**
-     * Returns a list of all columns in the current row.
-     *
-     * @return a list of {@code RowColumn} objects
+     * @return The list of row columns
      */
     public List<RowColumn> columns() {
-        return columnList.getOrThrow();
+        return columns;
     }
 
     /**
-     * Return a stream of objects containing the values of the results in this row.
+     * Provides a map of column labels to {@link RowColumn} objects for the current row.
+     * <p>
+     * The underlying map implementation is a {@link LinkedHashMap}, preserving the order of columns.
+     * <p>
+     * If the underlying map is not already initialised, it will be created and populated with
+     * the columns in this row; subsequent calls will return the same map.
      *
-     * @return a stream of objects for all values in the row
+     * @return A map where the keys are column labels (strings) and the values
+     * are the corresponding {@link RowColumn} objects.
      */
-    public Stream<@Nullable Object> valueStream() {
-        return columns.sequencedValues().stream();
+    public Map<String, RowColumn> columnMap() {
+        return ensureColumnMap();
     }
 
     /**
-     * Retrieve a column from the row by its name if it exists.
+     * Retrieves the value of the column at the given index.
      *
-     * @param column the name of the column to retrieve; must not be null
-     * @return an {@code Optional} containing the {@code RowColumn} associated with the specified column name
-     * if it exists, or an empty {@code Optional} if no match is found
+     * @param index The row column index
+     * @return The row column value
+     * @throws IndexOutOfBoundsException if an invalid column index is specified
      */
-    public Optional<RowColumn> column(final String column) {
-        return columnStream()
-                .filter(rc -> StringUtils.equalsIgnoreCase(rc.column().name(), column))
-                .findFirst();
+    public @Nullable Object value(final int index) {
+        return columns.get(index).value();
+    }
+
+    /**
+     * Retrieves the value of the column with the given label/alias.
+     *
+     * @param label The row column label (column name or alias)
+     * @return The row column value
+     * @throws NoSuchElementException if the column is not found
+     */
+    public @Nullable Object value(final String label) {
+        return column(label).value();
+    }
+
+    /**
+     * Retrieves the column at the given index.
+     *
+     * @param index The row column index
+     * @return The row column
+     * @throws IndexOutOfBoundsException if an invalid column index is specified
+     */
+    public RowColumn column(final int index) throws IndexOutOfBoundsException {
+        return columns.get(index);
+    }
+
+    /**
+     * Retrieves the column with the given label/alias.
+     *
+     * @param label The row column label (column name or alias)
+     * @return The row column
+     * @throws NoSuchElementException if the column is not found
+     */
+    public RowColumn column(final String label) throws NoSuchElementException {
+        return ObjectUtils.requireNonNull(ensureColumnMap().get(label),
+                () -> new NoSuchElementException("Row column not found: " + label));
     }
 
     /**
@@ -94,29 +101,24 @@ public final class Row {
      * @param column the column metadata to match
      * @return the index of the column if found, or -1 otherwise
      */
-    public int getColumnIndex(final Column column) {
-        final String alias = column.alias();
-
-        if (alias != null) {
-            return getColumnIndexForAlias(alias);
-        } else {
-            return getColumnIndex(column.name());
-        }
+    public int indexOf(final Column column) {
+        return indexOf(column.name());
     }
 
     /**
      * Retrieves the index of a column from the row by its name.
      *
-     * @param columnName the name of the column to retrieve
+     * @param label the label of the column to retrieve
      * @return the index of the column if found, or -1 otherwise
      */
-    public int getColumnIndex(final String columnName) {
+    public int indexOf(final String label) {
         int index = 0;
 
-        for (Column col : columns.keySet()) {
-            if (StringUtils.equalsIgnoreCase(col.name(), columnName)) {
+        for (RowColumn rowColumn : columns) {
+            if (StringUtils.equalsIgnoreCase(rowColumn.label(), label)) {
                 return index;
             }
+
             index++;
         }
 
@@ -124,148 +126,43 @@ public final class Row {
     }
 
     /**
-     * Retrieves the index of a column from the row by its alias.
+     * Returns the number of columns in this row.
      *
-     * @param alias the alias of the column to retrieve
-     * @return the index of the column if found, or -1 otherwise
-     */
-    public int getColumnIndexForAlias(final String alias) {
-        int index = 0;
-
-        for (Column col : columns.keySet()) {
-            if (StringUtils.equalsIgnoreCase(col.alias(), alias)) {
-                return index;
-            }
-            index++;
-        }
-
-        return -1;
-    }
-
-    /**
-     * Retrieves the value of a column by its index.
-     *
-     * @param index the index of the column
-     * @return the value of the column
-     */
-    public @Nullable Object getValue(final int index) {
-        return column(index).value();
-    }
-
-    /**
-     * Retrieves a column from the row by its index.
-     *
-     * @param index the index of the column to retrieve
-     * @return the {@code RowColumn} at the specified index
-     */
-    public RowColumn column(final int index) {
-        return columns().get(index);
-    }
-
-    /**
-     * Retrieve a column from the row by its name if it exists.
-     *
-     * @param alias the alias of the column to retrieve; must not be null
-     * @return an {@code Optional} containing the {@code RowColumn} associated with the specified column name
-     * if it exists, or an empty {@code Optional} if no match is found
-     */
-    public Optional<RowColumn> columnForAlias(final String alias) {
-        final String aliasToCheck = Objects.requireNonNull(alias, "Alias cannot be null");
-        return columnStream()
-                .filter(rc -> StringUtils.equalsIgnoreCase(rc.column().alias(), aliasToCheck))
-                .findFirst();
-    }
-
-    /**
-     * Retrieves a column from the row by its {@code Column} metadata.
-     *
-     * @param column the column metadata to match
-     * @return an {@code Optional} containing the {@code RowColumn} if found, or empty otherwise
-     */
-    @SuppressWarnings("ConstantConditions")
-    public Optional<RowColumn> column(final Column column) {
-        if (column.alias() != null) {
-            return columnForAlias(column.alias());
-        } else {
-            return column(column.name());
-        }
-    }
-
-    /**
-     * Returns the total number of expressions in the current row.
-     *
-     * @return the size of the column collection for the row
+     * @return The number of columns
      */
     public int size() {
         return columns.size();
     }
 
-    @Override
-    public String toString() {
-        final StringJoiner sj = new StringJoiner(", ", "{", "}");
-        columns.forEach((column, value) -> sj.add(column.name()
-                + (column.alias() != null && !Objects.equals(column.alias(), column.name()) ? "/" + column.alias() + "=" : "=")
-                + value));
-        return sj.toString();
-    }
+    private LinkedHashMap<String, RowColumn> ensureColumnMap() {
+        if (columnMap == null) {
+            columnMap = new LinkedHashMap<>();
 
-    /**
-     * A combination of a column and its associated value within a row.
-     * <p>
-     * This class acts as a wrapper to tie a {@code Column} instance with its value in a specific row.
-     * It provides methods to access the column, its value, and a string representation of the pairing.
-     * <p>
-     * Instances of this class are immutable and primarily used as part of the {@link Row} class to
-     * manage column-value associations.
-     */
-    public final class RowColumn {
-        private final Column column;
-
-        /**
-         * Construct a new {@code RowColumn} instance by associating the specified column with a row.
-         *
-         * @param column the {@code Column} to be associated with this row; must not be null
-         */
-        public RowColumn(final Column column) {
-            this.column = column;
-        }
-
-        /**
-         * Retrieve the {@code Column} instance associated with this {@code RowColumn}.
-         *
-         * @return the associated {@code Column} instance
-         */
-        public Column column() {
-            return column;
-        }
-
-        /**
-         * Retrieve the value associated with the current {@code Column} in the context of the row.
-         *
-         * @return the value corresponding to the associated {@code Column}
-         */
-        public @Nullable Object value() {
-            return columns.get(column);
-        }
-
-        @Override
-        public String toString() {
-            if (column.alias() != null) {
-                return column.name() + "/" + column.alias() + "=" + value();
-            } else {
-                return column.name() + "=" + value();
+            for (RowColumn rowColumn : columns) {
+                columnMap.put(rowColumn.label(), rowColumn);
             }
         }
 
-        @Override
-        public boolean equals(final Object o) {
-            if (!(o instanceof final RowColumn rowColumn)) return false;
-            return Objects.equals(column, rowColumn.column);
+        return columnMap;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o || (o instanceof final Row that
+                && Objects.equals(this.columns, that.columns))) {
+            return true;
         }
 
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(column);
-        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(columns);
+    }
+
+    @Override
+    public String toString() {
+        return columns.toString();
     }
 }

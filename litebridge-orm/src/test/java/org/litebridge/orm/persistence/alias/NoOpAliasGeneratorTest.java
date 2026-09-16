@@ -37,7 +37,7 @@ class NoOpAliasGeneratorTest {
         final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
 
         // When
-        final Table result = noOpAliasGenerator.aliasTable(ormTable);
+        final Table result = noOpAliasGenerator.newTableAlias(ormTable);
 
         // Then
         assertEquals(result, table);
@@ -54,7 +54,7 @@ class NoOpAliasGeneratorTest {
         final Table aliasedTable = table.as("tt");
 
         // When
-        final Column result = noOpAliasGenerator.aliasColumn(aliasedTable, columnMetaData);
+        final Column result = noOpAliasGenerator.newColumnAlias(aliasedTable, columnMetaData);
 
         // Then
         assertEquals(columnMetaData.name(), result.name());

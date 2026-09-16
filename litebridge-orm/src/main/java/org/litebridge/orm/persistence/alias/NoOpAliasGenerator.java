@@ -1,9 +1,8 @@
 package org.litebridge.orm.persistence.alias;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
-import org.litebridge.orm.persistence.OrmTable;
 
 /**
  * An {@link AliasGenerator} implementation that does not generate any aliases,
@@ -12,22 +11,37 @@ import org.litebridge.orm.persistence.OrmTable;
 public final class NoOpAliasGenerator implements AliasGenerator {
 
     @Override
-    public Table aliasTable(final OrmTable ormTable) {
-        return ormTable.getMetaData().toTable();
+    public @Nullable Column column(final String alias) {
+        return null;
     }
 
     @Override
-    public Table aliasTable(final Table table) {
-        return table;
+    public @Nullable String columnAlias(final Column column) {
+        return null;
     }
 
     @Override
-    public Column aliasColumn(final Table ormTable, final ColumnMetaData columnMetaData) {
-        return columnMetaData.toColumn();
+    public @Nullable String tableAlias(final Table table) {
+        return null;
     }
 
     @Override
-    public Column aliasColumn(final Table ormTable, final Column column) {
-        return column;
+    public String newTableAlias(final Table table) {
+        return table.name();
+    }
+
+    @Override
+    public String newColumnAlias(final Column column) {
+        return column.name();
+    }
+
+    @Override
+    public void setColumnAlias(final Column column, final String alias) {
+        /* Ignored */
+    }
+
+    @Override
+    public String newAlias(final String name) {
+        return name;
     }
 }

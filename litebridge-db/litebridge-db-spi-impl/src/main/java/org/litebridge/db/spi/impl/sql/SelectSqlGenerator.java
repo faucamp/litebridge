@@ -3,6 +3,8 @@ package org.litebridge.db.spi.impl.sql;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.alias.AliasedQuery;
+import org.litebridge.db.spi.alias.AliasedTable;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
@@ -13,7 +15,6 @@ import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
-import java.util.Objects;
 import java.util.function.BiFunction;
 
 /**
@@ -59,16 +60,25 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
                 sql.append(identifier);
             }
         } else {
-            // Empty select clause; return all expressions
+            // Empty select clause; return all columns
             sql.append("*");
         }
 
         // From table
         sql.append(" FROM ");
-        appendTable(sql, select.table());
 
-        if (select.table().alias() != null) {
-            sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(select.table().alias())));
+        switch (select.from()) {
+            case Table table -> appendTable(sql, table);
+            case Select subselect -> sql.append('(')
+                    .append(generateSql(subselect, connectionProvider))
+                    .append(')');
+            case AliasedQuery aliasedQuery -> sql.append('(')
+                    .append(generateSql(aliasedQuery.target(), connectionProvider))
+                    .append(") AS ")
+                    .append(aliasedQuery.alias());
+            case AliasedTable aliasedTable -> appendTable(sql, aliasedTable.target())
+                    .append(" AS ")
+                    .append(aliasedTable.alias());
         }
 
         // Joins
@@ -145,9 +155,9 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
     protected String createJoin(final Join join, final Select operation, final ConnectionProvider connectionProvider) {
         final StringBuilder sb = appendTable(new StringBuilder(" JOIN "), join.table());
 
-        if (join.table().alias() != null) {
-            sb.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(join.table().alias())));
-        }
+//        if (join.table().alias() != null) {
+//            sb.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(join.table().alias())));
+//        }
 
         if (join.conditions().conditions().size() == 1
                 && join.conditions().subgroups().isEmpty()

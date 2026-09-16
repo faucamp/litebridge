@@ -1,8 +1,10 @@
 package org.litebridge.orm.e2e.sql;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.e2e.AbstractE2eTest;
@@ -22,7 +24,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 public class SqlMergeE2eTest extends AbstractE2eTest {
 
     @TestTemplate
-    public void merge(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    @DisplayName("SQL merge using table")
+    public void merge_usingSubquery(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Don't run test for databases that do not support MERGE INTO
         assumeTrue(litebridge instanceof Litebridge);
         final Litebridge litebridge = (Litebridge) this.litebridge;
@@ -82,15 +85,102 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
         for (int i = 1; i <= 4; i++) {
             final int id = i;
             assertTrue(accountRows.stream().anyMatch(row -> {
-                final Row.RowColumn accountIdCol = row.column(accountId).orElseThrow();
-                final Row.RowColumn balanceCol = row.column(balance).orElseThrow();
+                final RowColumn accountIdCol = row.column(accountId);
+                final RowColumn balanceCol = row.column(balance);
                 return accountIdCol.value().equals(id) && balanceCol.value().equals(500);
             }));
         }
 
         assertTrue(accountRows.stream().anyMatch(row -> {
-            final Row.RowColumn accountIdCol = row.column(accountId).orElseThrow();
-            final Row.RowColumn balanceCol = row.column(balance).orElseThrow();
+            final RowColumn accountIdCol = row.column(accountId);
+            final RowColumn balanceCol = row.column(balance);
+            return accountIdCol.value().equals(123) && balanceCol.value().equals(0);
+        }));
+    }
+
+    @TestTemplate
+    @DisplayName("SQL merge using query")
+    public void merge(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Don't run test for databases that do not support MERGE INTO
+        assumeTrue(litebridge instanceof Litebridge);
+        final Litebridge litebridge = (Litebridge) this.litebridge;
+
+        final String accountTable = tableMapper.qualifyName("ACCOUNT");
+        final String personTable = tableMapper.qualifyName("PERSON");
+        final String accountId = tableMapper.transformColumnName("ACCOUNT_ID");
+        final String accountName = tableMapper.transformColumnName("ACCOUNT_NAME");
+        final String balance = tableMapper.transformColumnName("BALANCE");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+
+        for (int j = 0; j < 10; j++) {
+            final int id = j + 1;
+            litebridge.insert(personTable, i -> i
+                    .into(firstName, surname, age)
+                    .values("Name" + id, "Surname" + id, id));
+        }
+
+        for (int j = 0; j < 5; j++) {
+            final int id = j + 1;
+            litebridge.insert(accountTable, i -> i
+                    .into(accountId, accountName, balance, personId)
+                    .values(id, "Account" + id, BigInteger.valueOf(id), id));
+        }
+
+//        final UpdateResult updateResult = litebridge.mergeInto(personTable, m -> m
+//                .using(q -> q
+//                        .select(accountId)
+//                        .from(accountTable))
+//                .on(accountId).eq(Fn.c(personTable, personId))
+//                .whenMatched(u -> u
+//                        .update(person -> person
+//                                .set(firstName).to("Updated Name")
+//                                .set(surname).to("Updated Surname")
+//                                .set(age).to(100))))
+
+
+        final UpdateResult updateResult = litebridge.mergeInto(accountTable, m -> m
+                .using(personTable)
+                .on(Fn.c(accountTable, accountId)).eq(Fn.c(personTable, personId))
+                .whenMatched(u -> u
+                        .update(account -> account
+                                .set(balance).to(500)
+                                .where(accountId).lt(5)))
+                .whenMatched(account -> account
+                        .delete(d -> d
+                                .where(accountId).gte(5)))
+                .whenNotMatched(i -> i
+                        .insert(accountId, accountName, balance, personId)
+                        .values(123L, "Default Account", 0, 1L)));
+
+        final boolean isOracle = "Oracle".equals(dbEnv.getName());
+        assertEquals(isOracle ? 5 : 10, updateResult.rowsAffected());
+
+        final int count = litebridge.select(Fn.convert(Fn.count(), int.class)).from(Account.class).oneOrThrow();
+        assertEquals(isOracle ? 10 : 5, count);
+
+        final List<Row> accountRows = litebridge.select(
+                        Fn.convert(Fn.c(accountId), int.class),
+                        Fn.convert(Fn.c(balance), int.class))
+                .from(accountTable)
+                .list();
+        assertEquals(isOracle ? 10 : 5, accountRows.size());
+
+        for (int i = 1; i <= 4; i++) {
+            final int id = i;
+            assertTrue(accountRows.stream().anyMatch(row -> {
+                final RowColumn accountIdCol = row.column(accountId);
+                final RowColumn balanceCol = row.column(balance);
+                return accountIdCol.value().equals(id) && balanceCol.value().equals(500);
+            }));
+        }
+
+        assertTrue(accountRows.stream().anyMatch(row -> {
+            final RowColumn accountIdCol = row.column(accountId);
+            final RowColumn balanceCol = row.column(balance);
             return accountIdCol.value().equals(123) && balanceCol.value().equals(0);
         }));
     }

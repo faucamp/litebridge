@@ -31,8 +31,11 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
 
         final StringBuilder columnSql = new StringBuilder(quoteIdentifier(column.name()));
 
-        if (clause == ClauseType.SELECT && !StringUtils.isBlank(column.alias())) {
-            columnSql.append(' ').append(createAliasDeclaration(quoteIdentifier(column.alias())));
+//        if (clause == ClauseType.SELECT && !StringUtils.isBlank(column.alias())) {
+//            columnSql.append(' ').append(createAliasDeclaration(quoteIdentifier(column.alias())));
+//        }
+        if (true) {
+            throw new UnsupportedOperationException("Not implemented yet");
         }
 
         return columnSql.toString();
@@ -46,17 +49,18 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
 
         // Oracle processes SELECT clauses in order: FROM, WHERE, GROUP BY, HAVING, SELECT (and the rest)
         // - this means that full column aliases are not available in WHERE, GROUP BY and HAVING clauses
-        return switch (clause) {
-            case WHERE, GROUP_BY, HAVING ->
-                    quoteIdentifier(column.table().aliasOrName()) + '.' + quoteIdentifier(column.name());
-            default -> {
-                if (shouldApplyTableQualifier(column, select)) {
-                    yield super.createColumnRef(column, operation, clause);
-                }
-
-                yield quoteIdentifier(column.name());
-            }
-        };
+//        return switch (clause) {
+//            case WHERE, GROUP_BY, HAVING ->
+//                    quoteIdentifier(column.table().aliasOrName()) + '.' + quoteIdentifier(column.name());
+//            default -> {
+//                if (shouldApplyTableQualifier(column, select)) {
+//                    yield super.createColumnRef(column, operation, clause);
+//                }
+//
+//                yield quoteIdentifier(column.name());
+//            }
+//        };
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
@@ -82,17 +86,18 @@ public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGener
             for (LogicCondition logicCondition : join.conditions().conditions()) {
                 final Condition condition = logicCondition.condition();
 
-                if (condition.operator() == Operator.USING
-                        // JOIN USING <expression>
-                        && condition.lhs() instanceof ColumnExpression columnExpression
-                        // Same expression
-                        && (columnExpression.column().name().equals(column.name())
-                        // Same expression but from other side of join
-                        || (columnExpression.column().equalsColumnOnlyIgnoreAlias(column)
-                        && (select.table().equalsIgnoreAlias(column.table()) || join.table().equalsIgnoreAlias(column.table()))))) {
-                    // Don't include table qualifiers
-                    return false;
-                }
+//                if (condition.operator() == Operator.USING
+//                        // JOIN USING <expression>
+//                        && condition.lhs() instanceof ColumnExpression columnExpression
+//                        // Same expression
+//                        && (columnExpression.column().name().equals(column.name())
+//                        // Same expression but from other side of join
+//                        || (columnExpression.column().equalsColumnOnlyIgnoreAlias(column)
+//                        && (select.table().equalsIgnoreAlias(column.table()) || join.table().equalsIgnoreAlias(column.table()))))) {
+//                    // Don't include table qualifiers
+//                    return false;
+//                }
+                throw new UnsupportedOperationException("Not implemented yet");
             }
         }
 

@@ -8,6 +8,7 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
@@ -43,7 +44,10 @@ import java.util.stream.Collectors;
 public class DtoMapper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DtoMapper.class);
-    private static final Pattern FUNCTION_SQL_COLUMN_PATTERN = Pattern.compile("(?i)(?:(\\w+)\\$)?(\\w+)");
+    private static final Pattern FUNCTION_SQL_COLUMN_PATTERN = Pattern.compile(
+            "\\b[a-zA-Z_]\\w*\\s*\\((?:\\s*\\b[a-zA-Z_]\\w*\\s*\\()*+\\s*(?:([a-zA-Z_]\\w*)\\.)?([a-zA-Z_]\\w*)",
+            Pattern.CASE_INSENSITIVE
+    );
 
     private final DtoCache dtoCache = new DtoCache();
     private final TypeConverter typeConverter;
@@ -54,7 +58,7 @@ public class DtoMapper {
     /**
      * Creates a new {@code DtoMapper} instance.
      *
-     * @param dtoConstructor   the DTO constructor helper
+     * @param dtoConstructor    the DTO constructor helper
      * @param litebridgeContext the Litebridge context
      */
     public DtoMapper(final DtoConstructor dtoConstructor,
@@ -134,17 +138,18 @@ public class DtoMapper {
         MappingData rootMappingData = null;
         int columnIndex = 0;
 
-        for (final Row.RowColumn rowColumn : rows.getFirst().columns()) {
-            final Column column = rowColumn.column();
-            final Table table;
+        for (final RowColumn rowColumn : rows.getFirst().columns()) {
+            final Column rawColumn = rowColumn.column();
+            final Column column;
 
-            if (column.hasTable()) {
-                table = column.table();
+            if (rawColumn.hasTable()) {
+                column = rawColumn;
             } else {
-                table = parseTargetColumn(column.name(), dtoClassTableMetaData.schema(), dtoClassTableMetaData).table();
+                column = parseTargetColumn(rawColumn.name(), dtoClassTableMetaData.schema(), dtoClassTableMetaData);
             }
 
-            final MappingData mappingData = createMappingDataIfAbsent(mappingDataMap, table, contextDtoClass);
+            final Table table = column.table();
+            final MappingData mappingData = createMappingDataIfAbsent(mappingDataMap, table, contextDtoClass, rowColumn);
 
             if (rootMappingData == null && mappingData.ormTable().equals(rootOrmTable)) {
                 rootMappingData = mappingData;
@@ -206,7 +211,12 @@ public class DtoMapper {
                     }
                 }
 
-                fieldMapping = new FieldMapping(fieldAccessor, new ArrayList<>(List.of(column)), basicType, relatedDto, relatedCollectionField, relatedDtoClass);
+                fieldMapping = new FieldMapping(fieldAccessor,
+                        new ArrayList<>(List.of(column)),
+                        new ArrayList<>(List.of(rowColumn.label())),
+                        basicType,
+                        relatedDto,
+                        relatedCollectionField, relatedDtoClass);
                 mappingData.fieldMappings().add(fieldMapping);
             }
 
@@ -234,7 +244,7 @@ public class DtoMapper {
                 final int[] columnIndexes = new int[fieldMapping.columns().size()];
 
                 for (int i = 0; i < columnIndexes.length; i++) {
-                    columnIndexes[i] = firstRow.getColumnIndex(fieldMapping.columns().get(i));
+                    columnIndexes[i] = firstRow.indexOf(fieldMapping.columnLabels().get(i));
                 }
 
                 fieldMapping.setColumnIndexes(columnIndexes);
@@ -281,9 +291,9 @@ public class DtoMapper {
                     final Column fkColumn = foreignKeyConstraint.foreignKey();
 
                     final FieldMapping targetFieldMapping = mappingDataMap.values().stream()
-                            .filter(targetMappingData -> targetMappingData.table().equalsIgnoreAlias(fkColumn.table()))
+                            .filter(targetMappingData -> targetMappingData.table().equals(fkColumn.table()))
                             .flatMap(targetMappingData -> targetMappingData.fieldMappings().stream())
-                            .filter(fieldMapping -> fieldMapping.columns().stream().anyMatch(c -> c.equalsIgnoreAlias(fkColumn)))
+                            .filter(fieldMapping -> fieldMapping.columns().stream().anyMatch(c -> c.equals(fkColumn)))
                             .findFirst()
                             .orElse(null);
 
@@ -344,8 +354,10 @@ public class DtoMapper {
         fieldMapping.columns().addAll(Arrays.asList(sortedColumns));
     }
 
-    private MappingData createMappingDataIfAbsent(final Map<String, MappingData> mappingDataMap, final Table table, final @Nullable Class<?> contextDtoClass) {
-        final String key = table.alias() != null ? table.alias() : table.qualifiedName();
+    private MappingData createMappingDataIfAbsent(final Map<String, MappingData> mappingDataMap, final Table table, final @Nullable Class<?> contextDtoClass, final RowColumn rowColumn) {
+//        final String key = table.alias() != null ? table.alias() : table.qualifiedName();
+        //TODO: verify table alias being missing doesn't break anything
+        final String key = table.qualifiedName();
         return mappingDataMap.computeIfAbsent(key, alias -> {
             final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
             final List<FieldAccessor> pkFields = ormTable.getPrimaryKeyFields();
@@ -364,12 +376,12 @@ public class DtoMapper {
         if (pkColumnIndexes.length == 0) {
             return EmptyPk.INSTANCE;
         } else if (pkColumnIndexes.length == 1) {
-            return new SinglePk(row.getValue(pkColumnIndexes[0]));
+            return new SinglePk(row.value(pkColumnIndexes[0]));
         } else {
             final Object[] values = new Object[pkColumnIndexes.length];
 
             for (int i = 0; i < pkColumnIndexes.length; i++) {
-                values[i] = row.getValue(pkColumnIndexes[i]);
+                values[i] = row.value(pkColumnIndexes[i]);
             }
 
             return new CompositePk(values);
@@ -408,7 +420,7 @@ public class DtoMapper {
 
             if (fieldMapping.isBasicType()) {
                 // Basic field
-                final Object dbValue = row.getValue(fieldMapping.columnIndexes()[0]);
+                final Object dbValue = row.value(fieldMapping.columnIndexes()[0]);
                 final Object convertedValue = typeConverter.convert(dbValue, fieldAccessor.type());
                 dtoData.set(fieldAccessor, convertedValue);
 
@@ -420,12 +432,12 @@ public class DtoMapper {
                 // Related DTO
                 final Pk pk;
                 if (fieldMapping.columnIndexes().length == 1) {
-                    pk = new SinglePk(row.getValue(fieldMapping.columnIndexes()[0]));
+                    pk = new SinglePk(row.value(fieldMapping.columnIndexes()[0]));
                 } else {
                     final Object[] pkValues = new Object[fieldMapping.columnIndexes().length];
 
                     for (int j = 0; j < pkValues.length; j++) {
-                        pkValues[j] = row.getValue(fieldMapping.columnIndexes()[j]);
+                        pkValues[j] = row.value(fieldMapping.columnIndexes()[j]);
                     }
 
                     pk = new CompositePk(pkValues);
@@ -733,6 +745,7 @@ public class DtoMapper {
                 }
 
                 final Table table = tableRegistry.getOrCreateSpiTable(tableName);
+                //TODO: dropping the "alias"/label here
                 return new Column(table, columnName);
             } else {
                 if (rootTableMetaData.hasColumn(columnName)) {
@@ -986,6 +999,7 @@ public class DtoMapper {
     private static final class FieldMapping {
         private final FieldAccessor fieldAccessor;
         private final List<Column> columns;
+        private final List<String> columnLabels;
         private final boolean isBasicType;
         private final boolean isRelatedDto;
         private final @Nullable FieldAccessor relatedCollectionField;
@@ -994,12 +1008,14 @@ public class DtoMapper {
 
         private FieldMapping(FieldAccessor fieldAccessor,
                              List<Column> columns,
+                             List<String> columnLabels,
                              boolean isBasicType,
                              boolean isRelatedDto,
                              @Nullable FieldAccessor relatedCollectionField,
                              @Nullable Class<?> relatedDtoClass) {
             this.fieldAccessor = fieldAccessor;
             this.columns = columns;
+            this.columnLabels = columnLabels;
             this.isBasicType = isBasicType;
             this.isRelatedDto = isRelatedDto;
             this.relatedCollectionField = relatedCollectionField;
@@ -1012,6 +1028,10 @@ public class DtoMapper {
 
         public List<Column> columns() {
             return columns;
+        }
+
+        public List<String> columnLabels() {
+            return columnLabels;
         }
 
         public int[] columnIndexes() {

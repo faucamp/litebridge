@@ -3,8 +3,9 @@ package org.litebridge.orm.api.condition;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
@@ -14,12 +15,12 @@ import java.util.function.Function;
  */
 public class CbSqlConditionClause extends AbstractCbConditionClause<Row> {
 
-    private final String table;
+    private final SelectNode selectNode;
 
     /**
      * Constructs a new {@code CbSqlConditionClause}.
      *
-     * @param table             the target table name
+     * @param selectNode        the root select query node
      * @param litebridgeContext the Litebridge context
      * @param logicOperator     the logical operator (AND/OR)
      * @param lhsColumn         the left-hand side column name
@@ -27,7 +28,7 @@ public class CbSqlConditionClause extends AbstractCbConditionClause<Row> {
      * @param node              the previous node in the chain
      * @param terminalCreator   the function to create the terminal clause
      */
-    public CbSqlConditionClause(final String table,
+    public CbSqlConditionClause(final SelectNode selectNode,
                                 final LitebridgeContext litebridgeContext,
                                 final LogicOperator logicOperator,
                                 final @Nullable String lhsColumn,
@@ -35,11 +36,11 @@ public class CbSqlConditionClause extends AbstractCbConditionClause<Row> {
                                 final @Nullable QueryNode node,
                                 final Function<QueryNode, AbstractCbConditionClauseTerminal<Row>> terminalCreator) {
         super(litebridgeContext, logicOperator, lhsColumn, lhsExpression, node, terminalCreator);
-        this.table = table;
+        this.selectNode = selectNode;
     }
 
     @Override
     protected AbstractCbConditionClauseTerminal<Row> createCbConditionClauseTerminal(final QueryNode conditionNode) {
-        return new CbSqlConditionClauseTerminal(table, conditionNode, litebridgeContext);
+        return new CbSqlConditionClauseTerminal(selectNode, conditionNode, litebridgeContext);
     }
 }

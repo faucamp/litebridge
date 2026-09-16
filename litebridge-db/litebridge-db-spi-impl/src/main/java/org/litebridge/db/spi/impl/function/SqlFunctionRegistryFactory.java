@@ -2,21 +2,17 @@ package org.litebridge.db.spi.impl.function;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.db.spi.expression.AliasReference;
 import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.expression.LiteralExpression;
+import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.DelegateColumnExpression;
+import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
-import org.litebridge.db.spi.expression.SelectReference;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.function.aggregate.Avg;
 import org.litebridge.db.spi.impl.function.aggregate.Count;
-import org.litebridge.db.spi.impl.function.aggregate.Max;
-import org.litebridge.db.spi.impl.function.aggregate.Min;
 import org.litebridge.db.spi.impl.function.date.CurrentTimestamp;
-import org.litebridge.db.spi.impl.function.scalar.Abs;
 import org.litebridge.db.spi.impl.function.scalar.Lower;
 import org.litebridge.db.spi.impl.function.scalar.Substring;
 import org.litebridge.db.spi.impl.function.scalar.Upper;
@@ -64,7 +60,8 @@ public class SqlFunctionRegistryFactory {
                         this::createSelectColumn,
                         this::createSubselect,
                         this::createLiteral,
-                        this::createSelectReference
+                        this::createSelectReference,
+                        this::createAliasReference
                 ),
                 new SqlFunctionRegistry.Aggregate(
                         this::createAvg,
@@ -87,11 +84,11 @@ public class SqlFunctionRegistryFactory {
      * Creates an expression to select a specific column.
      *
      * @param column Target column
-     * @param args   Not used; empty array
+     * @param alias  Optional column alias
      * @return Expression to select a specific column
      */
-    protected SelectColumn createSelectColumn(final Column column, final Object... args) {
-        return new SelectColumn(column, columnIdentifierGenerator);
+    protected SelectColumn createSelectColumn(final Column column, final @Nullable String alias, final @Nullable String tableAlias) {
+        return new SelectColumn(column, alias, tableAlias);
     }
 
     /**
@@ -131,8 +128,19 @@ public class SqlFunctionRegistryFactory {
      * @param column the column
      * @return the select reference expression
      */
-    protected SelectReference createSelectReference(Column column) {
-        return new SelectReferenceImpl(column, columnIdentifierGenerator);
+    protected ColumnReference createSelectReference(final Column column, final @Nullable String alias, final @Nullable String tableAlias) {
+        return new ColumnReferenceImpl(column, alias, tableAlias);
+    }
+
+    /**
+     * Creates an alias reference expression.
+     *
+     * @param tableAlias the alias to select from
+     * @param alias      the column to reference
+     * @return the select reference expression
+     */
+    protected AliasReference createAliasReference(final String alias, final @Nullable String tableAlias) {
+        return new AliasReferenceImpl(alias, tableAlias);
     }
 
     /**
@@ -143,7 +151,8 @@ public class SqlFunctionRegistryFactory {
      * @return A AVG-implementing expression
      */
     protected DelegateColumnExpression createAvg(final ColumnExpression target, final Object... args) {
-        return new Avg(target, columnIdentifierGenerator);
+//        return new Avg(target, columnIdentifierGenerator);
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     /**
@@ -154,7 +163,8 @@ public class SqlFunctionRegistryFactory {
      * @return A MIN-implementing expression
      */
     protected DelegateColumnExpression createMin(final ColumnExpression target, final Object... args) {
-        return new Min(target, columnIdentifierGenerator);
+//        return new Min(target, columnIdentifierGenerator);
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     /**
@@ -165,7 +175,8 @@ public class SqlFunctionRegistryFactory {
      * @return A MAX-implementing expression
      */
     protected DelegateColumnExpression createMax(final ColumnExpression target, final Object... args) {
-        return new Max(target, columnIdentifierGenerator);
+//        return new Max(target, columnIdentifierGenerator);
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     /**
@@ -185,7 +196,7 @@ public class SqlFunctionRegistryFactory {
      * @return An UPPER-implementing expression
      */
     protected DelegateColumnExpression createUpper(final ColumnExpression columnExpression, final Object... args) {
-        return new Upper(columnExpression, columnIdentifierGenerator);
+        return new Upper(columnExpression, (String) args[0]);
     }
 
     /**
@@ -196,7 +207,7 @@ public class SqlFunctionRegistryFactory {
      * @return A LOWER-implementing expression
      */
     protected DelegateColumnExpression createLower(final ColumnExpression target, final Object... args) {
-        return new Lower(target, columnIdentifierGenerator);
+        return new Lower(target, (String) args[0]);
     }
 
     /**
@@ -220,8 +231,8 @@ public class SqlFunctionRegistryFactory {
      * @param length Substring length; may be {@code null}
      * @return SUBSTRING-implementing expression
      */
-    protected DelegateColumnExpression createSubstring(final ColumnExpression target, final int start, @Nullable Integer length) {
-        return new Substring(target, start, length, columnIdentifierGenerator);
+    protected DelegateColumnExpression createSubstring(final ColumnExpression target, final int start, @Nullable Integer length, final @Nullable String alias) {
+        return new Substring(target, start, length, alias);
     }
 
     /**
@@ -232,7 +243,8 @@ public class SqlFunctionRegistryFactory {
      * @return An ABS-implementing expression
      */
     protected DelegateColumnExpression createAbs(final ColumnExpression target, final Object... args) {
-        return new Abs(target, columnIdentifierGenerator);
+//        return new Abs(target, columnIdentifierGenerator);
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     /**

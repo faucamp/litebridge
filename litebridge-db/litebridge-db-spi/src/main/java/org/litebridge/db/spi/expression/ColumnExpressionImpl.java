@@ -1,5 +1,6 @@
 package org.litebridge.db.spi.expression;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 
 /**
@@ -19,18 +20,32 @@ public abstract class ColumnExpressionImpl implements ColumnExpression {
      * The target column of this expression.
      */
     protected final Column column;
+    protected final @Nullable String alias;
+    protected final @Nullable String tableAlias;
 
     /**
      * Constructor.
      *
      * @param column The target column for this expression.
      */
-    protected ColumnExpressionImpl(final Column column) {
+    protected ColumnExpressionImpl(final Column column, final @Nullable String alias, final @Nullable String tableAlias) {
         this.column = column;
+        this.alias = alias;
+        this.tableAlias = tableAlias;
     }
 
     @Override
     public Column column() {
         return column;
+    }
+
+    @Override
+    public @Nullable String alias() {
+        return alias;
+    }
+
+    @Override
+    public @Nullable String tableAlias() {
+        return tableAlias;
     }
 }

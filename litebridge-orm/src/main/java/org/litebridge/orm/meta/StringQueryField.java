@@ -1,5 +1,6 @@
 package org.litebridge.orm.meta;
 
+import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Fn;
 import org.litebridge.orm.expression.ProtoNestableTOExpr;
 
@@ -29,8 +30,14 @@ public final class StringQueryField extends QueryField {
      *
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      */
-    public ProtoNestableTOExpr<String> upper() {
-        return Fn.upper(Fn.f(dtoClass, field));
+    public StringQueryField upper() {
+        if (pendingExpressionSpec != null) {
+            pendingExpressionSpec = Fn.lower(pendingExpressionSpec);
+        } else {
+            return Fn.upper(Fn.f(dtoClass, field));
+        }
+
+        return this;
     }
 
     /**
@@ -38,7 +45,17 @@ public final class StringQueryField extends QueryField {
      *
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      */
-    public ProtoNestableTOExpr<String> lower() {
-        return Fn.lower(Fn.f(dtoClass, field));
+    public StringQueryField lower() {
+        if (pendingExpressionSpec != null) {
+            pendingExpressionSpec = Fn.lower(pendingExpressionSpec);
+        } else {
+            pendingExpressionSpec = Fn.lower(Fn.field(field));
+        }
+
+        return this;
+    }
+
+    ExpressionSpec pendingExpressionSpec() {
+        return pendingExpressionSpec;
     }
 }

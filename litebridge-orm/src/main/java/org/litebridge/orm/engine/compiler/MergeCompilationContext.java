@@ -331,59 +331,63 @@ final class MergeCompilationContext extends AbstractCompilationContext {
     }
 
     @Override
-    protected Column resolveAlias(final Table table, final ColumnMetaData columnMetaData) {
+    protected String resolveAlias(final Table table, final ColumnMetaData columnMetaData) {
         return resolveAlias(table, columnMetaData.toColumn());
     }
 
     @Override
-    protected Column resolveAlias(final Table table, final Column column) {
-        final Column aliasedColumn = aliasedColumns.stream()
-                .filter(col -> col.equalsIgnoreAlias(column))
-                .findFirst()
-                .orElse(null);
-
-        if (aliasedColumn != null) {
-            return aliasedColumn;
-        }
-
-        final Table aliasedTable = aliasedTables.get(table.qualifiedName());
-
-        if (aliasedTable != null) {
-            column.setTable(aliasedTable);
-        }
-
-        return column;
+    protected String resolveAlias(final Table table, final Column column) {
+//        final Column aliasedColumn = aliasedColumns.stream()
+//                .filter(col -> col.equalsIgnoreAlias(column))
+//                .findFirst()
+//                .orElse(null);
+//
+//        if (aliasedColumn != null) {
+//            return aliasedColumn;
+//        }
+//
+//        final Table aliasedTable = aliasedTables.get(table.qualifiedName());
+//
+//        if (aliasedTable != null) {
+//            column.setTable(aliasedTable);
+//        }
+//
+//        return column;
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
     protected ExpressionSpec resolveAlias(final ExpressionSpec expressionSpec) {
         final ColumnExpressionSpec columnExpressionSpec = findColumnExpressionSpec(expressionSpec);
 
-        if (columnExpressionSpec != null) {
-            final Column column = columnExpressionSpec.getColumn();
-            final Column aliasedColumn = resolveAlias(column.table(), column);
-            columnExpressionSpec.setColumn(aliasedColumn);
-        }
-
-        return expressionSpec;
+//        if (columnExpressionSpec != null) {
+//            final Column column = columnExpressionSpec.getColumn();
+//            final Column aliasedColumn = resolveAlias(column.table(), column);
+//            columnExpressionSpec.setColumn(aliasedColumn);
+//        }
+//
+//        return expressionSpec;
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     private Table aliasTable(final Table table) {
-        if (table == targetTable) {
-            return table;
-        } else if (table.equalsIgnoreAlias(targetTable)) {
-            return targetTable;
-        }
-
-        return aliasedTables.computeIfAbsent(table.qualifiedName(), tableName -> aliasGenerator.aliasTable(table));
+//        if (table == targetTable) {
+//            return table;
+//        } else if (table.equalsIgnoreAlias(targetTable)) {
+//            return targetTable;
+//        }
+//
+//        return aliasedTables.computeIfAbsent(table.qualifiedName(), tableName -> aliasGenerator.aliasTable(table));
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     private Table aliasTable(final OrmTable ormTable) {
-        final TableMetaData tableMetaData = ormTable.getMetaData();
-        return aliasedTables.computeIfAbsent(tableMetaData.qualifiedName(), tableName -> aliasGenerator.aliasTable(ormTable));
+//        final TableMetaData tableMetaData = ormTable.getMetaData();
+//        return aliasedTables.computeIfAbsent(tableMetaData.qualifiedName(), tableName -> aliasGenerator.aliasTable(ormTable));
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    private Column resolveAlias(final Table table, final String columnName) {
+    private String resolveAlias(final Table table, final String columnName) {
         return resolveAlias(table, new Column(table, columnName));
     }
 
@@ -394,14 +398,15 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             final Column column = columnExpressionSpec.getColumn();
             final Column aliasedColumn;
 
-            if (column.table().equalsIgnoreAlias(targetTable)) {
-                aliasedColumn = aliasGenerator.aliasColumn(targetTable, column);
-            } else {
-                //TODO: may need to alias the table itself
-                aliasedColumn = aliasGenerator.aliasColumn(column.table(), column);
-            }
-
-            columnExpressionSpec.setColumn(aliasedColumn);
+//            if (column.table().equalsIgnoreAlias(targetTable)) {
+//                aliasedColumn = aliasGenerator.aliasColumn(targetTable, column);
+//            } else {
+//                //TODO: may need to alias the table itself
+//                aliasedColumn = aliasGenerator.aliasColumn(column.table(), column);
+//            }
+//
+//            columnExpressionSpec.setColumn(aliasedColumn);
+            throw new UnsupportedOperationException("Not implemented yet");
         }
 
         return expressionSpec;

@@ -9,9 +9,9 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
+import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
-import org.litebridge.db.spi.expression.SelectReference;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.query.Condition;
@@ -281,8 +281,8 @@ class AbstractCompilationContextTest {
         final DeleteCompilationContext compilationContext = createContext(context, table);
 
         final Column refColumn = new Column(new Table("other"), "ref_id");
-        final SelectReference selectReference = mock(SelectReference.class);
-        when(context.sqlFunctionRegistry().select().reference().create(refColumn)).thenReturn(selectReference);
+        final ColumnReference columnReference = mock(ColumnReference.class);
+        when(context.sqlFunctionRegistry().select().reference().create(refColumn)).thenReturn(columnReference);
 
         final ConditionSpec conditionSpec = new ConditionSpec("id", null, Operator.EQ, refColumn);
 
@@ -290,7 +290,7 @@ class AbstractCompilationContextTest {
         final Condition condition = compilationContext.toCondition(conditionSpec, null, table);
 
         // Then
-        assertSame(selectReference, condition.rhs());
+        assertSame(columnReference, condition.rhs());
     }
 
     @Test

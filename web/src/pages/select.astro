@@ -1,0 +1,156 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Terminal, Database, Settings } from '@lucide/astro';
+import CodeExample from '../components/CodeExample.astro';
+import CodeBlock from "../components/CodeBlock.astro";
+
+const title = "Retrieving data";
+const description = "SELECT query examples";
+
+const commonExampleCode = `import org.litebridge.orm.Litebridge;
+import org.litebridge.db.h2.H2DatabaseProvider;
+import org.litebridge.db.spi.Row;
+
+// Assuming "dataSource" is a valid javax.sql.DataSource instance
+Litebridge litebridge = Litebridge.withDatabaseProvider(
+        new H2DatabaseProvider(), 
+        dataSource)
+    .build();
+`;
+
+const basicSelectExamples = [
+  {
+    id: 'dtoMode',
+    title: 'DTO mode',
+    description: 'Select all entities of a specific type.',
+    code: `List<Person> persons = litebridge.select(Person.class).list();`
+  },
+  {
+    id: 'sqlMode',
+    title: 'SQL mode',
+    description: 'Select all records from a table without DTO/entity mapping.',
+    code: `List<Row> rows = litebridge.select().from("LB.PERSON").list();`
+  },
+  {
+    id: 'nativeSql',
+    title: 'Native SQL',
+    description: 'Select all records using a raw SQL query.',
+    code: `List<Row> rows = litebridge.nativeSql().query("SELECT * FROM LB.PERSON").list();`,
+  },
+];
+
+const conditionalSelectExamples = [
+  {
+    id: 'dtoMode',
+    title: 'DTO mode',
+    description: 'Select all Person DTOs where the "name" field has a value of "Alice".',
+    code: `List<Person> persons = litebridge.select(Person.class)
+    .where(PersonMeta.name).eq("Alice")
+    .list();`,
+  },
+  {
+    id: 'sqlMode',
+    title: 'SQL mode',
+    description: 'Select all records where the FIRST_NAME column has a value of "Alice".',
+    code: `List<Row> rows = litebridge.select().from("LB.PERSON")
+    .where("FIRST_NAME").eq("Alice")
+    .list();`,
+  },
+  {
+    id: 'nativeSql',
+    title: 'Native SQL',
+    description: 'Select records matching conditions using a raw SQL query.',
+    code: `List<Row> rows = litebridge.nativeSql()
+    .query("SELECT * FROM LB.PERSON WHERE FIRST_NAME = ?", "Alice")
+    .list();`,
+  },
+];
+---
+
+<Layout title={title} description={description}>
+  <div class="pt-32 pb-20 lg:pt-48 lg:pb-32">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <div class="mb-16 reveal">
+        <h1 class="text-4xl font-extrabold tracking-tight text-primary dark:text-white sm:text-6xl mb-6">
+          Retrieving data
+        </h1>
+      </div>
+
+      <div class="space-y-16">
+        <!-- Concepts -->
+        <section class="reveal">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+              <Settings class="h-6 w-6" />
+            </div>
+            <h2 class="text-3xl font-bold text-primary dark:text-white">Concepts</h2>
+          </div>
+          <p class="mb-4 text-gray-600 dark:text-gray-400">
+            Litebridge's API has 2 primary modes of operation, as well as native SQL execution:
+          </p>
+          <ul class="space-y-4 text-gray-600 dark:text-gray-400">
+            <li class="flex items-start gap-3">
+              <span class="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent"></span>
+              <span><strong>DTO mode</strong>: Full ORM support. Queries are executed against registered DTO/entity classes.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent"></span>
+              <span><strong>SQL mode</strong>: Query are executed directly against tables; no DTO mapping required.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent"></span>
+              <span><strong>Native SQL</strong>: Direct execution of native SQL statements.</span>
+            </li>
+          </ul>
+          <br/>
+          <p class="mb-4 text-gray-600 dark:text-gray-400">
+            DTO mode provides optional type safety using Litebridge metamodels.
+          </p>
+          <p class="mb-4 text-gray-600 dark:text-gray-400">
+            The examples in this section use common imports and initialisation code:
+          </p>
+          <CodeBlock filename="ExampleBase.java" code={commonExampleCode}/>
+          <br/>
+          <p class="mb-4 text-gray-600 dark:text-gray-400">
+            The <var>Row</var> class is Litebridge's basic result row encapsulation, primarily used in SQL mode.
+          </p>
+        </section>
+
+        <!-- Select all -->
+        <section class="reveal" style="transition-delay: 100ms">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+              <Terminal class="h-6 w-6" />
+            </div>
+            <h2 class="text-3xl font-bold text-primary dark:text-white">Retrieve all</h2>
+          </div>
+          <CodeExample filename="SelectAllExample.java" examples={basicSelectExamples} />
+        </section>
+
+        <!-- Select with conditions -->
+        <section class="reveal" style="transition-delay: 200ms">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+              <Terminal class="h-6 w-6" />
+            </div>
+            <h2 class="text-3xl font-bold text-primary dark:text-white">Query with conditions</h2>
+          </div>
+          <CodeExample filename="SelectWhereExample.java" examples={conditionalSelectExamples} />
+        </section>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.8s ease-out;
+  }
+
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>

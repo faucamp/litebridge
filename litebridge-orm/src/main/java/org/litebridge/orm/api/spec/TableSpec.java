@@ -16,7 +16,20 @@ import java.util.Map;
  * with different configurations.
  */
 @NullMarked
-public final class TableSpec extends Table {
+public final class TableSpec {
+
+    /**
+     * Database catalog name
+     */
+    private final @Nullable String catalog;
+    /**
+     * Database schema name
+     */
+    private final @Nullable String schema;
+    /**
+     * Table name
+     */
+    private final String name;
 
     /**
      * Field name to ColumnSpec map; key is field name, value is the column definition
@@ -35,9 +48,9 @@ public final class TableSpec extends Table {
                      @Nullable final String schema,
                      final String table,
                      final Map<FieldMapping, ColumnMapping> fieldColumnMap) {
-        super(StringUtils.blankIfNull(catalog),
-                StringUtils.blankIfNull(schema),
-                StringUtils.requireNonBlank(table, "Table name cannot be blank"));
+        this.catalog = StringUtils.blankIfNull(catalog);
+        this.schema = StringUtils.blankIfNull(schema);
+        this.name = StringUtils.requireNonBlank(table, "Table name cannot be blank");
         this.fieldColumnMap = Collections.unmodifiableMap(CollectionUtils.requireNonEmpty(fieldColumnMap, "Field-column map cannot be null or empty"));
     }
 
@@ -64,4 +77,7 @@ public final class TableSpec extends Table {
         return fieldColumnMap;
     }
 
+    public Table toTable() {
+        return new Table(catalog, schema, name);
+    }
 }

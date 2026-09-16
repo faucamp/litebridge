@@ -8,8 +8,8 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.expression.BindValueExpression;
+import org.litebridge.db.spi.impl.function.ColumnReferenceImpl;
 import org.litebridge.db.spi.impl.function.SelectColumn;
-import org.litebridge.db.spi.impl.function.SelectReferenceImpl;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
@@ -55,7 +55,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition onCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
                 Operator.EQ,
-                new SelectReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         // WHEN MATCHED UPDATE SET BALANCE = ? WHERE ACCOUNT.ACCOUNT_ID < ?
@@ -95,7 +95,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition onCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
                 Operator.EQ,
-                new SelectReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         // WHEN MATCHED UPDATE SET BALANCE = ? (no WHERE clause)
@@ -120,7 +120,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition onCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
                 Operator.EQ,
-                new SelectReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         // WHEN MATCHED UPDATE SET BALANCE = ? WHERE ACCOUNT.ACCOUNT_ID < ?
@@ -165,7 +165,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition onCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
                 Operator.EQ,
-                new SelectReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatched<Merge.WhenMatchedOperation> updateMatched = new Merge.WhenMatched<>(
@@ -188,7 +188,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition onCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
                 Operator.EQ,
-                new SelectReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatched<Merge.MergeInsert> insertMatched = new Merge.WhenMatched<>(
@@ -213,7 +213,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition onCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
                 Operator.EQ,
-                new SelectReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Condition whereCondition = new Condition(
@@ -239,7 +239,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition onCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
                 Operator.EQ,
-                new SelectReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatched<Merge.WhenMatchedOperation> updateMatched = new Merge.WhenMatched<>(
@@ -273,7 +273,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition onCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
                 Operator.EQ,
-                new SelectReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatchedOperation unknownOp = mock(Merge.WhenMatchedOperation.class);
@@ -294,7 +294,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition onCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
                 Operator.EQ,
-                new SelectReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatched<Merge.WhenMatchedOperation> updateMatched = new Merge.WhenMatched<>(
@@ -320,7 +320,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition onCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
                 Operator.EQ,
-                new SelectReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatched<Merge.WhenMatchedOperation> multiUpdate = new Merge.WhenMatched<>(
@@ -361,7 +361,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition onCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
                 Operator.EQ,
-                new SelectReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatched<Merge.WhenMatchedOperation> updateNoBind = new Merge.WhenMatched<>(
@@ -384,7 +384,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition onCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
                 Operator.EQ,
-                new SelectReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatchedOperation unknownOp = mock(Merge.WhenMatchedOperation.class);

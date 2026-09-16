@@ -28,20 +28,21 @@ public class ColumnIdentifierGenerator {
         final StringBuilder sb = new StringBuilder();
         final Table table = column.table();
 
-        if (!StringUtils.isBlank(table.alias())) {
-            //noinspection DataFlowIssue
-            sb.append(quoteIdentifier(table.alias()));
-        } else {
-            sb.append(quoteIdentifier(table.name()));
-        }
-
-        sb.append('.').append(quoteIdentifier(column.name()));
-
-        if (!nested && column.alias() != null) {
-            sb.append(' ').append(createAliasDeclaration(column.alias()));
-        }
-
-        return sb.toString();
+//        if (!StringUtils.isBlank(table.alias())) {
+//            //noinspection DataFlowIssue
+//            sb.append(quoteIdentifier(table.alias()));
+//        } else {
+//            sb.append(quoteIdentifier(table.name()));
+//        }
+//
+//        sb.append('.').append(quoteIdentifier(column.name()));
+//
+//        if (!nested && column.alias() != null) {
+//            sb.append(' ').append(createAliasDeclaration(column.alias()));
+//        }
+//
+//        return sb.toString();
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     /**
@@ -53,16 +54,17 @@ public class ColumnIdentifierGenerator {
      * @return the generated SQL column reference
      */
     public String createColumnRef(final Column column, final Operation operation, final ClauseType clause) {
-        if (column.alias() != null && clause != ClauseType.WHERE) {
-            //noinspection DataFlowIssue
-            return quoteIdentifier(column.alias());
-        }
-
-        if (column.table().alias() != null) {
-            return quoteIdentifier(column.table().alias()) + "." + quoteIdentifier(column.name());
-        }
-
-        return quoteIdentifier(column.table().name()) + "." + quoteIdentifier(column.name());
+//        if (column.alias() != null && clause != ClauseType.WHERE) {
+//            //noinspection DataFlowIssue
+//            return quoteIdentifier(column.alias());
+//        }
+//
+//        if (column.table().alias() != null) {
+//            return quoteIdentifier(column.table().alias()) + "." + quoteIdentifier(column.name());
+//        }
+//
+//        return quoteIdentifier(column.table().name()) + "." + quoteIdentifier(column.name());
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     /**
@@ -71,7 +73,7 @@ public class ColumnIdentifierGenerator {
      * @param identifier the identifier to potentially quote
      * @return the quoted (if necessary) or original identifier
      */
-    public String quoteIdentifier(final String identifier) {
+    public static String quoteIdentifier(final String identifier) {
         if (SqlReservedWords.contains(identifier)) {
             return "\"%s\"".formatted(identifier);
         } else {

@@ -21,19 +21,13 @@ import org.litebridge.db.spi.query.Select;
 public class DelegateColumnExpressionImpl extends DelegateColumnExpression {
 
     /**
-     * The generator used for creating SQL column identifiers.
-     */
-    protected final ColumnIdentifierGenerator columnIdentifierGenerator;
-
-    /**
      * Constructs a {@code DelegateColumnExpressionImpl} with the specified target column and identifier generator.
      *
      * @param target                    the target column expression
-     * @param columnIdentifierGenerator the generator to use for creating SQL identifiers
+     * @param alias                     the alias for the column expression
      */
-    public DelegateColumnExpressionImpl(final ColumnExpression target, final ColumnIdentifierGenerator columnIdentifierGenerator) {
-        super(target);
-        this.columnIdentifierGenerator = columnIdentifierGenerator;
+    public DelegateColumnExpressionImpl(final ColumnExpression target, final @Nullable String alias) {
+        super(target, alias);
     }
 
     /**
@@ -46,10 +40,11 @@ public class DelegateColumnExpressionImpl extends DelegateColumnExpression {
      */
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
-        if (clause == ClauseType.SELECT && operation instanceof Select select) {
-            return columnIdentifierGenerator.createSelectColumn(column, select, clause, (parent != null));
-        } else {
-            return columnIdentifierGenerator.createColumnRef(column, operation, clause);
-        }
+//        if (clause == ClauseType.SELECT && operation instanceof Select select) {
+//            return columnIdentifierGenerator.createSelectColumn(column, select, clause, (parent != null));
+//        } else {
+//            return columnIdentifierGenerator.createColumnRef(column, operation, clause);
+//        }
+        throw new UnsupportedOperationException("Not implemented");
     }
 }

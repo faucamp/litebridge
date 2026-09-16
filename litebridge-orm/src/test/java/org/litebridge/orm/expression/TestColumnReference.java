@@ -3,16 +3,15 @@ package org.litebridge.orm.expression;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Operation;
-import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.expression.ClauseType;
+import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.DelegateExpression;
-import org.litebridge.db.spi.expression.SelectReference;
 
 import java.util.Objects;
 
-public class TestSelectReference extends SelectReference {
+public class TestColumnReference extends ColumnReference {
 
-    public TestSelectReference(final Column column) {
+    public TestColumnReference(final Column column) {
         super(column);
     }
 
@@ -23,7 +22,7 @@ public class TestSelectReference extends SelectReference {
 
     @Override
     public boolean equals(final Object obj) {
-        return obj instanceof TestSelectReference testColumnExpression
+        return obj instanceof TestColumnReference testColumnExpression
                 && Objects.equals(this.column, testColumnExpression.column);
     }
 

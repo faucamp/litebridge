@@ -4,6 +4,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
@@ -23,13 +24,16 @@ public sealed class MergeAndStep<DTO, MUS extends MergeUpdateStep>
     /**
      * Creates a new {@code MergeAndStep} instance.
      *
-     * @param targetTable       the target table name
      * @param usingTable        the using table name
      * @param node              the current query node
+     * @param mergeNode         the root merge node
      * @param litebridgeContext the Litebridge context
      */
-    public MergeAndStep(final String targetTable, final String usingTable, final QueryNode node, final LitebridgeContext litebridgeContext) {
-        super(targetTable, usingTable, litebridgeContext);
+    public MergeAndStep(final String usingTable,
+                        final QueryNode node,
+                        final MergeNode mergeNode,
+                        final LitebridgeContext litebridgeContext) {
+        super(usingTable, mergeNode, litebridgeContext);
         this.node = node;
         this.litebridgeContext = litebridgeContext;
     }
@@ -60,6 +64,6 @@ public sealed class MergeAndStep<DTO, MUS extends MergeUpdateStep>
                 column,
                 expression,
                 node,
-                conditionNode -> new MergeWhenMatchedConditionClauseTerminal<>(targetTable, usingTable, conditionNode, litebridgeContext));
+                conditionNode -> new MergeWhenMatchedConditionClauseTerminal<>(usingTable, conditionNode, mergeNode, litebridgeContext));
     }
 }

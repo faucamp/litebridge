@@ -4,10 +4,9 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.expression.ExpressionSpec;
-
-import java.util.Objects;
 
 /**
  * Merge step for setting up the {@code MERGE INTO ... USING ... ON} condition.
@@ -21,20 +20,22 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
         permits DtoMergeOnStep {
 
     /**
-     * The root merge AST node.
-     */
-    protected final MergeNode mergeNode;
-
-    /**
      * Creates a new {@code MergeOnStep} instance.
      *
      * @param usingTable        the merge using table
      * @param mergeNode         the root merge node
      * @param litebridgeContext Litebridge context
      */
-    public MergeOnStep(final String usingTable, final MergeNode mergeNode, final LitebridgeContext litebridgeContext) {
-        super(Objects.requireNonNull(mergeNode.table()), usingTable, litebridgeContext);
-        this.mergeNode = mergeNode;
+    public MergeOnStep(final String usingTable,
+                       final MergeNode mergeNode,
+                       final LitebridgeContext litebridgeContext) {
+        super(usingTable, mergeNode, litebridgeContext);
+    }
+
+    public MergeOnStep(final QueryNode subselectNode,
+                       final MergeNode mergeNode,
+                       final LitebridgeContext litebridgeContext) {
+        super(subselectNode, mergeNode, litebridgeContext);
     }
 
     /**
@@ -44,9 +45,10 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
      * @param mergeNode         the root merge node
      * @param litebridgeContext the Litebridge context
      */
-    protected MergeOnStep(final Class<?> usingDtoClass, final MergeNode mergeNode, final LitebridgeContext litebridgeContext) {
-        super(Objects.requireNonNull(mergeNode.dtoClass()), usingDtoClass, litebridgeContext);
-        this.mergeNode = mergeNode;
+    protected MergeOnStep(final Class<?> usingDtoClass,
+                          final MergeNode mergeNode,
+                          final LitebridgeContext litebridgeContext) {
+        super(usingDtoClass, mergeNode, litebridgeContext);
     }
 
     /**

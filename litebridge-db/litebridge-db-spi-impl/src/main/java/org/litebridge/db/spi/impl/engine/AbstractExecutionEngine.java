@@ -6,6 +6,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
@@ -145,7 +146,7 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
             final List<Row> rows = new ArrayList<>();
 
             while (resultSet.next()) {
-                final Row row = new Row();
+                final List<RowColumn> rowColumns = new ArrayList<>();
                 final int columnCount = resultSet.getMetaData().getColumnCount();
                 final Map<String, Table> seenTables = new HashMap<>();
 
@@ -200,10 +201,10 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
                         value = typeConverter.convert(resultSet.getObject(i), columnSqlType);
                     }
 
-                    row.withColumn(column, value);
+                    rowColumns.add(new RowColumn(alias, value, column));
                 }
 
-                rows.add(row);
+                rows.add(new Row(rowColumns));
             }
 
             return rows;

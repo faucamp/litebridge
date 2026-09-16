@@ -102,7 +102,7 @@ public final class TableMapper {
         }
 
         // Read the table metadata
-        final TableMetaData tableMetaData = tableMetaDataCache.ensureTableMetaData(tableSpec);
+        final TableMetaData tableMetaData = tableMetaDataCache.ensureTableMetaData(tableSpec.toTable());
 
         final MappedDto mappedDto = mapFields(lookup, dtoClass, tableMetaData, tableSpec.fieldColumnMap(), allDtoClasses);
         final OrmTable ormTable = new OrmTable(dtoClass, tableMetaData, mappedDto.mappedFields(), changeTracker, classFieldAccessorCache);

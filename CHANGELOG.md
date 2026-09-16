@@ -74,6 +74,7 @@
     - `Litebridge.save(Object... dtos)` has been removed in favour of `saveAll()`.
     - `SelectSpecDtoMapper`: replaced by `DtoMapper`
     - Legacy query-building specifications: `SelectSpec`, `InsertSpec`, `UpdateSpec`, `DeleteSpec`
+    - Removed `AliasGeneratorFactory`
 - Database Provider SPI:
     - Legacy SPI interfaces have been removed, such as operation-specific execution methods (`select()`, `insert()`,
       `nativeQuery()`, etc.).

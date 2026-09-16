@@ -11,11 +11,16 @@ import java.util.StringJoiner;
  * It extends the functionality of the {@code Aliased} class to include the concept of table association.
  * Columns can be used to construct queries and represent database metadata.
  */
-public final class Column extends Aliased {
+public final class Column {
 
     private static final Table NO_TABLE = new Table("");
 
-    private Table table;
+    /**
+     * Target name
+     */
+    private final String name;
+
+    private final Table table;
 
     /**
      * Construct a new {@code Column} instance associated with the specified table and column name.
@@ -36,7 +41,7 @@ public final class Column extends Aliased {
      * @param alias an optional alias for the column; may be null if not needed
      */
     public Column(final Table table, final String name, final @Nullable String alias) {
-        super(name, alias);
+        this.name = name;
         this.table = table;
     }
 
@@ -48,6 +53,15 @@ public final class Column extends Aliased {
      */
     public Column(final String name, final @Nullable String alias) {
         this(NO_TABLE, name);
+    }
+
+    /**
+     * Retrieve the name of the aliased entity.
+     *
+     * @return the name of the aliased entity
+     */
+    public String name() {
+        return name;
     }
 
     public boolean hasTable() {
@@ -64,79 +78,15 @@ public final class Column extends Aliased {
     }
 
     /**
-     * Sets the table associated with this column.
+     * Set the alias for this entity and return the updated instance.
      *
-     * @param table the table to set
+     * @param alias the alias to assign to this entity; must not be null
+     * @return the updated instance of {@code Aliased} with the specified alias set
      */
-    public void setTable(final Table table) {
-        this.table = table;
-    }
-
-    /**
-     * Assign an alias to the current {@code Column} instance and return the updated instance.
-     *
-     * @param alias the alias to set for this column; must not be null
-     * @return the updated {@code Column} instance with the specified alias
-     */
-    @Override
     public Column as(final String alias) {
-        setAlias(alias);
-        return this;
-    }
-
-    /**
-     * Create a new {@code Column} instance for the specified table and column name.
-     * <p>
-     * This is shorthand for {@code new Column(table, column)}.
-     *
-     * @param table  the table to which the column belongs
-     * @param column the name of the column
-     * @return a new {@code Column} instance associated with the given table and column name
-     */
-    public static Column c(final Table table, final String column) {
-        return new Column(table, column);
-    }
-
-    /**
-     * Create a new {@code Column} instance associated with the specified table and column name.
-     * <p>
-     * This is shorthand for {@code new Column(new Table("", "", table), column)}.
-     *
-     * @param table  the name of the table to which the column belongs
-     * @param column the name of the column
-     * @return a new {@code Column} instance associated with the specified catalog, schema, table, and column name
-     */
-    public static Column c(final String table, final String column) {
-        return c(new Table(table, null), column);
-    }
-
-    /**
-     * Create a new {@code Column} instance associated with the specified schema, table, and column name.
-     * <p>
-     * This is shorthand for {@code new Column(new Table("", schema, table), column)}.
-     *
-     * @param schema the name of the schema to which the table belongs
-     * @param table  the name of the table to which the column belongs
-     * @param column the name of the column
-     * @return a new {@code Column} instance associated with the specified catalog, schema, table, and column name
-     */
-    public static Column c(final String schema, final String table, final String column) {
-        return c("", schema, table, column);
-    }
-
-    /**
-     * Create a new {@code Column} instance associated with the specified catalog, schema, table, and column name.
-     * <p>
-     * This is shorthand for {@code new Column(new Table(catalog, schema, table), column)}.
-     *
-     * @param catalog the name of the catalog to which the table belongs
-     * @param schema  the name of the schema to which the table belongs
-     * @param table   the name of the table to which the column belongs
-     * @param column  the name of the column
-     * @return a new {@code Column} instance associated with the specified catalog, schema, table, and column name
-     */
-    public static Column c(final String catalog, final String schema, final String table, final String column) {
-        return new Column(new Table(catalog, schema, table), column);
+//        setAlias(alias);
+//        return this;
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     /**
@@ -154,16 +104,9 @@ public final class Column extends Aliased {
 
     @Override
     public boolean equals(final Object o) {
-        if (!(o instanceof final Column column)) return false;
-        if (!super.equals(o)) return false;
-        return Objects.equals(table, column.table);
-    }
-
-    @Override
-    public boolean equalsIgnoreAlias(final Aliased aliased) {
-        if (!(aliased instanceof final Column column)) return false;
-        if (!super.equalsIgnoreAlias(column)) return false;
-        return table.equalsIgnoreAlias(column.table);
+        return this == o || (o instanceof final Column column
+                && Objects.equals(name, column.name)
+                && Objects.equals(table, column.table));
     }
 
     /**
@@ -173,8 +116,9 @@ public final class Column extends Aliased {
      * @param column the column to compare with
      * @return {@code true} if the column names are equal; {@code false} otherwise
      */
+    @Deprecated(forRemoval = true)
     public boolean equalsColumnOnlyIgnoreAlias(final Column column) {
-        return super.equalsIgnoreAlias(column);
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     @Override
@@ -185,9 +129,8 @@ public final class Column extends Aliased {
     @Override
     public String toString() {
         return new StringJoiner(", ", Column.class.getSimpleName() + "[", "]")
+                .add("name='" + name + "'")
                 .add("table=" + table)
-                .add("name=" + name())
-                .add("alias=" + alias())
                 .toString();
     }
 }

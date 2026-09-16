@@ -3,6 +3,7 @@ package org.litebridge.orm.api.merge;
 import org.litebridge.db.spi.Column;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.tracking.FieldAccessor;
 
@@ -22,6 +23,10 @@ public final class DtoMergeOnStep<DTO> extends MergeOnStep<DTO, DtoMergeUpdateSt
      */
     public DtoMergeOnStep(final Class<?> usingDtoClass, final MergeNode mergeNode, final LitebridgeContext litebridgeContext) {
         super(usingDtoClass, mergeNode, litebridgeContext);
+    }
+
+    public DtoMergeOnStep(final QueryNode subselectNode, final MergeNode mergeNode, final LitebridgeContext litebridgeContext) {
+        super(subselectNode, mergeNode, litebridgeContext);
     }
 
     /**

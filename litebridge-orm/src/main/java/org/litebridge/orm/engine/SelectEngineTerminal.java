@@ -7,6 +7,7 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
@@ -25,7 +26,6 @@ import org.litebridge.orm.exception.NonUniqueResultException;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.TableRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -304,7 +304,7 @@ public class SelectEngineTerminal {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T unwrap(final Class<T> type, final Row.RowColumn rowColumn, final TypeConverter typeConverter) {
+    private <T> T unwrap(final Class<T> type, final RowColumn rowColumn, final TypeConverter typeConverter) {
         final Object converted = typeConverter.convert(rowColumn.value(), type);
         return (T) converted;
     }
@@ -321,9 +321,10 @@ public class SelectEngineTerminal {
                 continue;
             }
 
-            final Row.RowColumn rowColumn = row.column(i);
+            final RowColumn rowColumn = row.column(i);
             final Object converted = typeConverter.convert(rowColumn.value(), resultType);
-            row.updateColumn(rowColumn.column(), converted);
+//            row.updateColumn(rowColumn.column(), converted);
+            throw new UnsupportedOperationException("Not implemented yet");
         }
 
         return row;
@@ -450,7 +451,7 @@ public class SelectEngineTerminal {
 
             if (expression instanceof ColumnExpression columnExpression) {
                 final Column column = columnExpression.column();
-                final String columnKey = Objects.requireNonNull(aliasTransformer.transformAlias(column.alias() != null ? column.alias() : column.name()));
+                final String columnKey = Objects.requireNonNull(aliasTransformer.transformAlias(columnExpression.alias() != null ? columnExpression.alias() : column.name()));
                 final TableMetaData tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(column.table());
                 final ColumnMetaData columnMetaData = tableMetaData.column(column.name());
                 columnLabelsToColumnMetaData.put(columnKey, columnMetaData);

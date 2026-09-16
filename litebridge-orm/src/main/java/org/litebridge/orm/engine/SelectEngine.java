@@ -1,8 +1,8 @@
 package org.litebridge.orm.engine;
 
-import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.select.FromClauseStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
+import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverride;
@@ -37,7 +37,7 @@ public class SelectEngine {
      * @return the terminal FROM clause step
      */
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final LitebridgeContext litebridgeContext) {
-        final SelectNode selectNode = new SelectNode(null, dtoClass, null, null, null, null);
+        final SelectNode selectNode = new SelectNode(dtoClass, null, null, null, null, null);
         return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContext);
     }
 
@@ -51,7 +51,7 @@ public class SelectEngine {
      * @return the terminal FROM clause step
      */
     public <DTO> DtoFromClauseTerminal<DTO> select(final Class<DTO> dtoClass, final Class<?> contextDtoClass, final LitebridgeContext litebridgeContext) {
-        final SelectNode selectNode = new SelectNode(null, dtoClass, contextDtoClass, null, null, null);
+        final SelectNode selectNode = new SelectNode(dtoClass, contextDtoClass, null, null, null, null);
         return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContext);
     }
 

@@ -24,10 +24,10 @@ class AliasGeneratorTest {
         OrmTable ormTable = mock(OrmTable.class);
         when(ormTable.getMetaData()).thenReturn(tableMetaData);
         
-        assertEquals(table, generator.aliasTable(ormTable));
+        assertEquals(table, generator.newTableAlias(ormTable));
         
         ColumnMetaData columnMetaData = new ColumnMetaData(table, "col", false, Types.VARCHAR, 0);
-        Column column = generator.aliasColumn(table, columnMetaData);
+        Column column = generator.newColumnAlias(table, columnMetaData);
         assertEquals(table, column.table());
         assertEquals("col", column.name());
     }

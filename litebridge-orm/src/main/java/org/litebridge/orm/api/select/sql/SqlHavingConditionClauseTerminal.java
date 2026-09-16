@@ -13,6 +13,7 @@ import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.HavingNode;
 import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -29,22 +30,22 @@ public final class SqlHavingConditionClauseTerminal
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
-    private final String table;
+    private final SelectNode selectNode;
 
     /**
      * Creates a new {@code SqlHavingConditionClauseTerminal} instance.
      *
-     * @param table                the table name
+     * @param selectNode           the root select query node
      * @param node                 the current query node
      * @param selectEngineTerminal the terminal select engine
      * @param litebridgeContext    the Litebridge context
      */
-    public SqlHavingConditionClauseTerminal(final String table,
+    public SqlHavingConditionClauseTerminal(final SelectNode selectNode,
                                             final QueryNode node,
                                             final SelectEngineTerminal selectEngineTerminal,
                                             final LitebridgeContext litebridgeContext) {
         super(node, selectEngineTerminal, litebridgeContext);
-        this.table = table;
+        this.selectNode = selectNode;
     }
 
     @Override
@@ -94,7 +95,7 @@ public final class SqlHavingConditionClauseTerminal
                     column,
                     expression,
                     havingNode.condition(),
-                    conditionNode -> new SqlHavingConditionClauseTerminal(table, havingNode.withCondition(conditionNode), selectEngineTerminal, litebridgeContext));
+                    conditionNode -> new SqlHavingConditionClauseTerminal(selectNode, havingNode.withCondition(conditionNode), selectEngineTerminal, litebridgeContext));
         }
 
         return new SqlHavingConditionClause(litebridgeContext,
@@ -102,11 +103,11 @@ public final class SqlHavingConditionClauseTerminal
                 column,
                 expression,
                 null,
-                conditionNode -> new SqlHavingConditionClauseTerminal(table, new HavingNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
+                conditionNode -> new SqlHavingConditionClauseTerminal(selectNode, new HavingNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
     private SqlHavingConditionClauseTerminal havingImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(table, node, litebridgeContext);
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, node, litebridgeContext);
         final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
         final QueryNode conditionNode = terminal.node();
 

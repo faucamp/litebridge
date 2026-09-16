@@ -15,6 +15,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -120,29 +121,39 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
     @DisplayName("UPPER()")
     void upper(final DbEnvDtoTableMapper tableMapper) throws Exception {
         final List<Row> uppercaseNames = litebridge.select(Fn.upper(tableMapper.transformColumnName("FIRST_NAME"))).from(personTableName).list();
-        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseNames.stream().flatMap(Row::columnStream)
+        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseNames.stream()
+                .flatMap(row -> row.columns().stream())
                 .map(rowColumn -> (String) rowColumn.value())
+                .filter(Objects::nonNull)
                 .toList());
 
         // Get the uppercase names of the stored persons
         final List<Row> uppercaseNamesExpr = litebridge.select(Fn.upper(Fn.c(tableMapper.transformColumnName("FIRST_NAME")))).from(personTableName).list();
-        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseNamesExpr.stream().flatMap(Row::columnStream)
+        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseNamesExpr.stream()
+                .flatMap(row -> row.columns().stream())
                 .map(rowColumn -> (String) rowColumn.value())
+                .filter(Objects::nonNull)
                 .toList());
     }
 
     @TestTemplate
     @DisplayName("LOWER()")
     void lower(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+
         // Get the lowercase names of the stored persons
-        final List<Row> lowercaseNames = litebridge.select(Fn.lower(tableMapper.transformColumnName("FIRST_NAME"))).from(personTableName).list();
-        assertLinesMatch(List.of("name0", "name1", "name2"), lowercaseNames.stream().flatMap(Row::columnStream)
+        final List<Row> lowercaseNames = litebridge.select(Fn.lower(firstName)).from(personTableName).list();
+        assertLinesMatch(List.of("name0", "name1", "name2"), lowercaseNames.stream()
+                .flatMap(row -> row.columns().stream())
                 .map(rowColumn -> (String) rowColumn.value())
+                .filter(Objects::nonNull)
                 .toList());
 
-        final List<Row> lowercaseNamesExpr = litebridge.select(Fn.lower(Fn.f(tableMapper.transformColumnName("FIRST_NAME")))).from(personTableName).list();
-        assertLinesMatch(List.of("name0", "name1", "name2"), lowercaseNamesExpr.stream().flatMap(Row::columnStream)
+        final List<Row> lowercaseNamesExpr = litebridge.select(Fn.lower(Fn.c(firstName))).from(personTableName).list();
+        assertLinesMatch(List.of("name0", "name1", "name2"), lowercaseNamesExpr.stream()
+                .flatMap(row -> row.columns().stream())
                 .map(rowColumn -> (String) rowColumn.value())
+                .filter(Objects::nonNull)
                 .toList());
     }
 
@@ -151,14 +162,18 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
     void substring(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Get substrings of the surnames
         final List<Row> surnameSubstrings = litebridge.select(Fn.substring(tableMapper.transformColumnName("SURNAME"), 2, 5)).from(personTableName).list();
-        assertLinesMatch(List.of("urnam", "urnam", "urnam"), surnameSubstrings.stream().flatMap(Row::columnStream)
+        assertLinesMatch(List.of("urnam", "urnam", "urnam"), surnameSubstrings.stream()
+                .flatMap(row -> row.columns().stream())
                 .map(rowColumn -> (String) rowColumn.value())
+                .filter(Objects::nonNull)
                 .toList());
 
         // Nested SQL functions
         final List<Row> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring(tableMapper.transformColumnName("SURNAME"), 4))).from(personTableName).list();
-        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings.stream().flatMap(Row::columnStream)
+        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings.stream()
+                .flatMap(row -> row.columns().stream())
                 .map(rowColumn -> (String) rowColumn.value())
+                .filter(Objects::nonNull)
                 .toList());
     }
 
@@ -178,8 +193,10 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
     void nestedFunctions(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Nested SQL functions
         final List<Row> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring(tableMapper.transformColumnName("SURNAME"), 4))).from(personTableName).list();
-        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings.stream().flatMap(Row::columnStream)
+        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings.stream()
+                .flatMap(row -> row.columns().stream())
                 .map(rowColumn -> (String) rowColumn.value())
+                .filter(Objects::nonNull)
                 .toList());
     }
 
@@ -201,9 +218,9 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
                 .list();
 
         assertEquals(1, results.size());
-        assertEquals(25, results.get(0).column(age).orElseThrow().value());
+        assertEquals(25, results.getFirst().value(age));
         final String countColumn = tableMapper.transformColumnName("COUNT(*)");
-        assertEquals(2L, results.get(0).column(countColumn).orElseThrow().value());
+        assertEquals(2L, results.getFirst().value(countColumn));
     }
 
     @TestTemplate
@@ -226,8 +243,8 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
                 .list();
 
         assertEquals(2, andResults.size());
-        assertEquals(20, andResults.get(0).column(age).orElseThrow().value());
-        assertEquals(25, andResults.get(1).column(age).orElseThrow().value());
+        assertEquals(20, andResults.get(0).value(age));
+        assertEquals(25, andResults.get(1).value(age));
 
         // Chained HAVING with AND: count > 1 AND count < 2 matches no groups
         final List<Row> andEmptyResults = litebridge.select(Fn.convert(Fn.c(age), Integer.class), Fn.convert(Fn.count(), Long.class))
@@ -248,7 +265,7 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
                 .list();
 
         assertEquals(1, orResults.size());
-        assertEquals(25, orResults.get(0).column(age).orElseThrow().value());
+        assertEquals(25, orResults.getFirst().value(age));
     }
 
     @TestTemplate

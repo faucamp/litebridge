@@ -18,7 +18,7 @@ class OracleSqlFunctionRegistryFactoryTest {
         final OracleSqlFunctionRegistryFactory oracleSqlFunctionRegistryFactory = new OracleSqlFunctionRegistryFactory(mock(ColumnIdentifierGenerator.class), mock(SelectSqlGenerator.class));
 
         // Whe
-        final DelegateColumnExpression result = oracleSqlFunctionRegistryFactory.createSubstring(mock(ColumnExpressionImpl.class), 3, 7);
+        final DelegateColumnExpression result = oracleSqlFunctionRegistryFactory.createSubstring(mock(ColumnExpressionImpl.class), 3, 7, null);
 
         // Then
         assertInstanceOf(Substr.class, result);

@@ -11,6 +11,7 @@ import org.litebridge.orm.e2e.basic.meta.PersonMeta;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.e2e.setup.DbEnvironment;
 import org.litebridge.orm.expression.Fn;
+import org.litebridge.orm.expression.select.AliasReferenceSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -190,10 +191,10 @@ public class FunctionsE2eTest extends AbstractE2eTest {
                 .list();
 
         assertEquals(2, results.size());
-        assertEquals(20, results.get(0).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
-        assertEquals(1L, results.get(0).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
-        assertEquals(25, results.get(1).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
-        assertEquals(2L, results.get(1).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
+        assertEquals(20, results.get(0).value(tableMapper.transformColumnName("AGE")));
+        assertEquals(1L, results.get(0).value(tableMapper.transformColumnName("COUNT(*)")));
+        assertEquals(25, results.get(1).value(tableMapper.transformColumnName("AGE")));
+        assertEquals(2L, results.get(1).value(tableMapper.transformColumnName("COUNT(*)")));
     }
 
     @TestTemplate
@@ -214,9 +215,9 @@ public class FunctionsE2eTest extends AbstractE2eTest {
                 .list();
 
         assertEquals(1, results.size());
-        assertEquals(25, results.get(0).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+        assertEquals(25, results.getFirst().value(tableMapper.transformColumnName("AGE")));
         final String countColumn = tableMapper.transformColumnName("COUNT(*)");
-        assertEquals(2L, results.get(0).column(countColumn).orElseThrow().value());
+        assertEquals(2L, results.getFirst().value(countColumn));
     }
 
     @TestTemplate
@@ -239,8 +240,8 @@ public class FunctionsE2eTest extends AbstractE2eTest {
                 .list();
 
         assertEquals(2, andResults.size());
-        assertEquals(20, andResults.get(0).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
-        assertEquals(25, andResults.get(1).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+        assertEquals(20, andResults.get(0).value(tableMapper.transformColumnName("AGE")));
+        assertEquals(25, andResults.get(1).value(tableMapper.transformColumnName("AGE")));
 
         // Chained HAVING with OR: count > 5 OR count == 2 matches only age 25
         final List<Row> orResults = litebridge.select(Fn.row(
@@ -253,7 +254,7 @@ public class FunctionsE2eTest extends AbstractE2eTest {
                 .list();
 
         assertEquals(1, orResults.size());
-        assertEquals(25, orResults.get(0).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
+        assertEquals(25, orResults.get(0).value(tableMapper.transformColumnName("AGE")));
     }
 
     @TestTemplate
@@ -267,20 +268,47 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     @DisplayName("Metamodel tests")
     void metamodel(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Select ID, lowercase name and uppercase surname using metamodel
-        final Person result = litebridge.select(PersonMeta.id, PersonMeta.name.lower(), PersonMeta.surname.upper())
+        final Person person = litebridge.select(PersonMeta.id, PersonMeta.name.lower(), PersonMeta.surname.upper())
                 .from(Person.class)
                 .where(PersonMeta.age).gte(30)
                 .oneOrThrow();
 
-        assertEquals(3L, result.getId());
-        assertEquals("name2", result.getName());
-        assertEquals("SURNAME2", result.getSurname());
+        assertEquals(3L, person.getId());
+        assertEquals("name2", person.getName());
+        assertEquals("SURNAME2", person.getSurname());
+
+        // Similar, but with custom aliases and references
+        // Select ID, lowercase name and uppercase surname using metamodel
+        {
+            final AliasReferenceSpec nameAlias = Fn.aliasRef("CustomAlias");
+
+
+            litebridge.select(
+                            PersonMeta.id.as("ALIASED_ID"),
+                            PersonMeta.name.lower().as("MY_OTHER_ALIS")).from(Person.class).where(PersonMeta.age).gt(30)
+                    .orderBy(PersonMeta.id).asc()
+                    .list();
+
+            final Person result = litebridge.select(
+                            PersonMeta.id,
+                            PersonMeta.name.lower().as(nameAlias),
+                            PersonMeta.surname.upper())
+                    .from(Person.class)
+                    .where(PersonMeta.age).gte(30)
+                    .orderBy(nameAlias).asc()
+                    .oneOrThrow();
+
+
+            assertEquals(3L, result.getId());
+            assertEquals("name2", result.getName());
+            assertEquals("SURNAME2", result.getSurname());
+        }
 
         // Prepare data
         final Account account = new Account();
         account.setName("Test Account");
         account.setBalance(BigInteger.valueOf(1000L));
-        account.setOwner(result);
+        account.setOwner(person);
         litebridge.save(account);
 
         // Join

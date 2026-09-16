@@ -4,6 +4,8 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
+import org.litebridge.orm.api.select.SelectApi;
+import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.expression.function.aggregate.AvgSpec;
 import org.litebridge.orm.expression.function.aggregate.CountSpec;
 import org.litebridge.orm.expression.function.aggregate.MaxSpec;
@@ -15,8 +17,13 @@ import org.litebridge.orm.expression.function.scalar.SubstringSpec;
 import org.litebridge.orm.expression.function.scalar.UpperSpec;
 import org.litebridge.orm.expression.intent.ConvertIntent;
 import org.litebridge.orm.expression.intent.ConvertSpec;
+import org.litebridge.orm.expression.select.AliasReferenceSpec;
+import org.litebridge.orm.expression.select.LiteralExpressionSpec;
+import org.litebridge.orm.expression.select.QueryAliasSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
+
+import java.util.function.Function;
 
 /**
  * Functions: Utility class that provides static methods for constructing query expressions.
@@ -51,7 +58,7 @@ public final class Fn {
      * <p>
      * Shorthand for {@link #field(Class, String)}.
      *
-     * @param dtoClass The DTO class.
+     * @param dtoClass The DTO class to select from.
      * @param field    The name of the DTO field to select.
      * @return a {@link SelectFieldSpec} expression instance to select the specified field.
      */
@@ -78,6 +85,21 @@ public final class Fn {
      */
     public static ExpressionSpec field(final Class<?> dtoClass, final String field) {
         return f(dtoClass, field);
+    }
+
+    /**
+     * Selects a database column by name and alias.
+     * <p>
+     * Shorthand for {@link #columnAlias(Table, String, String)} (Table, String, String)}
+     * <p>
+     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
+     *
+     * @param dtoClass The DTO class to select from.
+     *                 * @param field    The name of the DTO field to select.@param alias The alias to use for the column; may be {@code null}.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     */
+    public static ExpressionSpec fa(final Class<?> dtoClass, final String field, final String alias) {
+        return new ProtoColumnExpressionSpec(SelectFieldSpec.class, field, alias, new Object[]{dtoClass});
     }
 
     /**
@@ -250,6 +272,32 @@ public final class Fn {
         return ca(table, column, columnAlias);
     }
 
+    /**
+     * Aliases the specified subquery.
+     *
+     * @param alias The alias to use for the subquery.
+     * @param query The subquery to alias.
+     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     */
+    public static QueryAliasSpec aliasQuery(final String alias, Function<SelectApi, SelectTerminal<?>> query) {
+        return new QueryAliasSpec(alias, query);
+    }
+
+    public static AliasReferenceSpec fromAlias(final String fromAlias, final String column) {
+        return new AliasReferenceSpec(fromAlias, column);
+    }
+
+    public static AliasReferenceSpec fromAlias(final String fromAlias, final ExpressionSpec expression) {
+        return new AliasReferenceSpec(fromAlias, expression);
+    }
+
+    public static AliasReferenceSpec aliasRef(final String alias) {
+        return new AliasReferenceSpec(alias);
+    }
+
+    public static ExpressionSpec literal(final String value) {
+        return new LiteralExpressionSpec(value);
+    }
     // Java helper functions
 
     /**

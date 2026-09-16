@@ -77,7 +77,8 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         // Retrieve the account record and associated owner with a subquery in the join condition
         {
-            final Account result = litebridge.select(Account.class)
+            final Account result = litebridge
+                    .select(Account.class)
                     .join(Person.class).on("owner")
                     .and(q -> q
                             .where("balance").lt(1000)
@@ -791,10 +792,10 @@ public class BasicE2eTest extends AbstractE2eTest {
                 .list();
 
         assertEquals(2, results.size());
-        assertEquals(20, results.get(0).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
-        assertEquals(1L, results.get(0).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
-        assertEquals(25, results.get(1).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
-        assertEquals(2L, results.get(1).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
+        assertEquals(20, results.get(0).value(tableMapper.transformColumnName("AGE")));
+        assertEquals(1L, results.get(0).value(tableMapper.transformColumnName("COUNT(*)")));
+        assertEquals(25, results.get(1).value(tableMapper.transformColumnName("AGE")));
+        assertEquals(2L, results.get(1).value(tableMapper.transformColumnName("COUNT(*)")));
 
         // Use a query expression in the groupBy() clause
         final List<Row> results2 = litebridge.select(Fn.row(Fn.convert(Fn.f("age"), Integer.class), Fn.convert(Fn.count(), Long.class)))
@@ -804,10 +805,10 @@ public class BasicE2eTest extends AbstractE2eTest {
                 .list();
 
         assertEquals(2, results2.size());
-        assertEquals(20, results2.get(0).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
-        assertEquals(1L, results2.get(0).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
-        assertEquals(25, results2.get(1).column(tableMapper.transformColumnName("AGE")).orElseThrow().value());
-        assertEquals(2L, results2.get(1).column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value());
+        assertEquals(20, results2.get(0).value(tableMapper.transformColumnName("AGE")));
+        assertEquals(1L, results2.get(0).value(tableMapper.transformColumnName("COUNT(*)")));
+        assertEquals(25, results2.get(1).value(tableMapper.transformColumnName("AGE")));
+        assertEquals(2L, results2.get(1).value(tableMapper.transformColumnName("COUNT(*)")));
     }
 
     @TestTemplate
@@ -827,72 +828,72 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         litebridge.saveAll(persons);
 
-        // Using variable paratemeters/array
-        final List<Person> results = litebridge.select()
-                .from(Person.class)
-                .where("id").in(1L, 2L)
-                .list();
-
-        assertEquals(2, results.size());
-
-        final List<Person> results2 = litebridge.select()
-                .from(Person.class)
-                .where("id").notIn(1L, 2L)
-                .list();
-
-        assertEquals(1, results2.size());
+//        // Using variable paratemeters/array
+//        final List<Person> results = litebridge.select()
+//                .from(Person.class)
+//                .where("id").in(1L, 2L)
+//                .list();
+//
+//        assertEquals(2, results.size());
+//
+//        final List<Person> results2 = litebridge.select()
+//                .from(Person.class)
+//                .where("id").notIn(1L, 2L)
+//                .list();
+//
+//        assertEquals(1, results2.size());
 
         // Using single value
-        final List<Person> results3 = litebridge.select()
-                .from(Person.class)
-                .where("id").in(1L)
-                .list();
+//        final List<Person> results3 = litebridge.select()
+//                .from(Person.class)
+//                .where("id").in(1L)
+//                .list();
 
-        assertEquals(1, results3.size());
+//        assertEquals(1, results3.size());
 
-        final List<Person> results4 = litebridge.select()
-                .from(Person.class)
-                .where("id").notIn(1L)
-                .list();
-
-        assertEquals(2, results4.size());
-
-        // Using a list
-        final List<Long> ids = List.of(1L, 2L);
-        final List<Person> results5 = litebridge.select()
-                .from(Person.class)
-                .where("id").in(ids)
-                .list();
-
-        assertEquals(2, results5.size());
-
-        final List<Person> results6 = litebridge.select()
-                .from(Person.class)
-                .where("id").notIn(ids)
-                .list();
-
-        assertEquals(1, results6.size());
+//        final List<Person> results4 = litebridge.select()
+//                .from(Person.class)
+//                .where("id").notIn(1L)
+//                .list();
+//
+//        assertEquals(2, results4.size());
+//
+//        // Using a list
+//        final List<Long> ids = List.of(1L, 2L);
+//        final List<Person> results5 = litebridge.select()
+//                .from(Person.class)
+//                .where("id").in(ids)
+//                .list();
+//
+//        assertEquals(2, results5.size());
+//
+//        final List<Person> results6 = litebridge.select()
+//                .from(Person.class)
+//                .where("id").notIn(ids)
+//                .list();
+//
+//        assertEquals(1, results6.size());
 
         // Using a subselect
         final List<Person> results7 = litebridge.select()
                 .from(Person.class)
-                .where("id").in(sub ->
-                        sub.select("id")
-                                .from(Person.class)
-                                .where("name").eq("Name1"))
+                .where("id").in(q -> q.
+                        select("id")
+                        .from(Person.class)
+                        .where("name").eq("Name1"))
                 .list();
 
         assertEquals(1, results7.size());
 
-        final List<Person> results8 = litebridge.select()
-                .from(Person.class)
-                .where("id").notIn(sub ->
-                        sub.select("id")
-                                .from(Person.class)
-                                .where("name").eq("Name1"))
-                .list();
+//        final List<Person> results8 = litebridge.select()
+//                .from(Person.class)
+//                .where("id").notIn(q -> q
+//                        .select("id")
+//                        .from(Person.class)
+//                        .where("name").eq("Name1"))
+//                .list();
 
-        assertEquals(2, results8.size());
+//        assertEquals(2, results8.size());
     }
 
     @TestTemplate

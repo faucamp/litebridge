@@ -3,6 +3,7 @@ package org.litebridge.orm.api.merge;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
@@ -21,13 +22,16 @@ public final class MergeWhenMatchedConditionClauseTerminal<DTO, MUS extends Merg
     /**
      * Creates a new {@code MergeWhenMatchedConditionClauseTerminal} instance.
      *
-     * @param targetTable       the target table name
      * @param usingTable        the using table name
      * @param node              the current query node
+     * @param mergeNode         the root merge node
      * @param litebridgeContext the Litebridge context
      */
-    public MergeWhenMatchedConditionClauseTerminal(final String targetTable, final String usingTable, final QueryNode node, final LitebridgeContext litebridgeContext) {
-        super(targetTable, usingTable, node, litebridgeContext);
+    public MergeWhenMatchedConditionClauseTerminal(final String usingTable,
+                                                   final QueryNode node,
+                                                   final MergeNode mergeNode,
+                                                   final LitebridgeContext litebridgeContext) {
+        super(usingTable, node, mergeNode, litebridgeContext);
     }
 
     @Override

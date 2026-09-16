@@ -36,7 +36,7 @@ class SqlProtoExpressionResolverTest {
         final ProtoExpressionSpec protoExpr = new ProtoColumnExpressionSpec(SelectColumnSpec.class, "name", "user_name");
 
         // When
-        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, null, table, ClauseType.SELECT);
+        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, alias, null, table, ClauseType.SELECT);
 
         // Then
         final SelectColumnSpec selectColumnSpec = assertInstanceOf(SelectColumnSpec.class, spec);

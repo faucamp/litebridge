@@ -8,6 +8,7 @@ import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.GroupByNode;
 import org.litebridge.orm.engine.ast.HavingNode;
 import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -19,42 +20,42 @@ public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTermina
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
-    private final String table;
+    private final SelectNode selectNode;
 
     /**
      * Creates a new {@code SqlGroupByClauseTerminal} instance using expressions.
      *
-     * @param table                the table name
+     * @param selectNode           the root select query node
      * @param expressions          the group-by expressions
      * @param node                 the current query node
      * @param selectEngineTerminal the terminal select engine
      * @param litebridgeContext    the Litebridge context
      */
-    public SqlGroupByClauseTerminal(final String table,
+    public SqlGroupByClauseTerminal(final SelectNode selectNode,
                                     final ExpressionSpec[] expressions,
                                     final QueryNode node,
                                     final SelectEngineTerminal selectEngineTerminal,
                                     final LitebridgeContext litebridgeContext) {
         super(expressions, new GroupByNode(node, null, expressions), selectEngineTerminal, litebridgeContext);
-        this.table = table;
+        this.selectNode = selectNode;
     }
 
     /**
      * Creates a new {@code SqlGroupByClauseTerminal} instance using column names.
      *
-     * @param table                the table name
+     * @param selectNode           the root select query node
      * @param columns              the group-by column names
      * @param node                 the current query node
      * @param selectEngineTerminal the terminal select engine
      * @param litebridgeContext    the Litebridge context
      */
-    public SqlGroupByClauseTerminal(final String table,
+    public SqlGroupByClauseTerminal(final SelectNode selectNode,
                                     final String[] columns,
                                     final QueryNode node,
                                     final SelectEngineTerminal selectEngineTerminal,
                                     final LitebridgeContext litebridgeContext) {
         super(columns, new GroupByNode(node, columns, null), selectEngineTerminal, litebridgeContext);
-        this.table = table;
+        this.selectNode = selectNode;
     }
 
     @Override
@@ -64,7 +65,7 @@ public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTermina
                 null,
                 expression,
                 null,
-                conditionNode -> new SqlHavingConditionClauseTerminal(table, new HavingNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
+                conditionNode -> new SqlHavingConditionClauseTerminal(selectNode, new HavingNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
     @Override

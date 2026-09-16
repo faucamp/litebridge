@@ -13,7 +13,7 @@ import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.expression.DelegateExpressionFactory;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
-import org.litebridge.db.spi.expression.SelectReference;
+import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
@@ -102,7 +102,7 @@ class PersistenceFacadeTest {
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn((column, args) -> new TestColumnExpression(column));
         when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
-        when(selectRegistry.reference()).thenReturn(column -> new SelectReference(column) {
+        when(selectRegistry.reference()).thenReturn(column -> new ColumnReference(column) {
             @Override
             public String toSql(org.litebridge.db.spi.Operation operation, ClauseType context, @Nullable DelegateExpression parent) {
                 return column().name();

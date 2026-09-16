@@ -1,5 +1,8 @@
 package org.litebridge.orm.meta;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.orm.expression.ExpressionSpec;
+
 /**
  * Inspector for {@link QueryField} instances, providing access to their internal state.
  */
@@ -26,5 +29,9 @@ public final class QueryFieldInspector {
      */
     public static Class<?> getDtoClass(final QueryField queryField) {
         return queryField.dtoClass();
+    }
+
+    public static @Nullable ExpressionSpec getPendingExpressionSpec(final QueryField queryField) {
+        return queryField.pendingExpressionSpec();
     }
 }

@@ -2,15 +2,24 @@ package org.litebridge.orm.e2e.sql;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
+import org.litebridge.db.h2.H2DatabaseProvider;
+import org.litebridge.db.oracle.OracleDatabaseProvider;
+import org.litebridge.db.oracle.api.LitebridgeOracle;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.db.sqlite.SQLiteDatabaseProvider;
+import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.LitebridgeBuilder;
+import org.litebridge.orm.LitebridgeCore;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Person;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.expression.Fn;
+import org.litebridge.orm.expression.select.QueryAliasSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
@@ -30,7 +39,7 @@ class SqlE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select all records")
-    void selectAll(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    void select_all(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
         final String personId = tableMapper.transformColumnName("PERSON_ID");
@@ -50,19 +59,78 @@ class SqlE2eTest extends AbstractE2eTest {
         // Then
         assertEquals(2, result.size());
         final Row row1 = result.getFirst();
-        assertEquals(5, row1.columnStream().count());
-        assertNumberEquals(1, row1.column(personId).orElseThrow().value());
-        assertEquals("Alice", row1.column(firstName).orElseThrow().value());
-        assertEquals("Smith", row1.column(surname).orElseThrow().value());
-        assertNumberEquals(20, row1.column(age).orElseThrow().value());
-        assertEquals("brown", row1.column(eyeColour).orElseThrow().value());
+        assertEquals(5, row1.size());
+        assertNumberEquals(1, row1.value(personId));
+        assertEquals("Alice", row1.value(firstName));
+        assertEquals("Smith", row1.value(surname));
+        assertNumberEquals(20, row1.value(age));
+        assertEquals("brown", row1.value(eyeColour));
         final Row row2 = result.get(1);
-        assertEquals(5, row2.columnStream().count());
-        assertNumberEquals(2, row2.column(personId).orElseThrow().value());
-        assertEquals("Bob", row2.column(firstName).orElseThrow().value());
-        assertEquals("Johnson", row2.column(surname).orElseThrow().value());
-        assertNull(row2.column(eyeColour).orElseThrow().value());
-        assertNumberEquals(30, row2.column(age).orElseThrow().value());
+        assertEquals(5, row2.size());
+        assertNumberEquals(2, row2.value(personId));
+        assertEquals("Bob", row2.value(firstName));
+        assertEquals("Johnson", row2.value(surname));
+        assertNull(row2.value(eyeColour));
+        assertNumberEquals(30, row2.value(age));
+    }
+
+    @TestTemplate
+    @DisplayName("Select using aliases")
+    void select_aliases(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
+        insertTestPersonRecords(personTableName);
+
+        final List<Row> result =
+                litebridge.select(
+                                Fn.ca("PERSON_ID", "id"),
+                                Fn.ca("FIRST_NAME", "firstName"),
+                                Fn.c("SURNAME"),
+                                Fn.c("AGE"),
+                                Fn.ca("EYE_COLOUR", "eyeColour"))
+                        .from(personTableName)
+                        .where("PERSON_ID").lt(10)
+//                        .orderBy("id").asc()
+                        .list();
+    }
+
+    @TestTemplate
+    @DisplayName("Select from a subquery")
+    void select_fromSubquery(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
+        insertTestPersonRecords(personTableName);
+        litebridge.insert(personTableName, i -> i
+                .into(personId, firstName, surname, age, eyeColour)
+                .values(3L, "James", "Smith", 26, "brown"));
+
+        // When
+        final QueryAliasSpec subselect = new QueryAliasSpec("GROUP_RESULT", q -> q
+                .select(Fn.c(surname), Fn.count())
+                .from(personTableName)
+                .groupBy(surname));
+
+        final Row result = litebridge.select(surname)
+                .from(Fn.aliasQuery("GROUP_RESULT", q -> q
+                        .select(Fn.c(surname), Fn.count())
+                        .from(personTableName)
+                        .groupBy(surname)))
+                .where(Fn.fromAlias("GROUP_RESULT", Fn.count())).gte(2)
+                .oneOrThrow();
+
+        // Then
+        assertEquals(2, result.size());
+        assertEquals("Doe", result.value(surname));
     }
 
     @TestTemplate
@@ -96,8 +164,8 @@ class SqlE2eTest extends AbstractE2eTest {
                         .offset(1)
                         .list();
         assertEquals(2, result2.size());
-        assertNumberEquals(2L, result2.getFirst().column(personIdColumn).orElseThrow().value());
-        assertNumberEquals(3L, result2.getLast().column(personIdColumn).orElseThrow().value());
+        assertNumberEquals(2L, result2.getFirst().value(personIdColumn));
+        assertNumberEquals(3L, result2.getLast().value(personIdColumn));
 
         // Limit only
         final List<Row> result3 =
@@ -106,7 +174,7 @@ class SqlE2eTest extends AbstractE2eTest {
                         .limit(1)
                         .list();
         assertEquals(1, result3.size());
-        assertNumberEquals(1L, result3.getFirst().column(personIdColumn).orElseThrow().value());
+        assertNumberEquals(1L, result3.getFirst().value(personIdColumn));
 
         // Limit and offset
         final List<Row> result4 =
@@ -115,7 +183,7 @@ class SqlE2eTest extends AbstractE2eTest {
                         .limit(1).offset(1)
                         .list();
         assertEquals(1, result4.size());
-        assertNumberEquals(2L, result4.getFirst().column(personIdColumn).orElseThrow().value());
+        assertNumberEquals(2L, result4.getFirst().value(personIdColumn));
 
         // Order by multiple columns
         final List<Row> result5 =
@@ -123,8 +191,8 @@ class SqlE2eTest extends AbstractE2eTest {
                         .orderBy(ageColumn).desc().then(surnameColumn).asc()
                         .list();
         assertEquals(3, result5.size());
-        assertNumberEquals(2L, result5.getFirst().column(personIdColumn).orElseThrow().value());
-        assertNumberEquals(1L, result5.getLast().column(personIdColumn).orElseThrow().value());
+        assertNumberEquals(2L, result5.getFirst().value(personIdColumn));
+        assertNumberEquals(1L, result5.getLast().value(personIdColumn));
     }
 
     @TestTemplate
@@ -148,10 +216,10 @@ class SqlE2eTest extends AbstractE2eTest {
 
         // Then
         assertEquals(1, result.size());
-        assertEquals(3, result.getFirst().columnStream().count());
-        assertEquals("Alice", result.getFirst().column(firstName).orElseThrow().value());
-        assertEquals("Smith", result.getFirst().column(surname).orElseThrow().value());
-        assertNumberEquals(20, result.getFirst().column(age).orElseThrow().value());
+        assertEquals(3, result.getFirst().size());
+        assertEquals("Alice", result.getFirst().value(firstName));
+        assertEquals("Smith", result.getFirst().value(surname));
+        assertNumberEquals(20, result.getFirst().value(age));
     }
 
     @TestTemplate
@@ -219,19 +287,19 @@ class SqlE2eTest extends AbstractE2eTest {
 
             assertEquals(2, result.size());
             final Row row1 = result.getFirst();
-            assertEquals(5, row1.columnStream().count());
-            assertEquals("Alice", row1.column(firstName).orElseThrow().value());
-            assertEquals("Smith", row1.column(surname).orElseThrow().value());
-            assertNumberEquals(20, row1.column(age).orElseThrow().value());
-            assertNumberEquals(1, row1.column(accountId).orElseThrow().value());
-            assertEquals("Alice's Account", row1.column(accountName).orElseThrow().value());
+            assertEquals(5, row1.size());
+            assertEquals("Alice", row1.value(firstName));
+            assertEquals("Smith", row1.value(surname));
+            assertNumberEquals(20, row1.value(age));
+            assertNumberEquals(1, row1.value(accountId));
+            assertEquals("Alice's Account", row1.value(accountName));
             final Row row2 = result.get(1);
-            assertEquals(5, row2.columnStream().count());
-            assertEquals("Bob", row2.column(firstName).orElseThrow().value());
-            assertEquals("Johnson", row2.column(surname).orElseThrow().value());
-            assertNumberEquals(30, row2.column(age).orElseThrow().value());
-            assertNumberEquals(2, row2.column(accountId).orElseThrow().value());
-            assertEquals("Bob's Account", row2.column(accountName).orElseThrow().value());
+            assertEquals(5, row2.size());
+            assertEquals("Bob", row2.value(firstName));
+            assertEquals("Johnson", row2.value(surname));
+            assertNumberEquals(30, row2.value(age));
+            assertNumberEquals(2, row2.value(accountId));
+            assertEquals("Bob's Account", row2.value(accountName));
         }
 
         // Join on
@@ -251,19 +319,19 @@ class SqlE2eTest extends AbstractE2eTest {
 
             assertEquals(2, result.size());
             final Row row1 = result.getFirst();
-            assertEquals(5, row1.columnStream().count());
-            assertEquals("Alice", row1.column(firstName).orElseThrow().value());
-            assertEquals("Smith", row1.column(surname).orElseThrow().value());
-            assertNumberEquals(20, row1.column(age).orElseThrow().value());
-            assertNumberEquals(1, row1.column(accountId).orElseThrow().value());
-            assertEquals("Alice's Account", row1.column(accountName).orElseThrow().value());
+            assertEquals(5, row1.size());
+            assertEquals("Alice", row1.value(firstName));
+            assertEquals("Smith", row1.value(surname));
+            assertNumberEquals(20, row1.value(age));
+            assertNumberEquals(1, row1.value(accountId));
+            assertEquals("Alice's Account", row1.value(accountName));
             final Row row2 = result.get(1);
-            assertEquals(5, row2.columnStream().count());
-            assertEquals("Bob", row2.column(firstName).orElseThrow().value());
-            assertEquals("Johnson", row2.column(surname).orElseThrow().value());
-            assertNumberEquals(30, row2.column(age).orElseThrow().value());
-            assertNumberEquals(2, row2.column(accountId).orElseThrow().value());
-            assertEquals("Bob's Account", row2.column(accountName).orElseThrow().value());
+            assertEquals(5, row2.size());
+            assertEquals("Bob", row2.value(firstName));
+            assertEquals("Johnson", row2.value(surname));
+            assertNumberEquals(30, row2.value(age));
+            assertNumberEquals(2, row2.value(accountId));
+            assertEquals("Bob's Account", row2.value(accountName));
         }
 
         // Join with subquery in ON clause
@@ -341,6 +409,9 @@ class SqlE2eTest extends AbstractE2eTest {
     void selectGroupBy(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
+        final String age = tableMapper.transformColumnName("AGE");
+        final String count = tableMapper.transformColumnName("COUNT(*)");
+
         litebridge.insert(personTableName, i -> i
                 .into("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE", "EYE_COLOUR")
                 .values(1L, "Alice", "Smith", 20, "brown")
@@ -350,35 +421,35 @@ class SqlE2eTest extends AbstractE2eTest {
 
         // Select with group by
         final List<Row> result =
-                litebridge.select(Fn.c(tableMapper.transformColumnName("AGE")), Fn.count())
+                litebridge.select(Fn.c(age), Fn.count())
                         .from(personTableName)
-                        .groupBy(tableMapper.transformColumnName("AGE"))
-                        .orderBy(tableMapper.transformColumnName("AGE")).asc()
+                        .groupBy(age)
+                        .orderBy(age).asc()
                         .list();
 
         assertEquals(2, result.size());
         assertEquals(2, result.getFirst().columns().size());
         final Row row1 = result.getFirst();
-        assertEquals(20, ((Number) row1.column(tableMapper.transformColumnName("AGE")).orElseThrow().value()).intValue());
-        assertEquals(2, ((Number) row1.column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value()).intValue());
+        assertEquals(20, ((Number) row1.value(age)).intValue());
+        assertEquals(2, ((Number) row1.value(count)).intValue());
         final Row row2 = result.get(1);
-        assertEquals(30, ((Number) row2.column(tableMapper.transformColumnName("AGE")).orElseThrow().value()).intValue());
-        assertEquals(1, ((Number) row2.column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value()).intValue());
+        assertEquals(30, ((Number) row2.value(age)).intValue());
+        assertEquals(1, ((Number) row2.value(count)).intValue());
 
         // Select with group by and having
         final List<Row> result2 =
-                litebridge.select(Fn.c(tableMapper.transformColumnName("AGE")), Fn.count())
+                litebridge.select(Fn.c(age), Fn.count())
                         .from(personTableName)
-                        .groupBy(tableMapper.transformColumnName("AGE"))
+                        .groupBy(age)
                         .having(Fn.count()).gt(1)
-                        .orderBy(tableMapper.transformColumnName("AGE")).asc()
+                        .orderBy(age).asc()
                         .list();
 
         assertEquals(1, result2.size());
         assertEquals(2, result2.getFirst().columns().size());
         final Row row = result2.getFirst();
-        assertEquals(20, ((Number) row.column(tableMapper.transformColumnName("AGE")).orElseThrow().value()).intValue());
-        assertEquals(2, ((Number) row.column(tableMapper.transformColumnName("COUNT(*)")).orElseThrow().value()).intValue());
+        assertEquals(20, ((Number) row.value(age)).intValue());
+        assertEquals(2, ((Number) row.value(count)).intValue());
     }
 
     @TestTemplate

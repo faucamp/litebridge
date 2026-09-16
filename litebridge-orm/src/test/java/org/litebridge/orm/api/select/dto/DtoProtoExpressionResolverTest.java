@@ -7,6 +7,7 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
+import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
 import org.litebridge.orm.expression.Resolvable;
@@ -65,7 +66,7 @@ class DtoProtoExpressionResolverTest {
         when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
 
         // When
-        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, ormTable, table, ClauseType.SELECT);
+        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, alias, ormTable, table, ClauseType.SELECT);
 
         // Then
         final SelectFieldSpec fieldSpec = assertInstanceOf(SelectFieldSpec.class, spec);
@@ -80,7 +81,7 @@ class DtoProtoExpressionResolverTest {
         when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
 
         // When
-        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, ormTable, table, ClauseType.WHERE);
+        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, alias, ormTable, table, ClauseType.WHERE);
 
         // Then
         final SelectFieldSpec fieldSpec = assertInstanceOf(SelectFieldSpec.class, spec);
@@ -95,7 +96,7 @@ class DtoProtoExpressionResolverTest {
         when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
 
         // When
-        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, ormTable, table, ClauseType.SELECT);
+        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, alias, ormTable, table, ClauseType.SELECT);
 
         // Then
         final SelectFieldSpec fieldSpec = assertInstanceOf(SelectFieldSpec.class, spec);
@@ -110,7 +111,7 @@ class DtoProtoExpressionResolverTest {
         when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
 
         // When
-        final ColumnExpressionSpec spec = resolver.resolveSelectField(resolvable, ormTable, table, ClauseType.SELECT);
+        final ColumnExpressionSpec spec = resolver.resolveSelectField(resolvable, alias, ormTable, table, ClauseType.SELECT);
 
         // Then
         final SelectFieldSpec fieldSpec = assertInstanceOf(SelectFieldSpec.class, spec);
@@ -124,7 +125,7 @@ class DtoProtoExpressionResolverTest {
         when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
 
         // When
-        final ColumnExpressionSpec spec = resolver.resolveSelectField(queryField, ormTable, table, ClauseType.SELECT);
+        final ExpressionSpec spec = resolver.resolveSelectField(queryField, ormTable, table, ClauseType.SELECT);
 
         // Then
         final SelectFieldSpec fieldSpec = assertInstanceOf(SelectFieldSpec.class, spec);

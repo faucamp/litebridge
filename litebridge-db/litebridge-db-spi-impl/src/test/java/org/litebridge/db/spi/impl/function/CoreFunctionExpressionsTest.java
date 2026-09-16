@@ -65,7 +65,7 @@ class CoreFunctionExpressionsTest {
     void selectReferenceImpl_toSql() {
         // Given
         final Column column = new Column(new Table("TEST"), "VAL");
-        final SelectReferenceImpl reference = new SelectReferenceImpl(column, new ColumnIdentifierGenerator());
+        final ColumnReferenceImpl reference = new ColumnReferenceImpl(column, new ColumnIdentifierGenerator());
 
         // When
         final String sql = reference.toSql(select, ClauseType.SELECT);
@@ -78,7 +78,7 @@ class CoreFunctionExpressionsTest {
     void selectReferenceImpl_toString() {
         // Given
         final Column column = new Column(new Table("TEST"), "VAL");
-        final SelectReferenceImpl reference = new SelectReferenceImpl(column, new ColumnIdentifierGenerator());
+        final ColumnReferenceImpl reference = new ColumnReferenceImpl(column, new ColumnIdentifierGenerator());
 
         // When
         final String str = reference.toString();

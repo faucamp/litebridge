@@ -2,6 +2,8 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.alias.AliasedTable;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.orm.engine.AbstractInsertEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -59,7 +61,11 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
     @Override
     public UpdateMetaData createUpdateMetaData(final PreparedOperation preparedOperation) {
         return AbstractInsertEngine.createUpdateMetaData(preparedOperation,
-                () -> preparedOperation.operation().table(),
+                () -> switch (preparedOperation.operation().table()) {
+                    case Table table -> table;
+                    case AliasedTable aliasedTable -> aliasedTable.target();
+                    default -> new Table("");
+                },
                 litebridgeContext);
     }
 }

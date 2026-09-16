@@ -8,11 +8,12 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.expression.AliasReference;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
+import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.ConnectionProviderExpression;
 import org.litebridge.db.spi.expression.LiteralExpression;
-import org.litebridge.db.spi.expression.SelectReference;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
@@ -104,9 +105,15 @@ public abstract class AbstractSqlGenerator {
             if (condition.rhs() instanceof SubselectExpression subselectExpression) {
                 final String subselectSql = subselectExpression.toSql(operation, connectionProvider);
                 sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), subselectSql);
-            } else if (condition.rhs() instanceof SelectReference selectReference) {
-                final Column referencedColumn = selectReference.column();
-                sql = "%s %s %s.%s".formatted(lhs, mapOperator(condition.operator()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.table().aliasOrName()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.name()));
+            } else if (condition.rhs() instanceof AliasReference aliasReference) {
+
+//                sql = "%s %s %s.%s".formatted(lhs, mapOperator(condition.operator()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.table().aliasOrName()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.name()));
+                throw new UnsupportedOperationException("Not implemented yet");
+            } else if (condition.rhs() instanceof ColumnReference columnReference) {
+                final Column referencedColumn = columnReference.column();
+//                sql = "%s %s %s.%s".formatted(lhs, mapOperator(condition.operator()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.table().aliasOrName()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.name()));
+//                columnReference
+                throw new UnsupportedOperationException("Not implemented yet");
             } else {
                 sql = "%s %s ?".formatted(lhs, mapOperator(condition.operator()));
             }

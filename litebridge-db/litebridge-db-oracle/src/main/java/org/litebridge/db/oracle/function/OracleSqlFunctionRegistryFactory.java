@@ -35,7 +35,7 @@ public final class OracleSqlFunctionRegistryFactory extends SqlFunctionRegistryF
      * @return a {@link Substr} expression
      */
     @Override
-    protected DelegateColumnExpression createSubstring(final ColumnExpression target, final int start, @Nullable final Integer length) {
-        return new Substr(target, start, length, columnIdentifierGenerator);
+    protected DelegateColumnExpression createSubstring(final ColumnExpression target, final int start, @Nullable final Integer length, final @Nullable String alias) {
+        return new Substr(target, start, length, alias);
     }
 }

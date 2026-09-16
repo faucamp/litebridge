@@ -1,12 +1,12 @@
 package org.litebridge.orm.api.select.model;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.commons.ObjectUtils;
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.expression.AliasReference;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
+import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.ConvertExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
@@ -25,6 +25,7 @@ import org.litebridge.orm.expression.function.scalar.SubstringSpec;
 import org.litebridge.orm.expression.function.scalar.UpperSpec;
 import org.litebridge.orm.expression.intent.ConvertSpec;
 import org.litebridge.orm.expression.intent.ExpressionSpecArray;
+import org.litebridge.orm.expression.select.AliasReferenceSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.meta.QueryField;
@@ -32,6 +33,7 @@ import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Maps high-level {@link ExpressionSpec} query expressions to dialect-specific {@link SelectExpression} instances.
@@ -84,8 +86,11 @@ public final class SelectExpressionMapper {
     public SelectExpression toSelectExpression(final ExpressionSpec expressionSpec, final boolean useSelectReferences) {
         return switch (expressionSpec) {
             // Select targets
-            case SelectFieldSpec selectFieldSpec -> toSelectColumn(selectFieldSpec, useSelectReferences);
-            case SelectColumnSpec selectColumnSpec -> toSelectColumn(selectColumnSpec, useSelectReferences);
+            case SelectFieldSpec selectFieldSpec ->
+                    useSelectReferences ? toColumnReference(selectFieldSpec) : toSelectColumn(selectFieldSpec);
+            case SelectColumnSpec selectColumnSpec ->
+                    useSelectReferences ? toColumnReference(selectColumnSpec) : toSelectColumn(selectColumnSpec);
+            case AliasReferenceSpec aliasReferenceSpec -> toAliasReference(aliasReferenceSpec);
             case ConvertSpec<?> convertSpec ->
                     new ConvertExpression(toSelectExpression(convertSpec.target(), useSelectReferences), convertSpec.returnType());
             case ExpressionSpecArray expressionSpecArray ->
@@ -105,41 +110,65 @@ public final class SelectExpressionMapper {
             case ProtoExpressionSpec protoExpression ->
                     throw new IllegalStateException("ProtoExpression not resolved: " + protoExpression);
             case QueryField queryField -> throw new IllegalStateException("QueryField not resolved: " + queryField);
+
+            default -> throw new IllegalStateException("Unsupported expression: " + expressionSpec);
         };
     }
 
-    private ColumnExpression resolveNestedExpression(final DelegateExpressionSpec expression, final boolean useSelectReferences) {
-        final ColumnExpression nestedExpression;
+    private SelectExpression resolveNestedExpression(final DelegateExpressionSpec expression, final boolean useSelectReferences) {
+        final SelectExpression nestedSelectExpression;
 
         if (expression.target() instanceof DelegateExpressionSpec targetNestableExpression) {
-            nestedExpression = resolveNestedExpression(targetNestableExpression, useSelectReferences);
+            nestedSelectExpression = resolveNestedExpression(targetNestableExpression, useSelectReferences);
         } else {
-            nestedExpression = (ColumnExpression) toSelectExpression(expression.target(), useSelectReferences);
+            nestedSelectExpression = toSelectExpression(expression.target(), useSelectReferences);
         }
+
+        if (!(nestedSelectExpression instanceof ColumnExpression nestedExpression)) {
+            return nestedSelectExpression;
+        }
+
+        final String alias = expression.getAlias();
 
         return switch (expression) {
             // Aggregate functions
-            case AvgSpec<?> avgSpec -> sqlFunctionRegistry.aggregate().avg().create(nestedExpression);
-            case MaxSpec<?> maxSpec -> sqlFunctionRegistry.aggregate().max().create(nestedExpression);
-            case MinSpec<?> minSpec -> sqlFunctionRegistry.aggregate().min().create(nestedExpression);
+            case AvgSpec<?> avgSpec -> sqlFunctionRegistry.aggregate().avg().create(nestedExpression, alias);
+            case MaxSpec<?> maxSpec -> sqlFunctionRegistry.aggregate().max().create(nestedExpression, alias);
+            case MinSpec<?> minSpec -> sqlFunctionRegistry.aggregate().min().create(nestedExpression, alias);
 
             // Scalar functions
-            case UpperSpec upperSpec -> sqlFunctionRegistry.scalar().upper().create(nestedExpression);
-            case LowerSpec lowerSpec -> sqlFunctionRegistry.scalar().lower().create(nestedExpression);
+            case UpperSpec upperSpec -> sqlFunctionRegistry.scalar().upper().create(nestedExpression, alias);
+            case LowerSpec lowerSpec -> sqlFunctionRegistry.scalar().lower().create(nestedExpression, alias);
             case SubstringSpec substringSpec ->
-                    sqlFunctionRegistry.scalar().substring().create(nestedExpression, substringSpec.start(), substringSpec.length());
-            case AbsSpec absSpec -> sqlFunctionRegistry.scalar().abs().create(nestedExpression);
+                    sqlFunctionRegistry.scalar().substring().create(nestedExpression, substringSpec.start(), substringSpec.length(), alias);
+            case AbsSpec absSpec -> sqlFunctionRegistry.scalar().abs().create(nestedExpression, alias);
+            default -> throw new IllegalArgumentException("Unsupported expression type: " + expression);
         };
     }
 
-    private ColumnExpression toSelectColumn(final ColumnExpressionSpec columnExpressionSpec, final boolean useSelectReferences) {
-        final Column column = ObjectUtils.requireNonNull(columnExpressionSpec.getColumn(), () -> new IllegalStateException("SelectField.column not set"));
+    private ColumnExpression toSelectColumn(final ColumnExpressionSpec columnExpressionSpec) {
+        return sqlFunctionRegistry.select().column()
+                .create(columnExpressionSpec.getColumn(), columnExpressionSpec.getAlias(), columnExpressionSpec.getTableAlias());
+    }
 
-        if (useSelectReferences) {
-            return sqlFunctionRegistry.select().reference().create(column);
+    private ColumnReference toColumnReference(final ColumnExpressionSpec columnExpressionSpec) {
+        return sqlFunctionRegistry.select().reference()
+                .create(columnExpressionSpec.getColumn(), columnExpressionSpec.getTableAlias(), columnExpressionSpec.getAlias());
+    }
+
+    private AliasReference toAliasReference(final AliasReferenceSpec aliasReferenceSpec) {
+        final String column;
+
+        if (aliasReferenceSpec.column() != null) {
+            column = aliasReferenceSpec.column();
+        } else if (aliasReferenceSpec.expression() != null) {
+            column = toSelectExpression(aliasReferenceSpec.expression(), true)
+                    .toSql(null, null);
         } else {
-            return sqlFunctionRegistry.select().column().create(column);
+            column = null;
         }
 
+
+        return sqlFunctionRegistry.select().aliasReference().create(aliasReferenceSpec.fromAlias(), column);
     }
 }

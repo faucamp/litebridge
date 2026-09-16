@@ -3,11 +3,12 @@ package org.litebridge.db.spi.impl.function;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpressionImpl;
 import org.litebridge.db.spi.expression.DelegateExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.query.Select;
+
+import static org.litebridge.db.spi.impl.ColumnIdentifierGenerator.quoteIdentifier;
 
 /**
  * Expression to select a database column.
@@ -15,19 +16,13 @@ import org.litebridge.db.spi.query.Select;
 public class SelectColumn extends ColumnExpressionImpl {
 
     /**
-     * The column identifier generator used to create SQL column identifiers.
-     */
-    protected final ColumnIdentifierGenerator columnIdentifierGenerator;
-
-    /**
      * Creates a new {@code SelectColumn}.
      *
-     * @param column                    the column
-     * @param columnIdentifierGenerator the column identifier generator
+     * @param column the column to select
+     * @param alias  the alias to assign to the column
      */
-    public SelectColumn(final Column column, final ColumnIdentifierGenerator columnIdentifierGenerator) {
-        super(column);
-        this.columnIdentifierGenerator = columnIdentifierGenerator;
+    public SelectColumn(final Column column, final @Nullable String alias, final @Nullable String tableAlias) {
+        super(column, alias, tableAlias);
     }
 
     /**
@@ -40,10 +35,21 @@ public class SelectColumn extends ColumnExpressionImpl {
      */
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
-        if (clause == ClauseType.SELECT && operation instanceof Select select) {
-            return columnIdentifierGenerator.createSelectColumn(column, select, clause, (parent != null));
+        final StringBuilder sb = new StringBuilder();
+        final Table table = column.table();
+
+        if (tableAlias != null) {
+            sb.append(quoteIdentifier(tableAlias));
         } else {
-            return columnIdentifierGenerator.createColumnRef(column, operation, clause);
+            sb.append(quoteIdentifier(table.name()));
         }
+
+        sb.append('.').append(quoteIdentifier(column.name()));
+
+        if (alias != null) {
+            sb.append(" AS ").append(alias);
+        }
+
+        return sb.toString();
     }
 }

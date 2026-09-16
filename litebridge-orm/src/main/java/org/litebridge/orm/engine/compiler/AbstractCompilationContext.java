@@ -9,9 +9,9 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
+import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
-import org.litebridge.db.spi.expression.SelectReference;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
@@ -51,14 +51,14 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return bindValues;
     }
 
-    protected Column resolveAlias(final Table table, final ColumnMetaData columnMetaData) {
+    protected @Nullable String resolveAlias(final Table table, final ColumnMetaData columnMetaData) {
         // Default implementation does nothing
-        return columnMetaData.toColumn();
+        return null;
     }
 
-    protected Column resolveAlias(final Table table, final Column column) {
+    protected @Nullable String resolveAlias(final Table table, final Column column) {
         // Default implementation does nothing
-        return column;
+        return null;
     }
 
     protected ExpressionSpec resolveAlias(final ExpressionSpec expressionSpec) {
@@ -100,12 +100,14 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         } else if (ormTable != null) {
             // DTO field name
             final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(Objects.requireNonNull(conditionSpec.getLhsColumn()));
-            final Column aliasedColumn = resolveAlias(table, columnMetaData);
-            lhsExpressionSpec = new SelectColumnSpec(aliasedColumn);
+            final Column column = columnMetaData.toColumn();
+            final String columnAlias = resolveAlias(table, column);
+            lhsExpressionSpec = new SelectColumnSpec(column, columnAlias);
         } else {
             // Column name
-            final Column aliasedColumn = resolveAlias(table, new Column(table, Objects.requireNonNull(conditionSpec.getLhsColumn())));
-            lhsExpressionSpec = new SelectColumnSpec(aliasedColumn);
+            final Column column = new Column(table, Objects.requireNonNull(conditionSpec.getLhsColumn()));
+            final String columnAlias = resolveAlias(table, column);
+            lhsExpressionSpec = new SelectColumnSpec(column, columnAlias);
         }
 
         final SelectExpression lhsSelectExpression = selectExpressionMapper.toSelectExpression(lhsExpressionSpec, true);
@@ -131,8 +133,9 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(rhsExpressionSpec, true));
         } else if (value instanceof Column referencedColumn) {
             // Reference to a selected column
-            final SelectReference selectReference = litebridgeContext.sqlFunctionRegistry().select().reference().create(referencedColumn);
-            return new Condition(lhsSelectExpression, operator, selectReference);
+            //TODO: alias regression
+            final ColumnReference columnReference = litebridgeContext.sqlFunctionRegistry().select().reference().create(referencedColumn, null, null);
+            return new Condition(lhsSelectExpression, operator, columnReference);
         }
 
         // Store bind values and return condition

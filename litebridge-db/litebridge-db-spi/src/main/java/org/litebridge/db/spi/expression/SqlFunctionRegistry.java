@@ -27,7 +27,8 @@ public record SqlFunctionRegistry(
             ColumnExpressionFactory column,
             SubselectExpressionFactory subselect,
             LiteralExpressionFactory literal,
-            SelectReferenceExpressionFactory reference) {
+            SelectReferenceExpressionFactory reference,
+            AliasReferenceExpressionFactory aliasReference) {
     }
 
     /**

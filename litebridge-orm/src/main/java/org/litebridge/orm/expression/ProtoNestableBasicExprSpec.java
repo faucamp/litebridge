@@ -4,30 +4,31 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridge.orm.expression.function.scalar.UpperSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
+
+import java.util.Objects;
 
 /**
  * Proto-expression that allows nesting other proto-expressions.
  * <p>
  * This record is used to create a nested chain of expression instances (e.g. {@link UpperSpec}) when table information is available.
  *
- * @param target The target expression; typically a column name to select via {@link SelectColumnSpec} or {@link SelectFieldSpec}.
- * @param alias  The column alias to use, or {@code null} if not specified.
- * @param type   The type of expression to create.
  */
-public record ProtoNestableBasicExprSpec(Class<? extends ExpressionSpec> type,
-                                         ProtoExpressionSpec target,
-                                         @Nullable String alias)
+public final class ProtoNestableBasicExprSpec extends AbstractAliasable
         implements ProtoNestableExpressionSpec {
+
+    private final Class<? extends ExpressionSpec> type;
+    private final ProtoExpressionSpec target;
 
     /**
      * Creates a new ProtoNestableBasicExprSpec.
      *
-     * @param type the type of expression to create
+     * @param type   the type of expression to create
      * @param target the target expression specification
-     * @param alias the column alias
+     * @param alias  the column alias
      */
-    public ProtoNestableBasicExprSpec(final Class<? extends ExpressionSpec> type, final ProtoExpressionSpec target, final @Nullable String alias) {
+    public ProtoNestableBasicExprSpec(final Class<? extends ExpressionSpec> type,
+                                      final ProtoExpressionSpec target,
+                                      final @Nullable String alias) {
         // Validate that a supported expression type is specified
         if (!ProtoExpressionResolver.isSupported(type)) {
             throw new IllegalArgumentException("Unsupported expression type: " + type);
@@ -50,7 +51,46 @@ public record ProtoNestableBasicExprSpec(Class<? extends ExpressionSpec> type,
     }
 
     @Override
+    public @Nullable String alias() {
+        return getAlias();
+    }
+
+    @Override
     public @Nullable Object @Nullable [] args() {
         return null;
     }
+
+    @Override
+    public Class<? extends ExpressionSpec> type() {
+        return type;
+    }
+
+    @Override
+    public ProtoExpressionSpec target() {
+        return target;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        var that = (ProtoNestableBasicExprSpec) obj;
+        return Objects.equals(this.type, that.type) &&
+                Objects.equals(this.target, that.target) &&
+                Objects.equals(this.alias, that.alias);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, target, alias);
+    }
+
+    @Override
+    public String toString() {
+        return "ProtoNestableBasicExprSpec[" +
+                "type=" + type + ", " +
+                "target=" + target + ", " +
+                "alias=" + alias + ']';
+    }
+
 }

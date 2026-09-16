@@ -13,7 +13,7 @@ import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ConnectionProviderExpression;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
-import org.litebridge.db.spi.expression.SelectReference;
+import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.function.SelectColumn;
@@ -397,9 +397,9 @@ class AbstractSqlGeneratorTest {
         final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
         final Column referencedColumn = createTestColumn();
         referencedColumn.table().setAlias("ref");
-        final SelectReference selectReference = mock(SelectReference.class);
-        when(selectReference.column()).thenReturn(referencedColumn);
-        final Condition condition = new Condition(column, Operator.EQ, selectReference);
+        final ColumnReference columnReference = mock(ColumnReference.class);
+        when(columnReference.column()).thenReturn(referencedColumn);
+        final Condition condition = new Condition(column, Operator.EQ, columnReference);
 
         // When
         final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));

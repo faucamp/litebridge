@@ -44,7 +44,7 @@ public abstract class ProtoExpressionResolver {
             SelectColumnSpec.class, SelectColumnSpec::new,
             SelectFieldSpec.class, SelectColumnSpec::new);
 
-    private static final Map<Class<? extends ExpressionSpec>, Function<ColumnExpressionSpec, DelegateExpressionSpec>> nestableColumnExpressions = Map.of(
+    private static final Map<Class<? extends ExpressionSpec>, BiFunction<ColumnExpressionSpec, @Nullable String, DelegateExpressionSpec>> nestableColumnExpressions = Map.of(
             UpperSpec.class, UpperSpec::new,
             LowerSpec.class, LowerSpec::new,
             AbsSpec.class, AbsSpec::new);
@@ -99,7 +99,7 @@ public abstract class ProtoExpressionResolver {
         } else if (resolvable instanceof ProtoNestableExpressionSpec protoNestableExpressionSpec) {
             resolvedExpressionSpec = resolveDelegateExpression(protoNestableExpressionSpec, ormTable, table, clause);
         } else if (resolvable instanceof ProtoColumnExpressionSpec protoColumnExpressionSpec) {
-            resolvedExpressionSpec = columnExpressions.get(targetType).apply(getColumn(protoColumnExpressionSpec, ormTable, table, clause));
+            resolvedExpressionSpec = new SelectColumnSpec(getColumn(protoColumnExpressionSpec, ormTable, table, clause), protoColumnExpressionSpec.alias());
         } else if (resolvable instanceof ConvertSpec<?> convertSpec) {
             return resolveConvertSpec(convertSpec, ormTable, table, clause);
         } else {
@@ -172,7 +172,7 @@ public abstract class ProtoExpressionResolver {
 
         if (expression.args() == null) {
             if (nestableColumnExpressions.containsKey(expression.type())) {
-                return nestableColumnExpressions.get(expression.type()).apply(resolvedNestedExpressionSpec);
+                return nestableColumnExpressions.get(expression.type()).apply(resolvedNestedExpressionSpec, expression.alias());
             }
 
             return typeOverrideColumnExpressions.get(expression.type()).apply(resolvedNestedExpressionSpec, expression.type());
@@ -183,19 +183,23 @@ public abstract class ProtoExpressionResolver {
     }
 
     private Stream<ExpressionSpec> resolveExpression(final QueryField queryField, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
-        return Stream.of(resolveSelectField(queryField, ormTable, table, clause));
+        return resolveSelectField(queryField, ormTable, table, clause);
     }
 
     /**
      * Resolves a resolvable into a column expression specification.
      *
      * @param resolvable the resolvable to resolve
+     * @param alias
      * @param ormTable   the ORM table metadata, or {@code null}
      * @param table      the target database table
      * @param clause     the clause type where the expression is being used
      * @return the resolved column expression specification
      */
-    protected abstract ColumnExpressionSpec resolveSelectField(final Resolvable resolvable, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause);
+    protected abstract ColumnExpressionSpec resolveSelectField(final Resolvable resolvable,
+                                                               final @Nullable OrmTable ormTable,
+                                                               final Table table,
+                                                               final ClauseType clause);
 
     /**
      * Resolves a query field into a column expression specification.
@@ -206,7 +210,7 @@ public abstract class ProtoExpressionResolver {
      * @param clause     the clause type where the expression is being used
      * @return the resolved column expression specification
      */
-    protected abstract ColumnExpressionSpec resolveSelectField(final QueryField queryField, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause);
+    protected abstract Stream<ExpressionSpec> resolveSelectField(final QueryField queryField, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause);
 
     /**
      * Returns the database column for a resolvable.

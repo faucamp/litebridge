@@ -8,11 +8,8 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.DefaultAliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
-import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
-import org.litebridge.db.spi.expression.SelectReference;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
-import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.Select;
@@ -40,7 +37,6 @@ import org.litebridge.tracking.FieldAccessor;
 import org.mockito.Mockito;
 
 import java.sql.Types;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 

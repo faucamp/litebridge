@@ -1,11 +1,13 @@
 package org.litebridge.orm.expression.select;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.tracking.FieldAccessor;
 
 /**
  * Expression spec that selects a DTO field.
  */
+@Deprecated(forRemoval = true)
 public final class SelectFieldSpec extends SelectColumnSpec {
 
     private final FieldAccessor field;
@@ -19,6 +21,12 @@ public final class SelectFieldSpec extends SelectColumnSpec {
     public SelectFieldSpec(FieldAccessor field, Column column) {
         super(column);
         this.field = field;
+    }
+
+    public SelectFieldSpec(FieldAccessor field, Column column, final @Nullable String alias) {
+        super(column);
+        this.field = field;
+        this.alias = alias;
     }
 
     /**

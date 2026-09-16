@@ -46,8 +46,11 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
         final Table targetTable = merge.table();
         final StringBuilder sql = appendTable(new StringBuilder("MERGE INTO "), targetTable);
 
-        if (targetTable.alias() != null) {
-            sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(merge.table().alias())));
+//        if (targetTable.alias() != null) {
+//            sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(merge.table().alias())));
+//        }
+        if (true) {
+            throw new UnsupportedOperationException("Not implemented yet");
         }
 
         sql.append(" USING ");
@@ -56,9 +59,10 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
         if (usingTable != null) {
             appendTable(sql, usingTable);
 
-            if (usingTable.alias() != null) {
-                sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(usingTable.alias())));
-            }
+//            if (usingTable.alias() != null) {
+//                sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(usingTable.alias())));
+//            }
+            throw new UnsupportedOperationException("Not implemented yet");
         }
 
         sql.append(" ON (");

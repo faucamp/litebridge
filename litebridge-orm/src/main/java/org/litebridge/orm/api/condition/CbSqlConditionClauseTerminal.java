@@ -2,9 +2,10 @@ package org.litebridge.orm.api.condition;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -12,39 +13,39 @@ import org.litebridge.orm.expression.ExpressionSpec;
  */
 public final class CbSqlConditionClauseTerminal extends AbstractCbConditionClauseTerminal<Row> {
 
-    private final String table;
+    private final SelectNode selectNode;
 
     /**
      * Constructs a new {@code CbSqlConditionClauseTerminal}.
      *
-     * @param table             the target table name
+     * @param selectNode        the root select query node
      * @param node              the current query node
      * @param litebridgeContext the Litebridge context
      */
-    public CbSqlConditionClauseTerminal(final String table,
+    public CbSqlConditionClauseTerminal(final SelectNode selectNode,
                                         final QueryNode node,
                                         final LitebridgeContext litebridgeContext) {
         super(node, litebridgeContext);
-        this.table = table;
+        this.selectNode = selectNode;
     }
 
     @Override
     protected CbSqlConditionClause whereImpl(final LogicOperator logicOperator, final String column) {
-        return new CbSqlConditionClause(table, litebridgeContext, logicOperator, column, null, node,
-                conditionNode -> new CbSqlConditionClauseTerminal(table, conditionNode, litebridgeContext));
+        return new CbSqlConditionClause(selectNode, litebridgeContext, logicOperator, column, null, node,
+                conditionNode -> new CbSqlConditionClauseTerminal(selectNode, conditionNode, litebridgeContext));
     }
 
     @Override
     protected CbSqlConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        return new CbSqlConditionClause(table, litebridgeContext, logicOperator, null, expression, node,
-                conditionNode -> new CbSqlConditionClauseTerminal(table, conditionNode, litebridgeContext));
+        return new CbSqlConditionClause(selectNode, litebridgeContext, logicOperator, null, expression, node,
+                conditionNode -> new CbSqlConditionClauseTerminal(selectNode, conditionNode, litebridgeContext));
     }
 
     @Override
     protected AbstractCbConditionClauseTerminal<Row> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(table, node, litebridgeContext);
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, node, litebridgeContext);
         final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
-        return new CbSqlConditionClauseTerminal(table,
+        return new CbSqlConditionClauseTerminal(selectNode,
                 new ConditionGroupNode(node, logicOperator, terminal.node()),
                 litebridgeContext);
     }

@@ -2,6 +2,7 @@ package org.litebridge.db.spi;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.StringUtils;
+import org.litebridge.db.spi.query.SelectTarget;
 
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -12,7 +13,7 @@ import java.util.StringJoiner;
  * This class provides functionality for handling table-related metadata
  * and supports aliasing for the table name.
  */
-public class Table extends Aliased {
+public final class Table implements SelectTarget {
 
     /**
      * Database catalog name
@@ -22,6 +23,10 @@ public class Table extends Aliased {
      * Database schema name
      */
     private final @Nullable String schema;
+    /**
+     * Database table name
+     */
+    private final String name;
 
     /**
      * Constructs a new {@code Table} with catalog, schema, and name.
@@ -31,19 +36,7 @@ public class Table extends Aliased {
      * @param name    the table name
      */
     public Table(final @Nullable String catalog, final @Nullable String schema, final String name) {
-        this(catalog, schema, name, null);
-    }
-
-    /**
-     * Constructs a new {@code Table} with catalog, schema, name, and alias.
-     *
-     * @param catalog the catalog name
-     * @param schema  the schema name
-     * @param name    the table name
-     * @param alias   the table alias
-     */
-    public Table(final @Nullable String catalog, final @Nullable String schema, final String name, final @Nullable String alias) {
-        super(name, alias);
+        this.name = name;
 
         if (!StringUtils.isBlank(catalog)) {
             this.catalog = catalog;
@@ -59,26 +52,16 @@ public class Table extends Aliased {
     }
 
     /**
-     * Constructs a new {@code Table} with name and alias.
+     * Constructs a new {@code Table} with the specified fully qualified name.
      *
-     * @param name  the table name
-     * @param alias the table alias
-     */
-    public Table(final String name, final @Nullable String alias) {
-        this(StringUtils.splitArray(name, '.', 3, true), alias);
-    }
-
-    /**
-     * Constructs a new {@code Table} with a name.
-     *
-     * @param name the table name
+     * @param name the fully qualified table name, e.g. {@code "schema.table"} or {@code "catalog.schema.table"}
      */
     public Table(final String name) {
-        this(name, null);
+        this(StringUtils.splitArray(name, '.', 3, true));
     }
 
-    private Table(final String[] catalogSchemaTable, final @Nullable String alias) {
-        this(catalogSchemaTable[0], catalogSchemaTable[1], catalogSchemaTable[2], alias);
+    private Table(final String[] catalogSchemaTable) {
+        this(catalogSchemaTable[0], catalogSchemaTable[1], catalogSchemaTable[2]);
     }
 
     /**
@@ -88,7 +71,7 @@ public class Table extends Aliased {
      */
     @SuppressWarnings("IncompleteCopyConstructor")
     public Table(final Table other) {
-        this(other.catalog(), other.schema(), other.name(), other.alias());
+        this(other.catalog(), other.schema(), other.name());
     }
 
     /**
@@ -122,26 +105,37 @@ public class Table extends Aliased {
         }
     }
 
-    @Override
+    /**
+     * Set the alias for this entity and return the updated instance.
+     *
+     * @param alias the alias to assign to this entity; must not be null
+     * @return the updated instance of {@code Aliased} with the specified alias set
+     */
+    @Deprecated(forRemoval = true)
     public Table as(final String alias) {
-        return (Table) super.as(alias);
+//        setAlias(alias);
+//        return (Table) this;
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     @Override
     public boolean equals(final Object o) {
-        if (!(o instanceof final Table table)) return false;
-        return equalsIgnoreAlias(table) && Objects.equals(alias(), table.alias());
+        return this == o || (o instanceof final Table that
+                && Objects.equals(this.name, that.name)
+                && Objects.equals(this.schema, that.schema)
+                && Objects.equals(this.catalog, that.catalog));
     }
 
-    @Override
-    public boolean equalsIgnoreAlias(final Aliased o) {
-        if (!(o instanceof final Table table)) return false;
-        return Objects.equals(catalog, table.catalog) && Objects.equals(schema, table.schema) && Objects.equals(name(), table.name());
+    @Deprecated(forRemoval = true)
+    public boolean equalsIgnoreAlias(final Object o) {
+//        if (!(o instanceof final Table table)) return false;
+//        return Objects.equals(catalog, table.catalog) && Objects.equals(schema, table.schema) && Objects.equals(name(), table.name());
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(catalog, schema, name(), alias());
+        return Objects.hash(catalog, schema, name);
     }
 
     @Override
@@ -149,8 +143,16 @@ public class Table extends Aliased {
         return new StringJoiner(", ", Table.class.getSimpleName() + "[", "]")
                 .add("catalog='" + catalog + "'")
                 .add("schema='" + schema + "'")
-                .add("name='" + name() + "'")
-                .add("alias='" + alias() + "'")
+                .add("name='" + name + "'")
                 .toString();
+    }
+
+    /**
+     * Retrieve the name of the aliased entity.
+     *
+     * @return the name of the aliased entity
+     */
+    public String name() {
+        return name;
     }
 }

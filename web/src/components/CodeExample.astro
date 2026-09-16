@@ -1,0 +1,128 @@
+---
+import CodeBlock from './CodeBlock.astro';
+
+export interface CodeSnippet {
+  id: string;
+  title: string;
+  description: string;
+  code: string;
+  lang?: string;
+  filename?: string;
+}
+
+export interface Props {
+  examples: CodeSnippet[];
+  defaultId?: string;
+  id?: string;
+  class?: string;
+  filename?: string;
+}
+
+const {
+  examples = [],
+  defaultId,
+  id,
+  class: className = '',
+  filename = 'LitebridgeExample.java',
+} = Astro.props;
+
+const activeId = defaultId ?? (examples[0]?.id ?? '');
+const instanceId = id ?? `ce-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<div class={`code-example my-6 w-full ${className}`} data-code-example id={instanceId}>
+  {examples.length > 0 && (
+    <>
+      <div role="tablist" class="flex flex-wrap gap-2 mb-3">
+        {examples.map((ex) => (
+          <button
+            type="button"
+            role="tab"
+            class="example-tab px-4 py-2 text-sm font-semibold rounded-lg border transition-all cursor-pointer border-gray-200 bg-white text-gray-700 hover:border-accent hover:text-accent dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-accent dark:hover:text-accent aria-selected:border-accent aria-selected:bg-accent/10 aria-selected:text-accent dark:aria-selected:border-accent dark:aria-selected:bg-accent/15 dark:aria-selected:text-accent"
+            data-tab-id={ex.id}
+            aria-selected={ex.id === activeId ? 'true' : 'false'}
+          >
+            {ex.title}
+          </button>
+        ))}
+      </div>
+
+      <div class="example-descriptions mb-4 min-h-[1.5rem]">
+        {examples.map((ex) => (
+          <p
+            data-desc-id={ex.id}
+            class={`example-desc text-sm sm:text-base text-gray-600 dark:text-gray-400 ${ex.id === activeId ? 'block' : 'hidden'}`}
+          >
+            {ex.description}
+          </p>
+        ))}
+      </div>
+
+      <div class="example-code-container">
+        {examples.map((ex) => (
+          <div
+            data-code-panel={ex.id}
+            class={`example-code-panel transition-all duration-300 ${ex.id === activeId ? 'block' : 'hidden'}`}
+          >
+            <CodeBlock
+              code={ex.code}
+              lang={ex.lang ?? 'java'}
+              filename={ex.filename ?? filename}
+            />
+          </div>
+        ))}
+      </div>
+    </>
+  )}
+</div>
+
+<script>
+  function initCodeExamples() {
+    const containers = document.querySelectorAll<HTMLElement>('[data-code-example]');
+
+    containers.forEach((container) => {
+      if (container.dataset.codeExampleInit === 'true') return;
+      container.dataset.codeExampleInit = 'true';
+
+      const tabs = container.querySelectorAll<HTMLButtonElement>('.example-tab');
+      const descs = container.querySelectorAll<HTMLElement>('.example-desc');
+      const panels = container.querySelectorAll<HTMLElement>('.example-code-panel');
+
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          const id = tab.getAttribute('data-tab-id');
+          if (!id) return;
+
+          tabs.forEach((t) => t.setAttribute('aria-selected', t === tab ? 'true' : 'false'));
+
+          descs.forEach((d) => {
+            if (d.getAttribute('data-desc-id') === id) {
+              d.classList.remove('hidden');
+              d.classList.add('block');
+            } else {
+              d.classList.remove('block');
+              d.classList.add('hidden');
+            }
+          });
+
+          panels.forEach((p) => {
+            if (p.getAttribute('data-code-panel') === id) {
+              p.classList.remove('hidden');
+              p.classList.add('block');
+              const codeBlock = p.querySelector<HTMLElement>('[data-code-block]');
+              if (codeBlock) {
+                codeBlock.dispatchEvent(new CustomEvent('code-block:animate'));
+              }
+            } else {
+              p.classList.remove('block');
+              p.classList.add('hidden');
+            }
+          });
+        });
+      });
+    });
+  }
+
+  initCodeExamples();
+  document.addEventListener('astro:page-load', initCodeExamples);
+</script>

@@ -5,13 +5,14 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.api.condition.SqlConditionClauseStart;
+import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.JoinNode;
 import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
@@ -29,22 +30,22 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
         implements SqlJoinClauseTerminal {
 
-    private final String selectedTable;
+    private final SelectNode selectNode;
 
     /**
      * Creates a new instance of {@code SqlJoinConditionClauseTerminal}.
      *
-     * @param selectedTable        the selected table name
+     * @param selectNode           the root select query node
      * @param joinNode             the join query node
      * @param selectEngineTerminal the terminal select engine
      * @param litebridgeContext    the Litebridge context
      */
-    public SqlJoinConditionClauseTerminal(final String selectedTable,
+    public SqlJoinConditionClauseTerminal(final SelectNode selectNode,
                                           final JoinNode joinNode,
                                           final SelectEngineTerminal selectEngineTerminal,
                                           final LitebridgeContext litebridgeContext) {
         super(joinNode, selectEngineTerminal, litebridgeContext);
-        this.selectedTable = selectedTable;
+        this.selectNode = selectNode;
     }
 
     @Override
@@ -82,7 +83,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
         return new SqlJoinClause(table, null, litebridgeContext, conditionNode -> {
             final JoinNode joinNode = new JoinNode(node, "INNER", null, table);
             joinNode.setCondition(conditionNode);
-            return new SqlJoinConditionClauseTerminal(table, joinNode, selectEngineTerminal, litebridgeContext);
+            return new SqlJoinConditionClauseTerminal(selectNode, joinNode, selectEngineTerminal, litebridgeContext);
         });
     }
 
@@ -98,12 +99,12 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final String... columns) {
-        return new SqlGroupByClauseTerminal(selectedTable, columns, node, selectEngineTerminal, litebridgeContext);
+        return new SqlGroupByClauseTerminal(selectNode, columns, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final ExpressionSpec... expressions) {
-        return new SqlGroupByClauseTerminal(selectedTable, expressions, node, selectEngineTerminal, litebridgeContext);
+        return new SqlGroupByClauseTerminal(selectNode, expressions, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
@@ -122,7 +123,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
                 column,
                 expression,
                 null,
-                conditionNode -> new SqlWhereConditionClauseTerminal(selectedTable, new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
+                conditionNode -> new SqlWhereConditionClauseTerminal(selectNode, new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
     private SqlJoinConditionClause joinImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {
@@ -138,7 +139,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     }
 
     private SqlJoinConditionClauseTerminal joinImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectedTable, null, litebridgeContext);
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, null, litebridgeContext);
         final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
         final QueryNode conditionNode = terminal.node();
 

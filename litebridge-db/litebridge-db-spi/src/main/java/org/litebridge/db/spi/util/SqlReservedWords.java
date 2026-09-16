@@ -48,7 +48,8 @@ public final class SqlReservedWords {
             "TRUE",
             "FALSE",
             "ASC",
-            "DESC"
+            "DESC",
+            "COUNT(*)"
     );
 
     /**

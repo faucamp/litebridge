@@ -43,7 +43,7 @@ class DefaultAliasGeneratorTest {
         final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
 
         // When
-        final Table result = defaultAliasGenerator.aliasTable(ormTable);
+        final Table result = defaultAliasGenerator.newTableAlias(ormTable);
 
         // Then
         assertNotEquals(result, table);
@@ -61,14 +61,14 @@ class DefaultAliasGeneratorTest {
         final Table aliasedTable = table.as("tt");
 
         // When
-        final Column result = defaultAliasGenerator.aliasColumn(aliasedTable, columnMetaData);
+        final Column result = defaultAliasGenerator.newColumnAlias(aliasedTable, columnMetaData);
 
         // Then
         assertEquals(columnMetaData.name(), result.name());
         assertEquals("ttmv", result.alias());
 
         // When 2
-        final Column result2 = defaultAliasGenerator.aliasColumn(aliasedTable, columnMetaData);
+        final Column result2 = defaultAliasGenerator.newColumnAlias(aliasedTable, columnMetaData);
 
         // Then 2
         assertEquals(columnMetaData.name(), result2.name());

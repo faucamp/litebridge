@@ -8,6 +8,7 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.orm.api.select.model.ProtoExpressionResolver;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
+import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
 import org.litebridge.orm.expression.Resolvable;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
@@ -20,6 +21,7 @@ import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * Resolves proto-expressions into DTO-based select expressions.
@@ -46,7 +48,10 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     }
 
     @Override
-    protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
+    protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable,
+                                                      final @Nullable OrmTable ormTable,
+                                                      final Table table,
+                                                      final ClauseType clause) {
         // Map the input DTO field names to database column names
         final Class<?> dtoClass = getDtoClass(resolvable, ormTable);
         final Column column = getColumn(dtoClass, resolvable, table, clause);
@@ -55,12 +60,19 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     }
 
     @Override
-    protected ColumnExpressionSpec resolveSelectField(final QueryField queryField, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
+    protected Stream<ExpressionSpec> resolveSelectField(final QueryField queryField, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
+        final ExpressionSpec pendingExpressionSpec = QueryFieldInspector.getPendingExpressionSpec(queryField);
+
+        if (pendingExpressionSpec != null) {
+            return resolveExpression(pendingExpressionSpec, ormTable, table, clause);
+        }
+
         // Map the input DTO field names to database column names
+        final Class<?> dtoClass = QueryFieldInspector.getDtoClass(queryField);
         final String fieldName = QueryFieldInspector.getFieldName(queryField);
-        final Column column = getColumn(QueryFieldInspector.getDtoClass(queryField), fieldName, table, clause);
-        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(QueryFieldInspector.getDtoClass(queryField), fieldName);
-        return new SelectFieldSpec(fieldAccessor, column);
+        final Column column = getColumn(dtoClass, fieldName, table, clause);
+        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, fieldName);
+        return Stream.of(new SelectFieldSpec(fieldAccessor, column));
     }
 
     private Class<?> getDtoClass(final Resolvable resolvable, final @Nullable OrmTable ormTable) {

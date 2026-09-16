@@ -1,12 +1,10 @@
 package org.litebridge.orm.persistence.alias;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
-import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +22,7 @@ import java.util.Objects;
  */
 public final class DefaultAliasGenerator implements AliasGenerator {
 
-    private final AliasTransformer aliasTransformer;
+//    private final AliasTransformer aliasTransformer;
     /**
      * Map of name -> alias base string
      */
@@ -33,6 +31,14 @@ public final class DefaultAliasGenerator implements AliasGenerator {
      * Map of alias base string -> count (number of times used)
      */
     private final Map<String, Integer> aliasCount = new HashMap<>();
+    /**
+     * Tables that have been aliased for the current operation; the value is the alias.
+     */
+    private final Map<Table, String> tableAliasMap = new HashMap<>();
+    /**
+     * Columns that have been aliased for the current operation; the value is the alias.
+     */
+    private final Map<Column, String> columnAliasMap = new HashMap<>();
 
     /**
      * Clears internal alias maps and usage counts.
@@ -48,48 +54,49 @@ public final class DefaultAliasGenerator implements AliasGenerator {
      * @param aliasTransformer the transformer to use for creating base aliases
      */
     public DefaultAliasGenerator(final AliasTransformer aliasTransformer) {
-        this.aliasTransformer = aliasTransformer;
+//        this.aliasTransformer = aliasTransformer;
     }
 
     @Override
-    public Table aliasTable(final OrmTable ormTable) {
-        final TableMetaData tableMetaData = ormTable.getMetaData();
-        final String tableAlias = newAlias(tableMetaData.name());
-        return new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), tableAlias);
+    public @Nullable Column column(final String alias) {
+        return columnAliasMap.entrySet().stream()
+                .filter(e -> e.getValue().equals(alias))
+                .findFirst()
+                .map(Map.Entry::getKey)
+                .orElse(null);
     }
 
     @Override
-    public Table aliasTable(final Table table) {
-        if (table.alias() != null) {
-            return table;
-        }
-
-        final String tableAlias = newAlias(table.name());
-        return table.as(tableAlias);
+    public @Nullable String columnAlias(final Column column) {
+        return columnAliasMap.get(column);
     }
 
     @Override
-    public Column aliasColumn(final Table ormTable, final ColumnMetaData columnMetaData) {
-        // Create a new alias
-        final String columnAlias = ormTable.alias() + newAlias(columnMetaData.name());
-        return new Column(ormTable, columnMetaData.name(), columnAlias);
+    public @Nullable String tableAlias(final Table table) {
+        return tableAliasMap.get(table);
     }
 
     @Override
-    public Column aliasColumn(final Table aliasedTable, final Column column) {
-        if (column.alias() != null) {
-            return column;
-        }
-
-        // Create a new alias
-        final String columnAlias = aliasedTable.alias() + newAlias(column.name());
-        column.setAlias(columnAlias);
-        column.setTable(aliasedTable);
-        return column;
+    public String newTableAlias(final Table table) {
+        return tableAliasMap.computeIfAbsent(table, t -> newAlias(t.name()));
     }
 
-    private String newAlias(final String name) {
-        final String alias = Objects.requireNonNull(aliasMap.computeIfAbsent(name, v -> aliasTransformer.transformAlias(StringUtils.abbreviate(v))));
+    @Override
+    public String newColumnAlias(final Column column) {
+        return columnAliasMap.computeIfAbsent(column, c -> newAlias(c.qualifiedName()));
+    }
+
+    @Override
+    public void setColumnAlias(final Column column, final String alias) {
+        columnAliasMap.put(column, alias);
+        aliasMap.put(alias, alias);
+    }
+
+    @Override
+    public String newAlias(final String name) {
+        //TODO: cleanup
+//        final String alias = Objects.requireNonNull(aliasMap.computeIfAbsent(name, v -> aliasTransformer.transformAlias(StringUtils.abbreviate(v))));
+        final String alias = Objects.requireNonNull(aliasMap.computeIfAbsent(name, StringUtils::abbreviate));
         final int count = aliasCount.compute(alias, (k, v) -> v == null ? 0 : v + 1);
 
         if (count >= 1) {

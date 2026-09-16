@@ -47,8 +47,11 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
         final Table targetTable = merge.table();
         final StringBuilder sql = appendTable(new StringBuilder("MERGE INTO "), targetTable);
 
-        if (targetTable.alias() != null) {
-            sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(merge.table().alias())));
+//        if (targetTable.alias() != null) {
+//            sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(merge.table().alias())));
+//        }
+        if (true) {
+            throw new UnsupportedOperationException("Not implemented yet, possibly deprecated");
         }
 
         sql.append(" USING ");
@@ -57,9 +60,13 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
         if (usingTable != null) {
             appendTable(sql, usingTable);
 
-            if (usingTable.alias() != null) {
-                sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(usingTable.alias())));
+//            if (usingTable.alias() != null) {
+//                sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(usingTable.alias())));
+//            }
+            if (true) {
+                throw new UnsupportedOperationException("Not implemented yet, possibly deprecated");
             }
+
         }
 
         sql.append(" ON (");
@@ -124,7 +131,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
     protected void appendInsert(final StringBuilder sql, final Merge.MergeInsert insert) {
         final List<String> columnNames = insert.columns().stream().map(UpdateColumn::name).toList();
         sql.append("INSERT (")
-                .append(String.join(", ", columnNames.stream().map(columnIdentifierGenerator::quoteIdentifier).toList()))
+                .append(String.join(", ", columnNames.stream().map(ColumnIdentifierGenerator::quoteIdentifier).toList()))
                 .append(") VALUES ");
 
         for (int i = 0; i < insert.rows(); i++) {

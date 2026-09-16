@@ -26,10 +26,10 @@ public class Substring extends FunctionExpression {
      * @param target                    Target expression to extract characters from.
      * @param start                     The starting position. The first character of a database string is always 1.
      * @param length                    The number of characters to return. If {@code null}, the function extracts everything from the start position to the end of the text.
-     * @param columnIdentifierGenerator Database provider-specific column identifier generator.
+     * @param alias                     The alias for the column expression.
      */
-    public Substring(final ColumnExpression target, final int start, final @Nullable Integer length, final ColumnIdentifierGenerator columnIdentifierGenerator) {
-        super(target, columnIdentifierGenerator);
+    public Substring(final ColumnExpression target, final int start, final @Nullable Integer length, final @Nullable String alias) {
+        super(target, alias);
         this.start = start;
         this.length = length;
     }

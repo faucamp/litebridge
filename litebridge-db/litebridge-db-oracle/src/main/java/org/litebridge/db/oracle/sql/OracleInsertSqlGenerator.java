@@ -63,7 +63,7 @@ public final class OracleInsertSqlGenerator extends InsertSqlGenerator {
                 .append(" (")
                 .append(String.join(", ", insert.columns().stream()
                         .map(UpdateColumn::name)
-                        .map(columnIdentifierGenerator::quoteIdentifier)
+                        .map(ColumnIdentifierGenerator::quoteIdentifier)
                         .toList()))
                 .append(") VALUES ");
         return intoClause.toString();

@@ -38,6 +38,7 @@ class SelectTest {
         // When
         final Select result = new Select(
                 table,
+                null,
                 List.of(new TestColumnExpression(column)),
                 List.of(join),
                 conditionGroup,

@@ -5,24 +5,44 @@ import org.litebridge.orm.expression.function.scalar.UpperSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.StringJoiner;
+
 /**
  * Type override proto-expression that allows nesting other proto-expressions.
  * <p>
  * This record is used to create a nested chain of expression instances (e.g. {@link UpperSpec}) when table information is available.
  *
- * @param typeOverride The type of the expression result.
- * @param target       The target expression; typically a column name to select via {@link SelectColumnSpec} or {@link SelectFieldSpec}.
- * @param alias        The column alias to use, or {@code null} if not specified.
- * @param type         The type of expression to create.
- * @param args         Extra expression-specific arguments.
- * @param <T>          The type override of the expression result.
  */
-public record ProtoNestableTOExpr<T>(Class<T> typeOverride,
-                                     Class<? extends ExpressionSpec> type,
-                                     ExpressionSpec target,
-                                     @Nullable String alias,
-                                     @Nullable Object @Nullable [] args)
+public final class ProtoNestableTOExpr<T> extends AbstractAliasable
         implements ProtoNestableExpressionSpec, TypeOverrideExpressionSpec<T> {
+
+    private final Class<T> typeOverride;
+    private final Class<? extends ExpressionSpec> type;
+    private final ExpressionSpec target;
+    ;
+    private final @Nullable Object @Nullable [] args;
+
+    /**
+     * @param typeOverride The type of the expression result.
+     * @param target       The target expression; typically a column name to select via {@link SelectColumnSpec} or {@link SelectFieldSpec}.
+     * @param alias        The column alias to use, or {@code null} if not specified.
+     * @param type         The type of expression to create.
+     * @param args         Extra expression-specific arguments.
+     * @param <T>          The type override of the expression result.
+     */
+    public ProtoNestableTOExpr(final Class<T> typeOverride,
+                               final Class<? extends ExpressionSpec> type,
+                               final ExpressionSpec target,
+                               final @Nullable String alias,
+                               final @Nullable Object @Nullable [] args) {
+        this.typeOverride = typeOverride;
+        this.type = type;
+        this.target = target;
+        this.alias = alias;
+        this.args = args;
+    }
 
     /**
      * Constructs a new ProtoTOColumnExpression instance with empty extra arguments.
@@ -64,5 +84,57 @@ public record ProtoNestableTOExpr<T>(Class<T> typeOverride,
     @Override
     public Class<T> returnType() {
         return typeOverride;
+    }
+
+    public Class<T> typeOverride() {
+        return typeOverride;
+    }
+
+    @Override
+    public Class<? extends ExpressionSpec> type() {
+        return type;
+    }
+
+    @Override
+    public ExpressionSpec target() {
+        return target;
+    }
+
+    @Override
+    public @Nullable String alias() {
+        return alias;
+    }
+
+    @Override
+    public @Nullable Object @Nullable [] args() {
+        return args;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        var that = (ProtoNestableTOExpr) obj;
+        return Objects.equals(this.typeOverride, that.typeOverride) &&
+                Objects.equals(this.type, that.type) &&
+                Objects.equals(this.target, that.target) &&
+                Objects.equals(this.alias, that.alias) &&
+                Objects.equals(this.args, that.args);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(typeOverride, type, target, alias, args);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", ProtoNestableTOExpr.class.getSimpleName() + "[", "]")
+                .add("alias='" + alias + "'")
+                .add("typeOverride=" + typeOverride)
+                .add("type=" + type)
+                .add("target=" + target)
+                .add("args=" + Arrays.toString(args))
+                .toString();
     }
 }

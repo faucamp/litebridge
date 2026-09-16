@@ -1,9 +1,9 @@
 package org.litebridge.orm.api.merge;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.engine.ast.MergeNode;
 
 import java.util.function.Function;
@@ -47,15 +47,5 @@ public abstract sealed class MergeUsingStep<DTO, MUS extends MergeUpdateStep, MI
     protected MergeUsingStep(final Class<DTO> dtoClass, final LitebridgeContext litebridgeContext) {
         this.mergeNode = new MergeNode(null, dtoClass);
         this.litebridgeContext = litebridgeContext;
-    }
-
-    /**
-     * Specifies a subquery to use as the merge source.
-     *
-     * @param subselect function building the subquery
-     * @return the merge ON condition clause terminal
-     */
-    public MergeOnConditionClauseTerminal<DTO, MUS, MIS> using(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
-        throw new UnsupportedOperationException("Not yet implemented");
     }
 }
