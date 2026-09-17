@@ -16,6 +16,7 @@ export interface Props {
   id?: string;
   class?: string;
   filename?: string;
+  layout?: 'top' | 'sidebar';
 }
 
 const {
@@ -24,6 +25,7 @@ const {
   id,
   class: className = '',
   filename = 'LitebridgeExample.java',
+  layout = 'top',
 } = Astro.props;
 
 const activeId = defaultId ?? (examples[0]?.id ?? '');
@@ -32,47 +34,85 @@ const instanceId = id ?? `ce-${Math.random().toString(36).slice(2, 9)}`;
 
 <div class={`code-example my-6 w-full ${className}`} data-code-example id={instanceId}>
   {examples.length > 0 && (
-    <>
-      <div role="tablist" class="flex flex-wrap gap-2 mb-3">
-        {examples.map((ex) => (
-          <button
-            type="button"
-            role="tab"
-            class="example-tab px-4 py-2 text-sm font-semibold rounded-lg border transition-all cursor-pointer border-gray-200 bg-white text-gray-700 hover:border-accent hover:text-accent dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-accent dark:hover:text-accent aria-selected:border-accent aria-selected:bg-accent/10 aria-selected:text-accent dark:aria-selected:border-accent dark:aria-selected:bg-accent/15 dark:aria-selected:text-accent"
-            data-tab-id={ex.id}
-            aria-selected={ex.id === activeId ? 'true' : 'false'}
-          >
-            {ex.title}
-          </button>
-        ))}
-      </div>
+    layout === 'sidebar' ? (
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div role="tablist" class="lg:col-span-4 flex flex-col gap-4">
+          {examples.map((ex) => (
+            <button
+              type="button"
+              role="tab"
+              class="example-tab group flex flex-col items-start rounded-xl border border-gray-200 p-6 text-left transition-all hover:border-accent hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50 aria-selected:border-accent aria-selected:bg-accent/5 dark:aria-selected:bg-accent/10 cursor-pointer"
+              data-tab-id={ex.id}
+              aria-selected={ex.id === activeId ? 'true' : 'false'}
+            >
+              <h3 class="text-lg font-bold text-primary dark:text-white group-hover:text-accent transition-colors">
+                {ex.title}
+              </h3>
+              <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                {ex.description}
+              </p>
+            </button>
+          ))}
+        </div>
 
-      <div class="example-descriptions mb-4 min-h-[1.5rem]">
-        {examples.map((ex) => (
-          <p
-            data-desc-id={ex.id}
-            class={`example-desc text-sm sm:text-base text-gray-600 dark:text-gray-400 ${ex.id === activeId ? 'block' : 'hidden'}`}
-          >
-            {ex.description}
-          </p>
-        ))}
+        <div class="lg:col-span-8 relative">
+          {examples.map((ex) => (
+            <div
+              data-code-panel={ex.id}
+              class={`example-code-panel transition-all duration-300 ${ex.id === activeId ? 'block' : 'hidden'}`}
+            >
+              <CodeBlock
+                code={ex.code}
+                lang={ex.lang ?? 'java'}
+                filename={ex.filename ?? filename}
+              />
+            </div>
+          ))}
+        </div>
       </div>
+    ) : (
+      <>
+        <div role="tablist" class="flex flex-wrap gap-2 mb-3">
+          {examples.map((ex) => (
+            <button
+              type="button"
+              role="tab"
+              class="example-tab px-4 py-2 text-sm font-semibold rounded-lg border transition-all cursor-pointer border-gray-200 bg-white text-gray-700 hover:border-accent hover:text-accent dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-accent dark:hover:text-accent aria-selected:border-accent aria-selected:bg-accent/10 aria-selected:text-accent dark:aria-selected:border-accent dark:aria-selected:bg-accent/15 dark:aria-selected:text-accent"
+              data-tab-id={ex.id}
+              aria-selected={ex.id === activeId ? 'true' : 'false'}
+            >
+              {ex.title}
+            </button>
+          ))}
+        </div>
 
-      <div class="example-code-container">
-        {examples.map((ex) => (
-          <div
-            data-code-panel={ex.id}
-            class={`example-code-panel transition-all duration-300 ${ex.id === activeId ? 'block' : 'hidden'}`}
-          >
-            <CodeBlock
-              code={ex.code}
-              lang={ex.lang ?? 'java'}
-              filename={ex.filename ?? filename}
-            />
-          </div>
-        ))}
-      </div>
-    </>
+        <div class="example-descriptions mb-4 min-h-[1.5rem]">
+          {examples.map((ex) => (
+            <p
+              data-desc-id={ex.id}
+              class={`example-desc text-sm sm:text-base text-gray-600 dark:text-gray-400 ${ex.id === activeId ? 'block' : 'hidden'}`}
+            >
+              {ex.description}
+            </p>
+          ))}
+        </div>
+
+        <div class="example-code-container">
+          {examples.map((ex) => (
+            <div
+              data-code-panel={ex.id}
+              class={`example-code-panel transition-all duration-300 ${ex.id === activeId ? 'block' : 'hidden'}`}
+            >
+              <CodeBlock
+                code={ex.code}
+                lang={ex.lang ?? 'java'}
+                filename={ex.filename ?? filename}
+              />
+            </div>
+          ))}
+        </div>
+      </>
+    )
   )}
 </div>
 
