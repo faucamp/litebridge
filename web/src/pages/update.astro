@@ -1,0 +1,206 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Terminal, ArrowLeft, DatabasePlus, DatabaseArrowUp, DatabaseCheck } from '@lucide/astro';
+import CodeExample from '../components/CodeExample.astro';
+import save from "@lucide/astro/icons/save";
+
+const title = "Updating data";
+const description = "Persistence, INSERT and UPDATE examples";
+
+const saveExamples = [
+  {
+    id: 'dtoMode',
+    title: 'DTO mode',
+    description: `The save() method is the primary mechanism for storing entities/mapped DTOs in Litebridge. It automatically executes an INSERT or UPDATE as needed.`,
+    code: `// Create a new Person object
+Person person = new Person();
+person.setId(1);
+person.setName("Alice");
+person.setSurname("Smith");
+
+// Executes INSERT INTO LB.PERSON (FIRST_NAME, SURNAME) VALUES (?, ?)
+litebridge.save(person);
+
+// Update a field in the DTO
+person.Name("Bob");
+
+// Executes UPDATE LB.PERSON SET FIRST_NAME = ? WHERE PERSON_ID = ?
+litebridge.save(person);
+`
+  },
+];
+
+const insertExamples = [
+  {
+    id: 'dtoModePersistence',
+    title: 'DTO mode (persistence)',
+    description: 'Explicitly insert an entity instance into the database. This ignores the persisted state of the entity and inserts all fields.',
+    code: `Person person = new Person();
+person.setId(1);
+person.setName("Alice");
+person.setSurname("Smith");
+
+// Similar to save(), but forces an INSERT
+litebridge.insert(person);`
+  },
+  {
+    id: 'dtoMode',
+    title: 'DTO mode',
+    description: 'Insert records into a table using entity mapping metadata.',
+    code: `// Insert columns into a mapped table directly
+litebridge.insert(Person.class, i -> i
+  .into(PersonMeta.id, PersonMeta.name, PersonMeta.surname)
+  .values(1, "Alice", "Smith")
+  .values(2, "Bob", "Jones"));`
+  },
+  {
+    id: 'sqlMode',
+    title: 'SQL mode',
+    description: 'Insert records into a table directly, without entity mapping.',
+    code: `// Insert columns into a table directly
+litebridge.insert("LB.PERSON", i -> i
+  .into("PERSON_ID", "FIRST_NAME", "SURNAME")
+  .values(1, "Alice", "Smith")
+  .values(2, "Bob", "Jones"));`
+  },
+  {
+    id: 'nativeSql',
+    title: 'Native SQL',
+    description: 'Insert records using a raw SQL statement.',
+    code: `// Insert records using native SQL and positional bind parameters
+litebridge.nativeSql()
+    .execute("INSERT INTO LB.PERSON (PERSON_ID, FIRST_NAME, SURNAME) VALUES (?, ?, ?)", 
+        1, "Alice", "Smith");
+
+// Using named parameters
+litebridge.nativeSql().
+    .execute("INSERT INTO LB.PERSON (PERSON_ID, FIRST_NAME, SURNAME) VALUES (:id, :name, :surname)"
+        Map.of("id", 2, 
+               "name", "Bob",
+               "surname", "Jones"));`
+  },
+];
+
+const updateExamples = [
+  {
+    id: 'dtoModePersistence',
+    title: 'DTO mode (persistence)',
+    description: 'Explicitly update an entity instance. This ignores the persisted state of the entity and updates all modified fields.',
+    code: `Person person = new Person();
+person.setId(1);
+person.setName("Alice");
+person.setSurname("Smith");
+
+// Similar to save(), but forces an UPDATE
+litebridge.update(person);`
+  },
+  {
+    id: 'dtoMode',
+    title: 'DTO mode',
+    description: 'Update records using entity mapping metadata.',
+    code: `
+litebridge.update(Person.class, p -> p
+    .set(PersonMeta.name).to("Bob")
+    .set(PersonMeta.surname).to("Jones")
+    .where(PersonMeta.id).eq(1));`
+  },
+  {
+    id: 'sqlMode',
+    title: 'SQL mode',
+    description: 'Update columns in a table matching specific conditions.',
+    code: `// Update table columns directly with conditions
+litebridge.update("LB.PERSON", p -> p
+    .set("FIRST_NAME", "Bob")
+    .set("SURNAME", "Jones")
+    .where("PERSON_ID").eq(1));`
+  },
+  {
+    id: 'nativeSql',
+    title: 'Native SQL',
+    description: 'Update records using a raw SQL statement.',
+    code: `// Update records using native SQL
+litebridge.nativeSql()
+    .execute(
+        "UPDATE LB.PERSON SET FIRST_NAME = ?, SURNAME = ? WHERE PERSON_ID = ?", 
+        "Bob", "Jones", 1);
+
+// Using named parameters        
+litebridge.nativeSql()
+    .execute("UPDATE LB.PERSON "
+        + "SET FIRST_NAME = :name, SURNAME = :surname WHERE PERSON_ID = :id", 
+            Map.of("id", 1, 
+                   "name", "Bob",
+                   "surname", "Jones"));`
+  },
+];
+---
+
+<Layout title={title} description={description}>
+  <div class="pt-32 pb-20 lg:pt-48 lg:pb-32">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <div class="mb-12 reveal">
+        <a
+          href="/examples"
+          class="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-accent dark:text-gray-400 dark:hover:text-accent transition-colors mb-6"
+        >
+          <ArrowLeft class="h-4 w-4" />
+          Back to Examples
+        </a>
+        <h1 class="text-4xl font-extrabold tracking-tight text-primary dark:text-white sm:text-6xl mb-6">
+          Updating data
+        </h1>
+        <p class="text-xl text-gray-500 dark:text-gray-400">
+          Persistence, INSERT and UPDATE examples using DTO mode, SQL mode, and native SQL.
+        </p>
+      </div>
+
+      <div class="space-y-16">
+        <!-- Persistence -->
+        <section class="reveal" style="transition-delay: 100ms">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+              <DatabaseCheck class="h-6 w-6" />
+            </div>
+            <h2 class="text-3xl font-bold text-primary dark:text-white">Persisting entities</h2>
+          </div>
+          <CodeExample filename="PersistenceExample.java" examples={saveExamples} />
+        </section>
+
+        <!-- Insert data -->
+        <section class="reveal">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+              <DatabasePlus class="h-6 w-6" />
+            </div>
+            <h2 class="text-3xl font-bold text-primary dark:text-white">Insert data</h2>
+          </div>
+          <CodeExample filename="InsertExample.java" examples={insertExamples} />
+        </section>
+
+        <!-- Update data -->
+        <section class="reveal" style="transition-delay: 100ms">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+              <DatabaseArrowUp class="h-6 w-6" />
+            </div>
+            <h2 class="text-3xl font-bold text-primary dark:text-white">Update data</h2>
+          </div>
+          <CodeExample filename="UpdateExample.java" examples={updateExamples} />
+        </section>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.8s ease-out;
+  }
+
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>

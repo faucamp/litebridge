@@ -1,156 +1,232 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { Terminal, Database, Settings } from '@lucide/astro';
+import {Terminal, Database, ArrowLeft, DatabaseSearch, SquareAsterisk, GitMerge, SquareMousePointer} from '@lucide/astro';
 import CodeExample from '../components/CodeExample.astro';
-import CodeBlock from "../components/CodeBlock.astro";
 
 const title = "Retrieving data";
 const description = "SELECT query examples";
 
-const commonExampleCode = `import org.litebridge.orm.Litebridge;
-import org.litebridge.db.h2.H2DatabaseProvider;
-import org.litebridge.db.spi.Row;
-
-// Assuming "dataSource" is a valid javax.sql.DataSource instance
-Litebridge litebridge = Litebridge.withDatabaseProvider(
-        new H2DatabaseProvider(), 
-        dataSource)
-    .build();
-`;
-
 const basicSelectExamples = [
-  {
-    id: 'dtoMode',
-    title: 'DTO mode',
-    description: 'Select all entities of a specific type.',
-    code: `List<Person> persons = litebridge.select(Person.class).list();`
-  },
-  {
-    id: 'sqlMode',
-    title: 'SQL mode',
-    description: 'Select all records from a table without DTO/entity mapping.',
-    code: `List<Row> rows = litebridge.select().from("LB.PERSON").list();`
-  },
-  {
-    id: 'nativeSql',
-    title: 'Native SQL',
-    description: 'Select all records using a raw SQL query.',
-    code: `List<Row> rows = litebridge.nativeSql().query("SELECT * FROM LB.PERSON").list();`,
-  },
+    {
+        id: 'dtoMode',
+        title: 'DTO mode',
+        description: 'Select all entities of a specific type.',
+        code: `List<Person> persons = litebridge.select(Person.class).list();`
+    },
+    {
+        id: 'sqlMode',
+        title: 'SQL mode',
+        description: 'Select all records from a table directly, without DTO/entity mapping metadata.',
+        code: `List<Row> rows = litebridge.select().from("LB.PERSON").list();`
+    },
+    {
+        id: 'nativeSql',
+        title: 'Native SQL',
+        description: 'Select all records using a raw SQL query.',
+        code: `List<Row> rows = litebridge.nativeSql().query("SELECT * FROM LB.PERSON").list();`,
+    },
 ];
 
 const conditionalSelectExamples = [
+    {
+        id: 'dtoMode',
+        title: 'DTO mode',
+        description: 'Fetch all Person entities where the "name" field value is "Alice" and the "id" field value is less than 5. This does not fetch any related entities.',
+        code: `List<Person> persons = litebridge.select(Person.class)
+    .where(PersonMeta.name).eq("Alice")
+    .and(PersonMeta.id).lt(5)
+    .list();`,
+    },
+    {
+        id: 'sqlMode',
+        title: 'SQL mode',
+        description: 'Select all records from the LB.PERSON table where the FIRST_NAME column value is "Alice" and the PERSON_ID column is less than 5.',
+        code: `List<Row> rows = litebridge.select().from("LB.PERSON")
+    .where("FIRST_NAME").eq("Alice")
+    .and("PERSON_ID").lt(5)
+    .list();`
+    },
+    {
+        id: 'nativeSql',
+        title: 'Native SQL',
+        description: 'Select records matching conditions using a raw SQL query.',
+        code: `// Select records using native SQL
+List<Row> rows = litebridge.nativeSql()
+    .query("SELECT * FROM LB.PERSON WHERE FIRST_NAME = ? AND PERSON_ID < ?", 
+           "Alice", 5)
+    .list();
+
+// Using named parameters
+List<Row> rows = litebridge.nativeSql()
+    .query("SELECT * FROM LB.PERSON WHERE FIRST_NAME = :name AND PERSON_ID < :id", 
+           Map.of("id", 5, 
+                  "name", "Alice"))
+    .list();`
+    },
+];
+
+const joinSelectExamples = [
+    {
+        id: 'dtoMode',
+        title: 'DTO mode',
+        description: 'Fetch all Person and related Account entities. Person has an "accounts" field of type "List<Account>".',
+        code: `List<Person> persons = litebridge.select(Person.class)
+    .join(Account.class).on(PersonMeta.accounts)
+    .list();`,
+    },
+    {
+        id: 'sqlMode',
+        title: 'SQL mode',
+        description: 'Select from a table and join with another table.',
+        code: `List<Row> rows = litebridge.select().from("LB.PERSON")
+    .join("LB.ACCOUNT").using("PERSON_ID")
+    .list();`
+    },
+    {
+        id: 'nativeSql',
+        title: 'Native SQL',
+        description: 'Select from a table and join with another table using a raw SQL query.',
+        code: `List<Row> rows = litebridge.nativeSql()
+    .query("SELECT * FROM LB.PERSON JOIN LB.ACCOUNT USING (PERSON_ID)")
+    .list();`
+    }
+];
+
+const specificColumnExamples = [
   {
     id: 'dtoMode',
     title: 'DTO mode',
-    description: 'Select all Person DTOs where the "name" field has a value of "Alice".',
-    code: `List<Person> persons = litebridge.select(Person.class)
+    description: 'Retrieve and populate specific fields of the first matching entity found, and apply a scalar function to change the "surname" field to uppercase.',
+    code: `import static org.example.meta.PersonMeta.id;
+import static org.example.meta.PersonMeta.name;
+import static org.example.meta.PersonMeta.surname;
+
+// Only the "id", "name", and "surname" fields are populated
+Person person = litebridge.select(id, name, surname.upper())
+    .from(Person.class)
     .where(PersonMeta.name).eq("Alice")
-    .list();`,
+    .orderBy(PersonMeta.id).asc()
+    .firstOrNull();`,
   },
   {
     id: 'sqlMode',
     title: 'SQL mode',
-    description: 'Select all records where the FIRST_NAME column has a value of "Alice".',
-    code: `List<Row> rows = litebridge.select().from("LB.PERSON")
+    description: 'Select specific columns from the LB.PERSON table, applying an UPPER() function on teh SURNAME column. Retrieve the first ordered result.',
+    code: `import static org.litebridge.orm.expression.Fn.upper;
+    
+Row row = litebridge.select("PERSON_ID", "FIRST_NAME", upper("SURNAME"))
+    .from("LB.PERSON")
     .where("FIRST_NAME").eq("Alice")
-    .list();`,
+    .orderBy("PERSON_ID").asc()
+    .firstOrNull();`
   },
   {
     id: 'nativeSql',
     title: 'Native SQL',
-    description: 'Select records matching conditions using a raw SQL query.',
-    code: `List<Row> rows = litebridge.nativeSql()
-    .query("SELECT * FROM LB.PERSON WHERE FIRST_NAME = ?", "Alice")
-    .list();`,
-  },
+    description: 'Select specific columns using a raw SQL query.',
+    code: `Row row = litebridge.nativeSql()
+    .query("SELECT PERSON_ID, FIRST_NAME, UPPER(SURNAME) "
+           + "FROM LB.PERSON WHERE FIRST_NAME = ? "
+           + "ORDER BY PERSON_ID ASC LIMIT 1", 
+           "Alice")
+    .firstOrNull();`
+  }
 ];
 ---
 
 <Layout title={title} description={description}>
-  <div class="pt-32 pb-20 lg:pt-48 lg:pb-32">
-    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-      <div class="mb-16 reveal">
-        <h1 class="text-4xl font-extrabold tracking-tight text-primary dark:text-white sm:text-6xl mb-6">
-          Retrieving data
-        </h1>
-      </div>
-
-      <div class="space-y-16">
-        <!-- Concepts -->
-        <section class="reveal">
-          <div class="flex items-center gap-4 mb-6">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
-              <Settings class="h-6 w-6" />
+    <div class="pt-32 pb-20 lg:pt-48 lg:pb-32">
+        <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div class="mb-12 reveal">
+                <a
+                        href="/examples"
+                        class="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-accent dark:text-gray-400 dark:hover:text-accent transition-colors mb-6"
+                >
+                    <ArrowLeft class="h-4 w-4"/>
+                    Back to Examples
+                </a>
+                <h1 class="text-4xl font-extrabold tracking-tight text-primary dark:text-white sm:text-6xl mb-6">
+                    Retrieving data
+                </h1>
+                <p class="text-xl text-gray-500 dark:text-gray-400">
+                    SELECT query examples using DTO mode, SQL mode, and native SQL.
+                </p>
             </div>
-            <h2 class="text-3xl font-bold text-primary dark:text-white">Concepts</h2>
-          </div>
-          <p class="mb-4 text-gray-600 dark:text-gray-400">
-            Litebridge's API has 2 primary modes of operation, as well as native SQL execution:
-          </p>
-          <ul class="space-y-4 text-gray-600 dark:text-gray-400">
-            <li class="flex items-start gap-3">
-              <span class="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent"></span>
-              <span><strong>DTO mode</strong>: Full ORM support. Queries are executed against registered DTO/entity classes.</span>
-            </li>
-            <li class="flex items-start gap-3">
-              <span class="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent"></span>
-              <span><strong>SQL mode</strong>: Query are executed directly against tables; no DTO mapping required.</span>
-            </li>
-            <li class="flex items-start gap-3">
-              <span class="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent"></span>
-              <span><strong>Native SQL</strong>: Direct execution of native SQL statements.</span>
-            </li>
-          </ul>
-          <br/>
-          <p class="mb-4 text-gray-600 dark:text-gray-400">
-            DTO mode provides optional type safety using Litebridge metamodels.
-          </p>
-          <p class="mb-4 text-gray-600 dark:text-gray-400">
-            The examples in this section use common imports and initialisation code:
-          </p>
-          <CodeBlock filename="ExampleBase.java" code={commonExampleCode}/>
-          <br/>
-          <p class="mb-4 text-gray-600 dark:text-gray-400">
-            The <var>Row</var> class is Litebridge's basic result row encapsulation, primarily used in SQL mode.
-          </p>
-        </section>
 
-        <!-- Select all -->
-        <section class="reveal" style="transition-delay: 100ms">
-          <div class="flex items-center gap-4 mb-6">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
-              <Terminal class="h-6 w-6" />
-            </div>
-            <h2 class="text-3xl font-bold text-primary dark:text-white">Retrieve all</h2>
-          </div>
-          <CodeExample filename="SelectAllExample.java" examples={basicSelectExamples} />
-        </section>
+            <div class="space-y-16">
+                <!-- Row class context -->
+                <section class="reveal">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <Database class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Row Results</h2>
+                    </div>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        When querying in <strong>SQL mode</strong> or using <strong>Native SQL</strong>, Litebridge
+                        returns records encapsulated in the <code
+                            class="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm text-primary dark:text-accent">Row</code>
+                        class, providing easy column access without requiring entity or DTO mapping.
+                    </p>
+                </section>
 
-        <!-- Select with conditions -->
-        <section class="reveal" style="transition-delay: 200ms">
-          <div class="flex items-center gap-4 mb-6">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
-              <Terminal class="h-6 w-6" />
+                <!-- Select all -->
+                <section class="reveal" style="transition-delay: 100ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <SquareAsterisk class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Retrieve all</h2>
+                    </div>
+                    <CodeExample filename="SelectAllExample.java" examples={basicSelectExamples}/>
+                </section>
+
+                <!-- Select with conditions -->
+                <section class="reveal" style="transition-delay: 200ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <DatabaseSearch class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Query with conditions</h2>
+                    </div>
+                    <CodeExample filename="SelectWhereExample.java" examples={conditionalSelectExamples}/>
+                </section>
+
+                <!-- Select with joins -->
+                <section class="reveal" style="transition-delay: 200ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <GitMerge class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Query with joins</h2>
+                    </div>
+                    <CodeExample filename="SelectJoinExample.java" examples={joinSelectExamples}/>
+                </section>
+
+                <!-- Select specific columns -->
+                <section class="reveal" style="transition-delay: 200ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <SquareMousePointer class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Select specific columns</h2>
+                    </div>
+                    <CodeExample filename="SelectColumnsExample.java" examples={specificColumnExamples}/>
+                </section>
             </div>
-            <h2 class="text-3xl font-bold text-primary dark:text-white">Query with conditions</h2>
-          </div>
-          <CodeExample filename="SelectWhereExample.java" examples={conditionalSelectExamples} />
-        </section>
-      </div>
+        </div>
     </div>
-  </div>
 </Layout>
 
 <style>
-  .reveal {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.8s ease-out;
-  }
+    .reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.8s ease-out;
+    }
 
-  .reveal.active {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
 </style>

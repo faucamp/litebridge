@@ -6,7 +6,7 @@ const examples = [
     id: 'mapping',
     title: 'Registration',
     description: 'Map DTOs to database tables using a fluent, programmatic API.',
-    code: `// Register a Litebridge entity
+    code: `// Register an annotated Litebridge entity
 litebridge.register(PersonEntity.class);
 
 // Or register any DTO programmatically
@@ -31,7 +31,7 @@ litebridge.save(person);
 
 person.setName("Bob");
 
-// Executes an UPDATE statement only for changed fields
+// Executes an UPDATE statement for modified "name" field
 litebridge.save(person);`,
   },
   {
