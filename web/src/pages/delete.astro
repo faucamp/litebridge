@@ -1,0 +1,95 @@
+---
+import Layout from '../layouts/Layout.astro';
+import {ArrowLeft, DatabaseX} from '@lucide/astro';
+import CodeExample from '../components/CodeExample.astro';
+import save from "@lucide/astro/icons/save";
+
+const title = "Deleting data";
+const description = "Delete operation examples";
+
+const deleteExamples = [
+    {
+        id: 'dtoModePersistence',
+        title: 'DTO mode (persistence)',
+        description: 'Explicitly delete an entity instance.',
+        code: `Person person = new Person();
+person.setId(1);
+
+litebridge.delete(person);`
+    },
+    {
+        id: 'dtoMode',
+        title: 'DTO mode',
+        description: 'Delete records using entity mapping metadata.',
+        code: `litebridge.delete(Person.class, p -> p
+    .where(PersonMeta.id).eq(1));`
+    },
+    {
+        id: 'sqlMode',
+        title: 'SQL mode',
+        description: 'Delete records directly, without entity mapping metadata.',
+        code: `litebridge.delete("LB.PERSON", p -> p
+    .where("PERSON_ID").eq(1));`
+    },
+    {
+        id: 'nativeSql',
+        title: 'Native SQL',
+        description: 'Delete records using a raw SQL statement.',
+        code: `litebridge.nativeSql()
+    .delete("DELETE FROM LB.PERSON WHERE PERSON_ID = ?", 1);
+
+// Using named parameters        
+litebridge.nativeSql()
+    .execute("DELETE FROM LB.PERSON WHERE PERSON_ID = :id", 
+             Map.of("id", 1));`
+    },
+];
+---
+
+<Layout title={title} description={description}>
+    <div class="pt-32 pb-20 lg:pt-48 lg:pb-32">
+        <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div class="mb-12 reveal">
+                <a
+                        href="/examples"
+                        class="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-accent dark:text-gray-400 dark:hover:text-accent transition-colors mb-6"
+                >
+                    <ArrowLeft class="h-4 w-4"/>
+                    Back to Examples
+                </a>
+                <h1 class="text-4xl font-extrabold tracking-tight text-primary dark:text-white sm:text-6xl mb-6">
+                    Deleting data
+                </h1>
+                <p class="text-xl text-gray-500 dark:text-gray-400">
+                    DELETE examples using DTO mode, SQL mode, and native SQL.
+                </p>
+            </div>
+
+            <div class="space-y-16">
+                <!-- Update data -->
+                <section class="reveal" style="transition-delay: 100ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <DatabaseX class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Delete data</h2>
+                    </div>
+                    <CodeExample filename="UpdateExample.java" examples={deleteExamples}/>
+                </section>
+            </div>
+        </div>
+    </div>
+</Layout>
+
+<style>
+    .reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.8s ease-out;
+    }
+
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>

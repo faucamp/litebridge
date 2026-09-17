@@ -1,6 +1,14 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import {Terminal, Database, ArrowLeft, DatabaseSearch, SquareAsterisk, GitMerge, SquareMousePointer} from '@lucide/astro';
+import {
+    Terminal,
+    Database,
+    ArrowLeft,
+    DatabaseSearch,
+    SquareAsterisk,
+    GitMerge,
+    SquareMousePointer
+} from '@lucide/astro';
 import CodeExample from '../components/CodeExample.astro';
 
 const title = "Retrieving data";
@@ -93,11 +101,11 @@ const joinSelectExamples = [
 ];
 
 const specificColumnExamples = [
-  {
-    id: 'dtoMode',
-    title: 'DTO mode',
-    description: 'Retrieve and populate specific fields of the first matching entity found, and apply a scalar function to change the "surname" field to uppercase.',
-    code: `import static org.example.meta.PersonMeta.id;
+    {
+        id: 'dtoMode',
+        title: 'DTO mode',
+        description: 'Retrieve and populate specific fields of the first matching entity found, and apply a scalar function to change the "surname" field to uppercase.',
+        code: `import static org.example.meta.PersonMeta.id;
 import static org.example.meta.PersonMeta.name;
 import static org.example.meta.PersonMeta.surname;
 
@@ -107,30 +115,30 @@ Person person = litebridge.select(id, name, surname.upper())
     .where(PersonMeta.name).eq("Alice")
     .orderBy(PersonMeta.id).asc()
     .firstOrNull();`,
-  },
-  {
-    id: 'sqlMode',
-    title: 'SQL mode',
-    description: 'Select specific columns from the LB.PERSON table, applying an UPPER() function on teh SURNAME column. Retrieve the first ordered result.',
-    code: `import static org.litebridge.orm.expression.Fn.upper;
+    },
+    {
+        id: 'sqlMode',
+        title: 'SQL mode',
+        description: 'Select specific columns from the LB.PERSON table, applying an UPPER() function on teh SURNAME column. Retrieve the first ordered result.',
+        code: `import static org.litebridge.orm.expression.Fn.upper;
     
 Row row = litebridge.select("PERSON_ID", "FIRST_NAME", upper("SURNAME"))
     .from("LB.PERSON")
     .where("FIRST_NAME").eq("Alice")
     .orderBy("PERSON_ID").asc()
     .firstOrNull();`
-  },
-  {
-    id: 'nativeSql',
-    title: 'Native SQL',
-    description: 'Select specific columns using a raw SQL query.',
-    code: `Row row = litebridge.nativeSql()
+    },
+    {
+        id: 'nativeSql',
+        title: 'Native SQL',
+        description: 'Select specific columns using a raw SQL query.',
+        code: `Row row = litebridge.nativeSql()
     .query("SELECT PERSON_ID, FIRST_NAME, UPPER(SURNAME) "
            + "FROM LB.PERSON WHERE FIRST_NAME = ? "
            + "ORDER BY PERSON_ID ASC LIMIT 1", 
            "Alice")
     .firstOrNull();`
-  }
+    }
 ];
 ---
 

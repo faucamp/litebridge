@@ -1,89 +1,124 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { Terminal, ArrowLeft } from '@lucide/astro';
+import {GitMerge, ArrowLeft} from '@lucide/astro';
 import CodeExample from '../components/CodeExample.astro';
 
 const title = "Merging data";
 const description = "MERGE (upsert) query examples";
 
 const mergeExamples = [
-  {
-    id: 'dtoMode',
-    title: 'DTO mode',
-    description: 'Merge an entity instance into the database (insert or update).',
-    code: `// Merge a DTO entity instance
-Person person = new Person();
-person.setId(1L);
-person.setName("Alice");
-
-litebridge.merge(person);`
-  },
-  {
-    id: 'sqlMode',
-    title: 'SQL mode',
-    description: 'Merge records into a table without DTO mapping.',
-    code: `// Merge records into a table directly
-litebridge.merge()
-    .into("LB.PERSON")
-    .key("ID", 1L)
-    .value("FIRST_NAME", "Alice")
-    .execute();`
-  },
-  {
-    id: 'nativeSql',
-    title: 'Native SQL',
-    description: 'Merge records using a raw SQL statement.',
-    code: `// Merge records using native SQL
+    {
+        id: 'dtoMode',
+        title: 'DTO mode',
+        description: 'Merge records into a table using entity mapping metadata.',
+        code: `litebridge.mergeInto(Account.class, m -> m
+    .using(Person.class)
+    .on(AccountMeta.id).eq(PersonMeta.id)
+    .whenMatched(u -> u
+        .update(account -> account
+        .set(AccountMeta.balance).to(500)
+        .where(AccountMeta.id).lt(5)))
+    .whenMatched(account -> account
+        .delete()
+        .where(AccountMeta.id).gte(5)))
+    .whenNotMatched(i -> i
+        .insert(AccountMeta.id, AccountMeta.name, AccountMeta.balance, AccountMeta.owner)
+        .values(123L, "Default Account", 0, 1L)));`
+    },
+    {
+        id: 'sqlMode',
+        title: 'SQL mode',
+        description: 'Merge records into a table without entity/DTO mapping metadata.',
+        code: `litebridge.mergeInto("LB.ACCOUNT", m -> m
+    .using("LB.PERSON")
+    .on(Fn.c("LB.ACCOUNT", "PERSON_ID")).eq(Fn.c("LB.PERSON", "PERSON_ID"))
+    .whenMatched(u -> u
+        .update("LB.ACCOUNT" -> account
+        .set("BALANCE").to(500)
+        .where("ACCOUNT_ID").lt(5)))
+    .whenMatched("LB.ACCOUNT" -> account
+        .delete()
+        .where("ACCOUNT_ID").gte(5)))
+    .whenNotMatched(i -> i
+        .insert("ACCOUNT_ID", "ACCOUNT_NAME", "BALANCE", "PERSON_ID")
+        .values(123L, "Default Account", 0, 1L)))`
+    },
+    {
+        id: 'nativeSql',
+        title: 'Native SQL',
+        description: 'Merge records using a raw SQL statement.',
+        code: `// Merge records using native SQL
 litebridge.nativeSql()
-    .execute("MERGE INTO LB.PERSON ...", 1L, "Alice");`
-  },
+    .execute("MERGE INTO LB.ACCOUNT AS A "
+        + "USING LB.PERSON AS P ON (A.PERSON_ID = P.ACCOUNT_ID) "
+        + "WHEN MATCHED AND A.ACCOUNT_ID < ? THEN UPDATE SET A.BALANCE = ? "
+        + "WHEN MATCHED AND A.ACCOUNT_ID >= ? THEN DELETE "
+        + "WHEN NOT MATCHED THEN INSERT (ACCOUNT_ID, ACCOUNT_NAME, BALANCE, PERSON_ID) "
+        + "VALUES (?, ?, ?, ?)", 
+        5, 500, 5, 123L, "Default Account", 0, 1L);
+    
+// Using named parameters
+litebridge.nativeSql()
+    .execute("MERGE INTO LB.ACCOUNT AS A "
+        + "USING LB.PERSON AS P ON (A.PERSON_ID = P.ACCOUNT_ID) "
+        + "WHEN MATCHED AND A.ACCOUNT_ID < :accountId THEN UPDATE SET A.BALANCE = :updateBalance "
+        + "WHEN MATCHED AND A.ACCOUNT_ID >= accountId THEN DELETE "
+        + "WHEN NOT MATCHED THEN INSERT (ACCOUNT_ID, ACCOUNT_NAME, BALANCE, PERSON_ID) "
+        + "VALUES (:newId, :newName, :newBalance, :personId)",
+        Map.of("accountId", 5,
+               "updateBalance", 500, 
+               "newId", 123L,
+               "newName", "Default Account",
+               "newBalance", 0,
+               "personId", 1L));`
+    },
 ];
 ---
 
 <Layout title={title} description={description}>
-  <div class="pt-32 pb-20 lg:pt-48 lg:pb-32">
-    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-      <div class="mb-12 reveal">
-        <a
-          href="/examples"
-          class="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-accent dark:text-gray-400 dark:hover:text-accent transition-colors mb-6"
-        >
-          <ArrowLeft class="h-4 w-4" />
-          Back to Examples
-        </a>
-        <h1 class="text-4xl font-extrabold tracking-tight text-primary dark:text-white sm:text-6xl mb-6">
-          Merging data
-        </h1>
-        <p class="text-xl text-gray-500 dark:text-gray-400">
-          MERGE (upsert) query examples using DTO mode, SQL mode, and native SQL.
-        </p>
-      </div>
-
-      <div class="space-y-16">
-        <!-- Merge data (upsert) -->
-        <section class="reveal">
-          <div class="flex items-center gap-4 mb-6">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
-              <Terminal class="h-6 w-6" />
+    <div class="pt-32 pb-20 lg:pt-48 lg:pb-32">
+        <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div class="mb-12 reveal">
+                <a
+                        href="/examples"
+                        class="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-accent dark:text-gray-400 dark:hover:text-accent transition-colors mb-6"
+                >
+                    <ArrowLeft class="h-4 w-4"/>
+                    Back to Examples
+                </a>
+                <h1 class="text-4xl font-extrabold tracking-tight text-primary dark:text-white sm:text-6xl mb-6">
+                    Merging data
+                </h1>
+                <p class="text-xl text-gray-500 dark:text-gray-400">
+                    MERGE (upsert) query examples using DTO mode, SQL mode, and native SQL.
+                </p>
             </div>
-            <h2 class="text-3xl font-bold text-primary dark:text-white">Merge data (upsert)</h2>
-          </div>
-          <CodeExample filename="MergeExample.java" examples={mergeExamples} />
-        </section>
-      </div>
+
+            <div class="space-y-16">
+                <!-- Merge data (upsert) -->
+                <section class="reveal">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <GitMerge class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Merge data (upsert)</h2>
+                    </div>
+                    <CodeExample filename="MergeExample.java" examples={mergeExamples}/>
+                </section>
+            </div>
+        </div>
     </div>
-  </div>
 </Layout>
 
 <style>
-  .reveal {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.8s ease-out;
-  }
+    .reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.8s ease-out;
+    }
 
-  .reveal.active {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
 </style>
