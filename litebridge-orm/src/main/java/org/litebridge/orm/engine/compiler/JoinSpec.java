@@ -13,7 +13,7 @@ final class JoinSpec {
     private final @Nullable OrmTable ormTable;
     private final JoinNode joinNode;
     private final ConditionGroupSpecStack conditionGroupSpecStack = new ConditionGroupSpecStack();
-    private @Nullable Table aliasedTable;
+    private @Nullable Table table;
 
     JoinSpec(final String type,
              final @Nullable Class<?> dtoClass,
@@ -47,11 +47,11 @@ final class JoinSpec {
         return conditionGroupSpecStack;
     }
 
-    public @Nullable Table getAliasedTable() {
-        return aliasedTable;
+    public @Nullable Table getTable() {
+        return table;
     }
 
-    public void setAliasedTable(final Table aliasedTable) {
-        this.aliasedTable = aliasedTable;
+    public void setTable(final Table table) {
+        this.table = table;
     }
 }

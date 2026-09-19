@@ -9,7 +9,7 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 public abstract sealed class AbstractColumnExpressionSpec extends AbstractAliasable implements ColumnExpressionSpec
         permits AbstractTODelegateExpressionSpec, LowerSpec, SubstringSpec, UpperSpec, SelectColumnSpec {
 
-    private @Nullable String tableAlias;
+    protected @Nullable String tableAlias;
 
     @Override
     public @Nullable String getTableAlias() {

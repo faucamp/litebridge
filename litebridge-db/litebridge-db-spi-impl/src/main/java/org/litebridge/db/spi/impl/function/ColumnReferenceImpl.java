@@ -26,7 +26,7 @@ public class ColumnReferenceImpl extends AliasReferenceImpl implements ColumnRef
      * @param alias  Alias of the column.
      */
     public ColumnReferenceImpl(final Column column, final @Nullable String alias, final @Nullable String tableAlias) {
-        super(tableAlias, alias);
+        super(alias, tableAlias);
         this.column = column;
     }
 

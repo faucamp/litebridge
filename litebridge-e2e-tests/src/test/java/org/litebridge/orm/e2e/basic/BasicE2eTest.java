@@ -103,7 +103,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         // Reverse the join
         {
             final Person result = litebridge.select(Person.class)
-                   .join(Account.class).on(PersonMeta.accounts)
+                    .join(Account.class).on(PersonMeta.accounts)
                     .where(PersonMeta.name).eq("Alice")
                     .oneOrThrow();
 
@@ -682,7 +682,10 @@ public class BasicE2eTest extends AbstractE2eTest {
         litebridge.saveAll(persons);
 
         // Read and populate specific fields only
-        final List<Person> result = litebridge.select("id", "surname").from(Person.class).orderBy("id").asc().list();
+        final List<Person> result = litebridge.select("id", "surname")
+                .from(Person.class)
+                .orderBy("id").asc()
+                .list();
 
         assertEquals(3, result.size());
         for (int i = 0; i < 3; i++) {
@@ -767,6 +770,9 @@ public class BasicE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("Select grouping by")
     void select_groupBy(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        final String age = tableMapper.transformColumnName("AGE");
+        final String count = tableMapper.transformColumnName("COUNT(*)");
+
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
@@ -792,10 +798,10 @@ public class BasicE2eTest extends AbstractE2eTest {
                 .list();
 
         assertEquals(2, results.size());
-        assertEquals(20, results.get(0).value(tableMapper.transformColumnName("AGE")));
-        assertEquals(1L, results.get(0).value(tableMapper.transformColumnName("COUNT(*)")));
-        assertEquals(25, results.get(1).value(tableMapper.transformColumnName("AGE")));
-        assertEquals(2L, results.get(1).value(tableMapper.transformColumnName("COUNT(*)")));
+        assertEquals(20, results.get(0).value(age));
+        assertEquals(1L, results.get(0).value(count));
+        assertEquals(25, results.get(1).value(age));
+        assertEquals(2L, results.get(1).value(count));
 
         // Use a query expression in the groupBy() clause
         final List<Row> results2 = litebridge.select(Fn.row(Fn.convert(Fn.f("age"), Integer.class), Fn.convert(Fn.count(), Long.class)))
@@ -805,10 +811,10 @@ public class BasicE2eTest extends AbstractE2eTest {
                 .list();
 
         assertEquals(2, results2.size());
-        assertEquals(20, results2.get(0).value(tableMapper.transformColumnName("AGE")));
-        assertEquals(1L, results2.get(0).value(tableMapper.transformColumnName("COUNT(*)")));
-        assertEquals(25, results2.get(1).value(tableMapper.transformColumnName("AGE")));
-        assertEquals(2L, results2.get(1).value(tableMapper.transformColumnName("COUNT(*)")));
+        assertEquals(20, results2.get(0).value(age));
+        assertEquals(1L, results2.get(0).value(count));
+        assertEquals(25, results2.get(1).value(age));
+        assertEquals(2L, results2.get(1).value(count));
     }
 
     @TestTemplate

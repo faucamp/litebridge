@@ -28,11 +28,11 @@ class JoinSpecTest {
         assertEquals(ormTable, joinSpec.ormTable());
         assertEquals(joinNode, joinSpec.joinNode());
         assertNotNull(joinSpec.conditionGroupStack());
-        assertNull(joinSpec.getAliasedTable());
+        assertNull(joinSpec.getTable());
 
         // When / Then
-        joinSpec.setAliasedTable(table);
-        assertEquals(table, joinSpec.getAliasedTable());
+        joinSpec.setTable(table);
+        assertEquals(table, joinSpec.getTable());
     }
 
     @Test

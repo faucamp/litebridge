@@ -13,6 +13,7 @@ import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
 import java.util.function.BiFunction;
@@ -66,20 +67,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
 
         // From table
         sql.append(" FROM ");
-
-        switch (select.from()) {
-            case Table table -> appendTable(sql, table);
-            case Select subselect -> sql.append('(')
-                    .append(generateSql(subselect, connectionProvider))
-                    .append(')');
-            case AliasedQuery aliasedQuery -> sql.append('(')
-                    .append(generateSql(aliasedQuery.target(), connectionProvider))
-                    .append(") AS ")
-                    .append(aliasedQuery.alias());
-            case AliasedTable aliasedTable -> appendTable(sql, aliasedTable.target())
-                    .append(" AS ")
-                    .append(aliasedTable.alias());
-        }
+        appendSelectTarget(sql, select.from(), connectionProvider);
 
         // Joins
         if (!CollectionUtils.isEmpty(select.joins())) {
@@ -139,6 +127,22 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         return sql.toString();
     }
 
+    protected void appendSelectTarget(final StringBuilder sql, final SelectTarget selectTarget, final ConnectionProvider connectionProvider) {
+        switch (selectTarget) {
+            case Table table -> appendTable(sql, table);
+            case Select subselect -> sql.append('(')
+                    .append(generateSql(subselect, connectionProvider))
+                    .append(')');
+            case AliasedQuery aliasedQuery -> sql.append('(')
+                    .append(generateSql(aliasedQuery.target(), connectionProvider))
+                    .append(") AS ")
+                    .append(aliasedQuery.alias());
+            case AliasedTable aliasedTable -> appendTable(sql, aliasedTable.target())
+                    .append(" AS ")
+                    .append(aliasedTable.alias());
+        }
+    }
+
     /**
      * Create a SQL JOIN clause based on the provided {@link Join} object.
      * <p>
@@ -153,7 +157,8 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
      * @return Prepared SQL join clause
      */
     protected String createJoin(final Join join, final Select operation, final ConnectionProvider connectionProvider) {
-        final StringBuilder sb = appendTable(new StringBuilder(" JOIN "), join.table());
+        final StringBuilder sql = new StringBuilder(" JOIN ");
+        appendSelectTarget(sql, join.target(), connectionProvider);
 
 //        if (join.table().alias() != null) {
 //            sb.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(join.table().alias())));
@@ -162,13 +167,13 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         if (join.conditions().conditions().size() == 1
                 && join.conditions().subgroups().isEmpty()
                 && join.conditions().conditions().getFirst().condition().operator() == Operator.USING) {
-            sb.append(' ');
+            sql.append(' ');
         } else {
-            sb.append(" ON ");
+            sql.append(" ON ");
         }
 
-        appendConditionsAndSubgroups(sb, join.conditions(), operation, connectionProvider);
-        return sb.toString();
+        appendConditionsAndSubgroups(sql, join.conditions(), operation, connectionProvider);
+        return sql.toString();
     }
 
     /**

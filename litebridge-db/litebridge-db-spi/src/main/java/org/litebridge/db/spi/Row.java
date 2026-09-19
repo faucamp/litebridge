@@ -140,6 +140,13 @@ public final class Row {
 
             for (RowColumn rowColumn : columns) {
                 columnMap.put(rowColumn.label(), rowColumn);
+
+                final Column column = rowColumn.column();
+
+                // Store the column name as well as a fallback, unless it overlaps with an existing label
+                if (column != null && !column.name().equals(rowColumn.label()) && !columnMap.containsKey(column.name())) {
+                    columnMap.put(column.name(), rowColumn);
+                }
             }
         }
 

@@ -109,6 +109,11 @@ public final class Column {
                 && Objects.equals(table, column.table));
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, table);
+    }
+
     /**
      * Compares this column with another column, ignoring the alias and the table.
      * Only the column name is compared.
@@ -119,11 +124,6 @@ public final class Column {
     @Deprecated(forRemoval = true)
     public boolean equalsColumnOnlyIgnoreAlias(final Column column) {
         throw new UnsupportedOperationException("Deprecated");
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), table);
     }
 
     @Override

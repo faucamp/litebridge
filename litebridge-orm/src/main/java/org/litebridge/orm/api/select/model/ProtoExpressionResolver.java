@@ -99,7 +99,8 @@ public abstract class ProtoExpressionResolver {
         } else if (resolvable instanceof ProtoNestableExpressionSpec protoNestableExpressionSpec) {
             resolvedExpressionSpec = resolveDelegateExpression(protoNestableExpressionSpec, ormTable, table, clause);
         } else if (resolvable instanceof ProtoColumnExpressionSpec protoColumnExpressionSpec) {
-            resolvedExpressionSpec = new SelectColumnSpec(getColumn(protoColumnExpressionSpec, ormTable, table, clause), protoColumnExpressionSpec.alias());
+            //TODO: check null tableAlias
+            resolvedExpressionSpec = new SelectColumnSpec(getColumn(protoColumnExpressionSpec, ormTable, table, clause), protoColumnExpressionSpec.alias(), null);
         } else if (resolvable instanceof ConvertSpec<?> convertSpec) {
             return resolveConvertSpec(convertSpec, ormTable, table, clause);
         } else {

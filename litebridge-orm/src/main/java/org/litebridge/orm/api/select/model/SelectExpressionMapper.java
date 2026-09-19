@@ -153,7 +153,7 @@ public final class SelectExpressionMapper {
 
     private ColumnReference toColumnReference(final ColumnExpressionSpec columnExpressionSpec) {
         return sqlFunctionRegistry.select().reference()
-                .create(columnExpressionSpec.getColumn(), columnExpressionSpec.getTableAlias(), columnExpressionSpec.getAlias());
+                .create(columnExpressionSpec.getColumn(), columnExpressionSpec.getAlias(), columnExpressionSpec.getTableAlias());
     }
 
     private AliasReference toAliasReference(final AliasReferenceSpec aliasReferenceSpec) {

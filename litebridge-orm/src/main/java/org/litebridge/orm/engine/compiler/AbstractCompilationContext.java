@@ -29,6 +29,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
+import org.litebridge.orm.persistence.alias.AliasGenerator;
 
 import java.sql.Types;
 import java.util.ArrayList;
@@ -40,10 +41,12 @@ import java.util.Objects;
 abstract sealed class AbstractCompilationContext implements CompilationContext permits DeleteCompilationContext, MergeCompilationContext, SelectCompilationContext, UpdateCompilationContext {
 
     protected final LitebridgeContext litebridgeContext;
+    protected final AliasGenerator aliasGenerator;
     protected final List<BindValue> bindValues = new ArrayList<>();
 
     protected AbstractCompilationContext(final LitebridgeContext litebridgeContext) {
         this.litebridgeContext = litebridgeContext;
+        this.aliasGenerator = litebridgeContext.aliasGenerator();
     }
 
     @Override
@@ -101,13 +104,15 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             // DTO field name
             final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(Objects.requireNonNull(conditionSpec.getLhsColumn()));
             final Column column = columnMetaData.toColumn();
-            final String columnAlias = resolveAlias(table, column);
-            lhsExpressionSpec = new SelectColumnSpec(column, columnAlias);
+            final String tableAlias = aliasGenerator.tableAlias(column.table());
+            final String columnAlias = aliasGenerator.columnAlias(column);
+            lhsExpressionSpec = new SelectColumnSpec(column, columnAlias, tableAlias);
         } else {
             // Column name
             final Column column = new Column(table, Objects.requireNonNull(conditionSpec.getLhsColumn()));
-            final String columnAlias = resolveAlias(table, column);
-            lhsExpressionSpec = new SelectColumnSpec(column, columnAlias);
+            final String tableAlias = aliasGenerator.tableAlias(column.table());
+            final String columnAlias = aliasGenerator.columnAlias(column);
+            lhsExpressionSpec = new SelectColumnSpec(column, columnAlias, tableAlias);
         }
 
         final SelectExpression lhsSelectExpression = selectExpressionMapper.toSelectExpression(lhsExpressionSpec, true);

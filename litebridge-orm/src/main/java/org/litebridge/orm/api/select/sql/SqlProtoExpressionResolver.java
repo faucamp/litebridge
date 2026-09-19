@@ -32,7 +32,8 @@ public final class SqlProtoExpressionResolver extends ProtoExpressionResolver {
             alias = null;
         }
 
-        return new SelectColumnSpec(getColumn(resolvable, ormTable, table, clause), alias);
+        //TODO: check null tableAlias
+        return new SelectColumnSpec(getColumn(resolvable, ormTable, table, clause), alias, null);
     }
 
     @Override

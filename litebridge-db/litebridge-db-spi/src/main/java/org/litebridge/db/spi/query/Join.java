@@ -1,7 +1,5 @@
 package org.litebridge.db.spi.query;
 
-import org.litebridge.db.spi.Table;
-
 /**
  * A database table join operation in a query.
  * <p>
@@ -17,9 +15,9 @@ import org.litebridge.db.spi.Table;
  * This record is used in query-building to specify join operations
  * within SQL select statements.
  *
- * @param table      The target table for the join operation.
+ * @param target     The target table/query for the join operation.
  * @param conditions The group of conditions defining the join relationship.
  * @see Select
  */
-public record Join(Table table, ConditionGroup conditions) {
+public record Join(SelectTarget target, ConditionGroup conditions) {
 }

@@ -23,9 +23,10 @@ public sealed class SelectColumnSpec extends AbstractColumnExpressionSpec implem
         this.column = column;
     }
 
-    public SelectColumnSpec(final Column column, @Nullable final String alias) {
+    public SelectColumnSpec(final Column column, final @Nullable String alias, final @Nullable String tableAlias) {
         this.column = column;
         this.alias = alias;
+        this.tableAlias = tableAlias;
     }
 
     @Override
