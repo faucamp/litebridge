@@ -8,6 +8,7 @@ import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.RowColumn;
+import org.litebridge.db.spi.RowInspector;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
@@ -318,13 +319,20 @@ public class SelectEngineTerminal {
             final Class<?> resultType = resultTypes[i];
 
             if (resultType == null) {
+                // No value conversion needed
                 continue;
             }
 
             final RowColumn rowColumn = row.column(i);
+            final Object rawValue = rowColumn.value();
+
+            if (rawValue != null && resultType.isAssignableFrom(rawValue.getClass())) {
+                // Value is of the correct type
+                continue;
+            }
+
             final Object converted = typeConverter.convert(rowColumn.value(), resultType);
-//            row.updateColumn(rowColumn.column(), converted);
-            throw new UnsupportedOperationException("Not implemented yet");
+            RowInspector.updateColumn(row, i, new RowColumn(rowColumn.label(), converted, rowColumn.column()));
         }
 
         return row;

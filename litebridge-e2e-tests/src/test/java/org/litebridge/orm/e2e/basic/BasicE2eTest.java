@@ -103,7 +103,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         // Reverse the join
         {
             final Person result = litebridge.select(Person.class)
-                    .join(Account.class).on(PersonMeta.accounts)
+                   .join(Account.class).on(PersonMeta.accounts)
                     .where(PersonMeta.name).eq("Alice")
                     .oneOrThrow();
 

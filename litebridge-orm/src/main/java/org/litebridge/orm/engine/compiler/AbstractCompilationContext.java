@@ -141,7 +141,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         // Store bind values and return condition
         return switch (operator) {
             case USING -> {
-                final LiteralExpression literalExpression = litebridgeContext.sqlFunctionRegistry().select().literal().create(value, true);
+                final LiteralExpression literalExpression = litebridgeContext.sqlFunctionRegistry().select().literal().create(value, false);
                 yield new Condition(lhsSelectExpression, operator, literalExpression);
             }
             case IS_NULL, IS_NOT_NULL -> new Condition(lhsSelectExpression, operator, null);
@@ -185,7 +185,15 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
                 return Collections.singletonList(new BindValue(convertedValue, columnMetaData.getDataType()));
             }
         } else if (rawValue != null) {
-            return Collections.singletonList(new BindValue(rawValue, typeConverter.getSqlDataType(rawValue.getClass())));
+            if (rawValue instanceof Collection<?> collection) {
+                // Multiple bind values
+                return collection.stream()
+                        .map(value -> new BindValue(value, typeConverter.getSqlDataType(value.getClass())))
+                        .toList();
+            } else {
+                // Single bind value
+                return Collections.singletonList(new BindValue(rawValue, typeConverter.getSqlDataType(rawValue.getClass())));
+            }
         } else {
             return Collections.singletonList(new BindValue(null, Types.NULL));
         }

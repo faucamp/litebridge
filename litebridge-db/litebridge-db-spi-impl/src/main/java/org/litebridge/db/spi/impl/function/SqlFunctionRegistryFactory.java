@@ -11,8 +11,12 @@ import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.impl.function.aggregate.Avg;
 import org.litebridge.db.spi.impl.function.aggregate.Count;
+import org.litebridge.db.spi.impl.function.aggregate.Max;
+import org.litebridge.db.spi.impl.function.aggregate.Min;
 import org.litebridge.db.spi.impl.function.date.CurrentTimestamp;
+import org.litebridge.db.spi.impl.function.scalar.Abs;
 import org.litebridge.db.spi.impl.function.scalar.Lower;
 import org.litebridge.db.spi.impl.function.scalar.Substring;
 import org.litebridge.db.spi.impl.function.scalar.Upper;
@@ -151,8 +155,7 @@ public class SqlFunctionRegistryFactory {
      * @return A AVG-implementing expression
      */
     protected DelegateColumnExpression createAvg(final ColumnExpression target, final Object... args) {
-//        return new Avg(target, columnIdentifierGenerator);
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new Avg(target, (String) args[0]);
     }
 
     /**
@@ -163,8 +166,7 @@ public class SqlFunctionRegistryFactory {
      * @return A MIN-implementing expression
      */
     protected DelegateColumnExpression createMin(final ColumnExpression target, final Object... args) {
-//        return new Min(target, columnIdentifierGenerator);
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new Min(target, (String) args[0]);
     }
 
     /**
@@ -175,8 +177,7 @@ public class SqlFunctionRegistryFactory {
      * @return A MAX-implementing expression
      */
     protected DelegateColumnExpression createMax(final ColumnExpression target, final Object... args) {
-//        return new Max(target, columnIdentifierGenerator);
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new Max(target, (String) args[0]);
     }
 
     /**
@@ -220,7 +221,8 @@ public class SqlFunctionRegistryFactory {
     protected DelegateColumnExpression createSubstring(final ColumnExpression target, final Object... args) {
         final int start = (int) args[0];
         final Integer length = (Integer) args[1];
-        return createSubstring(target, start, length);
+        final String alias = (String) args[2];
+        return createSubstring(target, start, length, alias);
     }
 
     /**
@@ -243,8 +245,7 @@ public class SqlFunctionRegistryFactory {
      * @return An ABS-implementing expression
      */
     protected DelegateColumnExpression createAbs(final ColumnExpression target, final Object... args) {
-//        return new Abs(target, columnIdentifierGenerator);
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new Abs(target, (String) args[0]);
     }
 
     /**

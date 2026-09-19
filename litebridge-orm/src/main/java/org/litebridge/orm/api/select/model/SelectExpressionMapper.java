@@ -169,6 +169,6 @@ public final class SelectExpressionMapper {
         }
 
 
-        return sqlFunctionRegistry.select().aliasReference().create(aliasReferenceSpec.fromAlias(), column);
+        return sqlFunctionRegistry.select().aliasReference().create(column, aliasReferenceSpec.fromAlias());
     }
 }

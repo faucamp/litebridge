@@ -34,7 +34,7 @@ public final class StringQueryField extends QueryField {
         if (pendingExpressionSpec != null) {
             pendingExpressionSpec = Fn.lower(pendingExpressionSpec);
         } else {
-            return Fn.upper(Fn.f(dtoClass, field));
+            pendingExpressionSpec = Fn.upper(Fn.f(dtoClass, field));
         }
 
         return this;
@@ -49,7 +49,7 @@ public final class StringQueryField extends QueryField {
         if (pendingExpressionSpec != null) {
             pendingExpressionSpec = Fn.lower(pendingExpressionSpec);
         } else {
-            pendingExpressionSpec = Fn.lower(Fn.field(field));
+            pendingExpressionSpec = Fn.lower(Fn.field(dtoClass, field));
         }
 
         return this;

@@ -24,9 +24,13 @@ public record RowColumn(String label, @Nullable Object value, @Nullable Column c
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", "{", "}")
-                .add("label='" + label + "'")
-                .add("value=" + value)
-                .toString();
+        final StringBuilder sb = new StringBuilder("{").append(label);
+
+        if (column != null && !column.name().equals(label)) {
+            sb.append('/').append(column.name());
+        }
+
+        sb.append(": ").append(value).append('}');
+        return sb.toString();
     }
 }

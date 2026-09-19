@@ -165,4 +165,8 @@ public final class Row {
     public String toString() {
         return columns.toString();
     }
+
+    void updateColumn(final int columnIndex, final RowColumn rowColumn) {
+        columns.set(columnIndex, rowColumn);
+    }
 }

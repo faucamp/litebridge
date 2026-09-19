@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Compilation context for SELECT statements.
@@ -169,9 +170,19 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 for (final String columnName : selectNode.columns()) {
                     final ColumnMetaData columnMetaData = tableMetaData.column(columnName);
                     final Column column = columnMetaData.toColumn();
-                    final String columnAlias = aliasGenerator.newColumnAlias(column);
-                    final String tableAlias = aliasGenerator.newTableAlias(column.table());
-                    this.selectExpressions.add(sqlFunctionRegistry.select().column().create(column, columnAlias, tableAlias));
+                    final String tableAlias;
+
+                    if (fromAlias != null) {
+                        if (table.equals(column.table())) {
+                            tableAlias = fromAlias;
+                        } else {
+                            tableAlias = aliasGenerator.newTableAlias(column.table());
+                        }
+                    } else {
+                        tableAlias = null;
+                    }
+
+                    this.selectExpressions.add(sqlFunctionRegistry.select().column().create(column, null, tableAlias));
                 }
             }
         } else {
@@ -183,9 +194,14 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 resolvedExpressionSpecs.addAll(selectExpressionMapper.resolveProtoExpression(expressionSpec, ormTable, table, ClauseType.SELECT));
             }
 
-            this.selectExpressions = resolvedExpressionSpecs.stream()
-                    .map(this::aliasExpression)
-                    .map(expressionSpec -> selectExpressionMapper.toSelectExpression(expressionSpec, false))
+            Stream<ExpressionSpec> expressionSpecStream = resolvedExpressionSpecs.stream();
+
+            if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
+                expressionSpecStream = expressionSpecStream.map(this::aliasExpression);
+            }
+
+            this.selectExpressions = expressionSpecStream.map(expressionSpec ->
+                            selectExpressionMapper.toSelectExpression(expressionSpec, false))
                     .toList();
         }
     }

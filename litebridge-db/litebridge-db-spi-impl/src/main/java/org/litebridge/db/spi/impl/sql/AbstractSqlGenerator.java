@@ -99,16 +99,16 @@ public abstract class AbstractSqlGenerator {
             }
         } else if (condition.operator() == Operator.USING) {
             sql = "%s (%s)".formatted(mapOperator(condition.operator()),
-                    ObjectUtils.requireNonNull(column, () -> new IllegalArgumentException("JOIN USING clause without column target"))
-                            .name());
+                    ObjectUtils.requireNonNull(condition.rhs(), () -> new IllegalArgumentException("JOIN USING clause without column target"))
+                            .toSql(operation, ClauseType.JOIN));
         } else {
             if (condition.rhs() instanceof SubselectExpression subselectExpression) {
                 final String subselectSql = subselectExpression.toSql(operation, connectionProvider);
                 sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), subselectSql);
             } else if (condition.rhs() instanceof AliasReference aliasReference) {
-
-//                sql = "%s %s %s.%s".formatted(lhs, mapOperator(condition.operator()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.table().aliasOrName()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.name()));
-                throw new UnsupportedOperationException("Not implemented yet");
+                sql = "%s %s %s".formatted(lhs,
+                        mapOperator(condition.operator()),
+                        aliasReference.toSql(operation, ClauseType.JOIN));
             } else if (condition.rhs() instanceof ColumnReference columnReference) {
                 final Column referencedColumn = columnReference.column();
 //                sql = "%s %s %s.%s".formatted(lhs, mapOperator(condition.operator()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.table().aliasOrName()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.name()));
