@@ -24,6 +24,7 @@
     - New APIs for retrieving database and database provider metadata.
     - New `executeBatch()` method for explicit batch update operations.
     - `Result` and `BatchUpdateResult` result models added.
+    - `VirtualTable` class added to encapsulate SELECT sources other than tables.
 - Oracle Database Provider:
     - Add custom mathematical operation SQL generator
     - Multi-row inserts are now supported via batched insert statements
