@@ -56,7 +56,15 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
         final Class<?> dtoClass = getDtoClass(resolvable, ormTable);
         final Column column = getColumn(dtoClass, resolvable, table, clause);
         final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, resolvable.column());
-        return new SelectFieldSpec(fieldAccessor, column);
+        final String alias;
+
+        if (resolvable instanceof ProtoExpressionSpec protoExpressionSpec) {
+            alias = protoExpressionSpec.alias();
+        } else {
+            alias = null;
+        }
+
+        return new SelectFieldSpec(fieldAccessor, column, alias);
     }
 
     @Override

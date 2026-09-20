@@ -284,11 +284,11 @@ public final class Fn {
     }
 
     public static AliasReferenceSpec fromAlias(final String fromAlias, final String column) {
-        return new AliasReferenceSpec(fromAlias, column);
+        return new AliasReferenceSpec(column, fromAlias);
     }
 
     public static AliasReferenceSpec fromAlias(final String fromAlias, final ExpressionSpec expression) {
-        return new AliasReferenceSpec(fromAlias, expression);
+        return new AliasReferenceSpec(expression, fromAlias);
     }
 
     public static AliasReferenceSpec aliasRef(final String alias) {

@@ -3,17 +3,17 @@ package org.litebridge.orm.expression.select;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.expression.ExpressionSpec;
 
-public record AliasReferenceSpec(String fromAlias,
-                                 @Nullable String column,
-                                 @Nullable ExpressionSpec expression)
+public record AliasReferenceSpec(@Nullable String alias,
+                                 @Nullable ExpressionSpec expression,
+                                 @Nullable String tableAlias)
         implements ExpressionSpec, SelectTargetSpec {
 
-    public AliasReferenceSpec(final String fromAlias, final String column) {
-        this(fromAlias, column, null);
+    public AliasReferenceSpec(final String alias, final String tableAlias) {
+        this(alias, null, tableAlias);
     }
 
-    public AliasReferenceSpec(final String fromAlias, final ExpressionSpec expression) {
-        this(fromAlias, null, expression);
+    public AliasReferenceSpec(final ExpressionSpec expression, final String tableAlias) {
+        this(null, expression, tableAlias);
     }
 
     public AliasReferenceSpec(final String alias) {

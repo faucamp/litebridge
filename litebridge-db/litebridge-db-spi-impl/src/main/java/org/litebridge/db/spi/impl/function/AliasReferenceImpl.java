@@ -25,6 +25,16 @@ public class AliasReferenceImpl implements AliasReference {
     }
 
     @Override
+    public String alias() {
+        return alias;
+    }
+
+    @Override
+    public @Nullable String tableAlias() {
+        return tableAlias;
+    }
+
+    @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
         if (tableAlias != null) {
             return quoteIdentifier(tableAlias) + "." + quoteIdentifier(alias);

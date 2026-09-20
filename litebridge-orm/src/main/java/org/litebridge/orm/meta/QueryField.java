@@ -27,7 +27,7 @@ public sealed class QueryField implements ExpressionSpec permits NumericQueryFie
     /**
      * Pending chained expression spec to use;
      */
-    protected @Nullable ExpressionSpec pendingExpressionSpec;
+    protected final @Nullable ExpressionSpec pendingExpressionSpec;
 
     /**
      * Creates a new {@link QueryField} instance.
@@ -38,10 +38,17 @@ public sealed class QueryField implements ExpressionSpec permits NumericQueryFie
     public QueryField(final Class<?> dtoClass, final String field) {
         this.dtoClass = dtoClass;
         this.field = field;
+        this.pendingExpressionSpec = null;
+    }
+
+    protected QueryField(final QueryField other, final ExpressionSpec pendingExpressionSpec) {
+        this.dtoClass = other.dtoClass;
+        this.field = other.field;
+        this.pendingExpressionSpec = pendingExpressionSpec;
     }
 
     public ExpressionSpec as(final AliasReferenceSpec alias) {
-        return as(alias.fromAlias());
+        return as(alias.alias());
     }
 
     public ExpressionSpec as(final String alias) {

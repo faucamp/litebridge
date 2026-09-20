@@ -643,15 +643,14 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
         if (columnExpressionSpec != null) {
             final Column column = columnExpressionSpec.getColumn();
+            final String tableAlias = aliasGenerator.tableAlias(column.table());
+            columnExpressionSpec.setTableAlias(tableAlias);
 
             if (columnExpressionSpec.getAlias() != null) {
                 aliasGenerator.setColumnAlias(column, columnExpressionSpec.getAlias());
             } else {
-                // Table alias in use; alias columns too
-                final String tableAlias = aliasGenerator.tableAlias(column.table());
                 final String columnAlias = aliasGenerator.newColumnAlias(column);
                 columnExpressionSpec.setAlias(columnAlias);
-                columnExpressionSpec.setTableAlias(tableAlias);
             }
         }
 

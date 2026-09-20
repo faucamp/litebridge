@@ -157,18 +157,18 @@ public final class SelectExpressionMapper {
     }
 
     private AliasReference toAliasReference(final AliasReferenceSpec aliasReferenceSpec) {
-        final String column;
+        final String alias;
 
-        if (aliasReferenceSpec.column() != null) {
-            column = aliasReferenceSpec.column();
+        if (aliasReferenceSpec.alias() != null) {
+            alias = aliasReferenceSpec.alias();
         } else if (aliasReferenceSpec.expression() != null) {
-            column = toSelectExpression(aliasReferenceSpec.expression(), true)
+            alias = toSelectExpression(aliasReferenceSpec.expression(), true)
                     .toSql(null, null);
         } else {
-            column = null;
+            alias = null;
         }
 
 
-        return sqlFunctionRegistry.select().aliasReference().create(column, aliasReferenceSpec.fromAlias());
+        return sqlFunctionRegistry.select().aliasReference().create(alias, aliasReferenceSpec.tableAlias());
     }
 }

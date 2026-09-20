@@ -7,12 +7,6 @@ import org.litebridge.db.spi.Column;
  * <p>
  * This is used to reference an unaliased selected column directly in condition and other clauses.
  */
-public interface ColumnReference extends SelectExpression {
+public interface ColumnReference extends ColumnExpression {
 
-    /**
-     * Retrieves the target column of this expression.
-     *
-     * @return The target column.
-     */
-    Column column();
 }

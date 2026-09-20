@@ -76,6 +76,10 @@ public final class QueryPlanCache {
         cache.clear();
     }
 
+    public Map<Integer, CachedOperation> cache() {
+        return cache;
+    }
+
     /**
      * Cached operation representing compiled SQL, bind value types, and conversion metadata.
      *

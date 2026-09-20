@@ -4,12 +4,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.db.spi.Row;
+import org.litebridge.orm.LitebridgeInspector;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.basic.dto.Person;
 import org.litebridge.orm.e2e.basic.meta.PersonMeta;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.e2e.setup.DbEnvironment;
+import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.expression.Fn;
 import org.litebridge.orm.expression.select.AliasReferenceSpec;
 import org.slf4j.Logger;
@@ -22,6 +24,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertLinesMatch;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FunctionsE2eTest extends AbstractE2eTest {
 
@@ -42,6 +46,7 @@ public class FunctionsE2eTest extends AbstractE2eTest {
             persons[i].setName("Name" + i);
             persons[i].setSurname("Surname" + i);
             persons[i].setAge(20 + (i * 5));
+            persons[i].setEyeColour("blue");
         }
 
         litebridge.saveAll(persons);
@@ -276,32 +281,33 @@ public class FunctionsE2eTest extends AbstractE2eTest {
         assertEquals(3L, person.getId());
         assertEquals("name2", person.getName());
         assertEquals("SURNAME2", person.getSurname());
+        assertNull(person.getEyeColour());
+
+        if ("H2".equals(dbEnv.getName())) {
+            assertQueryPlanCacheContains("SELECT p1.PERSON_ID AS ppi, LOWER(p1.FIRST_NAME) AS pfn, UPPER(p1.SURNAME) AS ps FROM LB.PERSON AS p1 WHERE p1.AGE >= ?");
+        }
 
         // Similar, but with custom aliases and references
-        // Select ID, lowercase name and uppercase surname using metamodel
         {
             final AliasReferenceSpec nameAlias = Fn.aliasRef("CustomAlias");
-
-
-            litebridge.select(
-                            PersonMeta.id.as("ALIASED_ID"),
-                            PersonMeta.name.lower().as("MY_OTHER_ALIS")).from(Person.class).where(PersonMeta.age).gt(30)
-                    .orderBy(PersonMeta.id).asc()
-                    .list();
-
             final Person result = litebridge.select(
-                            PersonMeta.id,
+                            PersonMeta.id.as("Aliased_ID"),
                             PersonMeta.name.lower().as(nameAlias),
+                            PersonMeta.eyeColour,
                             PersonMeta.surname.upper())
                     .from(Person.class)
                     .where(PersonMeta.age).gte(30)
                     .orderBy(nameAlias).asc()
                     .oneOrThrow();
 
-
             assertEquals(3L, result.getId());
             assertEquals("name2", result.getName());
             assertEquals("SURNAME2", result.getSurname());
+            assertEquals("blue", result.getEyeColour());
+
+            if ("H2".equals(dbEnv.getName())) {
+                assertQueryPlanCacheContains("SELECT p1.PERSON_ID AS Aliased_ID, LOWER(p1.FIRST_NAME) AS CustomAlias, p1.EYE_COLOUR AS pec, UPPER(p1.SURNAME) AS ps FROM LB.PERSON AS p1 WHERE p1.AGE >= ? ORDER BY CustomAlias ASC");
+            }
         }
 
         // Prepare data
@@ -344,5 +350,12 @@ public class FunctionsE2eTest extends AbstractE2eTest {
         assertEquals(3L, result4.getId());
         assertEquals("Name2", result4.getName());
         assertEquals("Surname2", result4.getSurname());
+    }
+
+    private void assertQueryPlanCacheContains(final String expectedSql) {
+        final QueryPlanCache queryPlanCache = LitebridgeInspector.getQueryPlanCache(litebridge);
+        assertTrue(queryPlanCache.cache().values().stream()
+                .map(QueryPlanCache.CachedOperation::sql)
+                .anyMatch(sql -> sql.equals(expectedSql)));
     }
 }

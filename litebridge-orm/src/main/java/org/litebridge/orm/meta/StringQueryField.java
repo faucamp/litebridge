@@ -25,6 +25,10 @@ public final class StringQueryField extends QueryField {
         super(dtoClass, fieldName);
     }
 
+    private StringQueryField(final StringQueryField other, final ExpressionSpec pendingExpressionSpec) {
+        super(other, pendingExpressionSpec);
+    }
+
     /**
      * {@code UPPER()}: Returns the uppercase value of a column's text.
      *
@@ -32,12 +36,10 @@ public final class StringQueryField extends QueryField {
      */
     public StringQueryField upper() {
         if (pendingExpressionSpec != null) {
-            pendingExpressionSpec = Fn.lower(pendingExpressionSpec);
+            return new StringQueryField(this, Fn.upper(pendingExpressionSpec));
         } else {
-            pendingExpressionSpec = Fn.upper(Fn.f(dtoClass, field));
+            return new StringQueryField(this, Fn.upper(Fn.f(dtoClass, field)));
         }
-
-        return this;
     }
 
     /**
@@ -47,15 +49,9 @@ public final class StringQueryField extends QueryField {
      */
     public StringQueryField lower() {
         if (pendingExpressionSpec != null) {
-            pendingExpressionSpec = Fn.lower(pendingExpressionSpec);
+            return new StringQueryField(this, Fn.lower(pendingExpressionSpec));
         } else {
-            pendingExpressionSpec = Fn.lower(Fn.field(dtoClass, field));
+            return new StringQueryField(this, Fn.lower(Fn.f(dtoClass, field)));
         }
-
-        return this;
-    }
-
-    ExpressionSpec pendingExpressionSpec() {
-        return pendingExpressionSpec;
     }
 }
