@@ -11,6 +11,8 @@ import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.RowInspector;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.VirtualTable;
+import org.litebridge.db.spi.VirtualTableMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ColumnExpression;
@@ -228,7 +230,7 @@ public class SelectEngineTerminal {
             final Class<?> contextDtoClass = selectNode.contextDtoClass();
 
             if (contextDtoClass != null) {
-                ormTable = litebridgeContext.tableRegistry().getTableInContextOrThrow(selectNode.dtoClass(), contextDtoClass);
+                ormTable = litebridgeContext.tableRegistry().getOrmTableInContextOrThrow(selectNode.dtoClass(), contextDtoClass);
             } else {
                 ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(selectNode.dtoClass());
             }
@@ -460,7 +462,7 @@ public class SelectEngineTerminal {
             if (expression instanceof ColumnExpression columnExpression) {
                 final Column column = columnExpression.column();
                 final String columnKey = Objects.requireNonNull(aliasTransformer.transformAlias(columnExpression.alias() != null ? columnExpression.alias() : column.name()));
-                final TableMetaData tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(column.table());
+                final TableMetaData tableMetaData = getTableMetaData(column.table(), litebridgeContext);
                 final ColumnMetaData columnMetaData = tableMetaData.column(column.name());
                 columnLabelsToColumnMetaData.put(columnKey, columnMetaData);
                 columnAliasesToTable.put(columnKey, column.table());
@@ -501,5 +503,13 @@ public class SelectEngineTerminal {
         }
 
         return Objects.requireNonNull(dtoClass, "Failed to determine DTO class");
+    }
+
+    private TableMetaData getTableMetaData(final Table table, final LitebridgeContext litebridgeContext) {
+        if (table instanceof VirtualTable virtualTable) {
+            return new VirtualTableMetaData(virtualTable);
+        }
+
+        return litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);
     }
 }

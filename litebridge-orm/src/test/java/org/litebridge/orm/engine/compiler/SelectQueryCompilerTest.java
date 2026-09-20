@@ -157,7 +157,7 @@ class SelectQueryCompilerTest {
         final SelectCompilationContext compilationContext = mock(SelectCompilationContext.class);
 
         final ConditionNode joinCond = new ConditionNode(null, LogicOperator.AND, "id", null, Operator.EQ, 10);
-        final JoinNode joinNode = new JoinNode(null, "INNER", null, "users");
+        final JoinNode joinNode = new JoinNode(null, Join.JoinType.INNER, null, "users");
         joinNode.setCondition(joinCond);
 
         // When
@@ -229,7 +229,7 @@ class SelectQueryCompilerTest {
         verify(havingStack).pop();
 
         // When JOIN group
-        final JoinNode joinWithGroup = new JoinNode(null, "INNER", null, "table");
+        final JoinNode joinWithGroup = new JoinNode(null, Join.JoinType.INNER, null, "table");
         joinWithGroup.setCondition(group);
         compiler.applyNode(joinWithGroup, compilationContext);
         verify(joinStack).push(LogicOperator.OR);

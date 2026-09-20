@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -157,7 +156,7 @@ class DtoConstructorTest {
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(ParentWithDefaultConstructorDto.class)).thenReturn(parentTable);
-        when(tableRegistry.getTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class)).thenReturn(relatedContextTable);
+        when(tableRegistry.getOrmTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class)).thenReturn(relatedContextTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
 
@@ -167,7 +166,7 @@ class DtoConstructorTest {
 
         // Then
         assertTrue(result.defaultConstructorUsed());
-        verify(tableRegistry).getTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class);
+        verify(tableRegistry).getOrmTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class);
     }
 
     @Test
@@ -180,7 +179,7 @@ class DtoConstructorTest {
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(ParentWithDefaultConstructorDto.class)).thenReturn(parentTable);
-        when(tableRegistry.getTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class)).thenReturn(null);
+        when(tableRegistry.getOrmTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class)).thenReturn(null);
         when(tableRegistry.getOrmTableOrThrow(DependencyDto.class)).thenReturn(relatedGlobalTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);

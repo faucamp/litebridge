@@ -7,6 +7,8 @@ import org.litebridge.convert.converter.ConverterFunction;
 import org.litebridge.convert.converter.SqlConverter;
 import org.litebridge.db.spi.convert.TypeConverter;
 
+import java.sql.Types;
+
 /**
  * A concrete implementation of {@link TypeConverter} that allows manual registration and unregistration of converters.
  * <p>
@@ -26,6 +28,10 @@ public class ConfigurableTypeConverter implements TypeConverter {
      */
     @Override
     public @Nullable Object convert(@Nullable final Object value, final int dbDataType) {
+        if (dbDataType == Types.OTHER) {
+            return value;
+        }
+
         final Converter<?> converter = converterRegistry.getConverter(dbDataType);
 
         if (converter == null) {

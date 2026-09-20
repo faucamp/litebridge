@@ -71,14 +71,6 @@ public abstract class AbstractSqlGenerator {
      */
     protected String createCondition(final Condition condition, final Operation operation, final ConnectionProvider connectionProvider) {
         final String lhs = condition.lhs().toSql(operation, ClauseType.WHERE);
-        final Column column;
-
-        if (condition.lhs() instanceof ColumnExpression columnExpression) {
-            column = columnExpression.column();
-        } else {
-            column = null;
-        }
-
         final String sql;
 
         if (condition.operator() == Operator.IS_NULL || condition.operator() == Operator.IS_NOT_NULL) {
@@ -98,9 +90,9 @@ public abstract class AbstractSqlGenerator {
                 sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), sqlFragment);
             }
         } else if (condition.operator() == Operator.USING) {
-            sql = "%s (%s)".formatted(mapOperator(condition.operator()),
-                    ObjectUtils.requireNonNull(condition.rhs(), () -> new IllegalArgumentException("JOIN USING clause without column target"))
-                            .toSql(operation, ClauseType.JOIN));
+            final String valueSql = ObjectUtils.requireNonNull(condition.rhs(), () -> new IllegalArgumentException("JOIN USING clause without column target"))
+                    .toSql(operation, ClauseType.JOIN);
+            sql = "%s (%s)".formatted(mapOperator(condition.operator()), valueSql);
         } else {
             if (condition.rhs() instanceof SubselectExpression subselectExpression) {
                 final String subselectSql = subselectExpression.toSql(operation, connectionProvider);

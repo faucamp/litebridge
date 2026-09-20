@@ -41,7 +41,7 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
         if (updateNode.dtoClass() != null) {
             this.ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(updateNode.dtoClass());
             this.tableMetaData = ormTable.getMetaData();
-            this.table = tableMetaData.toTable();
+            this.table = tableMetaData.table();
         } else {
             this.ormTable = null;
             this.table = litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(updateNode.table()));
@@ -100,7 +100,7 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
             this.bindValues.addAll(bindValues);
         }
 
-        final ConditionGroup conditionGroup = where != null ? toConditionGroup(where.current(), ormTable, table) : EMPTY_CONDITION_GROUP;
+        final ConditionGroup conditionGroup = where != null ? toConditionGroup(where.current(), table) : EMPTY_CONDITION_GROUP;
         return new Update(table, updateColumns, conditionGroup);
     }
 

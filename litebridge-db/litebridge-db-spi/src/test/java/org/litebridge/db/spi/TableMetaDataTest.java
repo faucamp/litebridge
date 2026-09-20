@@ -425,7 +425,7 @@ class TableMetaDataTest {
         final TableMetaData tableMetaData = new TableMetaData(table, List.of("id"), List.of(column1));
 
         // When
-        final Table result = tableMetaData.toTable();
+        final Table result = tableMetaData.table();
 
         // Then
         assertEquals(table.catalog(), result.catalog());

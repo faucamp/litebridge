@@ -51,6 +51,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable,
                                                       final @Nullable OrmTable ormTable,
                                                       final Table table,
+                                                      final @Nullable String tableAlias,
                                                       final ClauseType clause) {
         // Map the input DTO field names to database column names
         final Class<?> dtoClass = getDtoClass(resolvable, ormTable);
@@ -64,15 +65,19 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
             alias = null;
         }
 
-        return new SelectFieldSpec(fieldAccessor, column, alias);
+        return new SelectFieldSpec(fieldAccessor, column, alias, tableAlias);
     }
 
     @Override
-    protected Stream<ExpressionSpec> resolveSelectField(final QueryField queryField, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
+    protected Stream<ExpressionSpec> resolveSelectField(final QueryField queryField,
+                                                        final @Nullable OrmTable ormTable,
+                                                        final Table table,
+                                                        final @Nullable String tableAlias,
+                                                        final ClauseType clause) {
         final ExpressionSpec pendingExpressionSpec = QueryFieldInspector.getPendingExpressionSpec(queryField);
 
         if (pendingExpressionSpec != null) {
-            return resolveExpression(pendingExpressionSpec, ormTable, table, clause);
+            return resolveExpression(pendingExpressionSpec, ormTable, table, tableAlias, clause);
         }
 
         // Map the input DTO field names to database column names
@@ -80,7 +85,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
         final String fieldName = QueryFieldInspector.getFieldName(queryField);
         final Column column = getColumn(dtoClass, fieldName, table, clause);
         final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, fieldName);
-        return Stream.of(new SelectFieldSpec(fieldAccessor, column));
+        return Stream.of(new SelectFieldSpec(fieldAccessor, column, null, tableAlias));
     }
 
     private Class<?> getDtoClass(final Resolvable resolvable, final @Nullable OrmTable ormTable) {
@@ -107,6 +112,6 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
 
     private Column getColumn(final Class<?> dtoClass, final String fieldName, Table table, final ClauseType clause) {
         final ColumnMetaData columnMetaData = tableRegistry.getOrmTableOrThrow(dtoClass).columnMetaDataForField(fieldName);
-        return columnMetaData.toColumn();
+        return columnMetaData.column();
     }
 }

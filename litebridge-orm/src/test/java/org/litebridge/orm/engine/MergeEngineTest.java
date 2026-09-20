@@ -9,7 +9,6 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.Insert;
-import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.api.insert.InsertValuesStep;
 import org.litebridge.orm.engine.ast.MergeNode;
@@ -65,7 +64,7 @@ class MergeEngineTest {
 
         final Table table = new Table("users");
         final TableMetaData tableMetaData = mock(TableMetaData.class);
-        when(tableMetaData.toTable()).thenReturn(table);
+        when(tableMetaData.table()).thenReturn(table);
         final ColumnMetaData pkMeta = new ColumnMetaData(table, "id", false, Types.BIGINT, 0, 0, true, null, null);
         when(tableMetaData.primaryKey()).thenReturn(List.of(pkMeta));
         when(tableMetaDataCache.ensureTableMetaData(table)).thenReturn(tableMetaData);

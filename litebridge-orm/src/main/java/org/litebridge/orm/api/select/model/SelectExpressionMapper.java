@@ -72,8 +72,12 @@ public final class SelectExpressionMapper {
      * @param clause         the clause type where the expression is used
      * @return the list of resolved expression specifications
      */
-    public List<ExpressionSpec> resolveProtoExpression(final ExpressionSpec expressionSpec, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
-        return protoExpressionResolver.resolveExpression(expressionSpec, ormTable, table, clause).toList();
+    public List<ExpressionSpec> resolveProtoExpression(final ExpressionSpec expressionSpec,
+                                                       final @Nullable OrmTable ormTable,
+                                                       final Table table,
+                                                       final @Nullable String tableAlias,
+                                                       final ClauseType clause) {
+        return protoExpressionResolver.resolveExpression(expressionSpec, ormTable, table, tableAlias, clause).toList();
     }
 
     /**

@@ -9,7 +9,6 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.DefaultAliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.math.MathOperator;
@@ -334,7 +333,7 @@ class MergeCompilationContextTest {
 
         final ColumnMetaData roleIdCol = new ColumnMetaData(roleTable, "id", false, Types.INTEGER, 0);
         final ForeignKeyConstraint fkc = mock(ForeignKeyConstraint.class);
-        when(fkc.foreignKey()).thenReturn(roleIdCol.toColumn());
+        when(fkc.foreignKey()).thenReturn(roleIdCol.column());
 
         final ColumnMetaData userRoleCol = new ColumnMetaData(userTable, "role_id", false, Types.INTEGER, 0);
         userRoleCol.addForeignKeyConstraint(fkc);
@@ -430,7 +429,7 @@ class MergeCompilationContextTest {
         when(context.tableMetaDataCache().ensureTableMetaData(sourceTable)).thenReturn(sourceMeta);
 
         final ColumnExpression colExpr = mock(ColumnExpression.class);
-        when(colExpr.column()).thenReturn(idCol.toColumn());
+        when(colExpr.column()).thenReturn(idCol.column());
         when(context.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(colExpr);
         when(context.typeConverter().convert(any(), eq(Types.INTEGER))).thenAnswer(inv -> inv.getArgument(0));
 

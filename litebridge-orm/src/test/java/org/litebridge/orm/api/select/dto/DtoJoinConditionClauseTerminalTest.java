@@ -37,7 +37,7 @@ class DtoJoinConditionClauseTerminalTest {
         selectEngineTerminal = mock(SelectEngineTerminal.class);
         litebridgeContext = mock(LitebridgeContext.class);
         final SelectNode selectNode = new SelectNode(null, SelectTestDto.class, null, null, null, null);
-        joinNode = new JoinNode(selectNode, "INNER", SelectTestDto.class, null);
+        joinNode = new JoinNode(selectNode, Join.JoinType.INNER, SelectTestDto.class, null);
         terminal = new DtoJoinConditionClauseTerminal<>(joinNode, selectEngineTerminal, litebridgeContext);
     }
 
@@ -194,7 +194,7 @@ class DtoJoinConditionClauseTerminalTest {
         assertNotNull(nextTerminal);
         final JoinNode secondJoinNode = assertInstanceOf(JoinNode.class, SelectTerminalInspector.getNode(nextTerminal));
         assertSame(joinNode, secondJoinNode.previous());
-        assertEquals("INNER", secondJoinNode.type());
+        assertEquals(Join.JoinType.INNER, secondJoinNode.type());
         assertEquals(SelectTestDto.class, secondJoinNode.dtoClass());
     }
 

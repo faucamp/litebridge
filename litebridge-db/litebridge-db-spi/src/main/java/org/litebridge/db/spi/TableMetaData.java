@@ -3,7 +3,6 @@ package org.litebridge.db.spi;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,23 +19,12 @@ import java.util.stream.Collectors;
  * <p>
  * This class is immutable and thread-safe.
  */
-public final class TableMetaData {
+public sealed class TableMetaData permits VirtualTableMetaData {
 
-    /**
-     * Database catalog name
-     */
-    private final @Nullable String catalog;
-    /**
-     * Database schema name
-     */
-    private final @Nullable String schema;
-    /**
-     * Database table name
-     */
-    private final String name;
+    protected final Table table;
     private final List<ColumnMetaData> primaryKey;
-    private final List<ColumnMetaData> columns;
-    private final Map<String, ColumnMetaData> columnMap;
+    protected final List<ColumnMetaData> columns;
+    protected final Map<String, ColumnMetaData> columnMap;
 
     /**
      * Construct a {@code TableMetaData} instance using the provided table, primary key, and column metadata.
@@ -47,24 +35,8 @@ public final class TableMetaData {
      * @throws IllegalArgumentException if any primary key column metadata is not found in the provided column metadata
      */
     public TableMetaData(final Table table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
-        this(table.catalog(), table.schema(), table.name(), primaryKey, columns);
-    }
-
-    /**
-     * Construct a {@code TableMetaData} object representing metadata for a database table.
-     *
-     * @param catalog    the catalog name of the table; may be {@code null} if not applicable
-     * @param schema     the schema name of the table; may be {@code null} if not applicable
-     * @param table      the name of the table; must not be {@code null}
-     * @param primaryKey a list of column names representing the primary key of the table; must not be {@code null}
-     * @param columns    a list of {@link ColumnMetaData} objects representing the expressions of the table; must not be {@code null}
-     * @throws IllegalArgumentException if any primary key column metadata is not found in the provided column metadata
-     */
-    public TableMetaData(final @Nullable String catalog, final @Nullable String schema, final String table, final List<String> primaryKey, final List<ColumnMetaData> columns) {
-        this.catalog = catalog;
-        this.schema = schema;
-        this.name = table;
-        this.columns = Collections.unmodifiableList(columns);
+        this.table = table;
+        this.columns = columns;
         this.columnMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         this.columnMap.putAll(columns.stream()
                 .collect(Collectors.toMap(ColumnMetaData::name,
@@ -85,7 +57,7 @@ public final class TableMetaData {
      * @return the catalog name, or {@code null} if not specified
      */
     public @Nullable String catalog() {
-        return catalog;
+        return table.catalog();
     }
 
     /**
@@ -94,7 +66,7 @@ public final class TableMetaData {
      * @return the schema name, or {@code null} if not specified
      */
     public @Nullable String schema() {
-        return schema;
+        return table.schema();
     }
 
     /**
@@ -103,7 +75,7 @@ public final class TableMetaData {
      * @return the table name
      */
     public String name() {
-        return name;
+        return table.name();
     }
 
     /**
@@ -115,7 +87,7 @@ public final class TableMetaData {
      * otherwise, it returns "catalog.schema.name".
      */
     public String qualifiedName() {
-        return catalog() != null ? catalog() + "." + schema() + "." + name() : schema() + "." + name();
+        return table.qualifiedName();
     }
 
     /**
@@ -166,8 +138,8 @@ public final class TableMetaData {
      *
      * @return a {@code Table} instance
      */
-    public Table toTable() {
-        return new Table(catalog, schema, name);
+    public Table table() {
+        return table;
     }
 
     @Override
@@ -175,24 +147,20 @@ public final class TableMetaData {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (TableMetaData) obj;
-        return Objects.equals(this.catalog(), that.catalog()) &&
-                Objects.equals(this.schema(), that.schema()) &&
-                Objects.equals(this.name(), that.name()) &&
+        return Objects.equals(this.table, that.table) &&
                 Objects.equals(this.primaryKey, that.primaryKey) &&
                 Objects.equals(this.columns, that.columns);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(catalog(), schema(), name(), primaryKey, columns);
+        return Objects.hash(table, primaryKey, columns);
     }
 
     @Override
     public String toString() {
         return new StringJoiner(", ", TableMetaData.class.getSimpleName() + "[", "]")
-                .add("catalog='" + catalog + "'")
-                .add("schema='" + schema + "'")
-                .add("name='" + name + "'")
+                .add("table='" + table + "'")
                 .add("primaryKey=" + primaryKey)
                 .add("expressions=" + columns)
                 .toString();

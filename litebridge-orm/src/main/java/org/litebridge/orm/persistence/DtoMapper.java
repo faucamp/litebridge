@@ -127,7 +127,7 @@ public class DtoMapper {
         final OrmTable rootOrmTable;
 
         if (contextDtoClass != null) {
-            rootOrmTable = tableRegistry.getTableInContextOrThrow(dtoClass, contextDtoClass);
+            rootOrmTable = tableRegistry.getOrmTableInContextOrThrow(dtoClass, contextDtoClass);
         } else {
             rootOrmTable = tableRegistry.getOrmTableOrThrow(dtoClass);
         }
@@ -327,7 +327,7 @@ public class DtoMapper {
         for (final Column column : fieldMapping.columns()) {
             final ColumnMetaData columnMetaData = ormTable.getColumnMetaData(column.name());
             final ForeignKeyConstraint constraint = columnMetaData.getForeignKeyConstraints().stream()
-                    .filter(fk -> fk.foreignKey().table().equalsIgnoreAlias(targetOrmTable.getMetaData().toTable()))
+                    .filter(fk -> fk.foreignKey().table().equalsIgnoreAlias(targetOrmTable.getMetaData().table()))
                     .findFirst()
                     .orElse(null);
 
@@ -749,7 +749,7 @@ public class DtoMapper {
                 return new Column(table, columnName);
             } else {
                 if (rootTableMetaData.hasColumn(columnName)) {
-                    return new Column(rootTableMetaData.toTable(), columnName);
+                    return new Column(rootTableMetaData.table(), columnName);
                 }
 
                 throw new IllegalStateException("Cannot infer target table from label: " + sqlFunction);

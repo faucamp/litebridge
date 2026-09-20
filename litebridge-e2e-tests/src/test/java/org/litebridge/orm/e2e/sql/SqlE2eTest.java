@@ -2,24 +2,15 @@ package org.litebridge.orm.e2e.sql;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
-import org.litebridge.db.h2.H2DatabaseProvider;
-import org.litebridge.db.oracle.OracleDatabaseProvider;
-import org.litebridge.db.oracle.api.LitebridgeOracle;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.update.UpdateResult;
-import org.litebridge.db.sqlite.SQLiteDatabaseProvider;
-import org.litebridge.orm.Litebridge;
-import org.litebridge.orm.LitebridgeBuilder;
-import org.litebridge.orm.LitebridgeCore;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Person;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.expression.Fn;
-import org.litebridge.orm.expression.select.QueryAliasSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
@@ -114,12 +105,7 @@ class SqlE2eTest extends AbstractE2eTest {
                 .into(personId, firstName, surname, age, eyeColour)
                 .values(3L, "James", "Smith", 26, "brown"));
 
-        // When
-        final QueryAliasSpec subselect = new QueryAliasSpec("GROUP_RESULT", q -> q
-                .select(Fn.c(surname), Fn.count())
-                .from(personTableName)
-                .groupBy(surname));
-
+        // Inline from query
         final Row result = litebridge.select(surname)
                 .from(Fn.aliasQuery("GROUP_RESULT", q -> q
                         .select(Fn.c(surname), Fn.count())
@@ -129,7 +115,7 @@ class SqlE2eTest extends AbstractE2eTest {
                 .oneOrThrow();
 
         // Then
-        assertEquals(2, result.size());
+        assertEquals(1, result.size());
         assertEquals("Smith", result.value(surname));
     }
 
@@ -235,16 +221,14 @@ class SqlE2eTest extends AbstractE2eTest {
         tableMapper.registerPersonDtoTableMapping(litebridge);
 
         // When
-        LOGGER.info("Selecting specific expressions and filtering records using a query");
-        final List<Person> result =
-                litebridge.select(firstName, surname, age)
-                        .from(personTableName)
-                        .where(age).gt(18)
-                        .and(age).lt(25)
-                        .orderBy(personId).asc()
-                        .stream()
-                        .map(row -> litebridge.toDto(row, Person.class))
-                        .toList();
+        final List<Person> result = litebridge.select(firstName, surname, age)
+                .from(personTableName)
+                .where(age).gt(18)
+                .and(age).lt(25)
+                .orderBy(personId).asc()
+                .stream()
+                .map(row -> litebridge.toDto(row, Person.class))
+                .toList();
 
         // Then
         assertEquals(1, result.size());

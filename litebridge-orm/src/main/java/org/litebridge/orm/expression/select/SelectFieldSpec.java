@@ -23,10 +23,11 @@ public final class SelectFieldSpec extends SelectColumnSpec {
         this.field = field;
     }
 
-    public SelectFieldSpec(FieldAccessor field, Column column, final @Nullable String alias) {
+    public SelectFieldSpec(FieldAccessor field, Column column, final @Nullable String alias, final @Nullable String tableAlias) {
         super(column);
         this.field = field;
         this.alias = alias;
+        this.tableAlias = tableAlias;
     }
 
     /**

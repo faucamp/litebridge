@@ -99,4 +99,8 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
         subgroups.add(logicConditionGroupSpec);
         return logicConditionGroupSpec;
     }
+
+    public boolean isEmpty() {
+        return conditions.isEmpty() && subgroups.isEmpty();
+    }
 }

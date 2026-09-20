@@ -7,7 +7,6 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.update.Delete;
 import org.litebridge.orm.engine.ast.ConditionNode;
-import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -36,7 +35,7 @@ class DeleteBuilderTest {
         when(litebridgeContext.createQueryCompiler()).thenReturn(queryCompiler);
 
         final PreparedOperation preparedOperation = mock(PreparedOperation.class);
-        final Delete deleteOp = new Delete(tableMetaData.toTable(), null);
+        final Delete deleteOp = new Delete(tableMetaData.table(), null);
         when(preparedOperation.operation()).thenReturn(deleteOp);
         when(queryCompiler.compile(any(QueryNode.class))).thenReturn(preparedOperation);
 
@@ -52,6 +51,6 @@ class DeleteBuilderTest {
         verify(queryCompiler).compile(any(WhereNode.class));
         assertInstanceOf(Delete.class, result.operation());
         final Delete delete = (Delete) result.operation();
-        assertEquals(tableMetaData.toTable(), delete.table());
+        assertEquals(tableMetaData.table(), delete.table());
     }
 }

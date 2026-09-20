@@ -84,7 +84,7 @@ class DeleteCompilationContextTest {
         when(context.typeConverter().convert(1, Types.INTEGER)).thenReturn(1);
 
         final ColumnExpression colExpr = mock(ColumnExpression.class);
-        when(colExpr.column()).thenReturn(colMeta.toColumn());
+        when(colExpr.column()).thenReturn(colMeta.column());
         when(context.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(colExpr);
 
         final DeleteNode deleteNode = new DeleteNode(null, null, UserDto.class);

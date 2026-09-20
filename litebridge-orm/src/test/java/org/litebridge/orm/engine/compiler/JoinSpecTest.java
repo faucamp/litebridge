@@ -17,7 +17,7 @@ class JoinSpecTest {
         // Given
         final Table table = new Table("TEST_TABLE").as("testAlias");
         final OrmTable ormTable = mock(OrmTable.class);
-        final JoinNode joinNode = new JoinNode(null, "INNER", Object.class, null);
+        final JoinNode joinNode = new JoinNode(null, Join.JoinType.INNER, Object.class, null);
 
         // When
         final JoinSpec joinSpec = new JoinSpec(joinNode.type(), Object.class, null, ormTable, joinNode);

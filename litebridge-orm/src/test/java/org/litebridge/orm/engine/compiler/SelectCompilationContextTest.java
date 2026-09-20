@@ -159,7 +159,7 @@ class SelectCompilationContextTest {
         final OrmTable ormTable = mock(OrmTable.class);
         when(ormTable.getMetaData()).thenReturn(metaData);
         when(ormTable.mappedColumns()).thenReturn(List.of(idCol));
-        when(context.tableRegistry().getTableInContextOrThrow(UserDto.class, ContextDto.class)).thenReturn(ormTable);
+        when(context.tableRegistry().getOrmTableInContextOrThrow(UserDto.class, ContextDto.class)).thenReturn(ormTable);
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, ContextDto.class, null, null, null);
 
@@ -218,7 +218,7 @@ class SelectCompilationContextTest {
         when(roleOrmTable.getMetaData()).thenReturn(roleMeta);
         when(context.tableRegistry().getOrmTableOrThrow(RoleDto.class)).thenReturn(roleOrmTable);
 
-        final JoinNode joinDtoNode = new JoinNode(selectNode, "INNER", RoleDto.class, null);
+        final JoinNode joinDtoNode = new JoinNode(selectNode, Join.JoinType.INNER, RoleDto.class, null);
         compilationContext.addJoin(joinDtoNode);
 
         // When adding join with table name
@@ -253,7 +253,7 @@ class SelectCompilationContextTest {
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
 
-        compilationContext.addJoin(new JoinNode(selectNode, "INNER", null, "orders"));
+        compilationContext.addJoin(new JoinNode(selectNode, Join.JoinType.INNER, null, "orders"));
 
         // With rhsColumn
         final ConditionNode condWithRhsCol = new ConditionNode(null, LogicOperator.AND, "order_user_id", null, Operator.EQ, null, "id");
@@ -490,7 +490,7 @@ class SelectCompilationContextTest {
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
 
-        compilationContext.addJoin(new JoinNode(selectNode, "INNER", UserDto.class, null));
+        compilationContext.addJoin(new JoinNode(selectNode, Join.JoinType.INNER, UserDto.class, null));
 
         final ConditionJoinUsingNode usingNode = new ConditionJoinUsingNode(null, LogicOperator.AND, "other", null);
 
@@ -528,7 +528,7 @@ class SelectCompilationContextTest {
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
 
-        compilationContext.addJoin(new JoinNode(selectNode, "INNER", RoleDto.class, null));
+        compilationContext.addJoin(new JoinNode(selectNode, Join.JoinType.INNER, RoleDto.class, null));
 
         final ConditionJoinUsingNode usingNode = new ConditionJoinUsingNode(null, LogicOperator.AND, "role", null);
 
@@ -630,7 +630,7 @@ class SelectCompilationContextTest {
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
 
-        final JoinNode joinNode = new JoinNode(selectNode, "INNER", RoleDto.class, null);
+        final JoinNode joinNode = new JoinNode(selectNode, Join.JoinType.INNER, RoleDto.class, null);
         final ConditionJoinUsingNode usingNode = new ConditionJoinUsingNode(null, LogicOperator.AND, "roles", null);
         joinNode.setCondition(usingNode);
 

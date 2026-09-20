@@ -20,8 +20,7 @@ import java.util.StringJoiner;
  */
 public final class ColumnMetaData implements MappedFieldTarget {
 
-    private final Table table;
-    private final String name;
+    private final Column column;
     private final boolean nullable;
     private final int dataType;
     private final int size;
@@ -55,8 +54,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
                           final boolean autoIncrement,
                           @Nullable final String defaultValue,
                           final @Nullable ColumnValueGenerator generator) {
-        this.table = table;
-        this.name = name;
+        this.column = new Column(table, name);
         this.nullable = nullable;
         this.dataType = dataType;
         this.size = size;
@@ -101,7 +99,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
      * @return the column name
      */
     public String name() {
-        return name;
+        return column.name();
     }
 
     /**
@@ -110,7 +108,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
      * @return the table
      */
     public Table table() {
-        return table;
+        return column.table();
     }
 
     /**
@@ -263,25 +261,32 @@ public final class ColumnMetaData implements MappedFieldTarget {
      *
      * @return a new {@link Column} instance
      */
-    public Column toColumn() {
-        return new Column(new Table(table), name);
+    public Column column() {
+        return column;
     }
 
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof final ColumnMetaData that)) return false;
-        return nullable == that.nullable && dataType == that.dataType && size == that.size && decimalDigits == that.decimalDigits && autoIncrement == that.autoIncrement && Objects.equals(table, that.table) && Objects.equals(name, that.name) && Objects.equals(generator, that.generator) && Objects.equals(joinColumn, that.joinColumn);
+        return Objects.equals(column, that.column)
+                && nullable == that.nullable
+                && dataType == that.dataType
+                && size == that.size
+                && decimalDigits == that.decimalDigits
+                && autoIncrement == that.autoIncrement
+                && Objects.equals(generator, that.generator)
+                && Objects.equals(joinColumn, that.joinColumn);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(table, name, nullable, dataType, size, decimalDigits, autoIncrement, generator, joinColumn);
+        return Objects.hash(column, nullable, dataType, size, decimalDigits, autoIncrement, generator, joinColumn);
     }
 
     @Override
     public String toString() {
         return new StringJoiner(", ", ColumnMetaData.class.getSimpleName() + "[", "]")
-                .add("name='" + name + "'")
+                .add("column='" + column + "'")
                 .toString();
     }
 }

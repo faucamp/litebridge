@@ -65,9 +65,9 @@ class QueryBindValueExtractorTest {
         // Given
         final ConditionNode havingCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, "having");
         final HavingNode having = new HavingNode(null, havingCondition);
-        final JoinNode joinWithoutCondition = new JoinNode(having, "INNER", Object.class, "other");
+        final JoinNode joinWithoutCondition = new JoinNode(having, Join.JoinType.INNER, Object.class, "other");
         final ConditionNode joinCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, "join");
-        final JoinNode joinNode = new JoinNode(joinWithoutCondition, "INNER", Object.class, "other");
+        final JoinNode joinNode = new JoinNode(joinWithoutCondition, Join.JoinType.INNER, Object.class, "other");
         joinNode.setCondition(joinCondition);
 
         // When

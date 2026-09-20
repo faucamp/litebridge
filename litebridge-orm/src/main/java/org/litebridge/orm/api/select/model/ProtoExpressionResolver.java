@@ -66,15 +66,20 @@ public abstract class ProtoExpressionResolver {
      * @param expressionSpec the proto-expression to resolve
      * @param ormTable       the ORM table metadata, or {@code null}
      * @param table          the target database table
+     * @param tableAlias
      * @param clause         the clause type where the expression is being used
      * @return the resolved {@link ExpressionSpec} corresponding to the provided column
      */
-    public Stream<ExpressionSpec> resolveExpression(final ExpressionSpec expressionSpec, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
+    public Stream<ExpressionSpec> resolveExpression(final ExpressionSpec expressionSpec,
+                                                    final @Nullable OrmTable ormTable,
+                                                    final Table table,
+                                                    final @Nullable String tableAlias,
+                                                    final ClauseType clause) {
         return switch (expressionSpec) {
             case ExpressionSpecArray(ExpressionSpec[] expressions) ->
-                    Arrays.stream(expressions).flatMap(expression -> resolveExpression(expression, ormTable, table, clause));
-            case Resolvable resolvable -> resolveExpression(resolvable, ormTable, table, clause);
-            case QueryField queryField -> resolveExpression(queryField, ormTable, table, clause);
+                    Arrays.stream(expressions).flatMap(expression -> resolveExpression(expression, ormTable, table, tableAlias, clause));
+            case Resolvable resolvable -> resolveExpression(resolvable, ormTable, table, tableAlias, clause);
+            case QueryField queryField -> resolveExpression(queryField, ormTable, table, tableAlias, clause);
             default -> Stream.of(expressionSpec);
         };
     }
@@ -87,22 +92,27 @@ public abstract class ProtoExpressionResolver {
      * @param resolvable the {@link Resolvable} to resolve
      * @param ormTable   the ORM table metadata, or {@code null}
      * @param table      the target database table
+     * @param tableAlias
      * @param clause     the clause type where the expression is being used
      * @return the resolved {@link ExpressionSpec} corresponding to the provided column
      */
-    public Stream<ExpressionSpec> resolveExpression(final Resolvable resolvable, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
+    public Stream<ExpressionSpec> resolveExpression(final Resolvable resolvable,
+                                                    final @Nullable OrmTable ormTable,
+                                                    final Table table,
+                                                    final @Nullable String tableAlias,
+                                                    final ClauseType clause) {
         final Class<?> targetType = resolvable.type();
         final ExpressionSpec resolvedExpressionSpec;
 
         if (targetType == SelectFieldSpec.class) {
-            resolvedExpressionSpec = resolveSelectField(resolvable, ormTable, table, clause);
+            resolvedExpressionSpec = resolveSelectField(resolvable, ormTable, table, tableAlias, clause);
         } else if (resolvable instanceof ProtoNestableExpressionSpec protoNestableExpressionSpec) {
-            resolvedExpressionSpec = resolveDelegateExpression(protoNestableExpressionSpec, ormTable, table, clause);
+            resolvedExpressionSpec = resolveDelegateExpression(protoNestableExpressionSpec, ormTable, table, tableAlias, clause);
         } else if (resolvable instanceof ProtoColumnExpressionSpec protoColumnExpressionSpec) {
             //TODO: check null tableAlias
             resolvedExpressionSpec = new SelectColumnSpec(getColumn(protoColumnExpressionSpec, ormTable, table, clause), protoColumnExpressionSpec.alias(), null);
         } else if (resolvable instanceof ConvertSpec<?> convertSpec) {
-            return resolveConvertSpec(convertSpec, ormTable, table, clause);
+            return resolveConvertSpec(convertSpec, ormTable, table, tableAlias, clause);
         } else {
             throw new IllegalStateException("Unsupported expression: " + resolvable);
         }
@@ -119,8 +129,12 @@ public abstract class ProtoExpressionResolver {
      * @param clause          the clause type where the expressions are being used
      * @return the list of resolved expression specifications
      */
-    public List<ExpressionSpec> resolveExpressions(final List<ExpressionSpec> expressionSpecs, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
-        return expressionSpecs.stream().flatMap(expressionSpec -> resolveExpression(expressionSpec, ormTable, table, clause)).toList();
+    public List<ExpressionSpec> resolveExpressions(final List<ExpressionSpec> expressionSpecs,
+                                                   final @Nullable OrmTable ormTable,
+                                                   final Table table,
+                                                   final @Nullable String tableAlias,
+                                                   final ClauseType clause) {
+        return expressionSpecs.stream().flatMap(expressionSpec -> resolveExpression(expressionSpec, ormTable, table, tableAlias, clause)).toList();
     }
 
     /**
@@ -132,8 +146,12 @@ public abstract class ProtoExpressionResolver {
      * @param clause      the clause type where the expression is being used
      * @return a stream containing the resolved expression specification
      */
-    protected Stream<ExpressionSpec> resolveConvertSpec(final ConvertSpec<?> convertSpec, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
-        return Stream.of(convertSpec.replaceTarget(resolveExpression(convertSpec.target(), ormTable, table, clause).findFirst().orElseThrow()));
+    protected Stream<ExpressionSpec> resolveConvertSpec(final ConvertSpec<?> convertSpec,
+                                                        final @Nullable OrmTable ormTable,
+                                                        final Table table,
+                                                        final @Nullable String tableAlias,
+                                                        final ClauseType clause) {
+        return Stream.of(convertSpec.replaceTarget(resolveExpression(convertSpec.target(), ormTable, table, tableAlias, clause).findFirst().orElseThrow()));
     }
 
     /**
@@ -149,16 +167,20 @@ public abstract class ProtoExpressionResolver {
                 || argTypeOverrideExpressions.containsKey(type);
     }
 
-    private ColumnExpressionSpec resolveDelegateExpression(final ProtoNestableExpressionSpec expression, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
+    private ColumnExpressionSpec resolveDelegateExpression(final ProtoNestableExpressionSpec expression,
+                                                           final @Nullable OrmTable ormTable,
+                                                           final Table table,
+                                                           final @Nullable String tableAlias,
+                                                           final ClauseType clause) {
         final ExpressionSpec nestedExpressionSpec = expression.target();
 
         final ColumnExpressionSpec resolvedNestedExpressionSpec = switch (nestedExpressionSpec) {
             case ColumnExpressionSpec columnExpression -> columnExpression;
             case ProtoNestableExpressionSpec protoNestableExpression ->
-                    resolveDelegateExpression(protoNestableExpression, ormTable, table, clause);
+                    resolveDelegateExpression(protoNestableExpression, ormTable, table, tableAlias, clause);
             case ProtoColumnExpressionSpec protoColumnExpression -> {
                 if (protoColumnExpression.type() == SelectFieldSpec.class) {
-                    yield resolveSelectField(protoColumnExpression, ormTable, table, clause);
+                    yield resolveSelectField(protoColumnExpression, ormTable, table, tableAlias, clause);
                 } else {
                     yield new SelectColumnSpec(getColumn(protoColumnExpression, ormTable, table, clause));
                 }
@@ -183,8 +205,12 @@ public abstract class ProtoExpressionResolver {
         return argTypeOverrideExpressions.get(expression.type()).apply(resolvedNestedExpressionSpec, expression.type(), expression.args());
     }
 
-    private Stream<ExpressionSpec> resolveExpression(final QueryField queryField, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
-        return resolveSelectField(queryField, ormTable, table, clause);
+    private Stream<ExpressionSpec> resolveExpression(final QueryField queryField,
+                                                     final @Nullable OrmTable ormTable,
+                                                     final Table table,
+                                                     final @Nullable String tableAlias,
+                                                     final ClauseType clause) {
+        return resolveSelectField(queryField, ormTable, table, tableAlias, clause);
     }
 
     /**
@@ -200,6 +226,7 @@ public abstract class ProtoExpressionResolver {
     protected abstract ColumnExpressionSpec resolveSelectField(final Resolvable resolvable,
                                                                final @Nullable OrmTable ormTable,
                                                                final Table table,
+                                                               final @Nullable String tableAlias,
                                                                final ClauseType clause);
 
     /**
@@ -211,7 +238,11 @@ public abstract class ProtoExpressionResolver {
      * @param clause     the clause type where the expression is being used
      * @return the resolved column expression specification
      */
-    protected abstract Stream<ExpressionSpec> resolveSelectField(final QueryField queryField, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause);
+    protected abstract Stream<ExpressionSpec> resolveSelectField(final QueryField queryField,
+                                                                 final @Nullable OrmTable ormTable,
+                                                                 final Table table,
+                                                                 final @Nullable String tableAlias,
+                                                                 final ClauseType clause);
 
     /**
      * Returns the database column for a resolvable.

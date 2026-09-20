@@ -204,7 +204,7 @@ class ColumnMetaDataTest {
         final ColumnMetaData columnMetaData = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, mock(ColumnValueGenerator.class));
 
         // When
-        final Column result = columnMetaData.toColumn();
+        final Column result = columnMetaData.column();
 
         // Then
         assertEquals(columnMetaData.table(), result.table());

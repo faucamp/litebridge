@@ -160,10 +160,6 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         final StringBuilder sql = new StringBuilder(" JOIN ");
         appendSelectTarget(sql, join.target(), connectionProvider);
 
-//        if (join.table().alias() != null) {
-//            sb.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(join.table().alias())));
-//        }
-
         if (join.conditions().conditions().size() == 1
                 && join.conditions().subgroups().isEmpty()
                 && join.conditions().conditions().getFirst().condition().operator() == Operator.USING) {

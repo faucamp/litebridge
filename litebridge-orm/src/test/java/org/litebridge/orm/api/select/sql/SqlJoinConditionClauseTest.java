@@ -30,7 +30,7 @@ class SqlJoinConditionClauseTest {
     void setUp() {
         litebridgeContext = mock(LitebridgeContext.class);
         final SelectNode selectNode = new SelectNode(null, null, null, null, null, null);
-        joinNode = new JoinNode(selectNode, "INNER", null, "orders");
+        joinNode = new JoinNode(selectNode, Join.JoinType.INNER, null, "orders");
         capturedNode = new AtomicReference<>();
     }
 

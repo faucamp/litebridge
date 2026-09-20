@@ -371,7 +371,7 @@ class LitebridgeTest {
         litebridge.register(dtoTableSpec);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
 
-        final Row row = new Row().withColumn(columnMetaData.toColumn(), "testValue");
+        final Row row = new Row().withColumn(columnMetaData.column(), "testValue");
 
         // When
         final TestDto result = litebridge.toDto(row, TestDto.class);
@@ -831,7 +831,7 @@ class LitebridgeTest {
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(tableMetaData.column(anyString())).thenReturn(columnMetaData);
         when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
-        when(tableMetaData.toTable()).thenReturn(new org.litebridge.db.spi.Table("MY_TABLE"));
+        when(tableMetaData.table()).thenReturn(new org.litebridge.db.spi.Table("MY_TABLE"));
 
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);

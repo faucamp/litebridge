@@ -3,7 +3,6 @@ package org.litebridge.orm.engine;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
-import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -68,7 +67,7 @@ class InsertEngineTest {
 
         final Table table = new Table("users");
         final TableMetaData tableMetaData = mock(TableMetaData.class);
-        when(tableMetaData.toTable()).thenReturn(table);
+        when(tableMetaData.table()).thenReturn(table);
         final ColumnMetaData pkMeta = new ColumnMetaData(table, "id", false, Types.BIGINT, 0, 0, true, null, null);
         when(tableMetaData.primaryKey()).thenReturn(List.of(pkMeta));
         when(tableMetaDataCache.ensureTableMetaData(table)).thenReturn(tableMetaData);

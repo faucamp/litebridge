@@ -160,7 +160,7 @@ public final class DtoConstructor {
         final OrmTable ormTable;
 
         if (contextDtoClass != null) {
-            ormTable = Objects.requireNonNullElseGet(tableRegistry.getTableInContext(dtoClass, contextDtoClass), () -> tableRegistry.getOrmTableOrThrow(dtoClass));
+            ormTable = Objects.requireNonNullElseGet(tableRegistry.getOrmTableInContext(dtoClass, contextDtoClass), () -> tableRegistry.getOrmTableOrThrow(dtoClass));
         } else {
             ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
         }

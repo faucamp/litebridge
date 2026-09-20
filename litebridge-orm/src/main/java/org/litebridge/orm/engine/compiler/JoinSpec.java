@@ -1,57 +1,43 @@
 package org.litebridge.orm.engine.compiler;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.query.Join;
+import org.litebridge.orm.engine.ast.ConditionJoinUsingNode;
 import org.litebridge.orm.engine.ast.JoinNode;
-import org.litebridge.orm.persistence.OrmTable;
+
+import java.util.Objects;
 
 final class JoinSpec {
 
-    private final String type;
-    private final @Nullable Class<?> dtoClass;
-    private final @Nullable String tableName;
-    private final @Nullable OrmTable ormTable;
-    private final JoinNode joinNode;
+    private final @Nullable JoinNode joinNode;
     private final ConditionGroupSpecStack conditionGroupSpecStack = new ConditionGroupSpecStack();
-    private @Nullable Table table;
+    private @Nullable ConditionJoinUsingNode conditionJoinUsingNode;
 
-    JoinSpec(final String type,
-             final @Nullable Class<?> dtoClass,
-             final @Nullable String tableName,
-             final @Nullable OrmTable ormTable,
-             final JoinNode joinNode) {
-        this.type = type;
-        this.dtoClass = dtoClass;
-        this.tableName = tableName;
-        this.ormTable = ormTable;
+    JoinSpec(final JoinNode joinNode) {
         this.joinNode = joinNode;
     }
 
-    @Nullable Class<?> dtoClass() {
-        return dtoClass;
-    }
-
-    @Nullable String tableName() {
-        return tableName;
-    }
-
-    @Nullable OrmTable ormTable() {
-        return ormTable;
+    JoinSpec() {
+        this.joinNode = null;
     }
 
     JoinNode joinNode() {
-        return joinNode;
+        return Objects.requireNonNull(joinNode);
     }
 
     ConditionGroupSpecStack conditionGroupStack() {
         return conditionGroupSpecStack;
     }
 
-    public @Nullable Table getTable() {
-        return table;
+    public @Nullable ConditionJoinUsingNode getConditionJoinUsingNode() {
+        return conditionJoinUsingNode;
     }
 
-    public void setTable(final Table table) {
-        this.table = table;
+    public void setConditionJoinUsingNode(@Nullable final ConditionJoinUsingNode conditionJoinUsingNode) {
+        this.conditionJoinUsingNode = conditionJoinUsingNode;
+    }
+
+    public Join.JoinType type() {
+        return joinNode().type();
     }
 }

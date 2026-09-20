@@ -416,7 +416,7 @@ public class PersistenceFacade {
                         nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
                             final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                             final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
-                            final Column joinColumn = ormTable.columnMetaDataForField(fieldAccessor.name()).toColumn();
+                            final Column joinColumn = ormTable.columnMetaDataForField(fieldAccessor.name()).column();
 
                             if (statementBuilder instanceof UpdateBuilder updateBuilder) {
                                 updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
@@ -830,7 +830,7 @@ public class PersistenceFacade {
         boolean first = true;
 
         for (ColumnMetaData columnMetaData : table.getMetaData().primaryKey()) {
-            final Column pkColumn = columnMetaData.toColumn();
+            final Column pkColumn = columnMetaData.column();
             final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
             final Object pkValue = field.get(dto);
             final SelectColumnSpec pkColumnSpec = new SelectColumnSpec(pkColumn);

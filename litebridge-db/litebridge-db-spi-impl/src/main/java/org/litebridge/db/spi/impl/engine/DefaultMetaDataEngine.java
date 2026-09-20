@@ -8,6 +8,8 @@ import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.VirtualTable;
+import org.litebridge.db.spi.VirtualTableMetaData;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
 import java.sql.Connection;

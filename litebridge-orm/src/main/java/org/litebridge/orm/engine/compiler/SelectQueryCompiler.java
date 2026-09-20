@@ -36,62 +36,57 @@ final class SelectQueryCompiler extends AbstractQueryCompiler<SelectCompilationC
     protected void applyNode(final QueryNode node, final SelectCompilationContext compilationContext) {
         switch (node) {
             case JoinNode joinNode -> applyJoinNode(joinNode, compilationContext);
-            case WhereNode whereNode ->
-                    flattenAndApplyConditionNode(whereNode.condition(), compilationContext, ConditionClauseType.WHERE);
-            case GroupByNode groupByNode -> compilationContext.addGroupBy(groupByNode);
-            case HavingNode havingNode ->
-                    flattenAndApplyConditionNode(havingNode.condition(), compilationContext, ConditionClauseType.HAVING);
-            case OrderByNode orderByNode -> compilationContext.addOrderBy(orderByNode);
-            case LimitNode limitNode -> compilationContext.setLimit(limitNode);
+            case WhereNode whereNode -> applyWhereNode(whereNode, compilationContext);
+            case GroupByNode groupByNode -> compilationContext.addGroupByNode(groupByNode);
+            case HavingNode havingNode -> applyHavingNode(havingNode, compilationContext);
             case SelectNode selectNode -> { /* Ignore */ }
+            case OrderByNode orderByNode -> compilationContext.addOrderByNode(orderByNode);
+            case LimitNode limitNode -> compilationContext.setLimitNode(limitNode);
             default -> throw new IllegalArgumentException("Unsupported node type: " + node);
         }
     }
 
     private void applyJoinNode(final JoinNode joinNode, final SelectCompilationContext compilationContext) {
-        compilationContext.addJoin(joinNode);
-        flattenAndApplyConditionNode(joinNode.condition(), compilationContext, ConditionClauseType.JOIN);
+        final ConditionGroupSpecStack conditionGroupSpecStack = compilationContext.addJoin(joinNode);
+        flattenAndApplyConditionNode(joinNode.condition(), conditionGroupSpecStack, compilationContext);
     }
 
-    private void flattenAndApplyConditionNode(final QueryNode node, final SelectCompilationContext compilationContext, ConditionClauseType conditionClauseType) {
-        flattenAndApplyNodes(node, conditionNode -> applyConditionNode(conditionNode, compilationContext, conditionClauseType));
+    private void applyWhereNode(final WhereNode whereNode, final SelectCompilationContext compilationContext) {
+        final ConditionGroupSpecStack conditionGroupSpecStack = compilationContext.setWhereNode(whereNode);
+        flattenAndApplyConditionNode(whereNode.condition(), conditionGroupSpecStack, compilationContext);
+    }
+
+    private void applyHavingNode(final HavingNode havingNode, final SelectCompilationContext compilationContext) {
+        final ConditionGroupSpecStack conditionGroupSpecStack = compilationContext.setHavingNode(havingNode);
+        flattenAndApplyConditionNode(havingNode.condition(), conditionGroupSpecStack, compilationContext);
+    }
+
+    private void flattenAndApplyConditionNode(final QueryNode node,
+                                              final ConditionGroupSpecStack conditionGroupSpecStack,
+                                              final SelectCompilationContext compilationContext) {
+        flattenAndApplyNodes(node, conditionNode -> applyConditionNode(conditionNode, conditionGroupSpecStack, compilationContext));
     }
 
     private void applyConditionNode(final QueryNode node,
-                                    final SelectCompilationContext compilationContext,
-                                    final ConditionClauseType conditionClauseType) {
+                                    final ConditionGroupSpecStack conditionGroupSpecStack,
+                                    final SelectCompilationContext compilationContext) {
         switch (node) {
-            case ConditionNode conditionNode -> {
-                switch (conditionClauseType) {
-                    case JOIN -> compilationContext.addJoinCondition(conditionNode);
-                    case WHERE -> compilationContext.addWhereCondition(conditionNode);
-                    case HAVING -> compilationContext.addHavingCondition(conditionNode);
-                }
-            }
-            case ConditionWithIdNode conditionWithIdNode -> {
-                final ConditionNode conditionNode = compilationContext.toConditionNode(conditionWithIdNode);
-                flattenAndApplyConditionNode(conditionNode, compilationContext, conditionClauseType);
-            }
+            case ConditionNode conditionNode -> conditionGroupSpecStack.current()
+                    .newCondition(conditionNode.logicOperator(),
+                            conditionNode.lhsColumn(),
+                            conditionNode.lhsExpression(),
+                            conditionNode.operator(),
+                            conditionNode.rhs());
+            case ConditionWithIdNode conditionWithIdNode ->
+                    compilationContext.setWhereConditionWithIdNode(conditionWithIdNode);
             case ConditionJoinUsingNode conditionJoinUsingNode ->
-                    compilationContext.addJoinCondition(conditionJoinUsingNode);
+                    compilationContext.addJoinUsingCondition(conditionJoinUsingNode);
             case ConditionGroupNode conditionGroupNode -> {
-                final ConditionGroupSpecStack conditionGroupSpecStack = switch (conditionClauseType) {
-                    case JOIN -> compilationContext.joinConditionGroupStack();
-                    case WHERE -> compilationContext.ensureWhereConditionGroupStack();
-                    case HAVING -> compilationContext.ensureHavingConditionGroupStack();
-                };
-
                 conditionGroupSpecStack.push(conditionGroupNode.logicOperator());
-                flattenAndApplyConditionNode(conditionGroupNode.lastChild(), compilationContext, conditionClauseType);
+                flattenAndApplyConditionNode(conditionGroupNode.lastChild(), conditionGroupSpecStack, compilationContext);
                 conditionGroupSpecStack.pop();
             }
             default -> throw new IllegalArgumentException("Unsupported condition node type: " + node);
         }
-    }
-
-    private enum ConditionClauseType {
-        JOIN,
-        WHERE,
-        HAVING
     }
 }

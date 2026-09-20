@@ -75,6 +75,17 @@ public class BasicE2eTest extends AbstractE2eTest {
             assertEquals(person, result.getOwner());
         }
 
+        // Retrieve the person record using a type-safe metamodel
+        {
+            final Account result = litebridge.select(Account.class)
+                    .join(Person.class).on(AccountMeta.owner)
+                    .where(AccountMeta.id).eq(person.getId())
+                    .oneOrThrow();
+
+            assertEquals(account, result);
+            assertEquals(person, result.getOwner());
+        }
+
         // Retrieve the account record and associated owner with a subquery in the join condition
         {
             final Account result = litebridge
@@ -83,17 +94,6 @@ public class BasicE2eTest extends AbstractE2eTest {
                     .and(q -> q
                             .where("balance").lt(1000)
                             .or(PersonMeta.eyeColour).eq("blue"))
-                    .oneOrThrow();
-
-            assertEquals(account, result);
-            assertEquals(person, result.getOwner());
-        }
-
-        // Retrieve the person record using a type-safe metamodel
-        {
-            final Account result = litebridge.select(Account.class)
-                    .join(Person.class).on(AccountMeta.owner)
-                    .where(AccountMeta.id).eq(person.getId())
                     .oneOrThrow();
 
             assertEquals(account, result);
@@ -257,37 +257,41 @@ public class BasicE2eTest extends AbstractE2eTest {
         litebridge.save(person);
 
         // Retrieve the person record and associated address and account
-        final Person result = litebridge.select(Person.class)
-                .join(Account.class).on("accounts")
-                .join(Address.class).on("addresses")
-                .where("id").eq(person.getId())
-                .oneOrThrow();
+        {
+            final Person result = litebridge.select(Person.class)
+                    .join(Account.class).on("accounts")
+                    .join(Address.class).on("addresses")
+                    .where("id").eq(person.getId())
+                    .oneOrThrow();
 
-        // Then
-        assertEquals(person, result);
-        assertNotNull(result.getAccounts());
-        assertEquals(1, result.getAccounts().size());
-        assertEquals(account, result.getAccounts().getFirst());
-        assertNotNull(result.getAddresses());
-        assertEquals(1, result.getAddresses().size());
-        assertEquals(address, result.getAddresses().getFirst());
+            // Then
+            assertEquals(person, result);
+            assertNotNull(result.getAccounts());
+            assertEquals(1, result.getAccounts().size());
+            assertEquals(account, result.getAccounts().getFirst());
+            assertNotNull(result.getAddresses());
+            assertEquals(1, result.getAddresses().size());
+            assertEquals(address, result.getAddresses().getFirst());
+        }
 
         // Retrieve the person record and associated address and account, with conditions on the join table
-        final Person result2 = litebridge.select(Person.class)
-                .join(Account.class).on("accounts")
-                .join(Address.class).on("addresses")
-                .where(Fn.f(Person.class, "id")).eq(person.getId())
-                .and(Fn.f(Address.class, "id")).eq(address.getId())
-                .oneOrThrow();
+        {
+            final Person result = litebridge.select(Person.class)
+                    .join(Account.class).on("accounts")
+                    .join(Address.class).on("addresses")
+                    .where(Fn.f(Person.class, "id")).eq(person.getId())
+                    .and(Fn.f(Address.class, "id")).eq(address.getId())
+                    .oneOrThrow();
 
-        // Then
-        assertEquals(person, result2);
-        assertNotNull(result2.getAccounts());
-        assertEquals(1, result2.getAccounts().size());
-        assertEquals(account, result2.getAccounts().getFirst());
-        assertNotNull(result2.getAddresses());
-        assertEquals(1, result2.getAddresses().size());
-        assertEquals(address, result2.getAddresses().getFirst());
+            // Then
+            assertEquals(person, result);
+            assertNotNull(result.getAccounts());
+            assertEquals(1, result.getAccounts().size());
+            assertEquals(account, result.getAccounts().getFirst());
+            assertNotNull(result.getAddresses());
+            assertEquals(1, result.getAddresses().size());
+            assertEquals(address, result.getAddresses().getFirst());
+        }
     }
 
     @TestTemplate

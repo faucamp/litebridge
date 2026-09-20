@@ -166,7 +166,7 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
                         if (aliasedTable != null) {
                             column = new Column(aliasedTable, columnMetaData.name(), alias);
                         } else {
-                            column = columnMetaData.toColumn().as(alias);
+                            column = columnMetaData.column().as(alias);
                         }
                     } else {
                         // Read the metadata from the result

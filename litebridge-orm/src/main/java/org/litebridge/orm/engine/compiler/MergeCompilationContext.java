@@ -75,7 +75,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             this.targetTable = aliasTable(targetOrmTable);
         } else {
             this.targetTableMetaData = this.tableMetaDataCache.ensureTableMetaData(tableRegistry.getOrCreateSpiTable(mergeNode.table()));
-            this.targetTable = aliasTable(targetTableMetaData.toTable());
+            this.targetTable = aliasTable(targetTableMetaData.table());
         }
     }
 
@@ -272,7 +272,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
     @Override
     public Operation toOperation() {
         final Table usingTable = Objects.requireNonNull(this.usingTable);
-        final ConditionGroup onConditionGroup = toConditionGroup(on.current(), null, usingTable);
+        final ConditionGroup onConditionGroup = toConditionGroup(on.current(), usingTable);
 
         final List<Merge.WhenMatched<Merge.WhenMatchedOperation>> whenMatchedList = new ArrayList<>();
         final List<Merge.WhenMatched<Merge.MergeInsert>> whenNotMatchedList = new ArrayList<>();
@@ -282,7 +282,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             final ConditionGroup andConditionGroup;
 
             if (andConditionGroupStack != null) {
-                andConditionGroup = toConditionGroup(andConditionGroupStack.current(), null, targetTable);
+                andConditionGroup = toConditionGroup(andConditionGroupStack.current(), targetTable);
             } else {
                 andConditionGroup = null;
             }
@@ -332,7 +332,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
 
     @Override
     protected String resolveAlias(final Table table, final ColumnMetaData columnMetaData) {
-        return resolveAlias(table, columnMetaData.toColumn());
+        return resolveAlias(table, columnMetaData.column());
     }
 
     @Override

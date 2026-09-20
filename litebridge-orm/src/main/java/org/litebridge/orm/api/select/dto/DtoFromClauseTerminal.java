@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.select.dto;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
@@ -122,7 +123,7 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     @Override
     public DtoJoinClause<DTO> join(final Class<?> dtoClass) {
         return new DtoJoinClause<>(null, litebridgeContext, conditionNode -> {
-            final JoinNode joinNode = new JoinNode(node, "INNER", dtoClass, null);
+            final JoinNode joinNode = new JoinNode(node, Join.JoinType.INNER, dtoClass, null, null, null, null);
             joinNode.setCondition(conditionNode);
             return new DtoJoinConditionClauseTerminal<>(joinNode, selectEngineTerminal, litebridgeContext);
         });

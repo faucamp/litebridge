@@ -1,8 +1,10 @@
 package org.litebridge.db.spi.impl.function;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.DelegateExpression;
@@ -51,7 +53,13 @@ public class ColumnReferenceImpl extends AliasReferenceImpl implements ColumnRef
             return quoteIdentifier(column.name());
         }
 
-        return quoteIdentifier(column.table().name()) + "." + quoteIdentifier(column.name());
+        final Table table = column.table();
+
+        if (table.isVirtual() && StringUtils.isBlank(table.name())) {
+            return quoteIdentifier(column.name());
+        } else {
+            return quoteIdentifier(table.name()) + "." + quoteIdentifier(column.name());
+        }
     }
 
     @Override

@@ -17,7 +17,7 @@ public abstract sealed class AbstractColumnExpressionSpec extends AbstractAliasa
     }
 
     @Override
-    public void setTableAlias(final String tableAlias) {
+    public void setTableAlias(final @Nullable String tableAlias) {
         this.tableAlias = tableAlias;
     }
 }

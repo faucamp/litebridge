@@ -38,7 +38,7 @@ class SqlJoinConditionClauseTerminalTest {
         selectEngineTerminal = mock(SelectEngineTerminal.class);
         litebridgeContext = mock(LitebridgeContext.class);
         final SelectNode selectNode = new SelectNode(null, null, null, null, null, null);
-        joinNode = new JoinNode(selectNode, "INNER", null, "orders");
+        joinNode = new JoinNode(selectNode, Join.JoinType.INNER, null, "orders");
         terminal = new SqlJoinConditionClauseTerminal("users", joinNode, selectEngineTerminal, litebridgeContext);
     }
 
@@ -195,8 +195,8 @@ class SqlJoinConditionClauseTerminalTest {
         assertNotNull(nextTerminal);
         final JoinNode secondJoinNode = assertInstanceOf(JoinNode.class, SelectTerminalInspector.getNode(nextTerminal));
         assertSame(joinNode, secondJoinNode.previous());
-        assertEquals("INNER", secondJoinNode.type());
-        assertEquals("items", secondJoinNode.rightTable());
+        assertEquals(Join.JoinType.INNER, secondJoinNode.type());
+        assertEquals("items", secondJoinNode.table());
     }
 
     @Test

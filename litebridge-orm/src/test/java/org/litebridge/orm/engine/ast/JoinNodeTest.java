@@ -16,7 +16,7 @@ class JoinNodeTest {
     void constructorAndGetters() {
         // Given
         final QueryNode previous = new DeleteNode(null, "p1", null);
-        final String type = "INNER";
+        final String type = Join.JoinType.INNER;
         final Class<?> dtoClass = String.class;
         final String rightTable = "USERS";
 
@@ -27,7 +27,7 @@ class JoinNodeTest {
         assertSame(previous, node.previous());
         assertEquals(type, node.type());
         assertEquals(dtoClass, node.dtoClass());
-        assertEquals(rightTable, node.rightTable());
+        assertEquals(rightTable, node.table());
         assertNull(node.condition());
     }
 
@@ -52,24 +52,24 @@ class JoinNodeTest {
         final QueryNode cond1 = new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, 1);
         final QueryNode cond2 = new ConditionWithIdNode(null, LogicOperator.OR, Operator.EQ, 1);
 
-        final JoinNode node1 = new JoinNode(prev1, "INNER", String.class, "USERS");
+        final JoinNode node1 = new JoinNode(prev1, Join.JoinType.INNER, String.class, "USERS");
         node1.setCondition(cond1);
-        final JoinNode node2 = new JoinNode(prev1, "INNER", String.class, "USERS");
+        final JoinNode node2 = new JoinNode(prev1, Join.JoinType.INNER, String.class, "USERS");
         node2.setCondition(cond1);
 
-        final JoinNode diffPrev = new JoinNode(prev2, "INNER", String.class, "USERS");
+        final JoinNode diffPrev = new JoinNode(prev2, Join.JoinType.INNER, String.class, "USERS");
         diffPrev.setCondition(cond1);
 
         final JoinNode diffType = new JoinNode(prev1, "LEFT", String.class, "USERS");
         diffType.setCondition(cond1);
 
-        final JoinNode diffDto = new JoinNode(prev1, "INNER", Integer.class, "USERS");
+        final JoinNode diffDto = new JoinNode(prev1, Join.JoinType.INNER, Integer.class, "USERS");
         diffDto.setCondition(cond1);
 
-        final JoinNode diffTable = new JoinNode(prev1, "INNER", String.class, "ORDERS");
+        final JoinNode diffTable = new JoinNode(prev1, Join.JoinType.INNER, String.class, "ORDERS");
         diffTable.setCondition(cond1);
 
-        final JoinNode diffCond = new JoinNode(prev1, "INNER", String.class, "USERS");
+        final JoinNode diffCond = new JoinNode(prev1, Join.JoinType.INNER, String.class, "USERS");
         diffCond.setCondition(cond2);
 
         // When / Then

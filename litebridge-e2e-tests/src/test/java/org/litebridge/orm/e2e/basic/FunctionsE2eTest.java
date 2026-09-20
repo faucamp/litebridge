@@ -284,7 +284,7 @@ public class FunctionsE2eTest extends AbstractE2eTest {
         assertNull(person.getEyeColour());
 
         if ("H2".equals(dbEnv.getName())) {
-            assertQueryPlanCacheContains("SELECT p1.PERSON_ID AS ppi, LOWER(p1.FIRST_NAME) AS pfn, UPPER(p1.SURNAME) AS ps FROM LB.PERSON AS p1 WHERE p1.AGE >= ?");
+            assertQueryPlanCacheContains("SELECT p.PERSON_ID AS ppi, LOWER(p.FIRST_NAME) AS pfn, UPPER(p.SURNAME) AS ps FROM LB.PERSON AS p WHERE p.AGE >= ?");
         }
 
         // Similar, but with custom aliases and references
@@ -306,7 +306,7 @@ public class FunctionsE2eTest extends AbstractE2eTest {
             assertEquals("blue", result.getEyeColour());
 
             if ("H2".equals(dbEnv.getName())) {
-                assertQueryPlanCacheContains("SELECT p1.PERSON_ID AS Aliased_ID, LOWER(p1.FIRST_NAME) AS CustomAlias, p1.EYE_COLOUR AS pec, UPPER(p1.SURNAME) AS ps FROM LB.PERSON AS p1 WHERE p1.AGE >= ? ORDER BY CustomAlias ASC");
+                assertQueryPlanCacheContains("SELECT p.PERSON_ID AS Aliased_ID, LOWER(p.FIRST_NAME) AS CustomAlias, p.EYE_COLOUR AS pec, UPPER(p.SURNAME) AS ps FROM LB.PERSON AS p WHERE p.AGE >= ? ORDER BY CustomAlias ASC");
             }
         }
 

@@ -553,12 +553,12 @@ class SelectEngineTerminalTest {
         final OrmTable contextOrmTable = mock(OrmTable.class);
         when(contextOrmTable.dtoClass()).thenReturn((Class) UserDto.class);
         when(contextOrmTable.getDtoClassInterfaces()).thenReturn(Collections.emptySet());
-        when(tableRegistry.getTableInContextOrThrow(UserDto.class, ContextDto.class)).thenReturn(contextOrmTable);
+        when(tableRegistry.getOrmTableInContextOrThrow(UserDto.class, ContextDto.class)).thenReturn(contextOrmTable);
 
         final SelectNode contextualNode = new SelectNode(null, UserDto.class, ContextDto.class, null, new ExpressionSpec[0], null);
         final List<UserDto> contextResults = terminal.fetchList(contextualNode, context);
         assertTrue(contextResults.isEmpty());
-        verify(tableRegistry).getTableInContextOrThrow(UserDto.class, ContextDto.class);
+        verify(tableRegistry).getOrmTableInContextOrThrow(UserDto.class, ContextDto.class);
     }
 
     private static class CustomException extends RuntimeException {

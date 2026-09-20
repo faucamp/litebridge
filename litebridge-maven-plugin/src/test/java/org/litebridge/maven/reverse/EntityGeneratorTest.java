@@ -49,7 +49,7 @@ class EntityGeneratorTest {
         when(column.name()).thenReturn("id");
         when(column.getDataType()).thenReturn(Types.BIGINT);
         when(column.isNullable()).thenReturn(false);
-        when(column.toColumn()).thenReturn(new Column(new Table("person"), "id"));
+        when(column.column()).thenReturn(new Column(new Table("person"), "id"));
 
         when(table.columns()).thenReturn(List.of(column));
 
@@ -85,7 +85,7 @@ class EntityGeneratorTest {
         when(column.name()).thenReturn("id");
         when(column.getDataType()).thenReturn(Types.BIGINT);
         when(column.isNullable()).thenReturn(false);
-        when(column.toColumn()).thenReturn(new Column(new Table("person"), "id"));
+        when(column.column()).thenReturn(new Column(new Table("person"), "id"));
 
         when(table.columns()).thenReturn(List.of(column));
 
@@ -184,7 +184,7 @@ class EntityGeneratorTest {
         when(column.name()).thenReturn("id");
         when(column.getDataType()).thenReturn(Types.BIGINT);
         when(column.isNullable()).thenReturn(false);
-        when(column.toColumn()).thenReturn(new Column(new Table("person"), "id"));
+        when(column.column()).thenReturn(new Column(new Table("person"), "id"));
 
         when(table.columns()).thenReturn(List.of(column));
 
@@ -213,7 +213,7 @@ class EntityGeneratorTest {
         when(column.name()).thenReturn("id");
         when(column.getDataType()).thenReturn(Types.BIGINT);
         when(column.isNullable()).thenReturn(false);
-        when(column.toColumn()).thenReturn(new Column(new Table("person"), "id"));
+        when(column.column()).thenReturn(new Column(new Table("person"), "id"));
 
         when(table.columns()).thenReturn(List.of(column));
 
@@ -440,13 +440,13 @@ class EntityGeneratorTest {
         when(columnId.name()).thenReturn("id");
         when(columnId.getDataType()).thenReturn(Types.BIGINT);
         when(columnId.isNullable()).thenReturn(false);
-        when(columnId.toColumn()).thenReturn(new Column(new Table("person"), "id"));
+        when(columnId.column()).thenReturn(new Column(new Table("person"), "id"));
 
         final ColumnMetaData columnName = mock(ColumnMetaData.class);
         when(columnName.name()).thenReturn("name");
         when(columnName.getDataType()).thenReturn(Types.VARCHAR);
         when(columnName.isNullable()).thenReturn(true);
-        when(columnName.toColumn()).thenReturn(new Column(new Table("person"), "name"));
+        when(columnName.column()).thenReturn(new Column(new Table("person"), "name"));
 
         when(table.columns()).thenReturn(List.of(columnId, columnName));
 
@@ -489,13 +489,13 @@ class EntityGeneratorTest {
         when(columnId.name()).thenReturn("id");
         when(columnId.getDataType()).thenReturn(Types.BIGINT);
         when(columnId.isNullable()).thenReturn(false);
-        when(columnId.toColumn()).thenReturn(new Column(new Table("person"), "id"));
+        when(columnId.column()).thenReturn(new Column(new Table("person"), "id"));
 
         final ColumnMetaData columnName = mock(ColumnMetaData.class);
         when(columnName.name()).thenReturn("name");
         when(columnName.getDataType()).thenReturn(Types.VARCHAR);
         when(columnName.isNullable()).thenReturn(true);
-        when(columnName.toColumn()).thenReturn(new Column(new Table("person"), "name"));
+        when(columnName.column()).thenReturn(new Column(new Table("person"), "name"));
 
         when(table.columns()).thenReturn(List.of(columnId, columnName));
 
@@ -530,7 +530,7 @@ class EntityGeneratorTest {
         when(columnId.name()).thenReturn("id");
         when(columnId.getDataType()).thenReturn(Types.BIGINT);
         when(columnId.isNullable()).thenReturn(false);
-        when(columnId.toColumn()).thenReturn(new Column(new Table("person"), "id"));
+        when(columnId.column()).thenReturn(new Column(new Table("person"), "id"));
 
         when(table.columns()).thenReturn(List.of(columnId));
 

@@ -30,7 +30,7 @@ class DtoJoinConditionClauseTest {
     void setUp() {
         litebridgeContext = mock(LitebridgeContext.class);
         final SelectNode selectNode = new SelectNode(null, SelectTestDto.class, null, null, null, null);
-        joinNode = new JoinNode(selectNode, "INNER", SelectTestDto.class, null);
+        joinNode = new JoinNode(selectNode, Join.JoinType.INNER, SelectTestDto.class, null);
         capturedNode = new AtomicReference<>();
     }
 

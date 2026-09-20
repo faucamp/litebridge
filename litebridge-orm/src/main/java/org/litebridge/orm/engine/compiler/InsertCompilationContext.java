@@ -46,13 +46,13 @@ final class InsertCompilationContext implements CompilationContext {
         if (insertNode.dtoClass() != null) {
             if (insertNode.contextDtoClass() != null) {
                 final TableRegistry tableRegistry = litebridgeContext.tableRegistry();
-                ormTable = Objects.requireNonNullElseGet(tableRegistry.getTableInContext(insertNode.dtoClass(), insertNode.contextDtoClass()), () -> tableRegistry.getOrmTableOrThrow(insertNode.dtoClass()));
+                ormTable = Objects.requireNonNullElseGet(tableRegistry.getOrmTableInContext(insertNode.dtoClass(), insertNode.contextDtoClass()), () -> tableRegistry.getOrmTableOrThrow(insertNode.dtoClass()));
             } else {
                 ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(insertNode.dtoClass());
             }
 
             tableMetaData = ormTable.getMetaData();
-            this.table = tableMetaData.toTable();
+            this.table = tableMetaData.table();
         } else {
             this.table = litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(insertNode.table()));
             tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);

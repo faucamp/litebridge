@@ -182,7 +182,7 @@ class UpdateCompilationContextTest {
         when(context.typeConverter().convert(1, Types.INTEGER)).thenReturn(1);
 
         final ColumnExpression colExpr = mock(ColumnExpression.class);
-        when(colExpr.column()).thenReturn(idCol.toColumn());
+        when(colExpr.column()).thenReturn(idCol.column());
         when(context.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(colExpr);
 
         final UpdateNode updateNode = new UpdateNode(null, "items", null);

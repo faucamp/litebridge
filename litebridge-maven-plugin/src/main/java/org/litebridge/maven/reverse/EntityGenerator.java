@@ -147,7 +147,7 @@ public final class EntityGenerator {
         for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
             final ColumnMappingConfig columnMappingConfig = getColumnMappingConfig(entityClassName, columnMetaData, tableMappingConfig);
             final String fieldName = createFieldName(columnMetaData, columnMappingConfig);
-            columnfieldMap.put(columnMetaData.toColumn(), fieldName);
+            columnfieldMap.put(columnMetaData.column(), fieldName);
         }
 
         // See if we should resolve entity relationships
@@ -167,7 +167,7 @@ public final class EntityGenerator {
         for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
             // Get config and create field-column tracking link
             final ColumnMappingConfig columnMappingConfig = getColumnMappingConfig(entityClassName, columnMetaData, tableMappingConfig);
-            final String fieldName = columnfieldMap.get(columnMetaData.toColumn());
+            final String fieldName = columnfieldMap.get(columnMetaData.column());
 
             // Determine field type
             final FieldClassInfo fieldClassInfo = createFieldClassInfo(entityClassName, columnMetaData, columnMappingConfig, tableMappingConfig);
@@ -704,7 +704,7 @@ public final class EntityGenerator {
                     // Configure reverse-mapping collection
                     oneToManySpecs.add(new OneToManySpec(remoteEntity.className(), remoteFieldName));
                 } else {
-                    throw new MojoExecutionException("Could not find 'joinOn' field for column: " + columnMetaData.toColumn());
+                    throw new MojoExecutionException("Could not find 'joinOn' field for column: " + columnMetaData.column());
                 }
             }
         }

@@ -23,7 +23,9 @@ public final class SqlProtoExpressionResolver extends ProtoExpressionResolver {
     @Override
     protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable,
                                                       final @Nullable OrmTable ormTable,
-                                                      final Table table, final ClauseType clause) {
+                                                      final Table table,
+                                                      final @Nullable String tableAlias,
+                                                      final ClauseType clause) {
         final String alias;
 
         if (resolvable instanceof ProtoExpressionSpec protoExpressionSpec) {
@@ -32,12 +34,15 @@ public final class SqlProtoExpressionResolver extends ProtoExpressionResolver {
             alias = null;
         }
 
-        //TODO: check null tableAlias
-        return new SelectColumnSpec(getColumn(resolvable, ormTable, table, clause), alias, null);
+        return new SelectColumnSpec(getColumn(resolvable, ormTable, table, clause), alias, tableAlias);
     }
 
     @Override
-    protected Stream<ExpressionSpec> resolveSelectField(final QueryField queryField, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
+    protected Stream<ExpressionSpec> resolveSelectField(final QueryField queryField,
+                                                        final @Nullable OrmTable ormTable,
+                                                        final Table table,
+                                                        final @Nullable String tableAlias,
+                                                        final ClauseType clause) {
         throw new UnsupportedOperationException("QueryField not yet supported in SQL mode: " + queryField);
     }
 

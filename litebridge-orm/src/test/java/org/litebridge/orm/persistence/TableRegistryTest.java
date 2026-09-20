@@ -89,7 +89,7 @@ class TableRegistryTest {
         tableRegistry.addTable(ContextDto.class, contextTable);
 
         // When
-        final OrmTable result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
+        final OrmTable result = tableRegistry.getOrmTableInContext(TestDto.class, ContextDto.class);
 
         // Then
         assertSame(nestedTable, result);
@@ -103,7 +103,7 @@ class TableRegistryTest {
         tableRegistry.addTable(ContextDto.class, contextTable);
 
         // When
-        final OrmTable result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
+        final OrmTable result = tableRegistry.getOrmTableInContext(TestDto.class, ContextDto.class);
 
         // Then
         assertNull(result);
@@ -115,7 +115,7 @@ class TableRegistryTest {
         final TableRegistry tableRegistry = new TableRegistry();
 
         // When
-        final OrmTable result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
+        final OrmTable result = tableRegistry.getOrmTableInContext(TestDto.class, ContextDto.class);
 
         // Then
         assertNull(result);
@@ -131,7 +131,7 @@ class TableRegistryTest {
         tableRegistry.addTable(ContextDto.class, contextTable);
 
         // When
-        final OrmTable result = tableRegistry.getTableInContextOrThrow(TestDto.class, ContextDto.class);
+        final OrmTable result = tableRegistry.getOrmTableInContextOrThrow(TestDto.class, ContextDto.class);
 
         // Then
         assertSame(nestedTable, result);
@@ -149,32 +149,6 @@ class TableRegistryTest {
 
         // Then
         assertSame(ormTable, result);
-    }
-
-    @Test
-    void getTable_schemaAndTable() {
-        // Given
-        final TableRegistry tableRegistry = new TableRegistry();
-        final OrmTable ormTable = ormTable(TestDto.class, "public", "test_table");
-        tableRegistry.addTable(TestDto.class, ormTable);
-
-        // When
-        final OrmTable result = tableRegistry.getOrmTable("public", "test_table");
-
-        // Then
-        assertSame(ormTable, result);
-    }
-
-    @Test
-    void getTable_schemaAndTable_notFound() {
-        // Given
-        final TableRegistry tableRegistry = new TableRegistry();
-
-        // When
-        final OrmTable result = tableRegistry.getOrmTable("public", "test_table");
-
-        // Then
-        assertNull(result);
     }
 
     @Test
@@ -214,24 +188,6 @@ class TableRegistryTest {
 
         // Then
         assertFalse(result);
-    }
-
-    @Test
-    void tableStream() {
-        // Given
-        final TableRegistry tableRegistry = new TableRegistry();
-        final OrmTable firstTable = ormTable(TestDto.class, "public", "test_table");
-        final OrmTable secondTable = ormTable(AnotherTestDto.class, "other", "another_test_table");
-        tableRegistry.addTable(TestDto.class, firstTable);
-        tableRegistry.addTable(AnotherTestDto.class, secondTable);
-
-        // When
-        final List<OrmTable> result = tableRegistry.tableStream().toList();
-
-        // Then
-        assertEquals(2, result.size());
-        assertTrue(result.contains(firstTable));
-        assertTrue(result.contains(secondTable));
     }
 
     @Test

@@ -182,7 +182,7 @@ class DtoFromClauseTerminalTest {
         assertInstanceOf(JoinNode.class, node);
         final JoinNode joinNode = (JoinNode) node;
         assertSame(selectNode, joinNode.previous());
-        assertEquals("INNER", joinNode.type());
+        assertEquals(Join.JoinType.INNER, joinNode.type());
         assertEquals(joinDtoClass, joinNode.dtoClass());
     }
 

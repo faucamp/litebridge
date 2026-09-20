@@ -13,7 +13,7 @@ import java.util.StringJoiner;
  * This class provides functionality for handling table-related metadata
  * and supports aliasing for the table name.
  */
-public final class Table implements SelectTarget {
+public sealed class Table implements SelectTarget permits VirtualTable {
 
     /**
      * Database catalog name
@@ -154,5 +154,9 @@ public final class Table implements SelectTarget {
      */
     public String name() {
         return name;
+    }
+
+    public boolean isVirtual() {
+        return false;
     }
 }

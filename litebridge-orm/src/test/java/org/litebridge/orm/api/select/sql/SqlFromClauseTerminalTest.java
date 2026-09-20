@@ -2,7 +2,6 @@ package org.litebridge.orm.api.select.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -95,8 +94,8 @@ class SqlFromClauseTerminalTest {
         assertInstanceOf(JoinNode.class, node);
         final JoinNode joinNode = (JoinNode) node;
         assertSame(selectNode, joinNode.previous());
-        assertEquals("INNER", joinNode.type());
-        assertEquals("orders", joinNode.rightTable());
+        assertEquals(Join.JoinType.INNER, joinNode.type());
+        assertEquals("orders", joinNode.table());
     }
 
     @Test

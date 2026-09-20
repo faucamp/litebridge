@@ -2,17 +2,15 @@ package org.litebridge.orm.api.select.sql;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.JoinNode;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
-
-import java.util.Objects;
 
 /**
  * SQL-mode terminal clause for FROM clauses.
@@ -50,7 +48,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
     @Override
     public SqlJoinClause join(final String table) {
         return new SqlJoinClause(table, null, litebridgeContext, conditionNode -> {
-            final JoinNode joinNode = new JoinNode(node, "INNER", null, table);
+            final JoinNode joinNode = new JoinNode(node, Join.JoinType.INNER, null, null, table, null, null);
             joinNode.setCondition(conditionNode);
             return new SqlJoinConditionClauseTerminal(selectNode, joinNode, selectEngineTerminal, litebridgeContext);
         });

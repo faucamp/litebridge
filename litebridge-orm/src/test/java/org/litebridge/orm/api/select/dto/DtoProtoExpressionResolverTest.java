@@ -51,7 +51,7 @@ class DtoProtoExpressionResolverTest {
         expectedColumn = new Column(table, "name");
         fieldAccessor = mock(FieldAccessor.class);
 
-        when(columnMetaData.toColumn()).thenReturn(expectedColumn);
+        when(columnMetaData.column()).thenReturn(expectedColumn);
         when(tableRegistry.getOrmTableOrThrow(SelectTestDto.class)).thenReturn(ormTable);
         when(ormTable.columnMetaDataForField("name")).thenReturn(columnMetaData);
         doReturnDtoClass(ormTable, SelectTestDto.class);

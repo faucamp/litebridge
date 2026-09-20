@@ -94,7 +94,7 @@ class InsertCompilationContextTest {
         when(ormTable.columnMetaDataForField("name")).thenReturn(col);
         when(ormTable.isManyToManyJoinTable()).thenReturn(false);
 
-        when(context.tableRegistry().getTableInContext(UserDto.class, ContextDto.class)).thenReturn(ormTable);
+        when(context.tableRegistry().getOrmTableInContext(UserDto.class, ContextDto.class)).thenReturn(ormTable);
 
         final InsertNode insertNode = new InsertNode(null, UserDto.class, ContextDto.class, new String[]{"name"}, null);
 
@@ -117,7 +117,7 @@ class InsertCompilationContextTest {
         when(ormTable.getMetaData()).thenReturn(metaData);
         when(ormTable.columnMetaDataForField("name")).thenReturn(col);
 
-        when(context.tableRegistry().getTableInContext(UserDto.class, ContextDto.class)).thenReturn(null);
+        when(context.tableRegistry().getOrmTableInContext(UserDto.class, ContextDto.class)).thenReturn(null);
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 
         final InsertNode insertNode = new InsertNode(null, UserDto.class, ContextDto.class, new String[]{"name"}, null);

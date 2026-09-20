@@ -1,15 +1,12 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Table;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 /**
  * The TableRegistry class is a centralized registry responsible for managing the relationship
@@ -28,8 +25,9 @@ import java.util.stream.Stream;
  */
 public final class TableRegistry {
 
-    private final Map<Class<?>, OrmTable> dtoTableMap = new ConcurrentHashMap<>();
-    private final Map<String, Map<String, OrmTable>> schemaTableMap = new ConcurrentHashMap<>();
+    private final Map<Class<?>, OrmTable> dtoOrmTableMap = new ConcurrentHashMap<>();
+    private final Map<String, OrmTable> ormTableMap = new ConcurrentHashMap<>();
+    private final Map<String, Table> spiTableMap = new ConcurrentHashMap<>();
 
     /**
      * Retrieves the {@link OrmTable} associated with the specified DTO class.
@@ -41,7 +39,7 @@ public final class TableRegistry {
      */
     public @Nullable OrmTable getOrmTable(final Class<?> dtoClass) {
         Objects.requireNonNull(dtoClass, "DTO class cannot be null");
-        return dtoTableMap.get(dtoClass);
+        return dtoOrmTableMap.get(dtoClass);
     }
 
     /**
@@ -68,7 +66,7 @@ public final class TableRegistry {
      * @return an {@link Optional} containing the {@link OrmTable} associated with the specified DTO class in the context
      * of the given context class, or an empty {@link Optional} if no such table is found
      */
-    public @Nullable OrmTable getTableInContext(final Class<?> dtoClass, final Class<?> contextClass) {
+    public @Nullable OrmTable getOrmTableInContext(final Class<?> dtoClass, final Class<?> contextClass) {
         final OrmTable contextOrmTable = getOrmTable(contextClass);
 
         if (contextOrmTable != null) {
@@ -94,7 +92,7 @@ public final class TableRegistry {
      * the given context class
      * @throws IllegalArgumentException if no {@link OrmTable} is mapped to the context class or the DTO class
      */
-    public OrmTable getTableInContextOrThrow(final Class<?> dtoClass, final Class<?> contextClass) {
+    public OrmTable getOrmTableInContextOrThrow(final Class<?> dtoClass, final Class<?> contextClass) {
         return getOrmTableOrThrow(contextClass)
                 .getContextTableRegistry()
                 .getOrmTableOrThrow(dtoClass);
@@ -107,8 +105,7 @@ public final class TableRegistry {
      * @return the {@link OrmTable} associated with the specified table name, or {@code null} if not found
      */
     public @Nullable OrmTable getOrmTable(final String table) {
-        final String[] catalogSchemaTable = StringUtils.splitArray(table, '.', 3, true);
-        return getOrmTable(catalogSchemaTable[1], catalogSchemaTable[2]);
+        return ormTableMap.get(table);
     }
 
     /**
@@ -123,40 +120,13 @@ public final class TableRegistry {
     }
 
     /**
-     * Retrieves the {@link OrmTable} associated with the specified schema and table name.
-     *
-     * @param schema the schema name
-     * @param table  the table name
-     * @return the {@link OrmTable} associated with the specified schema and table name, or {@code null} if not found
-     */
-    public @Nullable OrmTable getOrmTable(final String schema, final String table) {
-        return schemaTableMap.getOrDefault(schema, Collections.emptyMap())
-                .get(table);
-    }
-
-    /**
      * Retrieves the {@link OrmTable} associated with the specified table.
      *
      * @param table the table
      * @return the {@link OrmTable} associated with the specified table, or {@code null} if not found
      */
     public @Nullable OrmTable getOrmTable(final Table table) {
-        final OrmTable ormTable = getOrmTable(StringUtils.blankIfNull(table.schema()), table.name());
-
-        if (ormTable != null) {
-            return ormTable;
-        }
-
-        if (table.schema() == null) {
-            // Try to find a table with this name in ANY schema
-            return schemaTableMap.values().stream()
-                    .map(tableMap -> tableMap.get(table.name()))
-                    .filter(Objects::nonNull)
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        return null;
+        return getOrmTable(table.qualifiedName());
     }
 
     /**
@@ -178,7 +148,7 @@ public final class TableRegistry {
      * @return {@code true} if a table is mapped to the specified DTO class, {@code false} otherwise
      */
     public boolean containsOrmTable(final Class<?> dtoClass) {
-        return dtoTableMap.containsKey(dtoClass);
+        return dtoOrmTableMap.containsKey(dtoClass);
     }
 
     /**
@@ -188,11 +158,11 @@ public final class TableRegistry {
      * @param ormTable the ORM table to register
      */
     public void addTable(final Class<?> dtoClass, final OrmTable ormTable) {
-        dtoTableMap.put(dtoClass, ormTable);
+        dtoOrmTableMap.put(dtoClass, ormTable);
         addTable(ormTable);
-        ormTable.getContextTableRegistry().getSchemaTableMap()
-                .forEach((schema, tableMap) ->
-                        schemaTableMap.computeIfAbsent(schema, k -> new ConcurrentHashMap<>()).putAll(tableMap));
+        ormTable.getContextTableRegistry().getOrmTableMap()
+                .forEach((tableName, contextTable) ->
+                        ormTableMap.computeIfAbsent(tableName, k -> contextTable));
     }
 
     /**
@@ -200,22 +170,10 @@ public final class TableRegistry {
      * <p>
      * The resulting ORM table will only be able to be queried by name from this registry.
      *
-     * @param table the table to register
+     * @param ormTable the table to register
      */
-    public void addTable(final OrmTable table) {
-        schemaTableMap.computeIfAbsent(StringUtils.blankIfNull(table.getMetaData().schema()), k -> new ConcurrentHashMap<>())
-                .put(table.getMetaData().name(), table);
-    }
-
-    /**
-     * Returns a stream of all registered tables.
-     *
-     * @return a stream of all registered tables
-     */
-    public Stream<OrmTable> tableStream() {
-        return schemaTableMap.values().stream()
-                .flatMap(tableMap ->
-                        tableMap.values().stream());
+    public void addTable(final OrmTable ormTable) {
+        ormTableMap.put(ormTable.getMetaData().table().qualifiedName(), ormTable);
     }
 
     /**
@@ -225,33 +183,22 @@ public final class TableRegistry {
      * @return the SPI table
      */
     public Table getOrCreateSpiTable(final String table) {
-        final String[] catalogSchemaTable = StringUtils.splitArray(table, '.', 3, true);
-        return getOrCreateSpiTable(catalogSchemaTable[0], catalogSchemaTable[1], catalogSchemaTable[2]);
+        return spiTableMap.computeIfAbsent(table, tableName -> {
+            // If the table has been registered for DTO mapping, use the corresponding Table object, else use the table name directly
+            final Table spiTable;
+            final OrmTable ormTable = getOrmTable(tableName);
+
+            if (ormTable != null) {
+                spiTable = ormTable.getMetaData().table();
+            } else {
+                spiTable = new Table(tableName);
+            }
+
+            return spiTable;
+        });
     }
 
-    private Map<String, Map<String, OrmTable>> getSchemaTableMap() {
-        return schemaTableMap;
-    }
-
-    /**
-     * Returns the SPI table for the specified catalog, schema, and table name.
-     *
-     * @param catalog the catalog name
-     * @param schema  the schema name
-     * @param table   the table name
-     * @return the SPI table
-     */
-    private Table getOrCreateSpiTable(final String catalog, final String schema, final String table) {
-        // If the table has been registered for DTO mapping, use the corresponding Table object, else use the table name directly
-        final Table spiTable;
-        final OrmTable ormTable = getOrmTable(schema, table);
-
-        if (ormTable != null) {
-            spiTable = ormTable.getMetaData().toTable();
-        } else {
-            spiTable = new Table(catalog, schema, table);
-        }
-
-        return spiTable;
+    private Map<String, OrmTable> getOrmTableMap() {
+        return ormTableMap;
     }
 }

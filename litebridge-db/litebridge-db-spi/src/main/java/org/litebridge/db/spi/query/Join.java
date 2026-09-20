@@ -15,9 +15,37 @@ package org.litebridge.db.spi.query;
  * This record is used in query-building to specify join operations
  * within SQL select statements.
  *
+ * @param type       The type of join operation.
  * @param target     The target table/query for the join operation.
  * @param conditions The group of conditions defining the join relationship.
  * @see Select
  */
-public record Join(SelectTarget target, ConditionGroup conditions) {
+public record Join(JoinType type, SelectTarget target, ConditionGroup conditions) {
+
+    public enum JoinType {
+        /**
+         * INNER JOIN
+         */
+        INNER,
+        /**
+         * LEFT JOIN / LEFT OUTER JOIN
+         */
+        LEFT,
+        /**
+         * RIGHT JOIN / RIGHT OUTER JOIN
+         */
+        RIGHT,
+        /**
+         * FULL OUTER JOIN
+         */
+        FULL,
+        /**
+         * CROSS JOIN
+         */
+        CROSS,
+        /**
+         * SELF JOIN
+         */
+        SELF
+    }
 }
