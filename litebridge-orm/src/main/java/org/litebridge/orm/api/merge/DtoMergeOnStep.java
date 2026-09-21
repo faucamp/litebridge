@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.merge;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
@@ -21,12 +22,18 @@ public final class DtoMergeOnStep<DTO> extends MergeOnStep<DTO, DtoMergeUpdateSt
      * @param mergeNode         the current merge node
      * @param litebridgeContext the Litebridge context
      */
-    public DtoMergeOnStep(final Class<?> usingDtoClass, final MergeNode mergeNode, final LitebridgeContext litebridgeContext) {
-        super(usingDtoClass, mergeNode, litebridgeContext);
+    public DtoMergeOnStep(final Class<?> usingDtoClass,
+                          final @Nullable String usingAlias,
+                          final MergeNode mergeNode,
+                          final LitebridgeContext litebridgeContext) {
+        super(usingDtoClass, usingAlias, mergeNode, litebridgeContext);
     }
 
-    public DtoMergeOnStep(final QueryNode subselectNode, final MergeNode mergeNode, final LitebridgeContext litebridgeContext) {
-        super(subselectNode, mergeNode, litebridgeContext);
+    public DtoMergeOnStep(final QueryNode subselectNode,
+                          final @Nullable String usingAlias,
+                          final MergeNode mergeNode, final
+                          LitebridgeContext litebridgeContext) {
+        super(subselectNode, usingAlias, mergeNode, litebridgeContext);
     }
 
     /**

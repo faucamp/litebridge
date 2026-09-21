@@ -53,6 +53,12 @@ public record SelectNode(@Nullable String table,
         this(null, null, null, fromQueryNode, alias, columns, expressions, resultTypes);
     }
 
+    public SelectNode(final String @Nullable [] columns,
+                      final ExpressionSpec @Nullable [] expressions,
+                      final @Nullable Class<?> @Nullable [] resultTypes) {
+        this(null, null, null, null, null, columns, expressions, resultTypes);
+    }
+
     /**
      * Checks whether this node represents selecting all columns/fields.
      *
@@ -69,17 +75,34 @@ public record SelectNode(@Nullable String table,
 
     @Override
     public boolean equals(final Object o) {
-        if (!(o instanceof final SelectNode that)) return false;
-        return Objects.equals(table, that.table)
-                && Objects.equals(dtoClass, that.dtoClass)
-                && Objects.equals(contextDtoClass, that.contextDtoClass)
-                && Arrays.deepEquals(resultTypes, that.resultTypes)
-                && Arrays.deepEquals(columns, that.columns)
-                && Arrays.deepEquals(expressions, that.expressions);
+        if (!(o instanceof SelectNode(
+                String table1, Class<?> thatDtoClass,
+                Class<?> thatContextDtoClass,
+                QueryNode thatFromQueryNode,
+                String thatAlias,
+                String[] thatColumns,
+                ExpressionSpec[] thatExpressions,
+                Class<?>[] thatResultTypes
+        ))) return false;
+        return Objects.equals(table, table1)
+                && Objects.equals(dtoClass, thatDtoClass)
+                && Objects.equals(contextDtoClass, thatContextDtoClass)
+                && Objects.equals(fromQueryNode, thatFromQueryNode)
+                && Objects.equals(alias, thatAlias)
+                && Arrays.deepEquals(resultTypes, thatResultTypes)
+                && Arrays.deepEquals(columns, thatColumns)
+                && Arrays.deepEquals(expressions, thatExpressions);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(table, dtoClass, contextDtoClass, Arrays.hashCode(columns), Arrays.hashCode(expressions), Arrays.hashCode(resultTypes));
+        return Objects.hash(table,
+                dtoClass,
+                contextDtoClass,
+                fromQueryNode,
+                alias,
+                Arrays.hashCode(columns),
+                Arrays.deepHashCode(expressions),
+                Arrays.hashCode(resultTypes));
     }
 }

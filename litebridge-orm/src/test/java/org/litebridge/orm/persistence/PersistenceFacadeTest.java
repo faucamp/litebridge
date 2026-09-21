@@ -9,8 +9,8 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.DelegateColumnExpression;
+import org.litebridge.db.spi.expression.DelegateColumnExpressionFactory;
 import org.litebridge.db.spi.expression.DelegateExpression;
-import org.litebridge.db.spi.expression.DelegateExpressionFactory;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.ColumnReference;
@@ -112,7 +112,7 @@ class PersistenceFacadeTest {
 
         final SqlFunctionRegistry.Aggregate aggregateRegistry = mock(SqlFunctionRegistry.Aggregate.class);
         when(sqlFunctionRegistry.aggregate()).thenReturn(aggregateRegistry);
-        final DelegateExpressionFactory delegateFactory = (target, args) -> mock(DelegateColumnExpression.class);
+        final DelegateColumnExpressionFactory delegateFactory = (target, args) -> mock(DelegateColumnExpression.class);
         when(aggregateRegistry.avg()).thenReturn(delegateFactory);
         when(aggregateRegistry.min()).thenReturn(delegateFactory);
         when(aggregateRegistry.max()).thenReturn(delegateFactory);

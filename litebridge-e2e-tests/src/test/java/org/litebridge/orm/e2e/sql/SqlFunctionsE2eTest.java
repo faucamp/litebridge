@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -271,9 +272,8 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("CURRENT_TIMESTAMP")
     void currentTimestamp(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        final Row sysdate = litebridge.select(Fn.currentTimestamp()).from(personTableName).firstOrThrow();
-        assertEquals(1, sysdate.size());
-        assertNotNull(sysdate.column(0).value());
+        final ZonedDateTime sysdate = litebridge.select(Fn.currentTimestamp()).firstOrThrow();
+        assertNotNull(sysdate);
     }
 
     private void insertTestPersonRecords(final String personTableName) throws SQLException {

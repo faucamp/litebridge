@@ -7,4 +7,6 @@ public interface Aliasable {
     @Nullable String getAlias();
 
     void setAlias(final String alias);
+
+    Aliasable as(final String alias);
 }

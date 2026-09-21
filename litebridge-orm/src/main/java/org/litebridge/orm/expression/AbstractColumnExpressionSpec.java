@@ -20,4 +20,9 @@ public abstract sealed class AbstractColumnExpressionSpec extends AbstractAliasa
     public void setTableAlias(final @Nullable String tableAlias) {
         this.tableAlias = tableAlias;
     }
+
+    @Override
+    public AbstractColumnExpressionSpec as(final String alias) {
+        return (AbstractColumnExpressionSpec) super.as(alias);
+    }
 }

@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
  * @param table    the table to update
  * @param dtoClass class of the DTO to update
  */
-public record MergeNode(@Nullable String table, @Nullable Class<?> dtoClass) implements QueryNode {
+public record MergeNode(@Nullable String table, @Nullable Class<?> dtoClass, @Nullable String alias) implements QueryNode {
 
     @Override
     public @Nullable QueryNode previous() {

@@ -1,5 +1,7 @@
 package org.litebridge.db.spi;
 
+import java.util.StringJoiner;
+
 /**
  * Virtual table
  */
@@ -18,5 +20,12 @@ public final class VirtualTable extends Table {
     @Override
     public boolean isVirtual() {
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", VirtualTable.class.getSimpleName() + "[", "]")
+                .add("alias='" + name() + "'")
+                .toString();
     }
 }

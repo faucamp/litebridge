@@ -6,6 +6,8 @@ import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.query.Limit;
+import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
 import java.util.function.BiFunction;
@@ -33,6 +35,17 @@ public final class OracleSelectSqlGenerator extends SelectSqlGenerator {
                                     final MathOperationGenerator mathOperationGenerator,
                                     final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
         super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+    }
+
+    @Override
+    protected void appendFromClause(final StringBuilder sql, final Select select, final ConnectionProvider connectionProvider) {
+        sql.append(" FROM ");
+
+        if (select.from() instanceof SelectTarget.Void) {
+            sql.append("DUAL");
+        } else {
+            appendSelectTarget(sql, select.from(), connectionProvider);
+        }
     }
 
     @Override

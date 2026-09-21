@@ -6,6 +6,7 @@ import org.litebridge.db.spi.expression.AliasReference;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.DelegateColumnExpression;
+import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
@@ -79,6 +80,7 @@ public class SqlFunctionRegistryFactory {
                         this::createSubstring,
                         this::createAbs
                 ),
+                this::createCast,
                 new SqlFunctionRegistry.Date(
                         createCurrentTimestamp()
                 ));
@@ -111,8 +113,8 @@ public class SqlFunctionRegistryFactory {
      * @param value the literal value
      * @return the literal expression
      */
-    protected LiteralExpression createLiteral(final @Nullable Object value) {
-        return createLiteral(value, false);
+    protected LiteralExpression createLiteral(final @Nullable Object value, final @Nullable String alias) {
+        return createLiteral(value, alias, false);
     }
 
     /**
@@ -122,8 +124,8 @@ public class SqlFunctionRegistryFactory {
      * @param parameter whether this literal should be treated as a bind parameter
      * @return the literal expression
      */
-    protected LiteralExpression createLiteral(final @Nullable Object value, final boolean parameter) {
-        return new LiteralExpression(value, parameter);
+    protected LiteralExpression createLiteral(final @Nullable Object value, final @Nullable String alias, final boolean parameter) {
+        return new LiteralExpression(value, alias, parameter);
     }
 
     /**
@@ -246,6 +248,10 @@ public class SqlFunctionRegistryFactory {
      */
     protected DelegateColumnExpression createAbs(final ColumnExpression target, final Object... args) {
         return new Abs(target, (String) args[0]);
+    }
+
+    protected DelegateExpression createCast(final SelectExpression target, final Object... args) {
+        return new Cast(target, (String) args[0], (int) args[1]);
     }
 
     /**

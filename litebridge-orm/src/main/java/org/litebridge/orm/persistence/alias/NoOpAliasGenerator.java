@@ -44,4 +44,14 @@ public final class NoOpAliasGenerator implements AliasGenerator {
     public String newAlias(final String name) {
         return name;
     }
+
+    @Override
+    public void pushScope() {
+        /* Ignored */
+    }
+
+    @Override
+    public void popScope() {
+        /* Ignored */
+    }
 }

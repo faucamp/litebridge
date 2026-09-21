@@ -12,6 +12,7 @@ public record SqlFunctionRegistry(
         Select select,
         Aggregate aggregate,
         Scalar scalar,
+        DelegateExpressionFactory cast,
         Date date) {
 
 
@@ -40,9 +41,9 @@ public record SqlFunctionRegistry(
      * @param count COUNT(): Total number of rows in the query result.
      */
     public record Aggregate(
-            DelegateExpressionFactory avg,
-            DelegateExpressionFactory min,
-            DelegateExpressionFactory max,
+            DelegateColumnExpressionFactory avg,
+            DelegateColumnExpressionFactory min,
+            DelegateColumnExpressionFactory max,
             SelectExpression count) {
     }
 
@@ -55,10 +56,10 @@ public record SqlFunctionRegistry(
      * @param abs       ABS(): Absolute value of a number.
      */
     public record Scalar(
-            DelegateExpressionFactory upper,
-            DelegateExpressionFactory lower,
-            DelegateExpressionFactory substring,
-            DelegateExpressionFactory abs) {
+            DelegateColumnExpressionFactory upper,
+            DelegateColumnExpressionFactory lower,
+            DelegateColumnExpressionFactory substring,
+            DelegateColumnExpressionFactory abs) {
     }
 
     /**

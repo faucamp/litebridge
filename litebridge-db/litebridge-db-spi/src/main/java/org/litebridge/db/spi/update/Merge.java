@@ -3,7 +3,7 @@ package org.litebridge.db.spi.update;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.ConditionGroup;
-import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.SelectTarget;
 
 import java.util.List;
 
@@ -14,25 +14,19 @@ import java.util.List;
  * to generate SQL {@code MERGE} statement strings.
  *
  * @param table          merge target table
- * @param usingTable     merge using/source table (if {@code usingSelect} is {@code null})
- * @param usingSelect    merge using/source select statement (if {@code usingTable} is {@code null})
+ * @param using          merge using table/query
  * @param on             merge condition
  * @param whenMatched    when matched clauses
  * @param whenNotMatched when not matched clauses
  */
-public record Merge(Table table,
-                    @Nullable Table usingTable,
-                    @Nullable Select usingSelect,
+public record Merge(SelectTarget table,
+                    SelectTarget using,
                     ConditionGroup on,
                     @Nullable List<WhenMatched<WhenMatchedOperation>> whenMatched,
                     @Nullable List<WhenMatched<MergeInsert>> whenNotMatched) implements UpdateStatement {
 
     public Merge {
         // Validate parameters
-        if (usingTable == null && usingSelect == null) {
-            throw new IllegalArgumentException("At least one of usingTable or usingSelect must be specified");
-        }
-
         if (whenMatched == null && whenNotMatched == null) {
             throw new IllegalArgumentException("No WHEN MATCHED/WHEN NOT MATCHED clauses provided");
         }

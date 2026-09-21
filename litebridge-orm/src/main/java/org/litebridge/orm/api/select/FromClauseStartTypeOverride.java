@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
+import org.litebridge.orm.api.select.impl.DelegatingSelectTerminal;
 import org.litebridge.orm.api.select.sql.SqlFromClauseTerminal;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -18,7 +19,7 @@ import java.util.function.Function;
  *
  * @param <ReturnType> the type override.
  */
-public final class FromClauseStartTypeOverride<ReturnType> {
+public final class FromClauseStartTypeOverride<ReturnType> extends DelegatingSelectTerminal<ReturnType> {
 
     private final Class<ReturnType> typeOverride;
     private final ExpressionSpec[] expressionSpecs;
@@ -37,10 +38,12 @@ public final class FromClauseStartTypeOverride<ReturnType> {
                                        final ExpressionSpec[] expressionSpecs,
                                        final SelectEngineTerminal selectEngineTerminal,
                                        final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
+        super(selectEngineTerminal, () -> litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
         this.typeOverride = typeOverride;
         this.expressionSpecs = expressionSpecs;
         this.selectEngineTerminal = selectEngineTerminal;
         this.litebridgeContextCreator = litebridgeContextCreator;
+        this.pendingNode = () -> new SelectNode(null, expressionSpecs, new Class<?>[]{typeOverride});
     }
 
     /**

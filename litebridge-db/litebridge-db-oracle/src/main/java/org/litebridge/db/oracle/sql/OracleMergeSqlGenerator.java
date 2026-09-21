@@ -13,7 +13,6 @@ import org.litebridge.db.spi.update.UpdateColumn;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.BiFunction;
 
 /**
@@ -28,10 +27,11 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
      * @param mathOperationGenerator    math operation generator
      * @param ensureTableMetaData       function that creates/retrieves table metadata
      */
-    public OracleMergeSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public OracleMergeSqlGenerator(final OracleSelectSqlGenerator selectSqlGenerator,
+                                   final ColumnIdentifierGenerator columnIdentifierGenerator,
                                    final MathOperationGenerator mathOperationGenerator,
                                    final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+        super(selectSqlGenerator, columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     /**
@@ -43,27 +43,11 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
      */
     @Override
     public String generateSql(final Merge merge, final ConnectionProvider connectionProvider) {
-        final Table targetTable = merge.table();
-        final StringBuilder sql = appendTable(new StringBuilder("MERGE INTO "), targetTable);
-
-//        if (targetTable.alias() != null) {
-//            sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(merge.table().alias())));
-//        }
-        if (true) {
-            throw new UnsupportedOperationException("Not implemented yet");
-        }
+        final StringBuilder sql = new StringBuilder("MERGE INTO ");
+        appendSelectTarget(sql, merge.table(), connectionProvider);
 
         sql.append(" USING ");
-        final Table usingTable = merge.usingTable();
-
-        if (usingTable != null) {
-            appendTable(sql, usingTable);
-
-//            if (usingTable.alias() != null) {
-//                sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(usingTable.alias())));
-//            }
-            throw new UnsupportedOperationException("Not implemented yet");
-        }
+        appendSelectTarget(sql, merge.using(), connectionProvider);
 
         sql.append(" ON (");
         appendConditionsAndSubgroups(sql, merge.on(), merge, connectionProvider);

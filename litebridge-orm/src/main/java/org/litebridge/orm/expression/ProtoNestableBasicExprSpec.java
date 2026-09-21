@@ -93,4 +93,7 @@ public final class ProtoNestableBasicExprSpec extends AbstractAliasable
                 "alias=" + alias + ']';
     }
 
+    public ProtoNestableBasicExprSpec as(final String alias) {
+        return (ProtoNestableBasicExprSpec) super.as(alias);
+    }
 }

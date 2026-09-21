@@ -6,9 +6,12 @@ import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.select.SelectApiImpl;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
+import org.litebridge.orm.api.select.sql.SqlFromClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.UsingNode;
+import org.litebridge.orm.expression.select.FromTargetSpec;
+import org.litebridge.orm.expression.select.QueryAliasSpec;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -35,7 +38,7 @@ public final class SqlMergeUsingStep extends MergeUsingStep<Row, SqlMergeUpdateS
      * @return step to specify the {@code ON} condition
      */
     public MergeOnStep<Row, SqlMergeUpdateStep, MergeInsertStep> using(final String usingTableName) {
-        return new MergeOnStep<>(usingTableName, mergeNode, litebridgeContext);
+        return new MergeOnStep<>(usingTableName, null, mergeNode, litebridgeContext);
     }
 
     /**
@@ -47,6 +50,12 @@ public final class SqlMergeUsingStep extends MergeUsingStep<Row, SqlMergeUpdateS
     public MergeOnStep<Row, SqlMergeUpdateStep, MergeInsertStep>  using(final Function<SelectApi, SelectTerminal<?>> subselect) {
         final SelectTerminal<?> selectTerminal = subselect.apply(new SelectApiImpl(litebridgeContext));
         final QueryNode subselectNode = Objects.requireNonNull(SelectTerminalInspector.getNode(selectTerminal));
-        return new MergeOnStep<>(subselectNode, mergeNode, litebridgeContext);
+        return new MergeOnStep<>(subselectNode, null, mergeNode, litebridgeContext);
+    }
+
+    public MergeOnStep<Row, SqlMergeUpdateStep, MergeInsertStep> using(final QueryAliasSpec query) {
+        final SelectTerminal<?> selectTerminal = query.query().apply(new SelectApiImpl(litebridgeContext));
+        final QueryNode subselectNode = Objects.requireNonNull(SelectTerminalInspector.getNode(selectTerminal));
+        return new MergeOnStep<>(subselectNode, query.alias(), mergeNode, litebridgeContext);
     }
 }

@@ -83,7 +83,6 @@ class AbstractCompilationContextTest {
         final ExpressionSpec spec = new SelectColumnSpec(col);
 
         // When & Then
-        assertEquals(col, compilationContext.resolveAlias(table, meta));
         assertSame(col, compilationContext.resolveAlias(table, col));
         assertSame(spec, compilationContext.resolveAlias(spec));
     }

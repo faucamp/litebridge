@@ -295,8 +295,8 @@ public final class Fn {
         return new AliasReferenceSpec(alias);
     }
 
-    public static ExpressionSpec literal(final String value) {
-        return new LiteralExpressionSpec(value);
+    public static <T> LiteralExpressionSpec<T> literal(final T value) {
+        return new LiteralExpressionSpec<>(value);
     }
     // Java helper functions
 

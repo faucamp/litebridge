@@ -16,12 +16,14 @@ import org.litebridge.orm.engine.ast.InsertDtoValuesNode;
 import org.litebridge.orm.engine.ast.InsertValuesNode;
 import org.litebridge.orm.engine.ast.JoinNode;
 import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.engine.ast.WhenMatchedNode;
 import org.litebridge.orm.engine.ast.WhenNotMatchedNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.LiteralExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.tracking.FieldAccessor;
 
@@ -81,7 +83,13 @@ public final class QueryBindValueExtractor {
                 case InsertDtoValuesNode insertDtoValuesNode ->
                         extractDtoValues(insertDtoValuesNode, bindValues, litebridgeContext);
                 // Merge
-                case UsingNode usingNode -> extractBindValuesAtLevel(usingNode.on(), bindValues, litebridgeContext);
+                case UsingNode usingNode -> {
+                    if (usingNode.query() != null) {
+                        extractBindValuesAtLevel(usingNode.query(), bindValues, litebridgeContext);
+                    }
+
+                    extractBindValuesAtLevel(usingNode.on(), bindValues, litebridgeContext);
+                }
                 case WhenMatchedNode whenMatchedNode -> {
                     final List<QueryNode> updateNodes = chainInSourceOrder(whenMatchedNode.update());
 
@@ -187,38 +195,53 @@ public final class QueryBindValueExtractor {
 
         // Process conditions before subgroups to match ConditionGroupSpec.toConditionGroup order.
         for (final QueryNode node : nodes) {
-            if (node instanceof final ConditionGroupNode conditionGroupNode) {
-                subgroups.add(conditionGroupNode);
-            } else if (node instanceof final ConditionNode conditionNode) {
-                final Operator operator = conditionNode.operator();
+            switch (node) {
+                case final ConditionGroupNode conditionGroupNode -> subgroups.add(conditionGroupNode);
+                case final ConditionNode conditionNode -> {
+                    final Operator operator = conditionNode.operator();
 
-                if (operator == Operator.IS_NULL || operator == Operator.IS_NOT_NULL || operator == Operator.USING) {
-                    continue;
+                    if (operator == Operator.IS_NULL || operator == Operator.IS_NOT_NULL || operator == Operator.USING) {
+                        continue;
+                    }
+
+                    final Object rhs = conditionNode.rhs();
+
+                    if (rhs instanceof SelectTerminal<?> st) {
+                        extractBindValues(Objects.requireNonNull(SelectTerminalInspector.getNode(st)), bindValues, litebridgeContext);
+                        continue;
+                    }
+
+                    if (rhs instanceof QueryNode qn) {
+                        extractBindValues(qn, bindValues, litebridgeContext);
+                        continue;
+                    }
+
+                    if (rhs instanceof Column || rhs instanceof ExpressionSpec) {
+                        continue;
+                    }
+
+                    if (rhs instanceof Collection<?> collection) {
+                        bindValues.addAll(collection);
+                    } else {
+                        bindValues.add(rhs);
+                    }
                 }
+                case final ConditionWithIdNode conditionWithIdNode -> bindValues.add(conditionWithIdNode.id());
+                case SelectNode selectNode -> {
+                    final ExpressionSpec[] expressionSpecs = selectNode.expressions();
 
-                final Object rhs = conditionNode.rhs();
+                    if (expressionSpecs == null) {
+                        continue;
+                    }
 
-                if (rhs instanceof SelectTerminal<?> st) {
-                    extractBindValues(Objects.requireNonNull(SelectTerminalInspector.getNode(st)), bindValues, litebridgeContext);
-                    continue;
+                    for (final ExpressionSpec expressionSpec : expressionSpecs) {
+                        if (expressionSpec instanceof LiteralExpressionSpec<?> literalExpressionSpec) {
+                            bindValues.add(literalExpressionSpec.value());
+                        }
+                    }
                 }
-
-                if (rhs instanceof QueryNode qn) {
-                    extractBindValues(qn, bindValues, litebridgeContext);
-                    continue;
+                case null, default -> {
                 }
-
-                if (rhs instanceof Column || rhs instanceof ExpressionSpec) {
-                    continue;
-                }
-
-                if (rhs instanceof Collection<?> collection) {
-                    bindValues.addAll(collection);
-                } else {
-                    bindValues.add(rhs);
-                }
-            } else if (node instanceof final ConditionWithIdNode conditionWithIdNode) {
-                bindValues.add(conditionWithIdNode.id());
             }
         }
 

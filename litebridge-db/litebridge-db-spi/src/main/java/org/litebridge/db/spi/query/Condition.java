@@ -26,7 +26,7 @@ public record Condition(SelectExpression lhs, Operator operator, @Nullable Selec
      * @throws IllegalArgumentException if {@code operator} is not {@code IS_NULL} or {@code IS_NOT_NULL}
      */
     public Condition(final SelectExpression lhs, final Operator operator, final @Nullable Object value) {
-        this(lhs, operator, new LiteralExpression(value));
+        this(lhs, operator, new LiteralExpression(value, null));
     }
 
     /**

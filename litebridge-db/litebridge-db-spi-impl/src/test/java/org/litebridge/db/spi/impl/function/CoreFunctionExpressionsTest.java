@@ -161,7 +161,7 @@ class CoreFunctionExpressionsTest {
         // When & Then
         assertNotNull(registry.select().column().create(column));
         assertNotNull(registry.select().subselect().create(mock(Select.class)));
-        assertNotNull(registry.select().literal().create("val"));
+        assertNotNull(registry.select().literal().create("val", "alias"));
         assertNotNull(registry.select().reference().create(column));
 
         assertNotNull(registry.aggregate().avg().create(colExpr, new Object[0]));

@@ -35,7 +35,7 @@ public final class DtoMergeUsingStep<DTO> extends MergeUsingStep<DTO, DtoMergeUp
      * @return the next step in the merge operation
      */
     public DtoMergeOnStep<DTO> using(final Class<?> dtoClass) {
-        return new DtoMergeOnStep<>(dtoClass, mergeNode, litebridgeContext);
+        return new DtoMergeOnStep<>(dtoClass, null, mergeNode, litebridgeContext);
     }
 
     /**
@@ -47,6 +47,6 @@ public final class DtoMergeUsingStep<DTO> extends MergeUsingStep<DTO, DtoMergeUp
     public DtoMergeOnStep<DTO> using(final Function<SelectApi, SelectTerminal<?>> subselect) {
         final SelectTerminal<?> selectTerminal = subselect.apply(new SelectApiImpl(litebridgeContext));
         final QueryNode subselectNode = Objects.requireNonNull(SelectTerminalInspector.getNode(selectTerminal));
-        return new DtoMergeOnStep<>(subselectNode, mergeNode, litebridgeContext);
+        return new DtoMergeOnStep<>(subselectNode, null, mergeNode, litebridgeContext);
     }
 }

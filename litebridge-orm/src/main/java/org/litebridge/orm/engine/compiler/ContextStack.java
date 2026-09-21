@@ -15,7 +15,7 @@ import java.util.List;
  *
  * @param <T> the type of the context objects managed by this stack
  */
-abstract class ContextStack<T> {
+public abstract class ContextStack<T> {
 
     private final List<T> all = new ArrayList<>();
     private final Deque<T> stack = new ArrayDeque<>();

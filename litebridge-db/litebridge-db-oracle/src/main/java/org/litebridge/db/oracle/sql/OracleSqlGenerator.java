@@ -24,6 +24,10 @@ public final class OracleSqlGenerator extends DefaultSqlGenerator {
             columnIdentifierGenerator,
             mathOperationGenerator,
             metaDataEngine::ensureTableMetaData));
+    private final ConcurrentLazy<OracleSelectSqlGenerator> oracleSelectSqlGenerator = new ConcurrentLazy<>(() -> new OracleSelectSqlGenerator(
+            columnIdentifierGenerator,
+            mathOperationGenerator,
+            metaDataEngine::ensureTableMetaData));
 
     public OracleSqlGenerator(final MetaDataEngine metaDataEngine,
                               final ColumnIdentifierGenerator columnIdentifierGenerator,
@@ -33,10 +37,7 @@ public final class OracleSqlGenerator extends DefaultSqlGenerator {
 
     @Override
     protected SelectSqlGenerator createSelectSqlGenerator() {
-        return new OracleSelectSqlGenerator(
-                columnIdentifierGenerator,
-                mathOperationGenerator,
-                metaDataEngine::ensureTableMetaData);
+        return oracleSelectSqlGenerator.getOrThrow();
     }
 
     @Override
@@ -47,6 +48,7 @@ public final class OracleSqlGenerator extends DefaultSqlGenerator {
     @Override
     protected MergeSqlGenerator createMergeSqlGenerator() {
         return new OracleMergeSqlGenerator(
+                oracleSelectSqlGenerator.getOrThrow(),
                 columnIdentifierGenerator,
                 mathOperationGenerator,
                 metaDataEngine::ensureTableMetaData);

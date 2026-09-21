@@ -8,6 +8,7 @@ import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.ConvertExpression;
+import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
@@ -26,6 +27,7 @@ import org.litebridge.orm.expression.function.scalar.UpperSpec;
 import org.litebridge.orm.expression.intent.ConvertSpec;
 import org.litebridge.orm.expression.intent.ExpressionSpecArray;
 import org.litebridge.orm.expression.select.AliasReferenceSpec;
+import org.litebridge.orm.expression.select.LiteralExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.meta.QueryField;
@@ -33,7 +35,6 @@ import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Maps high-level {@link ExpressionSpec} query expressions to dialect-specific {@link SelectExpression} instances.
@@ -99,6 +100,8 @@ public final class SelectExpressionMapper {
                     new ConvertExpression(toSelectExpression(convertSpec.target(), useSelectReferences), convertSpec.returnType());
             case ExpressionSpecArray expressionSpecArray ->
                     throw new IllegalStateException("ExpressionSpecArray not resolved: " + expressionSpecArray);
+            case LiteralExpressionSpec<?> literalExpressionSpec ->
+                    sqlFunctionRegistry.select().literal().create(literalExpressionSpec.value(), literalExpressionSpec.getAlias(), useSelectReferences);
 
             // Aggregate functions
             case CountSpec countSpec -> sqlFunctionRegistry.aggregate().count();

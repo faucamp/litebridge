@@ -6,6 +6,7 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.UsingNode;
+import org.litebridge.orm.expression.Aliasable;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -19,6 +20,8 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
         extends MergeStepBase
         permits DtoMergeOnStep {
 
+    protected final @Nullable String usingAlias;
+
     /**
      * Creates a new {@code MergeOnStep} instance.
      *
@@ -27,15 +30,19 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
      * @param litebridgeContext Litebridge context
      */
     public MergeOnStep(final String usingTable,
+                       final @Nullable String usingAlias,
                        final MergeNode mergeNode,
                        final LitebridgeContext litebridgeContext) {
         super(usingTable, mergeNode, litebridgeContext);
+        this.usingAlias = usingAlias;
     }
 
     public MergeOnStep(final QueryNode subselectNode,
+                       final @Nullable String usingAlias,
                        final MergeNode mergeNode,
                        final LitebridgeContext litebridgeContext) {
         super(subselectNode, mergeNode, litebridgeContext);
+        this.usingAlias = usingAlias;
     }
 
     /**
@@ -46,9 +53,11 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
      * @param litebridgeContext the Litebridge context
      */
     protected MergeOnStep(final Class<?> usingDtoClass,
+                          final @Nullable String usingAlias,
                           final MergeNode mergeNode,
                           final LitebridgeContext litebridgeContext) {
         super(usingDtoClass, mergeNode, litebridgeContext);
+        this.usingAlias = usingAlias;
     }
 
     /**
@@ -72,13 +81,21 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
     }
 
     private MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> onImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {
+        final String alias;
+
+        if (expression instanceof Aliasable aliasable) {
+            alias = aliasable.getAlias();
+        } else {
+            alias = usingAlias;
+        }
+
         return new MergeConditionClause<>(litebridgeContext,
                 LogicOperator.NOOP,
                 column,
                 expression,
                 null,
                 conditionNode -> {
-                    final UsingNode usingNode = new UsingNode(mergeNode, usingTable, usingDtoClass, conditionNode);
+                    final UsingNode usingNode = new UsingNode(mergeNode, usingTable, usingDtoClass, usingQueryNode, alias, conditionNode);
                     return new MergeOnConditionClauseTerminal<>(mergeNode, usingNode, litebridgeContext);
                 });
     }

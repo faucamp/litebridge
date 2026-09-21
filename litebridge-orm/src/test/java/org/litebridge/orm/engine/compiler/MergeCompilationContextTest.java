@@ -475,9 +475,6 @@ class MergeCompilationContextTest {
         final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null), context);
 
         // When & Then
-        final Column col = compilationContext.resolveAlias(table, idCol);
-        assertNotNull(col);
-
         final SelectColumnSpec spec = new SelectColumnSpec(new Column(table, "id"));
         final ExpressionSpec resolvedSpec = compilationContext.resolveAlias(spec);
         assertSame(spec, resolvedSpec);

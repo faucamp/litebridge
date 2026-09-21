@@ -422,9 +422,15 @@ public class SelectEngineTerminal {
             }
 
             final Row result;
+            final Class<?>[] resultTypes = selectNode.resultTypes();
 
-            if (selectNode.resultTypes() != null) {
-                result = convertRowValue(row, selectNode.resultTypes(), litebridgeContext.typeConverter());
+            if (resultTypes != null) {
+                if (selectNode.table() != null || (resultTypes.length > 1 || row.size() > 1)) {
+                    result = convertRowValue(row, selectNode.resultTypes(), litebridgeContext.typeConverter());
+                } else {
+                    // Single type override
+                    return (DTO) unwrap(resultTypes[0], row.column(0), litebridgeContext.typeConverter());
+                }
             } else {
                 result = row;
             }

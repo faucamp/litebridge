@@ -17,4 +17,10 @@ public abstract sealed class AbstractAliasable implements Aliasable permits Abst
     public void setAlias(@Nullable final String alias) {
         this.alias = alias;
     }
+
+    @Override
+    public AbstractAliasable as(final String alias) {
+        this.alias = alias;
+        return this;
+    }
 }

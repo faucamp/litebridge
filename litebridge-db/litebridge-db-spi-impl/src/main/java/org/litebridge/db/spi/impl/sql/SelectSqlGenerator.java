@@ -66,8 +66,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         }
 
         // From table
-        sql.append(" FROM ");
-        appendSelectTarget(sql, select.from(), connectionProvider);
+        appendFromClause(sql, select, connectionProvider);
 
         // Joins
         if (!CollectionUtils.isEmpty(select.joins())) {
@@ -127,6 +126,13 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         return sql.toString();
     }
 
+    protected void appendFromClause(final StringBuilder sql, final Select select, final ConnectionProvider connectionProvider) {
+        if (!(select.from() instanceof SelectTarget.Void)) {
+            sql.append(" FROM ");
+            appendSelectTarget(sql, select.from(), connectionProvider);
+        }
+    }
+
     protected void appendSelectTarget(final StringBuilder sql, final SelectTarget selectTarget, final ConnectionProvider connectionProvider) {
         switch (selectTarget) {
             case Table table -> appendTable(sql, table);
@@ -140,6 +146,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
             case AliasedTable aliasedTable -> appendTable(sql, aliasedTable.target())
                     .append(" AS ")
                     .append(aliasedTable.alias());
+            case SelectTarget.Void voidTarget -> { /* Ignore */ }
         }
     }
 

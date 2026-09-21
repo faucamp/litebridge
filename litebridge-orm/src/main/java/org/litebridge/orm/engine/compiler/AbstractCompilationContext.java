@@ -71,21 +71,6 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return bindValues;
     }
 
-    protected @Nullable String resolveAlias(final Table table, final ColumnMetaData columnMetaData) {
-        // Default implementation does nothing
-        return null;
-    }
-
-    protected @Nullable String resolveAlias(final Table table, final Column column) {
-        // Default implementation does nothing
-        return null;
-    }
-
-    protected ExpressionSpec resolveAlias(final ExpressionSpec expressionSpec) {
-        // Default implementation does nothing
-        return expressionSpec;
-    }
-
     protected final ConditionGroup toConditionGroup(final ConditionGroupSpec conditionGroupSpec, final SelectTarget selectTargets) {
         return toConditionGroup(conditionGroupSpec, Collections.singletonList(selectTargets));
     }
@@ -160,10 +145,6 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             } else {
                 lhsExpressionSpec = conditionSpec.getLhsExpression();
             }
-
-            if (operator != Operator.USING) {
-                lhsExpressionSpec = resolveAlias(lhsExpressionSpec);
-            }
         } else if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
             // DTO field name
             final SelectTarget selectTarget = selectTargets.getFirst();
@@ -173,7 +154,6 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
             final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(Objects.requireNonNull(conditionSpec.getLhsColumn()));
             final Column column = columnMetaData.column();
-//            final String tableAlias = aliasGenerator.tableAlias(column.table());
             final String columnAlias = aliasGenerator.columnAlias(column);
             lhsExpressionSpec = new SelectColumnSpec(column, columnAlias, tableAlias);
         } else {
@@ -183,7 +163,6 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             final String tableAlias = operator == Operator.USING ? null : getAlias(selectTarget);
 
             final Column column = new Column(table, Objects.requireNonNull(conditionSpec.getLhsColumn()));
-//            final String tableAlias = aliasGenerator.tableAlias(column.table());
             final String columnAlias = aliasGenerator.columnAlias(column);
             lhsExpressionSpec = new SelectColumnSpec(column, columnAlias, tableAlias);
         }
@@ -219,10 +198,6 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
                 rhsExpressionSpec = expressionSpec;
             }
 
-            if (operator != Operator.USING) {
-                rhsExpressionSpec = resolveAlias(rhsExpressionSpec);
-            }
-
             return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(rhsExpressionSpec, true));
         } else if (value instanceof Column referencedColumn) {
             // Reference to a selected column
@@ -234,8 +209,9 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         // Store bind values and return condition
         return switch (operator) {
             case USING -> {
-                final LiteralExpression literalExpression = litebridgeContext.sqlFunctionRegistry().select().literal().create(value, false);
-                yield new Condition(lhsSelectExpression, operator, literalExpression);
+                final ColumnReference lhsColumnRef = (ColumnReference) lhsSelectExpression;
+                final ColumnReference usingColumRef = litebridgeContext.sqlFunctionRegistry().select().reference().create(new Column(lhsColumnRef.column().name(), null), null, null);
+                yield new Condition(usingColumRef, operator, usingColumRef);
             }
             case IS_NULL, IS_NOT_NULL -> new Condition(lhsSelectExpression, operator, null);
             default -> {
@@ -264,7 +240,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         }
 
         if (column != null) {
-            final ColumnMetaData columnMetaData = tableMetaDataCache.ensureTableMetaData(column.table()).column(column.name());
+            final ColumnMetaData columnMetaData = getTableMetaData(column.table()).column(column.name());
 
             if (rawValue instanceof Collection<?> collection) {
                 // Multiple bind values
@@ -339,15 +315,50 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);
     }
 
-    protected @Nullable String getAlias(final SelectTarget selectTarget) {
-        if (selectTarget instanceof Aliased<?> aliased) {
-            return aliased.alias();
-        }
-
-        return null;
+    protected final SelectTarget getSelectTargetDto(final Class<?> dtoClass,
+                                            final @Nullable Class<?> contextDtoClass,
+                                            final @Nullable String alias) {
+        final OrmTable ormTable = getOrmTable(dtoClass, contextDtoClass);
+        final Table table = ormTable.getMetaData().table();
+        final String tableAlias = alias != null ? alias : aliasGenerator.newTableAlias(table);
+        return new AliasedTable(tableAlias, table);
     }
 
-    private static BindValueExpression createBindValueExpression(final @Nullable Object value, final int index) {
+    protected final SelectTarget getSelectTargetTable(final String tableName, final @Nullable String alias) {
+        final Table table = tableRegistry.getOrCreateSpiTable(tableName);
+
+        if (alias != null) {
+            return new AliasedTable(alias, table);
+        } else {
+            return table;
+        }
+    }
+
+    protected final SelectTarget getSelectTargetQuery(final QueryNode fromQueryNode, final @Nullable String alias) {
+        final SelectTarget query;
+        litebridgeContext.aliasGenerator().pushScope();
+        final PreparedOperation preparedOperation = litebridgeContext.createQueryCompiler().compile(fromQueryNode);
+        litebridgeContext.aliasGenerator().popScope();
+        bindValues.addAll(preparedOperation.bindValues());
+
+        if (alias != null) {
+            query = new AliasedQuery(alias, (Select) preparedOperation.operation());
+        } else {
+            query = (Select) preparedOperation.operation();
+        }
+
+        return query;
+    }
+
+    protected @Nullable String getAlias(final SelectTarget selectTarget) {
+        return switch (selectTarget) {
+            case Aliased<?> aliased -> aliased.alias();
+            case Table table -> aliasGenerator.tableAlias(table);
+            default -> null;
+        };
+    }
+
+    protected static BindValueExpression createBindValueExpression(final @Nullable Object value, final int index) {
         final int valueSize;
 
         if (value instanceof Collection<?> collection) {

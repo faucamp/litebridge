@@ -4,24 +4,29 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.alias.AliasedQuery;
+import org.litebridge.db.spi.alias.AliasedTable;
 import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.LogicConditionGroup;
+import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateColumn;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.function.BiFunction;
 
 /**
  * SQL generator for {@code MERGE} statements.
  */
 public class MergeSqlGenerator extends AbstractSqlGenerator {
+
+    private final SelectSqlGenerator selectSqlGenerator;
 
     /**
      * Creates a new {@code MergeSqlGenerator}.
@@ -30,10 +35,12 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
      * @param mathOperationGenerator    math operation generator
      * @param ensureTableMetaData       function that creates/retrieves table metadata
      */
-    public MergeSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public MergeSqlGenerator(final SelectSqlGenerator selectSqlGenerator,
+                             final ColumnIdentifierGenerator columnIdentifierGenerator,
                              final MathOperationGenerator mathOperationGenerator,
                              final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
         super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+        this.selectSqlGenerator = selectSqlGenerator;
     }
 
     /**
@@ -44,30 +51,11 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
      * @return the generated SQL statement string
      */
     public String generateSql(final Merge merge, final ConnectionProvider connectionProvider) {
-        final Table targetTable = merge.table();
-        final StringBuilder sql = appendTable(new StringBuilder("MERGE INTO "), targetTable);
-
-//        if (targetTable.alias() != null) {
-//            sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(merge.table().alias())));
-//        }
-        if (true) {
-            throw new UnsupportedOperationException("Not implemented yet, possibly deprecated");
-        }
+        final StringBuilder sql = new StringBuilder("MERGE INTO ");
+        appendSelectTarget(sql, merge.table(), connectionProvider);
 
         sql.append(" USING ");
-        final Table usingTable = merge.usingTable();
-
-        if (usingTable != null) {
-            appendTable(sql, usingTable);
-
-//            if (usingTable.alias() != null) {
-//                sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(usingTable.alias())));
-//            }
-            if (true) {
-                throw new UnsupportedOperationException("Not implemented yet, possibly deprecated");
-            }
-
-        }
+        appendSelectTarget(sql, merge.using(), connectionProvider);
 
         sql.append(" ON (");
         appendConditionsAndSubgroups(sql, merge.on(), merge, connectionProvider);
@@ -177,6 +165,22 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
 
         for (final LogicConditionGroup logicConditionGroup : conditionGroup.subgroups()) {
             collectConditionGroupIndices(logicConditionGroup.conditionGroup(), parameterIndices);
+        }
+    }
+
+    protected void appendSelectTarget(final StringBuilder sql, final SelectTarget selectTarget, final ConnectionProvider connectionProvider) {
+        switch (selectTarget) {
+            case Table table -> appendTable(sql, table);
+            case Select subselect -> sql.append('(')
+                    .append(selectSqlGenerator.generateSql(subselect, connectionProvider))
+                    .append(')');
+            case AliasedQuery aliasedQuery -> sql.append('(')
+                    .append(selectSqlGenerator.generateSql(aliasedQuery.target(), connectionProvider))
+                    .append(") AS ")
+                    .append(aliasedQuery.alias());
+            case AliasedTable aliasedTable -> appendTable(sql, aliasedTable.target())
+                    .append(" AS ")
+                    .append(aliasedTable.alias());
         }
     }
 }

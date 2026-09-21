@@ -5,6 +5,8 @@ import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.alias.AliasTransformer;
+import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.engine.compiler.ContextStack;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,23 +24,20 @@ import java.util.Objects;
  */
 public final class DefaultAliasGenerator implements AliasGenerator {
 
-//    private final AliasTransformer aliasTransformer;
     /**
      * Map of name -> alias base string
      */
     private final Map<String, String> aliasMap = new HashMap<>();
+
     /**
      * Map of alias base string -> count (number of times used)
      */
     private final Map<String, Integer> aliasCount = new HashMap<>();
+
     /**
-     * Tables that have been aliased for the current operation; the value is the alias.
+     * Scope stack (used for subqueries)
      */
-    private final Map<Table, String> tableAliasMap = new HashMap<>();
-    /**
-     * Columns that have been aliased for the current operation; the value is the alias.
-     */
-    private final Map<Column, String> columnAliasMap = new HashMap<>();
+    private final ScopeContextStack scope = new ScopeContextStack();
 
     /**
      * Clears internal alias maps and usage counts.
@@ -59,7 +58,7 @@ public final class DefaultAliasGenerator implements AliasGenerator {
 
     @Override
     public @Nullable Column column(final String alias) {
-        return columnAliasMap.entrySet().stream()
+        return scope.current().columnAliasMap.entrySet().stream()
                 .filter(e -> e.getValue().equals(alias))
                 .findFirst()
                 .map(Map.Entry::getKey)
@@ -68,27 +67,27 @@ public final class DefaultAliasGenerator implements AliasGenerator {
 
     @Override
     public @Nullable String columnAlias(final Column column) {
-        return columnAliasMap.get(column);
+        return scope.current().columnAliasMap.get(column);
     }
 
     @Override
     public @Nullable String tableAlias(final Table table) {
-        return tableAliasMap.get(table);
+        return scope.current().tableAliasMap.get(table);
     }
 
     @Override
     public String newTableAlias(final Table table) {
-        return tableAliasMap.computeIfAbsent(table, t -> newAlias(t.name()));
+        return scope.current().tableAliasMap.computeIfAbsent(table, t -> newAlias(t.name()));
     }
 
     @Override
     public String newColumnAlias(final Column column) {
-        return columnAliasMap.computeIfAbsent(column, c -> newAlias(c.qualifiedName()));
+        return scope.current().columnAliasMap.computeIfAbsent(column, c -> newAlias(c.qualifiedName()));
     }
 
     @Override
     public void setColumnAlias(final Column column, final String alias) {
-        columnAliasMap.put(column, alias);
+        scope.current().columnAliasMap.put(column, alias);
         aliasMap.put(alias, alias);
     }
 
@@ -103,6 +102,40 @@ public final class DefaultAliasGenerator implements AliasGenerator {
             return alias + count;
         } else {
             return alias;
+        }
+    }
+
+    @Override
+    public void pushScope() {
+        scope.push(LogicOperator.NOOP);
+    }
+
+    @Override
+    public void popScope() {
+        scope.pop();
+    }
+
+    /**
+     * @param tableAliasMap  Tables that have been aliased for the current operation; the value is the alias.
+     * @param columnAliasMap Columns that have been aliased for the current operation; the value is the alias.
+     */
+    private record Scope(Map<Table, String> tableAliasMap, Map<Column, String> columnAliasMap) {
+
+        public Scope() {
+            this(new HashMap<>(), new HashMap<>());
+        }
+    }
+
+    private class ScopeContextStack extends ContextStack<Scope> {
+
+        @Override
+        protected Scope newRootInstance() {
+            return new Scope();
+        }
+
+        @Override
+        protected Scope newSubInstance(final LogicOperator logicOperator) {
+            return new Scope();
         }
     }
 }

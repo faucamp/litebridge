@@ -22,7 +22,7 @@ abstract sealed class MergeStepBase permits MergeAndStep, MergeOnStep {
     /**
      * The using sub-query's terminal node
      */
-    protected final @Nullable QueryNode usingSubselectNode;
+    protected final @Nullable QueryNode usingQueryNode;
     /**
      * The Litebridge context.
      */
@@ -34,7 +34,7 @@ abstract sealed class MergeStepBase permits MergeAndStep, MergeOnStep {
         this.mergeNode = mergeNode;
         this.usingTable = usingTable;
         this.usingDtoClass = null;
-        this.usingSubselectNode = null;
+        this.usingQueryNode = null;
         this.litebridgeContext = litebridgeContext;
     }
 
@@ -44,17 +44,17 @@ abstract sealed class MergeStepBase permits MergeAndStep, MergeOnStep {
         this.mergeNode = mergeNode;
         this.usingTable = null;
         this.usingDtoClass = usingDtoClass;
-        this.usingSubselectNode = null;
+        this.usingQueryNode = null;
         this.litebridgeContext = litebridgeContext;
     }
 
-    MergeStepBase(final QueryNode usingSubselectNode,
+    MergeStepBase(final QueryNode usingQueryNode,
                   final MergeNode mergeNode,
                   final LitebridgeContext litebridgeContext) {
         this.mergeNode = mergeNode;
         this.usingTable = null;
         this.usingDtoClass = null;
-        this.usingSubselectNode = usingSubselectNode;
+        this.usingQueryNode = usingQueryNode;
         this.litebridgeContext = litebridgeContext;
     }
 }

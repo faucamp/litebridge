@@ -111,6 +111,12 @@ public final class ProtoNestableTOExpr<T> extends AbstractAliasable
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public ProtoNestableTOExpr<T> as(final String alias) {
+        return (ProtoNestableTOExpr<T>) super.as(alias);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;

@@ -120,6 +120,28 @@ class SqlE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
+    @DisplayName("Select a literal value")
+    void select_literal(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Integer literal
+        {
+            final int result = litebridge.select(Fn.literal(123)).oneOrThrow();
+            assertEquals(123, result);
+        }
+
+        // String literal
+        {
+            final String result = litebridge.select(Fn.literal("Hello World!")).oneOrThrow();
+            assertEquals("Hello World!", result);
+        }
+
+        // String literal that needs escaping
+        {
+            final String result = litebridge.select(Fn.literal("Robert'); DROP TABLE Students;")).oneOrThrow();
+            assertEquals("Robert'); DROP TABLE Students;", result);
+        }
+    }
+
+    @TestTemplate
     @DisplayName("Select with limit/offset and order by")
     void select_limitOffset(final DbEnvDtoTableMapper tableMapper) throws Exception {
         final String personTableName = tableMapper.qualifyName("PERSON");
@@ -183,7 +205,7 @@ class SqlE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select specific expressions and filter records using a query")
-    void selectQuery(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    void select_query(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
         final String firstName = tableMapper.transformColumnName("FIRST_NAME");
@@ -210,7 +232,7 @@ class SqlE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("Select records using SQL and map results to Person objects")
-    void selectMapToDto(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    void select_mapToDto(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given
         final String personTableName = tableMapper.qualifyName("PERSON");
         final String personId = tableMapper.transformColumnName("PERSON_ID");

@@ -6,7 +6,7 @@ import org.jspecify.annotations.Nullable;
  * Factory to create nestable column expressions.
  */
 @FunctionalInterface
-public interface DelegateExpressionFactory {
+public interface DelegateColumnExpressionFactory {
 
     /**
      * Creates a nestable column expression.
@@ -15,5 +15,5 @@ public interface DelegateExpressionFactory {
      * @param args   Expression-specific additional arguments, if any.
      * @return A new column expression.
      */
-    DelegateExpression create(SelectExpression target, @Nullable Object... args);
+    DelegateColumnExpression create(ColumnExpression target, @Nullable Object... args);
 }

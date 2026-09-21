@@ -12,4 +12,9 @@ public final class CountSpec extends AbstractAliasable implements TypeOverrideEx
     public Class<Long> returnType() {
         return Long.class;
     }
+
+    @Override
+    public CountSpec as(final String alias) {
+        return (CountSpec) super.as(alias);
+    }
 }

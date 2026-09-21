@@ -7,10 +7,12 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.LitebridgeInspector;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.e2e.setup.MultiDbTestExtension;
+import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.expression.Fn;
 
 import java.math.BigInteger;
@@ -25,7 +27,7 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("SQL merge using table")
-    public void merge_usingSubquery(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    public void merge_usingTable(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Don't run test for databases that do not support MERGE INTO
         assumeTrue(litebridge instanceof Litebridge);
         final Litebridge litebridge = (Litebridge) this.litebridge;
@@ -100,7 +102,7 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
 
     @TestTemplate
     @DisplayName("SQL merge using query")
-    public void merge(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    public void merge_usingQuery(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Don't run test for databases that do not support MERGE INTO
         assumeTrue(litebridge instanceof Litebridge);
         final Litebridge litebridge = (Litebridge) this.litebridge;
@@ -130,58 +132,81 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
                     .values(id, "Account" + id, BigInteger.valueOf(id), id));
         }
 
-//        final UpdateResult updateResult = litebridge.mergeInto(personTable, m -> m
-//                .using(q -> q
-//                        .select(accountId)
-//                        .from(accountTable))
-//                .on(accountId).eq(Fn.c(personTable, personId))
-//                .whenMatched(u -> u
-//                        .update(person -> person
-//                                .set(firstName).to("Updated Name")
-//                                .set(surname).to("Updated Surname")
-//                                .set(age).to(100))))
+        litebridge.select().from("LB.PERSON").list();
 
-
-        final UpdateResult updateResult = litebridge.mergeInto(accountTable, m -> m
-                .using(personTable)
-                .on(Fn.c(accountTable, accountId)).eq(Fn.c(personTable, personId))
+        final UpdateResult updateResult = litebridge.mergeInto(personTable, m -> m
+                .using(q -> q
+                        .select(accountId)
+                        .from(accountTable))
+                .on(accountId).eq(Fn.c(personTable, personId))
                 .whenMatched(u -> u
-                        .update(account -> account
-                                .set(balance).to(500)
-                                .where(accountId).lt(5)))
-                .whenMatched(account -> account
-                        .delete(d -> d
-                                .where(accountId).gte(5)))
-                .whenNotMatched(i -> i
-                        .insert(accountId, accountName, balance, personId)
-                        .values(123L, "Default Account", 0, 1L)));
+                        .update(person -> person
+                                .set(firstName).to("Updated Name")
+                                .set(surname).to("Updated Surname")
+                                .set(age).to(100))));
 
-        final boolean isOracle = "Oracle".equals(dbEnv.getName());
-        assertEquals(isOracle ? 5 : 10, updateResult.rowsAffected());
+        assertEquals(5, updateResult.rowsAffected());
+    }
 
-        final int count = litebridge.select(Fn.convert(Fn.count(), int.class)).from(Account.class).oneOrThrow();
-        assertEquals(isOracle ? 10 : 5, count);
+    @TestTemplate
+    @DisplayName("SQL merge: upsert")
+    public void merge_upsert(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Don't run test for databases that do not support MERGE INTO
+        assumeTrue(litebridge instanceof Litebridge);
+        final Litebridge litebridge = (Litebridge) this.litebridge;
 
-        final List<Row> accountRows = litebridge.select(
-                        Fn.convert(Fn.c(accountId), int.class),
-                        Fn.convert(Fn.c(balance), int.class))
-                .from(accountTable)
-                .list();
-        assertEquals(isOracle ? 10 : 5, accountRows.size());
+        final String personTable = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+        final QueryPlanCache queryPlanCache = LitebridgeInspector.getQueryPlanCache(litebridge);
+        int prevCacheSize = queryPlanCache.size();
 
-        for (int i = 1; i <= 4; i++) {
-            final int id = i;
-            assertTrue(accountRows.stream().anyMatch(row -> {
-                final RowColumn accountIdCol = row.column(accountId);
-                final RowColumn balanceCol = row.column(balance);
-                return accountIdCol.value().equals(id) && balanceCol.value().equals(500);
-            }));
+        // Insert a row that does not exist
+        {
+            final UpdateResult insertResult = litebridge.mergeInto(personTable, m -> m
+                    .using(Fn.aliasQuery("X", q -> q
+                            .select(Fn.literal(123).as("PERSON_ID"))))
+                    .on(personId).eq(Fn.fromAlias("X", personId))
+                    .whenMatched(u -> u
+                            .update(person -> person
+                                    .set(firstName).to("Updated Name")
+                                    .set(surname).to("Updated Surname")))
+                    .whenNotMatched(i -> i
+                            .insert(personId, firstName, surname, age)
+                            .values(123, "Inserted Name", "Inserted Surname", 30)));
+
+            assertEquals(1, insertResult.rowsAffected());
+            assertEquals(prevCacheSize + 1, queryPlanCache.size());
+            final Row row = litebridge.select().from(personTable).where(personId).eq(123).oneOrThrow();
+            assertEquals("Inserted Name", row.value(firstName));
+            assertEquals("Inserted Surname", row.value(surname));
+            assertEquals(30, ((Number) row.value(age)).intValue());
+            prevCacheSize = queryPlanCache.size();
         }
 
-        assertTrue(accountRows.stream().anyMatch(row -> {
-            final RowColumn accountIdCol = row.column(accountId);
-            final RowColumn balanceCol = row.column(balance);
-            return accountIdCol.value().equals(123) && balanceCol.value().equals(0);
-        }));
+        // Update an existing row with the same merge statement
+        {
+            final UpdateResult updateResult = litebridge.mergeInto(personTable, m -> m
+                    .using(Fn.aliasQuery("X", q -> q
+                            .select(Fn.literal(123).as("PERSON_ID"))))
+                    .on(personId).eq(Fn.fromAlias("X", personId))
+                    .whenMatched(u -> u
+                            .update(person -> person
+                                    .set(firstName).to("Updated Name")
+                                    .set(surname).to("Updated Surname")))
+                    .whenNotMatched(i -> i
+                            .insert(personId, firstName, surname, age)
+                            .values(123, "Inserted Name", "Inserted Surname", 30)));
+
+            assertEquals(1, updateResult.rowsAffected());
+            assertEquals(prevCacheSize, queryPlanCache.size());
+            final Row row = litebridge.select().from(personTable).where(personId).eq(123).oneOrThrow();
+            assertEquals("Updated Name", row.value(firstName));
+            assertEquals("Updated Surname", row.value(surname));
+            assertEquals(30, ((Number) row.value(age)).intValue());
+        }
     }
 }

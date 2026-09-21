@@ -17,16 +17,16 @@
 //                mock(SelectReferenceExpressionFactory.class)
 //        );
 //        final SqlFunctionRegistry.Aggregate aggregate = new SqlFunctionRegistry.Aggregate(
-//                mock(DelegateExpressionFactory.class),
-//                mock(DelegateExpressionFactory.class),
-//                mock(DelegateExpressionFactory.class),
+//                mock(DelegateColumnExpressionFactory.class),
+//                mock(DelegateColumnExpressionFactory.class),
+//                mock(DelegateColumnExpressionFactory.class),
 //                mock(SelectExpression.class)
 //        );
 //        final SqlFunctionRegistry.Scalar scalar = new SqlFunctionRegistry.Scalar(
-//                mock(DelegateExpressionFactory.class),
-//                mock(DelegateExpressionFactory.class),
-//                mock(DelegateExpressionFactory.class),
-//                mock(DelegateExpressionFactory.class)
+//                mock(DelegateColumnExpressionFactory.class),
+//                mock(DelegateColumnExpressionFactory.class),
+//                mock(DelegateColumnExpressionFactory.class),
+//                mock(DelegateColumnExpressionFactory.class)
 //        );
 //        final SqlFunctionRegistry.Date date = new SqlFunctionRegistry.Date(
 //                mock(SelectExpression.class)

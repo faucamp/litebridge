@@ -13,7 +13,7 @@ import java.util.StringJoiner;
  */
 public final class Column {
 
-    private static final Table NO_TABLE = new Table("");
+    private static final Table NO_TABLE = VirtualTable.anonymous();
 
     /**
      * Target name

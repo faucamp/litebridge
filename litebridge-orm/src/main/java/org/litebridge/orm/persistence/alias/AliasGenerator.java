@@ -22,4 +22,8 @@ public sealed interface AliasGenerator permits DefaultAliasGenerator, NoOpAliasG
     void setColumnAlias(Column column, String alias);
 
     String newAlias(String name);
+
+    void pushScope();
+
+    void popScope();
 }

@@ -10,6 +10,7 @@ import org.litebridge.orm.exception.NonUniqueResultException;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -25,6 +26,7 @@ public abstract class DelegatingSelectTerminal<DTO> implements SelectTerminal<DT
     protected final LitebridgeContext litebridgeContext;
     protected QueryNode node;
     protected @Nullable Supplier<QueryNode> pendingNode;
+    private final @Nullable Supplier<LitebridgeContext> litebridgeContextSupplier;
 
     /**
      * Creates a new {@code DelegatingSelectTerminal} instance.
@@ -39,61 +41,78 @@ public abstract class DelegatingSelectTerminal<DTO> implements SelectTerminal<DT
         this.node = node;
         this.selectEngineTerminal = selectEngineTerminal;
         this.litebridgeContext = litebridgeContext;
+        this.litebridgeContextSupplier = null;
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public DelegatingSelectTerminal(final SelectEngineTerminal selectEngineTerminal, final Supplier<LitebridgeContext> litebridgeContextSupplier) {
+        this.selectEngineTerminal = selectEngineTerminal;
+        this.litebridgeContext = null;
+        this.litebridgeContextSupplier = litebridgeContextSupplier;
     }
 
     @Override
     public Optional<DTO> one() {
-        return selectEngineTerminal.fetchOne(node(), litebridgeContext);
+        return selectEngineTerminal.fetchOne(node(), litebridgeContext());
     }
 
     @Override
     public @Nullable DTO oneOrNull() throws NonUniqueResultException {
-        return selectEngineTerminal.fetchOneOrNull(node(), litebridgeContext);
+        return selectEngineTerminal.fetchOneOrNull(node(), litebridgeContext());
     }
 
     @Override
     public DTO oneOrThrow() throws NoSuchElementException {
-        return selectEngineTerminal.fetchOneOrThrow(node(), litebridgeContext);
+        return selectEngineTerminal.fetchOneOrThrow(node(), litebridgeContext());
     }
 
     @Override
     public <X extends Throwable> DTO oneOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
-        return selectEngineTerminal.fetchOneOrThrow(node(), litebridgeContext, exceptionSupplier);
+        return selectEngineTerminal.fetchOneOrThrow(node(), litebridgeContext(), exceptionSupplier);
     }
 
     @Override
     public Optional<DTO> first() {
-        return selectEngineTerminal.fetchFirst(node(), litebridgeContext);
+        return selectEngineTerminal.fetchFirst(node(), litebridgeContext());
     }
 
     @Override
     public @Nullable DTO firstOrNull() {
-        return selectEngineTerminal.fetchFirstOrNull(node(), litebridgeContext);
+        return selectEngineTerminal.fetchFirstOrNull(node(), litebridgeContext());
     }
 
     @Override
     public DTO firstOrThrow() throws NoSuchElementException {
-        return selectEngineTerminal.fetchFirstOrThrow(node(), litebridgeContext);
+        return selectEngineTerminal.fetchFirstOrThrow(node(), litebridgeContext());
     }
 
     @Override
     public <X extends Throwable> DTO firstOrThrow(final Supplier<? extends X> exceptionSupplier) throws X {
-        return selectEngineTerminal.fetchFirstOrThrow(node(), litebridgeContext, exceptionSupplier);
+        return selectEngineTerminal.fetchFirstOrThrow(node(), litebridgeContext(), exceptionSupplier);
     }
 
     @Override
     public Stream<DTO> stream() {
-        return selectEngineTerminal.fetchStream(node(), litebridgeContext);
+        return selectEngineTerminal.fetchStream(node(), litebridgeContext());
     }
 
     @Override
     public List<DTO> list() {
-        return selectEngineTerminal.fetchList(node(), litebridgeContext);
+        return selectEngineTerminal.fetchList(node(), litebridgeContext());
     }
 
     @Override
     public PreparedSql toSql() {
-        return selectEngineTerminal.generateSql(node(), litebridgeContext);
+        return selectEngineTerminal.generateSql(node(), litebridgeContext());
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private LitebridgeContext litebridgeContext() {
+        if (litebridgeContext == null) {
+            return Objects.requireNonNull(litebridgeContextSupplier).get();
+        }
+
+        return litebridgeContext;
     }
 
     QueryNode node() {

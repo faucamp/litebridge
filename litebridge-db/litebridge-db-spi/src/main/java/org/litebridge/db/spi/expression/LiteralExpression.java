@@ -13,6 +13,7 @@ import java.util.StringJoiner;
 public class LiteralExpression implements SelectExpression {
 
     private final @Nullable Object value;
+    private final @Nullable String alias;
     private final boolean parameter;
 
     /**
@@ -20,8 +21,8 @@ public class LiteralExpression implements SelectExpression {
      *
      * @param value the literal value to be represented
      */
-    public LiteralExpression(final @Nullable Object value) {
-        this(value, false);
+    public LiteralExpression(final @Nullable Object value, final @Nullable String alias) {
+        this(value, alias, false);
     }
 
     /**
@@ -30,8 +31,9 @@ public class LiteralExpression implements SelectExpression {
      * @param value     the literal value to be represented
      * @param parameter whether this literal should be treated as a bind parameter
      */
-    public LiteralExpression(final @Nullable Object value, final boolean parameter) {
+    public LiteralExpression(final @Nullable Object value, final @Nullable String alias, final boolean parameter) {
         this.value = value;
+        this.alias = alias;
         this.parameter = parameter;
     }
 
@@ -42,6 +44,10 @@ public class LiteralExpression implements SelectExpression {
      */
     public @Nullable Object value() {
         return value;
+    }
+
+    public @Nullable String alias() {
+        return alias;
     }
 
     /**
@@ -55,11 +61,12 @@ public class LiteralExpression implements SelectExpression {
 
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
+        final String valueStr;
+
         if (parameter) {
-            return toBindValueSql(operation);
-        }
-        if (value == null) {
-            return "NULL";
+            valueStr = "CAST(%s AS %s)".formatted(toBindValueSql(operation), "INT");
+        } else if (value == null) {
+            valueStr = "NULL";
         } else if (value instanceof Collection collection) {
             final StringJoiner joiner = new StringJoiner(", ");
 
@@ -67,10 +74,18 @@ public class LiteralExpression implements SelectExpression {
                 joiner.add(element.toString());
             }
 
-            return joiner.toString();
+            valueStr = joiner.toString();
+        } else if (value instanceof String string) {
+            valueStr = "'" + string.replace("'", "''") + "'";
         } else {
-            return value.toString();
+            valueStr = value.toString();
         }
+
+        if (alias != null) {
+            return valueStr + " AS " + alias;
+        }
+
+        return valueStr;
     }
 
     /**
@@ -98,21 +113,20 @@ public class LiteralExpression implements SelectExpression {
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof final LiteralExpression that)) return false;
-        if (this.parameter != that.parameter) return false;
-        if (this.parameter) return true; // Structurally equal if both are parameters
-        return Objects.equals(value, that.value);
+        return parameter == that.parameter && Objects.equals(value, that.value) && Objects.equals(alias, that.alias);
     }
 
     @Override
     public int hashCode() {
-        if (parameter) return 31; // Constant hash for all parameters
-        return Objects.hashCode(value);
+        return Objects.hash(value, alias, parameter);
     }
 
     @Override
     public String toString() {
         return new StringJoiner(", ", LiteralExpression.class.getSimpleName() + "[", "]")
                 .add("value=" + value)
+                .add("alias='" + alias + "'")
+                .add("parameter=" + parameter)
                 .toString();
     }
 }
