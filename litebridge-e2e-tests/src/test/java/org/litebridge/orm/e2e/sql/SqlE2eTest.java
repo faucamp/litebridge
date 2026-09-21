@@ -2,6 +2,7 @@ package org.litebridge.orm.e2e.sql;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
+import org.litebridge.convert.converter.LongConverter;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.e2e.AbstractE2eTest;
@@ -77,17 +78,24 @@ class SqlE2eTest extends AbstractE2eTest {
         final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
         insertTestPersonRecords(personTableName);
 
-        final List<Row> result =
+        final Row result =
                 litebridge.select(
-                                Fn.ca("PERSON_ID", "id"),
-                                Fn.ca("FIRST_NAME", "firstName"),
-                                Fn.c("SURNAME"),
-                                Fn.c("AGE"),
-                                Fn.ca("EYE_COLOUR", "eyeColour"))
+                                Fn.ca(personId, "id"),
+                                Fn.ca(firstName, "firstName"),
+                                Fn.c(surname),
+                                Fn.c(age),
+                                Fn.ca(eyeColour, "eyeColour"))
                         .from(personTableName)
-                        .where("PERSON_ID").lt(10)
-//                        .orderBy("id").asc()
-                        .list();
+                        .where(personId).lt(10)
+                        .orderBy(personId).asc()
+                        .firstOrThrow();
+
+        assertEquals(5, result.size());
+        assertEquals(1L, typeConverter.convert(result.value("id"), Long.class));
+        assertEquals("Alice", result.value("firstName"));
+        assertEquals("Smith", result.value(surname));
+        assertEquals(20, typeConverter.convert(result.value(age), int.class));
+        assertEquals("brown", result.value("eyeColour"));
     }
 
     @TestTemplate
@@ -107,11 +115,11 @@ class SqlE2eTest extends AbstractE2eTest {
 
         // Inline from query
         final Row result = litebridge.select(surname)
-                .from(Fn.aliasQuery("GROUP_RESULT", q -> q
+                .from(Fn.aliasQuery("myQuery", q -> q
                         .select(Fn.c(surname), Fn.count())
                         .from(personTableName)
                         .groupBy(surname)))
-                .where(Fn.fromAlias("GROUP_RESULT", Fn.count())).gte(2)
+                .where(Fn.fromAlias("myQuery", Fn.count())).gte(2)
                 .oneOrThrow();
 
         // Then

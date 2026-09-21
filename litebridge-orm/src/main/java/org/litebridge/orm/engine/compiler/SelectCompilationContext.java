@@ -587,7 +587,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final List<SelectExpression> selectExpressions = new ArrayList<>();
 
         expressionSpecStream.forEach(expressionSpec -> {
-            final SelectExpression selectExpression = selectExpressionMapper.toSelectExpression(expressionSpec, true);
+            final SelectExpression selectExpression = selectExpressionMapper.toSelectExpression(expressionSpec, false);
 
             if (selectExpression instanceof LiteralExpression literalExpression && literalExpression.isParameter()) {
                 final Object value = literalExpression.value();

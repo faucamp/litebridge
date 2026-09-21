@@ -13,7 +13,6 @@ import java.util.List;
  * It is used by {@link org.litebridge.db.spi.DatabaseProvider} implementations
  * to generate SQL {@code SELECT} statement strings.
  *
- * @param table       The table from which data is being selected.
  * @param from        The aliased table/subquery from which data is being selected.
  * @param expressions A list of expressions (e.g. columns or functions) to be included in the SELECT query.
  * @param joins       A list of joins that define relationships with other tables.

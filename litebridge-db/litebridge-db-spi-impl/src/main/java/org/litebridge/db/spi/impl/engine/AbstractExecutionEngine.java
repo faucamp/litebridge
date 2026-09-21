@@ -36,6 +36,8 @@ import java.util.Objects;
 
 abstract class AbstractExecutionEngine implements ExecutionEngine {
 
+    private static final Class<?>[] TYPE_OVERRIDES_EMPTY = new Class<?>[0];
+
     private final TypeConverter typeConverter;
     private final AliasTransformer aliasTransformer;
     private final DatabaseProviderMetaData.InsertCapability insertCapability;
@@ -123,17 +125,14 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
     @Override
     public List<Row> executeQuery(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
         final Map<String, ColumnMetaData> columnLabelsToColumnMetaData;
-        final Map<String, Table> columnAliasesToTable;
         final Class<?>[] typeOverrides;
 
         if (preparedSql.typeConversionMetaData() != null) {
             columnLabelsToColumnMetaData = preparedSql.typeConversionMetaData().columnLabelsToColumnMetaData();
-            columnAliasesToTable = preparedSql.typeConversionMetaData().columnAliasesToTable();
             typeOverrides = preparedSql.typeConversionMetaData().typeOverrides();
         } else {
             columnLabelsToColumnMetaData = Collections.emptyMap();
-            columnAliasesToTable = Collections.emptyMap();
-            typeOverrides = new Class<?>[0];
+            typeOverrides = TYPE_OVERRIDES_EMPTY;
         }
 
         try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, connectionProvider)) {
@@ -151,23 +150,15 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
                 final Map<String, Table> seenTables = new HashMap<>();
 
                 for (int i = 1; i <= columnCount; i++) {
-                    final String columnAlias = resultSet.getMetaData().getColumnLabel(i);
-                    final String alias = Objects.requireNonNull(aliasTransformer.transformAlias(columnAlias));
-                    final ColumnMetaData columnMetaData = columnLabelsToColumnMetaData.get(alias);
+                    final String label = resultSet.getMetaData().getColumnLabel(i);
+                    final ColumnMetaData columnMetaData = columnLabelsToColumnMetaData.get(label);
                     final int columnSqlType;
                     final Column column;
 
                     if (columnMetaData != null) {
                         // Use ORM-side metadata
+                        column = columnMetaData.column();
                         columnSqlType = columnMetaData.getDataType();
-
-                        final Table aliasedTable = columnAliasesToTable.get(alias);
-
-                        if (aliasedTable != null) {
-                            column = new Column(aliasedTable, columnMetaData.name(), alias);
-                        } else {
-                            column = columnMetaData.column().as(alias);
-                        }
                     } else {
                         // Read the metadata from the result
                         final String schemaName = resultSet.getMetaData().getSchemaName(i);
@@ -184,9 +175,9 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
                             }
 
                             final Table table = seenTables.computeIfAbsent(qualifiedTableName, key -> new Table(null, schemaName, tableName));
-                            column = new Column(table, columnName, columnAlias);
+                            column = new Column(table, columnName, label);
                         } else {
-                            column = new Column(columnName, columnAlias);
+                            column = new Column(columnName, label);
                         }
                     }
 
@@ -201,7 +192,7 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
                         value = typeConverter.convert(resultSet.getObject(i), columnSqlType);
                     }
 
-                    rowColumns.add(new RowColumn(alias, value, column));
+                    rowColumns.add(new RowColumn(label, value, column));
                 }
 
                 rows.add(new Row(rowColumns));

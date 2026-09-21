@@ -16,7 +16,6 @@ import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ColumnReference;
-import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.query.Condition;
@@ -158,8 +157,35 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             lhsExpressionSpec = new SelectColumnSpec(column, columnAlias, tableAlias);
         } else {
             // Column name
-            final SelectTarget selectTarget = selectTargets.getFirst();
-            final Table table = getTable(selectTarget);
+            final TableMetaDataCache tableMetaDataCache = litebridgeContext.tableMetaDataCache();
+            final String columnName = Objects.requireNonNull(conditionSpec.getLhsColumn());
+            SelectTarget selectTarget = null;
+            Table table = null;
+
+            for (SelectTarget st : selectTargets) {
+                final Table t = getTable(st);
+
+                if (t.isVirtual()) {
+                    // Fallback on the last seen virtual table if no real table match was found for this column
+                    selectTarget = st;
+                    table = t;
+                    continue;
+                }
+
+                final TableMetaData tableMetaData = tableMetaDataCache.ensureTableMetaData(t);
+
+                if (tableMetaData.hasColumn(columnName)) {
+                    // Column found in select target table
+                    selectTarget = st;
+                    table = t;
+                    break;
+                }
+            }
+
+            if (selectTarget == null) {
+                throw new IllegalArgumentException("No such column: " + conditionSpec.getLhsColumn());
+            }
+
             final String tableAlias = operator == Operator.USING ? null : getAlias(selectTarget);
 
             final Column column = new Column(table, Objects.requireNonNull(conditionSpec.getLhsColumn()));
@@ -316,8 +342,8 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
     }
 
     protected final SelectTarget getSelectTargetDto(final Class<?> dtoClass,
-                                            final @Nullable Class<?> contextDtoClass,
-                                            final @Nullable String alias) {
+                                                    final @Nullable Class<?> contextDtoClass,
+                                                    final @Nullable String alias) {
         final OrmTable ormTable = getOrmTable(dtoClass, contextDtoClass);
         final Table table = ormTable.getMetaData().table();
         final String tableAlias = alias != null ? alias : aliasGenerator.newTableAlias(table);

@@ -101,7 +101,7 @@ public final class SelectExpressionMapper {
             case ExpressionSpecArray expressionSpecArray ->
                     throw new IllegalStateException("ExpressionSpecArray not resolved: " + expressionSpecArray);
             case LiteralExpressionSpec<?> literalExpressionSpec ->
-                    sqlFunctionRegistry.select().literal().create(literalExpressionSpec.value(), literalExpressionSpec.getAlias(), useSelectReferences);
+                    sqlFunctionRegistry.select().literal().create(literalExpressionSpec.value(), literalExpressionSpec.getAlias(), !useSelectReferences);
 
             // Aggregate functions
             case CountSpec countSpec -> sqlFunctionRegistry.aggregate().count();

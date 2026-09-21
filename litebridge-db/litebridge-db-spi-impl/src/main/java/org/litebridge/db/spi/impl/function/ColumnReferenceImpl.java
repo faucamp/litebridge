@@ -39,7 +39,7 @@ public class ColumnReferenceImpl extends AliasReferenceImpl implements ColumnRef
 
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
-        if (alias != null && clause != ClauseType.WHERE) {
+        if (alias != null && clause != ClauseType.SELECT && clause != ClauseType.WHERE) {
             return quoteIdentifier(alias);
         }
 

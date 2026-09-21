@@ -19,7 +19,7 @@ import java.sql.Types;
 public class StringConverter implements SqlConverter<String> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StringConverter.class);
-    private static final int[] SQL_TYPES = new int[]{Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.CLOB};
+    private static final int[] SQL_TYPES = new int[]{Types.VARCHAR, Types.CHAR, Types.LONGVARCHAR, Types.CLOB};
 
     /**
      * Converts the given value to a {@link String}.

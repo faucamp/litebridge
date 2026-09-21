@@ -64,7 +64,7 @@ public class LiteralExpression implements SelectExpression {
         final String valueStr;
 
         if (parameter) {
-            valueStr = "CAST(%s AS %s)".formatted(toBindValueSql(operation), "INT");
+            return toBindValueSql(operation);
         } else if (value == null) {
             valueStr = "NULL";
         } else if (value instanceof Collection collection) {

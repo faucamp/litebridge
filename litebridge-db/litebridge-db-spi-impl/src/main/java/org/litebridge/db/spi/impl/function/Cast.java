@@ -5,9 +5,9 @@ import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
+import org.litebridge.db.spi.impl.DatabaseProviderContext;
 
 import java.sql.JDBCType;
-import java.sql.Types;
 
 public class Cast implements DelegateExpression {
 
@@ -27,7 +27,7 @@ public class Cast implements DelegateExpression {
     }
 
     @Override
-    public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
+    public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent, final Object providerContext) {
         final String sql = "CAST(%s AS %s)".formatted(target.toSql(operation, clause, this), JDBCType.valueOf(dataType).getName());
 
         if (alias != null) {

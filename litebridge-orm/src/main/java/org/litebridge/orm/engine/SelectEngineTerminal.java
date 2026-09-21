@@ -13,7 +13,6 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.VirtualTable;
 import org.litebridge.db.spi.VirtualTableMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ConvertExpression;
@@ -452,9 +451,7 @@ public class SelectEngineTerminal {
 
     private TypeConversionMetaData createTypeConversionMetaData(final Select select, final LitebridgeContext litebridgeContext) {
         final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.expressions().size());
-        final Map<String, Table> columnAliasesToTable = new HashMap<>();
         final Class<?>[] typeOverrides = new Class<?>[select.expressions().size()];
-        final AliasTransformer aliasTransformer = litebridgeContext.databaseProvider().aliasTransformer();
 
         for (int i = 0; i < select.expressions().size(); i++) {
             SelectExpression expression = select.expressions().get(i);
@@ -467,15 +464,14 @@ public class SelectEngineTerminal {
 
             if (expression instanceof ColumnExpression columnExpression) {
                 final Column column = columnExpression.column();
-                final String columnKey = Objects.requireNonNull(aliasTransformer.transformAlias(columnExpression.alias() != null ? columnExpression.alias() : column.name()));
+                final String columnKey = Objects.requireNonNull(columnExpression.alias() != null ? columnExpression.alias() : column.name());
                 final TableMetaData tableMetaData = getTableMetaData(column.table(), litebridgeContext);
                 final ColumnMetaData columnMetaData = tableMetaData.column(column.name());
                 columnLabelsToColumnMetaData.put(columnKey, columnMetaData);
-                columnAliasesToTable.put(columnKey, column.table());
             }
         }
 
-        return new TypeConversionMetaData(columnLabelsToColumnMetaData, typeOverrides, columnAliasesToTable);
+        return new TypeConversionMetaData(columnLabelsToColumnMetaData, typeOverrides);
     }
 
     private static SelectNode findSelectNode(final QueryNode node) {

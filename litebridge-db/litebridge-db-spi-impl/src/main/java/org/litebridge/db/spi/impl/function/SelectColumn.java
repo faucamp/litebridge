@@ -47,7 +47,7 @@ public class SelectColumn extends ColumnExpressionImpl {
         sb.append('.').append(quoteIdentifier(column.name()));
 
         if (alias != null) {
-            sb.append(" AS ").append(alias);
+            sb.append(" AS \"").append(alias).append("\"");
         }
 
         return sb.toString();

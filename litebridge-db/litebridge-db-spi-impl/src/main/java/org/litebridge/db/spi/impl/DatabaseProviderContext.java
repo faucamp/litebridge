@@ -1,5 +1,6 @@
 package org.litebridge.db.spi.impl;
 
+import org.litebridge.db.spi.expression.ProviderContext;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.engine.ExecutionEngine;

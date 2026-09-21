@@ -4,6 +4,8 @@ import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.litebridge.convert.DefaultTypeConverter;
+import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.orm.LitebridgeCore;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.e2e.setup.DbEnvironment;
@@ -15,7 +17,9 @@ import org.slf4j.LoggerFactory;
 @ExtendWith(MultiDbTestExtension.class)
 public abstract class AbstractE2eTest {
 
+    protected static final TypeConverter typeConverter = new DefaultTypeConverter();
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractE2eTest.class);
+
     protected LitebridgeCore litebridge;
     protected DbEnvironment dbEnv;
     protected LitebridgeConfig litebridgeConfig;

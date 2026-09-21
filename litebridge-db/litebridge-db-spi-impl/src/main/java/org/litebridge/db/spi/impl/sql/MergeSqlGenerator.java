@@ -181,6 +181,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
             case AliasedTable aliasedTable -> appendTable(sql, aliasedTable.target())
                     .append(" AS ")
                     .append(aliasedTable.alias());
+            case SelectTarget.Void voidTarget -> { /* Ignore */ }
         }
     }
 }
