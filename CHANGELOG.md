@@ -20,6 +20,8 @@
       to specify what Litebridge APIs are available at compile time,
       thus making the `Litebridge` instance database-specific. This allows future expansion to expose unique database
       vendor capabilities via the main Litebridge API.
+    - Selecting literal values are now fully supported.
+    - Support added for select statements without from clauses.
 - Database Provider SPI
     - New APIs for retrieving database and database provider metadata.
     - New `executeBatch()` method for explicit batch update operations.
