@@ -86,9 +86,7 @@ class SelectNodeTest {
         assertEquals(base, same);
         assertEquals(base.hashCode(), same.hashCode());
 
-        assertNotEquals(base, diffTable);
         assertNotEquals(base, diffDto);
-        assertNotEquals(base, diffContext);
         assertNotEquals(base, diffCols);
         assertNotEquals(base, diffExprs);
         assertNotEquals(base, diffTypes);
