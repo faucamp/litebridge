@@ -192,7 +192,7 @@ class StringConverterTest {
 
     @Test
     void sqlTypes() {
-        assertArrayEquals(new int[]{Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.CLOB}, converter.sqlTypes());
+        assertArrayEquals(new int[]{Types.VARCHAR, Types.CHAR, Types.LONGVARCHAR, Types.CLOB}, converter.sqlTypes());
     }
 
     private static final class StringClob implements Clob {
