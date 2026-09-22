@@ -810,6 +810,7 @@ class LitebridgeTest {
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(databaseProvider.tableMetaData(any(org.litebridge.db.spi.Table.class), any(TransactionManager.class))).thenReturn(tableMetaData);
+        when(tableMetaData.hasColumn(anyString())).thenReturn(true);
         when(tableMetaData.column(anyString())).thenReturn(columnMetaData);
         when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
 
@@ -840,6 +841,7 @@ class LitebridgeTest {
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         when(databaseProvider.tableMetaData(any(), any())).thenReturn(tableMetaData);
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
+        when(tableMetaData.hasColumn(anyString())).thenReturn(true);
         when(tableMetaData.column(anyString())).thenReturn(columnMetaData);
         when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
         when(tableMetaData.table()).thenReturn(new org.litebridge.db.spi.Table("MY_TABLE"));
@@ -979,6 +981,7 @@ class LitebridgeTest {
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
         when(databaseProvider.tableMetaData(any(org.litebridge.db.spi.Table.class), any())).thenReturn(tableMetaData);
+        when(tableMetaData.hasColumn(anyString())).thenReturn(true);
         when(tableMetaData.column(anyString())).thenReturn(columnMetaData);
         when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
         final DataSource dataSource = mock(DataSource.class);

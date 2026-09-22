@@ -201,9 +201,9 @@ class TableMapperExtraTest {
         final TableMetaData joinMetaData = new TableMetaData(joinTable, List.of("join_col", "inv_join_col"), List.of(joinCol, invJoinCol));
 
         when(databaseProvider.tableMetaData(any(), any())).thenAnswer(invocation -> {
-            TableSpec spec = invocation.getArgument(0);
-            if (spec.name().equals("TEST")) return metaData;
-            if (spec.name().equals("join_table")) return joinMetaData;
+            final Table tableArg = invocation.getArgument(0);
+            if (tableArg.name().equals("TEST")) return metaData;
+            if (tableArg.name().equals("join_table")) return joinMetaData;
             return null;
         });
 

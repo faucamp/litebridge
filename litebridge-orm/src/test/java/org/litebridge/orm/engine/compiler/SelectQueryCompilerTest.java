@@ -137,9 +137,16 @@ class SelectQueryCompilerTest {
         final ConditionNode havingCond = new ConditionNode(null, LogicOperator.AND, "cnt", null, Operator.GT, 5);
         final HavingNode havingNode = new HavingNode(null, havingCond);
 
+        when(compilationContext.setWhereNode(whereNode)).thenReturn(new ConditionGroupSpecStack());
+        when(compilationContext.setHavingNode(havingNode)).thenReturn(new ConditionGroupSpecStack());
+
         // When
         compiler.applyNode(whereNode, compilationContext);
         compiler.applyNode(havingNode, compilationContext);
+
+        // Then
+        verify(compilationContext).setWhereNode(whereNode);
+        verify(compilationContext).setHavingNode(havingNode);
     }
 
     @Test
@@ -152,6 +159,8 @@ class SelectQueryCompilerTest {
         final ConditionNode joinCond = new ConditionNode(null, LogicOperator.AND, "id", null, Operator.EQ, 10);
         final JoinNode joinNode = new JoinNode(null, Join.JoinType.INNER, null, null, "users", null, null);
         joinNode.setCondition(joinCond);
+
+        when(compilationContext.addJoin(any())).thenReturn(new ConditionGroupSpecStack());
 
         // When
         compiler.applyNode(joinNode, compilationContext);

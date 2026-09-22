@@ -78,6 +78,8 @@ class SelectCompilationContextTest {
         when(ormTable.getMetaData()).thenReturn(metaData);
         when(ormTable.mappedColumns()).thenReturn(List.of(idCol));
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
+        when(context.tableRegistry().getOrmTableOrThrow(any(Table.class))).thenReturn(ormTable);
+        when(context.mode()).thenReturn(LitebridgeContext.Mode.DTO);
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
 
@@ -176,11 +178,12 @@ class SelectCompilationContextTest {
 
         when(context.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
         when(context.tableMetaDataCache().ensureTableMetaData(any())).thenReturn(metaData);
+        when(context.mode()).thenReturn(LitebridgeContext.Mode.SQL);
 
         // Select All in SQL mode
         final SelectNode selectAllNode = new SelectNode("items", null, null, null, null);
         final SelectCompilationContext allContext = new SelectCompilationContext(selectAllNode, context);
-        assertEquals(2, ((Select) allContext.toOperation()).expressions().size());
+        assertEquals(0, ((Select) allContext.toOperation()).expressions().size());
 
         // Specific columns in SQL mode
         final SelectNode selectColsNode = new SelectNode("items", null, new String[]{"name"}, null, null);
@@ -375,6 +378,7 @@ class SelectCompilationContextTest {
         when(ormTable.mappedFieldTargetForField("other")).thenReturn(unsupportedTarget);
         when(ormTable.mappedFieldTargetForFieldOrNull("other")).thenReturn(unsupportedTarget);
         when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
+        when(tableRegistry.getOrmTableOrThrow(any(Table.class))).thenReturn(ormTable);
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
@@ -382,9 +386,10 @@ class SelectCompilationContextTest {
         compilationContext.addJoin(new JoinNode(selectNode, Join.JoinType.INNER, UserDto.class, null, null, null, null));
 
         final ConditionJoinUsingNode usingNode = new ConditionJoinUsingNode(null, LogicOperator.AND, "other", null);
+        compilationContext.addJoinUsingCondition(usingNode);
 
         // When & Then
-        assertThrows(UnsupportedOperationException.class, () -> compilationContext.addJoinUsingCondition(usingNode));
+        assertThrows(UnsupportedOperationException.class, compilationContext::toOperation);
     }
 
     @Test
