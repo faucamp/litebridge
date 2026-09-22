@@ -1,46 +1,47 @@
 package org.litebridge.orm.meta;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.orm.expression.ProtoNestableTOExpr;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class StringQueryFieldTest {
 
     @Test
-    void testConstructor() {
+    void constructor() {
         // Given
         final StringQueryField field = new StringQueryField(TestDto.class, "name");
 
         // Then
         assertEquals(TestDto.class, field.dtoClass());
         assertEquals("name", field.field());
+        assertNull(field.pendingExpressionSpec());
     }
 
     @Test
-    void testUpper() {
+    void upper() {
         // Given
         final StringQueryField field = new StringQueryField(TestDto.class, "name");
 
         // When
-        final ProtoNestableTOExpr<String> upper = field.upper();
+        final StringQueryField result = field.upper();
 
         // Then
-        assertNotNull(upper);
-        assertEquals(String.class, upper.returnType());
+        assertNotNull(result);
+        assertNotNull(result.pendingExpressionSpec());
     }
 
     @Test
-    void testLower() {
+    void lower() {
         // Given
         final StringQueryField field = new StringQueryField(TestDto.class, "name");
 
         // When
-        final ProtoNestableTOExpr<String> lower = field.lower();
+        final StringQueryField result = field.lower();
 
         // Then
-        assertNotNull(lower);
-        assertEquals(String.class, lower.returnType());
+        assertNotNull(result);
+        assertNotNull(result.pendingExpressionSpec());
     }
 }

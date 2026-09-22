@@ -6,6 +6,7 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
+import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.SelectTerminal;
@@ -26,7 +27,6 @@ import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.engine.ast.WhenMatchedNode;
 import org.litebridge.orm.engine.ast.WhenNotMatchedNode;
 import org.litebridge.orm.engine.ast.WhereNode;
-import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -65,9 +65,9 @@ class QueryBindValueExtractorTest {
         // Given
         final ConditionNode havingCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, "having");
         final HavingNode having = new HavingNode(null, havingCondition);
-        final JoinNode joinWithoutCondition = new JoinNode(having, Join.JoinType.INNER, Object.class, "other");
+        final JoinNode joinWithoutCondition = new JoinNode(having, Join.JoinType.INNER, null, null, "other", null, null);
         final ConditionNode joinCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, "join");
-        final JoinNode joinNode = new JoinNode(joinWithoutCondition, Join.JoinType.INNER, Object.class, "other");
+        final JoinNode joinNode = new JoinNode(joinWithoutCondition, Join.JoinType.INNER, null, null, "other", null, null);
         joinNode.setCondition(joinCondition);
 
         // When
@@ -84,7 +84,7 @@ class QueryBindValueExtractorTest {
         final ConditionNode skippedNotNull = new ConditionNode(skippedNull, LogicOperator.AND, null, null, Operator.IS_NOT_NULL, null);
         final ConditionNode skippedUsing = new ConditionNode(skippedNotNull, LogicOperator.AND, null, null, Operator.USING, "column");
         final ConditionNode expression = new ConditionNode(skippedUsing, LogicOperator.AND, null, null, Operator.EQ, mock(Column.class));
-        final ConditionNode expressionSpec = new ConditionNode(expression, LogicOperator.AND, null, null, Operator.EQ, new SelectColumnSpec(new Column("t", "test")));
+        final ConditionNode expressionSpec = new ConditionNode(expression, LogicOperator.AND, null, null, Operator.EQ, new SelectColumnSpec(new Column("t")));
         final ConditionNode values = new ConditionNode(expressionSpec, LogicOperator.AND, null, null, Operator.IN, List.of("a", "b"));
         final ConditionWithIdNode id = new ConditionWithIdNode(values, LogicOperator.AND, Operator.EQ, 42L);
 
@@ -142,9 +142,9 @@ class QueryBindValueExtractorTest {
     @Test
     void extractBindValues_mergeNode_sqlMode() {
         // Given
-        final MergeNode root = new MergeNode("target", null);
+        final MergeNode root = new MergeNode("target", null, null);
         final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 1);
-        final UsingNode using = new UsingNode(root, "source", null, onCondition);
+        final UsingNode using = new UsingNode(root, "source", null, null, null, onCondition);
 
         final UpdateNode update = new UpdateNode(null, "target", null);
         final SetNode set = new SetNode(update, "balance", 500);
@@ -171,9 +171,9 @@ class QueryBindValueExtractorTest {
     @Test
     void extractBindValues_mergeNode_dtoMode() {
         // Given
-        final MergeNode root = new MergeNode("target", null);
+        final MergeNode root = new MergeNode("target", null, null);
         final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 1);
-        final UsingNode using = new UsingNode(root, "source", null, onCondition);
+        final UsingNode using = new UsingNode(root, "source", null, null, null, onCondition);
 
         final InsertNode insertNode = new InsertNode(null, AccountRecord.class, null, null, null);
         final InsertDtoValuesNode insertDto = new InsertDtoValuesNode(insertNode, new AccountRecord(456L, "Test", 100));
@@ -299,9 +299,9 @@ class QueryBindValueExtractorTest {
     @Test
     void extractBindValues_whenNotMatchedWithAndClause() {
         // Given
-        final MergeNode root = new MergeNode("target", null);
+        final MergeNode root = new MergeNode("target", null, null);
         final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 1);
-        final UsingNode using = new UsingNode(root, "source", null, onCondition);
+        final UsingNode using = new UsingNode(root, "source", null, null, null, onCondition);
 
         final ConditionNode andCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 777);
         final InsertNode insert = new InsertNode("target", null, new String[]{"id"});
@@ -366,9 +366,9 @@ class QueryBindValueExtractorTest {
     @Test
     void extractBindValues_whenNotMatchedWithInsertDtoValuesNode() {
         // Given
-        final MergeNode root = new MergeNode("target", null);
+        final MergeNode root = new MergeNode("target", null, null);
         final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 1);
-        final UsingNode using = new UsingNode(root, "source", null, onCondition);
+        final UsingNode using = new UsingNode(root, "source", null, null, null, onCondition);
 
         final InsertNode insert = new InsertNode("target", null, new String[]{"id"});
         final InsertDtoValuesNode insertDto = new InsertDtoValuesNode(insert, new AccountRecord(77L, "name", 10));

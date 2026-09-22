@@ -70,7 +70,7 @@ class FromClauseStartTypeOverrideTest {
         assertNotNull(terminal);
         verify(litebridgeContextCreator).apply(LitebridgeContext.Mode.DTO);
 
-        final SelectNode expectedNode = new SelectNode(null, TestDto.class, ContextDto.class, null, expressionSpecs, new Class<?>[]{String.class});
+        final SelectNode expectedNode = new SelectNode(TestDto.class, ContextDto.class, null, null, expressionSpecs, new Class<?>[]{String.class});
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 
@@ -146,7 +146,7 @@ class FromClauseStartTypeOverrideTest {
         assertNotNull(terminal);
         verify(litebridgeContextCreator).apply(LitebridgeContext.Mode.SQL);
 
-        final SelectNode expectedNode = new SelectNode("users", null, null, null, expressionSpecs, new Class<?>[]{String.class});
+        final SelectNode expectedNode = new SelectNode("users", null, null, expressionSpecs, new Class<?>[]{String.class});
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 

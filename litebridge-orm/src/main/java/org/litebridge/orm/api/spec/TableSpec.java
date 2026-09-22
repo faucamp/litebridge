@@ -68,6 +68,10 @@ public final class TableSpec {
         this(catalogSchemaTable[0], catalogSchemaTable[1], catalogSchemaTable[2], fieldColumnMap);
     }
 
+    public String name() {
+        return name;
+    }
+
     /**
      * Field name to {@link ColumnSpec} map; key is field name, value is the column definition
      *

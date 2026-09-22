@@ -175,9 +175,9 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
                             }
 
                             final Table table = seenTables.computeIfAbsent(qualifiedTableName, key -> new Table(null, schemaName, tableName));
-                            column = new Column(table, columnName, label);
+                            column = new Column(table, columnName);
                         } else {
-                            column = new Column(columnName, label);
+                            column = new Column(columnName);
                         }
                     }
 

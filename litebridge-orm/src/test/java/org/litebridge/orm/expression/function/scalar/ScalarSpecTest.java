@@ -13,7 +13,7 @@ class ScalarSpecTest {
     @Test
     void testAbsSpec() {
         final ColumnExpressionSpec target = new SelectColumnSpec(mock(Column.class));
-        final AbsSpec spec = new AbsSpec(target);
+        final AbsSpec spec = new AbsSpec(target, null);
 
         assertEquals(target, spec.target());
         assertEquals(Number.class, spec.returnType());
@@ -27,7 +27,7 @@ class ScalarSpecTest {
     @Test
     void testLowerSpec() {
         final ColumnExpressionSpec target = new SelectColumnSpec(mock(Column.class));
-        final LowerSpec spec = new LowerSpec(target);
+        final LowerSpec spec = new LowerSpec(target, null);
 
         assertEquals(target, spec.target());
         assertEquals(String.class, spec.returnType());
@@ -41,7 +41,7 @@ class ScalarSpecTest {
     @Test
     void testUpperSpec() {
         final ColumnExpressionSpec target = new SelectColumnSpec(mock(Column.class));
-        final UpperSpec spec = new UpperSpec(target);
+        final UpperSpec spec = new UpperSpec(target, null);
 
         assertEquals(target, spec.target());
         assertEquals(String.class, spec.returnType());

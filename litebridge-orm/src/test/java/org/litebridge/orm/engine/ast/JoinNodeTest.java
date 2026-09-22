@@ -1,6 +1,7 @@
 package org.litebridge.orm.engine.ast;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 
@@ -16,12 +17,12 @@ class JoinNodeTest {
     void constructorAndGetters() {
         // Given
         final QueryNode previous = new DeleteNode(null, "p1", null);
-        final String type = Join.JoinType.INNER;
+        final Join.JoinType type = Join.JoinType.INNER;
         final Class<?> dtoClass = String.class;
         final String rightTable = "USERS";
 
         // When
-        final JoinNode node = new JoinNode(previous, type, dtoClass, rightTable);
+        final JoinNode node = new JoinNode(previous, type, dtoClass, null, rightTable, null, null);
 
         // Then
         assertSame(previous, node.previous());
@@ -34,7 +35,7 @@ class JoinNodeTest {
     @Test
     void setConditionUpdatesCondition() {
         // Given
-        final JoinNode node = new JoinNode(null, "LEFT", null, "ORDERS");
+        final JoinNode node = new JoinNode(null, Join.JoinType.LEFT, null, null, "ORDERS", null, null);
         final QueryNode condition = new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, 1);
 
         // When
@@ -52,24 +53,24 @@ class JoinNodeTest {
         final QueryNode cond1 = new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, 1);
         final QueryNode cond2 = new ConditionWithIdNode(null, LogicOperator.OR, Operator.EQ, 1);
 
-        final JoinNode node1 = new JoinNode(prev1, Join.JoinType.INNER, String.class, "USERS");
+        final JoinNode node1 = new JoinNode(prev1, Join.JoinType.INNER, String.class, null, "USERS", null, null);
         node1.setCondition(cond1);
-        final JoinNode node2 = new JoinNode(prev1, Join.JoinType.INNER, String.class, "USERS");
+        final JoinNode node2 = new JoinNode(prev1, Join.JoinType.INNER, String.class, null, "USERS", null, null);
         node2.setCondition(cond1);
 
-        final JoinNode diffPrev = new JoinNode(prev2, Join.JoinType.INNER, String.class, "USERS");
+        final JoinNode diffPrev = new JoinNode(prev2, Join.JoinType.INNER, String.class, null, "USERS", null, null);
         diffPrev.setCondition(cond1);
 
-        final JoinNode diffType = new JoinNode(prev1, "LEFT", String.class, "USERS");
+        final JoinNode diffType = new JoinNode(prev1, Join.JoinType.LEFT, String.class, null, "USERS", null, null);
         diffType.setCondition(cond1);
 
-        final JoinNode diffDto = new JoinNode(prev1, Join.JoinType.INNER, Integer.class, "USERS");
+        final JoinNode diffDto = new JoinNode(prev1, Join.JoinType.INNER, Integer.class, null, "USERS", null, null);
         diffDto.setCondition(cond1);
 
-        final JoinNode diffTable = new JoinNode(prev1, Join.JoinType.INNER, String.class, "ORDERS");
+        final JoinNode diffTable = new JoinNode(prev1, Join.JoinType.INNER, String.class, null, "ORDERS", null, null);
         diffTable.setCondition(cond1);
 
-        final JoinNode diffCond = new JoinNode(prev1, Join.JoinType.INNER, String.class, "USERS");
+        final JoinNode diffCond = new JoinNode(prev1, Join.JoinType.INNER, String.class, null, "USERS", null, null);
         diffCond.setCondition(cond2);
 
         // When / Then

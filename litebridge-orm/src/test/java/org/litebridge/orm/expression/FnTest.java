@@ -75,7 +75,7 @@ class FnTest {
         assertInstanceOf(SelectColumnSpec.class, caTable);
         assertEquals(table, ((SelectColumnSpec) caTable).getColumn().table());
         assertEquals("COL", ((SelectColumnSpec) caTable).getColumn().name());
-        assertEquals("alias", ((SelectColumnSpec) caTable).getColumn().alias());
+        assertEquals("alias", ((SelectColumnSpec) caTable).getAlias());
 
         final ExpressionSpec ca = Fn.ca("COL", "alias");
         assertInstanceOf(ProtoColumnExpressionSpec.class, ca);
@@ -85,7 +85,7 @@ class FnTest {
         assertInstanceOf(SelectColumnSpec.class, caTableName);
         assertEquals("TABLE", ((SelectColumnSpec) caTableName).getColumn().table().name());
         assertEquals("COL", ((SelectColumnSpec) caTableName).getColumn().name());
-        assertEquals("alias", ((SelectColumnSpec) caTableName).getColumn().alias());
+        assertEquals("alias", ((SelectColumnSpec) caTableName).getAlias());
 
         assertInstanceOf(SelectColumnSpec.class, Fn.columnAlias(table, "COL", "alias"));
         assertInstanceOf(ProtoColumnExpressionSpec.class, Fn.columnAlias("COL", "alias"));

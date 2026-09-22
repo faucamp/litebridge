@@ -13,13 +13,13 @@ class UsingNodeTest {
     @Test
     void recordComponentsAndGetters() {
         // Given
-        final MergeNode previous = new MergeNode("TARGET", null);
+        final MergeNode previous = new MergeNode("TARGET", null, null);
         final String table = "SOURCE";
         final Class<?> dtoClass = String.class;
         final QueryNode on = new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, 1);
 
         // When
-        final UsingNode node = new UsingNode(previous, table, dtoClass, on);
+        final UsingNode node = new UsingNode(previous, table, dtoClass, null, null, on);
 
         // Then
         assertSame(previous, node.previous());
@@ -31,18 +31,18 @@ class UsingNodeTest {
     @Test
     void equals_hashCode() {
         // Given
-        final MergeNode prev1 = new MergeNode("T1", null);
-        final MergeNode prev2 = new MergeNode("T2", null);
+        final MergeNode prev1 = new MergeNode("T1", null, null);
+        final MergeNode prev2 = new MergeNode("T2", null, null);
         final QueryNode on1 = new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, 1);
         final QueryNode on2 = new ConditionWithIdNode(null, LogicOperator.OR, Operator.EQ, 1);
 
-        final UsingNode node1 = new UsingNode(prev1, "SRC", String.class, on1);
-        final UsingNode node2 = new UsingNode(prev1, "SRC", String.class, on1);
+        final UsingNode node1 = new UsingNode(prev1, "SRC", String.class, null, null, on1);
+        final UsingNode node2 = new UsingNode(prev1, "SRC", String.class, null, null, on1);
 
-        final UsingNode diffPrev = new UsingNode(prev2, "SRC", String.class, on1);
-        final UsingNode diffTable = new UsingNode(prev1, "OTHER", String.class, on1);
-        final UsingNode diffDto = new UsingNode(prev1, "SRC", Integer.class, on1);
-        final UsingNode diffOn = new UsingNode(prev1, "SRC", String.class, on2);
+        final UsingNode diffPrev = new UsingNode(prev2, "SRC", String.class, null, null, on1);
+        final UsingNode diffTable = new UsingNode(prev1, "OTHER", String.class, null, null, on1);
+        final UsingNode diffDto = new UsingNode(prev1, "SRC", Integer.class, null, null, on1);
+        final UsingNode diffOn = new UsingNode(prev1, "SRC", String.class, null, null, on2);
 
         // When / Then
         assertEquals(node1, node1);

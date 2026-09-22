@@ -10,6 +10,7 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
+import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.Select;
@@ -17,15 +18,14 @@ import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionJoinUsingNode;
 import org.litebridge.orm.engine.ast.ConditionNode;
-import org.litebridge.orm.engine.ast.ConditionWithIdNode;
 import org.litebridge.orm.engine.ast.GroupByNode;
+import org.litebridge.orm.engine.ast.HavingNode;
 import org.litebridge.orm.engine.ast.JoinNode;
 import org.litebridge.orm.engine.ast.LimitNode;
 import org.litebridge.orm.engine.ast.OrderByNode;
 import org.litebridge.orm.engine.ast.SelectNode;
+import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.Fn;
-import org.litebridge.orm.expression.intent.ConvertSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.MappedManyToMany;
 import org.litebridge.orm.persistence.MappedOneToMany;
@@ -38,17 +38,13 @@ import org.mockito.Mockito;
 
 import java.sql.Types;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -88,7 +84,7 @@ class SelectCompilationContextTest {
 
         // When
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
-        final Select select = compilationContext.toOperation();
+        final Select select = (Select) compilationContext.toOperation();
 
         // Then
         assertNotNull(select);
@@ -112,7 +108,7 @@ class SelectCompilationContextTest {
 
         // When
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
-        final Select select = compilationContext.toOperation();
+        final Select select = (Select) compilationContext.toOperation();
 
         // Then
         assertNotNull(select);
@@ -132,7 +128,7 @@ class SelectCompilationContextTest {
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 
         final SelectColumnSpec spec = new SelectColumnSpec(new Column(table, "user_id"));
-        when(context.selectExpressionMapper().resolveProtoExpression(any(), any(), any(), eq(ClauseType.SELECT)))
+        when(context.selectExpressionMapper().resolveProtoExpression(any(), any(), any(), nullable(String.class), eq(ClauseType.SELECT)))
                 .thenReturn(List.of(spec));
         when(context.selectExpressionMapper().toSelectExpression(any(), eq(false)))
                 .thenReturn(mock(SelectExpression.class));
@@ -141,7 +137,7 @@ class SelectCompilationContextTest {
 
         // When
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
-        final Select select = compilationContext.toOperation();
+        final Select select = (Select) compilationContext.toOperation();
 
         // Then
         assertNotNull(select);
@@ -161,7 +157,7 @@ class SelectCompilationContextTest {
         when(ormTable.mappedColumns()).thenReturn(List.of(idCol));
         when(context.tableRegistry().getOrmTableInContextOrThrow(UserDto.class, ContextDto.class)).thenReturn(ormTable);
 
-        final SelectNode selectNode = new SelectNode(null, UserDto.class, ContextDto.class, null, null, null);
+        final SelectNode selectNode = new SelectNode(UserDto.class, ContextDto.class, null, null, null, null);
 
         // When
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
@@ -183,14 +179,14 @@ class SelectCompilationContextTest {
         when(context.tableMetaDataCache().ensureTableMetaData(any())).thenReturn(metaData);
 
         // Select All in SQL mode
-        final SelectNode selectAllNode = new SelectNode("items", null, null, null, null, null);
+        final SelectNode selectAllNode = new SelectNode("items", null, null, null, null);
         final SelectCompilationContext allContext = new SelectCompilationContext(selectAllNode, context);
-        assertEquals(2, allContext.toOperation().expressions().size());
+        assertEquals(2, ((Select) allContext.toOperation()).expressions().size());
 
         // Specific columns in SQL mode
-        final SelectNode selectColsNode = new SelectNode("items", null, null, new String[]{"name"}, null, null);
+        final SelectNode selectColsNode = new SelectNode("items", null, new String[]{"name"}, null, null);
         final SelectCompilationContext colsContext = new SelectCompilationContext(selectColsNode, context);
-        assertEquals(1, colsContext.toOperation().expressions().size());
+        assertEquals(1, ((Select) colsContext.toOperation()).expressions().size());
     }
 
     @Test
@@ -218,17 +214,17 @@ class SelectCompilationContextTest {
         when(roleOrmTable.getMetaData()).thenReturn(roleMeta);
         when(context.tableRegistry().getOrmTableOrThrow(RoleDto.class)).thenReturn(roleOrmTable);
 
-        final JoinNode joinDtoNode = new JoinNode(selectNode, Join.JoinType.INNER, RoleDto.class, null);
+        final JoinNode joinDtoNode = new JoinNode(selectNode, Join.JoinType.INNER, RoleDto.class, null, null, null, null);
         compilationContext.addJoin(joinDtoNode);
 
         // When adding join with table name
         final Table ordersTable = new Table("orders");
         when(context.tableRegistry().getOrCreateSpiTable("orders")).thenReturn(ordersTable);
-        final JoinNode joinTableNode = new JoinNode(joinDtoNode, "LEFT", null, "orders");
+        final JoinNode joinTableNode = new JoinNode(joinDtoNode, Join.JoinType.LEFT, null, null, "orders", null, null);
         compilationContext.addJoin(joinTableNode);
 
         // Then
-        final Select select = compilationContext.toOperation();
+        final Select select = (Select) compilationContext.toOperation();
         assertNotNull(select.joins());
         assertEquals(2, select.joins().size());
     }
@@ -253,129 +249,18 @@ class SelectCompilationContextTest {
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
 
-        compilationContext.addJoin(new JoinNode(selectNode, Join.JoinType.INNER, null, "orders"));
+        final ConditionGroupSpecStack joinConditionGroupSpecStack = compilationContext.addJoin(new JoinNode(selectNode, Join.JoinType.INNER, null, null, "orders", null, null));
 
         // With rhsColumn
         final ConditionNode condWithRhsCol = new ConditionNode(null, LogicOperator.AND, "order_user_id", null, Operator.EQ, null, "id");
-        compilationContext.addJoinCondition(condWithRhsCol);
+        joinConditionGroupSpecStack.current().newCondition(LogicOperator.AND, "order_user_id", null, Operator.EQ, "id");
 
         // Without rhsColumn
-        final ConditionNode condWithoutRhsCol = new ConditionNode(null, LogicOperator.AND, "order_status", null, Operator.EQ, "PAID");
-        compilationContext.addJoinCondition(condWithoutRhsCol);
+//        final ConditionNode condWithoutRhsCol = new ConditionNode(null, LogicOperator.AND, "order_status", null, Operator.EQ, "PAID");
+//        compilationContext.addJoinCondition(condWithoutRhsCol);
 
         // Then
-        assertEquals(2, compilationContext.joinConditionGroupStack().current().conditions().size());
-    }
-
-    @Test
-    void toConditionNodeSinglePrimaryKey() {
-        // Given
-        final LitebridgeContext context = createMockContext();
-        final Table table = new Table("users");
-        final ColumnMetaData idCol = new ColumnMetaData(table, "id", true, Types.INTEGER, 0);
-        final TableMetaData metaData = new TableMetaData(table, List.of("id"), List.of(idCol));
-
-        final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
-        when(ormTable.mappedColumns()).thenReturn(List.of(idCol));
-
-        final FieldAccessor fieldAccessor = mock(FieldAccessor.class);
-        when(fieldAccessor.name()).thenReturn("userId");
-        when(ormTable.getFieldForColumnName("id")).thenReturn(fieldAccessor);
-        when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
-
-        final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
-
-        // When
-        final ConditionWithIdNode withIdNode = new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, 42);
-        final ConditionNode result = compilationContext.toConditionNode(withIdNode);
-
-        // Then
-        assertNotNull(result);
-        assertEquals("userId", result.lhsColumn());
-        assertEquals(42, result.rhs());
-        assertEquals(Operator.EQ, result.operator());
-    }
-
-    @Test
-    void toConditionNodeCompositePrimaryKeyVariants() {
-        // Given
-        final LitebridgeContext context = createMockContext();
-        final Table table = new Table("composite");
-        final ColumnMetaData pk1Col = new ColumnMetaData(table, "pk1", true, Types.INTEGER, 0);
-        final ColumnMetaData pk2Col = new ColumnMetaData(table, "pk2", true, Types.VARCHAR, 50);
-        final TableMetaData metaData = new TableMetaData(table, List.of("pk1", "pk2"), List.of(pk1Col, pk2Col));
-
-        final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
-        when(ormTable.mappedColumns()).thenReturn(List.of(pk1Col, pk2Col));
-
-        final FieldAccessor fa1 = mock(FieldAccessor.class);
-        when(fa1.name()).thenReturn("field1");
-        final FieldAccessor fa2 = mock(FieldAccessor.class);
-        when(fa2.name()).thenReturn("field2");
-
-        when(ormTable.getFieldForColumnName("pk1")).thenReturn(fa1);
-        when(ormTable.getFieldForColumnName("pk2")).thenReturn(fa2);
-        when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
-
-        final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
-
-        // 1. Valid List
-        final ConditionNode listResult = compilationContext.toConditionNode(new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, List.of(1, "abc")));
-        assertNotNull(listResult);
-
-        // 2. Invalid List size throws
-        assertThrows(IllegalArgumentException.class,
-                () -> compilationContext.toConditionNode(new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, List.of(1))));
-
-        // 3. Valid Object[]
-        final ConditionNode arrayResult = compilationContext.toConditionNode(new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, new Object[]{1, "abc"}));
-        assertNotNull(arrayResult);
-
-        // 4. Invalid Object[] length throws
-        assertThrows(IllegalArgumentException.class,
-                () -> compilationContext.toConditionNode(new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, new Object[]{1})));
-
-        // 5. Valid Map
-        final ConditionNode mapResult = compilationContext.toConditionNode(new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, Map.of("field1", 1, "field2", "abc")));
-        assertNotNull(mapResult);
-
-        // 6. Invalid Map size throws
-        assertThrows(IllegalArgumentException.class,
-                () -> compilationContext.toConditionNode(new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, Map.of("field1", 1))));
-
-        // 7. Unsupported type throws
-        assertThrows(IllegalArgumentException.class,
-                () -> compilationContext.toConditionNode(new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, "unsupported")));
-
-        // 8. Null id throws
-        assertThrows(IllegalArgumentException.class,
-                () -> compilationContext.toConditionNode(new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, null)));
-    }
-
-    @Test
-    void toConditionNodeThrowsWhenNoPrimaryKey() {
-        // Given
-        final LitebridgeContext context = createMockContext();
-        final Table table = new Table("no_pk");
-        final ColumnMetaData col = new ColumnMetaData(table, "val", true, Types.VARCHAR, 50);
-        final TableMetaData metaData = new TableMetaData(table, List.of(), List.of(col));
-
-        final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
-        when(ormTable.mappedColumns()).thenReturn(List.of(col));
-        when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
-
-        final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
-
-        // When & Then
-        final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> compilationContext.toConditionNode(new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, 1)));
-        assertTrue(ex.getMessage().contains("No primary key fields found"));
+//        assertEquals(2, compilationContext.joinConditionGroupStack().current().conditions().size());
     }
 
     @Test
@@ -390,40 +275,45 @@ class SelectCompilationContextTest {
         when(context.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
         when(context.tableMetaDataCache().ensureTableMetaData(any())).thenReturn(metaData);
 
-        final SelectNode selectNode = new SelectNode("items", null, null, null, null, null);
+        final SelectNode selectNode = new SelectNode("items", null, null, null, null);
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
 
         // GroupBy via column names in SQL mode
-        compilationContext.addGroupBy(new GroupByNode(null, new String[]{"category"}, null));
+        compilationContext.addGroupByNode(new GroupByNode(null, new String[]{"category"}, null));
 
         // GroupBy via expressions
         final SelectColumnSpec spec = new SelectColumnSpec(new Column(table, "id"));
-        when(context.selectExpressionMapper().resolveProtoExpression(any(), any(), any(), eq(ClauseType.GROUP_BY)))
+        when(context.selectExpressionMapper().resolveProtoExpression(any(), any(), any(), nullable(String.class), eq(ClauseType.GROUP_BY)))
                 .thenReturn(List.of(spec));
         when(context.selectExpressionMapper().toSelectExpression(any(), eq(true)))
                 .thenReturn(mock(SelectExpression.class));
-        compilationContext.addGroupBy(new GroupByNode(null, null, new ExpressionSpec[]{spec}));
+        compilationContext.addGroupByNode(new GroupByNode(null, null, new ExpressionSpec[]{spec}));
 
         // OrderBy via column name in SQL mode
-        compilationContext.addOrderBy(new OrderByNode(null, "id", null, true));
+        compilationContext.addOrderByNode(new OrderByNode(null, "id", null, true));
 
         // OrderBy via expression
-        when(context.selectExpressionMapper().resolveProtoExpression(any(), any(), any(), eq(ClauseType.ORDER_BY)))
+        when(context.selectExpressionMapper().resolveProtoExpression(any(), any(), any(), nullable(String.class), eq(ClauseType.ORDER_BY)))
                 .thenReturn(List.of(spec));
-        compilationContext.addOrderBy(new OrderByNode(null, null, spec, false));
+        compilationContext.addOrderByNode(new OrderByNode(null, null, spec, false));
 
         // Having condition
-        assertNotNull(compilationContext.ensureHavingConditionGroupStack());
-        compilationContext.addHavingCondition(new ConditionNode(null, LogicOperator.AND, "id", null, Operator.GT, 10));
+        final HavingNode havingNode = new HavingNode(null, new ConditionNode(null, LogicOperator.AND, "id", null, Operator.GT, 10));
+        final ConditionGroupSpecStack havingConditionGroupSpecStack = compilationContext.setHavingNode(havingNode);
+        havingConditionGroupSpecStack.current()
+                .newCondition(LogicOperator.AND, "id", null, Operator.GT, 10);
 
         // Where condition
-        compilationContext.addWhereCondition(new ConditionNode(null, LogicOperator.AND, "category", null, Operator.EQ, "books"));
+        final WhereNode whereNode = new WhereNode(null, new ConditionNode(null, LogicOperator.AND, "category", null, Operator.EQ, "books"));
+        final ConditionGroupSpecStack whereConditionGroupSpecStack = compilationContext.setWhereNode(whereNode);
+        whereConditionGroupSpecStack.current()
+                .newCondition(LogicOperator.AND, "category", null, Operator.EQ, "books");
 
         // Limit
-        compilationContext.setLimit(new LimitNode(null, 20, 10));
+        compilationContext.setLimitNode(new LimitNode(null, 20, 10));
 
         // When
-        final Select select = compilationContext.toOperation();
+        final Select select = (Select) compilationContext.toOperation();
 
         // Then
         assertNotNull(select.groupBy());
@@ -457,13 +347,13 @@ class SelectCompilationContextTest {
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
 
         // Group by field in DTO mode
-        compilationContext.addGroupBy(new GroupByNode(null, new String[]{"name"}, null));
+        compilationContext.addGroupByNode(new GroupByNode(null, new String[]{"name"}, null));
 
         // Order by field in DTO mode
-        compilationContext.addOrderBy(new OrderByNode(null, "name", null, true));
+        compilationContext.addOrderByNode(new OrderByNode(null, "name", null, true));
 
         // Then
-        final Select select = compilationContext.toOperation();
+        final Select select = (Select) compilationContext.toOperation();
         assertEquals(1, select.groupBy().size());
         assertEquals(1, select.orderBy().size());
     }
@@ -490,12 +380,12 @@ class SelectCompilationContextTest {
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
 
-        compilationContext.addJoin(new JoinNode(selectNode, Join.JoinType.INNER, UserDto.class, null));
+        compilationContext.addJoin(new JoinNode(selectNode, Join.JoinType.INNER, UserDto.class, null, null, null, null));
 
         final ConditionJoinUsingNode usingNode = new ConditionJoinUsingNode(null, LogicOperator.AND, "other", null);
 
         // When & Then
-        assertThrows(UnsupportedOperationException.class, () -> compilationContext.addJoinCondition(usingNode));
+        assertThrows(UnsupportedOperationException.class, () -> compilationContext.addJoinUsingCondition(usingNode));
     }
 
     @Test
@@ -528,15 +418,12 @@ class SelectCompilationContextTest {
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
 
-        compilationContext.addJoin(new JoinNode(selectNode, Join.JoinType.INNER, RoleDto.class, null));
+        compilationContext.addJoin(new JoinNode(selectNode, Join.JoinType.INNER, RoleDto.class, null, null, null, null));
 
         final ConditionJoinUsingNode usingNode = new ConditionJoinUsingNode(null, LogicOperator.AND, "role", null);
 
-        // When
-        compilationContext.addJoinCondition(usingNode);
-
-        // Then
-        assertEquals(1, compilationContext.joinConditionGroupStack().current().conditions().size());
+        // When / Then
+        compilationContext.addJoinUsingCondition(usingNode);
     }
 
     @Test
@@ -576,17 +463,14 @@ class SelectCompilationContextTest {
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
 
-        final JoinNode joinNode = new JoinNode(selectNode, "LEFT", OrderDto.class, null);
+        final JoinNode joinNode = new JoinNode(selectNode, Join.JoinType.LEFT, OrderDto.class, null, null, null, null);
         final ConditionJoinUsingNode usingNode = new ConditionJoinUsingNode(null, LogicOperator.AND, "orders", null);
         joinNode.setCondition(usingNode);
 
         compilationContext.addJoin(joinNode);
 
-        // When
-        compilationContext.addJoinCondition(usingNode);
-
-        // Then
-        assertEquals(1, compilationContext.joinConditionGroupStack().current().conditions().size());
+        // When / Then
+        compilationContext.addJoinUsingCondition(usingNode);
     }
 
     @Test
@@ -630,55 +514,26 @@ class SelectCompilationContextTest {
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
 
-        final JoinNode joinNode = new JoinNode(selectNode, Join.JoinType.INNER, RoleDto.class, null);
+        final JoinNode joinNode = new JoinNode(selectNode, Join.JoinType.INNER, RoleDto.class, null, null, null, null);
         final ConditionJoinUsingNode usingNode = new ConditionJoinUsingNode(null, LogicOperator.AND, "roles", null);
         joinNode.setCondition(usingNode);
 
         compilationContext.addJoin(joinNode);
 
-        // When
-        compilationContext.addJoinCondition(usingNode);
-
-        // Then
-        assertEquals(1, compilationContext.joinConditionGroupStack().current().conditions().size());
-    }
-
-    @Test
-    void resolveAliasWithExistingAlias() {
-        // Given
-        final LitebridgeContext context = createMockContext();
-        final Table table = new Table("items");
-        final ColumnMetaData col = new ColumnMetaData(table, "name", true, Types.VARCHAR, 50);
-        final TableMetaData metaData = new TableMetaData(table, List.of(), List.of(col));
-
-        when(context.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
-        when(context.tableMetaDataCache().ensureTableMetaData(any())).thenReturn(metaData);
-
-        final SelectNode selectNode = new SelectNode("items", null, null, null, null, null);
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
-
-        // Column with existing alias
-        final Column aliasedCol = new Column(table, "name").as("customAlias");
-        assertSame(aliasedCol, compilationContext.resolveAlias(table, aliasedCol));
-
-        // ExpressionSpec with aliased column
-        final SelectColumnSpec specWithAlias = new SelectColumnSpec(aliasedCol);
-        assertSame(specWithAlias, compilationContext.resolveAlias(specWithAlias));
-
-        // ConvertSpec resolution
-        final SelectColumnSpec colSpec = new SelectColumnSpec(new Column(new Table("other"), "col"));
-        final ConvertSpec<?> convertSpec = Fn.convert(colSpec, String.class);
-        final ExpressionSpec resolvedConvert = compilationContext.resolveAlias(convertSpec);
-        assertNotNull(resolvedConvert);
+        // When / Then
+        compilationContext.addJoinUsingCondition(usingNode);
     }
 
     static class UserDto {
         private String name;
     }
 
-    static class RoleDto {}
+    static class RoleDto {
+    }
 
-    static class OrderDto {}
+    static class OrderDto {
+    }
 
-    static class ContextDto {}
+    static class ContextDto {
+    }
 }

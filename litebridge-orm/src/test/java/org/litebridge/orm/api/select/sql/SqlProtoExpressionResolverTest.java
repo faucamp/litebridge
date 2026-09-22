@@ -14,7 +14,6 @@ import org.litebridge.orm.meta.QueryField;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -36,13 +35,12 @@ class SqlProtoExpressionResolverTest {
         final ProtoExpressionSpec protoExpr = new ProtoColumnExpressionSpec(SelectColumnSpec.class, "name", "user_name");
 
         // When
-        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, alias, null, table, ClauseType.SELECT);
+        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, null, table, null, ClauseType.SELECT);
 
         // Then
         final SelectColumnSpec selectColumnSpec = assertInstanceOf(SelectColumnSpec.class, spec);
         final Column column = selectColumnSpec.getColumn();
         assertEquals("name", column.name());
-        assertEquals("user_name", column.alias());
         assertEquals(table, column.table());
     }
 
@@ -53,7 +51,7 @@ class SqlProtoExpressionResolverTest {
 
         // When & Then
         final UnsupportedOperationException ex = assertThrows(UnsupportedOperationException.class,
-                () -> resolver.resolveSelectField(queryField, null, table, ClauseType.SELECT));
+                () -> resolver.resolveSelectField(queryField, null, table, null, ClauseType.SELECT));
         assertEquals("QueryField not yet supported in SQL mode: " + queryField, ex.getMessage());
     }
 
@@ -67,7 +65,6 @@ class SqlProtoExpressionResolverTest {
 
         // Then
         assertEquals("age", column.name());
-        assertNull(column.alias());
         assertEquals(table, column.table());
     }
 
@@ -82,7 +79,6 @@ class SqlProtoExpressionResolverTest {
 
         // Then
         assertEquals("created_at", column.name());
-        assertNull(column.alias());
         assertEquals(table, column.table());
     }
 }

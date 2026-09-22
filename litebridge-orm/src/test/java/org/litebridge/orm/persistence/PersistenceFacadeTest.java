@@ -86,7 +86,7 @@ class PersistenceFacadeTest {
 
         try {
             when(databaseProvider.tableMetaData(any(), any())).thenAnswer(invocation -> {
-                org.litebridge.db.spi.Table table = invocation.getArgument(0);
+                final Table table = invocation.getArgument(0);
                 return metaDataMap.get(table.qualifiedName());
             });
             when(databaseProvider.toSql(any(), any())).thenAnswer(invocation -> {

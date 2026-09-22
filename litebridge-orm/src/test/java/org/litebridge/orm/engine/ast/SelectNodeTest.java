@@ -27,7 +27,7 @@ class SelectNodeTest {
         final Class<?>[] resultTypes = new Class<?>[]{String.class, String.class};
 
         // When
-        final SelectNode node = new SelectNode(table, dtoClass, contextDto, columns, expressions, resultTypes);
+        final SelectNode node = new SelectNode(table, dtoClass, contextDto, null, "alias1", columns, expressions, resultTypes);
 
         // Then
         assertNull(node.previous());
@@ -35,6 +35,8 @@ class SelectNodeTest {
         assertEquals(dtoClass, node.dtoClass());
         assertEquals(contextDto, node.contextDtoClass());
         assertArrayEquals(columns, node.columns());
+        assertNull(node.fromQueryNode());
+        assertEquals("alias1", node.alias());
         assertArrayEquals(expressions, node.expressions());
         assertArrayEquals(resultTypes, node.resultTypes());
     }
@@ -42,11 +44,11 @@ class SelectNodeTest {
     @Test
     void isSelectAllBranches() {
         // Given
-        final SelectNode selectAll = new SelectNode("USERS", null, null, null, null, null);
-        final SelectNode selectColumns = new SelectNode("USERS", null, null, new String[]{"id"}, null, null);
+        final SelectNode selectAll = new SelectNode("USERS", null, null, null, null);
+        final SelectNode selectColumns = new SelectNode("USERS", null, new String[]{"id"}, null, null);
         final ExpressionSpec expr = new SelectColumnSpec(new Column(new Table("t"), "col1"));
-        final SelectNode selectExpr = new SelectNode("USERS", null, null, null, new ExpressionSpec[]{expr}, null);
-        final SelectNode selectBoth = new SelectNode("USERS", null, null, new String[]{"id"}, new ExpressionSpec[]{expr}, null);
+        final SelectNode selectExpr = new SelectNode("USERS", null, null, new ExpressionSpec[]{expr}, null);
+        final SelectNode selectBoth = new SelectNode("USERS", null, new String[]{"id"}, new ExpressionSpec[]{expr}, null);
 
         // When / Then
         assertTrue(selectAll.isSelectAll());
@@ -61,22 +63,22 @@ class SelectNodeTest {
         final ExpressionSpec expr1 = new SelectColumnSpec(new Column(new Table("t"), "col1"));
         final ExpressionSpec expr2 = new SelectColumnSpec(new Column(new Table("t"), "col2"));
 
-        final SelectNode base = new SelectNode("T1", String.class, Integer.class,
+        final SelectNode base = new SelectNode(String.class, Integer.class, null,
                 new String[]{"c1"}, new ExpressionSpec[]{expr1}, new Class<?>[]{Long.class});
-        final SelectNode same = new SelectNode("T1", String.class, Integer.class,
+        final SelectNode same = new SelectNode(String.class, Integer.class, null,
                 new String[]{"c1"}, new ExpressionSpec[]{expr1}, new Class<?>[]{Long.class});
 
-        final SelectNode diffTable = new SelectNode("T2", String.class, Integer.class,
+        final SelectNode diffTable = new SelectNode(String.class, Integer.class, null,
                 new String[]{"c1"}, new ExpressionSpec[]{expr1}, new Class<?>[]{Long.class});
-        final SelectNode diffDto = new SelectNode("T1", Double.class, Integer.class,
+        final SelectNode diffDto = new SelectNode(String.class, Double.class, null,
                 new String[]{"c1"}, new ExpressionSpec[]{expr1}, new Class<?>[]{Long.class});
-        final SelectNode diffContext = new SelectNode("T1", String.class, Double.class,
+        final SelectNode diffContext = new SelectNode(String.class, Integer.class, null,
                 new String[]{"c1"}, new ExpressionSpec[]{expr1}, new Class<?>[]{Long.class});
-        final SelectNode diffCols = new SelectNode("T1", String.class, Integer.class,
+        final SelectNode diffCols = new SelectNode(String.class, Integer.class, null,
                 new String[]{"c2"}, new ExpressionSpec[]{expr1}, new Class<?>[]{Long.class});
-        final SelectNode diffExprs = new SelectNode("T1", String.class, Integer.class,
+        final SelectNode diffExprs = new SelectNode(String.class, Integer.class, null,
                 new String[]{"c1"}, new ExpressionSpec[]{expr2}, new Class<?>[]{Long.class});
-        final SelectNode diffTypes = new SelectNode("T1", String.class, Integer.class,
+        final SelectNode diffTypes = new SelectNode(String.class, Integer.class, null,
                 new String[]{"c1"}, new ExpressionSpec[]{expr1}, new Class<?>[]{Short.class});
 
         // When / Then

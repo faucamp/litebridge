@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.db.spi.query.Select;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.sql.SqlWhereConditionClauseTerminal;
@@ -13,6 +14,7 @@ import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 import java.util.function.Function;
@@ -27,10 +29,12 @@ class ConditionClauseImplTest {
 
     private ConditionClauseImpl<Object, TestConditionClause, TestConditionClauseTerminal> clause;
     private QueryNode[] capturedNode = new QueryNode[1];
+    private SelectNode selectNode;
 
     @BeforeEach
     void setUp() {
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+        selectNode = new SelectNode("TEST_TABLE", null, null, null, null);
 
         clause = new ConditionClauseImpl<>(
                 litebridgeContext,
@@ -161,7 +165,7 @@ class ConditionClauseImplTest {
 
     private void assertSubselectCondition(final SubselectConditionInvoker invoker, final Operator expectedOperator) {
         final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(
-                "TEST_TABLE",
+                selectNode,
                 null,
                 mock(SelectEngineTerminal.class),
                 mock(LitebridgeContext.class));

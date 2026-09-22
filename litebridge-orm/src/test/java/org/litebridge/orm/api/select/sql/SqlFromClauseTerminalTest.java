@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -33,7 +34,7 @@ class SqlFromClauseTerminalTest {
     void setUp() {
         selectEngineTerminal = mock(SelectEngineTerminal.class);
         litebridgeContext = mock(LitebridgeContext.class);
-        selectNode = new SelectNode("users", null, null, null, null, null);
+        selectNode = new SelectNode("users", null, null, null, null);
         terminal = new SqlFromClauseTerminal(selectNode, selectEngineTerminal, litebridgeContext);
     }
 

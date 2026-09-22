@@ -197,7 +197,7 @@ public final class Fn {
      * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
      */
     public static ExpressionSpec ca(final Table table, final String column, final @Nullable String columnAlias) {
-        return new SelectColumnSpec(new Column(table, column, columnAlias));
+        return new SelectColumnSpec(new Column(table, column), columnAlias, null);
     }
 
     /**

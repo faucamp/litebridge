@@ -236,7 +236,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return switch (operator) {
             case USING -> {
                 final ColumnExpression lhsColumnExpression = (ColumnExpression) lhsSelectExpression;
-                final ColumnExpression usingColumExpression = litebridgeContext.sqlFunctionRegistry().select().column().create(new Column(lhsColumnExpression.column().name(), null), null, null);
+                final ColumnExpression usingColumExpression = litebridgeContext.sqlFunctionRegistry().select().column().create(new Column(lhsColumnExpression.column().name()), null, null);
                 yield new Condition(usingColumExpression, operator, usingColumExpression);
             }
             case IS_NULL, IS_NOT_NULL -> new Condition(lhsSelectExpression, operator, null);

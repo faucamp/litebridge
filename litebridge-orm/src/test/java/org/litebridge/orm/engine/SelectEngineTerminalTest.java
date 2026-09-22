@@ -6,9 +6,11 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
+import org.litebridge.db.spi.alias.AliasedColumn;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ConvertExpression;
@@ -165,7 +167,7 @@ class SelectEngineTerminalTest {
         when(compiler.compile(selectNode)).thenReturn(preparedOperation);
         when(databaseProvider.toSql(selectOperation, txManager)).thenReturn("SELECT id FROM users");
 
-        final Row row = new Row().withColumn(new Column(new Table("users"), "id"), 42);
+        final Row row = new Row(List.of(new RowColumn("id", 42, new Column(new Table("users"), "id"))));
         when(databaseProvider.executeQuery(any(PreparedSql.class), eq(txManager))).thenReturn(List.of(row));
 
         // When: First execution (cache miss)
@@ -206,14 +208,15 @@ class SelectEngineTerminalTest {
         when(databaseProvider.aliasTransformer()).thenReturn(aliasTransformer);
 
         final Table table = new Table("users");
-        final Column colWithAlias = new Column(table, "name", "u_name");
-        final Column colWithoutAlias = new Column(table, "age", null);
+        final Column nameColumn = new Column(table, "name");
+        final AliasedColumn colWithAlias = new AliasedColumn("u_name", nameColumn);
+        final Column ageColumn = new Column(table, "age");
 
         final ColumnExpression colExprWithAlias = mock(ColumnExpression.class);
-        when(colExprWithAlias.column()).thenReturn(colWithAlias);
+        when(colExprWithAlias.column()).thenReturn(nameColumn);
 
         final ColumnExpression colExprWithoutAlias = mock(ColumnExpression.class);
-        when(colExprWithoutAlias.column()).thenReturn(colWithoutAlias);
+        when(colExprWithoutAlias.column()).thenReturn(ageColumn);
 
         final ConvertExpression convertExpr = new ConvertExpression(colExprWithAlias, String.class);
         final SelectExpression otherExpr = mock(SelectExpression.class);
@@ -285,7 +288,7 @@ class SelectEngineTerminalTest {
         assertThrows(CustomException.class, () -> terminal.fetchOneOrThrow(selectNode, context, () -> new CustomException("empty")));
 
         // Scenario 2: 1 row
-        final Row singleRow = new Row().withColumn(new Column("users", "id"), 1);
+        final Row singleRow = new Row(List.of(new RowColumn("id", 1, new Column(new Table("users"), "id"))));
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(singleRow));
 
         final Optional<Row> singleOpt = terminal.fetchOne(selectNode, context);
@@ -302,7 +305,7 @@ class SelectEngineTerminalTest {
         assertSame(singleRow, customThrowRow);
 
         // Scenario 3: Multiple rows (> 1)
-        final Row secondRow = new Row().withColumn(new Column(new Table("users"), "id"), 2);
+        final Row secondRow = new Row(List.of(new RowColumn("id", 2, new Column(new Table("users"), "id"))));
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(singleRow, secondRow));
 
         final IllegalStateException nonUniqueEx = assertThrows(IllegalStateException.class, () -> terminal.fetchOneOrNull(selectNode, context));
@@ -352,8 +355,11 @@ class SelectEngineTerminalTest {
         assertThrows(CustomException.class, () -> terminal.fetchFirstOrThrow(selectNode, context, () -> new CustomException("empty")));
 
         // Scenario 2: 1 or more rows
-        final Row row1 = new Row().withColumn(new Column("users", "id"), 1);
-        final Row row2 = new Row().withColumn(new Column("users", "id"), 2);
+        final Column col = new Column(new Table("users"), "id");
+        final RowColumn rowColumn1 = new RowColumn("id", 1, col);
+        final Row row1 = new Row(List.of(rowColumn1));
+        final RowColumn rowColumn2 = new RowColumn("id", 2, col);
+        final Row row2 = new Row(List.of(rowColumn2));
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(row1, row2));
 
         final Optional<Row> firstOpt = terminal.fetchFirst(selectNode, context);
@@ -388,8 +394,12 @@ class SelectEngineTerminalTest {
         final QueryPlanCache.CachedOperation cachedOperation = new QueryPlanCache.CachedOperation("SELECT 1", Collections.emptyList(), null, null);
         when(queryPlanCache.get(anyInt())).thenReturn(cachedOperation);
 
-        final Row row1 = new Row().withColumn(new Column("users", "id"), 1);
-        final Row row2 = new Row().withColumn(new Column("users", "id"), 2);
+        final Table table = new Table("users");
+        final Column col = new Column(table, "id");
+        final RowColumn rowColumn1 = new RowColumn("id", 1, col);
+        final Row row1 = new Row(List.of(rowColumn1));
+        final RowColumn rowColumn2 = new RowColumn("id", 2, col);
+        final Row row2 = new Row(List.of(rowColumn2));
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(row1, row2));
 
         // When
@@ -420,9 +430,13 @@ class SelectEngineTerminalTest {
         final QueryPlanCache.CachedOperation cachedOperation = new QueryPlanCache.CachedOperation("SELECT 1", Collections.emptyList(), null, null);
         when(queryPlanCache.get(anyInt())).thenReturn(cachedOperation);
 
+        final Table table = new Table("users");
+        final Column idCol = new Column(table, "id");
+        final Column nameCol = new Column(table, "name");
+
         // Branch 1: Row size does not match resultTypes length
         final SelectNode mismatchNode = new SelectNode(null, null, null, null, new ExpressionSpec[0], new Class<?>[]{String.class, Integer.class});
-        final Row singleColumnRow = new Row().withColumn(new Column(new Table("users"), "id"), 1);
+        final Row singleColumnRow = new Row(List.of(new RowColumn(idCol.name(), 1, idCol)));
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(singleColumnRow));
 
         final IllegalStateException mismatchEx = assertThrows(IllegalStateException.class, () -> terminal.fetchList(mismatchNode, context));
@@ -430,9 +444,9 @@ class SelectEngineTerminalTest {
 
         // Branch 2: Matching size, with a null resultType at index 0 and non-null at index 1
         final SelectNode matchingNode = new SelectNode(null, null, null, null, new ExpressionSpec[0], new Class<?>[]{null, String.class});
-        final Column col1 = new Column(new Table("users"), "id");
-        final Column col2 = new Column(new Table("users"), "name");
-        final Row twoColumnRow = new Row().withColumn(col1, 10).withColumn(col2, "Alice");
+        final RowColumn rowColumn1 = new RowColumn(idCol.name(), 10, idCol);
+        final RowColumn rowColumn2 = new RowColumn(nameCol.name(), "Alice", nameCol);
+        final Row twoColumnRow = new Row(List.of(rowColumn1, rowColumn2));
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(twoColumnRow));
         when(typeConverter.convert("Alice", String.class)).thenReturn("ALICE_CONVERTED");
 
@@ -472,8 +486,12 @@ class SelectEngineTerminalTest {
         // Scenario 1: Single type override (String.class)
         final SelectNode singleOverrideNode = new SelectNode(null, UserDto.class, null, null, new ExpressionSpec[0], new Class<?>[]{String.class});
         final Column col = new Column(new Table("users"), "name");
-        final Row row1 = new Row().withColumn(col, "Alice");
-        final Row row2 = new Row().withColumn(col, "Bob");
+
+        final RowColumn rowColumn1 = new RowColumn("name", "Alice", col);
+        final Row row1 = new Row(List.of(rowColumn1));
+        final RowColumn rowColumn2 = new RowColumn("name", "Bob", col);
+        final Row row2 = new Row(List.of(rowColumn2));
+
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(row1, row2));
         when(typeConverter.convert("Alice", String.class)).thenReturn("Alice");
         when(typeConverter.convert("Bob", String.class)).thenReturn("Bob");
@@ -496,7 +514,9 @@ class SelectEngineTerminalTest {
 
         // Scenario 2: Multiple type overrides -> dtoClass becomes Row.class
         final SelectNode multiOverrideNode = new SelectNode(null, UserDto.class, null, null, new ExpressionSpec[0], new Class<?>[]{String.class, Integer.class});
-        final Row multiColRow = new Row().withColumn(col, "Alice").withColumn(new Column(new Table("users"), "age"), 30);
+        final Row multiColRow = new Row(List.of(new RowColumn(col.name(), "Alice", col),
+                new RowColumn("users", 30, new Column(new Table("users"), "age"))));
+
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(multiColRow));
         when(typeConverter.convert("Alice", String.class)).thenReturn("Alice");
         when(typeConverter.convert(30, Integer.class)).thenReturn(30);
@@ -506,7 +526,7 @@ class SelectEngineTerminalTest {
 
         // Scenario 3: Single type override to Row.class
         final SelectNode rowOverrideNode = new SelectNode(null, UserDto.class, null, null, new ExpressionSpec[0], new Class<?>[]{Row.class});
-        final Row singleColRow = new Row().withColumn(col, "Alice");
+        final Row singleColRow = new Row(List.of(new RowColumn(col.name(), "Alice", col)));
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(singleColRow));
 
         final List<Row> unwrappedRows = terminal.fetchList(rowOverrideNode, context);
@@ -555,7 +575,7 @@ class SelectEngineTerminalTest {
         when(contextOrmTable.getDtoClassInterfaces()).thenReturn(Collections.emptySet());
         when(tableRegistry.getOrmTableInContextOrThrow(UserDto.class, ContextDto.class)).thenReturn(contextOrmTable);
 
-        final SelectNode contextualNode = new SelectNode(null, UserDto.class, ContextDto.class, null, new ExpressionSpec[0], null);
+        final SelectNode contextualNode = new SelectNode(UserDto.class, ContextDto.class, null, null, new ExpressionSpec[0], null);
         final List<UserDto> contextResults = terminal.fetchList(contextualNode, context);
         assertTrue(contextResults.isEmpty());
         verify(tableRegistry).getOrmTableInContextOrThrow(UserDto.class, ContextDto.class);

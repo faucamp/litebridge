@@ -136,9 +136,9 @@ class QueryCompilerTest {
         when(context.selectExpressionMapper()).thenReturn(expressionMapper);
         when(context.typeConverter()).thenReturn(typeConverter);
         final QueryCompiler compiler = new QueryCompiler(context);
-        final MergeNode root = new MergeNode("items", null);
+        final MergeNode root = new MergeNode("items", null, null);
         final ConditionNode condition = new ConditionNode(null, LogicOperator.AND, "id", null, Operator.EQ, 1);
-        final UsingNode using = new UsingNode(root, "incoming", null, condition);
+        final UsingNode using = new UsingNode(root, "incoming", null, null, null, condition);
 
         // When
         final PreparedOperation result = compiler.compile(using);
@@ -179,9 +179,9 @@ class QueryCompilerTest {
         final QueryCompiler compiler = new QueryCompiler(context);
 
         // MERGE INTO items USING incoming ON incoming.id = 1
-        final MergeNode root = new MergeNode("items", null);
+        final MergeNode root = new MergeNode("items", null, null);
         final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, "id", null, Operator.EQ, 1);
-        final UsingNode using = new UsingNode(root, "incoming", null, onCondition);
+        final UsingNode using = new UsingNode(root, "incoming", null, null, null, onCondition);
 
         // WHEN MATCHED (UPDATE SET balance = 500 WHERE id < 5)
         final UpdateNode updateNode = new UpdateNode(null, "items", null);
@@ -242,7 +242,7 @@ class QueryCompilerTest {
         when(context.aliasGenerator()).thenReturn(new NoOpAliasGenerator());
         when(context.selectExpressionMapper()).thenReturn(mock(SelectExpressionMapper.class));
         final QueryCompiler compiler = new QueryCompiler(context);
-        final SelectNode root = new SelectNode("items", null, null, null, new ExpressionSpec[0], null);
+        final SelectNode root = new SelectNode("items", null, null, new ExpressionSpec[0], null);
 
         // When
         final PreparedOperation result = compiler.compile(root);
@@ -264,7 +264,7 @@ class QueryCompilerTest {
         when(context.aliasGenerator()).thenReturn(new NoOpAliasGenerator());
         when(context.selectExpressionMapper()).thenReturn(mock(SelectExpressionMapper.class));
         final QueryCompiler compiler = new QueryCompiler(context);
-        final SelectNode root = new SelectNode("items", null, null, null, new ExpressionSpec[0], null);
+        final SelectNode root = new SelectNode("items", null, null, new ExpressionSpec[0], null);
 
         // When
         final PreparedOperation first = compiler.compile(root);
@@ -329,8 +329,8 @@ class QueryCompilerTest {
         when(metadataCache.ensureTableMetaData(table)).thenReturn(metadata);
         final LitebridgeContext context = context(tableRegistry, metadataCache);
         final QueryCompiler compiler = new QueryCompiler(context);
-        final MergeNode root = new MergeNode("items", null);
-        final UsingNode using = new UsingNode(root, "items", null, null);
+        final MergeNode root = new MergeNode("items", null, null);
+        final UsingNode using = new UsingNode(root, "items", null, null, null, null);
 
         // When
         final PreparedOperation first = compiler.compile(using);

@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.dto;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
@@ -37,7 +38,7 @@ class DtoJoinConditionClauseTerminalTest {
         selectEngineTerminal = mock(SelectEngineTerminal.class);
         litebridgeContext = mock(LitebridgeContext.class);
         final SelectNode selectNode = new SelectNode(null, SelectTestDto.class, null, null, null, null);
-        joinNode = new JoinNode(selectNode, Join.JoinType.INNER, SelectTestDto.class, null);
+        joinNode = new JoinNode(selectNode, Join.JoinType.INNER, SelectTestDto.class, null, null, null, null);
         terminal = new DtoJoinConditionClauseTerminal<>(joinNode, selectEngineTerminal, litebridgeContext);
     }
 

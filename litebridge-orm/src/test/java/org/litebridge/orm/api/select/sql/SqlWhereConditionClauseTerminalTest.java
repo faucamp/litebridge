@@ -63,7 +63,8 @@ class SqlWhereConditionClauseTerminalTest {
     @Test
     void and_withColumn_whenNodeIsNotWhereNode() {
         // Given
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal("users", selectNode, selectEngineTerminal, litebridgeContext);
+        final QueryNode node = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, node, selectEngineTerminal, litebridgeContext);
 
         // When
         final SqlWhereConditionClause clause = terminal.and("name");
@@ -85,7 +86,7 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal("users", whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec expr = Fn.column("age");
 
         // When
@@ -105,7 +106,7 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal("users", whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
         final QueryConditionBuilder<Row> builder = q -> q.where("age").gt(21);
 
         // When
@@ -125,7 +126,8 @@ class SqlWhereConditionClauseTerminalTest {
     @Test
     void and_withQueryConditionBuilder_throwsExceptionWhenNodeNotWhereNode() {
         // Given
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal("users", selectNode, selectEngineTerminal, litebridgeContext);
+        final QueryNode node = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, node, selectEngineTerminal, litebridgeContext);
         final QueryConditionBuilder<Row> builder = q -> q.where("age").gt(21);
 
         // When & Then
@@ -138,7 +140,7 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal("users", whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
 
         // When
         final SqlWhereConditionClause clause = terminal.or("age");
@@ -157,7 +159,7 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal("users", whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec expr = Fn.column("age");
 
         // When
@@ -177,7 +179,7 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal("users", whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
         final QueryConditionBuilder<Row> builder = q -> q.where("age").lt(10);
 
         // When
@@ -197,7 +199,8 @@ class SqlWhereConditionClauseTerminalTest {
     @Test
     void or_withQueryConditionBuilder_throwsExceptionWhenNodeNotWhereNode() {
         // Given
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal("users", selectNode, selectEngineTerminal, litebridgeContext);
+        final QueryNode node = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, node, selectEngineTerminal, litebridgeContext);
         final QueryConditionBuilder<Row> builder = q -> q.where("age").lt(10);
 
         // When & Then
@@ -209,7 +212,7 @@ class SqlWhereConditionClauseTerminalTest {
     void groupBy_withColumns() {
         // Given
         final WhereNode whereNode = new WhereNode(selectNode, null);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal("users", whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
 
         // When
         final SqlGroupByClauseTerminal groupByTerminal = terminal.groupBy("name");
@@ -225,7 +228,7 @@ class SqlWhereConditionClauseTerminalTest {
     void groupBy_withExpressions() {
         // Given
         final WhereNode whereNode = new WhereNode(selectNode, null);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal("users", whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec expr = Fn.column("name");
 
         // When
@@ -242,7 +245,7 @@ class SqlWhereConditionClauseTerminalTest {
     void orderBy_withColumns() {
         // Given
         final WhereNode whereNode = new WhereNode(selectNode, null);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal("users", whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
 
         // When
         final SqlOrderByClause orderByClause = terminal.orderBy("age");
@@ -260,7 +263,7 @@ class SqlWhereConditionClauseTerminalTest {
     void orderBy_withExpressions() {
         // Given
         final WhereNode whereNode = new WhereNode(selectNode, null);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal("users", whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec expr = Fn.column("age");
 
         // When

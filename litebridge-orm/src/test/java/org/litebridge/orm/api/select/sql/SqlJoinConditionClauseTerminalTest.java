@@ -3,6 +3,7 @@ package org.litebridge.orm.api.select.sql;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
@@ -37,9 +38,9 @@ class SqlJoinConditionClauseTerminalTest {
     void setUp() {
         selectEngineTerminal = mock(SelectEngineTerminal.class);
         litebridgeContext = mock(LitebridgeContext.class);
-        final SelectNode selectNode = new SelectNode(null, null, null, null, null, null);
-        joinNode = new JoinNode(selectNode, Join.JoinType.INNER, null, "orders");
-        terminal = new SqlJoinConditionClauseTerminal("users", joinNode, selectEngineTerminal, litebridgeContext);
+        final SelectNode selectNode = new SelectNode("users", null, null, null, null);
+        joinNode = new JoinNode(selectNode, Join.JoinType.INNER, null, null, "orders", null, null);
+        terminal = new SqlJoinConditionClauseTerminal(selectNode, joinNode, selectEngineTerminal, litebridgeContext);
     }
 
     @Test

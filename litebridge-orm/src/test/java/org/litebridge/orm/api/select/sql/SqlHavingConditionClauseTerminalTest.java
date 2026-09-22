@@ -30,20 +30,22 @@ class SqlHavingConditionClauseTerminalTest {
 
     private SelectEngineTerminal selectEngineTerminal;
     private LitebridgeContext litebridgeContext;
+    private SelectNode selectNode;
     private GroupByNode groupByNode;
 
     @BeforeEach
     void setUp() {
         selectEngineTerminal = mock(SelectEngineTerminal.class);
         litebridgeContext = mock(LitebridgeContext.class);
-        final SelectNode selectNode = new SelectNode(null, null, null, null, null, null);
+        selectNode = new SelectNode(null, null, null, null, null, null);
         groupByNode = new GroupByNode(selectNode, new String[]{"name"}, null);
     }
 
     @Test
     void and_withColumn_whenNodeIsNotHavingNode() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", groupByNode, selectEngineTerminal, litebridgeContext);
+        final QueryNode queryNode = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, queryNode, selectEngineTerminal, litebridgeContext);
 
         // When
         final SqlHavingConditionClause clause = terminal.and("age");
@@ -66,7 +68,7 @@ class SqlHavingConditionClauseTerminalTest {
         // Given
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, null, Fn.count(), Operator.GT, 5);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", existingHavingNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
 
         // When
         final SqlHavingConditionClause clause = terminal.and("age");
@@ -87,7 +89,7 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void and_withExpression_whenNodeIsNotHavingNode() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec countExpr = Fn.count();
 
         // When
@@ -110,7 +112,7 @@ class SqlHavingConditionClauseTerminalTest {
         // Given
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", existingHavingNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec countExpr = Fn.count();
 
         // When
@@ -132,7 +134,7 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void and_withQueryConditionBuilder_whenNodeIsNotHavingNode() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
         final QueryConditionBuilder<Row> builder = q -> q.where("age").gt(21);
 
         // When
@@ -158,7 +160,7 @@ class SqlHavingConditionClauseTerminalTest {
         // Given
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, null, Fn.count(), Operator.GT, 1);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", existingHavingNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
         final QueryConditionBuilder<Row> builder = q -> q.where("name").isNotNull();
 
         // When
@@ -177,7 +179,7 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void or_withColumn_whenNodeIsNotHavingNode() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
 
         // When
         final SqlHavingConditionClause clause = terminal.or("name");
@@ -198,7 +200,7 @@ class SqlHavingConditionClauseTerminalTest {
         // Given
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", existingHavingNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
 
         // When
         final SqlHavingConditionClause clause = terminal.or("name");
@@ -218,7 +220,7 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void or_withExpression_whenNodeIsNotHavingNode() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec countExpr = Fn.count();
 
         // When
@@ -240,7 +242,7 @@ class SqlHavingConditionClauseTerminalTest {
         // Given
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", existingHavingNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec countExpr = Fn.count();
 
         // When
@@ -261,7 +263,7 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void or_withQueryConditionBuilder_whenNodeIsNotHavingNode() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
         final QueryConditionBuilder<Row> builder = q -> q.where("age").lt(10);
 
         // When
@@ -280,7 +282,7 @@ class SqlHavingConditionClauseTerminalTest {
         // Given
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, null, Fn.count(), Operator.GT, 1);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", existingHavingNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
         final QueryConditionBuilder<Row> builder = q -> q.where("age").lt(10);
 
         // When
@@ -296,7 +298,7 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void orderBy_withColumns() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
 
         // When
         final SqlOrderByClause orderByClause = terminal.orderBy("age");
@@ -312,7 +314,7 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void orderBy_withExpressions() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal("users", groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec expr = Fn.column("age");
 
         // When

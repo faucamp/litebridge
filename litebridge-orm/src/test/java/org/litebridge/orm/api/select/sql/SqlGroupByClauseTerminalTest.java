@@ -40,7 +40,7 @@ class SqlGroupByClauseTerminalTest {
         final String[] columns = new String[]{"name", "age"};
 
         // When
-        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal("users", columns, selectNode, selectEngineTerminal, litebridgeContext);
+        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal(selectNode, columns, selectNode, selectEngineTerminal, litebridgeContext);
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(terminal);
@@ -56,7 +56,7 @@ class SqlGroupByClauseTerminalTest {
         final ExpressionSpec[] expressions = new ExpressionSpec[]{Fn.column("name")};
 
         // When
-        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal("users", expressions, selectNode, selectEngineTerminal, litebridgeContext);
+        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal(selectNode, expressions, selectNode, selectEngineTerminal, litebridgeContext);
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(terminal);
@@ -70,7 +70,7 @@ class SqlGroupByClauseTerminalTest {
     void having() {
         // Given
         final String[] columns = new String[]{"name"};
-        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal("users", columns, selectNode, selectEngineTerminal, litebridgeContext);
+        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal(selectNode, columns, selectNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec countExpr = Fn.count();
 
         // When
@@ -93,7 +93,7 @@ class SqlGroupByClauseTerminalTest {
     void orderBy_withColumns() {
         // Given
         final String[] columns = new String[]{"name"};
-        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal("users", columns, selectNode, selectEngineTerminal, litebridgeContext);
+        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal(selectNode, columns, selectNode, selectEngineTerminal, litebridgeContext);
 
         // When
         final SqlOrderByClause orderByClause = terminal.orderBy("age");
@@ -113,7 +113,7 @@ class SqlGroupByClauseTerminalTest {
     void orderBy_withExpressions() {
         // Given
         final String[] columns = new String[]{"name"};
-        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal("users", columns, selectNode, selectEngineTerminal, litebridgeContext);
+        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal(selectNode, columns, selectNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec expr = Fn.column("age");
 
         // When

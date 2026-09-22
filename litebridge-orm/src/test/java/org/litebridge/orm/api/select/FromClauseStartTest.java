@@ -93,7 +93,7 @@ class FromClauseStartTest {
         // Then
         assertNotNull(terminal);
         verify(litebridgeContextCreator).apply(LitebridgeContext.Mode.DTO);
-        final SelectNode expectedNode = new SelectNode(null, TestDto.class, ContextDto.class, columns, null, null);
+        final SelectNode expectedNode = new SelectNode(TestDto.class, ContextDto.class, null, columns, null, null);
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 
@@ -109,7 +109,7 @@ class FromClauseStartTest {
         // Then
         assertNotNull(terminal);
         verify(litebridgeContextCreator).apply(LitebridgeContext.Mode.SQL);
-        final SelectNode expectedNode = new SelectNode("users", null, null, columns, null, null);
+        final SelectNode expectedNode = new SelectNode("users", null, columns, null, null);
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 
@@ -125,7 +125,7 @@ class FromClauseStartTest {
         // Then
         assertNotNull(terminal);
         verify(litebridgeContextCreator).apply(LitebridgeContext.Mode.SQL);
-        final SelectNode expectedNode = new SelectNode("users", null, null, null, expressionSpecs, null);
+        final SelectNode expectedNode = new SelectNode("users", null, null, expressionSpecs, null);
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 
@@ -142,7 +142,7 @@ class FromClauseStartTest {
         assertNotNull(terminal);
         verify(litebridgeContextCreator).apply(LitebridgeContext.Mode.SQL);
         final Class<?>[] expectedResultTypes = new Class<?>[]{Long.class, Long.class};
-        final SelectNode expectedNode = new SelectNode("users", null, null, null, expressionSpecs, expectedResultTypes);
+        final SelectNode expectedNode = new SelectNode("users", null, null, expressionSpecs, expectedResultTypes);
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 
@@ -159,7 +159,7 @@ class FromClauseStartTest {
         assertNotNull(terminal);
         verify(litebridgeContextCreator).apply(LitebridgeContext.Mode.SQL);
         final Class<?>[] expectedResultTypes = new Class<?>[]{null, Long.class, null};
-        final SelectNode expectedNode = new SelectNode("users", null, null, null, expressionSpecs, expectedResultTypes);
+        final SelectNode expectedNode = new SelectNode("users", null, null, expressionSpecs, expectedResultTypes);
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 

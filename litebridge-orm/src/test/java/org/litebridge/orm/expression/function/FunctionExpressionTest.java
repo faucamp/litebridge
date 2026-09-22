@@ -88,7 +88,7 @@ class FunctionExpressionTest {
         final ColumnExpressionSpec target = mockTarget();
 
         // When
-        final AbsSpec spec = new AbsSpec(target);
+        final AbsSpec spec = new AbsSpec(target, null);
 
         // Then
         assertEquals(target, spec.target());
@@ -101,7 +101,7 @@ class FunctionExpressionTest {
         final ColumnExpressionSpec target = mockTarget();
 
         // When
-        final LowerSpec spec = new LowerSpec(target);
+        final LowerSpec spec = new LowerSpec(target, null);
 
         // Then
         assertEquals(target, spec.target());
@@ -114,7 +114,7 @@ class FunctionExpressionTest {
         final ColumnExpressionSpec target = mockTarget();
 
         // When
-        final UpperSpec spec = new UpperSpec(target);
+        final UpperSpec spec = new UpperSpec(target, null);
 
         // Then
         assertEquals(target, spec.target());

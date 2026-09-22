@@ -2,6 +2,7 @@ package org.litebridge.orm.persistence;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
@@ -28,7 +29,8 @@ class DeleteBuilderTest {
     void build() {
         // Given
         final OrmTable ormTable = mock(OrmTable.class);
-        final TableMetaData tableMetaData = new TableMetaData("catalog", "schema", "table", Collections.emptyList(), Collections.emptyList());
+        final Table table = new Table("catalog", "schema", "table");
+        final TableMetaData tableMetaData = new TableMetaData(table, Collections.emptyList(), Collections.emptyList());
         when(ormTable.getMetaData()).thenReturn(tableMetaData);
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         final QueryCompiler queryCompiler = mock(QueryCompiler.class);

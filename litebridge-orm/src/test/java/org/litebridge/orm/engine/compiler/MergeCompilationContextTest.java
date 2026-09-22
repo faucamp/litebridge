@@ -43,7 +43,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -85,7 +84,7 @@ class MergeCompilationContextTest {
         when(context.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
         when(context.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
 
-        final MergeNode mergeNode = new MergeNode("items", null);
+        final MergeNode mergeNode = new MergeNode("items", null, null);
 
         // When
         final MergeCompilationContext compilationContext = new MergeCompilationContext(mergeNode, context);
@@ -107,7 +106,7 @@ class MergeCompilationContextTest {
         when(ormTable.getMetaData()).thenReturn(metaData);
         when(context.tableRegistry().getOrmTable(UserDto.class)).thenReturn(ormTable);
 
-        final MergeNode mergeNode = new MergeNode(null, UserDto.class);
+        final MergeNode mergeNode = new MergeNode(null, UserDto.class, null);
 
         // When
         final MergeCompilationContext compilationContext = new MergeCompilationContext(mergeNode, context);
@@ -128,7 +127,7 @@ class MergeCompilationContextTest {
         when(ormTable.getMetaData()).thenReturn(metaData);
         when(context.tableRegistry().getOrmTable("users")).thenReturn(ormTable);
 
-        final MergeNode mergeNode = new MergeNode("users", null);
+        final MergeNode mergeNode = new MergeNode("users", null, null);
 
         // When
         final MergeCompilationContext compilationContext = new MergeCompilationContext(mergeNode, context);
@@ -152,10 +151,11 @@ class MergeCompilationContextTest {
         final Table usingTable = new Table("incoming");
         when(context.tableRegistry().getOrCreateSpiTable("incoming")).thenReturn(usingTable);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null), context);
+        final ConditionNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, "c1", null, Operator.EQ, "c2");
 
         // When using table name
-        compilationContext.setUsingNode(new UsingNode(null, "incoming", null, null));
+        compilationContext.setUsingNode(new UsingNode(null, "incoming", null, null, null, conditionNode));
 
         // Then
         assertEquals(MergeCompilationContext.ConditionContext.ON, compilationContext.conditionContext());
@@ -166,7 +166,7 @@ class MergeCompilationContextTest {
         when(usingOrmTable.getMetaData()).thenReturn(usingMeta);
         when(context.tableRegistry().getOrmTable(UserDto.class)).thenReturn(usingOrmTable);
 
-        compilationContext.setUsingNode(new UsingNode(null, null, UserDto.class, null));
+        compilationContext.setUsingNode(new UsingNode(null, null, UserDto.class, null, null, conditionNode));
         assertEquals(MergeCompilationContext.ConditionContext.ON, compilationContext.conditionContext());
     }
 
@@ -181,9 +181,10 @@ class MergeCompilationContextTest {
         when(context.tableRegistry().getOrmTable("items")).thenReturn(null);
         when(context.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
         when(context.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
+        final ConditionNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, "c1", null, Operator.EQ, "c2");
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null), context);
-        compilationContext.setUsingNode(new UsingNode(null, "items", null, null));
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null), context);
+        compilationContext.setUsingNode(new UsingNode(null, "items", null, null, null, conditionNode));
 
         // When addOnCondition
         final ConditionNode onCond = new ConditionNode(null, LogicOperator.AND, "id", null, Operator.EQ, 1);
@@ -219,7 +220,7 @@ class MergeCompilationContextTest {
         when(ormTable.columnMetaDataForField("name")).thenReturn(nameCol);
         when(context.tableRegistry().getOrmTable(UserDto.class)).thenReturn(ormTable);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null), context);
         compilationContext.addWhenMatchedSpec(true);
 
         // 1. Column by field name in DTO mode
@@ -267,7 +268,7 @@ class MergeCompilationContextTest {
         when(ormTable.columnMetaDataForField("unknown")).thenReturn(null);
         when(context.tableRegistry().getOrmTable(UserDto.class)).thenReturn(ormTable);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null), context);
         compilationContext.addWhenMatchedSpec(false);
 
         // 1. Column names in DTO mode
@@ -312,7 +313,7 @@ class MergeCompilationContextTest {
         when(context.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
         when(context.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null), context);
         compilationContext.addWhenMatchedSpec(false);
         compilationContext.whenNotMatchedInsert(new InsertNode("items", null, new String[]{"id"}));
 
@@ -372,7 +373,7 @@ class MergeCompilationContextTest {
 
         when(context.tableRegistry().getOrmTable(UserWithRoleDto.class)).thenReturn(userOrmTable);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserWithRoleDto.class), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserWithRoleDto.class, null), context);
         compilationContext.addWhenMatchedSpec(false);
 
         // When
@@ -401,7 +402,7 @@ class MergeCompilationContextTest {
         when(ormTable.fieldForColumnNameOrNull("id")).thenReturn(idAccessor);
         when(context.tableRegistry().getOrmTable(UserDto.class)).thenReturn(ormTable);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null), context);
         compilationContext.addWhenMatchedSpec(false);
 
         // When & Then
@@ -433,8 +434,9 @@ class MergeCompilationContextTest {
         when(context.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(colExpr);
         when(context.typeConverter().convert(any(), eq(Types.INTEGER))).thenAnswer(inv -> inv.getArgument(0));
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null), context);
-        compilationContext.setUsingNode(new UsingNode(null, "incoming", null, null));
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null), context);
+        final ConditionNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, "c1", null, Operator.EQ, "c2");
+        compilationContext.setUsingNode(new UsingNode(null, "incoming", null, null, null, conditionNode));
         compilationContext.addOnCondition(new ConditionNode(null, LogicOperator.AND, "id", null, Operator.EQ, 1));
 
         // When matched: update val = 100
@@ -472,7 +474,7 @@ class MergeCompilationContextTest {
         when(context.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
         when(context.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null), context);
 
         // When & Then
         final SelectColumnSpec spec = new SelectColumnSpec(new Column(table, "id"));
@@ -511,7 +513,10 @@ class MergeCompilationContextTest {
 
     static class RoleDto {
         private final int id;
-        RoleDto(final int id) { this.id = id; }
+
+        RoleDto(final int id) {
+            this.id = id;
+        }
     }
 
     static class UserWithRoleDto {

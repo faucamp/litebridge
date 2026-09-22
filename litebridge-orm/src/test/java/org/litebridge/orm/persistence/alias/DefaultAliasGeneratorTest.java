@@ -2,77 +2,45 @@ package org.litebridge.orm.persistence.alias;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
-import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.DatabaseProvider;
-import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.DefaultAliasTransformer;
-import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.tracking.ChangeTracker;
-import org.litebridge.tracking.ClassFieldAccessorCache;
-import org.litebridge.tracking.DirectFieldAccessor;
-import org.litebridge.tracking.FieldAccessor;
-
-import java.lang.invoke.MethodHandles;
-import java.sql.Types;
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 
 class DefaultAliasGeneratorTest {
 
     @Test
-    void aliasTable() {
+    void newTableAlias() {
         // Given
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final DefaultAliasGenerator defaultAliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
-        final TableMetaData tableMetaData = new TableMetaData("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", List.of("MY_VAR"), List.of(columnMetaData));
-        final FieldAccessor fieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup());
-        final Map<FieldAccessor, MappedFieldTarget> fieldColumnMap = Map.of(fieldAccessor, columnMetaData);
-        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
-        final OrmTable ormTable = new OrmTable(TestDto.class, tableMetaData, fieldColumnMap, changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
 
         // When
-        final Table result = defaultAliasGenerator.newTableAlias(ormTable);
+        final String result = defaultAliasGenerator.newTableAlias(table);
 
         // Then
-        assertNotEquals(result, table);
-        assertTrue(result.equalsIgnoreAlias(table));
-        assertEquals("tt", result.alias());
+        assertEquals("tt", result);
     }
 
     @Test
-    void aliasColumn() {
+    void newColumnAlias() {
         // Given
         final DefaultAliasGenerator defaultAliasGenerator = new DefaultAliasGenerator(new DefaultAliasTransformer());
-
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
-        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR);
-        final Table aliasedTable = table.as("tt");
+        final Column column = new Column(table, "MY_VAR");
 
         // When
-        final Column result = defaultAliasGenerator.newColumnAlias(aliasedTable, columnMetaData);
+        final String result = defaultAliasGenerator.newColumnAlias(column);
 
         // Then
-        assertEquals(columnMetaData.name(), result.name());
-        assertEquals("ttmv", result.alias());
+        assertEquals("ttmv", result);
 
         // When 2
-        final Column result2 = defaultAliasGenerator.newColumnAlias(aliasedTable, columnMetaData);
+        final String result2 = defaultAliasGenerator.newColumnAlias(column);
 
         // Then 2
-        assertEquals(columnMetaData.name(), result2.name());
-        assertEquals("ttmv1", result2.alias());
+        assertEquals("ttmv1", result2);
     }
 
     private static class TestDto {
