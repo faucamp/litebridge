@@ -3,8 +3,8 @@ package org.litebridge.db.spi.query;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.expression.ColumnExpressionTest;
-import org.litebridge.db.spi.expression.LiteralExpression;
+import org.litebridge.db.spi.expression.ColumnTestExpression;
+import org.litebridge.db.spi.expression.LiteralTestExpression;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,9 +20,9 @@ class ConditionGroupTest {
         assertTrue(new ConditionGroup(Collections.emptyList()).isEmpty());
 
         final LogicCondition condition = new LogicCondition(
-                ColumnExpressionTest.select(new Column(new Table("T"), "C")),
+                new ColumnTestExpression(new Column(new Table("T"), "C")),
                 Operator.EQ,
-                new LiteralExpression(1)
+                new LiteralTestExpression(1)
         );
         assertFalse(new ConditionGroup(List.of(condition)).isEmpty());
         assertFalse(new ConditionGroup(condition).isEmpty());

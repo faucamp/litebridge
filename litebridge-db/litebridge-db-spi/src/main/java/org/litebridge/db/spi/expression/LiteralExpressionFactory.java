@@ -14,5 +14,5 @@ public interface LiteralExpressionFactory {
      * @param value The literal value to be represented.
      * @return A new literal expression.
      */
-    LiteralExpression create(@Nullable Object value, @Nullable String alias, boolean parameter);
+    LiteralExpression create(@Nullable Object value, @Nullable String alias);
 }

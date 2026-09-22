@@ -112,18 +112,7 @@ public class SqlFunctionRegistryFactory {
      * @return the literal expression
      */
     protected LiteralExpressionImpl createLiteral(final @Nullable Object value, final @Nullable String alias) {
-        return createLiteral(value, alias, false);
-    }
-
-    /**
-     * Creates a literal expression.
-     *
-     * @param value     the literal value
-     * @param parameter whether this literal should be treated as a bind parameter
-     * @return the literal expression
-     */
-    protected LiteralExpressionImpl createLiteral(final @Nullable Object value, final @Nullable String alias, final boolean parameter) {
-        return new LiteralExpressionImpl(value, alias, parameter, labelGenerator);
+        return new LiteralExpressionImpl(value, alias, labelGenerator);
     }
 
     /**

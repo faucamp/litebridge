@@ -134,9 +134,7 @@ class TableMetaDataTest {
 
         // When
         final TableMetaData result = new TableMetaData(
-                "TEST_CATALOG",
-                "TEST_SCHEMA",
-                "TEST_TABLE",
+                new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"),
                 List.of("id"),
                 List.of(id, name)
         );

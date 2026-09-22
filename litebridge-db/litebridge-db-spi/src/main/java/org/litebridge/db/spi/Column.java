@@ -1,7 +1,5 @@
 package org.litebridge.db.spi;
 
-import org.jspecify.annotations.Nullable;
-
 import java.util.Objects;
 import java.util.StringJoiner;
 
@@ -29,18 +27,6 @@ public final class Column {
      * @param name  the name of the column; must not be null
      */
     public Column(final Table table, final String name) {
-        this(table, name, null);
-    }
-
-    /**
-     * Construct a new {@code Column} instance associated with the specified table, column name,
-     * and optional column alias.
-     *
-     * @param table the table to which the column belongs; must not be null
-     * @param name  the name of the column; must not be null
-     * @param alias an optional alias for the column; may be null if not needed
-     */
-    public Column(final Table table, final String name, final @Nullable String alias) {
         this.name = name;
         this.table = table;
     }
@@ -48,10 +34,9 @@ public final class Column {
     /**
      * Construct a new {@code Column} instance without an associated {@link Table} instance.
      *
-     * @param name  the name of the column; must not be null
-     * @param alias an optional alias for the column; may be null if not needed
+     * @param name the name of the column; must not be null
      */
-    public Column(final String name, final @Nullable String alias) {
+    public Column(final String name) {
         this(NO_TABLE, name);
     }
 
@@ -75,18 +60,6 @@ public final class Column {
      */
     public Table table() {
         return table;
-    }
-
-    /**
-     * Set the alias for this entity and return the updated instance.
-     *
-     * @param alias the alias to assign to this entity; must not be null
-     * @return the updated instance of {@code Aliased} with the specified alias set
-     */
-    public Column as(final String alias) {
-//        setAlias(alias);
-//        return this;
-        throw new UnsupportedOperationException("Deprecated");
     }
 
     /**

@@ -102,12 +102,10 @@ public final class ContextBuilder {
                 Objects.requireNonNullElseGet(databaseProviderMetaData, () -> new DatabaseProviderMetaData(true, true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW));
         final MetaDataEngine finalMetaDataEngine =
                 Objects.requireNonNullElseGet(metaDataEngine, () -> new DefaultMetaDataEngine(finalDatabaseProviderMetaData));
-        final ColumnIdentifierGenerator finalColumnIdentifierGenerator =
-                Objects.requireNonNullElseGet(columnIdentifierGenerator, ColumnIdentifierGenerator::new);
-        final MathOperationGenerator finalMathOperationGenerator =
-                Objects.requireNonNullElseGet(mathOperationGenerator, () -> new MathOperationGenerator(finalColumnIdentifierGenerator));
         final LabelGenerator finalLabelGenerator =
                 Objects.requireNonNullElseGet(labelGenerator, LabelGenerator::new);
+        final MathOperationGenerator finalMathOperationGenerator =
+                Objects.requireNonNullElseGet(mathOperationGenerator, () -> new MathOperationGenerator(finalLabelGenerator));
         final SqlGenerator finalSqlGenerator =
                 Objects.requireNonNullElseGet(sqlGenerator, () -> new DefaultSqlGenerator(finalMetaDataEngine, finalLabelGenerator, finalMathOperationGenerator));
         final TypeConverter finalTypeConverter =

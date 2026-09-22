@@ -17,27 +17,26 @@ import java.util.StringJoiner;
 public class LiteralExpressionImpl extends AbstractAliasedExpression implements LiteralExpression {
 
     private final @Nullable Object value;
-    private final boolean parameter;
 
     /**
      * Constructs a new {@code LiteralExpressionImpl} with the given value.
      *
-     * @param value the literal value to be represented
+     * @param value          the literal value to be represented
+     * @param labelGenerator generator for rendering aliases/identifiers
      */
     public LiteralExpressionImpl(final @Nullable Object value, final @Nullable String alias, final LabelGenerator labelGenerator) {
-        this(value, alias, false, labelGenerator);
+        super(alias, null, labelGenerator);
+        this.value = value;
     }
 
     /**
-     * Constructs a new {@code LiteralExpressionImpl} with the given value and parameter flag.
+     * Constructs a new {@code LiteralExpressionImpl} with the given value and no alias.
      *
-     * @param value     the literal value to be represented
-     * @param parameter whether this literal should be treated as a bind parameter
+     * @param value          the literal value to be represented
+     * @param labelGenerator generator for rendering aliases/identifiers
      */
-    public LiteralExpressionImpl(final @Nullable Object value, final @Nullable String alias, final boolean parameter, final LabelGenerator labelGenerator) {
-        super(alias, null, labelGenerator);
-        this.value = value;
-        this.parameter = parameter;
+    public LiteralExpressionImpl(final @Nullable Object value, final LabelGenerator labelGenerator) {
+        this(value, null, labelGenerator);
     }
 
     public @Nullable Object value() {
@@ -48,20 +47,11 @@ public class LiteralExpressionImpl extends AbstractAliasedExpression implements 
         return alias;
     }
 
-    /**
-     * Returns whether this literal should be treated as a bind parameter.
-     *
-     * @return {@code true} if it's a parameter, {@code false} otherwise
-     */
-    public boolean isParameter() {
-        return parameter;
-    }
-
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
         final String valueStr;
 
-        if (parameter) {
+        if (clause == ClauseType.SELECT || clause == ClauseType.JOIN) {
             return toBindValueSql(operation);
         } else if (value == null) {
             valueStr = "NULL";
@@ -107,12 +97,12 @@ public class LiteralExpressionImpl extends AbstractAliasedExpression implements 
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof final LiteralExpressionImpl that)) return false;
-        return parameter == that.parameter && Objects.equals(value, that.value) && Objects.equals(alias, that.alias);
+        return Objects.equals(value, that.value) && Objects.equals(alias, that.alias);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value, alias, parameter);
+        return Objects.hash(value, alias);
     }
 
     @Override
@@ -120,7 +110,6 @@ public class LiteralExpressionImpl extends AbstractAliasedExpression implements 
         return new StringJoiner(", ", LiteralExpressionImpl.class.getSimpleName() + "[", "]")
                 .add("value=" + value)
                 .add("alias='" + alias + "'")
-                .add("parameter=" + parameter)
                 .toString();
     }
 }

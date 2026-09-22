@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.TypeConversionMetaData;
@@ -26,9 +27,11 @@ import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -84,8 +87,8 @@ class ExecutionEngineTest {
         // Then
         assertEquals(1, rows.size());
         assertEquals(1, rows.getFirst().size());
-        assertEquals("converted", rows.getFirst().getValue(0));
-        assertEquals("name", rows.getFirst().column(0).column().alias());
+        assertEquals("converted", rows.getFirst().value(0));
+        assertEquals("name", rows.getFirst().column(0).label());
         verify(statement).close();
     }
 
@@ -101,12 +104,12 @@ class ExecutionEngineTest {
         when(metadata.getColumnCount()).thenReturn(1);
         when(metadata.getColumnLabel(1)).thenReturn("name");
         when(resultSet.getObject(1)).thenReturn("Alice");
-        final Table aliasedTable = new Table("TEST_TABLE", "t");
-        final ColumnMetaData columnMetaData = new ColumnMetaData(new Table("TEST_TABLE"), "NAME", true, Types.VARCHAR);
+        final Table table = new Table("TEST_TABLE");
+        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "NAME", true, Types.VARCHAR);
         final TypeConverter typeConverter = mock(TypeConverter.class);
         when(typeConverter.convert("Alice", Integer.class)).thenReturn(7);
         final TypeConversionMetaData conversionMetaData = new TypeConversionMetaData(
-                Map.of("name", columnMetaData), new Class<?>[]{Integer.class}, Map.of("name", aliasedTable));
+                Map.of("name", columnMetaData), new Class<?>[]{Integer.class});
         final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(typeConverter, String::toLowerCase, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
         final Connection connection = connection(statement);
 
@@ -114,8 +117,11 @@ class ExecutionEngineTest {
         final List<Row> rows = engine.executeQuery(new PreparedSql("select name", List.of(), conversionMetaData, null), provider(connection));
 
         // Then
-        assertEquals(7, rows.getFirst().getValue(0));
-        assertEquals("t", rows.getFirst().column(0).column().table().alias());
+        assertEquals(7, rows.getFirst().value(0));
+        final RowColumn rowColumn = rows.getFirst().column(0);
+        assertEquals("name", rowColumn.label());
+        assertNotNull(rowColumn.column());
+        assertEquals(table, rowColumn.column().table());
     }
 
     @Test

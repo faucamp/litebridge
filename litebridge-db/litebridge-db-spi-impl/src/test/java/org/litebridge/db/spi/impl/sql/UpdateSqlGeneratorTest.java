@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.math.MathOperator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.mockito.Mock;
@@ -26,9 +25,9 @@ class UpdateSqlGeneratorTest {
 
     @BeforeEach
     void beforeEach() {
-        final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
-        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(columnIdentifierGenerator);
-        updateSqlGenerator = new UpdateSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(labelGenerator);
+        updateSqlGenerator = new UpdateSqlGenerator(labelGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     @Test

@@ -30,7 +30,7 @@ class PreparedSqlTest {
         // Given
         final List<BindValue> bindValues = List.of(new BindValue("test", Types.VARCHAR));
         final String sql = "SELECT * FROM table WHERE expression = ?";
-        final TypeConversionMetaData typeConversionMetaData = new TypeConversionMetaData(Collections.emptyMap(), new Class<?>[0], Collections.emptyMap());
+        final TypeConversionMetaData typeConversionMetaData = new TypeConversionMetaData(Collections.emptyMap(), new Class<?>[0]);
 
         // When
         final PreparedSql result = new PreparedSql(sql, bindValues, typeConversionMetaData, null);

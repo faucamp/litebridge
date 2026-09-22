@@ -5,7 +5,8 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.ColumnExpressionTest;
-import org.litebridge.db.spi.expression.LiteralExpression;
+import org.litebridge.db.spi.expression.ColumnTestExpression;
+import org.litebridge.db.spi.expression.LiteralTestExpression;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
@@ -25,7 +26,7 @@ class UpdateTest {
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnMetaData column = new ColumnMetaData(table, "TEST_COLUMN", true, Types.VARCHAR);
         final UpdateColumn updateColumn = new UpdateColumn(column.name());
-        final Condition condition = new Condition(ColumnExpressionTest.select(new Column(table, "ID")), Operator.EQ, new LiteralExpression(1L));
+        final Condition condition = new Condition(new ColumnTestExpression(new Column(table, "ID")), Operator.EQ, new LiteralTestExpression(1L));
         final ConditionGroup conditionGroup = new ConditionGroup(new LogicCondition(LogicOperator.AND, condition));
 
         // When

@@ -1,16 +1,10 @@
 package org.litebridge.db.spi.query;
 
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.expression.ClauseType;
-import org.litebridge.db.spi.expression.ColumnExpressionImpl;
-import org.litebridge.db.spi.expression.ColumnExpressionTest;
-import org.litebridge.db.spi.expression.DelegateExpression;
-import org.litebridge.db.spi.expression.LiteralExpression;
+import org.litebridge.db.spi.expression.ColumnTestExpression;
+import org.litebridge.db.spi.expression.LiteralTestExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 
 import java.util.List;
@@ -28,18 +22,17 @@ class SelectTest {
         final Column column = new Column(table, "TEST_COLUMN");
         final Operator operator = Operator.EQ;
         final Object value = "testValue";
-        final Condition condition = new Condition(ColumnExpressionTest.select(column), operator, new LiteralExpression(value));
+        final Condition condition = new Condition(new ColumnTestExpression(column), operator, new LiteralTestExpression(value));
         final ConditionGroup conditionGroup = new ConditionGroup(new LogicCondition(LogicOperator.AND, condition));
-        final Join join = new Join(table, conditionGroup);
-        final List<SelectExpression> groupBy = List.of(new ColumnExpressionTest.SelectColumnExpression(column));
-        final OrderBy orderBy = new OrderBy(new ColumnExpressionTest.SelectColumnExpression(column), true);
+        final Join join = new Join(Join.JoinType.INNER, table, conditionGroup);
+        final List<SelectExpression> groupBy = List.of(new ColumnTestExpression(column));
+        final OrderBy orderBy = new OrderBy(new ColumnTestExpression(column), true);
         final Limit limit = new Limit(10, 20);
 
         // When
         final Select result = new Select(
                 table,
-                null,
-                List.of(new TestColumnExpression(column)),
+                List.of(new ColumnTestExpression(column)),
                 List.of(join),
                 conditionGroup,
                 groupBy,
@@ -51,25 +44,12 @@ class SelectTest {
         // Then
         assertEquals(table, result.table());
         assertEquals(1, result.expressions().size());
-        assertInstanceOf(TestColumnExpression.class, result.expressions().getFirst());
-        assertEquals(column, ((TestColumnExpression) result.expressions().getFirst()).column());
+        assertInstanceOf(ColumnTestExpression.class, result.expressions().getFirst());
+        assertEquals(column, ((ColumnTestExpression) result.expressions().getFirst()).column());
         assertEquals(List.of(join), result.joins());
         assertEquals(conditionGroup, result.where());
         assertNull(result.having());
         assertEquals(List.of(orderBy), result.orderBy());
         assertEquals(limit, result.limit());
-    }
-
-    @NullMarked
-    private static final class TestColumnExpression extends ColumnExpressionImpl {
-
-        public TestColumnExpression(final Column column) {
-            super(column);
-        }
-
-        @Override
-        public String toSql(final Operation operation, final ClauseType context, final @Nullable DelegateExpression parent) {
-            return column.name();
-        }
     }
 }

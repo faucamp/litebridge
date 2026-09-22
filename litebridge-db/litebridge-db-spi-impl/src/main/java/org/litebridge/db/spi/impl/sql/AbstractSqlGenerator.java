@@ -68,13 +68,14 @@ public abstract class AbstractSqlGenerator {
      */
     protected String createCondition(final Condition condition, final Operation operation, final ConnectionProvider connectionProvider) {
         final String lhs = condition.lhs().toSql(operation, ClauseType.WHERE);
+        final Operator operator = condition.operator();
         final String sql;
 
-        if (condition.operator() == Operator.IS_NULL || condition.operator() == Operator.IS_NOT_NULL) {
-            sql = "%s %s".formatted(lhs, mapOperator(condition.operator()));
-        } else if (condition.operator() == Operator.IN || condition.operator() == Operator.NOT_IN) {
+        if (operator == Operator.IS_NULL || operator == Operator.IS_NOT_NULL) {
+            sql = "%s %s".formatted(lhs, mapOperator(operator));
+        } else if (operator == Operator.IN || operator == Operator.NOT_IN) {
             if (condition.rhs() instanceof LiteralExpressionImpl literalExpression) {
-                sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), literalExpression.toBindValueSql(operation));
+                sql = "%s %s (%s)".formatted(lhs, mapOperator(operator), literalExpression.toBindValueSql(operation));
             } else {
                 final String sqlFragment;
 
@@ -84,22 +85,22 @@ public abstract class AbstractSqlGenerator {
                     sqlFragment = Objects.requireNonNull(condition.rhs()).toSql(operation, ClauseType.WHERE);
                 }
 
-                sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), sqlFragment);
+                sql = "%s %s (%s)".formatted(lhs, mapOperator(operator), sqlFragment);
             }
-        } else if (condition.operator() == Operator.USING) {
+        } else if (operator == Operator.USING) {
             final String valueSql = ObjectUtils.requireNonNull(condition.rhs(), () -> new IllegalArgumentException("JOIN USING clause without column target"))
                     .toSql(operation, ClauseType.JOIN);
-            sql = "%s (%s)".formatted(mapOperator(condition.operator()), valueSql);
+            sql = "%s (%s)".formatted(mapOperator(operator), valueSql);
         } else {
             if (condition.rhs() instanceof SubselectExpression subselectExpression) {
                 final String subselectSql = subselectExpression.toSql(operation, connectionProvider);
-                sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), subselectSql);
+                sql = "%s %s (%s)".formatted(lhs, mapOperator(operator), subselectSql);
             } else if (condition.rhs() instanceof AliasedExpression aliasedExpression) {
                 sql = "%s %s %s".formatted(lhs,
-                        mapOperator(condition.operator()),
+                        mapOperator(operator),
                         aliasedExpression.toSql(operation, ClauseType.JOIN));
             } else {
-                sql = "%s %s ?".formatted(lhs, mapOperator(condition.operator()));
+                sql = "%s %s ?".formatted(lhs, mapOperator(operator));
             }
         }
 

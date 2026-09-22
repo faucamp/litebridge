@@ -209,7 +209,6 @@ class ColumnMetaDataTest {
         // Then
         assertEquals(columnMetaData.table(), result.table());
         assertEquals(columnMetaData.name(), result.name());
-        assertNull(result.alias());
     }
 
     @Test

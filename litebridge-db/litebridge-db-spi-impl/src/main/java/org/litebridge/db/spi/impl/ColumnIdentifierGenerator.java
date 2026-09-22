@@ -13,6 +13,7 @@ import org.litebridge.db.spi.util.SqlReservedWords;
  * with optional table qualifiers, handling reserved keywords, and creating aliases for columns.
  * This class can be extended to implement database-specific customizations of column identifier generation.
  */
+@Deprecated(forRemoval = true)
 public class ColumnIdentifierGenerator {
 
     /**

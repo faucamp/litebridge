@@ -4,8 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.expression.SelectColumn;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.Operator;
@@ -14,8 +12,11 @@ import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateColumn;
 
 import java.util.List;
+import java.util.function.BiFunction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.litebridge.db.spi.impl.sql.TestUtil.createLiteralExpression;
+import static org.litebridge.db.spi.impl.sql.TestUtil.createSelectColumn;
 import static org.litebridge.db.spi.impl.sql.TestUtil.createTestColumn;
 import static org.litebridge.db.spi.impl.sql.TestUtil.createTestTable;
 import static org.mockito.Mockito.mock;
@@ -26,25 +27,26 @@ class MergeSqlGeneratorTest {
 
     @BeforeEach
     void beforeEach() {
-        final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
-        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(columnIdentifierGenerator);
-        mergeSqlGenerator = new MergeSqlGenerator(
-                columnIdentifierGenerator,
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(labelGenerator);
+        final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData = (table, connectionProvider) -> mock(TableMetaData.class);
+        final SelectSqlGenerator selectSqlGenerator = new SelectSqlGenerator(labelGenerator, mathOperationGenerator, ensureTableMetaData);
+        mergeSqlGenerator = new MergeSqlGenerator(selectSqlGenerator,
+                labelGenerator,
                 mathOperationGenerator,
-                (table, connectionProvider) -> mock(TableMetaData.class));
+                ensureTableMetaData);
     }
 
     @Test
     void generateSql_matchedUpdateAndDelete() {
         // Given
         final ConditionGroup on = new ConditionGroup(new LogicCondition(
-                new SelectColumn(createTestColumn("TEST_ID"), mergeSqlGenerator.columnIdentifierGenerator),
+                createSelectColumn(createTestColumn("TEST_ID")),
                 Operator.EQ,
-                1));
+                createLiteralExpression(1)));
         final Merge merge = new Merge(
                 createTestTable(),
                 new Table("SOURCE_TABLE"),
-                null,
                 on,
                 List.of(
                         new Merge.WhenMatched<>(null, new Merge.MergeUpdate(List.of(new UpdateColumn("TEST_COLUMN")))),
@@ -62,13 +64,13 @@ class MergeSqlGeneratorTest {
     void generateSql_notMatchedInsertGeneratedValueAndMultipleRows() {
         // Given
         final ConditionGroup on = new ConditionGroup(new LogicCondition(
-                new SelectColumn(createTestColumn("TEST_ID"), mergeSqlGenerator.columnIdentifierGenerator),
+                createSelectColumn(createTestColumn("TEST_ID")),
                 Operator.EQ,
-                1));
+                createLiteralExpression(1)));
         final Merge.MergeInsert insert = new Merge.MergeInsert(
                 List.of(new UpdateColumn("TEST_ID", () -> "DEFAULT", null), new UpdateColumn("TEST_COLUMN")),
                 2);
-        final Merge merge = new Merge(createTestTable(), new Table("SOURCE_TABLE"), null, on, null, List.of(new Merge.WhenMatched<>(null, insert)));
+        final Merge merge = new Merge(createTestTable(), new Table("SOURCE_TABLE"), on, null, List.of(new Merge.WhenMatched<>(null, insert)));
 
         // When
         final String result = mergeSqlGenerator.generateSql(merge, mock(ConnectionProvider.class));

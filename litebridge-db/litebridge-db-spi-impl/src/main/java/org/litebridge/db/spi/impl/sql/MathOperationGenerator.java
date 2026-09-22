@@ -1,14 +1,13 @@
 package org.litebridge.db.spi.impl.sql;
 
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.math.MathOperator;
 
 public class MathOperationGenerator {
 
-    protected final ColumnIdentifierGenerator columnIdentifierGenerator;
+    protected final LabelGenerator labelGenerator;
 
-    public MathOperationGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator) {
-        this.columnIdentifierGenerator = columnIdentifierGenerator;
+    public MathOperationGenerator(final LabelGenerator labelGenerator) {
+        this.labelGenerator = labelGenerator;
     }
 
     /**
@@ -19,6 +18,6 @@ public class MathOperationGenerator {
      * @return the SQL representation of the math operation
      */
     public String createMathOperation(final String column, final MathOperator mathOperator) {
-        return "%s %s ?".formatted(columnIdentifierGenerator.quoteIdentifier(column), mathOperator.symbol());
+        return "%s %s ?".formatted(labelGenerator.quoteIdentifier(column), mathOperator.symbol());
     }
 }

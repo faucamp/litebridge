@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ColumnTest {
@@ -36,45 +35,6 @@ class ColumnTest {
     }
 
     @Test
-    void alias() {
-        // Given
-        final Column column = new Column(table, "testName", "testAlias");
-
-        // When
-        final String result = column.alias();
-
-        // Then
-        assertEquals("testAlias", result);
-    }
-
-    @Test
-    void as() {
-        // Given
-        final Column column = new Column(table, "testName");
-
-        // When
-        final Column result = column.as("testAlias");
-
-        // Then
-        assertEquals(table, result.table());
-        assertEquals("testName", result.name());
-        assertEquals("testAlias", result.alias());
-    }
-
-    @Test
-    void as_bridge() {
-        // Given
-        final Aliased aliased = new Column(table, "testName");
-
-        // When
-        final Aliased result = aliased.as("testAlias");
-
-        // Then
-        assertEquals("testAlias", result.alias());
-        assertTrue(result instanceof Column);
-    }
-
-    @Test
     void equals_sameInstance() {
         // Given
         final Column column = new Column(table, "testName");
@@ -84,56 +44,10 @@ class ColumnTest {
     }
 
     @Test
-    void c() {
-        // When
-        final Column result = Column.c(table, "testName");
-
-        // Then
-        assertEquals(table, result.table());
-        assertEquals("testName", result.name());
-    }
-
-    @Test
-    void c_tableName() {
-        // When
-        final Column result = Column.c("TEST_TABLE", "testName");
-
-        // Then
-        assertNull(result.table().catalog());
-        assertNull(result.table().schema());
-        assertEquals("TEST_TABLE", result.table().name());
-        assertEquals("testName", result.name());
-    }
-
-    @Test
-    void c_schemaTableNames() {
-        // When
-        final Column result = Column.c("TEST_SCHEMA", "TEST_TABLE", "testName");
-
-        // Then
-        assertNull(result.table().catalog());
-        assertEquals("TEST_SCHEMA", result.table().schema());
-        assertEquals("TEST_TABLE", result.table().name());
-        assertEquals("testName", result.name());
-    }
-
-    @Test
-    void c_catalogSchemaTableNames() {
-        // When
-        final Column result = Column.c("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", "testName");
-
-        // Then
-        assertEquals("TEST_CATALOG", result.table().catalog());
-        assertEquals("TEST_SCHEMA", result.table().schema());
-        assertEquals("TEST_TABLE", result.table().name());
-        assertEquals("testName", result.name());
-    }
-
-    @Test
     void equals_true() {
         // Given
-        final Column column1 = new Column(table, "testName", "testAlias");
-        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "testName", "testAlias");
+        final Column column1 = new Column(table, "testName");
+        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "testName");
 
         // When
         final boolean result = column1.equals(column2);
@@ -143,23 +57,10 @@ class ColumnTest {
     }
 
     @Test
-    void equals_false_differentAlias() {
-        // Given
-        final Column column1 = new Column(table, "testName", "testAlias");
-        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "testName", "otherAlias");
-
-        // When
-        final boolean result = column1.equals(column2);
-
-        // Then
-        assertFalse(result);
-    }
-
-    @Test
     void equals_false_differentName() {
         // Given
-        final Column column1 = new Column(table, "testName", "testAlias");
-        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "otherName", "testAlias");
+        final Column column1 = new Column(table, "testName");
+        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "otherName");
 
         // When
         final boolean result = column1.equals(column2);
@@ -171,8 +72,8 @@ class ColumnTest {
     @Test
     void equals_false_differentTable() {
         // Given
-        final Column column1 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "testName", "testAlias");
-        final Column column2 = new Column(new Table("OTHER_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "testName", "testAlias");
+        final Column column1 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "testName");
+        final Column column2 = new Column(new Table("OTHER_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "testName");
 
         // When
         final boolean result = column1.equals(column2);
@@ -184,7 +85,7 @@ class ColumnTest {
     @Test
     void equals_false_differentType() {
         // Given
-        final Column column = new Column(table, "testName", "testAlias");
+        final Column column = new Column(table, "testName");
         final Object other = new Object();
 
         // When
@@ -195,87 +96,9 @@ class ColumnTest {
     }
 
     @Test
-    void equalsIgnoreAlias_true() {
-        // Given
-        final Column column1 = new Column(table, "testName", "testAlias");
-        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", "otherAlias"), "testName", "otherAlias");
-
-        // When
-        final boolean result = column1.equalsIgnoreAlias(column2);
-
-        // Then
-        assertTrue(result);
-    }
-
-    @Test
-    void equalsIgnoreAlias_false_table() {
-        // Given
-        final Column column1 = new Column(table, "testName", "testAlias");
-        final Column column2 = new Column(new Table("OTHER_CATALOG", "OTHER_SCHEMA", "OTHER_TABLE"), "testName", "otherAlias");
-
-        // When
-        final boolean result = column1.equalsIgnoreAlias(column2);
-
-        // Then
-        assertFalse(result);
-    }
-
-    @Test
-    void equalsIgnoreAlias_false_name() {
-        // Given
-        final Column column1 = new Column(table, "testName", "testAlias");
-        final Column column2 = new Column(table, "otherName", "otherAlias");
-
-        // When
-        final boolean result = column1.equalsIgnoreAlias(column2);
-
-        // Then
-        assertFalse(result);
-    }
-
-    @Test
-    void equalsIgnoreAlias_false_differentType() {
-        // Given
-        final Column column = new Column(table, "testName", "testAlias");
-        final Aliased other = new Aliased("testName", "testAlias");
-
-        // When
-        final boolean result = column.equalsIgnoreAlias(other);
-
-        // Then
-        assertFalse(result);
-    }
-
-    @Test
-    void equalsColumnOnlyIgnoreAlias_true() {
-        // Given
-        final Column column1 = new Column(table, "testName", "testAlias");
-        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "DIFFERENT_TABLE", "otherAlias"), "testName", "otherAlias");
-
-        // When
-        final boolean result = column1.equalsColumnOnlyIgnoreAlias(column2);
-
-        // Then
-        assertTrue(result);
-    }
-
-    @Test
-    void equalsColumnOnlyIgnoreAlias_false() {
-        // Given
-        final Column column1 = new Column(table, "testName", "testAlias");
-        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "DIFFERENT_TABLE", "otherAlias"), "differentColumn", "otherAlias");
-
-        // When
-        final boolean result = column1.equalsColumnOnlyIgnoreAlias(column2);
-
-        // Then
-        assertFalse(result);
-    }
-
-    @Test
     void testToString() {
         // Given
-        final Column column = new Column(table, "testName", "testAlias");
+        final Column column = new Column(table, "testName");
 
         // When
         final String result = column.toString();
@@ -283,14 +106,13 @@ class ColumnTest {
         // Then
         assertTrue(result.contains("Column"));
         assertTrue(result.contains("testName"));
-        assertTrue(result.contains("testAlias"));
     }
 
     @Test
     void hashCode_sameWhenEqual() {
         // Given
-        final Column column1 = new Column(table, "testName", "testAlias");
-        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "testName", "testAlias");
+        final Column column1 = new Column(table, "testName");
+        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "testName");
 
         // When
         final int result1 = column1.hashCode();
@@ -298,19 +120,5 @@ class ColumnTest {
 
         // Then
         assertEquals(result1, result2);
-    }
-
-    @Test
-    void hashCode_differsWhenAliasDiffers() {
-        // Given
-        final Column column1 = new Column(table, "testName", "testAlias");
-        final Column column2 = new Column(new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE"), "testName", "otherAlias");
-
-        // When
-        final int result1 = column1.hashCode();
-        final int result2 = column2.hashCode();
-
-        // Then
-        assertFalse(result1 == result2);
     }
 }

@@ -1,16 +1,16 @@
-package org.litebridge.db.spi.impl.function.aggregate;
+package org.litebridge.db.spi.impl.expression.function.aggregate;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ClauseType;
+import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.DelegateExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.expression.function.aggregate.Avg;
 import org.litebridge.db.spi.impl.expression.function.aggregate.Count;
 import org.litebridge.db.spi.impl.expression.function.aggregate.Max;
 import org.litebridge.db.spi.impl.expression.function.aggregate.Min;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.query.Select;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 class AggregateFunctionsTest {
 
-    private final ColumnIdentifierGenerator generator = new ColumnIdentifierGenerator();
+    private final LabelGenerator labelGenerator = new LabelGenerator();
     private final Select select = mock(Select.class);
 
     @Test
@@ -31,7 +31,7 @@ class AggregateFunctionsTest {
         final ColumnExpression target = mock(ColumnExpression.class);
         when(target.column()).thenReturn(column);
         when(target.toSql(eq(select), eq(ClauseType.SELECT), nullable(DelegateExpression.class))).thenReturn("TEST.VAL");
-        final Avg avg = new Avg(target, generator);
+        final Avg avg = new Avg(target, null, labelGenerator);
 
         // When
         final String sql = avg.toSql(select, ClauseType.SELECT);
@@ -43,7 +43,7 @@ class AggregateFunctionsTest {
     @Test
     void count() {
         // Given
-        final Count count = new Count();
+        final Count count = new Count(null, labelGenerator);
 
         // When
         final String sql = count.toSql(select, ClauseType.SELECT);
@@ -59,7 +59,7 @@ class AggregateFunctionsTest {
         final ColumnExpression target = mock(ColumnExpression.class);
         when(target.column()).thenReturn(column);
         when(target.toSql(eq(select), eq(ClauseType.SELECT), nullable(DelegateExpression.class))).thenReturn("TEST.VAL");
-        final Max max = new Max(target, generator);
+        final Max max = new Max(target, null, labelGenerator);
 
         // When
         final String sql = max.toSql(select, ClauseType.SELECT);
@@ -75,7 +75,7 @@ class AggregateFunctionsTest {
         final ColumnExpression target = mock(ColumnExpression.class);
         when(target.column()).thenReturn(column);
         when(target.toSql(eq(select), eq(ClauseType.SELECT), nullable(DelegateExpression.class))).thenReturn("TEST.VAL");
-        final Min min = new Min(target, generator);
+        final Min min = new Min(target, null, labelGenerator);
 
         // When
         final String sql = min.toSql(select, ClauseType.SELECT);

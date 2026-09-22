@@ -2,7 +2,6 @@ package org.litebridge.db.spi.query;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Operation;
-import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.SelectExpression;
 
 import java.util.List;
@@ -30,11 +29,6 @@ public record Select(SelectTarget from,
                      @Nullable ConditionGroup having,
                      @Nullable List<OrderBy> orderBy,
                      @Nullable Limit limit) implements Operation, SelectTarget {
-
-    @Deprecated(forRemoval = true)
-    public Select(final @Nullable Table table, final SelectTarget from, final List<SelectExpression> expressions, @Nullable final List<Join> joins, @Nullable final ConditionGroup where, @Nullable final List<SelectExpression> groupBy, @Nullable final ConditionGroup having, @Nullable final List<OrderBy> orderBy, @Nullable final Limit limit) {
-        this(from, expressions, joins, where, groupBy, having, orderBy, limit);
-    }
 
     @Override
     public SelectTarget table() {
