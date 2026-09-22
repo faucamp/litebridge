@@ -1,23 +1,18 @@
 package org.litebridge.orm.persistence;
 
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.expression.ClauseType;
-import org.litebridge.db.spi.expression.DelegateColumnExpression;
-import org.litebridge.db.spi.expression.DelegateColumnExpressionFactory;
 import org.litebridge.db.spi.expression.DelegateExpression;
-import org.litebridge.db.spi.impl.expression.LiteralExpressionImpl;
+import org.litebridge.db.spi.expression.DelegateExpressionFactory;
 import org.litebridge.db.spi.expression.SelectExpression;
-import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.expression.SubselectExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.expression.SelectColumn;
+import org.litebridge.db.spi.impl.expression.LiteralExpressionImpl;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.InsertResult;
@@ -26,7 +21,6 @@ import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.engine.SelectEngine;
-import org.litebridge.orm.expression.TestColumnExpression;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
 import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridge.orm.persistence.manytomany.HiddenJoinEntity;
@@ -62,6 +56,8 @@ import static org.mockito.Mockito.when;
 
 class PersistenceFacadeTest {
 
+    private static final LabelGenerator labelGenerator = new LabelGenerator();
+
     private final Map<String, TableMetaData> metaDataMap = new HashMap<>();
 
     private PersistenceFacade createFacade(TableRegistry tableRegistry, TransactionalDatabaseProvider databaseProvider, ChangeTracker changeTracker, DtoConstructor dtoConstructor) {
@@ -90,8 +86,9 @@ class PersistenceFacadeTest {
                 return metaDataMap.get(table.qualifiedName());
             });
             when(databaseProvider.toSql(any(), any())).thenAnswer(invocation -> {
-                org.litebridge.db.spi.Operation op = invocation.getArgument(0);
-                return "INSERT INTO " + op.table().name() + (op.table().name().equals("customers") ? " WHERE id IS NULL" : "");
+                final org.litebridge.db.spi.Operation op = invocation.getArgument(0);
+                final String tableName = op.table() instanceof Table t ? t.name() : "";
+                return "INSERT INTO " + tableName + (tableName.equals("customers") ? " WHERE id IS NULL" : "");
             });
         } catch (SQLException e) {
             // Should not happen
@@ -100,19 +97,13 @@ class PersistenceFacadeTest {
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
-        when(selectRegistry.column()).thenReturn((column, args) -> new TestColumnExpression(column));
-        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
-        when(selectRegistry.reference()).thenReturn(column -> new ColumnReference(column) {
-            @Override
-            public String toSql(org.litebridge.db.spi.Operation operation, ClauseType context, @Nullable DelegateExpression parent) {
-                return column().name();
-            }
-        });
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn((value, alias) -> new LiteralExpressionImpl(value, alias, labelGenerator));
         when(selectRegistry.subselect()).thenReturn(select -> mock(SubselectExpression.class));
 
         final SqlFunctionRegistry.Aggregate aggregateRegistry = mock(SqlFunctionRegistry.Aggregate.class);
         when(sqlFunctionRegistry.aggregate()).thenReturn(aggregateRegistry);
-        final DelegateColumnExpressionFactory delegateFactory = (target, args) -> mock(DelegateColumnExpression.class);
+        final DelegateExpressionFactory delegateFactory = (target, args) -> mock(DelegateExpression.class);
         when(aggregateRegistry.avg()).thenReturn(delegateFactory);
         when(aggregateRegistry.min()).thenReturn(delegateFactory);
         when(aggregateRegistry.max()).thenReturn(delegateFactory);
@@ -182,8 +173,8 @@ class PersistenceFacadeTest {
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
-        when(selectRegistry.column()).thenReturn((column, args) -> new SelectColumn(column, mock(ColumnIdentifierGenerator.class)));
-        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
+        when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
+        when(selectRegistry.literal()).thenReturn((value, alias) -> new LiteralExpressionImpl(value, alias, labelGenerator));
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
@@ -221,7 +212,7 @@ class PersistenceFacadeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
+        when(selectRegistry.literal()).thenReturn((value, alias) -> new LiteralExpressionImpl(value, alias, labelGenerator));
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
@@ -716,7 +707,7 @@ class PersistenceFacadeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
+        when(selectRegistry.literal()).thenReturn((value, alias) -> new LiteralExpressionImpl(value, alias, labelGenerator));
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
     }
 
