@@ -3,10 +3,8 @@ package org.litebridge.db.spi.impl.sql;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Insert;
-import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateColumn;
 
 import java.util.function.BiFunction;
@@ -21,14 +19,14 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
     /**
      * Creates a new {@code InsertSqlGenerator}.
      *
-     * @param columnIdentifierGenerator the column identifier generator
-     * @param ensureTableMetaData       a function to ensure table metadata
+     * @param labelGenerator      the label generator for rendering aliases/identifiers
+     * @param ensureTableMetaData a function to ensure table metadata
      */
-    public InsertSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public InsertSqlGenerator(final LabelGenerator labelGenerator,
                               final MathOperationGenerator mathOperationGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData,
                               final DatabaseProviderMetaData.InsertCapability insertCapability) {
-        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+        super(labelGenerator, mathOperationGenerator, ensureTableMetaData);
         this.insertCapability = insertCapability;
     }
 
@@ -44,7 +42,7 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
                 .append(" (")
                 .append(String.join(", ", insert.columns().stream()
                         .map(UpdateColumn::name)
-                        .map(ColumnIdentifierGenerator::quoteIdentifier)
+                        .map(labelGenerator::quoteIdentifier)
                         .toList()))
                 .append(") VALUES ");
 

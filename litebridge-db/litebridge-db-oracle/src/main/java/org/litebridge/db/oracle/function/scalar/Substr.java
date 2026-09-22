@@ -1,22 +1,23 @@
 package org.litebridge.db.oracle.function.scalar;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.function.scalar.Substring;
+import org.litebridge.db.spi.expression.SelectExpression;
+import org.litebridge.db.spi.impl.expression.function.scalar.Substring;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 
 public final class Substr extends Substring {
 
     /**
      * Construct a {@code SUBSTR} function.
      *
-     * @param target                    Target column expression to extract characters from.
-     * @param start                     The starting position. The first character of a database string is always 1.
-     * @param length                    The number of characters to return. If {@code null}, the function extracts everything from the start position to the end of the text.
-     * @param alias                     Alias for the column expression.
+     * @param target         Target column expression to extract characters from.
+     * @param start          The starting position. The first character of a database string is always 1.
+     * @param length         The number of characters to return. If {@code null}, the function extracts everything from the start position to the end of the text.
+     * @param alias          Alias for the column expression.
+     * @param labelGenerator the label generator for rendering aliases/identifiers
      */
-    public Substr(final ColumnExpression target, final int start, final @Nullable Integer length, final @Nullable String alias) {
-        super(target, start, length, alias);
+    public Substr(final SelectExpression target, final int start, final @Nullable Integer length, final @Nullable String alias, final LabelGenerator labelGenerator) {
+        super(target, start, length, alias, labelGenerator);
     }
 
     @Override

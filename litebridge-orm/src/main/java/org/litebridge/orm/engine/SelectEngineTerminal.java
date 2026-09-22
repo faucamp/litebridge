@@ -14,8 +14,10 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.VirtualTable;
 import org.litebridge.db.spi.VirtualTableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.expression.AliasedExpression;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ConvertExpression;
+import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.query.TypeConversionMetaData;
@@ -455,6 +457,7 @@ public class SelectEngineTerminal {
 
         for (int i = 0; i < select.expressions().size(); i++) {
             SelectExpression expression = select.expressions().get(i);
+            String alias = null;
 
             if (expression instanceof ConvertExpression convertExpression) {
                 typeOverrides[i] = convertExpression.typeOverride();
@@ -462,9 +465,21 @@ public class SelectEngineTerminal {
                 expression = convertExpression.target();
             }
 
+            while (expression instanceof DelegateExpression delegateExpression) {
+                if (alias == null && expression instanceof AliasedExpression aliasedExpression) {
+                    alias = aliasedExpression.alias();
+                }
+
+                expression = delegateExpression.target();
+            }
+
             if (expression instanceof ColumnExpression columnExpression) {
+                if (alias == null) {
+                    alias = columnExpression.alias();
+                }
+
                 final Column column = columnExpression.column();
-                final String columnKey = Objects.requireNonNull(columnExpression.alias() != null ? columnExpression.alias() : column.name());
+                final String columnKey = Objects.requireNonNull(alias != null ? alias : column.name());
                 final TableMetaData tableMetaData = getTableMetaData(column.table(), litebridgeContext);
                 final ColumnMetaData columnMetaData = tableMetaData.column(column.name());
                 columnLabelsToColumnMetaData.put(columnKey, columnMetaData);

@@ -9,7 +9,7 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.impl.function.ColumnReferenceImpl;
-import org.litebridge.db.spi.impl.function.SelectColumn;
+import org.litebridge.db.spi.impl.expression.SelectColumn;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;

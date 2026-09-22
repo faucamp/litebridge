@@ -18,7 +18,8 @@ import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
 import org.litebridge.db.spi.impl.engine.DefaultMetaDataEngine;
 import org.litebridge.db.spi.impl.engine.ExecutionEngine;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
-import org.litebridge.db.spi.impl.function.SqlFunctionRegistryFactory;
+import org.litebridge.db.spi.impl.expression.SqlFunctionRegistryFactory;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.SqlGenerator;
 import org.litebridge.orm.LitebridgeBuilder;
@@ -45,11 +46,12 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider imple
         final MetaDataEngine metaDataEngine = new DefaultMetaDataEngine(databaseProviderMetaData);
         final ColumnIdentifierGenerator columnIdentifierGenerator = new OracleColumnIdentifierGenerator();
         final MathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(columnIdentifierGenerator);
-        final SqlGenerator sqlGenerator = new OracleSqlGenerator(metaDataEngine, columnIdentifierGenerator, mathOperationGenerator);
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final SqlGenerator sqlGenerator = new OracleSqlGenerator(metaDataEngine, labelGenerator, mathOperationGenerator);
         final TypeConverter typeConverter = new DefaultTypeConverter();
         final AliasTransformer aliasTransformer = new UppercaseAliasTransformer();
         final ExecutionEngine executionEngine = new OracleExecutionEngine(typeConverter, aliasTransformer);
-        final SqlFunctionRegistryFactory sqlFunctionRegistry = new OracleSqlFunctionRegistryFactory(columnIdentifierGenerator, sqlGenerator.selectSqlGenerator());
+        final SqlFunctionRegistryFactory sqlFunctionRegistry = new OracleSqlFunctionRegistryFactory(labelGenerator, sqlGenerator.selectSqlGenerator());
 
         return ContextBuilder.newContext()
                 .withAliasTransformer(aliasTransformer)
@@ -57,6 +59,7 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider imple
                 .withMathOperationGenerator(mathOperationGenerator)
                 .withDatabaseProviderMetaData(databaseProviderMetaData)
                 .withExecutionEngine(executionEngine)
+                .withLabelGenerator(labelGenerator)
                 .withSqlFunctionRegistryFactory(sqlFunctionRegistry)
                 .withSqlGenerator(sqlGenerator)
                 .withTypeConverter(typeConverter)

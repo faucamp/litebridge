@@ -2,10 +2,10 @@ package org.litebridge.db.oracle.function;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.oracle.function.scalar.Substr;
-import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.expression.DelegateColumnExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.function.SqlFunctionRegistryFactory;
+import org.litebridge.db.spi.expression.DelegateExpression;
+import org.litebridge.db.spi.expression.SelectExpression;
+import org.litebridge.db.spi.impl.expression.SqlFunctionRegistryFactory;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 
 /**
@@ -18,12 +18,12 @@ public final class OracleSqlFunctionRegistryFactory extends SqlFunctionRegistryF
     /**
      * Constructs a new {@code OracleSqlFunctionRegistryFactory}.
      *
-     * @param columnIdentifierGenerator The database provider's column identifier generator
-     * @param selectSqlGenerator        The database provider's select SQL generator
+     * @param labelGenerator     the label generator for rendering aliases/identifiers
+     * @param selectSqlGenerator The database provider's select SQL generator
      */
-    public OracleSqlFunctionRegistryFactory(final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public OracleSqlFunctionRegistryFactory(final LabelGenerator labelGenerator,
                                             final SelectSqlGenerator selectSqlGenerator) {
-        super(columnIdentifierGenerator, selectSqlGenerator);
+        super(labelGenerator, selectSqlGenerator);
     }
 
     /**
@@ -35,7 +35,7 @@ public final class OracleSqlFunctionRegistryFactory extends SqlFunctionRegistryF
      * @return a {@link Substr} expression
      */
     @Override
-    protected DelegateColumnExpression createSubstring(final ColumnExpression target, final int start, @Nullable final Integer length, final @Nullable String alias) {
-        return new Substr(target, start, length, alias);
+    protected DelegateExpression createSubstring(final SelectExpression target, final int start, @Nullable final Integer length, final @Nullable String alias) {
+        return new Substr(target, start, length, alias, labelGenerator);
     }
 }

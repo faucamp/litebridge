@@ -411,7 +411,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                         .map(fieldName -> {
                             final Column column = ormTable.columnMetaDataForField(fieldName).column();
                             final String columnAlias = aliasGenerator.columnAlias(column);
-                            return (SelectExpression) sqlFunctionRegistry.select().reference().create(column, columnAlias, tableAlias);
+                            return (SelectExpression) sqlFunctionRegistry.select().column().create(column, columnAlias, tableAlias);
                         })
                         .toList();
             } else {
@@ -421,7 +421,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                         .map(columnName -> {
                             final Column column = tableMetaData.column(columnName).column();
                             final String columnAlias = aliasGenerator.columnAlias(column);
-                            return (SelectExpression) sqlFunctionRegistry.select().reference().create(column, columnAlias, tableAlias);
+                            return (SelectExpression) sqlFunctionRegistry.select().column().create(column, columnAlias, tableAlias);
                         })
                         .toList();
             }
@@ -474,7 +474,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
             final String tableAlias = aliasGenerator.tableAlias(column.table());
             final String columnAlias = aliasGenerator.columnAlias(column);
-            orderByExpressions = Collections.singletonList(litebridgeContext.sqlFunctionRegistry().select().reference().create(column, columnAlias, tableAlias));
+            orderByExpressions = Collections.singletonList(litebridgeContext.sqlFunctionRegistry().select().column().create(column, columnAlias, tableAlias));
         }
 
         return orderByExpressions.stream()
@@ -589,7 +589,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         expressionSpecStream.forEach(expressionSpec -> {
             final SelectExpression selectExpression = selectExpressionMapper.toSelectExpression(expressionSpec, false);
 
-            if (selectExpression instanceof LiteralExpression literalExpression && literalExpression.isParameter()) {
+            if (selectExpression instanceof LiteralExpression literalExpression) {
                 final Object value = literalExpression.value();
                 final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size());
                 bindValues.addAll(createBindValues(literalExpression, value, litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter()));

@@ -1,11 +1,9 @@
 package org.litebridge.db.spi.impl.function.date;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.expression.ClauseType;
+import org.litebridge.db.spi.impl.expression.function.date.CurrentTimestamp;
 import org.litebridge.db.spi.query.Select;
-
-import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;

@@ -16,7 +16,7 @@ public interface SelectExpression {
      * @param parent    The parent expression/nesting expression, or {@code null} if this is a top-level expression
      * @return the SQL representation of the expression
      */
-    String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent, final Object providerContext);
+    String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent);
 
     /**
      * Creates a SQL representation of the expression as a non-nested/top-level expression.
@@ -25,7 +25,7 @@ public interface SelectExpression {
      * @param clause    The current clause type being evaluated
      * @return the SQL representation of the expression
      */
-    default String toSql(final Operation operation, final ClauseType clause, final Object providerContext) {
-        return toSql(operation, clause, null, providerContext);
+    default String toSql(final Operation operation, final ClauseType clause) {
+        return toSql(operation, clause, null);
     }
 }

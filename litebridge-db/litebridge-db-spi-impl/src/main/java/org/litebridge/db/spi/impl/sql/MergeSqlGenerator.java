@@ -7,7 +7,6 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasedQuery;
 import org.litebridge.db.spi.alias.AliasedTable;
 import org.litebridge.db.spi.expression.BindValueExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
@@ -31,15 +30,15 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
     /**
      * Creates a new {@code MergeSqlGenerator}.
      *
-     * @param columnIdentifierGenerator column identifier generator
-     * @param mathOperationGenerator    math operation generator
-     * @param ensureTableMetaData       function that creates/retrieves table metadata
+     * @param labelGenerator         the label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator math operation generator
+     * @param ensureTableMetaData    function that creates/retrieves table metadata
      */
     public MergeSqlGenerator(final SelectSqlGenerator selectSqlGenerator,
-                             final ColumnIdentifierGenerator columnIdentifierGenerator,
+                             final LabelGenerator labelGenerator,
                              final MathOperationGenerator mathOperationGenerator,
                              final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+        super(labelGenerator, mathOperationGenerator, ensureTableMetaData);
         this.selectSqlGenerator = selectSqlGenerator;
     }
 
@@ -108,7 +107,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
                 sql.append(", ");
             }
 
-            sql.append(columnIdentifierGenerator.quoteIdentifier(updateColumn.name()));
+            sql.append(labelGenerator.quoteIdentifier(updateColumn.name()));
             sql.append(" = ");
             sql.append(getColumnValueFragment(updateColumn));
         }
@@ -119,7 +118,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
     protected void appendInsert(final StringBuilder sql, final Merge.MergeInsert insert) {
         final List<String> columnNames = insert.columns().stream().map(UpdateColumn::name).toList();
         sql.append("INSERT (")
-                .append(String.join(", ", columnNames.stream().map(ColumnIdentifierGenerator::quoteIdentifier).toList()))
+                .append(String.join(", ", columnNames.stream().map(labelGenerator::quoteIdentifier).toList()))
                 .append(") VALUES ");
 
         for (int i = 0; i < insert.rows(); i++) {
@@ -176,11 +175,10 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
                     .append(')');
             case AliasedQuery aliasedQuery -> sql.append('(')
                     .append(selectSqlGenerator.generateSql(aliasedQuery.target(), connectionProvider))
-                    .append(") AS ")
-                    .append(aliasedQuery.alias());
+                    .append(')')
+                    .append(labelGenerator.createAliasAs(aliasedQuery.alias()));
             case AliasedTable aliasedTable -> appendTable(sql, aliasedTable.target())
-                    .append(" AS ")
-                    .append(aliasedTable.alias());
+                    .append(labelGenerator.createAliasAs(aliasedTable.alias()));
             case SelectTarget.Void voidTarget -> { /* Ignore */ }
         }
     }

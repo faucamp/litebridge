@@ -4,7 +4,7 @@ import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.oracle.engine.OracleExecutionEngine;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.MergeSqlGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
@@ -23,15 +23,15 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
     /**
      * Creates a new {@code OracleMergeSqlGenerator}.
      *
-     * @param columnIdentifierGenerator column identifier generator
-     * @param mathOperationGenerator    math operation generator
-     * @param ensureTableMetaData       function that creates/retrieves table metadata
+     * @param labelGenerator         the label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator math operation generator
+     * @param ensureTableMetaData    function that creates/retrieves table metadata
      */
     public OracleMergeSqlGenerator(final OracleSelectSqlGenerator selectSqlGenerator,
-                                   final ColumnIdentifierGenerator columnIdentifierGenerator,
+                                   final LabelGenerator labelGenerator,
                                    final MathOperationGenerator mathOperationGenerator,
                                    final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(selectSqlGenerator, columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+        super(selectSqlGenerator, labelGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     /**
@@ -174,7 +174,7 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
                 sql.append(", ");
             }
 
-            sql.append(columnIdentifierGenerator.quoteIdentifier(updateColumn.name()));
+            sql.append(labelGenerator.quoteIdentifier(updateColumn.name()));
             sql.append(" = ");
             sql.append(getColumnValueFragment(updateColumn));
         }

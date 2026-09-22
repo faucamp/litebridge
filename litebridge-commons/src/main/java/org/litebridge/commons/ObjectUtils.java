@@ -56,13 +56,13 @@ public final class ObjectUtils {
      *
      * @param <X>  the type of the exception to be thrown if validation fails
      * @param <T>  the expected type of the object
-     * @param obj  the object to check
      * @param type the expected class type
+     * @param obj  the object to check
      * @return the object cast to the expected type
      * @throws X if {@code obj} is not an instance of {@code type}
      */
-    public static <X extends Throwable, T> T requireInstanceOf(@Nullable final Object obj, final Class<T> type) throws X {
-        return requireInstanceOf(obj, type, () ->
+    public static <X extends Throwable, T> T requireInstanceOf(final Class<T> type, @Nullable final Object obj) throws X {
+        return requireInstanceOf(type, obj, () ->
                 new IllegalArgumentException("Not an instance of " + type.getName()));
     }
 
@@ -73,14 +73,14 @@ public final class ObjectUtils {
      *
      * @param <X>               the type of the exception to be thrown if validation fails
      * @param <T>               the expected type of the object
-     * @param obj               the object to check
      * @param type              the expected class type
+     * @param obj               the object to check
      * @param exceptionSupplier the supplier that provides an exception to be thrown if {@code obj} is not an instance of {@code type}
      * @return the object cast to the expected type
      * @throws X if {@code obj} is not an instance of {@code type}
      */
     @SuppressWarnings("unchecked")
-    public static <X extends Throwable, T> T requireInstanceOf(@Nullable final Object obj, final Class<T> type, final Supplier<? extends X> exceptionSupplier) throws X {
+    public static <X extends Throwable, T> T requireInstanceOf(final Class<T> type, @Nullable final Object obj, final Supplier<? extends X> exceptionSupplier) throws X {
         if (type.isInstance(obj)) {
             return (T) obj;
         } else {

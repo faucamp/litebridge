@@ -10,7 +10,7 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ColumnReference;
-import org.litebridge.db.spi.expression.LiteralExpression;
+import org.litebridge.db.spi.impl.expression.LiteralExpressionImpl;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.expression.SubselectExpression;
@@ -299,7 +299,7 @@ class AbstractCompilationContextTest {
         final Table table = new Table("items");
         final DeleteCompilationContext compilationContext = createContext(context, table);
 
-        final LiteralExpression literalExpr = mock(LiteralExpression.class);
+        final LiteralExpressionImpl literalExpr = mock(LiteralExpressionImpl.class);
         when(context.sqlFunctionRegistry().select().literal().create("customLiteral", true)).thenReturn(literalExpr);
 
         final ConditionSpec conditionSpec = new ConditionSpec("id", null, Operator.USING, "customLiteral");

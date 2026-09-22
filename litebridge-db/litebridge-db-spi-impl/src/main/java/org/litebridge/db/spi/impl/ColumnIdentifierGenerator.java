@@ -73,7 +73,7 @@ public class ColumnIdentifierGenerator {
      * @param identifier the identifier to potentially quote
      * @return the quoted (if necessary) or original identifier
      */
-    public static String quoteIdentifier(final String identifier) {
+    public String quoteIdentifier(final String identifier) {
         if (SqlReservedWords.contains(identifier)) {
             return "\"%s\"".formatted(identifier);
         } else {

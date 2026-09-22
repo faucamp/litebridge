@@ -1,10 +1,10 @@
 package org.litebridge.db.oracle.sql;
 
 import org.litebridge.commons.type.ConcurrentLazy;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.impl.sql.DefaultSqlGenerator;
 import org.litebridge.db.spi.impl.sql.InsertSqlGenerator;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.MergeSqlGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
@@ -21,18 +21,18 @@ import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 public final class OracleSqlGenerator extends DefaultSqlGenerator {
 
     private final ConcurrentLazy<OracleInsertSqlGenerator> oracleInsertSqlGenerator = new ConcurrentLazy<>(() -> new OracleInsertSqlGenerator(
-            columnIdentifierGenerator,
+            labelGenerator,
             mathOperationGenerator,
             metaDataEngine::ensureTableMetaData));
     private final ConcurrentLazy<OracleSelectSqlGenerator> oracleSelectSqlGenerator = new ConcurrentLazy<>(() -> new OracleSelectSqlGenerator(
-            columnIdentifierGenerator,
+            labelGenerator,
             mathOperationGenerator,
             metaDataEngine::ensureTableMetaData));
 
     public OracleSqlGenerator(final MetaDataEngine metaDataEngine,
-                              final ColumnIdentifierGenerator columnIdentifierGenerator,
+                              final LabelGenerator labelGenerator,
                               final MathOperationGenerator mathOperationGenerator) {
-        super(metaDataEngine, columnIdentifierGenerator, mathOperationGenerator);
+        super(metaDataEngine, labelGenerator, mathOperationGenerator);
     }
 
     @Override
@@ -49,7 +49,7 @@ public final class OracleSqlGenerator extends DefaultSqlGenerator {
     protected MergeSqlGenerator createMergeSqlGenerator() {
         return new OracleMergeSqlGenerator(
                 oracleSelectSqlGenerator.getOrThrow(),
-                columnIdentifierGenerator,
+                labelGenerator,
                 mathOperationGenerator,
                 metaDataEngine::ensureTableMetaData);
     }

@@ -6,9 +6,7 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.AliasReference;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.ConvertExpression;
-import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
@@ -123,16 +121,12 @@ public final class SelectExpressionMapper {
     }
 
     private SelectExpression resolveNestedExpression(final DelegateExpressionSpec expression, final boolean useSelectReferences) {
-        final SelectExpression nestedSelectExpression;
+        final SelectExpression nestedExpression;
 
         if (expression.target() instanceof DelegateExpressionSpec targetNestableExpression) {
-            nestedSelectExpression = resolveNestedExpression(targetNestableExpression, useSelectReferences);
+            nestedExpression = resolveNestedExpression(targetNestableExpression, useSelectReferences);
         } else {
-            nestedSelectExpression = toSelectExpression(expression.target(), useSelectReferences);
-        }
-
-        if (!(nestedSelectExpression instanceof ColumnExpression nestedExpression)) {
-            return nestedSelectExpression;
+            nestedExpression = toSelectExpression(expression.target(), useSelectReferences);
         }
 
         final String alias = expression.getAlias();
@@ -158,8 +152,12 @@ public final class SelectExpressionMapper {
                 .create(columnExpressionSpec.getColumn(), columnExpressionSpec.getAlias(), columnExpressionSpec.getTableAlias());
     }
 
-    private ColumnReference toColumnReference(final ColumnExpressionSpec columnExpressionSpec) {
-        return sqlFunctionRegistry.select().reference()
+    private ColumnExpression toColumnReference(final ColumnExpressionSpec columnExpressionSpec) {
+//        return sqlFunctionRegistry.select().reference()
+//                .create(columnExpressionSpec.getColumn(), columnExpressionSpec.getAlias(), columnExpressionSpec.getTableAlias());
+
+        //FNA: here
+        return sqlFunctionRegistry.select().column()
                 .create(columnExpressionSpec.getColumn(), columnExpressionSpec.getAlias(), columnExpressionSpec.getTableAlias());
     }
 
@@ -170,7 +168,7 @@ public final class SelectExpressionMapper {
             alias = aliasReferenceSpec.alias();
         } else if (aliasReferenceSpec.expression() != null) {
             alias = toSelectExpression(aliasReferenceSpec.expression(), true)
-                    .toSql(null, null);
+                    .toSql(null, null, null);
         } else {
             alias = null;
         }

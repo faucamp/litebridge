@@ -2,7 +2,6 @@ package org.litebridge.db.spi.impl.sql;
 
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Delete;
 
@@ -16,14 +15,14 @@ public class DeleteSqlGenerator extends AbstractSqlGenerator {
     /**
      * Constructs a {@code DeleteSqlGenerator} with the specified components.
      *
-     * @param columnIdentifierGenerator the generator for column identifiers
-     * @param mathOperationGenerator    the math operation generator
-     * @param ensureTableMetaData       the function to retrieve table metadata
+     * @param labelGenerator         the label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator the math operation generator
+     * @param ensureTableMetaData    the function to retrieve table metadata
      */
-    public DeleteSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public DeleteSqlGenerator(final LabelGenerator labelGenerator,
                               final MathOperationGenerator mathOperationGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+        super(labelGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     /**

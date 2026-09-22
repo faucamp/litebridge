@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.function.SelectColumn;
+import org.litebridge.db.spi.impl.expression.SelectColumn;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.Operator;

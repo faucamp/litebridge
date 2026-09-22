@@ -4,12 +4,12 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.expression.ClauseType;
-import org.litebridge.db.spi.expression.ColumnExpressionImpl;
+import org.litebridge.db.spi.impl.expression.AbstractColumnExpression;
 import org.litebridge.db.spi.expression.DelegateExpression;
 
 import java.util.Objects;
 
-public class TestColumnExpression extends ColumnExpressionImpl {
+public class TestColumnExpression extends AbstractColumnExpression {
 
     public TestColumnExpression(final Column column) {
         super(column);

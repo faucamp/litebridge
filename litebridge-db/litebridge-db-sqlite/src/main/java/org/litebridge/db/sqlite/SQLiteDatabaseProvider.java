@@ -2,6 +2,7 @@ package org.litebridge.db.sqlite;
 
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.orm.spi.LitebridgeOverrideDatabaseProvider;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
@@ -54,7 +55,8 @@ public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider imple
         final MetaDataEngine metaDataEngine = new SQLiteMetaDataEngine();
         final ColumnIdentifierGenerator columnIdentifierGenerator = new ColumnIdentifierGenerator();
         final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(columnIdentifierGenerator);
-        final SQLiteSqlGenerator sqlGenerator = new SQLiteSqlGenerator(metaDataEngine, columnIdentifierGenerator, mathOperationGenerator);
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final SQLiteSqlGenerator sqlGenerator = new SQLiteSqlGenerator(metaDataEngine, labelGenerator, mathOperationGenerator);
 
         return ContextBuilder.newContext()
                 .withAliasTransformer(aliasTransformer)
@@ -63,6 +65,7 @@ public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider imple
                 .withExecutionEngine(executionEngine)
                 .withMathOperationGenerator(mathOperationGenerator)
                 .withMetaDataEngine(metaDataEngine)
+                .withLabelGenerator(labelGenerator)
                 .withSqlGenerator(sqlGenerator)
                 .withTypeConverter(typeConverter)
                 .build();

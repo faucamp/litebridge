@@ -235,9 +235,9 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         // Store bind values and return condition
         return switch (operator) {
             case USING -> {
-                final ColumnReference lhsColumnRef = (ColumnReference) lhsSelectExpression;
-                final ColumnReference usingColumRef = litebridgeContext.sqlFunctionRegistry().select().reference().create(new Column(lhsColumnRef.column().name(), null), null, null);
-                yield new Condition(usingColumRef, operator, usingColumRef);
+                final ColumnExpression lhsColumnExpression = (ColumnExpression) lhsSelectExpression;
+                final ColumnExpression usingColumExpression = litebridgeContext.sqlFunctionRegistry().select().column().create(new Column(lhsColumnExpression.column().name(), null), null, null);
+                yield new Condition(usingColumExpression, operator, usingColumExpression);
             }
             case IS_NULL, IS_NOT_NULL -> new Condition(lhsSelectExpression, operator, null);
             default -> {

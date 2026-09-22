@@ -7,7 +7,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.impl.engine.DefaultMetaDataEngine;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
-import org.litebridge.db.spi.impl.function.SelectColumn;
+import org.litebridge.db.spi.impl.expression.SelectColumn;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;

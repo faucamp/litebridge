@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Factory to create nestable column expressions.
  */
+@Deprecated(forRemoval = true)
 @FunctionalInterface
 public interface DelegateColumnExpressionFactory {
 

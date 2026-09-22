@@ -1,50 +1,50 @@
-package org.litebridge.db.spi.impl.function;
-
-import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Operation;
-import org.litebridge.db.spi.expression.ClauseType;
-import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.expression.DelegateColumnExpression;
-import org.litebridge.db.spi.expression.DelegateExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.query.Select;
-
-/**
- * A nestable column expression with support for SQL aliasing.
- * <p>
- * This class extends {@code NestableExpression} and integrates the functionality
- * of aliasing of results through a {@code ColumnIdentifierGenerator}.
- * <p>
- * The primary responsibility of this class is to provide SQL representations
- * of nestable function expressions, either with or without an alias.
- */
-public class DelegateColumnExpressionImpl extends DelegateColumnExpression {
-
-    /**
-     * Constructs a {@code DelegateColumnExpressionImpl} with the specified target column and identifier generator.
-     *
-     * @param target                    the target column expression
-     * @param alias                     the alias for the column expression
-     */
-    public DelegateColumnExpressionImpl(final ColumnExpression target, final @Nullable String alias) {
-        super(target, alias);
-    }
-
-    /**
-     * Creates a SQL representation of the expression.
-     * <p>
-     * This is usually used for expressions that do not require any aliases.
-     *
-     * @param operation the operation that is being executed
-     * @return the SQL representation of the expression
-     */
-    @Override
-    public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
-//        if (clause == ClauseType.SELECT && operation instanceof Select select) {
-//            return columnIdentifierGenerator.createSelectColumn(column, select, clause, (parent != null));
-//        } else {
-//            return columnIdentifierGenerator.createColumnRef(column, operation, clause);
-//        }
-        throw new UnsupportedOperationException("Not implemented");
-    }
-}
+//package org.litebridge.db.spi.impl.function;
+//
+//import org.jspecify.annotations.Nullable;
+//import org.litebridge.db.spi.Operation;
+//import org.litebridge.db.spi.expression.ClauseType;
+//import org.litebridge.db.spi.expression.ColumnExpression;
+//import org.litebridge.db.spi.expression.DelegateColumnExpression;
+//import org.litebridge.db.spi.expression.DelegateExpression;
+//import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+//import org.litebridge.db.spi.query.Select;
+//
+///**
+// * A nestable column expression with support for SQL aliasing.
+// * <p>
+// * This class extends {@code NestableExpression} and integrates the functionality
+// * of aliasing of results through a {@code ColumnIdentifierGenerator}.
+// * <p>
+// * The primary responsibility of this class is to provide SQL representations
+// * of nestable function expressions, either with or without an alias.
+// */
+//public class DelegateColumnExpressionImpl extends DelegateColumnExpression {
+//
+//    /**
+//     * Constructs a {@code DelegateColumnExpressionImpl} with the specified target column and identifier generator.
+//     *
+//     * @param target                    the target column expression
+//     * @param alias                     the alias for the column expression
+//     */
+//    public DelegateColumnExpressionImpl(final ColumnExpression target, final @Nullable String alias) {
+//        super(target, alias);
+//    }
+//
+//    /**
+//     * Creates a SQL representation of the expression.
+//     * <p>
+//     * This is usually used for expressions that do not require any aliases.
+//     *
+//     * @param operation the operation that is being executed
+//     * @return the SQL representation of the expression
+//     */
+//    @Override
+//    public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent, final Object providerContext) {
+////        if (clause == ClauseType.SELECT && operation instanceof Select select) {
+////            return columnIdentifierGenerator.createSelectColumn(column, select, clause, (parent != null));
+////        } else {
+////            return columnIdentifierGenerator.createColumnRef(column, operation, clause);
+////        }
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
+//}

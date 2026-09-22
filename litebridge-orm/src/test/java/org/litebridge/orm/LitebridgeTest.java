@@ -9,7 +9,7 @@ import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.DefaultAliasTransformer;
-import org.litebridge.db.spi.expression.LiteralExpression;
+import org.litebridge.db.spi.impl.expression.LiteralExpressionImpl;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.impl.DefaultSequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
@@ -206,7 +206,7 @@ class LitebridgeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
@@ -249,7 +249,7 @@ class LitebridgeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.aliasTransformer()).thenReturn(new DefaultAliasTransformer());
         final DataSource dataSource = mock(DataSource.class);
@@ -278,7 +278,7 @@ class LitebridgeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
@@ -306,7 +306,7 @@ class LitebridgeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
@@ -389,7 +389,7 @@ class LitebridgeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(selectRegistry.reference()).thenReturn(TestColumnReference::new);
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
@@ -771,7 +771,7 @@ class LitebridgeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.aliasTransformer()).thenReturn(new DefaultAliasTransformer());
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
@@ -792,7 +792,7 @@ class LitebridgeTest {
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         final TableMetaData tableMetaData = mock(TableMetaData.class);
@@ -821,7 +821,7 @@ class LitebridgeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
@@ -851,7 +851,7 @@ class LitebridgeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
@@ -931,7 +931,7 @@ class LitebridgeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
@@ -961,7 +961,7 @@ class LitebridgeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(selectRegistry.reference()).thenReturn(new TestSelectReferenceExpressionFactory());
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());

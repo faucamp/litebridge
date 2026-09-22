@@ -1,26 +1,24 @@
-package org.litebridge.db.spi.impl.function;
+package org.litebridge.db.spi.impl.expression;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.expression.AliasReference;
-import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ColumnReference;
-import org.litebridge.db.spi.expression.DelegateColumnExpression;
 import org.litebridge.db.spi.expression.DelegateExpression;
-import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.expression.SubselectExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.function.aggregate.Avg;
-import org.litebridge.db.spi.impl.function.aggregate.Count;
-import org.litebridge.db.spi.impl.function.aggregate.Max;
-import org.litebridge.db.spi.impl.function.aggregate.Min;
-import org.litebridge.db.spi.impl.function.date.CurrentTimestamp;
-import org.litebridge.db.spi.impl.function.scalar.Abs;
-import org.litebridge.db.spi.impl.function.scalar.Lower;
-import org.litebridge.db.spi.impl.function.scalar.Substring;
-import org.litebridge.db.spi.impl.function.scalar.Upper;
+import org.litebridge.db.spi.impl.expression.function.aggregate.Avg;
+import org.litebridge.db.spi.impl.expression.function.aggregate.Count;
+import org.litebridge.db.spi.impl.expression.function.aggregate.Max;
+import org.litebridge.db.spi.impl.expression.function.aggregate.Min;
+import org.litebridge.db.spi.impl.expression.function.date.CurrentTimestamp;
+import org.litebridge.db.spi.impl.expression.function.scalar.Abs;
+import org.litebridge.db.spi.impl.expression.function.scalar.Lower;
+import org.litebridge.db.spi.impl.expression.function.scalar.Substring;
+import org.litebridge.db.spi.impl.expression.function.scalar.Upper;
+import org.litebridge.db.spi.impl.function.Subselect;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.query.Select;
 
@@ -33,9 +31,9 @@ import org.litebridge.db.spi.query.Select;
 public class SqlFunctionRegistryFactory {
 
     /**
-     * The column identifier generator.
+     * Alias/identifier SQL fragment generator
      */
-    protected final ColumnIdentifierGenerator columnIdentifierGenerator;
+    protected final LabelGenerator labelGenerator;
 
     /**
      * The select SQL generator.
@@ -45,12 +43,12 @@ public class SqlFunctionRegistryFactory {
     /**
      * Constructs a new {@code SqlFunctionRegistryFactory}.
      *
-     * @param columnIdentifierGenerator The database provider's column identifier generator
-     * @param selectSqlGenerator        The database provider's select SQL generator
+     * @param labelGenerator     The database provider's column alias/identifier SQL fragment generator
+     * @param selectSqlGenerator The database provider's select SQL generator
      */
-    public SqlFunctionRegistryFactory(final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public SqlFunctionRegistryFactory(final LabelGenerator labelGenerator,
                                       final SelectSqlGenerator selectSqlGenerator) {
-        this.columnIdentifierGenerator = columnIdentifierGenerator;
+        this.labelGenerator = labelGenerator;
         this.selectSqlGenerator = selectSqlGenerator;
     }
 
@@ -94,7 +92,7 @@ public class SqlFunctionRegistryFactory {
      * @return Expression to select a specific column
      */
     protected SelectColumn createSelectColumn(final Column column, final @Nullable String alias, final @Nullable String tableAlias) {
-        return new SelectColumn(column, alias, tableAlias);
+        return new SelectColumn(column, alias, tableAlias, labelGenerator);
     }
 
     /**
@@ -113,7 +111,7 @@ public class SqlFunctionRegistryFactory {
      * @param value the literal value
      * @return the literal expression
      */
-    protected LiteralExpression createLiteral(final @Nullable Object value, final @Nullable String alias) {
+    protected LiteralExpressionImpl createLiteral(final @Nullable Object value, final @Nullable String alias) {
         return createLiteral(value, alias, false);
     }
 
@@ -124,8 +122,8 @@ public class SqlFunctionRegistryFactory {
      * @param parameter whether this literal should be treated as a bind parameter
      * @return the literal expression
      */
-    protected LiteralExpression createLiteral(final @Nullable Object value, final @Nullable String alias, final boolean parameter) {
-        return new LiteralExpression(value, alias, parameter);
+    protected LiteralExpressionImpl createLiteral(final @Nullable Object value, final @Nullable String alias, final boolean parameter) {
+        return new LiteralExpressionImpl(value, alias, parameter, labelGenerator);
     }
 
     /**
@@ -135,7 +133,8 @@ public class SqlFunctionRegistryFactory {
      * @return the select reference expression
      */
     protected ColumnReference createSelectReference(final Column column, final @Nullable String alias, final @Nullable String tableAlias) {
-        return new ColumnReferenceImpl(column, alias, tableAlias);
+//        return new ColumnReferenceImpl(column, alias, tableAlias);
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     /**
@@ -146,7 +145,7 @@ public class SqlFunctionRegistryFactory {
      * @return the select reference expression
      */
     protected AliasReference createAliasReference(final String alias, final @Nullable String tableAlias) {
-        return new AliasReferenceImpl(alias, tableAlias);
+        return new AliasReferenceImpl(alias, tableAlias, labelGenerator);
     }
 
     /**
@@ -156,8 +155,8 @@ public class SqlFunctionRegistryFactory {
      * @param args   Not used; empty array
      * @return A AVG-implementing expression
      */
-    protected DelegateColumnExpression createAvg(final ColumnExpression target, final Object... args) {
-        return new Avg(target, (String) args[0]);
+    protected DelegateExpression createAvg(final SelectExpression target, final Object... args) {
+        return new Avg(target, (String) args[0], labelGenerator);
     }
 
     /**
@@ -167,8 +166,8 @@ public class SqlFunctionRegistryFactory {
      * @param args   Not used; empty array
      * @return A MIN-implementing expression
      */
-    protected DelegateColumnExpression createMin(final ColumnExpression target, final Object... args) {
-        return new Min(target, (String) args[0]);
+    protected DelegateExpression createMin(final SelectExpression target, final Object... args) {
+        return new Min(target, (String) args[0], labelGenerator);
     }
 
     /**
@@ -178,8 +177,8 @@ public class SqlFunctionRegistryFactory {
      * @param args   Not used; empty array
      * @return A MAX-implementing expression
      */
-    protected DelegateColumnExpression createMax(final ColumnExpression target, final Object... args) {
-        return new Max(target, (String) args[0]);
+    protected DelegateExpression createMax(final SelectExpression target, final Object... args) {
+        return new Max(target, (String) args[0], labelGenerator);
     }
 
     /**
@@ -188,18 +187,18 @@ public class SqlFunctionRegistryFactory {
      * @return A COUNT-implementing expression
      */
     protected SelectExpression createCount() {
-        return new Count();
+        return new Count(null, labelGenerator);
     }
 
     /**
      * Creates an UPPER-implementing expression.
      *
-     * @param columnExpression Target expression to encapsulate.
-     * @param args             Not used; empty array
+     * @param delegate Target expression to encapsulate.
+     * @param args     Not used; empty array
      * @return An UPPER-implementing expression
      */
-    protected DelegateColumnExpression createUpper(final ColumnExpression columnExpression, final Object... args) {
-        return new Upper(columnExpression, (String) args[0]);
+    protected DelegateExpression createUpper(final SelectExpression delegate, final Object... args) {
+        return new Upper(delegate, (String) args[0], labelGenerator);
     }
 
     /**
@@ -209,8 +208,8 @@ public class SqlFunctionRegistryFactory {
      * @param args   Not used; empty array
      * @return A LOWER-implementing expression
      */
-    protected DelegateColumnExpression createLower(final ColumnExpression target, final Object... args) {
-        return new Lower(target, (String) args[0]);
+    protected DelegateExpression createLower(final SelectExpression target, final Object... args) {
+        return new Lower(target, (String) args[0], labelGenerator);
     }
 
     /**
@@ -220,7 +219,7 @@ public class SqlFunctionRegistryFactory {
      * @param args   expression arguments; should be [int, Inteeger]
      * @return SUBSTRING-implementing expression
      */
-    protected DelegateColumnExpression createSubstring(final ColumnExpression target, final Object... args) {
+    protected DelegateExpression createSubstring(final SelectExpression target, final Object... args) {
         final int start = (int) args[0];
         final Integer length = (Integer) args[1];
         final String alias = (String) args[2];
@@ -235,8 +234,8 @@ public class SqlFunctionRegistryFactory {
      * @param length Substring length; may be {@code null}
      * @return SUBSTRING-implementing expression
      */
-    protected DelegateColumnExpression createSubstring(final ColumnExpression target, final int start, @Nullable Integer length, final @Nullable String alias) {
-        return new Substring(target, start, length, alias);
+    protected DelegateExpression createSubstring(final SelectExpression target, final int start, @Nullable Integer length, final @Nullable String alias) {
+        return new Substring(target, start, length, alias, labelGenerator);
     }
 
     /**
@@ -246,12 +245,12 @@ public class SqlFunctionRegistryFactory {
      * @param args   Not used; empty array
      * @return An ABS-implementing expression
      */
-    protected DelegateColumnExpression createAbs(final ColumnExpression target, final Object... args) {
-        return new Abs(target, (String) args[0]);
+    protected DelegateExpression createAbs(final SelectExpression target, final Object... args) {
+        return new Abs(target, (String) args[0], labelGenerator);
     }
 
     protected DelegateExpression createCast(final SelectExpression target, final Object... args) {
-        return new Cast(target, (String) args[0], (int) args[1]);
+        return new Cast(target, (String) args[0], (int) args[1], labelGenerator);
     }
 
     /**
@@ -260,6 +259,6 @@ public class SqlFunctionRegistryFactory {
      * @return A CURRENT_TIMESTAMP-implementing expression
      */
     protected SelectExpression createCurrentTimestamp() {
-        return new CurrentTimestamp();
+        return new CurrentTimestamp(null, labelGenerator);
     }
 }

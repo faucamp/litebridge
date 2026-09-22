@@ -2,14 +2,7 @@ package org.litebridge.db.spi.expression;
 
 import org.jspecify.annotations.Nullable;
 
-public interface AliasReference extends SelectExpression {
-
-    /**
-     * Retrieves the alias of this expression.
-     *
-     * @return The optional alias.
-     */
-    String alias();
+public interface AliasReference extends AliasedExpression {
 
     /**
      * Retrieves the parent table alias for the expression.

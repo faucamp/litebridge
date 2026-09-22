@@ -7,7 +7,6 @@ import org.litebridge.db.spi.alias.AliasedQuery;
 import org.litebridge.db.spi.alias.AliasedTable;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.SelectExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.query.Operator;
@@ -26,14 +25,14 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
     /**
      * Creates a new {@code SelectSqlGenerator}.
      *
-     * @param columnIdentifierGenerator the column identifier generator
-     * @param mathOperationGenerator    the math operation generator
-     * @param ensureTableMetaData       a function to ensure table metadata
+     * @param labelGenerator         the label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator the math operation generator
+     * @param ensureTableMetaData    a function to ensure table metadata
      */
-    public SelectSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public SelectSqlGenerator(final LabelGenerator labelGenerator,
                               final MathOperationGenerator mathOperationGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+        super(labelGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     /**
@@ -141,11 +140,10 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
                     .append(')');
             case AliasedQuery aliasedQuery -> sql.append('(')
                     .append(generateSql(aliasedQuery.target(), connectionProvider))
-                    .append(") AS ")
-                    .append(aliasedQuery.alias());
+                    .append(')')
+                    .append(labelGenerator.createAliasAs(aliasedQuery.alias()));
             case AliasedTable aliasedTable -> appendTable(sql, aliasedTable.target())
-                    .append(" AS ")
-                    .append(aliasedTable.alias());
+                    .append(labelGenerator.createAliasAs(aliasedTable.alias()));
             case SelectTarget.Void voidTarget -> { /* Ignore */ }
         }
     }

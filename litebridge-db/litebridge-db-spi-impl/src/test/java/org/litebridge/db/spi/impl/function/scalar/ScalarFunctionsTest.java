@@ -7,6 +7,10 @@ import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.impl.expression.function.scalar.Abs;
+import org.litebridge.db.spi.impl.expression.function.scalar.Lower;
+import org.litebridge.db.spi.impl.expression.function.scalar.Substring;
+import org.litebridge.db.spi.impl.expression.function.scalar.Upper;
 import org.litebridge.db.spi.query.Select;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

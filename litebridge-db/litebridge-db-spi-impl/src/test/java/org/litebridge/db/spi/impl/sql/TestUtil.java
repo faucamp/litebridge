@@ -3,7 +3,7 @@ package org.litebridge.db.spi.impl.sql;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.function.SelectColumn;
+import org.litebridge.db.spi.impl.expression.SelectColumn;
 
 final class TestUtil {
 

@@ -12,8 +12,9 @@ import org.litebridge.db.spi.impl.engine.DefaultMetaDataEngine;
 import org.litebridge.db.spi.impl.engine.ExecutionEngine;
 import org.litebridge.db.spi.impl.engine.ExecutionEngineReturnedKeysAuto;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
-import org.litebridge.db.spi.impl.function.SqlFunctionRegistryFactory;
+import org.litebridge.db.spi.impl.expression.SqlFunctionRegistryFactory;
 import org.litebridge.db.spi.impl.sql.DefaultSqlGenerator;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.SqlGenerator;
 
@@ -24,6 +25,7 @@ public final class ContextBuilder {
 
     private @Nullable DatabaseProviderMetaData databaseProviderMetaData;
     private @Nullable SqlGenerator sqlGenerator;
+    private @Nullable LabelGenerator labelGenerator;
     private @Nullable MetaDataEngine metaDataEngine;
     private @Nullable ExecutionEngine executionEngine;
     private @Nullable ColumnIdentifierGenerator columnIdentifierGenerator;
@@ -47,6 +49,11 @@ public final class ContextBuilder {
 
     public ContextBuilder withSqlGenerator(final SqlGenerator sqlGenerator) {
         this.sqlGenerator = sqlGenerator;
+        return this;
+    }
+
+    public ContextBuilder withLabelGenerator(final LabelGenerator labelGenerator) {
+        this.labelGenerator = labelGenerator;
         return this;
     }
 
@@ -99,8 +106,10 @@ public final class ContextBuilder {
                 Objects.requireNonNullElseGet(columnIdentifierGenerator, ColumnIdentifierGenerator::new);
         final MathOperationGenerator finalMathOperationGenerator =
                 Objects.requireNonNullElseGet(mathOperationGenerator, () -> new MathOperationGenerator(finalColumnIdentifierGenerator));
+        final LabelGenerator finalLabelGenerator =
+                Objects.requireNonNullElseGet(labelGenerator, LabelGenerator::new);
         final SqlGenerator finalSqlGenerator =
-                Objects.requireNonNullElseGet(sqlGenerator, () -> new DefaultSqlGenerator(finalMetaDataEngine, finalColumnIdentifierGenerator, finalMathOperationGenerator));
+                Objects.requireNonNullElseGet(sqlGenerator, () -> new DefaultSqlGenerator(finalMetaDataEngine, finalLabelGenerator, finalMathOperationGenerator));
         final TypeConverter finalTypeConverter =
                 Objects.requireNonNullElseGet(typeConverter, ContextBuilder::loadDefaultTypeConverter);
         final AliasTransformer finalAliasTransformer =
@@ -115,11 +124,12 @@ public final class ContextBuilder {
         if (sqlFunctionRegistryFactory != null) {
             sqlFunctionRegistry = sqlFunctionRegistryFactory.create();
         } else {
-            sqlFunctionRegistry = new SqlFunctionRegistryFactory(finalColumnIdentifierGenerator, finalSqlGenerator.selectSqlGenerator()).create();
+            sqlFunctionRegistry = new SqlFunctionRegistryFactory(finalLabelGenerator, finalSqlGenerator.selectSqlGenerator()).create();
         }
 
         return new DatabaseProviderContext(
                 finalSqlGenerator,
+                finalLabelGenerator,
                 finalMetaDataEngine,
                 finalExecutionEngine,
                 sqlFunctionRegistry,

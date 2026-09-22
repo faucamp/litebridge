@@ -119,7 +119,7 @@ public final class DtoWhereConditionClauseTerminal<DTO>
     }
 
     private DtoWhereConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        final WhereNode whereNode = ObjectUtils.requireInstanceOf(node, WhereNode.class);
+        final WhereNode whereNode = ObjectUtils.requireInstanceOf(WhereNode.class, node);
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
         final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
         whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, terminal.node()));

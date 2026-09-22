@@ -7,6 +7,10 @@ import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.impl.expression.function.aggregate.Avg;
+import org.litebridge.db.spi.impl.expression.function.aggregate.Count;
+import org.litebridge.db.spi.impl.expression.function.aggregate.Max;
+import org.litebridge.db.spi.impl.expression.function.aggregate.Min;
 import org.litebridge.db.spi.query.Select;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

@@ -1,8 +1,8 @@
 package org.litebridge.db.sqlite.sql;
 
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.impl.sql.DefaultSqlGenerator;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 
@@ -16,16 +16,23 @@ import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
  */
 public class SQLiteSqlGenerator extends DefaultSqlGenerator {
 
+    /**
+     * Creates a new {@code SQLiteSqlGenerator} instance.
+     *
+     * @param metaDataEngine         Metadata engine to use
+     * @param labelGenerator         Label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator Math operation SQL fragment generator
+     */
     public SQLiteSqlGenerator(final MetaDataEngine metaDataEngine,
-                              final ColumnIdentifierGenerator columnIdentifierGenerator,
+                              final LabelGenerator labelGenerator,
                               final MathOperationGenerator mathOperationGenerator) {
-        super(metaDataEngine, columnIdentifierGenerator, mathOperationGenerator);
+        super(metaDataEngine, labelGenerator, mathOperationGenerator);
     }
 
     @Override
     protected SelectSqlGenerator createSelectSqlGenerator() {
         return new SQLiteSelectSqlGenerator(
-                columnIdentifierGenerator,
+                labelGenerator,
                 mathOperationGenerator,
                 metaDataEngine::ensureTableMetaData);
     }

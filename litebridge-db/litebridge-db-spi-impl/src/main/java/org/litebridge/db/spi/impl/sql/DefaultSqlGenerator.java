@@ -2,7 +2,6 @@ package org.litebridge.db.spi.impl.sql;
 
 import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.Operation;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.tx.ConnectionProvider;
@@ -14,7 +13,7 @@ import org.litebridge.db.spi.update.Update;
 public class DefaultSqlGenerator implements SqlGenerator {
 
     protected final MetaDataEngine metaDataEngine;
-    protected final ColumnIdentifierGenerator columnIdentifierGenerator;
+    protected final LabelGenerator labelGenerator;
     protected final MathOperationGenerator mathOperationGenerator;
 
     protected final ConcurrentLazy<SelectSqlGenerator> selectSqlGenerator = new ConcurrentLazy<>(this::createSelectSqlGenerator);
@@ -23,11 +22,18 @@ public class DefaultSqlGenerator implements SqlGenerator {
     protected final ConcurrentLazy<DeleteSqlGenerator> deleteSqlGenerator = new ConcurrentLazy<>(this::createDeleteSqlGenerator);
     protected final ConcurrentLazy<MergeSqlGenerator> mergeSqlGenerator = new ConcurrentLazy<>(this::createMergeSqlGenerator);
 
+    /**
+     * Creates a new {@code DefaultSqlGenerator} instance.
+     *
+     * @param metaDataEngine         Metadata engine to use
+     * @param labelGenerator         Label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator Math operation SQL fragment generator
+     */
     public DefaultSqlGenerator(final MetaDataEngine metaDataEngine,
-                               final ColumnIdentifierGenerator columnIdentifierGenerator,
+                               final LabelGenerator labelGenerator,
                                final MathOperationGenerator mathOperationGenerator) {
         this.metaDataEngine = metaDataEngine;
-        this.columnIdentifierGenerator = columnIdentifierGenerator;
+        this.labelGenerator = labelGenerator;
         this.mathOperationGenerator = mathOperationGenerator;
     }
 
@@ -54,7 +60,7 @@ public class DefaultSqlGenerator implements SqlGenerator {
      */
     protected SelectSqlGenerator createSelectSqlGenerator() {
         return new SelectSqlGenerator(
-                columnIdentifierGenerator,
+                labelGenerator,
                 mathOperationGenerator,
                 metaDataEngine::ensureTableMetaData);
     }
@@ -66,7 +72,7 @@ public class DefaultSqlGenerator implements SqlGenerator {
      */
     protected InsertSqlGenerator createInsertSqlGenerator() {
         return new InsertSqlGenerator(
-                columnIdentifierGenerator,
+                labelGenerator,
                 mathOperationGenerator,
                 metaDataEngine::ensureTableMetaData,
                 metaDataEngine.metaData().insertCapability());
@@ -79,7 +85,7 @@ public class DefaultSqlGenerator implements SqlGenerator {
      */
     protected UpdateSqlGenerator createUpdateSqlGenerator() {
         return new UpdateSqlGenerator(
-                columnIdentifierGenerator,
+                labelGenerator,
                 mathOperationGenerator,
                 metaDataEngine::ensureTableMetaData);
     }
@@ -91,7 +97,7 @@ public class DefaultSqlGenerator implements SqlGenerator {
      */
     protected DeleteSqlGenerator createDeleteSqlGenerator() {
         return new DeleteSqlGenerator(
-                columnIdentifierGenerator,
+                labelGenerator,
                 mathOperationGenerator,
                 metaDataEngine::ensureTableMetaData);
     }
@@ -104,7 +110,7 @@ public class DefaultSqlGenerator implements SqlGenerator {
     protected MergeSqlGenerator createMergeSqlGenerator() {
         return new MergeSqlGenerator(
                 selectSqlGenerator.getOrThrow(),
-                columnIdentifierGenerator,
+                labelGenerator,
                 mathOperationGenerator,
                 metaDataEngine::ensureTableMetaData);
     }

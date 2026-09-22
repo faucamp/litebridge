@@ -1,7 +1,6 @@
 package org.litebridge.db.spi.expression;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.Operation;
 
 import org.litebridge.db.spi.query.Select;
 

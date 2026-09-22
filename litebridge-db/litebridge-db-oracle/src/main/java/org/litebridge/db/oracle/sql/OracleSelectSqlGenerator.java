@@ -2,7 +2,7 @@ package org.litebridge.db.oracle.sql;
 
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.query.Limit;
@@ -27,14 +27,14 @@ public final class OracleSelectSqlGenerator extends SelectSqlGenerator {
     /**
      * Constructs a new {@code OracleSelectSqlGenerator}.
      *
-     * @param columnIdentifierGenerator The generator for column identifiers.
-     * @param mathOperationGenerator    The generator for math operations.
-     * @param ensureTableMetaData       A function to ensure table metadata.
+     * @param labelGenerator         the label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator The generator for math operations.
+     * @param ensureTableMetaData    A function to ensure table metadata.
      */
-    public OracleSelectSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public OracleSelectSqlGenerator(final LabelGenerator labelGenerator,
                                     final MathOperationGenerator mathOperationGenerator,
                                     final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+        super(labelGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     @Override

@@ -8,15 +8,12 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.expression.AliasReference;
+import org.litebridge.db.spi.expression.AliasedExpression;
 import org.litebridge.db.spi.expression.ClauseType;
-import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.ConnectionProviderExpression;
-import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.impl.expression.LiteralExpressionImpl;
 import org.litebridge.db.spi.math.MathOperator;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
@@ -36,7 +33,7 @@ import java.util.function.BiFunction;
  */
 public abstract class AbstractSqlGenerator {
 
-    protected final ColumnIdentifierGenerator columnIdentifierGenerator;
+    protected final LabelGenerator labelGenerator;
     protected final MathOperationGenerator mathOperationGenerator;
 
     /**
@@ -47,13 +44,13 @@ public abstract class AbstractSqlGenerator {
     /**
      * Constructs a new {@code AbstractSqlGenerator}.
      *
-     * @param columnIdentifierGenerator The column identifier generator to use.
-     * @param ensureTableMetaData       The function to ensure table metadata is available.
+     * @param labelGenerator      the label generator for rendering aliases/identifiers
+     * @param ensureTableMetaData The function to ensure table metadata is available.
      */
-    public AbstractSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public AbstractSqlGenerator(final LabelGenerator labelGenerator,
                                 final MathOperationGenerator mathOperationGenerator,
                                 final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        this.columnIdentifierGenerator = columnIdentifierGenerator;
+        this.labelGenerator = labelGenerator;
         this.mathOperationGenerator = mathOperationGenerator;
         this.ensureTableMetaData = ensureTableMetaData;
     }
@@ -76,7 +73,7 @@ public abstract class AbstractSqlGenerator {
         if (condition.operator() == Operator.IS_NULL || condition.operator() == Operator.IS_NOT_NULL) {
             sql = "%s %s".formatted(lhs, mapOperator(condition.operator()));
         } else if (condition.operator() == Operator.IN || condition.operator() == Operator.NOT_IN) {
-            if (condition.rhs() instanceof LiteralExpression literalExpression) {
+            if (condition.rhs() instanceof LiteralExpressionImpl literalExpression) {
                 sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), literalExpression.toBindValueSql(operation));
             } else {
                 final String sqlFragment;
@@ -97,15 +94,10 @@ public abstract class AbstractSqlGenerator {
             if (condition.rhs() instanceof SubselectExpression subselectExpression) {
                 final String subselectSql = subselectExpression.toSql(operation, connectionProvider);
                 sql = "%s %s (%s)".formatted(lhs, mapOperator(condition.operator()), subselectSql);
-            } else if (condition.rhs() instanceof AliasReference aliasReference) {
+            } else if (condition.rhs() instanceof AliasedExpression aliasedExpression) {
                 sql = "%s %s %s".formatted(lhs,
                         mapOperator(condition.operator()),
-                        aliasReference.toSql(operation, ClauseType.JOIN));
-            } else if (condition.rhs() instanceof ColumnReference columnReference) {
-                final Column referencedColumn = columnReference.column();
-//                sql = "%s %s %s.%s".formatted(lhs, mapOperator(condition.operator()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.table().aliasOrName()), columnIdentifierGenerator.quoteIdentifier(referencedColumn.name()));
-//                columnReference
-                throw new UnsupportedOperationException("Not implemented yet");
+                        aliasedExpression.toSql(operation, ClauseType.JOIN));
             } else {
                 sql = "%s %s ?".formatted(lhs, mapOperator(condition.operator()));
             }
@@ -145,7 +137,7 @@ public abstract class AbstractSqlGenerator {
      * @return the SQL representation of the math operation
      */
     protected String createMathOperation(final String column, final MathOperator mathOperator) {
-        return "%s %s ?".formatted(columnIdentifierGenerator.quoteIdentifier(column), mathOperator.symbol());
+        return "%s %s ?".formatted(labelGenerator.quoteIdentifier(column), mathOperator.symbol());
     }
 
     /**
@@ -166,13 +158,11 @@ public abstract class AbstractSqlGenerator {
      * @param table  The table name.
      */
     protected StringBuilder appendTable(final StringBuilder sql, final @Nullable String schema, final String table) {
-        final ColumnIdentifierGenerator cig = columnIdentifierGenerator;
-
         if (!StringUtils.isBlank(schema)) {
-            sql.append(cig.quoteIdentifier(schema)).append('.');
+            sql.append(labelGenerator.quoteIdentifier(schema)).append('.');
         }
 
-        sql.append(cig.quoteIdentifier(table));
+        sql.append(labelGenerator.quoteIdentifier(table));
         return sql;
     }
 

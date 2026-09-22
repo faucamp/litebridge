@@ -11,12 +11,12 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ConnectionProviderExpression;
-import org.litebridge.db.spi.expression.LiteralExpression;
+import org.litebridge.db.spi.impl.expression.LiteralExpressionImpl;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.function.SelectColumn;
+import org.litebridge.db.spi.impl.expression.SelectColumn;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
@@ -426,7 +426,7 @@ class AbstractSqlGeneratorTest {
     void createCondition_nullRhs() {
         // Given
         final ColumnExpression column = createSelectColumn(sqlGenerator.columnIdentifierGenerator);
-        final Condition condition = new Condition(column, Operator.EQ, new LiteralExpression(null));
+        final Condition condition = new Condition(column, Operator.EQ, new LiteralExpressionImpl(null));
 
         // When
         final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));

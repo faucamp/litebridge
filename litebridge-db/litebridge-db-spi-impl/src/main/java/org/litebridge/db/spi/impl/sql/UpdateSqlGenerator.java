@@ -2,7 +2,6 @@ package org.litebridge.db.spi.impl.sql;
 
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateColumn;
@@ -17,14 +16,14 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
     /**
      * Creates a new {@code UpdateSqlGenerator}.
      *
-     * @param columnIdentifierGenerator the column identifier generator
-     * @param mathOperationGenerator    the math operation generator
-     * @param ensureTableMetaData       a function to ensure table metadata
+     * @param labelGenerator         the label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator the math operation generator
+     * @param ensureTableMetaData    a function to ensure table metadata
      */
-    public UpdateSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public UpdateSqlGenerator(final LabelGenerator labelGenerator,
                               final MathOperationGenerator mathOperationGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+        super(labelGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     /**
@@ -48,7 +47,7 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
                 sql.append(", ");
             }
 
-            sql.append(columnIdentifierGenerator.quoteIdentifier(updateColumn.name())).append(" = ");
+            sql.append(labelGenerator.quoteIdentifier(updateColumn.name())).append(" = ");
             sql.append(getColumnValueFragment(updateColumn));
         }
 

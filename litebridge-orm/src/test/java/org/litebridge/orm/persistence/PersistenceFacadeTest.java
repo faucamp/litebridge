@@ -11,13 +11,13 @@ import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.DelegateColumnExpression;
 import org.litebridge.db.spi.expression.DelegateColumnExpressionFactory;
 import org.litebridge.db.spi.expression.DelegateExpression;
-import org.litebridge.db.spi.expression.LiteralExpression;
+import org.litebridge.db.spi.impl.expression.LiteralExpressionImpl;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.function.SelectColumn;
+import org.litebridge.db.spi.impl.expression.SelectColumn;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.InsertResult;
@@ -101,7 +101,7 @@ class PersistenceFacadeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn((column, args) -> new TestColumnExpression(column));
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(selectRegistry.reference()).thenReturn(column -> new ColumnReference(column) {
             @Override
             public String toSql(org.litebridge.db.spi.Operation operation, ClauseType context, @Nullable DelegateExpression parent) {
@@ -183,7 +183,7 @@ class PersistenceFacadeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn((column, args) -> new SelectColumn(column, mock(ColumnIdentifierGenerator.class)));
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
@@ -221,7 +221,7 @@ class PersistenceFacadeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
@@ -716,7 +716,7 @@ class PersistenceFacadeTest {
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
-        when(selectRegistry.literal()).thenReturn(LiteralExpression::new);
+        when(selectRegistry.literal()).thenReturn(LiteralExpressionImpl::new);
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
     }
 

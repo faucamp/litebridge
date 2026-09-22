@@ -2,7 +2,7 @@ package org.litebridge.db.sqlite.sql;
 
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.query.Limit;
@@ -21,14 +21,14 @@ public class SQLiteSelectSqlGenerator extends SelectSqlGenerator {
     /**
      * Creates a new {@code SQLiteSelectSqlGenerator}.
      *
-     * @param columnIdentifierGenerator the column identifier generator
-     * @param mathOperationGenerator    the math operation generator
-     * @param ensureTableMetaData       a function to ensure table metadata
+     * @param labelGenerator         the label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator the math operation generator
+     * @param ensureTableMetaData    a function to ensure table metadata
      */
-    public SQLiteSelectSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public SQLiteSelectSqlGenerator(final LabelGenerator labelGenerator,
                                     final MathOperationGenerator mathOperationGenerator,
                                     final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+        super(labelGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     @Override

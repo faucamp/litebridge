@@ -4,8 +4,8 @@ import org.litebridge.commons.BooleanUtils;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.sql.InsertSqlGenerator;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Insert;
@@ -19,14 +19,14 @@ public final class OracleInsertSqlGenerator extends InsertSqlGenerator {
     /**
      * Creates a new {@code OracleInsertSqlGenerator}.
      *
-     * @param columnIdentifierGenerator the column identifier generator
-     * @param mathOperationGenerator    the math operation generator
-     * @param ensureTableMetaData       a function to ensure table metadata
+     * @param labelGenerator         the label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator the math operation generator
+     * @param ensureTableMetaData    a function to ensure table metadata
      */
-    public OracleInsertSqlGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public OracleInsertSqlGenerator(final LabelGenerator labelGenerator,
                                     final MathOperationGenerator mathOperationGenerator,
                                     final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData, DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
+        super(labelGenerator, mathOperationGenerator, ensureTableMetaData, DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
     }
 
     public String createInsertAllClause(final List<Insert> inserts) {
@@ -63,7 +63,7 @@ public final class OracleInsertSqlGenerator extends InsertSqlGenerator {
                 .append(" (")
                 .append(String.join(", ", insert.columns().stream()
                         .map(UpdateColumn::name)
-                        .map(ColumnIdentifierGenerator::quoteIdentifier)
+                        .map(labelGenerator::quoteIdentifier)
                         .toList()))
                 .append(") VALUES ");
         return intoClause.toString();

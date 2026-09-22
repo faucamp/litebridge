@@ -1,19 +1,17 @@
-package org.litebridge.db.spi.impl.function;
+package org.litebridge.db.spi.impl.expression;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.ClauseType;
-import org.litebridge.db.spi.expression.ColumnExpressionImpl;
 import org.litebridge.db.spi.expression.DelegateExpression;
-
-import static org.litebridge.db.spi.impl.ColumnIdentifierGenerator.quoteIdentifier;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 
 /**
  * Expression to select a database column.
  */
-public class SelectColumn extends ColumnExpressionImpl {
+public class SelectColumn extends AbstractColumnExpression {
 
     /**
      * Creates a new {@code SelectColumn}.
@@ -21,8 +19,11 @@ public class SelectColumn extends ColumnExpressionImpl {
      * @param column the column to select
      * @param alias  the alias to assign to the column
      */
-    public SelectColumn(final Column column, final @Nullable String alias, final @Nullable String tableAlias) {
-        super(column, alias, tableAlias);
+    public SelectColumn(final Column column,
+                        final @Nullable String alias,
+                        final @Nullable String tableAlias,
+                        final LabelGenerator labelGenerator) {
+        super(column, alias, tableAlias, labelGenerator);
     }
 
     /**
@@ -38,18 +39,17 @@ public class SelectColumn extends ColumnExpressionImpl {
         final StringBuilder sb = new StringBuilder();
         final Table table = column.table();
 
-        if (tableAlias != null) {
-            sb.append(quoteIdentifier(tableAlias));
-        } else {
-            sb.append(quoteIdentifier(table.name()));
+        if (!table.isVirtual()) {
+            if (tableAlias != null) {
+                sb.append(labelGenerator.quoteAlias(tableAlias));
+            } else {
+                sb.append(labelGenerator.quoteIdentifier(table.name()));
+            }
+
+            sb.append('.');
         }
 
-        sb.append('.').append(quoteIdentifier(column.name()));
-
-        if (alias != null) {
-            sb.append(" AS \"").append(alias).append("\"");
-        }
-
-        return sb.toString();
+        sb.append(labelGenerator.quoteIdentifier(column.name()));
+        return addAliasAs(sb.toString(), clause);
     }
 }

@@ -1,8 +1,8 @@
-package org.litebridge.db.spi.impl;
+package org.litebridge.db.spi.impl.sql;
 
 import org.litebridge.db.spi.util.SqlReservedWords;
 
-public class LabelProcessor {
+public class LabelGenerator {
 
     public String createAliasAs(final String alias) {
         return " AS " + quoteAlias(alias);
@@ -18,7 +18,7 @@ public class LabelProcessor {
      * @param identifier the identifier to potentially quote
      * @return the quoted (if necessary) or original identifier
      */
-    public static String quoteIdentifier(final String identifier) {
+    public String quoteIdentifier(final String identifier) {
         if (SqlReservedWords.contains(identifier)) {
             return "\"%s\"".formatted(identifier);
         } else {

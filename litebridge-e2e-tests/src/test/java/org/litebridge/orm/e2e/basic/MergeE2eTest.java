@@ -50,6 +50,8 @@ public class MergeE2eTest extends AbstractE2eTest {
 
         litebridge.saveAll(persons);
         litebridge.saveAll(accounts);
+        litebridge.select().from("LB.ACCOUNT").list();
+        litebridge.select().from("LB.PERSON").list();
 
         // Merge with: "USING <dto>", "WHEN MATCHED AND <update>", "WHEN MATHED AND <delete>", "WHEN NOT MATCHED <insert values directly>"
         {

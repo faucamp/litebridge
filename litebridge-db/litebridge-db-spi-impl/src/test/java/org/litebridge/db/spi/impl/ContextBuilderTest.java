@@ -7,7 +7,7 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.engine.ExecutionEngine;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
-import org.litebridge.db.spi.impl.function.SqlFunctionRegistryFactory;
+import org.litebridge.db.spi.impl.expression.SqlFunctionRegistryFactory;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.SqlGenerator;
 

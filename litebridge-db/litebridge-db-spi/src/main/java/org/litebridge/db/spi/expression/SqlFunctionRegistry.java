@@ -41,9 +41,9 @@ public record SqlFunctionRegistry(
      * @param count COUNT(): Total number of rows in the query result.
      */
     public record Aggregate(
-            DelegateColumnExpressionFactory avg,
-            DelegateColumnExpressionFactory min,
-            DelegateColumnExpressionFactory max,
+            DelegateExpressionFactory avg,
+            DelegateExpressionFactory min,
+            DelegateExpressionFactory max,
             SelectExpression count) {
     }
 
@@ -56,10 +56,10 @@ public record SqlFunctionRegistry(
      * @param abs       ABS(): Absolute value of a number.
      */
     public record Scalar(
-            DelegateColumnExpressionFactory upper,
-            DelegateColumnExpressionFactory lower,
-            DelegateColumnExpressionFactory substring,
-            DelegateColumnExpressionFactory abs) {
+            DelegateExpressionFactory upper,
+            DelegateExpressionFactory lower,
+            DelegateExpressionFactory substring,
+            DelegateExpressionFactory abs) {
     }
 
     /**

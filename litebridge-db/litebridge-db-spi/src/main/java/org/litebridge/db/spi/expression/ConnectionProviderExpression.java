@@ -2,8 +2,6 @@ package org.litebridge.db.spi.expression;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Operation;
-import org.litebridge.db.spi.PreparedOperation;
-import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
 /**
