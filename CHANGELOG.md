@@ -60,6 +60,8 @@
     - Split SQL generation and execution into distinct engine components for improved flexibility and maintainability.
     - Native SQL and ORM-generated SQL now follow the same execution path.
     - Mathematical operations can now be overridden more simply in database providers
+    - `LabelGenerator` replace `ColumnIdentifierGenerator`; simplify and standardise alias handling
+    - Refactor and simplify `SelectExpression` reference implementations.
 - Oracle Database Provider:
     - Improve aliasing behaviour by enforcing Oracle's SELECT clause processing order
 
@@ -70,7 +72,7 @@
     - Fixed multi-row inserts; now uses batched insert statements
 - SQLite Database Provider:
     - Use correct `LIMIT -1` when a SELECT statement is generated with an offset but not limit
-
+    
 ### Removed
 
 - ORM:
@@ -81,6 +83,7 @@
 - Database Provider SPI:
     - Legacy SPI interfaces have been removed, such as operation-specific execution methods (`select()`, `insert()`,
       `nativeQuery()`, etc.).
+    - `ColumnIdentifierGenerator`; replaced by `LabelGenerator`.
 
 ## [0.4.0] - 2026-08-10
 
