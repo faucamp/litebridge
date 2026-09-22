@@ -17,6 +17,7 @@ import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 import org.mockito.Mockito;
 
 import java.sql.Types;
@@ -71,7 +72,7 @@ class DeleteCompilationContextTest {
     @Test
     void constructWithDtoClassAndWhereCondition() {
         // Given
-        final LitebridgeContext context = createMockContext();
+        final LitebridgeContext litebridgeContext = createMockContext();
         final Table table = new Table("users");
         final OrmTable ormTable = mock(OrmTable.class);
         final ColumnMetaData colMeta = new ColumnMetaData(table, "user_id", true, Types.INTEGER, 0);
@@ -79,18 +80,21 @@ class DeleteCompilationContextTest {
 
         when(ormTable.getMetaData()).thenReturn(tableMetaData);
         when(ormTable.columnMetaDataForField("id")).thenReturn(colMeta);
-        when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
-        when(context.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(tableMetaData);
-        when(context.typeConverter().convert(1, Types.INTEGER)).thenReturn(1);
+        when(litebridgeContext.mode()).thenReturn(LitebridgeContext.Mode.DTO);
+        when(litebridgeContext.aliasGenerator()).thenReturn(new DefaultAliasGenerator());
+        when(litebridgeContext.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
+        when(litebridgeContext.tableRegistry().getOrmTableOrThrow(table)).thenReturn(ormTable);
+        when(litebridgeContext.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(tableMetaData);
+        when(litebridgeContext.typeConverter().convert(1, Types.INTEGER)).thenReturn(1);
 
         final ColumnExpression colExpr = mock(ColumnExpression.class);
         when(colExpr.column()).thenReturn(colMeta.column());
-        when(context.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(colExpr);
+        when(litebridgeContext.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(colExpr);
 
         final DeleteNode deleteNode = new DeleteNode(null, null, UserDto.class);
 
         // When
-        final DeleteCompilationContext compilationContext = new DeleteCompilationContext(deleteNode, context);
+        final DeleteCompilationContext compilationContext = new DeleteCompilationContext(deleteNode, litebridgeContext);
         assertNotNull(compilationContext.ensureWhereConditionGroupStack());
         assertSame(compilationContext.ensureWhereConditionGroupStack(), compilationContext.ensureWhereConditionGroupStack());
 

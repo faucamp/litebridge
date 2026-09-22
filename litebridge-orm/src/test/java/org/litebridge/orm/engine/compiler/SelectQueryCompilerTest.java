@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.alias.DefaultAliasTransformer;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
@@ -52,7 +51,7 @@ class SelectQueryCompilerTest {
         when(context.tableMetaDataCache()).thenReturn(metadataCache);
         when(context.selectExpressionMapper()).thenReturn(expressionMapper);
         when(context.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(context.aliasGenerator()).thenReturn(new DefaultAliasGenerator(new DefaultAliasTransformer()));
+        when(context.aliasGenerator()).thenReturn(new DefaultAliasGenerator());
         return context;
     }
 

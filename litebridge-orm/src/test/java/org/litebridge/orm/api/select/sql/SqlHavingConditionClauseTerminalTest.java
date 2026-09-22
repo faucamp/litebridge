@@ -55,7 +55,7 @@ class SqlHavingConditionClauseTerminalTest {
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
         assertInstanceOf(HavingNode.class, node);
         final HavingNode havingNode = (HavingNode) node;
-        assertSame(groupByNode, havingNode.previous());
+        assertSame(queryNode, havingNode.previous());
         final ConditionNode conditionNode = assertInstanceOf(ConditionNode.class, havingNode.condition());
         assertEquals("age", conditionNode.lhsColumn());
         assertEquals(LogicOperator.AND, conditionNode.logicOperator());

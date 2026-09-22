@@ -6,7 +6,6 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.alias.DefaultAliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
@@ -26,8 +25,6 @@ import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.Fn;
-import org.litebridge.orm.expression.intent.ConvertSpec;
 import org.litebridge.orm.expression.intent.ExpressionSpecArray;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.meta.QueryField;
@@ -68,7 +65,7 @@ class MergeCompilationContextTest {
         when(context.selectExpressionMapper()).thenReturn(expressionMapper);
         when(context.typeConverter()).thenReturn(typeConverter);
         when(context.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(context.aliasGenerator()).thenReturn(new DefaultAliasGenerator(new DefaultAliasTransformer()));
+        when(context.aliasGenerator()).thenReturn(new DefaultAliasGenerator());
         return context;
     }
 
@@ -97,40 +94,21 @@ class MergeCompilationContextTest {
     @Test
     void constructWithDtoClass() {
         // Given
-        final LitebridgeContext context = createMockContext();
+        final LitebridgeContext litebridgeContext = createMockContext();
         final Table table = new Table("users");
         final ColumnMetaData idCol = new ColumnMetaData(table, "id", true, Types.INTEGER, 0);
         final TableMetaData metaData = new TableMetaData(table, List.of("id"), List.of(idCol));
 
         final OrmTable ormTable = mock(OrmTable.class);
         when(ormTable.getMetaData()).thenReturn(metaData);
-        when(context.tableRegistry().getOrmTable(UserDto.class)).thenReturn(ormTable);
+        when(litebridgeContext.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
+        when(litebridgeContext.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
+        when(litebridgeContext.tableRegistry().getOrmTableOrThrow(table)).thenReturn(ormTable);
 
         final MergeNode mergeNode = new MergeNode(null, UserDto.class, null);
 
         // When
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(mergeNode, context);
-
-        // Then
-        assertNotNull(compilationContext);
-    }
-
-    @Test
-    void constructWithTableNameThatIsDto() {
-        // Given
-        final LitebridgeContext context = createMockContext();
-        final Table table = new Table("users");
-        final ColumnMetaData idCol = new ColumnMetaData(table, "id", true, Types.INTEGER, 0);
-        final TableMetaData metaData = new TableMetaData(table, List.of("id"), List.of(idCol));
-
-        final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
-        when(context.tableRegistry().getOrmTable("users")).thenReturn(ormTable);
-
-        final MergeNode mergeNode = new MergeNode("users", null, null);
-
-        // When
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(mergeNode, context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(mergeNode, litebridgeContext);
 
         // Then
         assertNotNull(compilationContext);
@@ -164,7 +142,7 @@ class MergeCompilationContextTest {
         final OrmTable usingOrmTable = mock(OrmTable.class);
         final TableMetaData usingMeta = new TableMetaData(new Table("users"), List.of("id"), List.of(idCol));
         when(usingOrmTable.getMetaData()).thenReturn(usingMeta);
-        when(context.tableRegistry().getOrmTable(UserDto.class)).thenReturn(usingOrmTable);
+        when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(usingOrmTable);
 
         compilationContext.setUsingNode(new UsingNode(null, null, UserDto.class, null, null, conditionNode));
         assertEquals(MergeCompilationContext.ConditionContext.ON, compilationContext.conditionContext());
@@ -209,7 +187,7 @@ class MergeCompilationContextTest {
     @Test
     void whenMatchedUpdateSetVariations() {
         // Given
-        final LitebridgeContext context = createMockContext();
+        final LitebridgeContext litebridgeContext = createMockContext();
         final Table table = new Table("users");
         final ColumnMetaData nameCol = new ColumnMetaData(table, "user_name", true, Types.VARCHAR, 100);
         final ColumnMetaData ageCol = new ColumnMetaData(table, "age", true, Types.INTEGER, 0);
@@ -217,20 +195,22 @@ class MergeCompilationContextTest {
 
         final OrmTable ormTable = mock(OrmTable.class);
         when(ormTable.getMetaData()).thenReturn(metaData);
+        when(litebridgeContext.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
         when(ormTable.columnMetaDataForField("name")).thenReturn(nameCol);
-        when(context.tableRegistry().getOrmTable(UserDto.class)).thenReturn(ormTable);
+        when(litebridgeContext.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
+        when(litebridgeContext.tableRegistry().getOrmTableOrThrow(table)).thenReturn(ormTable);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null), litebridgeContext);
         compilationContext.addWhenMatchedSpec(true);
 
         // 1. Column by field name in DTO mode
-        when(context.mode()).thenReturn(LitebridgeContext.Mode.DTO);
+        when(litebridgeContext.mode()).thenReturn(LitebridgeContext.Mode.DTO);
         compilationContext.whenMatchedUpdateSet(new SetNode(null, "name", "Alice"));
         assertEquals(1, compilationContext.getWhenMatchedSpec().getUpdateColumns().size());
         assertEquals(1, compilationContext.getWhenMatchedSpec().getBindValues().size());
 
         // 2. Column by column name in SQL mode
-        when(context.mode()).thenReturn(LitebridgeContext.Mode.SQL);
+        when(litebridgeContext.mode()).thenReturn(LitebridgeContext.Mode.SQL);
         compilationContext.whenMatchedUpdateSet(new SetNode(null, "user_name", "Bob"));
         assertEquals(2, compilationContext.getWhenMatchedSpec().getUpdateColumns().size());
 
@@ -256,7 +236,7 @@ class MergeCompilationContextTest {
     @Test
     void whenNotMatchedInsertVariations() {
         // Given
-        final LitebridgeContext context = createMockContext();
+        final LitebridgeContext litebridgeContext = createMockContext();
         final Table table = new Table("users");
         final ColumnMetaData nameCol = new ColumnMetaData(table, "user_name", true, Types.VARCHAR, 100);
         final ColumnMetaData ageCol = new ColumnMetaData(table, "age", true, Types.INTEGER, 0);
@@ -264,20 +244,22 @@ class MergeCompilationContextTest {
 
         final OrmTable ormTable = mock(OrmTable.class);
         when(ormTable.getMetaData()).thenReturn(metaData);
+        when(litebridgeContext.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
         when(ormTable.columnMetaDataForField("name")).thenReturn(nameCol);
         when(ormTable.columnMetaDataForField("unknown")).thenReturn(null);
-        when(context.tableRegistry().getOrmTable(UserDto.class)).thenReturn(ormTable);
+        when(litebridgeContext.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
+        when(litebridgeContext.tableRegistry().getOrmTableOrThrow(table)).thenReturn(ormTable);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null), litebridgeContext);
         compilationContext.addWhenMatchedSpec(false);
 
         // 1. Column names in DTO mode
-        when(context.mode()).thenReturn(LitebridgeContext.Mode.DTO);
+        when(litebridgeContext.mode()).thenReturn(LitebridgeContext.Mode.DTO);
         compilationContext.whenNotMatchedInsert(new InsertNode("users", null, new String[]{"name"}));
         assertEquals(1, compilationContext.getWhenMatchedSpec().getColumnMetaDataList().size());
 
         // 2. Column names in SQL mode
-        when(context.mode()).thenReturn(LitebridgeContext.Mode.SQL);
+        when(litebridgeContext.mode()).thenReturn(LitebridgeContext.Mode.SQL);
         compilationContext.whenNotMatchedInsert(new InsertNode("users", null, new String[]{"age"}));
         assertEquals(2, compilationContext.getWhenMatchedSpec().getColumnMetaDataList().size());
 
@@ -370,8 +352,10 @@ class MergeCompilationContextTest {
         when(roleIdAccessor.get(roleObj)).thenReturn(99);
         when(roleOrmTable.getFieldForColumnName("id")).thenReturn(roleIdAccessor);
         when(context.tableRegistry().getOrmTableOrThrow(RoleDto.class)).thenReturn(roleOrmTable);
+        when(context.tableRegistry().getOrmTableOrThrow(roleTable)).thenReturn(userOrmTable);
 
-        when(context.tableRegistry().getOrmTable(UserWithRoleDto.class)).thenReturn(userOrmTable);
+        when(context.tableRegistry().getOrmTableOrThrow(UserWithRoleDto.class)).thenReturn(userOrmTable);
+        when(context.tableRegistry().getOrmTableOrThrow(userTable)).thenReturn(userOrmTable);
 
         final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserWithRoleDto.class, null), context);
         compilationContext.addWhenMatchedSpec(false);
@@ -388,21 +372,23 @@ class MergeCompilationContextTest {
     @Test
     void addInsertDtoValuesMissingNonNullableWithoutGeneratorThrowsException() {
         // Given
-        final LitebridgeContext context = createMockContext();
+        final LitebridgeContext litebridgeContext = createMockContext();
         final Table table = new Table("items");
         final ColumnMetaData idCol = new ColumnMetaData(table, "id", false, Types.INTEGER, 0); // NOT NULL, no generator
         final TableMetaData metaData = new TableMetaData(table, List.of("id"), List.of(idCol));
 
         final OrmTable ormTable = mock(OrmTable.class);
         when(ormTable.getMetaData()).thenReturn(metaData);
+        when(litebridgeContext.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
         when(ormTable.mappedColumns()).thenReturn(List.of(idCol));
 
         final FieldAccessor idAccessor = mock(FieldAccessor.class);
         when(idAccessor.get(any())).thenReturn(null);
         when(ormTable.fieldForColumnNameOrNull("id")).thenReturn(idAccessor);
-        when(context.tableRegistry().getOrmTable(UserDto.class)).thenReturn(ormTable);
+        when(litebridgeContext.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
+        when(litebridgeContext.tableRegistry().getOrmTableOrThrow(table)).thenReturn(ormTable);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null), litebridgeContext);
         compilationContext.addWhenMatchedSpec(false);
 
         // When & Then
@@ -460,30 +446,6 @@ class MergeCompilationContextTest {
         assertEquals(2, merge.whenMatched().size());
         assertEquals(1, merge.whenNotMatched().size());
         assertEquals(4, compilationContext.getBindValues().size());
-    }
-
-    @Test
-    void resolveAliasMethods() {
-        // Given
-        final LitebridgeContext context = createMockContext();
-        final Table table = new Table("items");
-        final ColumnMetaData idCol = new ColumnMetaData(table, "id", true, Types.INTEGER, 0);
-        final TableMetaData metaData = new TableMetaData(table, List.of("id"), List.of(idCol));
-
-        when(context.tableRegistry().getOrmTable("items")).thenReturn(null);
-        when(context.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
-        when(context.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
-
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null), context);
-
-        // When & Then
-        final SelectColumnSpec spec = new SelectColumnSpec(new Column(table, "id"));
-        final ExpressionSpec resolvedSpec = compilationContext.resolveAlias(spec);
-        assertSame(spec, resolvedSpec);
-
-        final ConvertSpec<?> convertSpec = Fn.convert(spec, String.class);
-        final ExpressionSpec resolvedConvertSpec = compilationContext.resolveAlias(convertSpec);
-        assertSame(convertSpec, resolvedConvertSpec);
     }
 
     @Test

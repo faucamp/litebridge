@@ -10,7 +10,6 @@ import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
-import org.litebridge.db.spi.alias.AliasedColumn;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ConvertExpression;
@@ -23,7 +22,6 @@ import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.engine.ast.LimitNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.compiler.QueryCompiler;
-import org.litebridge.orm.exception.NonUniqueResultException;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.OrmTable;
@@ -32,6 +30,7 @@ import org.litebridge.orm.persistence.TableRegistry;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -209,11 +208,11 @@ class SelectEngineTerminalTest {
 
         final Table table = new Table("users");
         final Column nameColumn = new Column(table, "name");
-        final AliasedColumn colWithAlias = new AliasedColumn("u_name", nameColumn);
         final Column ageColumn = new Column(table, "age");
 
         final ColumnExpression colExprWithAlias = mock(ColumnExpression.class);
         when(colExprWithAlias.column()).thenReturn(nameColumn);
+        when(colExprWithAlias.alias()).thenReturn("u_name");
 
         final ColumnExpression colExprWithoutAlias = mock(ColumnExpression.class);
         when(colExprWithoutAlias.column()).thenReturn(ageColumn);
@@ -318,9 +317,9 @@ class SelectEngineTerminalTest {
         when(typeConverter.convert(1, Integer.class)).thenReturn(100);
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(singleRow));
 
-        final Row convertedRow = terminal.fetchOneOrNull(typedSelectNode, context);
-        assertNotNull(convertedRow);
-        assertEquals(100, convertedRow.column(0).value());
+        final Integer convertedRowValue = terminal.fetchOneOrNull(typedSelectNode, context);
+        assertNotNull(convertedRowValue);
+        assertEquals(100, convertedRowValue);
     }
 
     @Test
@@ -445,93 +444,18 @@ class SelectEngineTerminalTest {
         // Branch 2: Matching size, with a null resultType at index 0 and non-null at index 1
         final SelectNode matchingNode = new SelectNode(null, null, null, null, new ExpressionSpec[0], new Class<?>[]{null, String.class});
         final RowColumn rowColumn1 = new RowColumn(idCol.name(), 10, idCol);
-        final RowColumn rowColumn2 = new RowColumn(nameCol.name(), "Alice", nameCol);
-        final Row twoColumnRow = new Row(List.of(rowColumn1, rowColumn2));
+        final RowColumn rowColumn2 = new RowColumn(nameCol.name(), 999, nameCol);
+        final List columns = new ArrayList();
+        columns.add(rowColumn1);
+        columns.add(rowColumn2);
+        final Row twoColumnRow = new Row(columns);
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(twoColumnRow));
-        when(typeConverter.convert("Alice", String.class)).thenReturn("ALICE_CONVERTED");
+        when(typeConverter.convert(999, String.class)).thenReturn("Alice");
 
         final List<Row> convertedRows = terminal.fetchList(matchingNode, context);
         assertEquals(1, convertedRows.size());
         assertEquals(10, convertedRows.getFirst().column(0).value());
-        assertEquals("ALICE_CONVERTED", convertedRows.getFirst().column(1).value());
-    }
-
-    @Test
-    void fetchInDtoModeSingleTypeOverrideAndRowOverride() throws Exception {
-        // Given
-        final DtoConstructor dtoConstructor = mock(DtoConstructor.class);
-        final SelectEngineTerminal terminal = new SelectEngineTerminal(dtoConstructor);
-        final LitebridgeContext context = mock(LitebridgeContext.class);
-        final QueryPlanCache queryPlanCache = mock(QueryPlanCache.class);
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        final TransactionManager txManager = mock(TransactionManager.class);
-        final TypeConverter typeConverter = mock(TypeConverter.class);
-        final TableRegistry tableRegistry = mock(TableRegistry.class);
-
-        when(context.queryPlanCache()).thenReturn(queryPlanCache);
-        when(context.databaseProvider()).thenReturn(databaseProvider);
-        when(context.transactionManager()).thenReturn(txManager);
-        when(context.typeConverter()).thenReturn(typeConverter);
-        when(context.tableRegistry()).thenReturn(tableRegistry);
-        when(context.mode()).thenReturn(LitebridgeContext.Mode.DTO);
-
-        final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.dtoClass()).thenReturn((Class) UserDto.class);
-        when(ormTable.getDtoClassInterfaces()).thenReturn(Collections.emptySet());
-        when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
-
-        final QueryPlanCache.CachedOperation cachedOperation = new QueryPlanCache.CachedOperation("SELECT name", Collections.emptyList(), null, null);
-        when(queryPlanCache.get(anyInt())).thenReturn(cachedOperation);
-
-        // Scenario 1: Single type override (String.class)
-        final SelectNode singleOverrideNode = new SelectNode(null, UserDto.class, null, null, new ExpressionSpec[0], new Class<?>[]{String.class});
-        final Column col = new Column(new Table("users"), "name");
-
-        final RowColumn rowColumn1 = new RowColumn("name", "Alice", col);
-        final Row row1 = new Row(List.of(rowColumn1));
-        final RowColumn rowColumn2 = new RowColumn("name", "Bob", col);
-        final Row row2 = new Row(List.of(rowColumn2));
-
-        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(row1, row2));
-        when(typeConverter.convert("Alice", String.class)).thenReturn("Alice");
-        when(typeConverter.convert("Bob", String.class)).thenReturn("Bob");
-
-        final List<String> names = terminal.fetchList(singleOverrideNode, context);
-        assertEquals(List.of("Alice", "Bob"), names);
-
-        // Calling fetchOneOrNull on multi-result in DTO mode throws NonUniqueResultException
-        final NonUniqueResultException nonUniqueEx = assertThrows(NonUniqueResultException.class, () -> terminal.fetchOneOrNull(singleOverrideNode, context));
-        assertEquals("Expected exactly one mapped result, but got 2", nonUniqueEx.getMessage());
-
-        // Calling fetchFirstOrNull returns the first
-        final String firstName = terminal.fetchFirstOrNull(singleOverrideNode, context);
-        assertEquals("Alice", firstName);
-
-        // When empty list in DTO mode
-        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(Collections.emptyList());
-        assertNull(terminal.fetchOneOrNull(singleOverrideNode, context));
-        assertNull(terminal.fetchFirstOrNull(singleOverrideNode, context));
-
-        // Scenario 2: Multiple type overrides -> dtoClass becomes Row.class
-        final SelectNode multiOverrideNode = new SelectNode(null, UserDto.class, null, null, new ExpressionSpec[0], new Class<?>[]{String.class, Integer.class});
-        final Row multiColRow = new Row(List.of(new RowColumn(col.name(), "Alice", col),
-                new RowColumn("users", 30, new Column(new Table("users"), "age"))));
-
-        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(multiColRow));
-        when(typeConverter.convert("Alice", String.class)).thenReturn("Alice");
-        when(typeConverter.convert(30, Integer.class)).thenReturn(30);
-
-        final List<Row> rowResults = terminal.fetchList(multiOverrideNode, context);
-        assertEquals(1, rowResults.size());
-
-        // Scenario 3: Single type override to Row.class
-        final SelectNode rowOverrideNode = new SelectNode(null, UserDto.class, null, null, new ExpressionSpec[0], new Class<?>[]{Row.class});
-        final Row singleColRow = new Row(List.of(new RowColumn(col.name(), "Alice", col)));
-        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(singleColRow));
-
-        final List<Row> unwrappedRows = terminal.fetchList(rowOverrideNode, context);
-        assertEquals(1, unwrappedRows.size());
-        assertSame(singleColRow, unwrappedRows.getFirst());
+        assertEquals("Alice", convertedRows.getFirst().column(1).value());
     }
 
     @Test

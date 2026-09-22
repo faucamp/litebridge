@@ -46,7 +46,7 @@ class FromClauseStartTest {
         // Then
         assertNotNull(terminal);
         verify(litebridgeContextCreator).apply(LitebridgeContext.Mode.DTO);
-        final SelectNode expectedNode = new SelectNode(null, TestDto.class, null, null, expressionSpecs, null);
+        final SelectNode expectedNode = new SelectNode(TestDto.class, null, null, null, expressionSpecs, null);
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 
@@ -62,7 +62,7 @@ class FromClauseStartTest {
         // Then
         assertNotNull(terminal);
         verify(litebridgeContextCreator).apply(LitebridgeContext.Mode.DTO);
-        final SelectNode expectedNode = new SelectNode(null, TestDto.class, null, columns, null, null);
+        final SelectNode expectedNode = new SelectNode(TestDto.class, null, null, columns, null, null);
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 
@@ -77,7 +77,7 @@ class FromClauseStartTest {
         // Then
         assertNotNull(terminal);
         verify(litebridgeContextCreator).apply(LitebridgeContext.Mode.DTO);
-        final SelectNode expectedNode = new SelectNode(null, TestDto.class, null, null, null, null);
+        final SelectNode expectedNode = new SelectNode(TestDto.class, null, null, null, null, null);
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 

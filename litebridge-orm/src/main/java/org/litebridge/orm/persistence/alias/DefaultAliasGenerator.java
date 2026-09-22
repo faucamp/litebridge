@@ -47,15 +47,6 @@ public final class DefaultAliasGenerator implements AliasGenerator {
         aliasCount.clear();
     }
 
-    /**
-     * Constructs a {@code DefaultAliasGenerator} with the specified {@link AliasTransformer}.
-     *
-     * @param aliasTransformer the transformer to use for creating base aliases
-     */
-    public DefaultAliasGenerator(final AliasTransformer aliasTransformer) {
-//        this.aliasTransformer = aliasTransformer;
-    }
-
     @Override
     public @Nullable Column column(final String alias) {
         return scope.current().columnAliasMap.entrySet().stream()

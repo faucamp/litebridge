@@ -52,7 +52,7 @@ class FromClauseStartTypeOverrideTest {
         verify(litebridgeContextCreator).apply(LitebridgeContext.Mode.DTO);
         verify(litebridgeContext, never()).setRelatedDtoStrategy(any());
 
-        final SelectNode expectedNode = new SelectNode(null, TestDto.class, null, null, expressionSpecs, new Class<?>[]{String.class});
+        final SelectNode expectedNode = new SelectNode(TestDto.class, null, null, null, expressionSpecs, new Class<?>[]{String.class});
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 
@@ -90,7 +90,7 @@ class FromClauseStartTypeOverrideTest {
         verify(litebridgeContext).setRelatedDtoStrategy(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
 
         // Fn.count() returns Long.class, so expressionReturnTypes should override typeOverride
-        final SelectNode expectedNode = new SelectNode(null, TestDto.class, null, null, expressionSpecs, new Class<?>[]{Long.class});
+        final SelectNode expectedNode = new SelectNode(TestDto.class, null, null, null, expressionSpecs, new Class<?>[]{Long.class});
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 
@@ -109,7 +109,7 @@ class FromClauseStartTypeOverrideTest {
         verify(litebridgeContextCreator).apply(LitebridgeContext.Mode.DTO);
         verify(litebridgeContext, never()).setRelatedDtoStrategy(any());
 
-        final SelectNode expectedNode = new SelectNode(null, TestDto.class, null, null, expressionSpecs, new Class<?>[]{String.class});
+        final SelectNode expectedNode = new SelectNode(TestDto.class, null, null, null, expressionSpecs, new Class<?>[]{String.class});
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 
@@ -128,7 +128,7 @@ class FromClauseStartTypeOverrideTest {
         verify(litebridgeContextCreator).apply(LitebridgeContext.Mode.DTO);
         verify(litebridgeContext).setRelatedDtoStrategy(RelatedDtoStrategy.NULL_IF_NO_JOIN);
 
-        final SelectNode expectedNode = new SelectNode(null, TestDto.class, null, null, expressionSpecs, new Class<?>[]{String.class});
+        final SelectNode expectedNode = new SelectNode(TestDto.class, null, null, null, expressionSpecs, new Class<?>[]{String.class});
         assertEquals(expectedNode, SelectTerminalInspector.getNode(terminal));
     }
 

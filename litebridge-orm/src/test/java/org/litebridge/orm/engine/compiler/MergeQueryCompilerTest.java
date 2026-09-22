@@ -23,6 +23,7 @@ import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 
 import java.util.List;
 
@@ -59,7 +60,7 @@ class MergeQueryCompilerTest {
 
         when(context.tableRegistry()).thenReturn(tableRegistry);
         when(context.tableMetaDataCache()).thenReturn(metadataCache);
-        when(context.aliasGenerator()).thenReturn(new org.litebridge.orm.persistence.alias.DefaultAliasGenerator(new org.litebridge.db.spi.alias.DefaultAliasTransformer()));
+        when(context.aliasGenerator()).thenReturn(new DefaultAliasGenerator());
         when(tableRegistry.getOrmTable("items")).thenReturn(null);
         when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
         when(metadataCache.ensureTableMetaData(table)).thenReturn(metaData);

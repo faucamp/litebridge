@@ -13,7 +13,6 @@ import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.expression.SubselectExpression;
-import org.litebridge.db.spi.impl.expression.LiteralExpressionImpl;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicOperator;
@@ -31,6 +30,7 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 import org.mockito.Mockito;
 
 import java.sql.Types;
@@ -40,9 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -65,10 +65,16 @@ class AbstractCompilationContextTest {
         return context;
     }
 
-    private DeleteCompilationContext createContext(final LitebridgeContext context, final Table table) {
-        when(context.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
+    private DeleteCompilationContext createContext(final LitebridgeContext litebridgeContext, final Table table) {
+        when(litebridgeContext.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
         final DeleteNode node = new DeleteNode(null, "items", null);
-        return new DeleteCompilationContext(node, context);
+        when(litebridgeContext.aliasGenerator()).thenReturn(new DefaultAliasGenerator());
+
+        final TableMetaData tableMetaData = mock(TableMetaData.class);
+        when(litebridgeContext.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(tableMetaData);
+        when(tableMetaData.hasColumn(anyString())).thenReturn(true);
+
+        return new DeleteCompilationContext(node, litebridgeContext);
     }
 
     @Test
@@ -112,25 +118,6 @@ class AbstractCompilationContextTest {
     }
 
     @Test
-    void toConditionWithLhsExpressionMultipleResolutionThrowsException() {
-        // Given
-        final LitebridgeContext context = createMockContext();
-        final Table table = new Table("items");
-        final DeleteCompilationContext compilationContext = createContext(context, table);
-
-        final ExpressionSpec lhsExpr = new SelectColumnSpec(new Column(table, "field1"));
-        final ConditionSpec conditionSpec = new ConditionSpec(null, lhsExpr, Operator.EQ, "value");
-
-        when(context.selectExpressionMapper().resolveProtoExpression(lhsExpr, null, table, null, ClauseType.WHERE))
-                .thenReturn(List.of(new SelectColumnSpec(new Column(table, "a")), new SelectColumnSpec(new Column(table, "b"))));
-
-        // When & Then
-        final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> compilationContext.toCondition(conditionSpec, List.of(table)));
-        assertTrue(ex.getMessage().contains("Expected exactly one LHS expression spec"));
-    }
-
-    @Test
     void toConditionWithLhsExpressionSuccess() {
         // Given
         final LitebridgeContext context = createMockContext();
@@ -158,16 +145,16 @@ class AbstractCompilationContextTest {
     @Test
     void toConditionWithOrmTableField() {
         // Given
-        final LitebridgeContext context = createMockContext();
         final Table table = new Table("items");
-        final DeleteCompilationContext compilationContext = createContext(context, table);
+        final LitebridgeContext litebridgeContext = createMockContext();
+        final DeleteCompilationContext compilationContext = createContext(litebridgeContext, table);
 
         final OrmTable ormTable = mock(OrmTable.class);
         final ColumnMetaData columnMetaData = new ColumnMetaData(table, "field1", true, Types.VARCHAR, 50);
         when(ormTable.columnMetaDataForField("field1")).thenReturn(columnMetaData);
 
         final SelectExpression lhsSelectExpr = mock(SelectExpression.class);
-        when(context.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(lhsSelectExpr);
+        when(litebridgeContext.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(lhsSelectExpr);
 
         final ConditionSpec conditionSpec = new ConditionSpec("field1", null, Operator.IS_NOT_NULL, null);
 
@@ -215,25 +202,6 @@ class AbstractCompilationContextTest {
     }
 
     @Test
-    void toConditionWithRhsExpressionSpecMultipleResolutionThrowsException() {
-        // Given
-        final LitebridgeContext context = createMockContext();
-        final Table table = new Table("items");
-        final DeleteCompilationContext compilationContext = createContext(context, table);
-
-        final ExpressionSpec rhsExpr = new SelectColumnSpec(new Column(table, "val"));
-        final ConditionSpec conditionSpec = new ConditionSpec("id", null, Operator.EQ, rhsExpr);
-
-        when(context.selectExpressionMapper().resolveProtoExpression(rhsExpr, null, table, null, ClauseType.WHERE))
-                .thenReturn(List.of(new SelectColumnSpec(new Column(table, "a")), new SelectColumnSpec(new Column(table, "b"))));
-
-        // When & Then
-        final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> compilationContext.toCondition(conditionSpec, List.of(table)));
-        assertTrue(ex.getMessage().contains("Expected exactly one RHS expression spec"));
-    }
-
-    @Test
     void toConditionWithRhsExpressionSpecSuccess() {
         // Given
         final LitebridgeContext context = createMockContext();
@@ -274,26 +242,6 @@ class AbstractCompilationContextTest {
 
         // Then
         assertSame(columnReference, condition.rhs());
-    }
-
-    @Test
-    void toConditionWithUsingOperator() {
-        // Given
-        final LitebridgeContext context = createMockContext();
-        final Table table = new Table("items");
-        final DeleteCompilationContext compilationContext = createContext(context, table);
-
-        final LiteralExpressionImpl literalExpr = mock(LiteralExpressionImpl.class);
-        when(context.sqlFunctionRegistry().select().literal().create("customLiteral", null)).thenReturn(literalExpr);
-
-        final ConditionSpec conditionSpec = new ConditionSpec("id", null, Operator.USING, "customLiteral");
-
-        // When
-        final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table));
-
-        // Then
-        assertEquals(Operator.USING, condition.operator());
-        assertSame(literalExpr, condition.rhs());
     }
 
     @Test

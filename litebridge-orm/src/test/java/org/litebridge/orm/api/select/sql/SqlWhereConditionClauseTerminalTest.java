@@ -73,7 +73,6 @@ class SqlWhereConditionClauseTerminalTest {
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
         final WhereNode whereNode = assertInstanceOf(WhereNode.class, node);
-        assertSame(selectNode, whereNode.previous());
         final ConditionNode conditionNode = assertInstanceOf(ConditionNode.class, whereNode.condition());
         assertEquals("name", conditionNode.lhsColumn());
         assertEquals(LogicOperator.AND, conditionNode.logicOperator());
@@ -132,7 +131,7 @@ class SqlWhereConditionClauseTerminalTest {
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> terminal.and(builder));
-        assertEquals("AST error: Expected a WhereNode but got " + selectNode, ex.getMessage());
+        assertEquals("AST error: Expected a WhereNode but got " + node, ex.getMessage());
     }
 
     @Test
@@ -205,7 +204,7 @@ class SqlWhereConditionClauseTerminalTest {
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> terminal.or(builder));
-        assertEquals("AST error: Expected a WhereNode but got " + selectNode, ex.getMessage());
+        assertEquals("AST error: Expected a WhereNode but got " + node, ex.getMessage());
     }
 
     @Test

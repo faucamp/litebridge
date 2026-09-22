@@ -3,6 +3,7 @@ package org.litebridge.orm.expression;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.VirtualTable;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.impl.expression.AbstractColumnExpression;
@@ -16,6 +17,10 @@ public class TestColumnExpression extends AbstractColumnExpression {
 
     public TestColumnExpression(final Column column) {
         super(column, null, null, labelGenerator);
+    }
+
+    public TestColumnExpression(final String columnName) {
+        super(new Column(VirtualTable.anonymous(), columnName), null, null, labelGenerator);
     }
 
     @Override

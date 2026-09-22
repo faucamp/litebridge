@@ -3,7 +3,6 @@ package org.litebridge.orm;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
-import org.litebridge.orm.spi.LitebridgeOverrideDatabaseProvider;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.tx.TransactionManager;
@@ -50,6 +49,7 @@ import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
+import org.litebridge.orm.spi.LitebridgeOverrideDatabaseProvider;
 import org.litebridge.orm.tx.DefaultTransactionManager;
 import org.litebridge.tracking.ChangeTracker;
 import org.slf4j.Logger;
@@ -649,7 +649,7 @@ public class LitebridgeCore implements SelectApi {
      * @return a new Litebridge context
      */
     protected LitebridgeContext createLitebridgeContext(final LitebridgeContext.Mode mode) {
-        final AliasGenerator aliasGenerator = new DefaultAliasGenerator(databaseProvider.aliasTransformer());
+        final AliasGenerator aliasGenerator = new DefaultAliasGenerator();
         return new LitebridgeContext(mode,
                 litebridgeConfig,
                 databaseProvider,

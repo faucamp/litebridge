@@ -25,6 +25,8 @@ import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
+import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.mockito.Mockito;
 
 import java.sql.Types;
@@ -55,6 +57,7 @@ class UpdateCompilationContextTest {
         when(context.selectExpressionMapper()).thenReturn(expressionMapper);
         when(context.typeConverter()).thenReturn(typeConverter);
         when(context.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+        when(context.aliasGenerator()).thenReturn(new DefaultAliasGenerator());
         return context;
     }
 

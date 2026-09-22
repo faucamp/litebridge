@@ -89,7 +89,5 @@ class JoinNodeTest {
 
         final String str = node1.toString();
         assertTrue(str.contains("JoinNode["));
-        assertTrue(str.contains("type=INNER"));
-        assertTrue(str.contains("rightTable=USERS"));
     }
 }

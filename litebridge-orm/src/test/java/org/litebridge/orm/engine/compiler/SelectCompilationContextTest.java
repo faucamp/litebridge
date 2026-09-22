@@ -5,7 +5,6 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.alias.DefaultAliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.SelectExpression;
@@ -63,7 +62,7 @@ class SelectCompilationContextTest {
         when(context.selectExpressionMapper()).thenReturn(expressionMapper);
         when(context.typeConverter()).thenReturn(typeConverter);
         when(context.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(context.aliasGenerator()).thenReturn(new DefaultAliasGenerator(new DefaultAliasTransformer()));
+        when(context.aliasGenerator()).thenReturn(new DefaultAliasGenerator());
         return context;
     }
 

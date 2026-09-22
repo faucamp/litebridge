@@ -2,7 +2,6 @@ package org.litebridge.orm.engine.compiler;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.Operation;
@@ -25,7 +24,6 @@ import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.intent.ConvertSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.OrmTable;
@@ -343,90 +341,6 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 onConditionGroup,
                 whenMatchedList,
                 whenNotMatchedList);
-    }
-
-    protected String resolveAlias(final Table table, final ColumnMetaData columnMetaData) {
-        return resolveAlias(table, columnMetaData.column());
-    }
-
-    protected String resolveAlias(final Table table, final Column column) {
-//        final Column aliasedColumn = aliasedColumns.stream()
-//                .filter(col -> col.equalsIgnoreAlias(column))
-//                .findFirst()
-//                .orElse(null);
-//
-//        if (aliasedColumn != null) {
-//            return aliasedColumn;
-//        }
-//
-//        final Table aliasedTable = aliasedTables.get(table.qualifiedName());
-//
-//        if (aliasedTable != null) {
-//            column.setTable(aliasedTable);
-//        }
-//
-//        return column;
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
-
-    protected ExpressionSpec resolveAlias(final ExpressionSpec expressionSpec) {
-        final ColumnExpressionSpec columnExpressionSpec = findColumnExpressionSpec(expressionSpec);
-
-//        if (columnExpressionSpec != null) {
-//            final Column column = columnExpressionSpec.getColumn();
-//            final Column aliasedColumn = resolveAlias(column.table(), column);
-//            columnExpressionSpec.setColumn(aliasedColumn);
-//        }
-//
-//        return expressionSpec;
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
-
-    private Table aliasTable(final OrmTable ormTable) {
-//        final TableMetaData tableMetaData = ormTable.getMetaData();
-//        return aliasedTables.computeIfAbsent(tableMetaData.qualifiedName(), tableName -> aliasGenerator.aliasTable(ormTable));
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
-
-    private String resolveAlias(final Table table, final String columnName) {
-        return resolveAlias(table, new Column(table, columnName));
-    }
-
-    private ExpressionSpec aliasExpression(final ExpressionSpec expressionSpec) {
-        final ColumnExpressionSpec columnExpressionSpec = findColumnExpressionSpec(expressionSpec);
-
-        if (columnExpressionSpec != null) {
-            final Column column = columnExpressionSpec.getColumn();
-            final Column aliasedColumn;
-
-//            if (column.table().equalsIgnoreAlias(targetTable)) {
-//                aliasedColumn = aliasGenerator.aliasColumn(targetTable, column);
-//            } else {
-//                //TODO: may need to alias the table itself
-//                aliasedColumn = aliasGenerator.aliasColumn(column.table(), column);
-//            }
-//
-//            columnExpressionSpec.setColumn(aliasedColumn);
-            throw new UnsupportedOperationException("Not implemented yet");
-        }
-
-        return expressionSpec;
-    }
-
-    private static @Nullable ColumnExpressionSpec findColumnExpressionSpec(final ExpressionSpec expressionSpec) {
-        final ExpressionSpec targetExpressionSpec;
-
-        if (expressionSpec instanceof ConvertSpec<?> convertSpec) {
-            targetExpressionSpec = convertSpec.target();
-        } else {
-            targetExpressionSpec = expressionSpec;
-        }
-
-        if (targetExpressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
-            return columnExpressionSpec;
-        } else {
-            return null;
-        }
     }
 
     private void addConditionToGroup(final ConditionNode conditionNode, final ConditionGroupSpec conditionGroupSpec) {
