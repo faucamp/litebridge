@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -30,7 +31,7 @@ class SqlJoinConditionClauseTest {
     void setUp() {
         litebridgeContext = mock(LitebridgeContext.class);
         final SelectNode selectNode = new SelectNode(null, null, null, null, null, null);
-        joinNode = new JoinNode(selectNode, Join.JoinType.INNER, null, "orders");
+        joinNode = new JoinNode(selectNode, Join.JoinType.INNER, null, null, "orders", null, null);
         capturedNode = new AtomicReference<>();
     }
 

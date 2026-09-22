@@ -28,7 +28,7 @@ class DeleteQueryCompilerTest {
         // Given
         final LitebridgeContext context = mock(LitebridgeContext.class);
         final DeleteQueryCompiler compiler = new DeleteQueryCompiler(context);
-        final SelectNode selectNode = new SelectNode("items", null, null, null, new ExpressionSpec[0], null);
+        final SelectNode selectNode = new SelectNode("items", null, null, new ExpressionSpec[0], null);
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
@@ -127,7 +127,7 @@ class DeleteQueryCompilerTest {
         final LitebridgeContext context = mock(LitebridgeContext.class);
         final DeleteQueryCompiler compiler = new DeleteQueryCompiler(context);
         final DeleteCompilationContext compilationContext = mock(DeleteCompilationContext.class);
-        final SelectNode unsupportedNode = new SelectNode("items", null, null, null, new ExpressionSpec[0], null);
+        final SelectNode unsupportedNode = new SelectNode("items", null, null, new ExpressionSpec[0], null);
 
         // When & Then
         final UnsupportedOperationException ex = assertThrows(UnsupportedOperationException.class,

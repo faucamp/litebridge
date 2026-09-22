@@ -44,7 +44,7 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal("users", whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
 
         // When
         final SqlWhereConditionClause clause = terminal.and("age");
@@ -63,8 +63,8 @@ class SqlWhereConditionClauseTerminalTest {
     @Test
     void and_withColumn_whenNodeIsNotWhereNode() {
         // Given
-        final QueryNode node = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, node, selectEngineTerminal, litebridgeContext);
+        final QueryNode queryNode = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, queryNode, selectEngineTerminal, litebridgeContext);
 
         // When
         final SqlWhereConditionClause clause = terminal.and("name");

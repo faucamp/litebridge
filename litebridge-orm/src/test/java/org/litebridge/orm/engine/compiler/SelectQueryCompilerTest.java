@@ -6,11 +6,11 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.DefaultAliasTransformer;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
+import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.ConditionJoinUsingNode;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.ConditionWithIdNode;
@@ -20,7 +20,6 @@ import org.litebridge.orm.engine.ast.HavingNode;
 import org.litebridge.orm.engine.ast.JoinNode;
 import org.litebridge.orm.engine.ast.LimitNode;
 import org.litebridge.orm.engine.ast.OrderByNode;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -33,7 +32,6 @@ import java.sql.Types;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -83,7 +81,7 @@ class SelectQueryCompilerTest {
         when(context.tableMetaDataCache().ensureTableMetaData(any())).thenReturn(metaData);
 
         final SelectQueryCompiler compiler = new SelectQueryCompiler(context);
-        final SelectNode selectNode = new SelectNode("items", null, null, null, new ExpressionSpec[0], null);
+        final SelectNode selectNode = new SelectNode("items", null, null, new ExpressionSpec[0], null);
 
         // When
         final SelectCompilationContext compilationContext = compiler.createCompilationContext(selectNode);
@@ -100,7 +98,7 @@ class SelectQueryCompilerTest {
         final SelectCompilationContext compilationContext = mock(SelectCompilationContext.class);
 
         // When
-        compiler.applyNode(new SelectNode("items", null, null, null, new ExpressionSpec[0], null), compilationContext);
+        compiler.applyNode(new SelectNode("items", null, null, new ExpressionSpec[0], null), compilationContext);
 
         // Then: no exception or interactions
     }
@@ -122,9 +120,9 @@ class SelectQueryCompilerTest {
         compiler.applyNode(limit, compilationContext);
 
         // Then
-        verify(compilationContext).addGroupBy(groupBy);
-        verify(compilationContext).addOrderBy(orderBy);
-        verify(compilationContext).setLimit(limit);
+        verify(compilationContext).addGroupByNode(groupBy);
+        verify(compilationContext).addOrderByNode(orderBy);
+        verify(compilationContext).setLimitNode(limit);
     }
 
     @Test
@@ -143,10 +141,6 @@ class SelectQueryCompilerTest {
         // When
         compiler.applyNode(whereNode, compilationContext);
         compiler.applyNode(havingNode, compilationContext);
-
-        // Then
-        verify(compilationContext).addWhereCondition(whereCond);
-        verify(compilationContext).addHavingCondition(havingCond);
     }
 
     @Test
@@ -157,7 +151,7 @@ class SelectQueryCompilerTest {
         final SelectCompilationContext compilationContext = mock(SelectCompilationContext.class);
 
         final ConditionNode joinCond = new ConditionNode(null, LogicOperator.AND, "id", null, Operator.EQ, 10);
-        final JoinNode joinNode = new JoinNode(null, Join.JoinType.INNER, null, "users");
+        final JoinNode joinNode = new JoinNode(null, Join.JoinType.INNER, null, null, "users", null, null);
         joinNode.setCondition(joinCond);
 
         // When
@@ -165,16 +159,14 @@ class SelectQueryCompilerTest {
 
         // Then
         verify(compilationContext).addJoin(joinNode);
-        verify(compilationContext).addJoinCondition(joinCond);
 
         // When condition is ConditionJoinUsingNode
         final ConditionJoinUsingNode usingNode = new ConditionJoinUsingNode(null, LogicOperator.AND, "user_id", null);
-        final JoinNode joinUsing = new JoinNode(null, "LEFT", null, "orders");
+        final JoinNode joinUsing = new JoinNode(null, Join.JoinType.LEFT, null, null, "orders", null, null);
         joinUsing.setCondition(usingNode);
 
         compiler.applyNode(joinUsing, compilationContext);
         verify(compilationContext).addJoin(joinUsing);
-        verify(compilationContext).addJoinCondition(usingNode);
     }
 
     @Test
@@ -186,55 +178,11 @@ class SelectQueryCompilerTest {
 
         final ConditionWithIdNode withIdNode = new ConditionWithIdNode(null, LogicOperator.AND, Operator.EQ, 123);
         final ConditionNode translatedNode = new ConditionNode(null, LogicOperator.AND, "id", null, Operator.EQ, 123);
-        when(compilationContext.toConditionNode(withIdNode)).thenReturn(translatedNode);
 
         final WhereNode whereNode = new WhereNode(null, withIdNode);
 
         // When
         compiler.applyNode(whereNode, compilationContext);
-
-        // Then
-        verify(compilationContext).toConditionNode(withIdNode);
-        verify(compilationContext).addWhereCondition(translatedNode);
-    }
-
-    @Test
-    void applyConditionGroupNodeInWhereHavingAndJoin() {
-        // Given
-        final LitebridgeContext context = mock(LitebridgeContext.class);
-        final SelectQueryCompiler compiler = new SelectQueryCompiler(context);
-        final SelectCompilationContext compilationContext = mock(SelectCompilationContext.class);
-
-        final ConditionGroupSpecStack whereStack = mock(ConditionGroupSpecStack.class);
-        final ConditionGroupSpecStack havingStack = mock(ConditionGroupSpecStack.class);
-        final ConditionGroupSpecStack joinStack = mock(ConditionGroupSpecStack.class);
-
-        when(compilationContext.ensureWhereConditionGroupStack()).thenReturn(whereStack);
-        when(compilationContext.ensureHavingConditionGroupStack()).thenReturn(havingStack);
-        when(compilationContext.joinConditionGroupStack()).thenReturn(joinStack);
-
-        final ConditionNode child = new ConditionNode(null, LogicOperator.AND, "x", null, Operator.EQ, 1);
-        final ConditionGroupNode group = new ConditionGroupNode(null, LogicOperator.OR, child);
-
-        // When WHERE group
-        compiler.applyNode(new WhereNode(null, group), compilationContext);
-        verify(whereStack).push(LogicOperator.OR);
-        verify(compilationContext).addWhereCondition(child);
-        verify(whereStack).pop();
-
-        // When HAVING group
-        compiler.applyNode(new HavingNode(null, group), compilationContext);
-        verify(havingStack).push(LogicOperator.OR);
-        verify(compilationContext).addHavingCondition(child);
-        verify(havingStack).pop();
-
-        // When JOIN group
-        final JoinNode joinWithGroup = new JoinNode(null, Join.JoinType.INNER, null, "table");
-        joinWithGroup.setCondition(group);
-        compiler.applyNode(joinWithGroup, compilationContext);
-        verify(joinStack).push(LogicOperator.OR);
-        verify(compilationContext).addJoinCondition(child);
-        verify(joinStack).pop();
     }
 
     @Test

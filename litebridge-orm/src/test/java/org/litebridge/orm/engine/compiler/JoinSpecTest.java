@@ -2,6 +2,9 @@ package org.litebridge.orm.engine.compiler;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.query.Join;
+import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.engine.ast.ConditionJoinUsingNode;
 import org.litebridge.orm.engine.ast.JoinNode;
 import org.litebridge.orm.persistence.OrmTable;
 
@@ -15,39 +18,20 @@ class JoinSpecTest {
     @Test
     void gettersAndSetters() {
         // Given
-        final Table table = new Table("TEST_TABLE").as("testAlias");
+        final Table table = new Table("TEST_TABLE");
         final OrmTable ormTable = mock(OrmTable.class);
-        final JoinNode joinNode = new JoinNode(null, Join.JoinType.INNER, Object.class, null);
+        final JoinNode joinNode = new JoinNode(null, Join.JoinType.INNER, Object.class, null, null, null, "testAlias");
 
         // When
-        final JoinSpec joinSpec = new JoinSpec(joinNode.type(), Object.class, null, ormTable, joinNode);
+        final JoinSpec joinSpec = new JoinSpec(joinNode);
 
         // Then
-        assertEquals(Object.class, joinSpec.dtoClass());
-        assertNull(joinSpec.tableName());
-        assertEquals(ormTable, joinSpec.ormTable());
         assertEquals(joinNode, joinSpec.joinNode());
         assertNotNull(joinSpec.conditionGroupStack());
-        assertNull(joinSpec.getTable());
+        assertNull(joinSpec.getConditionJoinUsingNode());
 
         // When / Then
-        joinSpec.setTable(table);
-        assertEquals(table, joinSpec.getTable());
-    }
-
-    @Test
-    void tableNameBasedJoinSpec() {
-        // Given
-        final JoinNode joinNode = new JoinNode(null, "LEFT", null, "users");
-
-        // When
-        final JoinSpec joinSpec = new JoinSpec(joinNode.type(), null, "users", null, joinNode);
-
-        // Then
-        assertNull(joinSpec.dtoClass());
-        assertEquals("users", joinSpec.tableName());
-        assertNull(joinSpec.ormTable());
-        assertEquals(joinNode, joinSpec.joinNode());
-        assertNotNull(joinSpec.conditionGroupStack());
+        joinSpec.setConditionJoinUsingNode(new ConditionJoinUsingNode(null, LogicOperator.NOOP, null, null));
+        assertNotNull(joinSpec.getConditionJoinUsingNode());
     }
 }

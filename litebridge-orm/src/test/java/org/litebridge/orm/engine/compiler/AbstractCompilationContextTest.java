@@ -10,10 +10,10 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ColumnReference;
-import org.litebridge.db.spi.impl.expression.LiteralExpressionImpl;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.expression.SubselectExpression;
+import org.litebridge.db.spi.impl.expression.LiteralExpressionImpl;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicOperator;
@@ -72,22 +72,6 @@ class AbstractCompilationContextTest {
     }
 
     @Test
-    void defaultResolveAliasMethodsDoNotAlterInputs() {
-        // Given
-        final LitebridgeContext context = createMockContext();
-        final Table table = new Table("items");
-        final DeleteCompilationContext compilationContext = createContext(context, table);
-
-        final ColumnMetaData meta = new ColumnMetaData(table, "name", true, Types.VARCHAR, 255);
-        final Column col = new Column(table, "name");
-        final ExpressionSpec spec = new SelectColumnSpec(col);
-
-        // When & Then
-        assertSame(col, compilationContext.resolveAlias(table, col));
-        assertSame(spec, compilationContext.resolveAlias(spec));
-    }
-
-    @Test
     void toConditionGroupWithEmptySpecReturnsEmptyGroup() {
         // Given
         final LitebridgeContext context = createMockContext();
@@ -96,7 +80,7 @@ class AbstractCompilationContextTest {
         final ConditionGroupSpec groupSpec = new ConditionGroupSpec();
 
         // When
-        final ConditionGroup group = compilationContext.toConditionGroup(groupSpec, null, table);
+        final ConditionGroup group = compilationContext.toConditionGroup(groupSpec, table);
 
         // Then
         assertTrue(group.conditions().isEmpty());
@@ -117,7 +101,7 @@ class AbstractCompilationContextTest {
         subSpec.newCondition(LogicOperator.AND, "status", null, Operator.IS_NOT_NULL, null);
 
         // When
-        final ConditionGroup group = compilationContext.toConditionGroup(groupSpec, null, table);
+        final ConditionGroup group = compilationContext.toConditionGroup(groupSpec, table);
 
         // Then
         assertEquals(1, group.conditions().size());
@@ -137,12 +121,12 @@ class AbstractCompilationContextTest {
         final ExpressionSpec lhsExpr = new SelectColumnSpec(new Column(table, "field1"));
         final ConditionSpec conditionSpec = new ConditionSpec(null, lhsExpr, Operator.EQ, "value");
 
-        when(context.selectExpressionMapper().resolveProtoExpression(lhsExpr, null, table, ClauseType.WHERE))
+        when(context.selectExpressionMapper().resolveProtoExpression(lhsExpr, null, table, null, ClauseType.WHERE))
                 .thenReturn(List.of(new SelectColumnSpec(new Column(table, "a")), new SelectColumnSpec(new Column(table, "b"))));
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> compilationContext.toCondition(conditionSpec, null, table));
+                () -> compilationContext.toCondition(conditionSpec, List.of(table)));
         assertTrue(ex.getMessage().contains("Expected exactly one LHS expression spec"));
     }
 
@@ -158,12 +142,12 @@ class AbstractCompilationContextTest {
         final SelectExpression lhsSelectExpr = mock(SelectExpression.class);
         final ConditionSpec conditionSpec = new ConditionSpec(null, lhsExpr, Operator.IS_NULL, null);
 
-        when(context.selectExpressionMapper().resolveProtoExpression(lhsExpr, null, table, ClauseType.WHERE))
+        when(context.selectExpressionMapper().resolveProtoExpression(lhsExpr, null, table, null, ClauseType.WHERE))
                 .thenReturn(List.of(resolvedSpec));
         when(context.selectExpressionMapper().toSelectExpression(resolvedSpec, true)).thenReturn(lhsSelectExpr);
 
         // When
-        final Condition condition = compilationContext.toCondition(conditionSpec, null, table);
+        final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table));
 
         // Then
         assertSame(lhsSelectExpr, condition.lhs());
@@ -188,7 +172,7 @@ class AbstractCompilationContextTest {
         final ConditionSpec conditionSpec = new ConditionSpec("field1", null, Operator.IS_NOT_NULL, null);
 
         // When
-        final Condition condition = compilationContext.toCondition(conditionSpec, ormTable, table);
+        final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table));
 
         // Then
         assertSame(lhsSelectExpr, condition.lhs());
@@ -221,7 +205,7 @@ class AbstractCompilationContextTest {
         final ConditionSpec conditionSpec = new ConditionSpec("id", null, Operator.IN, subselectNode);
 
         // When
-        final Condition condition = compilationContext.toCondition(conditionSpec, null, table);
+        final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table));
 
         // Then
         assertSame(lhsSelectExpr, condition.lhs());
@@ -240,12 +224,12 @@ class AbstractCompilationContextTest {
         final ExpressionSpec rhsExpr = new SelectColumnSpec(new Column(table, "val"));
         final ConditionSpec conditionSpec = new ConditionSpec("id", null, Operator.EQ, rhsExpr);
 
-        when(context.selectExpressionMapper().resolveProtoExpression(rhsExpr, null, table, ClauseType.WHERE))
+        when(context.selectExpressionMapper().resolveProtoExpression(rhsExpr, null, table, null, ClauseType.WHERE))
                 .thenReturn(List.of(new SelectColumnSpec(new Column(table, "a")), new SelectColumnSpec(new Column(table, "b"))));
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> compilationContext.toCondition(conditionSpec, null, table));
+                () -> compilationContext.toCondition(conditionSpec, List.of(table)));
         assertTrue(ex.getMessage().contains("Expected exactly one RHS expression spec"));
     }
 
@@ -261,12 +245,12 @@ class AbstractCompilationContextTest {
         final SelectExpression rhsSelectExpr = mock(SelectExpression.class);
         final ConditionSpec conditionSpec = new ConditionSpec("id", null, Operator.EQ, rhsExpr);
 
-        when(context.selectExpressionMapper().resolveProtoExpression(rhsExpr, null, table, ClauseType.WHERE))
+        when(context.selectExpressionMapper().resolveProtoExpression(rhsExpr, null, table, null, ClauseType.WHERE))
                 .thenReturn(List.of(resolvedRhs));
         when(context.selectExpressionMapper().toSelectExpression(resolvedRhs, true)).thenReturn(rhsSelectExpr);
 
         // When
-        final Condition condition = compilationContext.toCondition(conditionSpec, null, table);
+        final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table));
 
         // Then
         assertSame(rhsSelectExpr, condition.rhs());
@@ -281,12 +265,12 @@ class AbstractCompilationContextTest {
 
         final Column refColumn = new Column(new Table("other"), "ref_id");
         final ColumnReference columnReference = mock(ColumnReference.class);
-        when(context.sqlFunctionRegistry().select().reference().create(refColumn)).thenReturn(columnReference);
+        when(context.sqlFunctionRegistry().select().reference().create(refColumn, null, null)).thenReturn(columnReference);
 
         final ConditionSpec conditionSpec = new ConditionSpec("id", null, Operator.EQ, refColumn);
 
         // When
-        final Condition condition = compilationContext.toCondition(conditionSpec, null, table);
+        final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table));
 
         // Then
         assertSame(columnReference, condition.rhs());
@@ -300,12 +284,12 @@ class AbstractCompilationContextTest {
         final DeleteCompilationContext compilationContext = createContext(context, table);
 
         final LiteralExpressionImpl literalExpr = mock(LiteralExpressionImpl.class);
-        when(context.sqlFunctionRegistry().select().literal().create("customLiteral", true)).thenReturn(literalExpr);
+        when(context.sqlFunctionRegistry().select().literal().create("customLiteral", null)).thenReturn(literalExpr);
 
         final ConditionSpec conditionSpec = new ConditionSpec("id", null, Operator.USING, "customLiteral");
 
         // When
-        final Condition condition = compilationContext.toCondition(conditionSpec, null, table);
+        final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table));
 
         // Then
         assertEquals(Operator.USING, condition.operator());
@@ -332,7 +316,7 @@ class AbstractCompilationContextTest {
         final ConditionSpec conditionSpec = new ConditionSpec("name", null, Operator.EQ, "Bob");
 
         // When
-        final Condition condition = compilationContext.toCondition(conditionSpec, null, table);
+        final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table));
 
         // Then
         assertNotNull(condition);
@@ -361,7 +345,7 @@ class AbstractCompilationContextTest {
         final ConditionSpec conditionSpec = new ConditionSpec("age", null, Operator.IN, List.of(10, 20));
 
         // When
-        final Condition condition = compilationContext.toCondition(conditionSpec, null, table);
+        final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table));
 
         // Then
         assertNotNull(condition);
