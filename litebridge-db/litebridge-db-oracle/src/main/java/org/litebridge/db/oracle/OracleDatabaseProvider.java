@@ -11,7 +11,6 @@ import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.ContextBuilder;
 import org.litebridge.db.spi.impl.DatabaseProviderContext;
 import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
@@ -44,9 +43,8 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider imple
                         DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
 
         final MetaDataEngine metaDataEngine = new DefaultMetaDataEngine(databaseProviderMetaData);
-        final ColumnIdentifierGenerator columnIdentifierGenerator = new OracleColumnIdentifierGenerator();
-        final MathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(columnIdentifierGenerator);
         final LabelGenerator labelGenerator = new LabelGenerator();
+        final MathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(labelGenerator);
         final SqlGenerator sqlGenerator = new OracleSqlGenerator(metaDataEngine, labelGenerator, mathOperationGenerator);
         final TypeConverter typeConverter = new DefaultTypeConverter();
         final AliasTransformer aliasTransformer = new UppercaseAliasTransformer();
@@ -55,7 +53,6 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider imple
 
         return ContextBuilder.newContext()
                 .withAliasTransformer(aliasTransformer)
-                .withColumnIdentifierGenerator(columnIdentifierGenerator)
                 .withMathOperationGenerator(mathOperationGenerator)
                 .withDatabaseProviderMetaData(databaseProviderMetaData)
                 .withExecutionEngine(executionEngine)

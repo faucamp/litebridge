@@ -1,26 +1,20 @@
 package org.litebridge.db.oracle.function.scalar;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.impl.expression.AbstractColumnExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.impl.expression.SelectColumn;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
 
 class SubstrTest {
 
-    private ColumnIdentifierGenerator columnIdentifierGenerator;
-
-    @BeforeEach
-    void beforeEach() {
-        columnIdentifierGenerator = mock(ColumnIdentifierGenerator.class);
-    }
+    private static final LabelGenerator labelGenerator = new LabelGenerator();
 
     @Test
     void template() {
         // Given
-        final Substr substr = new Substr(mock(AbstractColumnExpression.class), 2, 5, columnIdentifierGenerator);
+        final Substr substr = new Substr(new SelectColumn(new Column("TEST_COL"), null, null, labelGenerator), 2, 5, null, labelGenerator);
 
         // When
         final String result = substr.template();
@@ -32,7 +26,7 @@ class SubstrTest {
     @Test
     void template_nullLength() {
         // Given
-        final Substr substr = new Substr(mock(AbstractColumnExpression.class), 3, null, columnIdentifierGenerator);
+        final Substr substr = new Substr(new SelectColumn(new Column("TEST_COL"), null, null, labelGenerator), 3, null, null, labelGenerator);
 
         // When
         final String result = substr.template();

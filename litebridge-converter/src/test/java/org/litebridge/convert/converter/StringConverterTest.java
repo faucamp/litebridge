@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -174,7 +175,7 @@ class StringConverterTest {
         });
     }
 
-    private static Clob clobProxy(final java.lang.reflect.InvocationHandler invocationHandler) {
+    private static Clob clobProxy(final InvocationHandler invocationHandler) {
         return assertInstanceOf(
                 Clob.class,
                 Proxy.newProxyInstance(

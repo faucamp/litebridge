@@ -2,9 +2,9 @@ package org.litebridge.db.oracle.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.oracle.OracleColumnIdentifierGenerator;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.UpdateColumn;
@@ -21,10 +21,10 @@ class OracleInsertSqlGeneratorTest {
 
     @BeforeEach
     void setUp() {
-        final OracleColumnIdentifierGenerator columnIdentifierGenerator = new OracleColumnIdentifierGenerator();
-        final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(columnIdentifierGenerator);
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(labelGenerator);
         insertSqlGenerator = new OracleInsertSqlGenerator(
-                columnIdentifierGenerator,
+                labelGenerator,
                 mathOperationGenerator,
                 (table, connectionProvider) -> mock(TableMetaData.class));
     }

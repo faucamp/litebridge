@@ -2,7 +2,7 @@ package org.litebridge.db.oracle.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.oracle.OracleColumnIdentifierGenerator;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.math.MathOperator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,8 +13,8 @@ class OracleMathOperationGeneratorTest {
 
     @BeforeEach
     void setUp() {
-        final OracleColumnIdentifierGenerator columnIdentifierGenerator = new OracleColumnIdentifierGenerator();
-        mathOperationGenerator = new OracleMathOperationGenerator(columnIdentifierGenerator);
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        mathOperationGenerator = new OracleMathOperationGenerator(labelGenerator);
     }
 
     @Test

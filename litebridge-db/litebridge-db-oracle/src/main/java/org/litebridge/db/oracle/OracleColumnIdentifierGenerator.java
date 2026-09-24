@@ -1,106 +1,106 @@
-package org.litebridge.db.oracle;
-
-import org.litebridge.commons.StringUtils;
-import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.Operation;
-import org.litebridge.db.spi.expression.ClauseType;
-import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.query.Condition;
-import org.litebridge.db.spi.query.Join;
-import org.litebridge.db.spi.query.LogicCondition;
-import org.litebridge.db.spi.query.Operator;
-import org.litebridge.db.spi.query.Select;
-
-import java.util.List;
-
-/**
- * Oracle-specific implementation of {@link ColumnIdentifierGenerator}.
- * <p>
- * This class handles Oracle-specific column identifier generation rules,
- * particularly dealing with {@code JOIN USING} clauses where Oracle prohibits
- * table qualifiers for columns listed in the {@code USING} clause.
- */
-public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGenerator {
-
-    @Override
-    public String createSelectColumn(final Column column, final Select select, final ClauseType clause, final boolean nested) {
-        if (shouldApplyTableQualifier(column, select)) {
-            return super.createSelectColumn(column, select, clause, nested);
-        }
-
-        final StringBuilder columnSql = new StringBuilder(quoteIdentifier(column.name()));
-
-//        if (clause == ClauseType.SELECT && !StringUtils.isBlank(column.alias())) {
-//            columnSql.append(' ').append(createAliasDeclaration(quoteIdentifier(column.alias())));
-//        }
-        if (true) {
-            throw new UnsupportedOperationException("Not implemented yet");
-        }
-
-        return columnSql.toString();
-    }
-
-    @Override
-    public String createColumnRef(final Column column, final Operation operation, final ClauseType clause) {
-        if (!(operation instanceof final Select select)) {
-            return super.createColumnRef(column, operation, clause);
-        }
-
-        // Oracle processes SELECT clauses in order: FROM, WHERE, GROUP BY, HAVING, SELECT (and the rest)
-        // - this means that full column aliases are not available in WHERE, GROUP BY and HAVING clauses
-//        return switch (clause) {
-//            case WHERE, GROUP_BY, HAVING ->
-//                    quoteIdentifier(column.table().aliasOrName()) + '.' + quoteIdentifier(column.name());
-//            default -> {
-//                if (shouldApplyTableQualifier(column, select)) {
-//                    yield super.createColumnRef(column, operation, clause);
-//                }
+//package org.litebridge.db.oracle;
 //
-//                yield quoteIdentifier(column.name());
+//import org.litebridge.commons.StringUtils;
+//import org.litebridge.db.spi.Column;
+//import org.litebridge.db.spi.Operation;
+//import org.litebridge.db.spi.expression.ClauseType;
+//import org.litebridge.db.spi.expression.ColumnExpression;
+//import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+//import org.litebridge.db.spi.query.Condition;
+//import org.litebridge.db.spi.query.Join;
+//import org.litebridge.db.spi.query.LogicCondition;
+//import org.litebridge.db.spi.query.Operator;
+//import org.litebridge.db.spi.query.Select;
+//
+//import java.util.List;
+//
+///**
+// * Oracle-specific implementation of {@link ColumnIdentifierGenerator}.
+// * <p>
+// * This class handles Oracle-specific column identifier generation rules,
+// * particularly dealing with {@code JOIN USING} clauses where Oracle prohibits
+// * table qualifiers for columns listed in the {@code USING} clause.
+// */
+//public final class OracleColumnIdentifierGenerator extends ColumnIdentifierGenerator {
+//
+//    @Override
+//    public String createSelectColumn(final Column column, final Select select, final ClauseType clause, final boolean nested) {
+//        if (shouldApplyTableQualifier(column, select)) {
+//            return super.createSelectColumn(column, select, clause, nested);
+//        }
+//
+//        final StringBuilder columnSql = new StringBuilder(quoteIdentifier(column.name()));
+//
+////        if (clause == ClauseType.SELECT && !StringUtils.isBlank(column.alias())) {
+////            columnSql.append(' ').append(createAliasDeclaration(quoteIdentifier(column.alias())));
+////        }
+//        if (true) {
+//            throw new UnsupportedOperationException("Not implemented yet");
+//        }
+//
+//        return columnSql.toString();
+//    }
+//
+//    @Override
+//    public String createColumnRef(final Column column, final Operation operation, final ClauseType clause) {
+//        if (!(operation instanceof final Select select)) {
+//            return super.createColumnRef(column, operation, clause);
+//        }
+//
+//        // Oracle processes SELECT clauses in order: FROM, WHERE, GROUP BY, HAVING, SELECT (and the rest)
+//        // - this means that full column aliases are not available in WHERE, GROUP BY and HAVING clauses
+////        return switch (clause) {
+////            case WHERE, GROUP_BY, HAVING ->
+////                    quoteIdentifier(column.table().aliasOrName()) + '.' + quoteIdentifier(column.name());
+////            default -> {
+////                if (shouldApplyTableQualifier(column, select)) {
+////                    yield super.createColumnRef(column, operation, clause);
+////                }
+////
+////                yield quoteIdentifier(column.name());
+////            }
+////        };
+//        throw new UnsupportedOperationException("Not implemented yet");
+//    }
+//
+//    @Override
+//    public String createAliasDeclaration(final String alias) {
+//        return quoteIdentifier(alias);
+//    }
+//
+//    private static boolean shouldApplyTableQualifier(final Column column, final Select select) {
+//        final List<Join> joins = select.joins();
+//
+//        if (joins == null) {
+//            return true;
+//        }
+//
+//        // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the column
+//        for (Join join : joins) {
+//
+//            if (join.conditions().conditions().size() != 1
+//                    && join.conditions().subgroups().isEmpty()) {
+//                continue;
 //            }
-//        };
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
-
-    @Override
-    public String createAliasDeclaration(final String alias) {
-        return quoteIdentifier(alias);
-    }
-
-    private static boolean shouldApplyTableQualifier(final Column column, final Select select) {
-        final List<Join> joins = select.joins();
-
-        if (joins == null) {
-            return true;
-        }
-
-        // If a JOIN USING is used in the select from/where/using clause, Oracle doesn't allow table qualifiers for the column
-        for (Join join : joins) {
-
-            if (join.conditions().conditions().size() != 1
-                    && join.conditions().subgroups().isEmpty()) {
-                continue;
-            }
-
-            for (LogicCondition logicCondition : join.conditions().conditions()) {
-                final Condition condition = logicCondition.condition();
-
-//                if (condition.operator() == Operator.USING
-//                        // JOIN USING <expression>
-//                        && condition.lhs() instanceof ColumnExpression columnExpression
-//                        // Same expression
-//                        && (columnExpression.column().name().equals(column.name())
-//                        // Same expression but from other side of join
-//                        || (columnExpression.column().equalsColumnOnlyIgnoreAlias(column)
-//                        && (select.table().equalsIgnoreAlias(column.table()) || join.table().equalsIgnoreAlias(column.table()))))) {
-//                    // Don't include table qualifiers
-//                    return false;
-//                }
-                throw new UnsupportedOperationException("Not implemented yet");
-            }
-        }
-
-        return true;
-    }
-}
+//
+//            for (LogicCondition logicCondition : join.conditions().conditions()) {
+//                final Condition condition = logicCondition.condition();
+//
+////                if (condition.operator() == Operator.USING
+////                        // JOIN USING <expression>
+////                        && condition.lhs() instanceof ColumnExpression columnExpression
+////                        // Same expression
+////                        && (columnExpression.column().name().equals(column.name())
+////                        // Same expression but from other side of join
+////                        || (columnExpression.column().equalsColumnOnlyIgnoreAlias(column)
+////                        && (select.table().equalsIgnoreAlias(column.table()) || join.table().equalsIgnoreAlias(column.table()))))) {
+////                    // Don't include table qualifiers
+////                    return false;
+////                }
+//                throw new UnsupportedOperationException("Not implemented yet");
+//            }
+//        }
+//
+//        return true;
+//    }
+//}

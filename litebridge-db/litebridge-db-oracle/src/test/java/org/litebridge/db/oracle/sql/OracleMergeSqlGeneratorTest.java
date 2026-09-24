@@ -2,14 +2,13 @@ package org.litebridge.db.oracle.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.oracle.OracleColumnIdentifierGenerator;
 import org.litebridge.db.oracle.engine.OracleExecutionEngine;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.expression.BindValueExpression;
-import org.litebridge.db.spi.impl.function.ColumnReferenceImpl;
 import org.litebridge.db.spi.impl.expression.SelectColumn;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
@@ -21,6 +20,7 @@ import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateColumn;
 
 import java.util.List;
+import java.util.function.BiFunction;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.mock;
 class OracleMergeSqlGeneratorTest {
 
     private OracleMergeSqlGenerator generator;
-    private OracleColumnIdentifierGenerator columnIdentifierGenerator;
+    private LabelGenerator labelGenerator;
     private final Table targetTable = new Table("ACCOUNT");
     private final Table sourceTable = new Table("PERSON");
 
@@ -40,27 +40,25 @@ class OracleMergeSqlGeneratorTest {
     void setUp() {
         OracleExecutionEngine.clearParameterPermutations();
 
-        columnIdentifierGenerator = new OracleColumnIdentifierGenerator();
-        final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(columnIdentifierGenerator);
-
-        generator = new OracleMergeSqlGenerator(
-                columnIdentifierGenerator,
-                mathOperationGenerator,
-                (t, c) -> mock(TableMetaData.class));
+        labelGenerator = new LabelGenerator();
+        final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(labelGenerator);
+        final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData = (t, c) -> mock(TableMetaData.class);
+        final OracleSelectSqlGenerator selectSqlGenerator = new OracleSelectSqlGenerator(labelGenerator, mathOperationGenerator, ensureTableMetaData);
+        generator = new OracleMergeSqlGenerator(selectSqlGenerator, labelGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     @Test
     void generateSql_updateWithWhere_recordsPermutation() {
         // ON (ACCOUNT.ACCOUNT_ID = PERSON.PERSON_ID)
         final Condition onCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.EQ,
-                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         // WHEN MATCHED UPDATE SET BALANCE = ? WHERE ACCOUNT.ACCOUNT_ID < ?
         final Condition whereCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.LT,
                 new BindValueExpression(0, 1));
         final ConditionGroup andGroup = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, whereCondition));
@@ -76,7 +74,7 @@ class OracleMergeSqlGeneratorTest {
                         new UpdateColumn("ACCOUNT_ID", null, null, 2),
                         new UpdateColumn("NAME", null, null, 3)), 1));
 
-        final Merge merge = new Merge(targetTable, sourceTable, null, on, List.of(updateMatched), List.of(insertMatched));
+        final Merge merge = new Merge(targetTable, sourceTable, on, List.of(updateMatched), List.of(insertMatched));
 
         // When
         final String sql = generator.generateSql(merge, mock(ConnectionProvider.class));
@@ -93,9 +91,9 @@ class OracleMergeSqlGeneratorTest {
     void generateSql_identityPermutation_doesNotRegisterPermutation() {
         // ON (ACCOUNT.ACCOUNT_ID = PERSON.PERSON_ID)
         final Condition onCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.EQ,
-                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         // WHEN MATCHED UPDATE SET BALANCE = ? (no WHERE clause)
@@ -103,7 +101,7 @@ class OracleMergeSqlGeneratorTest {
                 null,
                 new Merge.MergeUpdate(List.of(new UpdateColumn("BALANCE", null, null, 0))));
 
-        final Merge merge = new Merge(targetTable, sourceTable, null, on, List.of(updateMatched), null);
+        final Merge merge = new Merge(targetTable, sourceTable, on, List.of(updateMatched), null);
 
         // When
         final String sql = generator.generateSql(merge, mock(ConnectionProvider.class));
@@ -118,14 +116,14 @@ class OracleMergeSqlGeneratorTest {
     void generateSql_updateAndDeleteWithWhere_recordsPermutation() {
         // ON (ACCOUNT.ACCOUNT_ID = PERSON.PERSON_ID)
         final Condition onCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.EQ,
-                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         // WHEN MATCHED UPDATE SET BALANCE = ? WHERE ACCOUNT.ACCOUNT_ID < ?
         final Condition updateWhere = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.LT,
                 new BindValueExpression(0, 1));
         final Merge.WhenMatched<Merge.WhenMatchedOperation> updateMatched = new Merge.WhenMatched<>(
@@ -134,7 +132,7 @@ class OracleMergeSqlGeneratorTest {
 
         // DELETE WHERE ACCOUNT.ACCOUNT_ID >= ?
         final Condition deleteWhere = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.GTE,
                 new BindValueExpression(2, 1));
         final Merge.WhenMatched<Merge.WhenMatchedOperation> deleteMatched = new Merge.WhenMatched<>(
@@ -146,7 +144,7 @@ class OracleMergeSqlGeneratorTest {
                 null,
                 new Merge.MergeInsert(List.of(new UpdateColumn("ACCOUNT_ID", null, null, 3)), 1));
 
-        final Merge merge = new Merge(targetTable, sourceTable, null, on, List.of(updateMatched, deleteMatched), List.of(insertMatched));
+        final Merge merge = new Merge(targetTable, sourceTable, on, List.of(updateMatched, deleteMatched), List.of(insertMatched));
 
         // When
         final String sql = generator.generateSql(merge, mock(ConnectionProvider.class));
@@ -163,9 +161,9 @@ class OracleMergeSqlGeneratorTest {
     void generateSql_nullUsingTable_generatesSqlWithoutUsingTable() {
         // Given
         final Condition onCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.EQ,
-                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatched<Merge.WhenMatchedOperation> updateMatched = new Merge.WhenMatched<>(
@@ -173,22 +171,22 @@ class OracleMergeSqlGeneratorTest {
                 new Merge.MergeUpdate(List.of(new UpdateColumn("BALANCE", null, null, 0))));
 
         final Select usingSelect = new Select(sourceTable, List.of(), List.of(), null, List.of(), null, List.of(), null);
-        final Merge merge = new Merge(targetTable, null, usingSelect, on, List.of(updateMatched), null);
+        final Merge merge = new Merge(targetTable, usingSelect, on, List.of(updateMatched), null);
 
         // When
         final String sql = generator.generateSql(merge, mock(ConnectionProvider.class));
 
         // Then
-        assertEquals("MERGE INTO ACCOUNT USING  ON (ACCOUNT.ACCOUNT_ID = PERSON.PERSON_ID) WHEN MATCHED THEN UPDATE SET BALANCE = ?", sql);
+        assertEquals("MERGE INTO ACCOUNT USING (SELECT * FROM PERSON) ON (ACCOUNT.ACCOUNT_ID = PERSON.PERSON_ID) WHEN MATCHED THEN UPDATE SET BALANCE = ?", sql);
     }
 
     @Test
     void generateSql_nullWhenMatched_onlyWhenNotMatched() {
         // Given
         final Condition onCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.EQ,
-                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatched<Merge.MergeInsert> insertMatched = new Merge.WhenMatched<>(
@@ -197,7 +195,7 @@ class OracleMergeSqlGeneratorTest {
                         new UpdateColumn("ACCOUNT_ID", null, null, 0),
                         new UpdateColumn("NAME", null, null, 1)), 1));
 
-        final Merge merge = new Merge(targetTable, sourceTable, null, on, null, List.of(insertMatched));
+        final Merge merge = new Merge(targetTable, sourceTable, on, null, List.of(insertMatched));
 
         // When
         final String sql = generator.generateSql(merge, mock(ConnectionProvider.class));
@@ -211,20 +209,20 @@ class OracleMergeSqlGeneratorTest {
     void generateSql_deletePrecedingUpdate_throwsException() {
         // Given
         final Condition onCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.EQ,
-                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Condition whereCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.GTE,
                 new BindValueExpression(0, 1));
         final Merge.WhenMatched<Merge.WhenMatchedOperation> deleteMatched = new Merge.WhenMatched<>(
                 new ConditionGroup(new LogicCondition(LogicOperator.NOOP, whereCondition)),
                 new Merge.MergeDelete());
 
-        final Merge merge = new Merge(targetTable, sourceTable, null, on, List.of(deleteMatched), null);
+        final Merge merge = new Merge(targetTable, sourceTable, on, List.of(deleteMatched), null);
 
         // When / Then
         final IllegalArgumentException ex = assertThrows(
@@ -237,9 +235,9 @@ class OracleMergeSqlGeneratorTest {
     void generateSql_operationFollowingDelete_throwsException() {
         // Given
         final Condition onCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.EQ,
-                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatched<Merge.WhenMatchedOperation> updateMatched = new Merge.WhenMatched<>(
@@ -247,7 +245,7 @@ class OracleMergeSqlGeneratorTest {
                 new Merge.MergeUpdate(List.of(new UpdateColumn("BALANCE", null, null, 0))));
 
         final Condition whereCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.GTE,
                 new BindValueExpression(1, 1));
         final Merge.WhenMatched<Merge.WhenMatchedOperation> deleteMatched = new Merge.WhenMatched<>(
@@ -258,7 +256,7 @@ class OracleMergeSqlGeneratorTest {
                 null,
                 new Merge.MergeUpdate(List.of(new UpdateColumn("BALANCE", null, null, 2))));
 
-        final Merge merge = new Merge(targetTable, sourceTable, null, on, List.of(updateMatched, deleteMatched, secondUpdateMatched), null);
+        final Merge merge = new Merge(targetTable, sourceTable, on, List.of(updateMatched, deleteMatched, secondUpdateMatched), null);
 
         // When / Then
         final IllegalArgumentException ex = assertThrows(
@@ -271,15 +269,15 @@ class OracleMergeSqlGeneratorTest {
     void generateSql_unsupportedWhenMatchedOperation_throwsException() {
         // Given
         final Condition onCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.EQ,
-                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatchedOperation unknownOp = mock(Merge.WhenMatchedOperation.class);
         final Merge.WhenMatched<Merge.WhenMatchedOperation> unknownMatched = new Merge.WhenMatched<>(null, unknownOp);
 
-        final Merge merge = new Merge(targetTable, sourceTable, null, on, List.of(unknownMatched), null);
+        final Merge merge = new Merge(targetTable, sourceTable, on, List.of(unknownMatched), null);
 
         // When / Then
         final IllegalArgumentException ex = assertThrows(
@@ -292,9 +290,9 @@ class OracleMergeSqlGeneratorTest {
     void generateSql_deleteWithoutWhere_throwsException() {
         // Given
         final Condition onCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.EQ,
-                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatched<Merge.WhenMatchedOperation> updateMatched = new Merge.WhenMatched<>(
@@ -305,7 +303,7 @@ class OracleMergeSqlGeneratorTest {
                 null,
                 new Merge.MergeDelete());
 
-        final Merge merge = new Merge(targetTable, sourceTable, null, on, List.of(updateMatched, deleteWithoutWhere), null);
+        final Merge merge = new Merge(targetTable, sourceTable, on, List.of(updateMatched, deleteWithoutWhere), null);
 
         // When / Then
         final IllegalArgumentException ex = assertThrows(
@@ -318,9 +316,9 @@ class OracleMergeSqlGeneratorTest {
     void generateSql_multiColumnUpdateAndGeneratedValuesAndMultiRowInsert() {
         // Given
         final Condition onCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.EQ,
-                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatched<Merge.WhenMatchedOperation> multiUpdate = new Merge.WhenMatched<>(
@@ -330,7 +328,7 @@ class OracleMergeSqlGeneratorTest {
                         new UpdateColumn("STATUS", null, null, 0))));
 
         final Condition notMatchedWhere = new Condition(
-                new SelectColumn(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator),
                 Operator.GT,
                 new BindValueExpression(1, 1));
         final ConditionGroup notMatchedAnd = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, notMatchedWhere));
@@ -341,7 +339,7 @@ class OracleMergeSqlGeneratorTest {
                         new UpdateColumn("ACCOUNT_ID", () -> "DEFAULT", null),
                         new UpdateColumn("NAME", null, null, 2)), 2));
 
-        final Merge merge = new Merge(targetTable, sourceTable, null, on, List.of(multiUpdate), List.of(multiRowInsert));
+        final Merge merge = new Merge(targetTable, sourceTable, on, List.of(multiUpdate), List.of(multiRowInsert));
 
         // When
         final String sql = generator.generateSql(merge, mock(ConnectionProvider.class));
@@ -359,16 +357,16 @@ class OracleMergeSqlGeneratorTest {
     void generateSql_emptyPermutation_doesNotRegisterPermutation() {
         // Given
         final Condition onCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.EQ,
-                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatched<Merge.WhenMatchedOperation> updateNoBind = new Merge.WhenMatched<>(
                 null,
                 new Merge.MergeUpdate(List.of(new UpdateColumn("BALANCE", () -> "DEFAULT", null))));
 
-        final Merge merge = new Merge(targetTable, sourceTable, null, on, List.of(updateNoBind), null);
+        final Merge merge = new Merge(targetTable, sourceTable, on, List.of(updateNoBind), null);
 
         // When
         final String sql = generator.generateSql(merge, mock(ConnectionProvider.class));
@@ -382,15 +380,15 @@ class OracleMergeSqlGeneratorTest {
     void computeParameterPermutation_withUnknownWhenMatchedOperation_ignoresOperation() {
         // Given
         final Condition onCondition = new Condition(
-                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.EQ,
-                new ColumnReferenceImpl(new Column(sourceTable, "PERSON_ID"), columnIdentifierGenerator));
+                new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator));
         final ConditionGroup on = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, onCondition));
 
         final Merge.WhenMatchedOperation unknownOp = mock(Merge.WhenMatchedOperation.class);
         final Merge.WhenMatched<Merge.WhenMatchedOperation> unknownMatched = new Merge.WhenMatched<>(null, unknownOp);
 
-        final Merge merge = new Merge(targetTable, sourceTable, null, on, List.of(unknownMatched), null);
+        final Merge merge = new Merge(targetTable, sourceTable, on, List.of(unknownMatched), null);
 
         // When
         final int[] permutation = generator.computeParameterPermutation(merge);

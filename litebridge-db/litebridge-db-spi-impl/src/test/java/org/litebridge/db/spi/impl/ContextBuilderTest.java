@@ -8,6 +8,7 @@ import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.engine.ExecutionEngine;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.impl.expression.SqlFunctionRegistryFactory;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.SqlGenerator;
 
@@ -49,8 +50,8 @@ class ContextBuilderTest {
         final DatabaseProviderMetaData databaseProviderMetaData = mock(DatabaseProviderMetaData.class);
         final ExecutionEngine executionEngine = mock(ExecutionEngine.class);
         final MetaDataEngine metaDataEngine = mock(MetaDataEngine.class);
-        final ColumnIdentifierGenerator columnIdentifierGenerator = mock(ColumnIdentifierGenerator.class);
-        final MathOperationGenerator mathOperationGenerator = mock(MathOperationGenerator.class);
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(labelGenerator);
         final SequenceColumnValueGenerator sequenceColumnValueGenerator = mock(SequenceColumnValueGenerator.class);
         final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
         final AliasTransformer aliasTransformer = mock(AliasTransformer.class);
@@ -60,7 +61,7 @@ class ContextBuilderTest {
         // When
         final DatabaseProviderContext result = ContextBuilder.newContext()
                 .withAliasTransformer(aliasTransformer)
-                .withColumnIdentifierGenerator(columnIdentifierGenerator)
+                .withLabelGenerator(labelGenerator)
                 .withDatabaseProviderMetaData(databaseProviderMetaData)
                 .withExecutionEngine(executionEngine)
                 .withMetaDataEngine(metaDataEngine)

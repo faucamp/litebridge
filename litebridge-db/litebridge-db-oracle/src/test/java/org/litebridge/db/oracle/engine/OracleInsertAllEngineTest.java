@@ -2,13 +2,13 @@ package org.litebridge.db.oracle.engine;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.oracle.OracleColumnIdentifierGenerator;
 import org.litebridge.db.oracle.sql.OracleInsertSqlGenerator;
 import org.litebridge.db.oracle.sql.OracleMathOperationGenerator;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
@@ -42,10 +42,10 @@ class OracleInsertAllEngineTest {
 
     @BeforeEach
     void setUp() {
-        final OracleColumnIdentifierGenerator columnIdentifierGenerator = new OracleColumnIdentifierGenerator();
-        final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(columnIdentifierGenerator);
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(labelGenerator);
         final OracleInsertSqlGenerator sqlGenerator = new OracleInsertSqlGenerator(
-                columnIdentifierGenerator,
+                labelGenerator,
                 mathOperationGenerator,
                 (t, c) -> mock(TableMetaData.class));
         insertAllEngine = new OracleInsertAllEngine(sqlGenerator);

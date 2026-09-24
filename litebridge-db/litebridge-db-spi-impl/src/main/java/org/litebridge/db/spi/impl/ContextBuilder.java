@@ -28,7 +28,6 @@ public final class ContextBuilder {
     private @Nullable LabelGenerator labelGenerator;
     private @Nullable MetaDataEngine metaDataEngine;
     private @Nullable ExecutionEngine executionEngine;
-    private @Nullable ColumnIdentifierGenerator columnIdentifierGenerator;
     private @Nullable MathOperationGenerator mathOperationGenerator;
     private @Nullable TypeConverter typeConverter;
     private @Nullable AliasTransformer aliasTransformer;
@@ -64,11 +63,6 @@ public final class ContextBuilder {
 
     public ContextBuilder withExecutionEngine(final ExecutionEngine executionEngine) {
         this.executionEngine = executionEngine;
-        return this;
-    }
-
-    public ContextBuilder withColumnIdentifierGenerator(final ColumnIdentifierGenerator columnIdentifierGenerator) {
-        this.columnIdentifierGenerator = columnIdentifierGenerator;
         return this;
     }
 

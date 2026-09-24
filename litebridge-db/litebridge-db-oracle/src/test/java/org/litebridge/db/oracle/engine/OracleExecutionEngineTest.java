@@ -43,7 +43,7 @@ class OracleExecutionEngineTest {
         // Given
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         final ResultSet resultSet = mock(ResultSet.class);
-        final Table table = new Table("TEST_TABLE", null);
+        final Table table = new Table("TEST_TABLE");
         final ColumnMetaData idColumn = new ColumnMetaData(table, "ID", false, Types.INTEGER);
         final ColumnMetaData otherIdColumn = new ColumnMetaData(table, "OTHER_ID", false, Types.INTEGER);
 
@@ -67,7 +67,7 @@ class OracleExecutionEngineTest {
         // Given
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         final ResultSet resultSet = mock(ResultSet.class);
-        final Table table = new Table("TEST_TABLE", null);
+        final Table table = new Table("TEST_TABLE");
         final ColumnMetaData idColumn = new ColumnMetaData(table, "ID", false, Types.INTEGER);
 
         when(preparedStatement.getGeneratedKeys()).thenReturn(resultSet);
@@ -85,7 +85,7 @@ class OracleExecutionEngineTest {
     void extractGeneratedKeys_withNullResultSet() throws SQLException {
         // Given
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
-        final Table table = new Table("TEST_TABLE", null);
+        final Table table = new Table("TEST_TABLE");
         final ColumnMetaData idColumn = new ColumnMetaData(table, "ID", false, Types.INTEGER);
 
         when(preparedStatement.getGeneratedKeys()).thenReturn(null);
@@ -174,7 +174,7 @@ class OracleExecutionEngineTest {
         // Given
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         final ResultSet resultSet = mock(ResultSet.class);
-        final Table table = new Table("TEST_TABLE", null);
+        final Table table = new Table("TEST_TABLE");
         final ColumnMetaData idColumn = new ColumnMetaData(table, "ID", false, Types.INTEGER);
         final ColumnMetaData otherIdColumn = new ColumnMetaData(table, "OTHER_ID", false, Types.INTEGER);
 
@@ -200,7 +200,7 @@ class OracleExecutionEngineTest {
         // Given
         final PreparedStatement preparedStatement = mock(PreparedStatement.class);
         final ResultSet resultSet = mock(ResultSet.class);
-        final Table table = new Table("TEST_TABLE", null);
+        final Table table = new Table("TEST_TABLE");
         final ColumnMetaData idColumn = new ColumnMetaData(table, "ID", false, Types.INTEGER);
 
         when(preparedStatement.getGeneratedKeys()).thenReturn(resultSet);

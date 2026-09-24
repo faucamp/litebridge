@@ -2,9 +2,9 @@ package org.litebridge.db.oracle.function;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.oracle.function.scalar.Substr;
+import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.impl.expression.AbstractColumnExpression;
-import org.litebridge.db.spi.expression.DelegateColumnExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -15,10 +15,11 @@ class OracleSqlFunctionRegistryFactoryTest {
     @Test
     void createSubstring() {
         // Given
-        final OracleSqlFunctionRegistryFactory oracleSqlFunctionRegistryFactory = new OracleSqlFunctionRegistryFactory(mock(ColumnIdentifierGenerator.class), mock(SelectSqlGenerator.class));
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final OracleSqlFunctionRegistryFactory oracleSqlFunctionRegistryFactory = new OracleSqlFunctionRegistryFactory(labelGenerator, mock(SelectSqlGenerator.class));
 
         // Whe
-        final DelegateColumnExpression result = oracleSqlFunctionRegistryFactory.createSubstring(mock(AbstractColumnExpression.class), 3, 7, null);
+        final DelegateExpression result = oracleSqlFunctionRegistryFactory.createSubstring(mock(AbstractColumnExpression.class), 3, 7, null);
 
         // Then
         assertInstanceOf(Substr.class, result);

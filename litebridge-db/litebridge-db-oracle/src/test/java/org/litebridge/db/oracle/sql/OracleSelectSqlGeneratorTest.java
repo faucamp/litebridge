@@ -2,11 +2,11 @@ package org.litebridge.db.oracle.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.oracle.OracleColumnIdentifierGenerator;
 import org.litebridge.db.oracle.OracleDatabaseProvider;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.mockito.Mock;
@@ -25,9 +25,9 @@ class OracleSelectSqlGeneratorTest {
 
     @BeforeEach
     void beforeEach() {
-        final OracleColumnIdentifierGenerator columnIdentifierGenerator = new OracleColumnIdentifierGenerator();
-        final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(columnIdentifierGenerator);
-        oracleSelectSqlGenerator = new OracleSelectSqlGenerator(columnIdentifierGenerator, mathOperationGenerator, ensureTableMetaData);
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(labelGenerator);
+        oracleSelectSqlGenerator = new OracleSelectSqlGenerator(labelGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     @Test

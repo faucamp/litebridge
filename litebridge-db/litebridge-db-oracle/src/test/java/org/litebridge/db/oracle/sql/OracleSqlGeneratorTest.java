@@ -2,12 +2,13 @@ package org.litebridge.db.oracle.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.oracle.OracleColumnIdentifierGenerator;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.impl.engine.DefaultMetaDataEngine;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
+import org.litebridge.db.spi.impl.expression.LiteralExpressionImpl;
 import org.litebridge.db.spi.impl.expression.SelectColumn;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
@@ -33,9 +34,9 @@ class OracleSqlGeneratorTest {
     @BeforeEach
     void setUp() {
         final MetaDataEngine metaDataEngine = new DefaultMetaDataEngine();
-        final OracleColumnIdentifierGenerator columnIdentifierGenerator = new OracleColumnIdentifierGenerator();
-        final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(columnIdentifierGenerator);
-        sqlGenerator = new OracleSqlGenerator(metaDataEngine, columnIdentifierGenerator, mathOperationGenerator);
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(labelGenerator);
+        sqlGenerator = new OracleSqlGenerator(metaDataEngine, labelGenerator, mathOperationGenerator);
     }
 
     @Test
@@ -54,12 +55,12 @@ class OracleSqlGeneratorTest {
         // Given
         final Table table = new Table("ACCOUNT");
         final ConnectionProvider connectionProvider = mock(ConnectionProvider.class);
-        final OracleColumnIdentifierGenerator columnIdentifierGenerator = new OracleColumnIdentifierGenerator();
+        final LabelGenerator labelGenerator = new LabelGenerator();
 
         final ConditionGroup where = new ConditionGroup(new LogicCondition(
-                new SelectColumn(new Column(table, "ID"), columnIdentifierGenerator),
+                new SelectColumn(new Column(table, "ID"), null, null, labelGenerator),
                 Operator.EQ,
-                1));
+                new LiteralExpressionImpl(1, labelGenerator)));
 
         final Select select = new Select(table, List.of(), List.of(), null, List.of(), null, List.of(), null);
         final Insert insert = new Insert(table, List.of(new UpdateColumn("ID")), 1, false);
@@ -69,7 +70,7 @@ class OracleSqlGeneratorTest {
         final Merge.WhenMatched<Merge.WhenMatchedOperation> whenMatched = new Merge.WhenMatched<>(
                 null,
                 new Merge.MergeUpdate(List.of(new UpdateColumn("NAME", null, null, 0))));
-        final Merge merge = new Merge(table, new Table("SOURCE"), null, where, List.of(whenMatched), null);
+        final Merge merge = new Merge(table, new Table("SOURCE"), where, List.of(whenMatched), null);
 
         // When / Then
         assertEquals("SELECT * FROM ACCOUNT", sqlGenerator.generateSql(select, connectionProvider));
