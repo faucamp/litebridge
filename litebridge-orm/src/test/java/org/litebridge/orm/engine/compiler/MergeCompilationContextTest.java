@@ -7,10 +7,12 @@ import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.math.MathOperator;
+import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.sql.BindValue;
@@ -467,6 +469,65 @@ class MergeCompilationContextTest {
         assertNull(spec.getAndConditionGroupStack());
         assertNotNull(spec.ensureAndConditionGroupStack());
         assertSame(spec.ensureAndConditionGroupStack(), spec.getAndConditionGroupStack());
+    }
+
+    @Test
+    void toOperationWithDtoOnConditionResolvesDistinctAliases() {
+        // Given
+        final LitebridgeContext context = createMockContext();
+        final Table targetTable = new Table("account");
+        final Table sourceTable = new Table("person");
+
+        final ColumnMetaData targetIdCol = new ColumnMetaData(targetTable, "account_id", true, Types.INTEGER, 0);
+        final ColumnMetaData sourceIdCol = new ColumnMetaData(sourceTable, "person_id", true, Types.INTEGER, 0);
+        final TableMetaData targetMeta = new TableMetaData(targetTable, List.of("account_id"), List.of(targetIdCol));
+        final TableMetaData sourceMeta = new TableMetaData(sourceTable, List.of("person_id"), List.of(sourceIdCol));
+
+        final OrmTable targetOrmTable = mock(OrmTable.class);
+        when(targetOrmTable.getMetaData()).thenReturn(targetMeta);
+        when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(targetOrmTable);
+        when(context.tableRegistry().getOrmTable(UserDto.class)).thenReturn(targetOrmTable);
+        when(context.tableRegistry().getOrmTable(targetTable)).thenReturn(targetOrmTable);
+
+        final OrmTable sourceOrmTable = mock(OrmTable.class);
+        when(sourceOrmTable.getMetaData()).thenReturn(sourceMeta);
+        when(context.tableRegistry().getOrmTableOrThrow(RoleDto.class)).thenReturn(sourceOrmTable);
+        when(context.tableRegistry().getOrmTable(RoleDto.class)).thenReturn(sourceOrmTable);
+        when(context.tableRegistry().getOrmTable(sourceTable)).thenReturn(sourceOrmTable);
+
+        when(context.tableMetaDataCache().ensureTableMetaData(targetTable)).thenReturn(targetMeta);
+        when(context.tableMetaDataCache().ensureTableMetaData(sourceTable)).thenReturn(sourceMeta);
+
+        final QueryField lhsQueryField = new QueryField(UserDto.class, "id");
+        final QueryField rhsQueryField = new QueryField(RoleDto.class, "id");
+
+        final SelectColumnSpec lhsResolved = new SelectColumnSpec(targetIdCol.column(), "account_id", "a");
+        final SelectColumnSpec rhsResolved = new SelectColumnSpec(sourceIdCol.column(), "person_id", "p");
+
+        when(context.selectExpressionMapper().resolveProtoExpression(eq(lhsQueryField), eq(targetOrmTable), eq(targetTable), eq("a"), eq(ClauseType.WHERE)))
+                .thenReturn(List.of(lhsResolved));
+        when(context.selectExpressionMapper().resolveProtoExpression(eq(rhsQueryField), eq(sourceOrmTable), eq(sourceTable), eq("p"), eq(ClauseType.WHERE)))
+                .thenReturn(List.of(rhsResolved));
+
+        final ColumnExpression lhsColExpr = mock(ColumnExpression.class);
+        final ColumnExpression rhsColExpr = mock(ColumnExpression.class);
+        when(context.selectExpressionMapper().toSelectExpression(lhsResolved, true)).thenReturn(lhsColExpr);
+        when(context.selectExpressionMapper().toSelectExpression(rhsResolved, true)).thenReturn(rhsColExpr);
+
+        final MergeNode mergeNode = new MergeNode(null, UserDto.class, "a");
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(mergeNode, context);
+        final ConditionNode onCondNode = new ConditionNode(null, LogicOperator.NOOP, null, lhsQueryField, Operator.EQ, rhsQueryField);
+        compilationContext.setUsingNode(new UsingNode(mergeNode, null, RoleDto.class, null, "p", onCondNode));
+        compilationContext.addOnCondition(onCondNode);
+
+        // When
+        final Merge merge = (Merge) compilationContext.toOperation();
+
+        // Then
+        assertNotNull(merge);
+        final Condition onCond = merge.on().conditions().getFirst().condition();
+        assertSame(lhsColExpr, onCond.lhs());
+        assertSame(rhsColExpr, onCond.rhs());
     }
 
     static class UserDto {

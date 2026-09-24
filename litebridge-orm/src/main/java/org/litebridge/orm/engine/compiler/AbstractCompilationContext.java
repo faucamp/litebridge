@@ -93,57 +93,12 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
     protected Condition toCondition(final ConditionSpec conditionSpec, final List<SelectTarget> selectTargets) {
         final SelectExpressionMapper selectExpressionMapper = litebridgeContext.selectExpressionMapper();
         final Operator operator = conditionSpec.getOperator();
-        //TODO: fix
-//        final SelectTarget selectTarget = selectTargets.getFirst();
-//        final Table table = getTable(selectTarget);
-//        final String tableAlias = operator == Operator.USING ? null : getAlias(selectTarget);
         ExpressionSpec lhsExpressionSpec;
 
         // Compile condition specs
         if (conditionSpec.getLhsExpression() != null) {
             // Expression specification
-            lhsExpressionSpec = conditionSpec.getLhsExpression();
-            final Table table;
-            final OrmTable ormTable;
-            final SelectTarget selectTarget;
-
-            if (lhsExpressionSpec instanceof ProtoExpressionSpec || lhsExpressionSpec instanceof QueryField) {
-                final Class<?> dtoClass;
-
-                if (lhsExpressionSpec instanceof QueryField queryField) {
-                    dtoClass = QueryFieldInspector.getDtoClass(queryField);
-                } else if (lhsExpressionSpec instanceof ProtoColumnExpressionSpec protoColumnExpressionSpec
-                        && protoColumnExpressionSpec.args() != null) {
-                    dtoClass = (Class<?>) protoColumnExpressionSpec.args()[0];
-                } else {
-                    dtoClass = null;
-                }
-
-                if (dtoClass != null) {
-                    ormTable = tableRegistry.getOrmTable(dtoClass);
-                    table = ormTable.getMetaData().table();
-                    selectTarget = selectTargets.stream()
-                            .filter(st -> st.equals(table))
-                            .findFirst().orElseThrow();
-                } else {
-                    selectTarget = selectTargets.getFirst();
-                    table = getTable(selectTarget);
-                    ormTable = tableRegistry.getOrmTable(table);
-                }
-
-                final String tableAlias = operator == Operator.USING ? null : getAlias(selectTarget);
-                final List<ExpressionSpec> lhsResolvedExpressionSpecs = selectExpressionMapper
-                        .resolveProtoExpression(lhsExpressionSpec, ormTable, table, tableAlias, ClauseType.WHERE).stream()
-                        .toList();
-
-                if (lhsResolvedExpressionSpecs.size() != 1) {
-                    throw new IllegalArgumentException("Expected exactly one LHS expression spec, but got " + lhsResolvedExpressionSpecs.size());
-                }
-
-                lhsExpressionSpec = lhsResolvedExpressionSpecs.getFirst();
-            } else {
-                lhsExpressionSpec = conditionSpec.getLhsExpression();
-            }
+            lhsExpressionSpec = resolveConditionExpressionSpec(conditionSpec.getLhsExpression(), selectTargets, operator);
         } else if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
             // DTO field name
             final SelectTarget selectTarget = selectTargets.getFirst();
@@ -205,25 +160,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             final SubselectExpression subselectExpression = litebridgeContext.sqlFunctionRegistry().select().subselect().create(subselect);
             return new Condition(lhsSelectExpression, operator, subselectExpression);
         } else if (value instanceof ExpressionSpec expressionSpec) {
-            ExpressionSpec rhsExpressionSpec;
-
-            if (expressionSpec instanceof ProtoExpressionSpec || expressionSpec instanceof QueryField) {
-                final SelectTarget selectTarget = selectTargets.getFirst();
-                final Table table = getTable(selectTarget);
-                final String tableAlias = operator == Operator.USING ? null : getAlias(selectTarget);
-
-                final OrmTable ormTable = tableRegistry.getOrmTable(table);
-                final List<ExpressionSpec> rhsResolvedExpressionSpecs = selectExpressionMapper.resolveProtoExpression(expressionSpec, ormTable, table, tableAlias, ClauseType.WHERE);
-
-                if (rhsResolvedExpressionSpecs.size() != 1) {
-                    throw new IllegalArgumentException("Expected exactly one RHS expression spec, but got " + rhsResolvedExpressionSpecs.size());
-                }
-
-                rhsExpressionSpec = rhsResolvedExpressionSpecs.getFirst();
-            } else {
-                rhsExpressionSpec = expressionSpec;
-            }
-
+            final ExpressionSpec rhsExpressionSpec = resolveConditionExpressionSpec(expressionSpec, selectTargets, operator);
             return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(rhsExpressionSpec, true));
         } else if (value instanceof Column referencedColumn) {
             // Reference to a selected column
@@ -394,5 +331,69 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         }
 
         return new BindValueExpression(index, valueSize);
+    }
+
+    private TargetResolution resolveSelectTarget(final ExpressionSpec expressionSpec,
+                                                 final List<SelectTarget> selectTargets,
+                                                 final Operator operator) {
+        final Class<?> dtoClass;
+
+        if (expressionSpec instanceof QueryField queryField) {
+            dtoClass = QueryFieldInspector.getDtoClass(queryField);
+        } else if (expressionSpec instanceof ProtoColumnExpressionSpec protoColumnExpressionSpec
+                && protoColumnExpressionSpec.args() != null
+                && protoColumnExpressionSpec.args().length > 0
+                && protoColumnExpressionSpec.args()[0] instanceof Class<?> clazz) {
+            dtoClass = clazz;
+        } else {
+            dtoClass = null;
+        }
+
+        final Table table;
+        final OrmTable ormTable;
+        final SelectTarget selectTarget;
+
+        if (dtoClass != null) {
+            ormTable = tableRegistry.getOrmTable(dtoClass);
+            if (ormTable == null) {
+                throw new IllegalArgumentException("No table mapped to class: " + dtoClass.getName());
+            }
+            table = ormTable.getMetaData().table();
+            selectTarget = selectTargets.stream()
+                    .filter(st -> getTable(st).equals(table))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Target table not found for DTO: " + dtoClass));
+        } else {
+            selectTarget = selectTargets.getFirst();
+            table = getTable(selectTarget);
+            ormTable = tableRegistry.getOrmTable(table);
+        }
+
+        final String tableAlias = operator == Operator.USING ? null : getAlias(selectTarget);
+        return new TargetResolution(selectTarget, table, ormTable, tableAlias);
+    }
+
+    private ExpressionSpec resolveConditionExpressionSpec(final ExpressionSpec expressionSpec,
+                                                          final List<SelectTarget> selectTargets,
+                                                          final Operator operator) {
+        if (expressionSpec instanceof ProtoExpressionSpec || expressionSpec instanceof QueryField) {
+            final TargetResolution resolution = resolveSelectTarget(expressionSpec, selectTargets, operator);
+            final List<ExpressionSpec> resolved = litebridgeContext.selectExpressionMapper()
+                    .resolveProtoExpression(expressionSpec, resolution.ormTable(), resolution.table(), resolution.tableAlias(), ClauseType.WHERE);
+
+            if (resolved.size() != 1) {
+                throw new IllegalArgumentException("Expected exactly one expression spec, but got " + resolved.size());
+            }
+
+            return resolved.getFirst();
+        }
+
+        return expressionSpec;
+    }
+
+    private record TargetResolution(SelectTarget selectTarget,
+                                    Table table,
+                                    @Nullable OrmTable ormTable,
+                                    @Nullable String tableAlias) {
     }
 }
