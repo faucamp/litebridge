@@ -5,7 +5,6 @@ import org.litebridge.orm.api.select.SelectTerminal;
 
 import java.util.function.Function;
 
-public record QueryAliasSpec(String alias,
-                             Function<SelectApi, SelectTerminal<?>> query)
-        implements FromTargetSpec {
+public record QueryAliasSpec(Function<SelectApi, SelectTerminal<?>> query, String alias)
+        implements SqlFromTargetSpec {
 }

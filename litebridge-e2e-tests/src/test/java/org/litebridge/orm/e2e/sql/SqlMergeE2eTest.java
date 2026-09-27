@@ -167,9 +167,10 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
         // Insert a row that does not exist
         {
             final UpdateResult insertResult = litebridge.mergeInto(personTable, m -> m
-                    .using(Fn.aliasQuery("X", q -> q
-                            .select(Fn.literal(123).as("PERSON_ID"))))
-                    .on(personId).eq(Fn.fromAlias("X", personId))
+                    .using(Fn.alias(q -> q
+                                    .select(Fn.literal(123).as("PERSON_ID")),
+                            "X"))
+                    .on(personId).eq(Fn.aliasRef("X", personId))
                     .whenMatched(u -> u
                             .update(person -> person
                                     .set(firstName).to("Updated Name")
@@ -190,9 +191,10 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
         // Update an existing row with the same merge statement
         {
             final UpdateResult updateResult = litebridge.mergeInto(personTable, m -> m
-                    .using(Fn.aliasQuery("X", q -> q
-                            .select(Fn.literal(123).as("PERSON_ID"))))
-                    .on(personId).eq(Fn.fromAlias("X", personId))
+                    .using(Fn.alias(q -> q
+                                    .select(Fn.literal(123).as("PERSON_ID")),
+                            "X"))
+                    .on(personId).eq(Fn.aliasRef("X", personId))
                     .whenMatched(u -> u
                             .update(person -> person
                                     .set(firstName).to("Updated Name")

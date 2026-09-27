@@ -60,7 +60,7 @@ public sealed class QueryField implements ExpressionSpec permits NumericQueryFie
             aliasable.setAlias(alias);
             return pendingExpressionSpec;
         } else {
-            return Fn.fa(dtoClass, field, alias);
+            return Fn.alias(dtoClass, field, alias);
         }
     }
 

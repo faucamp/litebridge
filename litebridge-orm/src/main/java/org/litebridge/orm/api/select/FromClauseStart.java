@@ -10,8 +10,10 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
-import org.litebridge.orm.expression.select.FromTargetSpec;
+import org.litebridge.orm.expression.select.DtoAliasSpec;
 import org.litebridge.orm.expression.select.QueryAliasSpec;
+import org.litebridge.orm.expression.select.SqlFromTargetSpec;
+import org.litebridge.orm.expression.select.TableAliasSpec;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -82,6 +84,11 @@ public final class FromClauseStart {
         return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.DTO));
     }
 
+    public <DTO> DtoFromClauseTerminal<DTO> from(final DtoAliasSpec<DTO> aliasedDtoClass) {
+        final SelectNode selectNode = new SelectNode(aliasedDtoClass.dtoClass(), null, aliasedDtoClass.alias(), columns, expressionSpecs, null);
+        return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.DTO));
+    }
+
     /**
      * Starts a FROM clause for the given DTO class within the context of another DTO class.
      *
@@ -102,17 +109,14 @@ public final class FromClauseStart {
      * @return the SQL from clause terminal.
      */
     public SqlFromClauseTerminal from(final String table) {
-        final Class<?>[] resultTypes = createResultTypes();
-        final SelectNode selectNode = new SelectNode(table, null, columns, expressionSpecs, resultTypes);
-        return new SqlFromClauseTerminal(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
+        return fromImpl(table, null);
     }
 
-    public SqlFromClauseTerminal from(final FromTargetSpec fromTargetSpec) {
-        if (fromTargetSpec instanceof QueryAliasSpec queryAliasSpec) {
-            return fromImpl(queryAliasSpec.query(), queryAliasSpec.alias());
-        } else {
-            throw new UnsupportedOperationException("Unsupported from target spec: " + fromTargetSpec);
-        }
+    public SqlFromClauseTerminal from(final SqlFromTargetSpec fromTargetSpec) {
+        return switch (fromTargetSpec) {
+            case QueryAliasSpec queryAliasSpec -> fromImpl(queryAliasSpec.query(), queryAliasSpec.alias());
+            case TableAliasSpec tableAliasSpec -> fromImpl(tableAliasSpec.table(), tableAliasSpec.alias());
+        };
     }
 
     /**
@@ -123,6 +127,12 @@ public final class FromClauseStart {
      */
     public SqlFromClauseTerminal from(final Function<SelectApi, SelectTerminal<?>> query) {
         return fromImpl(query, null);
+    }
+
+    private SqlFromClauseTerminal fromImpl(final String table, final @Nullable String alias) {
+        final Class<?>[] resultTypes = createResultTypes();
+        final SelectNode selectNode = new SelectNode(table, alias, columns, expressionSpecs, resultTypes);
+        return new SqlFromClauseTerminal(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
     }
 
     private SqlFromClauseTerminal fromImpl(final Function<SelectApi, SelectTerminal<?>> query, final @Nullable String alias) {

@@ -31,9 +31,11 @@ import org.litebridge.orm.api.select.model.ConditionSpec;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
+import org.litebridge.orm.expression.Resolvable;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
@@ -46,6 +48,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +56,7 @@ import java.util.Objects;
 
 abstract sealed class AbstractCompilationContext implements CompilationContext permits DeleteCompilationContext, MergeCompilationContext, SelectCompilationContext, UpdateCompilationContext {
 
+    protected static SelectExpressions EMPTY_SELECT_EXPRESSIONS = new SelectExpressions(Collections.emptyList(), Collections.emptyMap());
     protected final LitebridgeContext litebridgeContext;
     protected final AliasGenerator aliasGenerator;
     protected final TableRegistry tableRegistry;
@@ -70,19 +74,19 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return bindValues;
     }
 
-    protected final ConditionGroup toConditionGroup(final ConditionGroupSpec conditionGroupSpec, final SelectTarget selectTargets) {
-        return toConditionGroup(conditionGroupSpec, Collections.singletonList(selectTargets));
+    protected final ConditionGroup toConditionGroup(final ConditionGroupSpec conditionGroupSpec, final SelectTarget selectTargets, final SelectExpressions selectExpressions) {
+        return toConditionGroup(conditionGroupSpec, Collections.singletonList(selectTargets), selectExpressions);
     }
 
-    protected final ConditionGroup toConditionGroup(final ConditionGroupSpec conditionGroupSpec, final List<SelectTarget> selectTargets) {
+    protected final ConditionGroup toConditionGroup(final ConditionGroupSpec conditionGroupSpec, final List<SelectTarget> selectTargets, final SelectExpressions selectExpressions) {
         final List<LogicCondition> resolvedConditions = conditionGroupSpec.conditions().stream()
                 .map(spec -> new LogicCondition(spec.logicOperator(),
-                        toCondition(spec.conditionSpec(), selectTargets)))
+                        toCondition(spec.conditionSpec(), selectTargets, selectExpressions)))
                 .toList();
 
         final List<LogicConditionGroup> subConditionGroups = conditionGroupSpec.subgroups().stream()
                 .map(subgroup -> {
-                    final ConditionGroup conditionGroup = toConditionGroup(subgroup.conditionGroupSpec(), selectTargets);
+                    final ConditionGroup conditionGroup = toConditionGroup(subgroup.conditionGroupSpec(), selectTargets, selectExpressions);
                     return new LogicConditionGroup(subgroup.logicOperator(), conditionGroup);
                 })
                 .toList();
@@ -90,7 +94,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return new ConditionGroup(resolvedConditions, subConditionGroups);
     }
 
-    protected Condition toCondition(final ConditionSpec conditionSpec, final List<SelectTarget> selectTargets) {
+    protected Condition toCondition(final ConditionSpec conditionSpec, final List<SelectTarget> selectTargets, final SelectExpressions selectExpressions) {
         final SelectExpressionMapper selectExpressionMapper = litebridgeContext.selectExpressionMapper();
         final Operator operator = conditionSpec.getOperator();
         ExpressionSpec lhsExpressionSpec;
@@ -112,35 +116,9 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             lhsExpressionSpec = new SelectColumnSpec(column, columnAlias, tableAlias);
         } else {
             // Column name
-            final TableMetaDataCache tableMetaDataCache = litebridgeContext.tableMetaDataCache();
             final String columnName = Objects.requireNonNull(conditionSpec.getLhsColumn());
-            SelectTarget selectTarget = null;
-            Table table = null;
-
-            for (SelectTarget st : selectTargets) {
-                final Table t = getTable(st);
-
-                if (t.isVirtual()) {
-                    // Fallback on the last seen virtual table if no real table match was found for this column
-                    selectTarget = st;
-                    table = t;
-                    continue;
-                }
-
-                final TableMetaData tableMetaData = tableMetaDataCache.ensureTableMetaData(t);
-
-                if (tableMetaData.hasColumn(columnName)) {
-                    // Column found in select target table
-                    selectTarget = st;
-                    table = t;
-                    break;
-                }
-            }
-
-            if (selectTarget == null) {
-                throw new IllegalArgumentException("No such column: " + conditionSpec.getLhsColumn());
-            }
-
+            final SelectTarget selectTarget = findSelectTarget(columnName, selectTargets);
+            final Table table = getTable(selectTarget);
             final String tableAlias = operator == Operator.USING ? null : getAlias(selectTarget);
 
             final Column column = new Column(table, Objects.requireNonNull(conditionSpec.getLhsColumn()));
@@ -148,7 +126,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             lhsExpressionSpec = new SelectColumnSpec(column, columnAlias, tableAlias);
         }
 
-        final SelectExpression lhsSelectExpression = selectExpressionMapper.toSelectExpression(lhsExpressionSpec, true);
+        final SelectExpression lhsSelectExpression = selectExpressionMapper.toSelectExpression(lhsExpressionSpec, selectExpressions.aliases());
         final Object value = conditionSpec.getValue();
 
         if (value instanceof QueryNode subselectNode) {
@@ -161,7 +139,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             return new Condition(lhsSelectExpression, operator, subselectExpression);
         } else if (value instanceof ExpressionSpec expressionSpec) {
             final ExpressionSpec rhsExpressionSpec = resolveConditionExpressionSpec(expressionSpec, selectTargets, operator);
-            return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(rhsExpressionSpec, true));
+            return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(rhsExpressionSpec, selectExpressions.aliases()));
         } else if (value instanceof Column referencedColumn) {
             // Reference to a selected column
             //TODO: alias regression
@@ -280,14 +258,14 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
 
     protected final SelectTarget getSelectTargetDto(final Class<?> dtoClass,
                                                     final @Nullable Class<?> contextDtoClass,
-                                                    final @Nullable String alias) {
+                                                    final @Nullable String alias, final boolean createAliasIfNull) {
         final OrmTable ormTable = getOrmTable(dtoClass, contextDtoClass);
         final Table table = ormTable.getMetaData().table();
         final String tableAlias = alias != null ? alias : aliasGenerator.newTableAlias(table);
         return new AliasedTable(tableAlias, table);
     }
 
-    protected final SelectTarget getSelectTargetTable(final String tableName, final @Nullable String alias) {
+    protected final SelectTarget getSelectTargetTable(final String tableName, final @Nullable String alias, final boolean createAliasIfNull) {
         final Table table = tableRegistry.getOrCreateSpiTable(tableName);
 
         if (alias != null) {
@@ -297,7 +275,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         }
     }
 
-    protected final SelectTarget getSelectTargetQuery(final QueryNode fromQueryNode, final @Nullable String alias) {
+    protected final SelectTarget getSelectTargetQuery(final QueryNode fromQueryNode, final @Nullable String alias, final boolean createAliasIfNull) {
         final SelectTarget query;
         litebridgeContext.aliasGenerator().pushScope();
         final PreparedOperation preparedOperation = litebridgeContext.createQueryCompiler().compile(fromQueryNode);
@@ -314,11 +292,11 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
     }
 
     protected @Nullable String getAlias(final SelectTarget selectTarget) {
-        return switch (selectTarget) {
-            case Aliased<?> aliased -> aliased.alias();
-            case Table table -> aliasGenerator.tableAlias(table);
-            default -> null;
-        };
+        if (selectTarget instanceof Aliased<?> aliased) {
+            return aliased.alias();
+        }
+
+        return null;
     }
 
     protected static BindValueExpression createBindValueExpression(final @Nullable Object value, final int index) {
@@ -373,6 +351,103 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return new TargetResolution(selectTarget, table, ormTable, tableAlias);
     }
 
+    protected AliasedTable createAliasedTable(final Table table) {
+        final String tableAlias = aliasGenerator.newTableAlias(table);
+        return new AliasedTable(tableAlias, table);
+    }
+
+    protected final @Nullable SelectTarget findSelectTargetOrNull(final ExpressionSpec expressionSpec, final List<SelectTarget> selectTargets) {
+        return switch (expressionSpec) {
+            case QueryField queryField -> {
+                final Class<?> dtoClass = QueryFieldInspector.getDtoClass(queryField);
+                final Table table = tableRegistry.getOrmTableOrThrow(dtoClass).getMetaData().table();
+
+                yield selectTargets.stream()
+                        .filter(selectTarget -> table.equals(getTable(selectTarget)))
+                        .findFirst()
+                        .orElse(null);
+            }
+            case ColumnExpressionSpec columnExpressionSpec -> {
+                final String tableAlias = columnExpressionSpec.getTableAlias();
+
+                if (tableAlias == null) {
+                    yield findSelectTargetOrNull(columnExpressionSpec.getColumn(), selectTargets);
+                }
+
+                yield selectTargets.stream()
+                        .filter(selectTarget -> tableAlias.equals(getAlias(selectTarget)))
+                        .findFirst()
+                        .orElse(null);
+            }
+            case Resolvable resolvable -> findSelectTarget(resolvable.column(), selectTargets);
+            // Default to the FROM clause (first target)
+            default -> selectTargets.getFirst();
+        };
+    }
+
+    protected final SelectTarget findSelectTarget(final ExpressionSpec expressionSpec, final List<SelectTarget> selectTargets) {
+        final SelectTarget selectTarget = findSelectTargetOrNull(expressionSpec, selectTargets);
+
+        if (selectTarget == null) {
+            throw new IllegalArgumentException("Could not find select target for expression spec " + expressionSpec);
+        }
+
+        return selectTarget;
+    }
+
+    protected final @Nullable SelectTarget findSelectTargetOrNull(final Column column, final List<SelectTarget> selectTargets) {
+        final Table table = column.table();
+        return selectTargets.stream()
+                .filter(selectTarget -> table.equals(getTable(selectTarget)))
+                .min(Comparator.comparing(this::getAlias,
+                        Comparator.nullsFirst(Comparator.naturalOrder())))
+                .orElse(null);
+    }
+
+    protected final SelectTarget findSelectTarget(final String columnName, final List<SelectTarget> selectTargets) {
+        if (columnName.isEmpty()) {
+            // Aggregate function or similar (e.g. COUNT(*)); return the "FROM" target (first)
+            return selectTargets.getFirst();
+        }
+
+        final TableMetaDataCache tableMetaDataCache = litebridgeContext.tableMetaDataCache();
+        final boolean dtoMode = litebridgeContext.mode() == LitebridgeContext.Mode.DTO;
+        SelectTarget selectTarget = null;
+
+        for (SelectTarget st : selectTargets) {
+            final Table table = getTable(st);
+
+            if (table.isVirtual()) {
+                // Fallback on the last seen virtual table if no real table match was found for this column
+                selectTarget = st;
+                continue;
+            }
+
+            if (dtoMode) {
+                final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
+
+                if (ormTable.hasField(columnName)) {
+                    selectTarget = st;
+                    break;
+                }
+            } else {
+                final TableMetaData tableMetaData = tableMetaDataCache.ensureTableMetaData(table);
+
+                if (tableMetaData.hasColumn(columnName)) {
+                    // Column found in select target table
+                    selectTarget = st;
+                    break;
+                }
+            }
+        }
+
+        if (selectTarget == null) {
+            throw new IllegalArgumentException("No such column: " + columnName);
+        }
+
+        return selectTarget;
+    }
+
     private ExpressionSpec resolveConditionExpressionSpec(final ExpressionSpec expressionSpec,
                                                           final List<SelectTarget> selectTargets,
                                                           final Operator operator) {
@@ -395,5 +470,8 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
                                     Table table,
                                     @Nullable OrmTable ormTable,
                                     @Nullable String tableAlias) {
+    }
+
+    protected record SelectExpressions(List<SelectExpression> expressions, Map<String, SelectExpression> aliases) {
     }
 }

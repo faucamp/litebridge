@@ -22,11 +22,16 @@
       vendor capabilities via the main Litebridge API.
     - Selecting literal values are now fully supported.
     - Support added for select statements without from clauses.
+    - Table, DTO, and subquery aliasing support in `from()` and `join()` clauses via `Fn.aliasTable()`, `Fn.alias()`,
+      and `FromClauseStart.from(DtoAliasSpec)`.
+    - Add `Fn.aliasRef()` helper methods for referencing aliased columns, tables, and subqueries in query conditions
+      and clauses.
 - Database Provider SPI
     - New APIs for retrieving database and database provider metadata.
     - New `executeBatch()` method for explicit batch update operations.
     - `Result` and `BatchUpdateResult` result models added.
     - `VirtualTable` class added to encapsulate SELECT sources other than tables.
+    - Add `tableAlias()` method to `AliasedExpression` to retrieve parent or source table aliases.
 - Oracle Database Provider:
     - Add custom mathematical operation SQL generator
     - Multi-row inserts are now supported via batched insert statements
@@ -53,6 +58,9 @@
     - `InsertResult` now supports multi-row insert operation results by default; this changes how generated keys are
       accessed.
     - Split the `Litebridge` class into `LitebridgeCore` (all methods except merge) and `Litebridge` (merge-capable).
+    - Propagate select expression aliases across query compilation contexts, enabling direct and contextual alias
+      referencing in `WHERE`, `GROUP BY`, `HAVING`, and `ORDER BY` clauses.
+    - `SqlMergeUsingStep.using()` now accepts `FromTargetSpec`.
 - Database Provider SPI:
     - Standardised and simplified the `DatabaseProvider` SPI interface. This breaks backward compatibility.
     - Massive refactor of `AbstractDatabaseProvider` to separate concerns make it more modular

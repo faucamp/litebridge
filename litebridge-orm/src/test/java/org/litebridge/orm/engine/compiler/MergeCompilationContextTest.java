@@ -419,7 +419,7 @@ class MergeCompilationContextTest {
 
         final ColumnExpression colExpr = mock(ColumnExpression.class);
         when(colExpr.column()).thenReturn(idCol.column());
-        when(context.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(colExpr);
+        when(context.selectExpressionMapper().toSelectExpression(any())).thenReturn(colExpr);
         when(context.typeConverter().convert(any(), eq(Types.INTEGER))).thenAnswer(inv -> inv.getArgument(0));
 
         final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null), context);
@@ -511,8 +511,8 @@ class MergeCompilationContextTest {
 
         final ColumnExpression lhsColExpr = mock(ColumnExpression.class);
         final ColumnExpression rhsColExpr = mock(ColumnExpression.class);
-        when(context.selectExpressionMapper().toSelectExpression(lhsResolved, true)).thenReturn(lhsColExpr);
-        when(context.selectExpressionMapper().toSelectExpression(rhsResolved, true)).thenReturn(rhsColExpr);
+        when(context.selectExpressionMapper().toSelectExpression(lhsResolved)).thenReturn(lhsColExpr);
+        when(context.selectExpressionMapper().toSelectExpression(rhsResolved)).thenReturn(rhsColExpr);
 
         final MergeNode mergeNode = new MergeNode(null, UserDto.class, "a");
         final MergeCompilationContext compilationContext = new MergeCompilationContext(mergeNode, context);

@@ -1,5 +1,7 @@
 package org.litebridge.db.spi.expression;
 
+import org.jspecify.annotations.Nullable;
+
 public interface AliasedExpression extends SelectExpression {
 
     /**
@@ -8,4 +10,13 @@ public interface AliasedExpression extends SelectExpression {
      * @return The optional alias.
      */
     String alias();
+
+    /**
+     * Retrieves the source/parent table alias of this expression.
+     *
+     * @return the source/parent table alias of this expression
+     */
+    default @Nullable String tableAlias() {
+        return null;
+    }
 }

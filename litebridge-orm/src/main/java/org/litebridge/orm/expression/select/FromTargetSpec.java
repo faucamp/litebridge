@@ -1,4 +1,4 @@
 package org.litebridge.orm.expression.select;
 
-public sealed interface FromTargetSpec permits QueryAliasSpec {
+public sealed interface FromTargetSpec permits DtoAliasSpec, SqlFromTargetSpec {
 }

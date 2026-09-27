@@ -131,7 +131,7 @@ class AbstractCompilationContextTest {
 
         when(context.selectExpressionMapper().resolveProtoExpression(lhsExpr, null, table, null, ClauseType.WHERE))
                 .thenReturn(List.of(resolvedSpec));
-        when(context.selectExpressionMapper().toSelectExpression(resolvedSpec, true)).thenReturn(lhsSelectExpr);
+        when(context.selectExpressionMapper().toSelectExpression(resolvedSpec)).thenReturn(lhsSelectExpr);
 
         // When
         final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table));
@@ -154,7 +154,7 @@ class AbstractCompilationContextTest {
         when(ormTable.columnMetaDataForField("field1")).thenReturn(columnMetaData);
 
         final SelectExpression lhsSelectExpr = mock(SelectExpression.class);
-        when(litebridgeContext.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(lhsSelectExpr);
+        when(litebridgeContext.selectExpressionMapper().toSelectExpression(any())).thenReturn(lhsSelectExpr);
 
         final ConditionSpec conditionSpec = new ConditionSpec("field1", null, Operator.IS_NOT_NULL, null);
 
@@ -187,7 +187,7 @@ class AbstractCompilationContextTest {
         when(context.sqlFunctionRegistry().select().subselect().create(subselect)).thenReturn(subselectExpression);
 
         final SelectExpression lhsSelectExpr = mock(SelectExpression.class);
-        when(context.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(lhsSelectExpr);
+        when(context.selectExpressionMapper().toSelectExpression(any())).thenReturn(lhsSelectExpr);
 
         final ConditionSpec conditionSpec = new ConditionSpec("id", null, Operator.IN, subselectNode);
 
@@ -215,7 +215,7 @@ class AbstractCompilationContextTest {
 
         when(context.selectExpressionMapper().resolveProtoExpression(rhsExpr, null, table, null, ClauseType.WHERE))
                 .thenReturn(List.of(resolvedRhs));
-        when(context.selectExpressionMapper().toSelectExpression(resolvedRhs, true)).thenReturn(rhsSelectExpr);
+        when(context.selectExpressionMapper().toSelectExpression(resolvedRhs)).thenReturn(rhsSelectExpr);
 
         // When
         final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table));
@@ -254,7 +254,7 @@ class AbstractCompilationContextTest {
         final Column column = new Column(table, "name");
         final ColumnExpression columnExpr = mock(ColumnExpression.class);
         when(columnExpr.column()).thenReturn(column);
-        when(context.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(columnExpr);
+        when(context.selectExpressionMapper().toSelectExpression(any())).thenReturn(columnExpr);
 
         final ColumnMetaData meta = new ColumnMetaData(table, "name", true, Types.VARCHAR, 255);
         final TableMetaData tableMetaData = new TableMetaData(table, List.of(), List.of(meta));
@@ -282,7 +282,7 @@ class AbstractCompilationContextTest {
         final Column column = new Column(table, "age");
         final ColumnExpression columnExpr = mock(ColumnExpression.class);
         when(columnExpr.column()).thenReturn(column);
-        when(context.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(columnExpr);
+        when(context.selectExpressionMapper().toSelectExpression(any())).thenReturn(columnExpr);
 
         final ColumnMetaData meta = new ColumnMetaData(table, "age", true, Types.INTEGER, 0);
         final TableMetaData tableMetaData = new TableMetaData(table, List.of(), List.of(meta));

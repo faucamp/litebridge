@@ -44,7 +44,7 @@ public final class ConvertSpec<T> implements TypeOverrideExpressionSpec<T>, Reso
 
     @Override
     public String column() {
-        return "";
+        return target instanceof Resolvable resolvable ? resolvable.column() : "";
     }
 
     @Override

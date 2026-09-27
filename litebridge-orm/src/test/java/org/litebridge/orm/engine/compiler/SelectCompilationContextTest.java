@@ -131,7 +131,7 @@ class SelectCompilationContextTest {
         final SelectColumnSpec spec = new SelectColumnSpec(new Column(table, "user_id"));
         when(context.selectExpressionMapper().resolveProtoExpression(any(), any(), any(), nullable(String.class), eq(ClauseType.SELECT)))
                 .thenReturn(List.of(spec));
-        when(context.selectExpressionMapper().toSelectExpression(any(), eq(false)))
+        when(context.selectExpressionMapper().toSelectExpression(any()))
                 .thenReturn(mock(SelectExpression.class));
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, new ExpressionSpec[]{spec}, null);
@@ -287,7 +287,7 @@ class SelectCompilationContextTest {
         final SelectColumnSpec spec = new SelectColumnSpec(new Column(table, "id"));
         when(context.selectExpressionMapper().resolveProtoExpression(any(), any(), any(), nullable(String.class), eq(ClauseType.GROUP_BY)))
                 .thenReturn(List.of(spec));
-        when(context.selectExpressionMapper().toSelectExpression(any(), eq(true)))
+        when(context.selectExpressionMapper().toSelectExpression(any()))
                 .thenReturn(mock(SelectExpression.class));
         compilationContext.addGroupByNode(new GroupByNode(null, null, new ExpressionSpec[]{spec}));
 

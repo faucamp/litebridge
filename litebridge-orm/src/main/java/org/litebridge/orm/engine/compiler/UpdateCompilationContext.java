@@ -100,7 +100,7 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
             this.bindValues.addAll(bindValues);
         }
 
-        final ConditionGroup conditionGroup = where != null ? toConditionGroup(where.current(), table) : EMPTY_CONDITION_GROUP;
+        final ConditionGroup conditionGroup = where != null ? toConditionGroup(where.current(), table, EMPTY_SELECT_EXPRESSIONS) : EMPTY_CONDITION_GROUP;
         return new Update(table, updateColumns, conditionGroup);
     }
 

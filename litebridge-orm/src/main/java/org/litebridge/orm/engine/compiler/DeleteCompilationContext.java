@@ -57,7 +57,7 @@ final class DeleteCompilationContext extends AbstractCompilationContext {
         final ConditionGroup whereConditionGroup;
 
         if (where != null) {
-            whereConditionGroup = toConditionGroup(where.current(), table);
+            whereConditionGroup = toConditionGroup(where.current(), table, EMPTY_SELECT_EXPRESSIONS);
         } else {
             whereConditionGroup = EMPTY_CONDITION_GROUP;
         }

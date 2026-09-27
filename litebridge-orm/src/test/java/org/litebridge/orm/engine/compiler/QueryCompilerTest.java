@@ -129,7 +129,7 @@ class QueryCompilerTest {
         final LitebridgeContext context = context(tableRegistry, metadataCache);
         when(context.mode()).thenReturn(LitebridgeContext.Mode.SQL);
         final SelectExpressionMapper expressionMapper = mock(SelectExpressionMapper.class);
-        when(expressionMapper.toSelectExpression(any(), eq(true))).thenReturn(mock(SelectExpression.class));
+        when(expressionMapper.toSelectExpression(any())).thenReturn(mock(SelectExpression.class));
         final TypeConverter typeConverter = mock(TypeConverter.class);
         when(typeConverter.getSqlDataType(Integer.class)).thenReturn(Types.INTEGER);
         when(context.selectExpressionMapper()).thenReturn(expressionMapper);
@@ -168,7 +168,7 @@ class QueryCompilerTest {
         final LitebridgeContext context = context(tableRegistry, metadataCache);
         when(context.mode()).thenReturn(LitebridgeContext.Mode.SQL);
         final SelectExpressionMapper expressionMapper = mock(SelectExpressionMapper.class);
-        when(expressionMapper.toSelectExpression(any(), eq(true))).thenReturn(mock(SelectExpression.class));
+        when(expressionMapper.toSelectExpression(any())).thenReturn(mock(SelectExpression.class));
         final TypeConverter typeConverter = mock(TypeConverter.class);
         when(typeConverter.getSqlDataType(Integer.class)).thenReturn(Types.INTEGER);
         when(typeConverter.convert(any(), eq(Types.INTEGER))).thenAnswer(inv -> inv.getArgument(0));

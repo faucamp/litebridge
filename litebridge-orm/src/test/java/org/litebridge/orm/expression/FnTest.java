@@ -87,9 +87,9 @@ class FnTest {
         assertEquals("COL", ((SelectColumnSpec) caTableName).getColumn().name());
         assertEquals("alias", ((SelectColumnSpec) caTableName).getAlias());
 
-        assertInstanceOf(SelectColumnSpec.class, Fn.columnAlias(table, "COL", "alias"));
-        assertInstanceOf(ProtoColumnExpressionSpec.class, Fn.columnAlias("COL", "alias"));
-        assertInstanceOf(SelectColumnSpec.class, Fn.columnAlias("TABLE", "COL", "alias"));
+        assertInstanceOf(SelectColumnSpec.class, Fn.alias(table, "COL", "alias"));
+        assertInstanceOf(ProtoColumnExpressionSpec.class, Fn.alias("COL", "alias"));
+        assertInstanceOf(SelectColumnSpec.class, Fn.alias("TABLE", "COL", "alias"));
     }
 
     @Test

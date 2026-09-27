@@ -26,7 +26,6 @@ import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
-import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.mockito.Mockito;
 
 import java.sql.Types;
@@ -38,7 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -186,7 +184,7 @@ class UpdateCompilationContextTest {
 
         final ColumnExpression colExpr = mock(ColumnExpression.class);
         when(colExpr.column()).thenReturn(idCol.column());
-        when(context.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(colExpr);
+        when(context.selectExpressionMapper().toSelectExpression(any())).thenReturn(colExpr);
 
         final UpdateNode updateNode = new UpdateNode(null, "items", null);
         final UpdateCompilationContext compilationContext = new UpdateCompilationContext(updateNode, context);

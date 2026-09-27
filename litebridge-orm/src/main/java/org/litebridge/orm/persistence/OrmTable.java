@@ -209,6 +209,10 @@ public class OrmTable {
         return Objects.requireNonNull(columnMetaData, () -> "No column for field path '" + fieldAccessor.name() + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
     }
 
+    public boolean hasField(final String fieldName) {
+        return fieldNameColumnMap.containsKey(fieldName);
+    }
+
     /**
      * Get the nested DTO classes.
      *

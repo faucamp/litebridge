@@ -37,6 +37,7 @@ public abstract class AbstractAliasedExpression extends AbstractExpression imple
      *
      * @return the alias of this expression
      */
+    @Override
     public @Nullable String alias() {
         return alias;
     }
@@ -46,6 +47,7 @@ public abstract class AbstractAliasedExpression extends AbstractExpression imple
      *
      * @return the source/parent table alias of this expression
      */
+    @Override
     public @Nullable String tableAlias() {
         return tableAlias;
     }

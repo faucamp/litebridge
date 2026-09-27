@@ -89,7 +89,7 @@ class DeleteCompilationContextTest {
 
         final ColumnExpression colExpr = mock(ColumnExpression.class);
         when(colExpr.column()).thenReturn(colMeta.column());
-        when(litebridgeContext.selectExpressionMapper().toSelectExpression(any(), eq(true))).thenReturn(colExpr);
+        when(litebridgeContext.selectExpressionMapper().toSelectExpression(any())).thenReturn(colExpr);
 
         final DeleteNode deleteNode = new DeleteNode(null, null, UserDto.class);
 

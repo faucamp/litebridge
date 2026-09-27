@@ -2,7 +2,6 @@ package org.litebridge.orm.e2e.sql;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
-import org.litebridge.convert.converter.LongConverter;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.e2e.AbstractE2eTest;
@@ -78,24 +77,60 @@ class SqlE2eTest extends AbstractE2eTest {
         final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
         insertTestPersonRecords(personTableName);
 
-        final Row result =
-                litebridge.select(
-                                Fn.ca(personId, "id"),
-                                Fn.ca(firstName, "firstName"),
-                                Fn.c(surname),
-                                Fn.c(age),
-                                Fn.ca(eyeColour, "eyeColour"))
-                        .from(personTableName)
-                        .where(personId).lt(10)
-                        .orderBy(personId).asc()
-                        .firstOrThrow();
+        // Aliases only, table alias as context
+        {
+            final Row result =
+                    litebridge.select(
+                                    Fn.ca(personId, "id"),
+                                    Fn.ca(firstName, "firstName"))
+                            .from(Fn.aliasTable(personTableName, "myPerson"))
+                            .where(Fn.aliasRef("myPerson", personId)).lt(10)
+                            .orderBy(Fn.aliasRef("myPerson", personId)).asc()
+                            .firstOrThrow();
 
-        assertEquals(5, result.size());
-        assertEquals(1L, typeConverter.convert(result.value("id"), Long.class));
-        assertEquals("Alice", result.value("firstName"));
-        assertEquals("Smith", result.value(surname));
-        assertEquals(20, typeConverter.convert(result.value(age), int.class));
-        assertEquals("brown", result.value("eyeColour"));
+            assertEquals(2, result.size());
+            assertEquals(1L, typeConverter.convert(result.value("id"), Long.class));
+            assertEquals("Alice", result.value("firstName"));
+        }
+
+        // Aliases only, using direct string-based alias referencing in where/order by clauses
+        // This tests that these alias references are correctly resolved to their contextual equivalents
+        {
+            final Row result =
+                    litebridge.select(
+                                    Fn.ca(personId, "id"),
+                                    Fn.ca(firstName, "firstName"))
+                            .from(Fn.aliasTable(personTableName, "myPerson"))
+                            .where(Fn.aliasRef("id")).lt(10)
+                            .orderBy(Fn.aliasRef("id")).asc()
+                            .firstOrThrow();
+
+            assertEquals(2, result.size());
+            assertEquals(1L, typeConverter.convert(result.value("id"), Long.class));
+            assertEquals("Alice", result.value("firstName"));
+        }
+
+        // Mixed used of aliases and column names
+        {
+            final Row result =
+                    litebridge.select(
+                                    Fn.ca(personId, "id"),
+                                    Fn.ca(firstName, "firstName"),
+                                    Fn.c(surname),
+                                    Fn.c(age),
+                                    Fn.ca(eyeColour, "eyeColour"))
+                            .from(Fn.aliasTable(personTableName, "myPerson"))
+                            .where(personId).lt(10)
+                            .orderBy(personId).asc()
+                            .firstOrThrow();
+
+            assertEquals(5, result.size());
+            assertEquals(1L, typeConverter.convert(result.value("id"), Long.class));
+            assertEquals("Alice", result.value("firstName"));
+            assertEquals("Smith", result.value(surname));
+            assertEquals(20, typeConverter.convert(result.value(age), int.class));
+            assertEquals("brown", result.value("eyeColour"));
+        }
     }
 
     @TestTemplate
@@ -115,11 +150,12 @@ class SqlE2eTest extends AbstractE2eTest {
 
         // Inline from query
         final Row result = litebridge.select(surname)
-                .from(Fn.aliasQuery("myQuery", q -> q
-                        .select(Fn.c(surname), Fn.count())
-                        .from(personTableName)
-                        .groupBy(surname)))
-                .where(Fn.fromAlias("myQuery", Fn.count())).gte(2)
+                .from(Fn.alias(q -> q
+                                .select(Fn.c(surname), Fn.count())
+                                .from(personTableName)
+                                .groupBy(surname),
+                        "myQuery"))
+                .where(Fn.aliasRef("myQuery", Fn.count())).gte(2)
                 .oneOrThrow();
 
         // Then

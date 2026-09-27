@@ -78,7 +78,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
 
         if (usingNode.query() != null) {
             final String queryAlias = usingNode.alias() != null ? usingNode.alias() : aliasGenerator.newAlias("using");
-            using = getSelectTargetQuery(Objects.requireNonNull(usingNode.query()), queryAlias);
+            using = getSelectTargetQuery(Objects.requireNonNull(usingNode.query()), queryAlias, true);
             return;
         }
 
@@ -286,7 +286,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
     @Override
     public Operation toOperation() {
         final SelectTarget using = Objects.requireNonNull(this.using);
-        final ConditionGroup onConditionGroup = toConditionGroup(on.current(), List.of(target, using));
+        final ConditionGroup onConditionGroup = toConditionGroup(on.current(), List.of(target, using), EMPTY_SELECT_EXPRESSIONS);
 
         final List<Merge.WhenMatched<Merge.WhenMatchedOperation>> whenMatchedList = new ArrayList<>();
         final List<Merge.WhenMatched<Merge.MergeInsert>> whenNotMatchedList = new ArrayList<>();
@@ -296,7 +296,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             final ConditionGroup andConditionGroup;
 
             if (andConditionGroupStack != null) {
-                andConditionGroup = toConditionGroup(andConditionGroupStack.current(), target);
+                andConditionGroup = toConditionGroup(andConditionGroupStack.current(), target, EMPTY_SELECT_EXPRESSIONS);
             } else {
                 andConditionGroup = null;
             }
