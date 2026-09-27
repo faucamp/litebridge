@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -89,7 +89,7 @@ class DeleteCompilationContextTest {
 
         final ColumnExpression colExpr = mock(ColumnExpression.class);
         when(colExpr.column()).thenReturn(colMeta.column());
-        when(litebridgeContext.selectExpressionMapper().toSelectExpression(any())).thenReturn(colExpr);
+        when(litebridgeContext.selectExpressionMapper().toSelectExpression(any(), anyMap())).thenReturn(colExpr);
 
         final DeleteNode deleteNode = new DeleteNode(null, null, UserDto.class);
 

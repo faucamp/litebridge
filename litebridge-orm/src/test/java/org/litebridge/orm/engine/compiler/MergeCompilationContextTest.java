@@ -48,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -419,7 +420,7 @@ class MergeCompilationContextTest {
 
         final ColumnExpression colExpr = mock(ColumnExpression.class);
         when(colExpr.column()).thenReturn(idCol.column());
-        when(context.selectExpressionMapper().toSelectExpression(any())).thenReturn(colExpr);
+        when(context.selectExpressionMapper().toSelectExpression(any(), anyMap())).thenReturn(colExpr);
         when(context.typeConverter().convert(any(), eq(Types.INTEGER))).thenAnswer(inv -> inv.getArgument(0));
 
         final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null), context);
@@ -511,8 +512,8 @@ class MergeCompilationContextTest {
 
         final ColumnExpression lhsColExpr = mock(ColumnExpression.class);
         final ColumnExpression rhsColExpr = mock(ColumnExpression.class);
-        when(context.selectExpressionMapper().toSelectExpression(lhsResolved)).thenReturn(lhsColExpr);
-        when(context.selectExpressionMapper().toSelectExpression(rhsResolved)).thenReturn(rhsColExpr);
+        when(context.selectExpressionMapper().toSelectExpression(eq(lhsResolved), anyMap())).thenReturn(lhsColExpr);
+        when(context.selectExpressionMapper().toSelectExpression(eq(rhsResolved), anyMap())).thenReturn(rhsColExpr);
 
         final MergeNode mergeNode = new MergeNode(null, UserDto.class, "a");
         final MergeCompilationContext compilationContext = new MergeCompilationContext(mergeNode, context);

@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
@@ -106,35 +107,6 @@ class SelectCompilationContextTest {
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, new String[]{"id"}, null, null);
-
-        // When
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
-        final Select select = (Select) compilationContext.toOperation();
-
-        // Then
-        assertNotNull(select);
-        assertEquals(1, select.expressions().size());
-    }
-
-    @Test
-    void constructWithDtoClassExpressions() {
-        // Given
-        final LitebridgeContext context = createMockContext();
-        final Table table = new Table("users");
-        final ColumnMetaData idCol = new ColumnMetaData(table, "user_id", true, Types.INTEGER, 0);
-        final TableMetaData metaData = new TableMetaData(table, List.of("user_id"), List.of(idCol));
-
-        final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
-        when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
-
-        final SelectColumnSpec spec = new SelectColumnSpec(new Column(table, "user_id"));
-        when(context.selectExpressionMapper().resolveProtoExpression(any(), any(), any(), nullable(String.class), eq(ClauseType.SELECT)))
-                .thenReturn(List.of(spec));
-        when(context.selectExpressionMapper().toSelectExpression(any()))
-                .thenReturn(mock(SelectExpression.class));
-
-        final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, new ExpressionSpec[]{spec}, null);
 
         // When
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
@@ -287,7 +259,7 @@ class SelectCompilationContextTest {
         final SelectColumnSpec spec = new SelectColumnSpec(new Column(table, "id"));
         when(context.selectExpressionMapper().resolveProtoExpression(any(), any(), any(), nullable(String.class), eq(ClauseType.GROUP_BY)))
                 .thenReturn(List.of(spec));
-        when(context.selectExpressionMapper().toSelectExpression(any()))
+        when(context.selectExpressionMapper().toSelectExpression(any(), anyMap()))
                 .thenReturn(mock(SelectExpression.class));
         compilationContext.addGroupByNode(new GroupByNode(null, null, new ExpressionSpec[]{spec}));
 

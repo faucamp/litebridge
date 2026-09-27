@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -184,7 +185,7 @@ class UpdateCompilationContextTest {
 
         final ColumnExpression colExpr = mock(ColumnExpression.class);
         when(colExpr.column()).thenReturn(idCol.column());
-        when(context.selectExpressionMapper().toSelectExpression(any())).thenReturn(colExpr);
+        when(context.selectExpressionMapper().toSelectExpression(any(), anyMap())).thenReturn(colExpr);
 
         final UpdateNode updateNode = new UpdateNode(null, "items", null);
         final UpdateCompilationContext compilationContext = new UpdateCompilationContext(updateNode, context);
