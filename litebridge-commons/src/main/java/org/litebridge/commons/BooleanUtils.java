@@ -29,6 +29,7 @@ public final class BooleanUtils {
      * @return {@code true} if the value is {@code true}
      * @throws IllegalArgumentException if the value is {@code false}
      */
+    @SuppressWarnings("SameReturnValue")
     public static boolean requireTrue(final boolean value, final String message) {
         if (!value) {
             throw new IllegalArgumentException(message);
@@ -46,6 +47,7 @@ public final class BooleanUtils {
      * @return {@code false} if the value is {@code false}
      * @throws IllegalArgumentException if the value is {@code true}
      */
+    @SuppressWarnings("SameReturnValue")
     public static boolean requireFalse(final boolean value, final String message) {
         if (value) {
             throw new IllegalArgumentException(message);

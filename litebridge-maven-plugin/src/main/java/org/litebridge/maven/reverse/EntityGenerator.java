@@ -472,8 +472,7 @@ public final class EntityGenerator {
             entityClass.setJavadocComment("Entity class for table: {@code %s}".formatted(tableMetaData.qualifiedName()));
         }
 
-        CompilationUnitAndClass cuClass = new CompilationUnitAndClass(entity, entityClass);
-        return cuClass;
+        return new CompilationUnitAndClass(entity, entityClass);
     }
 
     private @Nullable TableMappingConfig getTableMappingConfig(final TableMetaData tableMetaData) {
@@ -838,10 +837,9 @@ public final class EntityGenerator {
 
     private @Nullable ColumnMappingConfig getColumnMappingConfig(final String entityClassName, final ColumnMetaData columnMetaData, final @Nullable TableMappingConfig tableMappingConfig) {
         if (tableMappingConfig != null && tableMappingConfig.getColumnMappings() != null) {
-            final ColumnMappingConfig mapping = tableMappingConfig.getColumnMappings().stream()
+            return tableMappingConfig.getColumnMappings().stream()
                     .filter(c -> c.getColumn().equals(columnMetaData.name()))
                     .findFirst().orElse(null);
-            return mapping;
         } else {
             return null;
         }

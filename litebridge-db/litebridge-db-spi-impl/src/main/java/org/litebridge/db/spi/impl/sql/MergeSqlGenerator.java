@@ -96,7 +96,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
         return sql.toString();
     }
 
-    protected String appendUpdate(final StringBuilder sql, final Merge.MergeUpdate update) {
+    protected void appendUpdate(final StringBuilder sql, final Merge.MergeUpdate update) {
         sql.append("UPDATE SET ");
 
         boolean first = true;
@@ -113,7 +113,6 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
             sql.append(getColumnValueFragment(updateColumn));
         }
 
-        return sql.toString();
     }
 
     protected void appendInsert(final StringBuilder sql, final Merge.MergeInsert insert) {

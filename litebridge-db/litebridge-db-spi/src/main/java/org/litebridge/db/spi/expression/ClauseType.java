@@ -27,5 +27,5 @@ public enum ClauseType {
     /**
      * The ORDER BY clause.
      */
-    ORDER_BY;
+    ORDER_BY
 }

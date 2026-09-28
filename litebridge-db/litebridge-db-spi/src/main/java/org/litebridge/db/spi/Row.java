@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /**
  * A row of data returned from a database query.
@@ -155,12 +154,8 @@ public final class Row {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o || (o instanceof final Row that
-                && Objects.equals(this.columns, that.columns))) {
-            return true;
-        }
-
-        return false;
+        return this == o || (o instanceof final Row that
+                && Objects.equals(this.columns, that.columns));
     }
 
     @Override

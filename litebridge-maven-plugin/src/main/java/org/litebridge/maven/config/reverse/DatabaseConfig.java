@@ -36,6 +36,7 @@ public final class DatabaseConfig {
      * <p>
      * Defaults to an empty string.
      */
+    @SuppressWarnings("DefaultAnnotationParam")
     @Parameter(defaultValue = "")
     private String password = "";
 

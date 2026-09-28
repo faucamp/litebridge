@@ -56,7 +56,7 @@ import java.util.Objects;
 
 abstract sealed class AbstractCompilationContext implements CompilationContext permits DeleteCompilationContext, MergeCompilationContext, SelectCompilationContext, UpdateCompilationContext {
 
-    protected static SelectExpressions EMPTY_SELECT_EXPRESSIONS = new SelectExpressions(Collections.emptyList(), Collections.emptyMap());
+    protected static final SelectExpressions EMPTY_SELECT_EXPRESSIONS = new SelectExpressions(Collections.emptyList(), Collections.emptyMap());
     protected final LitebridgeContext litebridgeContext;
     protected final AliasGenerator aliasGenerator;
     protected final TableRegistry tableRegistry;

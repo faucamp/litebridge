@@ -24,7 +24,7 @@ public abstract sealed class AbstractCbConditionClauseTerminal<DTO>
     /**
      * The current query node in the AST.
      */
-    protected QueryNode node;
+    protected final QueryNode node;
 
     /**
      * Constructs a new {@code AbstractCbConditionClauseTerminal}.

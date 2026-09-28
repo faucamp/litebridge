@@ -40,6 +40,7 @@ public final class LitebridgeBuilder<LB extends LitebridgeCore> {
      * @param databaseProvider The database provider responsible for database interactions.
      * @param dataSource       The data source for database connections.
      */
+    @SuppressWarnings("unchecked")
     LitebridgeBuilder(final DatabaseProvider databaseProvider, final DataSource dataSource) {
         this.litebridgeClass = (Class<LB>) Litebridge.class;
         this.databaseProvider = databaseProvider;

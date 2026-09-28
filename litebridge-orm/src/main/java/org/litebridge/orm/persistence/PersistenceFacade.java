@@ -448,10 +448,9 @@ public class PersistenceFacade {
         return statementChain;
     }
 
-    private <DTO> StatementChain prepareDeleteStatement(final DTO dto, final OrmTable table, final DeleteBuilder deleteBuilder, final Set<Object> inProgressDtos) {
+    private <DTO> void prepareDeleteStatement(final DTO dto, final OrmTable table, final DeleteBuilder deleteBuilder, final Set<Object> inProgressDtos) {
         inProgressDtos.add(dto);
         addPrimaryKeyConditions(dto, table, deleteBuilder);
-        return deleteBuilder.statementChain();
     }
 
     private <DTO> void processOneToManyUpdate(final DTO dto, final OrmTable table,
@@ -678,20 +677,18 @@ public class PersistenceFacade {
      *
      * @param statementBuilder the builder for the update statement to be executed,
      *                         including any dependencies that need to be resolved beforehand
-     * @return an {@code UpdateOpResult} representing the outcome of the executed statement,
-     * including the number of rows affected
      * @throws SQLException if a database access error occurs during statement execution
      */
-    private CompositeUpdateResult executeUpdateStatement(final Object dto,
-                                                         final @Nullable DtoUpdateResult parentResult,
-                                                         final StatementBuilder statementBuilder,
-                                                         final CompositeUpdateResult result) throws SQLException {
+    private void executeUpdateStatement(final Object dto,
+                                        final @Nullable DtoUpdateResult parentResult,
+                                        final StatementBuilder statementBuilder,
+                                        final CompositeUpdateResult result) throws SQLException {
         final DtoUpdateResult dtoUpdateResult = new DtoUpdateResult(dto, parentResult);
 
         if (statementBuilder instanceof NoOpStatementBuilder) {
             dtoUpdateResult.setResult(EMPTY_UPDATE_RESULT);
             result.add(dtoUpdateResult);
-            return result;
+            return;
         }
 
         for (Map.Entry<Object, PipedStatement> entry : statementBuilder.statementChain().getDependencies().entrySet()) {
@@ -752,7 +749,6 @@ public class PersistenceFacade {
             executeUpdateStatement(pipedStatement.dto(), dtoUpdateResult, pipedStatement.statementBuilder(), result);
         }
 
-        return result;
     }
 
     private static class TableProvider {
