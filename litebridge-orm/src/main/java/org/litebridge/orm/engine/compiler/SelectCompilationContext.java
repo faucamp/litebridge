@@ -158,6 +158,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
     private SelectTarget processFromClause() {
         return getSelectTarget(selectNode.dtoClass(),
                 selectNode.contextDtoClass(),
+                null,
                 selectNode.table(),
                 selectNode.fromQueryNode(),
                 selectNode.alias());
@@ -168,21 +169,31 @@ final class SelectCompilationContext extends AbstractCompilationContext {
             return Collections.singletonList(from);
         }
 
-        final List<SelectTarget> selectTargets = new ArrayList<>(joinSpecs.size() + 1);
+        final int initialCapacity = joinSpecs.size() + 1;
+        final List<SelectTarget> selectTargets = new ArrayList<>(initialCapacity);
         selectTargets.add(from);
+        final List<Class<?>> fallbackContextDtoClasses = new ArrayList<>(initialCapacity);
+        fallbackContextDtoClasses.add(selectNode.dtoClass());
 
         for (JoinSpec joinSpec : joinSpecs) {
             final JoinNode joinNode = joinSpec.joinNode();
+            final Class<?> dtoClass = joinNode.dtoClass();
+            final Class<?> contextDtoClass = joinNode.contextDtoClass();
 
             // Determine the JOIN target
-            final SelectTarget joinTarget = getSelectTarget(joinNode.dtoClass(),
-                    joinNode.contextDtoClass(),
+            final SelectTarget joinTarget = getSelectTarget(dtoClass,
+                    contextDtoClass,
+                    fallbackContextDtoClasses,
                     joinNode.table(),
                     joinNode.queryNode(),
                     joinNode.alias());
 
             joinSpec.setJoinTarget(joinTarget);
             selectTargets.add(joinTarget);
+
+            if (contextDtoClass == null && dtoClass != null) {
+                fallbackContextDtoClasses.add(dtoClass);
+            }
         }
 
         return selectTargets;
@@ -644,6 +655,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
     private SelectTarget getSelectTarget(final @Nullable Class<?> dtoClass,
                                          final @Nullable Class<?> contextDtoClass,
+                                         final @Nullable List<Class<?>> fallbackContextDtoClasses,
                                          final @Nullable String tableName,
                                          final @Nullable QueryNode fromQueryNode,
                                          final @Nullable String alias) {
@@ -651,7 +663,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
         if (dtoClass != null) {
             // Selecting a DTO/entity
-            selectTarget = getSelectTargetDto(dtoClass, contextDtoClass, selectNode.dtoClass(), alias);
+            selectTarget = getSelectTargetDto(dtoClass, contextDtoClass, fallbackContextDtoClasses, alias);
         } else if (tableName != null) {
             // Selecting a table directly
             selectTarget = getSelectTargetTable(tableName, alias);

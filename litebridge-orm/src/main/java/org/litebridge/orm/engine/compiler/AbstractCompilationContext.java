@@ -221,16 +221,27 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return getOrmTable(dtoClass, contextDtoClass, null);
     }
 
-    protected final OrmTable getOrmTable(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass, final @Nullable Class<?> fallbackContextDtoClass) {
+    protected final OrmTable getOrmTable(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass, final @Nullable List<Class<?>> fallbackContextDtoClasses) {
         OrmTable ormTable;
 
         if (contextDtoClass != null) {
             ormTable = tableRegistry.getOrmTableInContextOrThrow(dtoClass, contextDtoClass);
-        } else if (fallbackContextDtoClass != null) {
+        } else if (fallbackContextDtoClasses != null) {
             ormTable = tableRegistry.getOrmTable(dtoClass);
 
             if (ormTable == null) {
-                ormTable = tableRegistry.getOrmTableInContextOrThrow(dtoClass, fallbackContextDtoClass);
+                // Traverse the fallbacks to infer a possible context, latest one first
+                for (Class<?> fallbackContextDtoClass : fallbackContextDtoClasses.reversed()) {
+                    ormTable = tableRegistry.getOrmTableInContext(dtoClass, fallbackContextDtoClass);
+
+                    if (ormTable != null) {
+                        break;
+                    }
+                }
+            }
+
+            if (ormTable == null) {
+                throw new IllegalArgumentException("DTO class not registered and context could not be inferred: '%s'".formatted(dtoClass.getName()));
             }
         } else {
             ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
@@ -268,9 +279,9 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
 
     protected final SelectTarget getSelectTargetDto(final Class<?> dtoClass,
                                                     final @Nullable Class<?> contextDtoClass,
-                                                    final @Nullable Class<?> fallbackContextDtoClass,
+                                                    final @Nullable List<Class<?>> fallbackContextDtoClasses,
                                                     final @Nullable String alias) {
-        final OrmTable ormTable = getOrmTable(dtoClass, contextDtoClass, fallbackContextDtoClass);
+        final OrmTable ormTable = getOrmTable(dtoClass, contextDtoClass, fallbackContextDtoClasses);
         final Table table = ormTable.getMetaData().table();
         final String tableAlias = alias != null ? alias : aliasGenerator.newTableAlias(table);
         return new AliasedTable(tableAlias, table);
