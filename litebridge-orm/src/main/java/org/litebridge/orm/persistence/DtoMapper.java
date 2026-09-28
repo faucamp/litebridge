@@ -171,6 +171,7 @@ public class DtoMapper {
 
             if (fieldMapping != null) {
                 fieldMapping.columns().add(column);
+                fieldMapping.columnLabels().add(rowColumn.label());
             } else {
                 final boolean basicType = ClassUtils.isBasicType(fieldAccessor.type());
                 final boolean relatedDto = !basicType;
@@ -291,9 +292,9 @@ public class DtoMapper {
                     final Column fkColumn = foreignKeyConstraint.foreignKey();
 
                     final FieldMapping targetFieldMapping = mappingDataMap.values().stream()
-                            .filter(targetMappingData -> targetMappingData.table().equals(fkColumn.table()))
+                            .filter(targetMappingData -> targetMappingData != mappingData && targetMappingData.table().equals(fkColumn.table()))
                             .flatMap(targetMappingData -> targetMappingData.fieldMappings().stream())
-                            .filter(fieldMapping -> fieldMapping.columns().stream().anyMatch(c -> c.equals(fkColumn)))
+                            .filter(mapping -> mapping.columns().stream().anyMatch(c -> c.equals(fkColumn)))
                             .findFirst()
                             .orElse(null);
 
@@ -323,11 +324,14 @@ public class DtoMapper {
         }
 
         final Column[] sortedColumns = new Column[targetPkFields.size()];
+        final String[] sortedColumnLabels = new String[targetPkFields.size()];
 
-        for (final Column column : fieldMapping.columns()) {
+        for (int i = 0; i < fieldMapping.columns().size(); i++) {
+            final Column column = fieldMapping.columns().get(i);
+            final String label = fieldMapping.columnLabels().get(i);
             final ColumnMetaData columnMetaData = ormTable.getColumnMetaData(column.name());
             final ForeignKeyConstraint constraint = columnMetaData.getForeignKeyConstraints().stream()
-                    .filter(fk -> fk.foreignKey().table().equalsIgnoreAlias(targetOrmTable.getMetaData().table()))
+                    .filter(fk -> fk.foreignKey().table().equals(targetOrmTable.getMetaData().table()))
                     .findFirst()
                     .orElse(null);
 
@@ -336,6 +340,7 @@ public class DtoMapper {
                 final int pkIndex = targetPkFields.indexOf(targetPkField);
                 if (pkIndex != -1) {
                     sortedColumns[pkIndex] = column;
+                    sortedColumnLabels[pkIndex] = label;
                 }
             }
         }
@@ -352,12 +357,12 @@ public class DtoMapper {
 
         fieldMapping.columns().clear();
         fieldMapping.columns().addAll(Arrays.asList(sortedColumns));
+        fieldMapping.columnLabels().clear();
+        fieldMapping.columnLabels().addAll(Arrays.asList(sortedColumnLabels));
     }
 
     private MappingData createMappingDataIfAbsent(final Map<String, MappingData> mappingDataMap, final Table table, final @Nullable Class<?> contextDtoClass, final RowColumn rowColumn) {
-//        final String key = table.alias() != null ? table.alias() : table.qualifiedName();
-        //TODO: verify table alias being missing doesn't break anything
-        final String key = table.qualifiedName();
+        final String key = rowColumn.tableAlias() != null ? rowColumn.tableAlias() : table.qualifiedName();
         return mappingDataMap.computeIfAbsent(key, alias -> {
             final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
             final List<FieldAccessor> pkFields = ormTable.getPrimaryKeyFields();
@@ -458,7 +463,8 @@ public class DtoMapper {
             final TableMetaData targetMeta = cit.tableSpec().getMetaData();
 
             return mappingDataMap.values().stream()
-                    .filter(md -> md.dtoClass().equals(fieldMapping.fieldAccessor().type())
+                    .filter(md -> md != sourceMappingData
+                            && md.dtoClass().equals(fieldMapping.fieldAccessor().type())
                             && Objects.equals(md.ormTable().getMetaData().schema(), targetMeta.schema())
                             && md.ormTable().getMetaData().name().equals(targetMeta.name()))
                     .findFirst()

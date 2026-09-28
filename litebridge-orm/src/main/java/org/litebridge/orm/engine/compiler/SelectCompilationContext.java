@@ -706,6 +706,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
         // Right table & column
         final Table rightTable = getTable(rightSelectTarget);
+        final String rightTableAlias = getAlias(rightSelectTarget);
         final TableMetaData rightTableMetaData = getTableMetaData(rightTable);
         final ColumnMetaData rightColumnMetaData = rightTableMetaData.column(leftColumnMetaData.getJoinColumn());
 
@@ -718,7 +719,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         for (ColumnMetaData columnMetaData : rightTableMetaData.columns()) {
             final Column column = columnMetaData.column();
             final String columnAlias = aliasGenerator.newColumnAlias(column);
-            String tableAlias = aliasGenerator.tableAlias(column.table());
+            String tableAlias = rightTableAlias != null ? rightTableAlias : aliasGenerator.tableAlias(column.table());
 
             if (tableAlias == null) {
                 tableAlias = aliasGenerator.newTableAlias(column.table());
@@ -804,7 +805,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         for (ColumnMetaData columnMetaData : rightOrmTable.mappedColumns()) {
             final Column column = columnMetaData.column();
             final String columnAlias = aliasGenerator.newColumnAlias(column);
-            String tableAlias = aliasGenerator.tableAlias(column.table());
+            String tableAlias = rightTableAlias != null ? rightTableAlias : aliasGenerator.tableAlias(column.table());
 
             if (tableAlias == null) {
                 tableAlias = aliasGenerator.newTableAlias(column.table());
@@ -831,7 +832,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                                                    final boolean selectAll) {
         // Right table & column
         final Table rightTable = getTable(rightSelectTarget);
-        final String rightTableAlias = aliasGenerator.newTableAlias(rightTable);
+        final String rightTableAlias = getAlias(rightSelectTarget) != null ? getAlias(rightSelectTarget) : aliasGenerator.newTableAlias(rightTable);
         final TableMetaData rightTableMetaData = getTableMetaData(rightTable);
         final OrmTable rightOrmTable = tableRegistry.getOrmTableOrThrow(rightTable);
         final ColumnMetaData rightColumnMetaData = rightOrmTable.columnMetaDataForField(mappedOneToMany.mappedByField());
@@ -855,7 +856,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         for (ColumnMetaData columnMetaData : rightTableMetaData.columns()) {
             final Column column = columnMetaData.column();
             final String columnAlias = aliasGenerator.newColumnAlias(column);
-            String tableAlias = aliasGenerator.tableAlias(column.table());
+            String tableAlias = rightTableAlias != null ? rightTableAlias : aliasGenerator.tableAlias(column.table());
 
             if (tableAlias == null) {
                 tableAlias = aliasGenerator.newTableAlias(column.table());

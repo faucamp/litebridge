@@ -16,11 +16,16 @@ import java.util.StringJoiner;
  * which represents a collection of such columns within a single row of
  * query results.
  *
- * @param label  The label or alias that identifies this column in a row; must not be null.
- * @param value  The optional value associated with this column; may be null if no value is present.
- * @param column An optional reference to the {@link Column} defining this column's metadata; can be null.
+ * @param label      The label or alias that identifies this column in a row; must not be null.
+ * @param value      The optional value associated with this column; may be null if no value is present.
+ * @param column     An optional reference to the {@link Column} defining this column's metadata; can be null.
+ * @param tableAlias The optional table alias associated with this column; can be null.
  */
-public record RowColumn(String label, @Nullable Object value, @Nullable Column column) {
+public record RowColumn(String label, @Nullable Object value, @Nullable Column column, @Nullable String tableAlias) {
+
+    public RowColumn(final String label, final @Nullable Object value, final @Nullable Column column) {
+        this(label, value, column, null);
+    }
 
     @Override
     public String toString() {

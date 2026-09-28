@@ -335,7 +335,7 @@ public class SelectEngineTerminal {
             }
 
             final Object converted = typeConverter.convert(rowColumn.value(), resultType);
-            RowInspector.updateColumn(row, i, new RowColumn(rowColumn.label(), converted, rowColumn.column()));
+            RowInspector.updateColumn(row, i, new RowColumn(rowColumn.label(), converted, rowColumn.column(), rowColumn.tableAlias()));
         }
 
         return row;
@@ -453,6 +453,7 @@ public class SelectEngineTerminal {
 
     private TypeConversionMetaData createTypeConversionMetaData(final Select select, final LitebridgeContext litebridgeContext) {
         final Map<String, ColumnMetaData> columnLabelsToColumnMetaData = new HashMap<>(select.expressions().size());
+        final Map<String, String> columnLabelsToTableAliases = new HashMap<>(select.expressions().size());
         final Class<?>[] typeOverrides = new Class<?>[select.expressions().size()];
 
         for (int i = 0; i < select.expressions().size(); i++) {
@@ -483,10 +484,14 @@ public class SelectEngineTerminal {
                 final TableMetaData tableMetaData = getTableMetaData(column.table(), litebridgeContext);
                 final ColumnMetaData columnMetaData = tableMetaData.column(column.name());
                 columnLabelsToColumnMetaData.put(columnKey, columnMetaData);
+
+                if (columnExpression.tableAlias() != null) {
+                    columnLabelsToTableAliases.put(columnKey, columnExpression.tableAlias());
+                }
             }
         }
 
-        return new TypeConversionMetaData(columnLabelsToColumnMetaData, typeOverrides);
+        return new TypeConversionMetaData(columnLabelsToColumnMetaData, columnLabelsToTableAliases, typeOverrides);
     }
 
     private static SelectNode findSelectNode(final QueryNode node) {

@@ -125,13 +125,16 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
     @Override
     public List<Row> executeQuery(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
         final Map<String, ColumnMetaData> columnLabelsToColumnMetaData;
+        final Map<String, String> columnLabelsToTableAliases;
         final Class<?>[] typeOverrides;
 
         if (preparedSql.typeConversionMetaData() != null) {
             columnLabelsToColumnMetaData = preparedSql.typeConversionMetaData().columnLabelsToColumnMetaData();
+            columnLabelsToTableAliases = preparedSql.typeConversionMetaData().columnLabelsToTableAliases();
             typeOverrides = preparedSql.typeConversionMetaData().typeOverrides();
         } else {
             columnLabelsToColumnMetaData = Collections.emptyMap();
+            columnLabelsToTableAliases = Collections.emptyMap();
             typeOverrides = TYPE_OVERRIDES_EMPTY;
         }
 
@@ -152,6 +155,7 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
                 for (int i = 1; i <= columnCount; i++) {
                     final String label = resultSet.getMetaData().getColumnLabel(i);
                     final ColumnMetaData columnMetaData = columnLabelsToColumnMetaData.get(label);
+                    final String tableAlias = columnLabelsToTableAliases.get(label);
                     final int columnSqlType;
                     final Column column;
 
@@ -192,7 +196,7 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
                         value = typeConverter.convert(resultSet.getObject(i), columnSqlType);
                     }
 
-                    rowColumns.add(new RowColumn(label, value, column));
+                    rowColumns.add(new RowColumn(label, value, column, tableAlias));
                 }
 
                 rows.add(new Row(rowColumns));
