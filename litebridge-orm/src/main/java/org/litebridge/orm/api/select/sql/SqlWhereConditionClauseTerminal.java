@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
+import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.condition.SqlConditionClauseStart;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
@@ -130,7 +131,7 @@ public final class SqlWhereConditionClauseTerminal
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, node, litebridgeContext);
         final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
 
-        whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, terminal.node()));
+        whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, CbConditionClauseTerminalInspector.getNode(terminal)));
         return this;
     }
 }

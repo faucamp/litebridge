@@ -3,6 +3,7 @@ package org.litebridge.orm.api.select.dto;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
+import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
@@ -109,7 +110,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     private DtoHavingConditionClauseTerminal<DTO> havingImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(node, litebridgeContext);
         final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
-        final QueryNode conditionNode = terminal.node();
+        final QueryNode conditionNode = CbConditionClauseTerminalInspector.getNode(terminal);
 
         if (node instanceof HavingNode havingNode) {
             final ConditionGroupNode groupNode = new ConditionGroupNode(havingNode.condition(), logicOperator, conditionNode);

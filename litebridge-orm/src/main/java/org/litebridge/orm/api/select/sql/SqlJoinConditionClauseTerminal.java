@@ -5,6 +5,7 @@ import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
+import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.condition.SqlConditionClauseStart;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
@@ -142,7 +143,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     private SqlJoinConditionClauseTerminal joinImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, null, litebridgeContext);
         final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
-        final QueryNode conditionNode = terminal.node();
+        final QueryNode conditionNode = CbConditionClauseTerminalInspector.getNode(terminal);
 
         final ConditionGroupNode groupNode = new ConditionGroupNode(joinNode.condition(), logicOperator, conditionNode);
         joinNode.setCondition(groupNode);

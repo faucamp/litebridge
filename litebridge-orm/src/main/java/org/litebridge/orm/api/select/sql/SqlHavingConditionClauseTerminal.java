@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
+import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractHavingClauseTerminal;
@@ -109,7 +110,7 @@ public final class SqlHavingConditionClauseTerminal
     private SqlHavingConditionClauseTerminal havingImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, node, litebridgeContext);
         final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
-        final QueryNode conditionNode = terminal.node();
+        final QueryNode conditionNode = CbConditionClauseTerminalInspector.getNode(terminal);
 
         if (node instanceof HavingNode havingNode) {
             final ConditionGroupNode groupNode = new ConditionGroupNode(havingNode.condition(), logicOperator, conditionNode);

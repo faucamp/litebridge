@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.dto;
 
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
+import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
 import org.litebridge.orm.api.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
@@ -74,7 +75,7 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
     public DtoJoinConditionClauseTerminal<DTO> on(final QueryConditionBuilder<DTO> builder) {
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
         final AbstractCbConditionClauseTerminal<DTO> terminal = builder.apply(conditionClauseStart);
-        final QueryNode conditionNode = terminal.node();
+        final QueryNode conditionNode = CbConditionClauseTerminalInspector.getNode(terminal);
         final ConditionGroupNode groupNode = new ConditionGroupNode(null, LogicOperator.NOOP, conditionNode);
         return terminalCreator.apply(groupNode);
     }

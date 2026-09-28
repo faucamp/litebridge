@@ -4,8 +4,9 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
 import org.litebridge.orm.api.condition.DtoConditionClauseStart;
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -122,7 +123,7 @@ public final class DtoWhereConditionClauseTerminal<DTO>
         final WhereNode whereNode = ObjectUtils.requireInstanceOf(WhereNode.class, node);
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
         final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
-        whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, terminal.node()));
+        whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, CbConditionClauseTerminalInspector.getNode(terminal)));
         return this;
     }
 }
