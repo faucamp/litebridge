@@ -187,6 +187,7 @@ class SelectCompilationContextTest {
         final TableMetaData roleMeta = new TableMetaData(roleTable, List.of("id"), List.of(new ColumnMetaData(roleTable, "id", true, Types.INTEGER, 0)));
         when(roleOrmTable.getMetaData()).thenReturn(roleMeta);
         when(context.tableRegistry().getOrmTableOrThrow(RoleDto.class)).thenReturn(roleOrmTable);
+        when(context.tableRegistry().getOrmTable(RoleDto.class)).thenReturn(roleOrmTable);
 
         final JoinNode joinDtoNode = new JoinNode(selectNode, Join.JoinType.INNER, RoleDto.class, null, null, null, null);
         compilationContext.addJoin(joinDtoNode);
@@ -350,7 +351,9 @@ class SelectCompilationContextTest {
         when(ormTable.mappedFieldTargetForField("other")).thenReturn(unsupportedTarget);
         when(ormTable.mappedFieldTargetForFieldOrNull("other")).thenReturn(unsupportedTarget);
         when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
+        when(tableRegistry.getOrmTable(UserDto.class)).thenReturn(ormTable);
         when(tableRegistry.getOrmTableOrThrow(any(Table.class))).thenReturn(ormTable);
+        when(tableRegistry.getOrmTable(any(Table.class))).thenReturn(ormTable);
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
         final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
@@ -481,7 +484,9 @@ class SelectCompilationContextTest {
         when(userOrmTable.mappedColumns()).thenReturn(List.of(idCol));
         when(userOrmTable.getContextTableRegistry()).thenReturn(tableRegistry);
         when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(userOrmTable);
+        when(tableRegistry.getOrmTable(UserDto.class)).thenReturn(userOrmTable);
         when(tableRegistry.getOrmTableOrThrow(RoleDto.class)).thenReturn(roleOrmTable);
+        when(tableRegistry.getOrmTable(RoleDto.class)).thenReturn(roleOrmTable);
         when(tableRegistry.getOrmTableOrThrow(any(Table.class))).thenReturn(userOrmTable);
         when(tableRegistry.getOrmTable(any(Table.class))).thenReturn(userOrmTable);
         when(tableRegistry.getOrmTable(any(String.class))).thenReturn(userOrmTable);
@@ -517,6 +522,161 @@ class SelectCompilationContextTest {
         assertEquals(Join.JoinType.INNER, secondJoin.type());
         assertNotNull(firstJoin.conditions());
         assertNotNull(secondJoin.conditions());
+    }
+
+    @Test
+    void multiLevelSharedDtoJoinResolvesCorrectLeftAlias() {
+        // Given
+        final LitebridgeContext context = createMockContext();
+        when(context.mode()).thenReturn(LitebridgeContext.Mode.DTO);
+        final TableRegistry tableRegistry = context.tableRegistry();
+
+        // Tables & MetaData
+        final Table tenantTable = new Table("tenants");
+        final ColumnMetaData tenantIdCol = new ColumnMetaData(tenantTable, "id", true, Types.INTEGER, 0);
+        final ColumnMetaData tenantSettingIdCol = new ColumnMetaData(tenantTable, "setting_id", true, Types.INTEGER, 1);
+        tenantSettingIdCol.setJoinColumn("id");
+        final TableMetaData tenantMeta = new TableMetaData(tenantTable, List.of("id"), List.of(tenantIdCol, tenantSettingIdCol));
+        final OrmTable tenantOrmTable = mock(OrmTable.class);
+        when(tenantOrmTable.getMetaData()).thenReturn(tenantMeta);
+        when(tenantOrmTable.mappedColumns()).thenReturn(List.of(tenantIdCol, tenantSettingIdCol));
+        when(tenantOrmTable.dtoClass()).thenReturn((Class) TenantDto.class);
+        when(tenantOrmTable.hasField("setting")).thenReturn(true);
+        when(tenantOrmTable.hasField("accounts")).thenReturn(true);
+        when(tenantOrmTable.columnMetaDataForField("setting")).thenReturn(tenantSettingIdCol);
+        when(tenantOrmTable.mappedFieldTargetForField("setting")).thenReturn(tenantSettingIdCol);
+        when(tenantOrmTable.mappedFieldTargetForFieldOrNull("setting")).thenReturn(tenantSettingIdCol);
+
+        final Table tenantSettingTable = new Table("tenant_settings");
+        final ColumnMetaData tenantSettingPkCol = new ColumnMetaData(tenantSettingTable, "id", true, Types.INTEGER, 0);
+        final TableMetaData tenantSettingMeta = new TableMetaData(tenantSettingTable, List.of("id"), List.of(tenantSettingPkCol));
+        final OrmTable tenantSettingOrmTable = mock(OrmTable.class);
+        when(tenantSettingOrmTable.getMetaData()).thenReturn(tenantSettingMeta);
+        when(tenantSettingOrmTable.mappedColumns()).thenReturn(List.of(tenantSettingPkCol));
+        when(tenantSettingOrmTable.dtoClass()).thenReturn((Class) SettingDto.class);
+
+        final FieldAccessor mappedByField = mock(FieldAccessor.class);
+        when(mappedByField.name()).thenReturn("tenantId");
+        final FieldAccessor accountsCollection = mock(FieldAccessor.class);
+        final MappedOneToMany tenantAccountsMapping = new MappedOneToMany(mappedByField, accountsCollection);
+        when(tenantOrmTable.mappedFieldTargetForField("accounts")).thenReturn(tenantAccountsMapping);
+        when(tenantOrmTable.mappedFieldTargetForFieldOrNull("accounts")).thenReturn(tenantAccountsMapping);
+
+        final Table accountTable = new Table("accounts");
+        final ColumnMetaData accountIdCol = new ColumnMetaData(accountTable, "id", true, Types.INTEGER, 0);
+        final ColumnMetaData accountTenantIdCol = new ColumnMetaData(accountTable, "tenant_id", true, Types.INTEGER, 1);
+        final ColumnMetaData accountSettingIdCol = new ColumnMetaData(accountTable, "setting_id", true, Types.INTEGER, 2);
+        accountSettingIdCol.setJoinColumn("id");
+        final TableMetaData accountMeta = new TableMetaData(accountTable, List.of("id"), List.of(accountIdCol, accountTenantIdCol, accountSettingIdCol));
+        final OrmTable accountOrmTable = mock(OrmTable.class);
+        when(accountOrmTable.getMetaData()).thenReturn(accountMeta);
+        when(accountOrmTable.mappedColumns()).thenReturn(List.of(accountIdCol, accountTenantIdCol, accountSettingIdCol));
+        when(accountOrmTable.dtoClass()).thenReturn((Class) AccountDto.class);
+        when(accountOrmTable.hasField("setting")).thenReturn(true);
+        when(accountOrmTable.columnMetaDataForField("tenantId")).thenReturn(accountTenantIdCol);
+        when(accountOrmTable.columnMetaDataForField(mappedByField)).thenReturn(accountTenantIdCol);
+        when(accountOrmTable.columnMetaDataForField("setting")).thenReturn(accountSettingIdCol);
+        when(accountOrmTable.mappedFieldTargetForField("setting")).thenReturn(accountSettingIdCol);
+        when(accountOrmTable.mappedFieldTargetForFieldOrNull("setting")).thenReturn(accountSettingIdCol);
+
+        final Table accountSettingTable = new Table("account_settings");
+        final ColumnMetaData accountSettingPkCol = new ColumnMetaData(accountSettingTable, "id", true, Types.INTEGER, 0);
+        final TableMetaData accountSettingMeta = new TableMetaData(accountSettingTable, List.of("id"), List.of(accountSettingPkCol));
+        final OrmTable accountSettingOrmTable = mock(OrmTable.class);
+        when(accountSettingOrmTable.getMetaData()).thenReturn(accountSettingMeta);
+        when(accountSettingOrmTable.mappedColumns()).thenReturn(List.of(accountSettingPkCol));
+        when(accountSettingOrmTable.dtoClass()).thenReturn((Class) SettingDto.class);
+
+        // Table registry stubs
+        when(tableRegistry.getOrmTableOrThrow(TenantDto.class)).thenReturn(tenantOrmTable);
+        when(tableRegistry.getOrmTable(TenantDto.class)).thenReturn(tenantOrmTable);
+        when(tableRegistry.getOrmTableOrThrow(tenantTable)).thenReturn(tenantOrmTable);
+        when(tableRegistry.getOrmTable(tenantTable)).thenReturn(tenantOrmTable);
+
+        when(tableRegistry.getOrmTableOrThrow(AccountDto.class)).thenReturn(accountOrmTable);
+        when(tableRegistry.getOrmTable(AccountDto.class)).thenReturn(accountOrmTable);
+        when(tableRegistry.getOrmTableOrThrow(accountTable)).thenReturn(accountOrmTable);
+        when(tableRegistry.getOrmTable(accountTable)).thenReturn(accountOrmTable);
+
+        // SettingDto is a shared DTO
+        when(tableRegistry.getOrmTable(SettingDto.class)).thenReturn(null);
+        when(tableRegistry.getOrmTableInContext(SettingDto.class, TenantDto.class)).thenReturn(tenantSettingOrmTable);
+        when(tableRegistry.getOrmTableInContext(SettingDto.class, AccountDto.class)).thenReturn(accountSettingOrmTable);
+        when(tableRegistry.getOrmTableOrThrow(tenantSettingTable)).thenReturn(tenantSettingOrmTable);
+        when(tableRegistry.getOrmTable(tenantSettingTable)).thenReturn(tenantSettingOrmTable);
+        when(tableRegistry.getOrmTableOrThrow(accountSettingTable)).thenReturn(accountSettingOrmTable);
+        when(tableRegistry.getOrmTable(accountSettingTable)).thenReturn(accountSettingOrmTable);
+
+        // MetaDataCache stubs
+        when(context.tableMetaDataCache().ensureTableMetaData(tenantTable)).thenReturn(tenantMeta);
+        when(context.tableMetaDataCache().ensureTableMetaData(tenantSettingTable)).thenReturn(tenantSettingMeta);
+        when(context.tableMetaDataCache().ensureTableMetaData(accountTable)).thenReturn(accountMeta);
+        when(context.tableMetaDataCache().ensureTableMetaData(accountSettingTable)).thenReturn(accountSettingMeta);
+
+        // SelectExpressionMapper stub
+        when(context.selectExpressionMapper().toSelectExpression(any(), anyMap()))
+                .thenAnswer(inv -> {
+                    final Object arg = inv.getArgument(0);
+                    if (arg instanceof SelectColumnSpec spec) {
+                        final org.litebridge.db.spi.expression.ColumnExpression colExpr = mock(org.litebridge.db.spi.expression.ColumnExpression.class);
+                        when(colExpr.column()).thenReturn(spec.getColumn());
+                        when(colExpr.tableAlias()).thenReturn(spec.getTableAlias());
+                        return colExpr;
+                    }
+                    return mock(SelectExpression.class);
+                });
+
+        // Build AST: Tenant -> Setting -> Account -> Setting
+        final SelectNode selectNode = new SelectNode(TenantDto.class, null, null, null, null, null);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
+
+        final JoinNode join1 = new JoinNode(selectNode, Join.JoinType.INNER, SettingDto.class, null, null, null, null);
+        final ConditionJoinUsingNode using1 = new ConditionJoinUsingNode(null, LogicOperator.AND, "setting", null);
+        join1.setCondition(using1);
+        compilationContext.addJoin(join1);
+        compilationContext.addJoinUsingCondition(using1);
+
+        final JoinNode join2 = new JoinNode(join1, Join.JoinType.INNER, AccountDto.class, null, null, null, null);
+        final ConditionJoinUsingNode using2 = new ConditionJoinUsingNode(null, LogicOperator.AND, "accounts", null);
+        join2.setCondition(using2);
+        compilationContext.addJoin(join2);
+        compilationContext.addJoinUsingCondition(using2);
+
+        final JoinNode join3 = new JoinNode(join2, Join.JoinType.INNER, SettingDto.class, null, null, null, null);
+        final ConditionJoinUsingNode using3 = new ConditionJoinUsingNode(null, LogicOperator.AND, "setting", null);
+        join3.setCondition(using3);
+        compilationContext.addJoin(join3);
+        compilationContext.addJoinUsingCondition(using3);
+
+        // When
+        final Select select = (Select) compilationContext.toOperation();
+
+        // Then
+        assertNotNull(select);
+        assertEquals(3, select.joins().size());
+
+        final Join resultJoin1 = select.joins().get(0);
+        final Join resultJoin2 = select.joins().get(1);
+        final Join resultJoin3 = select.joins().get(2);
+
+        assertEquals("tenant_settings", ((org.litebridge.db.spi.alias.AliasedTable) resultJoin1.target()).target().name());
+        assertEquals("accounts", ((org.litebridge.db.spi.alias.AliasedTable) resultJoin2.target()).target().name());
+        assertEquals("account_settings", ((org.litebridge.db.spi.alias.AliasedTable) resultJoin3.target()).target().name());
+
+        // Verify the 3rd join's condition uses the Account table alias as left target
+        final org.litebridge.db.spi.query.LogicCondition join3Condition = resultJoin3.conditions().conditions().getFirst();
+        final org.litebridge.db.spi.expression.ColumnExpression leftExpr = (org.litebridge.db.spi.expression.ColumnExpression) join3Condition.condition().lhs();
+        assertEquals("accounts", leftExpr.column().table().name());
+        assertEquals(((org.litebridge.db.spi.alias.AliasedTable) resultJoin2.target()).alias(), leftExpr.tableAlias());
+    }
+
+    static class TenantDto {
+    }
+
+    static class AccountDto {
+    }
+
+    static class SettingDto {
     }
 
     static class UserDto {

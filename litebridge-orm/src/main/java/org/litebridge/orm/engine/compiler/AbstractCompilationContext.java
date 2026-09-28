@@ -354,15 +354,34 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         final SelectTarget selectTarget;
 
         if (dtoClass != null) {
-            ormTable = tableRegistry.getOrmTable(dtoClass);
-            if (ormTable == null) {
-                throw new IllegalArgumentException("No table mapped to class: " + dtoClass.getName());
+            OrmTable foundOrmTable = tableRegistry.getOrmTable(dtoClass);
+            SelectTarget foundSelectTarget = null;
+
+            if (foundOrmTable != null) {
+                final Table t = foundOrmTable.getMetaData().table();
+                foundSelectTarget = selectTargets.stream()
+                        .filter(st -> getTable(st).equals(t))
+                        .findFirst()
+                        .orElse(null);
+            } else {
+                for (final SelectTarget st : selectTargets) {
+                    final Table t = getTable(st);
+                    final OrmTable stOrm = tableRegistry.getOrmTable(t);
+                    if (stOrm != null && dtoClass.equals(stOrm.dtoClass())) {
+                        foundOrmTable = stOrm;
+                        foundSelectTarget = st;
+                        break;
+                    }
+                }
             }
+
+            if (foundOrmTable == null || foundSelectTarget == null) {
+                throw new IllegalArgumentException("Target table not found for DTO: " + dtoClass);
+            }
+
+            ormTable = foundOrmTable;
             table = ormTable.getMetaData().table();
-            selectTarget = selectTargets.stream()
-                    .filter(st -> getTable(st).equals(table))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Target table not found for DTO: " + dtoClass));
+            selectTarget = foundSelectTarget;
         } else {
             selectTarget = selectTargets.getFirst();
             table = getTable(selectTarget);
@@ -377,9 +396,16 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return switch (expressionSpec) {
             case QueryField queryField -> {
                 final Class<?> dtoClass = QueryFieldInspector.getDtoClass(queryField);
-                final Table table = tableRegistry.getOrmTableOrThrow(dtoClass).getMetaData().table();
+                final OrmTable ormTable = tableRegistry.getOrmTable(dtoClass);
 
-                yield table.equals(getTable(selectTarget));
+                if (ormTable != null) {
+                    final Table table = ormTable.getMetaData().table();
+                    yield table.equals(getTable(selectTarget));
+                } else {
+                    final Table table = getTable(selectTarget);
+                    final OrmTable stOrm = tableRegistry.getOrmTable(table);
+                    yield stOrm != null && dtoClass.equals(stOrm.dtoClass());
+                }
             }
             case ColumnExpressionSpec columnExpressionSpec -> {
                 final String tableAlias = columnExpressionSpec.getTableAlias();
@@ -400,12 +426,24 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return switch (expressionSpec) {
             case QueryField queryField -> {
                 final Class<?> dtoClass = QueryFieldInspector.getDtoClass(queryField);
-                final Table table = tableRegistry.getOrmTableOrThrow(dtoClass).getMetaData().table();
+                final OrmTable ormTable = tableRegistry.getOrmTable(dtoClass);
 
-                yield selectTargets.stream()
-                        .filter(selectTarget -> table.equals(getTable(selectTarget)))
-                        .findFirst()
-                        .orElse(null);
+                if (ormTable != null) {
+                    final Table table = ormTable.getMetaData().table();
+                    yield selectTargets.stream()
+                            .filter(selectTarget -> table.equals(getTable(selectTarget)))
+                            .findFirst()
+                            .orElse(null);
+                } else {
+                    yield selectTargets.stream()
+                            .filter(selectTarget -> {
+                                final Table table = getTable(selectTarget);
+                                final OrmTable stOrm = tableRegistry.getOrmTable(table);
+                                return stOrm != null && dtoClass.equals(stOrm.dtoClass());
+                            })
+                            .findFirst()
+                            .orElse(null);
+                }
             }
             case ColumnExpressionSpec columnExpressionSpec -> {
                 final String tableAlias = columnExpressionSpec.getTableAlias();

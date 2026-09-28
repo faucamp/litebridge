@@ -137,7 +137,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         SelectExpressions selectExpressions = processSelectExpressions(from, selectTargets);
 
         // Process JOINs
-        final List<Join> joins = processJoinClauses(from, selectExpressions);
+        final List<Join> joins = processJoinClauses(selectTargets, selectExpressions);
 
         if (joinSelectExpressions != null) {
             // Combine the FROM expressions with the JOIN ones
@@ -173,9 +173,12 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final List<SelectTarget> selectTargets = new ArrayList<>(initialCapacity);
         selectTargets.add(from);
         final List<Class<?>> fallbackContextDtoClasses = new ArrayList<>(initialCapacity);
-        fallbackContextDtoClasses.add(selectNode.dtoClass());
 
-        for (JoinSpec joinSpec : joinSpecs) {
+        if (selectNode.dtoClass() != null) {
+            fallbackContextDtoClasses.add(selectNode.dtoClass());
+        }
+
+        for (final JoinSpec joinSpec : joinSpecs) {
             final JoinNode joinNode = joinSpec.joinNode();
             final Class<?> dtoClass = joinNode.dtoClass();
             final Class<?> contextDtoClass = joinNode.contextDtoClass();
@@ -189,6 +192,11 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                     joinNode.alias());
 
             joinSpec.setJoinTarget(joinTarget);
+
+            // Determine source SelectTarget for this join
+            final SelectTarget sourceTarget = resolveSourceSelectTarget(joinSpec, contextDtoClass, fallbackContextDtoClasses, selectTargets, from);
+            joinSpec.setSourceTarget(sourceTarget);
+
             selectTargets.add(joinTarget);
 
             if (contextDtoClass == null && dtoClass != null) {
@@ -199,12 +207,74 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         return selectTargets;
     }
 
-    private @Nullable List<Join> processJoinClauses(final SelectTarget from, final SelectExpressions selectExpressions) {
+    private SelectTarget resolveSourceSelectTarget(final JoinSpec joinSpec,
+                                                   final @Nullable Class<?> contextDtoClass,
+                                                   final List<Class<?>> fallbackContextDtoClasses,
+                                                   final List<SelectTarget> selectTargets,
+                                                   final SelectTarget from) {
+        final JoinNode joinNode = joinSpec.joinNode();
+        final Class<?> dtoClass = joinNode.dtoClass();
+
+        // If explicit contextDtoClass was provided, find the corresponding target
+        if (contextDtoClass != null) {
+            final SelectTarget contextTarget = findSelectTargetByDtoClass(contextDtoClass, selectTargets);
+
+            if (contextTarget != null) {
+                return contextTarget;
+            }
+        }
+
+        // If DTO class was mapped in context via fallbacks, find which fallback context was used
+        if (dtoClass != null && tableRegistry.getOrmTable(dtoClass) == null) {
+            for (final Class<?> fallbackContextDtoClass : fallbackContextDtoClasses.reversed()) {
+                if (tableRegistry.getOrmTableInContext(dtoClass, fallbackContextDtoClass) != null) {
+                    final SelectTarget contextTarget = findSelectTargetByDtoClass(fallbackContextDtoClass, selectTargets);
+
+                    if (contextTarget != null) {
+                        return contextTarget;
+                    }
+                }
+            }
+        }
+
+        // If USING/ON field condition is present, search backwards for a target declaring that field
+        if (joinSpec.getConditionJoinUsingNode() != null) {
+            final String fieldName = joinSpec.getConditionJoinUsingNode().usingColumn();
+            if (fieldName != null) {
+                for (int i = selectTargets.size() - 1; i >= 0; i--) {
+                    final SelectTarget candidateTarget = selectTargets.get(i);
+                    if (matchesSelectTarget(fieldName, candidateTarget)) {
+                        return candidateTarget;
+                    }
+                }
+            }
+        }
+
+        // Fallback to FROM (root)
+        return from;
+    }
+
+    private @Nullable SelectTarget findSelectTargetByDtoClass(final Class<?> dtoClass, final List<SelectTarget> selectTargets) {
+        for (int i = selectTargets.size() - 1; i >= 0; i--) {
+            final SelectTarget st = selectTargets.get(i);
+            final Table table = getTable(st);
+            final OrmTable ormTable = tableRegistry.getOrmTable(table);
+
+            if (ormTable != null && dtoClass.equals(ormTable.dtoClass())) {
+                return st;
+            }
+        }
+
+        return null;
+    }
+
+    private @Nullable List<Join> processJoinClauses(final List<SelectTarget> selectTargets, final SelectExpressions selectExpressions) {
         if (joinSpecs == null) {
             return null;
         }
 
         final List<Join> joins = new ArrayList<>(joinSpecs.size());
+        final SelectTarget from = selectTargets.getFirst();
 
         for (final JoinSpec joinSpec : joinSpecs) {
             joins.addAll(processJoinClause(joinSpec, from, selectExpressions));
@@ -216,23 +286,24 @@ final class SelectCompilationContext extends AbstractCompilationContext {
     private List<Join> processJoinClause(final JoinSpec joinSpec, final SelectTarget from, final SelectExpressions selectExpressions) {
         final JoinNode joinNode = joinSpec.joinNode();
         final SelectTarget joinTarget = joinSpec.getJoinTarget();
+        final SelectTarget leftTarget = joinSpec.getSourceTarget() != null ? joinSpec.getSourceTarget() : from;
 
         // Compile condition specs and create new Join
         if (joinSpec.getConditionJoinUsingNode() != null) {
-            return processJoinUsingConditionNode(joinSpec.getConditionJoinUsingNode(), joinTarget, joinSpec, from, selectExpressions);
+            return processJoinUsingConditionNode(joinSpec.getConditionJoinUsingNode(), joinTarget, joinSpec, leftTarget, selectExpressions);
         }
 
-        final ConditionGroup conditionGroup = toConditionGroup(joinSpec.conditionGroupStack().current(), List.of(from, joinTarget), selectExpressions);
+        final ConditionGroup conditionGroup = toConditionGroup(joinSpec.conditionGroupStack().current(), List.of(leftTarget, joinTarget), selectExpressions);
         return List.of(new Join(joinNode.type(), joinTarget, conditionGroup));
     }
 
     private List<Join> processJoinUsingConditionNode(final ConditionJoinUsingNode conditionJoinUsingNode,
                                                      final SelectTarget joinTarget,
                                                      final JoinSpec joinSpec,
-                                                     final SelectTarget from,
+                                                     final SelectTarget leftTarget,
                                                      final SelectExpressions selectExpressions) {
         final String fieldName = Objects.requireNonNull(conditionJoinUsingNode.usingColumn(), "USING column not provided");
-        final Table leftTable = getTable(from);
+        final Table leftTable = getTable(leftTarget);
         final OrmTable leftOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(leftTable);
 
         // Get details on the USING column on the local table
@@ -241,7 +312,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
         switch (mappedFieldTarget) {
             case ColumnMetaData usingColumnMetaData -> {
-                final JoinOnSpec joinOnSpec = processOneToManyJoin(from, usingColumnMetaData, joinTarget);
+                final JoinOnSpec joinOnSpec = processOneToManyJoin(leftTarget, usingColumnMetaData, joinTarget);
                 final SelectColumnSpec leftSelectColumnSpec = joinOnSpec.leftSelectColumnSpec();
                 final SelectColumnSpec rightSelectColumnSpec = joinOnSpec.rightSelectColumnSpec();
 
@@ -264,11 +335,11 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                             rightSelectColumnSpec);
                 }
 
-                final ConditionGroup conditionGroup = toConditionGroup(conditionGroupSpec, List.of(from, joinTarget), selectExpressions);
+                final ConditionGroup conditionGroup = toConditionGroup(conditionGroupSpec, List.of(leftTarget, joinTarget), selectExpressions);
                 return List.of(new Join(joinSpec.joinNode().type(), joinTarget, conditionGroup));
             }
             case MappedOneToMany mappedOneToMany -> {
-                final JoinOnSpec joinOnSpec = processOneToManyReverseJoin(joinTarget, mappedOneToMany, from, true);
+                final JoinOnSpec joinOnSpec = processOneToManyReverseJoin(joinTarget, mappedOneToMany, leftTarget, true);
                 final SelectColumnSpec leftSelectColumnSpec = joinOnSpec.leftSelectColumnSpec();
                 final SelectColumnSpec rightSelectColumnSpec = joinOnSpec.rightSelectColumnSpec();
 
@@ -291,11 +362,11 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                             rightSelectColumnSpec);
                 }
 
-                final ConditionGroup conditionGroup = toConditionGroup(conditionGroupSpec, List.of(from, joinTarget), selectExpressions);
+                final ConditionGroup conditionGroup = toConditionGroup(conditionGroupSpec, List.of(leftTarget, joinTarget), selectExpressions);
                 return List.of(new Join(joinSpec.joinNode().type(), joinTarget, conditionGroup));
             }
             case MappedManyToMany mappedManyToMany -> {
-                final List<JoinOnSpec> joinOnSpecs = processManyToManyJoin(mappedManyToMany, from, joinTarget);
+                final List<JoinOnSpec> joinOnSpecs = processManyToManyJoin(mappedManyToMany, leftTarget, joinTarget);
 
                 // First join
                 final JoinOnSpec firstJoinOnSpec = joinOnSpecs.getFirst();
@@ -312,7 +383,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                         Operator.EQ,
                         firstRightSelectColumnSpec);
 
-                final ConditionGroup firstConditionGroup = toConditionGroup(firstConditionGroupSpec, List.of(from, aliasedJoinTable), selectExpressions);
+                final ConditionGroup firstConditionGroup = toConditionGroup(firstConditionGroupSpec, List.of(leftTarget, aliasedJoinTable), selectExpressions);
                 final Join firstJoin = new Join(joinSpec.joinNode().type(), aliasedJoinTable, firstConditionGroup);
 
                 // Second join
@@ -847,7 +918,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final OrmTable leftOrmTable = tableRegistry.getOrmTableOrThrow(leftTable);
         final ColumnMetaData leftColumnMetaData = leftOrmTable.getMetaData().primaryKey().getFirst();
         final Column leftColumn = leftColumnMetaData.column();
-        final String leftTableAlias = aliasGenerator.tableAlias(leftTable);
+        final String leftTableAlias = getAlias(leftSelectTarget) != null ? getAlias(leftSelectTarget) : aliasGenerator.tableAlias(leftTable);
         final String leftColumnAlias = aliasGenerator.columnAlias(leftColumn);
         final SelectColumnSpec leftSelectColumnSpec = new SelectColumnSpec(leftColumn, leftColumnAlias, leftTableAlias);
 
