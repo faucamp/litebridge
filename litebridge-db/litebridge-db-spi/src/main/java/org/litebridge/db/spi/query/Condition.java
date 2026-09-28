@@ -14,20 +14,6 @@ import org.litebridge.db.spi.expression.SelectExpression;
  */
 public record Condition(SelectExpression lhs, Operator operator, @Nullable SelectExpression rhs) {
 
-//    /**
-//     * Convenience constructor that wraps the given value into a {@link LiteralExpression}.
-//     * <p>
-//     * Equivalent to {@code Condition(lhs, operator, new LiteralExpression(value))}.
-//     *
-//     * @param lhs      Left-hand side of the condition; usually a expression expression.
-//     * @param operator {@code IS_NULL} or {@code IS_NOT_NULL} operator
-//     * @param value    Literal value/operand for the RHS of the condition; may be {@code null}.
-//     * @throws IllegalArgumentException if {@code operator} is not {@code IS_NULL} or {@code IS_NOT_NULL}
-//     */
-//    public Condition(final SelectExpression lhs, final Operator operator, final @Nullable Object value) {
-//        this(lhs, operator, new LiteralExpression(value, null));
-//    }
-
     /**
      * Convenience constructor for {@code Operator.IS_NULL} and @{code Operator.IS_NOT_NULL} operators.
      * <p>

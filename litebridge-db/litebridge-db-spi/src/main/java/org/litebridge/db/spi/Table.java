@@ -105,32 +105,12 @@ public sealed class Table implements SelectTarget permits VirtualTable {
         }
     }
 
-    /**
-     * Set the alias for this entity and return the updated instance.
-     *
-     * @param alias the alias to assign to this entity; must not be null
-     * @return the updated instance of {@code Aliased} with the specified alias set
-     */
-    @Deprecated(forRemoval = true)
-    public Table as(final String alias) {
-//        setAlias(alias);
-//        return (Table) this;
-        throw new UnsupportedOperationException("Deprecated");
-    }
-
     @Override
     public boolean equals(final Object o) {
         return this == o || (o instanceof final Table that
                 && Objects.equals(this.name, that.name)
                 && Objects.equals(this.schema, that.schema)
                 && Objects.equals(this.catalog, that.catalog));
-    }
-
-    @Deprecated(forRemoval = true)
-    public boolean equalsIgnoreAlias(final Object o) {
-//        if (!(o instanceof final Table table)) return false;
-//        return Objects.equals(catalog, table.catalog) && Objects.equals(schema, table.schema) && Objects.equals(name(), table.name());
-        throw new UnsupportedOperationException("Deprecated");
     }
 
     @Override
