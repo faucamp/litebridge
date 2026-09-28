@@ -30,7 +30,8 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
 
     @Override
     @BeforeEach
-    public void beforeEach(DbEnvironment env) throws Exception {
+    @SuppressWarnings("JUnitMalformedDeclaration")
+    public void beforeEach(DbEnvironment<?> env) throws Exception {
         super.beforeEach(env);
 
         // Setup data

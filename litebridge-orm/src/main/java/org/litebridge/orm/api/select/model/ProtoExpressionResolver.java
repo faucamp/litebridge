@@ -66,7 +66,7 @@ public abstract class ProtoExpressionResolver {
      * @param expressionSpec the proto-expression to resolve
      * @param ormTable       the ORM table metadata, or {@code null}
      * @param table          the target database table
-     * @param tableAlias
+     * @param tableAlias     optional table alias
      * @param clause         the clause type where the expression is being used
      * @return the resolved {@link ExpressionSpec} corresponding to the provided column
      */
@@ -92,7 +92,7 @@ public abstract class ProtoExpressionResolver {
      * @param resolvable the {@link Resolvable} to resolve
      * @param ormTable   the ORM table metadata, or {@code null}
      * @param table      the target database table
-     * @param tableAlias
+     * @param tableAlias optional table alias
      * @param clause     the clause type where the expression is being used
      * @return the resolved {@link ExpressionSpec} corresponding to the provided column
      */
@@ -216,9 +216,9 @@ public abstract class ProtoExpressionResolver {
      * Resolves a resolvable into a column expression specification.
      *
      * @param resolvable the resolvable to resolve
-     * @param alias
      * @param ormTable   the ORM table metadata, or {@code null}
      * @param table      the target database table
+     * @param tableAlias optional table alias
      * @param clause     the clause type where the expression is being used
      * @return the resolved column expression specification
      */

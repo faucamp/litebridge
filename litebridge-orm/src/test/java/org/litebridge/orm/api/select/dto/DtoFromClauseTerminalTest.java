@@ -34,14 +34,13 @@ import static org.mockito.Mockito.when;
 class DtoFromClauseTerminalTest {
 
     private SelectEngineTerminal selectEngineTerminal;
-    private LitebridgeContext litebridgeContext;
     private SelectNode selectNode;
     private DtoFromClauseTerminal<SelectTestDto> terminal;
 
     @BeforeEach
     void setUp() {
         selectEngineTerminal = mock(SelectEngineTerminal.class);
-        litebridgeContext = mock(LitebridgeContext.class);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         selectNode = new SelectNode(null, SelectTestDto.class, null, null, null, null);
         terminal = new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContext);
     }

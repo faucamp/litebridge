@@ -31,15 +31,13 @@ import static org.mockito.Mockito.when;
 
 class DtoJoinClauseTest {
 
-    private LitebridgeContext litebridgeContext;
-    private SelectNode selectNode;
     private AtomicReference<QueryNode> capturedConditionNode;
     private DtoJoinClause<SelectTestDto> joinClause;
 
     @BeforeEach
     void setUp() {
-        litebridgeContext = mock(LitebridgeContext.class);
-        selectNode = new SelectNode(null, SelectTestDto.class, null, null, null, null);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+        final SelectNode selectNode = new SelectNode(null, SelectTestDto.class, null, null, null, null);
         capturedConditionNode = new AtomicReference<>();
         joinClause = new DtoJoinClause<>(selectNode, litebridgeContext, conditionNode -> {
             capturedConditionNode.set(conditionNode);

@@ -20,7 +20,6 @@ final class DeleteCompilationContext extends AbstractCompilationContext {
     private static final ConditionGroup EMPTY_CONDITION_GROUP = new ConditionGroup(Collections.emptyList());
 
     private final Table table;
-    private final @Nullable OrmTable ormTable;
     private @Nullable ConditionGroupSpecStack where;
 
     DeleteCompilationContext(final DeleteNode deleteNode,
@@ -28,10 +27,9 @@ final class DeleteCompilationContext extends AbstractCompilationContext {
         super(litebridgeContext);
 
         if (deleteNode.dtoClass() != null) {
-            this.ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(deleteNode.dtoClass());
+            final OrmTable ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(deleteNode.dtoClass());
             this.table = ormTable.getMetaData().table();
         } else {
-            this.ormTable = null;
             this.table = litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(deleteNode.table()));
         }
     }

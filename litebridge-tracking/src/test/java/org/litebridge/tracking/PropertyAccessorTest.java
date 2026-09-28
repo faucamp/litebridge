@@ -225,7 +225,7 @@ class PropertyAccessorTest {
         assertTrue(result.contains("myVar"));
     }
 
-    private class TestDto {
+    private static class TestDto {
         private String myVar;
         private String otherVar;
 
@@ -246,7 +246,7 @@ class PropertyAccessorTest {
         }
     }
 
-    private class TestDto2 {
+    private static class TestDto2 {
         private List<Long> list;
 
         public List<Long> getList() {

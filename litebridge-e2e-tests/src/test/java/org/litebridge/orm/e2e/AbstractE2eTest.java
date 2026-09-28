@@ -26,7 +26,8 @@ public abstract class AbstractE2eTest {
     private Flyway flyway;
 
     @BeforeEach
-    public void beforeEach(final DbEnvironment env) throws Exception {
+    @SuppressWarnings("JUnitMalformedDeclaration")
+    public void beforeEach(final DbEnvironment<?> env) throws Exception {
         this.dbEnv = env;
         this.dbEnv.start(); // If not already started
 

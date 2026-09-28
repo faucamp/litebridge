@@ -16,7 +16,6 @@ import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 
@@ -28,21 +27,17 @@ import java.util.stream.Stream;
  */
 public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
 
-    private final AliasGenerator aliasGenerator;
     private final ClassFieldAccessorCache classFieldAccessorCache;
     private final TableRegistry tableRegistry;
 
     /**
      * Creates a new instance of {@code DtoProtoExpressionResolver} without a select specification.
      *
-     * @param aliasGenerator          the alias generator
      * @param classFieldAccessorCache the field accessor cache
      * @param tableRegistry           the table registry
      */
-    public DtoProtoExpressionResolver(final AliasGenerator aliasGenerator,
-                                      final ClassFieldAccessorCache classFieldAccessorCache,
+    public DtoProtoExpressionResolver(final ClassFieldAccessorCache classFieldAccessorCache,
                                       final TableRegistry tableRegistry) {
-        this.aliasGenerator = aliasGenerator;
         this.classFieldAccessorCache = classFieldAccessorCache;
         this.tableRegistry = tableRegistry;
     }

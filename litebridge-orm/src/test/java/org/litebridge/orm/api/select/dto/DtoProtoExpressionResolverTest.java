@@ -16,23 +16,18 @@ import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.orm.persistence.alias.AliasGenerator;
-import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class DtoProtoExpressionResolverTest {
 
-    private AliasGenerator aliasGenerator;
     private ClassFieldAccessorCache classFieldAccessorCache;
     private TableRegistry tableRegistry;
     private OrmTable ormTable;
@@ -44,7 +39,6 @@ class DtoProtoExpressionResolverTest {
 
     @BeforeEach
     void setUp() {
-        aliasGenerator = new NoOpAliasGenerator();
         classFieldAccessorCache = mock(ClassFieldAccessorCache.class);
         tableRegistry = mock(TableRegistry.class);
         ormTable = mock(OrmTable.class);
@@ -58,7 +52,7 @@ class DtoProtoExpressionResolverTest {
         when(ormTable.columnMetaDataForField("name")).thenReturn(columnMetaData);
         doReturnDtoClass(ormTable, SelectTestDto.class);
 
-        resolver = new DtoProtoExpressionResolver(aliasGenerator, classFieldAccessorCache, tableRegistry);
+        resolver = new DtoProtoExpressionResolver(classFieldAccessorCache, tableRegistry);
     }
 
     @Test

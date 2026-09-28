@@ -33,7 +33,8 @@ public class FunctionsE2eTest extends AbstractE2eTest {
 
     @Override
     @BeforeEach
-    public void beforeEach(DbEnvironment env) throws Exception {
+    @SuppressWarnings("JUnitMalformedDeclaration")
+    public void beforeEach(DbEnvironment<?> env) throws Exception {
         super.beforeEach(env);
 
         // Register DTO-table mappings

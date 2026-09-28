@@ -2,8 +2,8 @@ package org.litebridge.orm.api.condition;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
@@ -14,8 +14,6 @@ import java.util.function.Function;
  * @param <DTO> The type of the DTO being queried.
  */
 public class CbDtoConditionClause<DTO> extends AbstractCbConditionClause<DTO> {
-
-    private final Function<QueryNode, AbstractCbConditionClauseTerminal<DTO>> terminalCreator;
 
     /**
      * Constructs a new {@code CbDtoConditionClause}.
@@ -34,7 +32,6 @@ public class CbDtoConditionClause<DTO> extends AbstractCbConditionClause<DTO> {
                                 final @Nullable QueryNode node,
                                 final Function<QueryNode, AbstractCbConditionClauseTerminal<DTO>> terminalCreator) {
         super(litebridgeContext, logicOperator, lhsColumn, lhsExpression, node, terminalCreator);
-        this.terminalCreator = terminalCreator;
     }
 
     @Override

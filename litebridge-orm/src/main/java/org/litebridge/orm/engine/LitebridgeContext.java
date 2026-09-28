@@ -224,7 +224,7 @@ public final class LitebridgeContext {
         final ProtoExpressionResolver protoExpressionResolver;
 
         if (mode == Mode.DTO) {
-            protoExpressionResolver = new DtoProtoExpressionResolver(aliasGenerator, classFieldAccessorCache(), tableRegistry());
+            protoExpressionResolver = new DtoProtoExpressionResolver(classFieldAccessorCache(), tableRegistry());
         } else {
             protoExpressionResolver = new SqlProtoExpressionResolver();
         }

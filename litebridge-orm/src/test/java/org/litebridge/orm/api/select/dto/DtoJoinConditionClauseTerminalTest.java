@@ -30,15 +30,13 @@ import static org.mockito.Mockito.mock;
 
 class DtoJoinConditionClauseTerminalTest {
 
-    private SelectEngineTerminal selectEngineTerminal;
-    private LitebridgeContext litebridgeContext;
     private JoinNode joinNode;
     private DtoJoinConditionClauseTerminal<SelectTestDto> terminal;
 
     @BeforeEach
     void setUp() {
-        selectEngineTerminal = mock(SelectEngineTerminal.class);
-        litebridgeContext = mock(LitebridgeContext.class);
+        final SelectEngineTerminal selectEngineTerminal = mock(SelectEngineTerminal.class);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         final SelectNode selectNode = new SelectNode(null, SelectTestDto.class, null, null, null, null);
         joinNode = new JoinNode(selectNode, Join.JoinType.INNER, SelectTestDto.class, null, null, null, null);
         terminal = new DtoJoinConditionClauseTerminal<>(joinNode, selectEngineTerminal, litebridgeContext);

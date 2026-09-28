@@ -121,7 +121,7 @@ public final class DefaultAliasGenerator implements AliasGenerator {
         }
     }
 
-    private class ScopeContextStack extends ContextStack<Scope> {
+    private static class ScopeContextStack extends ContextStack<Scope> {
 
         @Override
         protected Scope newRootInstance() {

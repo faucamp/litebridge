@@ -26,14 +26,13 @@ import static org.mockito.Mockito.mock;
 
 class AbstractCbConditionClauseTest {
 
-    private LitebridgeContext litebridgeContext;
     private AbstractCbConditionClause<Object> clause;
     private final QueryNode[] capturedNode = new QueryNode[1];
 
     @BeforeEach
     @SuppressWarnings("ConstantConditions")
     void setUp() {
-        litebridgeContext = mock(LitebridgeContext.class);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         ExpressionSpec lhs = new SelectColumnSpec(new Column(new Table("TEST"), "COL"));
         clause = new AbstractCbConditionClause<Object>(
                 litebridgeContext,

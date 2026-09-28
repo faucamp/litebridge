@@ -13,7 +13,6 @@ import java.util.StringJoiner;
  * Type override proto-expression that allows nesting other proto-expressions.
  * <p>
  * This record is used to create a nested chain of expression instances (e.g. {@link UpperSpec}) when table information is available.
- *
  */
 public final class ProtoNestableTOExpr<T> extends AbstractAliasable
         implements ProtoNestableExpressionSpec, TypeOverrideExpressionSpec<T> {
@@ -29,7 +28,6 @@ public final class ProtoNestableTOExpr<T> extends AbstractAliasable
      * @param alias        The column alias to use, or {@code null} if not specified.
      * @param type         The type of expression to create.
      * @param args         Extra expression-specific arguments.
-     * @param <T>          The type override of the expression result.
      */
     public ProtoNestableTOExpr(final Class<T> typeOverride,
                                final Class<? extends ExpressionSpec> type,
