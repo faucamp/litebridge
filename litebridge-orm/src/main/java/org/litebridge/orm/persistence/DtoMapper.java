@@ -142,10 +142,14 @@ public class DtoMapper {
             final Column rawColumn = rowColumn.column();
             final Column column;
 
-            if (rawColumn.hasTable()) {
-                column = rawColumn;
+            if (rawColumn != null) {
+                if (rawColumn.hasTable()) {
+                    column = rawColumn;
+                } else {
+                    column = parseTargetColumn(rawColumn.name(), dtoClassTableMetaData.schema(), dtoClassTableMetaData);
+                }
             } else {
-                column = parseTargetColumn(rawColumn.name(), dtoClassTableMetaData.schema(), dtoClassTableMetaData);
+                column = parseTargetColumn(rowColumn.label(), dtoClassTableMetaData.schema(), dtoClassTableMetaData);
             }
 
             final Table table = column.table();
@@ -161,8 +165,7 @@ public class DtoMapper {
             FieldMapping fieldMapping = null;
             final List<FieldMapping> currentMappings = mappingData.fieldMappings();
 
-            for (int i = 0; i < currentMappings.size(); i++) {
-                final FieldMapping mapping = currentMappings.get(i);
+            for (final FieldMapping mapping : currentMappings) {
                 if (mapping.fieldAccessor().equals(fieldAccessor)) {
                     fieldMapping = mapping;
                     break;
@@ -188,8 +191,9 @@ public class DtoMapper {
                         if (hostOrmTable != null) {
                             final MappedFieldTarget target = hostOrmTable.mappedFieldTargetForField(collectionField);
 
-                            if (target instanceof MappedOneToMany mappedOneToMany && mappedOneToMany.mappedByField().equals(fieldAccessor)) {
-                                relatedCollectionField = mappedOneToMany.collection();
+                            if (target instanceof MappedOneToMany(FieldAccessor mappedByField, FieldAccessor collection)
+                                    && mappedByField.equals(fieldAccessor)) {
+                                relatedCollectionField = collection;
                                 relatedDtoClass = collectionField.dtoClass();
                                 break;
                             }
@@ -342,16 +346,6 @@ public class DtoMapper {
                     sortedColumns[pkIndex] = column;
                     sortedColumnLabels[pkIndex] = label;
                 }
-            }
-        }
-
-        // Verify we found all columns
-        for (int i = 0; i < sortedColumns.length; i++) {
-            if (sortedColumns[i] == null) {
-                LOGGER.warn("Could not find column for PK field {} of DTO {} in columns of field {}",
-                        targetPkFields.get(i).name(), targetDtoClass.getName(), fieldMapping.fieldAccessor().name());
-                // Don't reorder if incomplete
-                return;
             }
         }
 
@@ -906,14 +900,14 @@ public class DtoMapper {
     }
 
     private static final class DtoData {
-        private final Map<FieldAccessor, Object> values = new HashMap<>();
+        private final Map<FieldAccessor, @Nullable Object> values = new HashMap<>();
         private final Map<FieldAccessor, Collection<Object>> collections = new HashMap<>();
 
-        public void set(FieldAccessor accessor, Object value) {
+        public void set(FieldAccessor accessor, @Nullable Object value) {
             values.put(accessor, value);
         }
 
-        public Object get(FieldAccessor accessor) {
+        public @Nullable Object get(FieldAccessor accessor) {
             return values.get(accessor);
         }
 
@@ -923,7 +917,7 @@ public class DtoMapper {
                     .add(value);
         }
 
-        public Map<FieldAccessor, Object> values() {
+        public Map<FieldAccessor, @Nullable Object> values() {
             return values;
         }
 
@@ -1065,13 +1059,13 @@ public class DtoMapper {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(final @Nullable Object obj) {
             if (obj == this) return true;
             if (obj == null || obj.getClass() != this.getClass()) return false;
             var that = (FieldMapping) obj;
             return Objects.equals(this.fieldAccessor, that.fieldAccessor) &&
                     Objects.equals(this.columns, that.columns) &&
-                    Objects.equals(this.columnIndexes, that.columnIndexes) &&
+                    Arrays.equals(this.columnIndexes, that.columnIndexes) &&
                     this.isBasicType == that.isBasicType &&
                     this.isRelatedDto == that.isRelatedDto &&
                     Objects.equals(this.relatedCollectionField, that.relatedCollectionField) &&
@@ -1080,7 +1074,7 @@ public class DtoMapper {
 
         @Override
         public int hashCode() {
-            return Objects.hash(fieldAccessor, columns, columnIndexes, isBasicType, isRelatedDto, relatedCollectionField, relatedDtoClass);
+            return Objects.hash(fieldAccessor, columns, Arrays.hashCode(columnIndexes), isBasicType, isRelatedDto, relatedCollectionField, relatedDtoClass);
         }
 
         @Override

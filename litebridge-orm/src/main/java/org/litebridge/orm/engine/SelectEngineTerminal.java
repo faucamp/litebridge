@@ -309,8 +309,7 @@ public class SelectEngineTerminal {
 
     @SuppressWarnings("unchecked")
     private <T> T unwrap(final Class<T> type, final RowColumn rowColumn, final TypeConverter typeConverter) {
-        final Object converted = typeConverter.convert(rowColumn.value(), type);
-        return (T) converted;
+        return typeConverter.convert(rowColumn.value(), type);
     }
 
     private Row convertRowValue(final Row row, final @Nullable Class<?>[] resultTypes, final TypeConverter typeConverter) {
@@ -484,9 +483,10 @@ public class SelectEngineTerminal {
                 final TableMetaData tableMetaData = getTableMetaData(column.table(), litebridgeContext);
                 final ColumnMetaData columnMetaData = tableMetaData.column(column.name());
                 columnLabelsToColumnMetaData.put(columnKey, columnMetaData);
+                final String tableAlias = columnExpression.tableAlias();
 
-                if (columnExpression.tableAlias() != null) {
-                    columnLabelsToTableAliases.put(columnKey, columnExpression.tableAlias());
+                if (tableAlias != null) {
+                    columnLabelsToTableAliases.put(columnKey, tableAlias);
                 }
             }
         }

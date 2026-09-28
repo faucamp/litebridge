@@ -2,8 +2,6 @@ package org.litebridge.db.spi;
 
 import org.jspecify.annotations.Nullable;
 
-import java.util.StringJoiner;
-
 /**
  * A column within a row of a database query result.
  * <p>
