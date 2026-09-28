@@ -1,4 +1,4 @@
-package org.litebridge.db.oracle.function.scalar;
+package org.litebridge.db.oracle.expression.function.scalar;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.oracle.expression.function.scalar.Substr;

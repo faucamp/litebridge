@@ -1,4 +1,4 @@
-package org.litebridge.db.oracle.function;
+package org.litebridge.db.oracle.expression.function;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.oracle.expression.function.OracleSqlFunctionRegistryFactory;
@@ -19,7 +19,7 @@ class OracleSqlFunctionRegistryFactoryTest {
         final LabelGenerator labelGenerator = new LabelGenerator();
         final OracleSqlFunctionRegistryFactory oracleSqlFunctionRegistryFactory = new OracleSqlFunctionRegistryFactory(labelGenerator, mock(SelectSqlGenerator.class));
 
-        // Whe
+        // When
         final DelegateExpression result = oracleSqlFunctionRegistryFactory.createSubstring(mock(AbstractColumnExpression.class), 3, 7, null);
 
         // Then
