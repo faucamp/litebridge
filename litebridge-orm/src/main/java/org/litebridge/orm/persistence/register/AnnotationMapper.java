@@ -1,5 +1,6 @@
 package org.litebridge.orm.persistence.register;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.DatabaseProvider;
@@ -35,21 +36,7 @@ public final class AnnotationMapper {
     public static DtoTableSpec createDtoTableSpec(final Class<?> entityClass, final DatabaseProvider databaseProvider, final MethodHandles.Lookup lookup) {
         // Map table
         final Table tableAnnotation = entityClass.getAnnotation(Table.class);
-
-        if (tableAnnotation == null) {
-            throw new IllegalArgumentException("Class " + entityClass.getName() + " is not annotated with @Table");
-        }
-
-        // Map supported superclasses/interfaces for entity when dealing with collections
-        final AllowInterface allowInterface = entityClass.getAnnotation(AllowInterface.class);
-        final List<Class<?>> entityInterfaces;
-
-        if (allowInterface != null) {
-            entityInterfaces = List.of(allowInterface.value());
-        } else {
-            entityInterfaces = Collections.emptyList();
-        }
-
+        final List<Class<?>> entityInterfaces = getEntityInterfaces(entityClass, tableAnnotation);
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = new LinkedHashMap<>();
         final Set<String> mappedFieldNames = new HashSet<>();
 
@@ -152,5 +139,23 @@ public final class AnnotationMapper {
         }
 
         return columnMapping;
+    }
+
+    private static List<Class<?>> getEntityInterfaces(final Class<?> entityClass, final @Nullable Table tableAnnotation) {
+        if (tableAnnotation == null) {
+            throw new IllegalArgumentException("Class " + entityClass.getName() + " is not annotated with @Table");
+        }
+
+        // Map supported superclasses/interfaces for entity when dealing with collections
+        final AllowInterface allowInterface = entityClass.getAnnotation(AllowInterface.class);
+        final List<Class<?>> entityInterfaces;
+
+        if (allowInterface != null) {
+            entityInterfaces = List.of(allowInterface.value());
+        } else {
+            entityInterfaces = Collections.emptyList();
+        }
+
+        return entityInterfaces;
     }
 }

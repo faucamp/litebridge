@@ -301,20 +301,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 andConditionGroup = null;
             }
 
-            final List<UpdateColumn> updatedColumns;
-            if (whenMatchedSpec.getUpdateColumns() != null) {
-                updatedColumns = new ArrayList<>(whenMatchedSpec.getUpdateColumns().size());
-                int currentBindIndex = bindValues.size();
-                for (UpdateColumn col : whenMatchedSpec.getUpdateColumns()) {
-                    if (col.generator() == null && col.mathOperator() == null) {
-                        updatedColumns.add(new UpdateColumn(col.name(), col.generator(), col.mathOperator(), currentBindIndex++));
-                    } else {
-                        updatedColumns.add(col);
-                    }
-                }
-            } else {
-                updatedColumns = null;
-            }
+            final List<UpdateColumn> updatedColumns = getUpdateColumns(whenMatchedSpec);
 
             if (whenMatchedSpec.isMatched()) {
                 // When matched
@@ -359,6 +346,27 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 conditionNode.lhsExpression(),
                 conditionNode.operator(),
                 conditionNode.rhs());
+    }
+
+    private @Nullable List<UpdateColumn> getUpdateColumns(final WhenMatchedSpec whenMatchedSpec) {
+        final List<UpdateColumn> updatedColumns;
+
+        if (whenMatchedSpec.getUpdateColumns() != null) {
+            updatedColumns = new ArrayList<>(whenMatchedSpec.getUpdateColumns().size());
+            int currentBindIndex = bindValues.size();
+
+            for (UpdateColumn col : whenMatchedSpec.getUpdateColumns()) {
+                if (col.generator() == null && col.mathOperator() == null) {
+                    updatedColumns.add(new UpdateColumn(col.name(), col.generator(), col.mathOperator(), currentBindIndex++));
+                } else {
+                    updatedColumns.add(col);
+                }
+            }
+        } else {
+            updatedColumns = null;
+        }
+
+        return updatedColumns;
     }
 
     static final class WhenMatchedSpec {
