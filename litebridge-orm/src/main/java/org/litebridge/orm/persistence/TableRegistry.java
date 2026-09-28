@@ -101,11 +101,27 @@ public final class TableRegistry {
     /**
      * Retrieves the {@link OrmTable} associated with the specified table name.
      *
-     * @param table the table name in the format "schema.table"
+     * @param table the table name in the format "schema.table" or unqualified "table"
      * @return the {@link OrmTable} associated with the specified table name, or {@code null} if not found
      */
     public @Nullable OrmTable getOrmTable(final String table) {
-        return ormTableMap.get(table);
+        final OrmTable directMatch = ormTableMap.get(table);
+
+        if (directMatch != null) {
+            return directMatch;
+        }
+
+        if (!table.contains(".")) {
+            for (final OrmTable ormTable : ormTableMap.values()) {
+                if (ormTable.getMetaData().table().name().equalsIgnoreCase(table)) {
+                    // Store the lookup to allow a direct match later
+                    ormTableMap.put(table, ormTable);
+                    return ormTable;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -125,8 +141,30 @@ public final class TableRegistry {
      * @param table the table
      * @return the {@link OrmTable} associated with the specified table, or {@code null} if not found
      */
-    public @Nullable OrmTable getOrmTable(final Table table) {
-        return getOrmTable(table.qualifiedName());
+    public @Nullable OrmTable getOrmTable(final @Nullable Table table) {
+        if (table == null) {
+            return null;
+        }
+
+        final OrmTable directMatch = getOrmTable(table.qualifiedName());
+
+        if (directMatch != null) {
+            return directMatch;
+        }
+
+        if (table.schema() == null) {
+            final String tableName = table.name();
+
+            for (final OrmTable ormTable : ormTableMap.values()) {
+                if (ormTable.getMetaData().table().name().equalsIgnoreCase(tableName)) {
+                    // Store the lookup to allow a direct match later
+                    ormTableMap.put(tableName, ormTable);
+                    return ormTable;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

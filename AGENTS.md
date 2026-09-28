@@ -144,6 +144,9 @@ Litebridge is modular and uses JPMS (`module-info.java`).
   many-to-many relationships.
 - **Record Support**: Java Records are reconstructed at most once per row, even when multiple dependencies are being
   injected.
+- **Resilient Column & Table Resolution**: Resolves unqualified table names and plain column names against registered
+  `OrmTable` metadata when database driver `ResultSetMetaData` lacks table or schema qualifiers (e.g. PostgreSQL or
+  Oracle native SQL queries).
 
 ### 4. Database Support
 
@@ -194,6 +197,8 @@ Litebridge is modular and uses JPMS (`module-info.java`).
   executable specifications.
 - `org.litebridge.orm.engine.ast.QueryNode`: Root AST node interface used by the `QueryCompiler`; subclasses implement
   specific SQL statement fragment information.
+- `org.litebridge.orm.persistence.TableRegistry`: Centralised registry for managing ORM table mappings, supporting
+  resolution of tables by DTO class, qualified table name (`schema.table`), and unqualified table name lookups.
 - `org.litebridge.orm.persistence.DtoMapper`: The high-performance engine for mapping database rows to DTO instances.
 
 ## Common Agent Tasks

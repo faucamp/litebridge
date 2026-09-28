@@ -152,6 +152,22 @@ class TableRegistryTest {
     }
 
     @Test
+    void getTable_string_unqualified() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final OrmTable ormTable = ormTable(TestDto.class, "public", "test_table");
+        tableRegistry.addTable(TestDto.class, ormTable);
+
+        // When
+        final OrmTable result = tableRegistry.getOrmTable("test_table");
+        final OrmTable resultCaseInsensitive = tableRegistry.getOrmTable("TEST_TABLE");
+
+        // Then
+        assertSame(ormTable, result);
+        assertSame(ormTable, resultCaseInsensitive);
+    }
+
+    @Test
     void getTable_table() {
         // Given
         final TableRegistry tableRegistry = new TableRegistry();
@@ -163,6 +179,22 @@ class TableRegistryTest {
 
         // Then
         assertSame(ormTable, result);
+    }
+
+    @Test
+    void getTable_table_unqualified() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final OrmTable ormTable = ormTable(TestDto.class, "public", "test_table");
+        tableRegistry.addTable(TestDto.class, ormTable);
+
+        // When
+        final OrmTable result = tableRegistry.getOrmTable(new Table(null, null, "test_table"));
+        final OrmTable resultCaseInsensitive = tableRegistry.getOrmTable(new Table(null, null, "TEST_TABLE"));
+
+        // Then
+        assertSame(ormTable, result);
+        assertSame(ormTable, resultCaseInsensitive);
     }
 
     @Test

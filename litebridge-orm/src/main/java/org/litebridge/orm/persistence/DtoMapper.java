@@ -356,13 +356,14 @@ public class DtoMapper {
     }
 
     private MappingData createMappingDataIfAbsent(final Map<String, MappingData> mappingDataMap, final Table table, final @Nullable Class<?> contextDtoClass, final RowColumn rowColumn) {
-        final String key = rowColumn.tableAlias() != null ? rowColumn.tableAlias() : table.qualifiedName();
+        final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
+        final Table canonicalTable = ormTable.getMetaData().table();
+        final String key = rowColumn.tableAlias() != null ? rowColumn.tableAlias() : canonicalTable.qualifiedName();
         return mappingDataMap.computeIfAbsent(key, alias -> {
-            final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
             final List<FieldAccessor> pkFields = ormTable.getPrimaryKeyFields();
             return new MappingData(ormTable.dtoClass(),
                     contextDtoClass,
-                    table,
+                    canonicalTable,
                     ormTable,
                     new int[pkFields.size()],
                     new ArrayList<>());
@@ -754,6 +755,8 @@ public class DtoMapper {
 
                 throw new IllegalStateException("Cannot infer target table from label: " + sqlFunction);
             }
+        } else if (rootTableMetaData.hasColumn(sqlFunction)) {
+            return new Column(rootTableMetaData.table(), sqlFunction);
         } else {
             throw new IllegalStateException("Cannot infer target column/table from label: " + sqlFunction);
         }

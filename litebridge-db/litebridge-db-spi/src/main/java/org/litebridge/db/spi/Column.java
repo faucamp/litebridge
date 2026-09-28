@@ -50,7 +50,7 @@ public final class Column {
     }
 
     public boolean hasTable() {
-        return table != NO_TABLE;
+        return table != null && table != NO_TABLE;
     }
 
     /**
