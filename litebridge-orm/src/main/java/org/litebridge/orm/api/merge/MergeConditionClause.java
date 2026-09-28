@@ -37,7 +37,7 @@ public class MergeConditionClause<DTO,
                                 final LogicOperator logicOperator,
                                 final @Nullable String lhsColumn,
                                 final @Nullable ExpressionSpec lhsExpression,
-                                final QueryNode node,
+                                final @Nullable QueryNode node,
                                 final Function<QueryNode, MCCT> terminalRecreator) {
         super(litebridgeContext, logicOperator, lhsColumn, lhsExpression, node, terminalRecreator);
     }

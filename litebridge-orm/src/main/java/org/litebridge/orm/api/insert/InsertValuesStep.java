@@ -31,7 +31,7 @@ public final class InsertValuesStep extends MergeTerminal {
      * @param values the values to insert
      * @return a new instance of {@code InsertValuesStep} allowing another row to be inserted
      */
-    public InsertValuesStep values(final Object @Nullable ... values) {
+    public InsertValuesStep values(final @Nullable Object... values) {
         return new InsertValuesStep(new InsertValuesNode(node, values), litebridgeContext);
     }
 }

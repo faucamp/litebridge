@@ -63,6 +63,6 @@ public sealed class MergeAndStep<DTO, MUS extends MergeUpdateStep>
                 column,
                 expression,
                 node,
-                conditionNode -> new MergeWhenMatchedConditionClauseTerminal<>(usingTable, conditionNode, mergeNode, litebridgeContext));
+                conditionNode -> new MergeWhenMatchedConditionClauseTerminal<>(usingTable(), conditionNode, mergeNode, litebridgeContext));
     }
 }

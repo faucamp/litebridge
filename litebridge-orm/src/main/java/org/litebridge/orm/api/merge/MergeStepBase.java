@@ -5,6 +5,8 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 
+import java.util.Objects;
+
 abstract sealed class MergeStepBase permits MergeAndStep, MergeOnStep {
 
     /**
@@ -56,5 +58,9 @@ abstract sealed class MergeStepBase permits MergeAndStep, MergeOnStep {
         this.usingDtoClass = null;
         this.usingQueryNode = usingQueryNode;
         this.litebridgeContext = litebridgeContext;
+    }
+
+    protected String usingTable() {
+        return Objects.requireNonNull(usingTable);
     }
 }
