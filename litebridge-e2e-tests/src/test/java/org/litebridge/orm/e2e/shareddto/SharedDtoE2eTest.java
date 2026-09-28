@@ -92,8 +92,8 @@ class SharedDtoE2eTest extends AbstractE2eTest {
 
         // Count specific Status records
         final int sqlapplicationStatusCount = litebridge.select(Fn.count())
-                .from("LB.APPLICATION_STATUS")
-                .where("CODE").neq(418)
+                .from(tableApplicationStatus)
+                .where(columnCode).neq(418)
                 .stream()
                 .map(row -> ((Number) row.column(0).value()).intValue())
                 .findFirst().orElseThrow();
