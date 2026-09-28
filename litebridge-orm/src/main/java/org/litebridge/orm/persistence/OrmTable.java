@@ -54,7 +54,7 @@ public class OrmTable {
     final boolean manyToManyJoinTable;
     private @Nullable List<FieldAccessor> oneToManyReverseMappings;
     private Set<Class<?>> dtoClassInterfaces = Collections.emptySet();
-    private Set<Class<?>> relatedDtoClasses = new HashSet<>();
+    private final Set<Class<?>> relatedDtoClasses = new HashSet<>();
 
     /**
      * Constructs a new {@code OrmTable} instance, initializing table metadata, field-to-column mappings,

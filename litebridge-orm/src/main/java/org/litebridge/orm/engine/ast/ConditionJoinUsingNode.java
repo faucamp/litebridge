@@ -21,11 +21,13 @@ public record ConditionJoinUsingNode(@Nullable QueryNode previous,
 
     @Override
     public boolean equals(final Object o) {
-        if (!(o instanceof final ConditionJoinUsingNode that)) return false;
-        return logicOperator == that.logicOperator
-                && Objects.equals(previous, that.previous)
-                && Objects.equals(usingColumn, that.usingColumn)
-                && Objects.equals(usingExpression, that.usingExpression);
+        if (!(o instanceof ConditionJoinUsingNode(
+                QueryNode previous1, LogicOperator operator, String column, ExpressionSpec expression
+        ))) return false;
+        return logicOperator == operator
+                && Objects.equals(previous, previous1)
+                && Objects.equals(usingColumn, column)
+                && Objects.equals(usingExpression, expression);
     }
 
     @Override

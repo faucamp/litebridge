@@ -21,9 +21,11 @@ import org.litebridge.orm.expression.Fn;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -231,7 +233,7 @@ class DtoFromClauseTerminalTest {
         final OrderByNode orderByNode = (OrderByNode) node;
         assertSame(selectNode, orderByNode.previous());
         assertEquals("name", orderByNode.column());
-        assertEquals(true, orderByNode.ascending());
+        assertTrue(orderByNode.ascending());
     }
 
     @Test
@@ -250,6 +252,6 @@ class DtoFromClauseTerminalTest {
         final OrderByNode orderByNode = (OrderByNode) node;
         assertSame(selectNode, orderByNode.previous());
         assertEquals(expressions[0], orderByNode.expression());
-        assertEquals(false, orderByNode.ascending());
+        assertFalse(orderByNode.ascending());
     }
 }

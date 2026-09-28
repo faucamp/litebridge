@@ -28,7 +28,7 @@ import static org.mockito.Mockito.mock;
 class ConditionClauseImplTest {
 
     private ConditionClauseImpl<Object, TestConditionClause, TestConditionClauseTerminal> clause;
-    private QueryNode[] capturedNode = new QueryNode[1];
+    private final QueryNode[] capturedNode = new QueryNode[1];
     private SelectNode selectNode;
 
     @BeforeEach

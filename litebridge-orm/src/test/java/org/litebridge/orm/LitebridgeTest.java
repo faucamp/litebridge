@@ -503,7 +503,7 @@ class LitebridgeTest {
 
         // When
         assertThrows(IllegalArgumentException.class, () -> litebridge.register(new Class<?>[0]));
-        litebridge.register(new Class<?>[]{TestEntity.class});
+        litebridge.register(TestEntity.class);
 
         // Then
         verify(registrationEngine).register(eq(new Class<?>[]{TestEntity.class}));
@@ -520,7 +520,7 @@ class LitebridgeTest {
         final DtoTableSpec spec = mock(DtoTableSpec.class);
 
         // When
-        litebridge.register(new DtoTableSpec[]{spec});
+        litebridge.register(spec);
 
         // Then
         verify(registrationEngine).register(any(DtoTableSpec[].class));
@@ -687,7 +687,7 @@ class LitebridgeTest {
         final ExpressionSpec expression = new org.litebridge.orm.meta.QueryField(TestDto.class, "myVar");
 
         // When
-        final FromClauseStart result = litebridge.select(new ExpressionSpec[]{expression});
+        final FromClauseStart result = litebridge.select(expression);
 
         // Then
         assertNotNull(result);

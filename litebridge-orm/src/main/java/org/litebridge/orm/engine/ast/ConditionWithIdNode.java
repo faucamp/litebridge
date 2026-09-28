@@ -23,11 +23,13 @@ public record ConditionWithIdNode(@Nullable QueryNode previous,
 
     @Override
     public boolean equals(final Object o) {
-        if (!(o instanceof final ConditionWithIdNode that)) return false;
-        return operator == that.operator
-                && Objects.equals(previous, that.previous)
-                && logicOperator == that.logicOperator
-                && Objects.equals(valueStructuralKey(id), valueStructuralKey(that.id));
+        if (!(o instanceof ConditionWithIdNode(
+                QueryNode previous1, LogicOperator logicOperator1, Operator operator1, Object id1
+        ))) return false;
+        return operator == operator1
+                && Objects.equals(previous, previous1)
+                && logicOperator == logicOperator1
+                && Objects.equals(valueStructuralKey(id), valueStructuralKey(id1));
     }
 
     @Override

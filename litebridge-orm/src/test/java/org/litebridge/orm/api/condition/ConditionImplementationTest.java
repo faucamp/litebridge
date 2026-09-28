@@ -80,7 +80,7 @@ class ConditionImplementationTest {
 
         final DtoConditionClauseStart<Object> start = new DtoConditionClauseStart<>(null, litebridgeContext);
         final AbstractCbConditionClause<Object> clause = start.where("field");
-        final AbstractCbConditionClauseTerminal<Object> terminal = (AbstractCbConditionClauseTerminal<Object>) clause.eq("val");
+        final AbstractCbConditionClauseTerminal<Object> terminal = clause.eq("val");
 
         final AbstractCbConditionClauseTerminal<Object> nestedTerminal = terminal.and(q -> q.where("field").eq("innerVal"));
 

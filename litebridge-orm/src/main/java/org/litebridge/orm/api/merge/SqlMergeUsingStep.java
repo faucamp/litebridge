@@ -54,10 +54,10 @@ public final class SqlMergeUsingStep extends MergeUsingStep<Row, SqlMergeUpdateS
     }
 
     public MergeOnStep<Row, SqlMergeUpdateStep, MergeInsertStep> using(final FromTargetSpec fromTargetSpec) {
-        if (fromTargetSpec instanceof QueryAliasSpec queryAliasSpec) {
-            final SelectTerminal<?> selectTerminal = queryAliasSpec.query().apply(new SelectApiImpl(litebridgeContext));
+        if (fromTargetSpec instanceof QueryAliasSpec(Function<SelectApi, SelectTerminal<?>> query, String alias)) {
+            final SelectTerminal<?> selectTerminal = query.apply(new SelectApiImpl(litebridgeContext));
             final QueryNode subselectNode = Objects.requireNonNull(SelectTerminalInspector.getNode(selectTerminal));
-            return new MergeOnStep<>(subselectNode, queryAliasSpec.alias(), mergeNode, litebridgeContext);
+            return new MergeOnStep<>(subselectNode, alias, mergeNode, litebridgeContext);
         } else {
             throw new UnsupportedOperationException("Unsupported from target spec: " + fromTargetSpec);
         }

@@ -28,7 +28,7 @@ class AbstractCbConditionClauseTest {
 
     private LitebridgeContext litebridgeContext;
     private AbstractCbConditionClause<Object> clause;
-    private QueryNode[] capturedNode = new QueryNode[1];
+    private final QueryNode[] capturedNode = new QueryNode[1];
 
     @BeforeEach
     @SuppressWarnings("ConstantConditions")

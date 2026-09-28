@@ -12,10 +12,8 @@ import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
  *
  * @param <T> The target Java type for conversion.
  */
-public final class ConvertSpec<T> implements TypeOverrideExpressionSpec<T>, Resolvable {
-
-    private final ExpressionSpec target;
-    private final Class<T> returnType;
+public record ConvertSpec<T>(ExpressionSpec target,
+                             Class<T> returnType) implements TypeOverrideExpressionSpec<T>, Resolvable {
 
     /**
      * Constructs a {@code ConvertSpec} with the specified target expression and return type.
@@ -23,9 +21,7 @@ public final class ConvertSpec<T> implements TypeOverrideExpressionSpec<T>, Reso
      * @param target     the target expression to convert
      * @param returnType the class of the target Java type
      */
-    public ConvertSpec(final ExpressionSpec target, final Class<T> returnType) {
-        this.target = target;
-        this.returnType = returnType;
+    public ConvertSpec {
     }
 
     /**
@@ -33,13 +29,9 @@ public final class ConvertSpec<T> implements TypeOverrideExpressionSpec<T>, Reso
      *
      * @return the target expression
      */
+    @Override
     public ExpressionSpec target() {
         return target;
-    }
-
-    @Override
-    public Class<T> returnType() {
-        return returnType;
     }
 
     @Override

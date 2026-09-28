@@ -49,14 +49,17 @@ public record ConditionNode(@Nullable QueryNode previous,
 
     @Override
     public boolean equals(final Object o) {
-        if (!(o instanceof final ConditionNode that)) return false;
-        return operator == that.operator
-                && Objects.equals(previous, that.previous)
-                && Objects.equals(lhsColumn, that.lhsColumn)
-                && Objects.equals(lhsExpression, that.lhsExpression)
-                && Objects.equals(rhsColumn, that.rhsColumn)
-                && logicOperator == that.logicOperator
-                && Objects.equals(valueStructuralKey(rhs), valueStructuralKey(that.rhs));
+        if (!(o instanceof ConditionNode(
+                QueryNode previous1, LogicOperator logicOperator1, String column, ExpressionSpec expression,
+                Operator operator1, Object rhs1, String rhsColumn1
+        ))) return false;
+        return operator == operator1
+                && Objects.equals(previous, previous1)
+                && Objects.equals(lhsColumn, column)
+                && Objects.equals(lhsExpression, expression)
+                && Objects.equals(rhsColumn, rhsColumn1)
+                && logicOperator == logicOperator1
+                && Objects.equals(valueStructuralKey(rhs), valueStructuralKey(rhs1));
     }
 
     @Override

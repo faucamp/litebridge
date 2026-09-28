@@ -43,5 +43,5 @@ public enum RelatedDtoStrategy {
      * The related DTO field {@code relatedDto} will contain an instance of {@code MyRelatedDto} with only the primary
      * key field {@code id} set if the JOIN clause doesn't include the @{code relatedDto} field.
      */
-    PARTIAL_OBJECT_IF_NO_JOIN;
+    PARTIAL_OBJECT_IF_NO_JOIN
 }

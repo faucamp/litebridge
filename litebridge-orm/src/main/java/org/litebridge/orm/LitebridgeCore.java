@@ -118,7 +118,7 @@ public class LitebridgeCore implements SelectApi {
      * @return a new instance of LitebridgeBuilder configured with the provided database provider and data source
      */
     public static <LB extends LitebridgeCore> LitebridgeBuilder<LB> withDatabase(final LitebridgeOverrideDatabaseProvider<LB> databaseProvider, final DataSource dataSource) {
-        return new LitebridgeBuilder<>((LitebridgeOverrideDatabaseProvider<LB>) databaseProvider, dataSource);
+        return new LitebridgeBuilder<>(databaseProvider, dataSource);
     }
 
     /**

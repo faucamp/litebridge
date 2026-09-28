@@ -27,7 +27,7 @@ class FromClauseStartTypeOverrideTest {
     private SelectEngineTerminal selectEngineTerminal;
     private LitebridgeContext litebridgeContext;
     @SuppressWarnings("unchecked")
-    private Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator = mock(Function.class);
+    private final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator = mock(Function.class);
 
     @BeforeEach
     void setUp() {

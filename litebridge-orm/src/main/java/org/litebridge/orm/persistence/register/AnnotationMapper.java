@@ -51,7 +51,7 @@ public final class AnnotationMapper {
         }
 
         final Map<FieldMapping, ColumnMapping> fieldColumnMap = new LinkedHashMap<>();
-        final Set<String> mappedFieldNames = new HashSet<>();;
+        final Set<String> mappedFieldNames = new HashSet<>();
 
         // Maps annotated fields to column specifications
         ClassUtils.getAllFields(entityClass, false, lookup)

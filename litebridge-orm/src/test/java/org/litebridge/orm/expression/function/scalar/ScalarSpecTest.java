@@ -6,6 +6,7 @@ import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 
 class ScalarSpecTest {
@@ -68,6 +69,6 @@ class ScalarSpecTest {
         assertEquals(newColumn, target.getColumn());
 
         final SubstringSpec specNoLength = new SubstringSpec(target, 1, null);
-        assertEquals(null, specNoLength.length());
+        assertNull(specNoLength.length());
     }
 }

@@ -20,10 +20,12 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Fn;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 class SqlHavingConditionClauseTerminalTest {
@@ -308,7 +310,7 @@ class SqlHavingConditionClauseTerminalTest {
         final SqlOrderByClauseChain chain = orderByClause.asc();
         final OrderByNode orderByNode = assertInstanceOf(OrderByNode.class, SelectTerminalInspector.getNode(chain));
         assertEquals("age", orderByNode.column());
-        assertEquals(true, orderByNode.ascending());
+        assertTrue(orderByNode.ascending());
     }
 
     @Test
@@ -325,6 +327,6 @@ class SqlHavingConditionClauseTerminalTest {
         final SqlOrderByClauseChain chain = orderByClause.desc();
         final OrderByNode orderByNode = assertInstanceOf(OrderByNode.class, SelectTerminalInspector.getNode(chain));
         assertEquals(expr, orderByNode.expression());
-        assertEquals(false, orderByNode.ascending());
+        assertFalse(orderByNode.ascending());
     }
 }

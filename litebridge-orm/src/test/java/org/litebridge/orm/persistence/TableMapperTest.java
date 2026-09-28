@@ -36,10 +36,10 @@ class TableMapperTest {
         DataSource dataSource = mock(DataSource.class);
         litebridge = new Litebridge(databaseProvider, dataSource);
 
-        TableRegistry tableRegistry = (TableRegistry) org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "tableRegistry", TableRegistry.class);
-        ChangeTracker changeTracker = (ChangeTracker) org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "changeTracker", ChangeTracker.class);
-        TransactionalDatabaseProvider transactionalDatabaseProvider = (TransactionalDatabaseProvider) org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "databaseProvider", TransactionalDatabaseProvider.class);
-        TableMetaDataCache tableMetaDataCache = (TableMetaDataCache) org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "tableMetaDataCache", TableMetaDataCache.class);
+        TableRegistry tableRegistry = org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "tableRegistry", TableRegistry.class);
+        ChangeTracker changeTracker = org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "changeTracker", ChangeTracker.class);
+        TransactionalDatabaseProvider transactionalDatabaseProvider = org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "databaseProvider", TransactionalDatabaseProvider.class);
+        TableMetaDataCache tableMetaDataCache = org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "tableMetaDataCache", TableMetaDataCache.class);
 
         tableMapper = new TableMapper(transactionalDatabaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
     }

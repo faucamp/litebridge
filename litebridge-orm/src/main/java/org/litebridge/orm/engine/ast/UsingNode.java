@@ -21,8 +21,10 @@ public record UsingNode(MergeNode previous,
 
     @Override
     public boolean equals(final Object o) {
-        if (!(o instanceof final UsingNode usingNode)) return false;
-        return Objects.equals(table, usingNode.table) && Objects.equals(alias, usingNode.alias) && Objects.equals(on, usingNode.on) && Objects.equals(query, usingNode.query) && Objects.equals(dtoClass, usingNode.dtoClass) && Objects.equals(previous, usingNode.previous);
+        if (!(o instanceof UsingNode(
+                MergeNode previous1, String table1, Class<?> aClass, QueryNode query1, String alias1, QueryNode on1
+        ))) return false;
+        return Objects.equals(table, table1) && Objects.equals(alias, alias1) && Objects.equals(on, on1) && Objects.equals(query, query1) && Objects.equals(dtoClass, aClass) && Objects.equals(previous, previous1);
     }
 
     @Override

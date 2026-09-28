@@ -21,7 +21,6 @@ public final class ProtoNestableTOExpr<T> extends AbstractAliasable
     private final Class<T> typeOverride;
     private final Class<? extends ExpressionSpec> type;
     private final ExpressionSpec target;
-    ;
     private final @Nullable Object @Nullable [] args;
 
     /**

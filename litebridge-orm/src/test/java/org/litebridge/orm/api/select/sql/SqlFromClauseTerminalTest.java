@@ -18,9 +18,11 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Fn;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 class SqlFromClauseTerminalTest {
@@ -149,7 +151,7 @@ class SqlFromClauseTerminalTest {
         final OrderByNode orderByNode = (OrderByNode) node;
         assertSame(selectNode, orderByNode.previous());
         assertEquals("name", orderByNode.column());
-        assertEquals(true, orderByNode.ascending());
+        assertTrue(orderByNode.ascending());
     }
 
     @Test
@@ -168,6 +170,6 @@ class SqlFromClauseTerminalTest {
         final OrderByNode orderByNode = (OrderByNode) node;
         assertSame(selectNode, orderByNode.previous());
         assertEquals(expressions[0], orderByNode.expression());
-        assertEquals(false, orderByNode.ascending());
+        assertFalse(orderByNode.ascending());
     }
 }

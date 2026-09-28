@@ -247,6 +247,6 @@ public final class LitebridgeContext {
         /**
          * Native SQL mode.
          */
-        NATIVE_SQL;
+        NATIVE_SQL
     }
 }

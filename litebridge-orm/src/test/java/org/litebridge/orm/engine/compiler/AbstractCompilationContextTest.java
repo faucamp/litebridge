@@ -136,7 +136,6 @@ class AbstractCompilationContextTest {
 
         // When
         final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table), AbstractCompilationContext.EMPTY_SELECT_EXPRESSIONS);
-        ;
 
         // Then
         assertSame(lhsSelectExpr, condition.lhs());
@@ -162,7 +161,6 @@ class AbstractCompilationContextTest {
 
         // When
         final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table), AbstractCompilationContext.EMPTY_SELECT_EXPRESSIONS);
-        ;
 
         // Then
         assertSame(lhsSelectExpr, condition.lhs());
@@ -196,7 +194,6 @@ class AbstractCompilationContextTest {
 
         // When
         final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table), AbstractCompilationContext.EMPTY_SELECT_EXPRESSIONS);
-        ;
 
         // Then
         assertSame(lhsSelectExpr, condition.lhs());
@@ -223,7 +220,6 @@ class AbstractCompilationContextTest {
 
         // When
         final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table), AbstractCompilationContext.EMPTY_SELECT_EXPRESSIONS);
-        ;
 
         // Then
         assertSame(rhsSelectExpr, condition.rhs());
@@ -244,7 +240,6 @@ class AbstractCompilationContextTest {
 
         // When
         final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table), AbstractCompilationContext.EMPTY_SELECT_EXPRESSIONS);
-        ;
 
         // Then
         assertSame(columnReference, condition.rhs());
@@ -300,7 +295,6 @@ class AbstractCompilationContextTest {
 
         // When
         final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table), AbstractCompilationContext.EMPTY_SELECT_EXPRESSIONS);
-        ;
 
         // Then
         assertNotNull(condition);
