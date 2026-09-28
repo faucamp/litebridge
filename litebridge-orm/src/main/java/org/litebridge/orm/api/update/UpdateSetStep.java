@@ -17,7 +17,8 @@ import java.util.function.Function;
  * @param <WCCT> the where condition clause terminal type
  */
 public abstract sealed class UpdateSetStep<DTO,
-        US extends UpdateStep<DTO, WCC, WCCT>,
+        US extends UpdateStep<DTO, US, SELF, WCC, WCCT>,
+        SELF extends UpdateSetStep<DTO, US, SELF, WCC, WCCT>,
         WCC extends UpdateWhereConditionClause<DTO, WCC, WCCT>,
         WCCT extends UpdateWhereConditionClauseTerminal<DTO, WCC, WCCT>>
 

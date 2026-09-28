@@ -395,7 +395,7 @@ public class PersistenceFacade {
                                     statementChain.addDependency(value, dependencyPipe);
                                 } else {
                                     // PK already set - set the PK value on the current DTO and ensure the embedded DTO is persisted
-                                    nestedDtoTable.getMetaData().primaryKey().stream().forEach(pkColumn -> {
+                                    nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
                                         final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                                         final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
                                         if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {

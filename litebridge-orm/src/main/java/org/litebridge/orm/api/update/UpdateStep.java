@@ -10,10 +10,12 @@ import org.litebridge.orm.expression.ExpressionSpec;
  * @param <WCCT> the WHERE condition clause terminal type
  */
 public sealed interface UpdateStep<DTO,
+        SELF extends UpdateStep<DTO, SELF, USS, WCC, WCCT>,
+        USS extends UpdateSetStep<DTO, SELF, USS, WCC, WCCT>,
         WCC extends UpdateWhereConditionClause<DTO, WCC, WCCT>,
         WCCT extends UpdateWhereConditionClauseTerminal<DTO, WCC, WCCT>>
 
-        extends UpdateStart, UpdateQuery
+        extends UpdateStart<DTO, SELF, USS, WCC, WCCT>, UpdateQuery
         permits DtoUpdateStep, SqlUpdateStep {
 
     /**

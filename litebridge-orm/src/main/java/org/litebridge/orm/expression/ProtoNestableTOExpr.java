@@ -116,12 +116,12 @@ public final class ProtoNestableTOExpr<T> extends AbstractAliasable
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (ProtoNestableTOExpr) obj;
+        var that = (ProtoNestableTOExpr<?>) obj;
         return Objects.equals(this.typeOverride, that.typeOverride) &&
                 Objects.equals(this.type, that.type) &&
                 Objects.equals(this.target, that.target) &&
                 Objects.equals(this.alias, that.alias) &&
-                Objects.equals(this.args, that.args);
+                Arrays.equals(this.args, that.args);
     }
 
     @Override

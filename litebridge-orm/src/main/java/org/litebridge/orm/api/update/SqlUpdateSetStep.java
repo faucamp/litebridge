@@ -13,6 +13,7 @@ public final class SqlUpdateSetStep
 
         extends UpdateSetStep<Row,
         SqlUpdateStep,
+        SqlUpdateSetStep,
         SqlUpdateWhereConditionClause,
         SqlUpdateWhereConditionClauseTerminal> {
 

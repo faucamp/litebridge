@@ -394,9 +394,9 @@ public final class Fn {
      * on the ORM side; e.g. {@link #avg(ExpressionSpec)} returns a @{Number} instance by default,
      * with the actual return type being determined by the database. To convert the return type to a {@code Long},
      * {@code convert()} can be used to convert it before returning:
-     * <code>
+     * {@code
      * litebridge.select(Fn.convert(Fn.avg(column), Long.class));
-     * </code>
+     * }
      *
      * @param <T>        The type to convert the expression result to
      * @param expression The target expression result to convert

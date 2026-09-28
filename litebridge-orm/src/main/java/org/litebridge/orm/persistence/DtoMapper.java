@@ -414,8 +414,7 @@ public class DtoMapper {
         final List<SpecificDtoDependency> relatedDtoDependencies = new ArrayList<>();
 
         // Map DTO field values
-        for (int i = 0; i < fieldMappings.size(); i++) {
-            final FieldMapping fieldMapping = fieldMappings.get(i);
+        for (final FieldMapping fieldMapping : fieldMappings) {
             final FieldAccessor fieldAccessor = fieldMapping.fieldAccessor();
 
             if (fieldMapping.isBasicType()) {

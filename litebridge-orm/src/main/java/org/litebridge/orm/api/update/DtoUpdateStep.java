@@ -14,6 +14,8 @@ import org.litebridge.orm.expression.ExpressionSpec;
  */
 public final class DtoUpdateStep<DTO> extends UpdateStepBase
         implements UpdateStep<DTO,
+        DtoUpdateStep<DTO>,
+        DtoUpdateSetStep<DTO>,
         DtoUpdateWhereConditionClause<DTO>,
         DtoUpdateWhereConditionClauseTerminal<DTO>> {
 

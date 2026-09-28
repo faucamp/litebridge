@@ -13,6 +13,7 @@ public final class DtoUpdateStart<DTO> extends UpdateStepBase
 
         implements UpdateStart<DTO,
         DtoUpdateStep<DTO>,
+        DtoUpdateSetStep<DTO>,
         DtoUpdateWhereConditionClause<DTO>,
         DtoUpdateWhereConditionClauseTerminal<DTO>> {
 

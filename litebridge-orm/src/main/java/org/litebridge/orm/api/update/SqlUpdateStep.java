@@ -3,9 +3,9 @@ package org.litebridge.orm.api.update;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
-import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -13,6 +13,8 @@ import org.litebridge.orm.expression.ExpressionSpec;
  */
 public final class SqlUpdateStep extends UpdateStepBase
         implements UpdateStep<Row,
+        SqlUpdateStep,
+        SqlUpdateSetStep,
         SqlUpdateWhereConditionClause,
         SqlUpdateWhereConditionClauseTerminal> {
 

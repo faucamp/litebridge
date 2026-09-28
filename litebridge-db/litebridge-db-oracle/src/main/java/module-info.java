@@ -26,4 +26,5 @@ module litebridge.db.oracle {
     exports org.litebridge.db.oracle.api.insert;
     exports org.litebridge.db.oracle.convert;
     exports org.litebridge.db.oracle.engine;
+    exports org.litebridge.db.oracle.sql;
 }

@@ -11,11 +11,11 @@ public enum RelatedDtoStrategy {
      * This is the default behaviour.
      * <p>
      * For example, given:
-     * <code>
+     * {@code
      * class MyDto {
      * private MyRelatedDto relatedDto;
      * }
-     * </code>
+     * }
      * <p>
      * The related DTO field {@code relatedDto} will be set to null if not added to the JOIN clauses of a query.
      */
@@ -26,19 +26,19 @@ public enum RelatedDtoStrategy {
      * if not added to the JOIN clauses of a query.
      * <p>
      * For example, given:
-     * <code>
+     * {@code
      * class MyDto {
      * private MyRelatedDto relatedDto;
      * }
-     * </code>
-     * <code>
+     * }
+     * {@code
      * class MyRelatedDto {
      * // Primary key
      * private Long id;
      * // Other fields
      * private String description;
      * }
-     * </code>
+     * }
      * <p>
      * The related DTO field {@code relatedDto} will contain an instance of {@code MyRelatedDto} with only the primary
      * key field {@code id} set if the JOIN clause doesn't include the @{code relatedDto} field.

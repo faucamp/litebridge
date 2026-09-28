@@ -12,6 +12,7 @@ public final class SqlUpdateStart extends UpdateStepBase
 
         implements UpdateStart<Row,
         SqlUpdateStep,
+        SqlUpdateSetStep,
         SqlUpdateWhereConditionClause,
         SqlUpdateWhereConditionClauseTerminal> {
 

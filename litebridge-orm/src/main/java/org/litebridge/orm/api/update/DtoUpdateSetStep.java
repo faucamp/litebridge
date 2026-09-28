@@ -14,6 +14,7 @@ public final class DtoUpdateSetStep<DTO>
 
         extends UpdateSetStep<DTO,
         DtoUpdateStep<DTO>,
+        DtoUpdateSetStep<DTO>,
         DtoUpdateWhereConditionClause<DTO>,
         DtoUpdateWhereConditionClauseTerminal<DTO>> {
 

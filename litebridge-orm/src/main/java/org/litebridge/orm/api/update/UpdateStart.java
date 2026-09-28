@@ -11,7 +11,8 @@ import org.litebridge.orm.expression.ExpressionSpec;
  * @param <WCCT> the WHERE condition clause terminal type
  */
 public sealed interface UpdateStart<DTO,
-        US extends UpdateStep<DTO, WCC, WCCT>,
+        US extends UpdateStep<DTO, US, USS, WCC, WCCT>,
+        USS extends UpdateSetStep<DTO, US, USS, WCC, WCCT>,
         WCC extends UpdateWhereConditionClause<DTO, WCC, WCCT>,
         WCCT extends UpdateWhereConditionClauseTerminal<DTO, WCC, WCCT>>
 
@@ -23,7 +24,7 @@ public sealed interface UpdateStart<DTO,
      * @param column the column or field name
      * @return step to specify the value for the column
      */
-    UpdateSetStep<DTO, US, WCC, WCCT> set(final String column);
+    USS set(final String column);
 
     /**
      * Starts a SET clause with an expression.
@@ -31,6 +32,5 @@ public sealed interface UpdateStart<DTO,
      * @param expression the expression specification
      * @return step to specify the value for the expression
      */
-    UpdateSetStep<DTO, US, WCC, WCCT> set(final ExpressionSpec expression);
-
+    USS set(final ExpressionSpec expression);
 }

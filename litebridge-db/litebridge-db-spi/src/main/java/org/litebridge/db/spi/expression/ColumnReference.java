@@ -1,7 +1,5 @@
 package org.litebridge.db.spi.expression;
 
-import org.litebridge.db.spi.Column;
-
 /**
  * Reference to an unaliased column in the select query.
  * <p>

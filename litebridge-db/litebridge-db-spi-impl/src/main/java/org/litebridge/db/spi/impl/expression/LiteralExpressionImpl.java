@@ -55,7 +55,7 @@ public class LiteralExpressionImpl extends AbstractAliasedExpression implements 
             return toBindValueSql(operation);
         } else if (value == null) {
             valueStr = "NULL";
-        } else if (value instanceof Collection collection) {
+        } else if (value instanceof Collection<?> collection) {
             final StringJoiner joiner = new StringJoiner(", ");
 
             for (final Object element : collection) {
@@ -81,10 +81,10 @@ public class LiteralExpressionImpl extends AbstractAliasedExpression implements 
     public String toBindValueSql(final Operation operation) {
         if (value == null) {
             return "?";
-        } else if (value instanceof Collection collection) {
+        } else if (value instanceof Collection<?> collection) {
             final StringJoiner joiner = new StringJoiner(", ");
 
-            for (final Object element : collection) {
+            for (int i = 0; i < collection.size(); i++) {
                 joiner.add("?");
             }
 
