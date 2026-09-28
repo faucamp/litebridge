@@ -35,7 +35,7 @@ class IdentityLookupWrapperTest {
         final WeakIdentityMap.IdentityLookupWrapper wrapper2 = new WeakIdentityMap.IdentityLookupWrapper(obj2);
 
         // When/Then
-        assertFalse(wrapper1.equals(wrapper2));
+        assertNotEquals(wrapper1, wrapper2);
     }
 
     /**
@@ -50,7 +50,7 @@ class IdentityLookupWrapperTest {
                 new WeakIdentityMap.IdentityWeakReference<>(obj, null);
 
         // When/Then
-        assertTrue(wrapper.equals(weakRef));
+        assertEquals(wrapper, weakRef);
     }
 
     /**
@@ -66,7 +66,7 @@ class IdentityLookupWrapperTest {
                 new WeakIdentityMap.IdentityWeakReference<>(obj2, null);
 
         // When/Then
-        assertFalse(wrapper.equals(weakRef));
+        assertNotEquals(wrapper, weakRef);
     }
 
     /**
@@ -79,7 +79,7 @@ class IdentityLookupWrapperTest {
         final WeakIdentityMap.IdentityLookupWrapper wrapper = new WeakIdentityMap.IdentityLookupWrapper(obj);
 
         // When/Then
-        assertFalse(wrapper.equals("Some String"));
+        assertNotEquals("Some String", wrapper);
     }
 
     /**

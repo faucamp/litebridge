@@ -458,10 +458,10 @@ public class SelectEngineTerminal {
             SelectExpression expression = select.expressions().get(i);
             String alias = null;
 
-            if (expression instanceof ConvertExpression convertExpression) {
-                typeOverrides[i] = convertExpression.typeOverride();
+            if (expression instanceof ConvertExpression(SelectExpression target, Class<?> typeOverride)) {
+                typeOverrides[i] = typeOverride;
                 // Process the nested expression (in case it targets a column)
-                expression = convertExpression.target();
+                expression = target;
             }
 
             while (expression instanceof DelegateExpression delegateExpression) {

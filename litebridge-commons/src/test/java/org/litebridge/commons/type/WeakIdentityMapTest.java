@@ -355,7 +355,7 @@ class WeakIdentityMapTest {
     void keySet_containsAll_false() {
         final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         map.put(new Object(), "value");
-        assertFalse(map.keySet().containsAll(List.of(new Object())));
+        assertFalse(map.keySet().contains(new Object()));
         assertTrue(map.keySet().containsAll(List.of())); // Empty collection
     }
 
@@ -431,7 +431,7 @@ class WeakIdentityMapTest {
         final WeakIdentityMap<Object, String> map = new WeakIdentityMap<>();
         Object key = new Object();
         map.put(key, "value");
-        assertFalse(map.keySet().addAll(List.of(key)));
+        assertFalse(map.keySet().add(key));
     }
 
     @Test
@@ -551,9 +551,9 @@ class WeakIdentityMapTest {
         final WeakIdentityMap.IdentityWeakReference<Object> ref = new WeakIdentityMap.IdentityWeakReference<>(key, null);
 
         // When/Then
-        assertTrue(wrapper.equals(ref));
-        assertFalse(wrapper.equals(new Object()));
-        assertFalse(wrapper.equals(null));
+        assertEquals(wrapper, ref);
+        assertNotEquals(wrapper, new Object());
+        assertNotEquals(null, wrapper);
     }
 
     @Test

@@ -35,7 +35,7 @@ public interface DbEnvironment<LB extends LitebridgeCore> {
             litebridgeBuilder = (LitebridgeBuilder<LB>) Litebridge.withDatabase(getDatabaseProvider(), dataSource);
         }
 
-        return (LB) litebridgeBuilder.withConfig(litebridgeConfig)
+        return litebridgeBuilder.withConfig(litebridgeConfig)
                 .withLookup(MethodHandles.lookup())
                 .build();
     }

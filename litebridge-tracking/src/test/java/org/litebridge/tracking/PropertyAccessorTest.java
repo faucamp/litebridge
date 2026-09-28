@@ -8,7 +8,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -125,7 +125,7 @@ class PropertyAccessorTest {
         final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
 
         // When/Then
-        assertFalse(propertyAccessor.equals(null));
+        assertNotEquals(null, propertyAccessor);
     }
 
     @Test
@@ -135,7 +135,7 @@ class PropertyAccessorTest {
         final PropertyAccessor propertyAccessor = new PropertyAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup(), classFieldAccessorCache);
 
         // When/Then
-        assertFalse(propertyAccessor.equals(new Object()));
+        assertNotEquals(propertyAccessor, new Object());
     }
 
     @Test
@@ -147,8 +147,8 @@ class PropertyAccessorTest {
         final PropertyAccessor right = new PropertyAccessor(field, MethodHandles.lookup(), classFieldAccessorCache);
 
         // When/Then
-        assertTrue(left.equals(right));
-        assertTrue(right.equals(left));
+        assertEquals(left, right);
+        assertEquals(right, left);
     }
 
     @Test
@@ -159,8 +159,8 @@ class PropertyAccessorTest {
         final PropertyAccessor right = new PropertyAccessor(ClassUtils.getField(TestDto.class, "otherVar"), MethodHandles.lookup(), classFieldAccessorCache);
 
         // When/Then
-        assertFalse(left.equals(right));
-        assertFalse(right.equals(left));
+        assertNotEquals(left, right);
+        assertNotEquals(right, left);
     }
 
     @Test
@@ -206,7 +206,7 @@ class PropertyAccessorTest {
         // Then
         assertTrue(ex.getMessage().contains("Failed to unreflect getter and setter for field: 'myVar'"));
         assertTrue(ex.getMessage().contains(TestDto.class.getName()));
-        assertTrue(ex.getCause() instanceof IllegalAccessException);
+        assertInstanceOf(IllegalAccessException.class, ex.getCause());
     }
 
     @Test

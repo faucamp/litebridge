@@ -704,7 +704,7 @@ class ReverseEngineerMojoTest {
 
     private static MemberValuePair ensureAnnotationPair(final String paramName, final boolean paramValue, final AnnotationExpr annotationExpr) {
         final MemberValuePair pair = ensureAnnotationPair(paramName, annotationExpr);
-        assertEquals(paramValue ? "true" : "false", pair.getValue().toString());
+        assertEquals(Boolean.toString(paramValue), pair.getValue().toString());
         return pair;
     }
 

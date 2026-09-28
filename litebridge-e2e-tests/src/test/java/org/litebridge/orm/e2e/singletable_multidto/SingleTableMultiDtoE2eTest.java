@@ -8,7 +8,7 @@ import org.litebridge.orm.e2e.singletable_multidto.dto.SingleTableNestedParent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
 
@@ -41,7 +41,7 @@ class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
                 .oneOrThrow();
 
         // Then
-        assertTrue(result != singleTableNestedParent);
+        assertNotSame(result, singleTableNestedParent);
         assertEquals("testParentValue1", result.getParentValue1());
         assertNotNull(result.getNestedChild());
         assertEquals("testChildValue1", result.getNestedChild().getChildValue1());

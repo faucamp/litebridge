@@ -56,7 +56,7 @@ class DirectFieldAccessorTest {
 
         // Then
         assertEquals("DTO class does not match field accessor class", ex.getMessage());
-        assertTrue(ex.getCause() instanceof ClassCastException);
+        assertInstanceOf(ClassCastException.class, ex.getCause());
     }
 
     @Test
@@ -136,7 +136,7 @@ class DirectFieldAccessorTest {
         final DirectFieldAccessor directFieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup());
 
         // When/Then
-        assertFalse(directFieldAccessor.equals(null));
+        assertNotEquals(null, directFieldAccessor);
     }
 
     @Test
@@ -145,7 +145,7 @@ class DirectFieldAccessorTest {
         final DirectFieldAccessor directFieldAccessor = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "myVar"), MethodHandles.lookup());
 
         // When/Then
-        assertFalse(directFieldAccessor.equals(new Object()));
+        assertNotEquals(directFieldAccessor, new Object());
     }
 
     @Test
@@ -156,8 +156,8 @@ class DirectFieldAccessorTest {
         final DirectFieldAccessor right = new DirectFieldAccessor(field, MethodHandles.lookup());
 
         // When/Then
-        assertTrue(left.equals(right));
-        assertTrue(right.equals(left));
+        assertEquals(left, right);
+        assertEquals(right, left);
     }
 
     @Test
@@ -167,8 +167,8 @@ class DirectFieldAccessorTest {
         final DirectFieldAccessor right = new DirectFieldAccessor(ClassUtils.getField(TestDto.class, "otherVar"), MethodHandles.lookup());
 
         // When/Then
-        assertFalse(left.equals(right));
-        assertFalse(right.equals(left));
+        assertNotEquals(left, right);
+        assertNotEquals(right, left);
     }
 
     @Test

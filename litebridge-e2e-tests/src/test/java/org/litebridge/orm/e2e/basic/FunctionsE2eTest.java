@@ -106,7 +106,7 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     @DisplayName("MIN()")
     void min(final DbEnvDtoTableMapper tableMapper) throws Exception {
         final Number minAge = litebridge.select(Fn.min("age")).from(Person.class).oneOrThrow();
-        assertEquals(20, ((Number) minAge).intValue());
+        assertEquals(20, minAge.intValue());
 
         final int minAgeInt = litebridge.select(Fn.convert(Fn.min("age"), Integer.class)).from(Person.class).oneOrThrow();
         assertEquals(20, minAgeInt);
@@ -116,7 +116,7 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     @DisplayName("MAX()")
     void max(final DbEnvDtoTableMapper tableMapper) throws Exception {
         final Number maxAge = litebridge.select(Fn.max("age")).from(Person.class).oneOrThrow();
-        assertEquals(30, ((Number) maxAge).intValue());
+        assertEquals(30, maxAge.intValue());
 
         final int maxAgeInt = litebridge.select(Fn.convert(Fn.max("age"), Integer.class)).from(Person.class).oneOrThrow();
         assertEquals(30, maxAgeInt);
