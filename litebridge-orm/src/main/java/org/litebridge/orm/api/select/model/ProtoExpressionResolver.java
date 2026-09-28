@@ -159,6 +159,7 @@ public abstract class ProtoExpressionResolver {
      * @param type the expression type to check
      * @return {@code true} if supported, {@code false} otherwise
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isSupported(final Class<? extends ExpressionSpec> type) {
         return columnExpressions.containsKey(type)
                 || nestableColumnExpressions.containsKey(type)

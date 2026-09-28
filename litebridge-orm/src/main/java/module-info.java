@@ -12,11 +12,8 @@ module litebridge.orm {
     requires org.slf4j;
     requires litebridge.annotations;
     requires litebridge.commons;
-    requires litebridge.converter;
     requires litebridge.db.spi;
     requires litebridge.tracking;
-    requires java.management;
-    requires java.xml.crypto;
 
     exports org.litebridge.orm;
     exports org.litebridge.orm.api.condition;

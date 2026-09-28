@@ -2,7 +2,6 @@ package org.litebridge.orm.api.select.model;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ConvertExpression;
@@ -29,7 +28,6 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
-import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.List;
 import java.util.Map;
@@ -41,25 +39,17 @@ public final class SelectExpressionMapper {
 
     private final SqlFunctionRegistry sqlFunctionRegistry;
     private final ProtoExpressionResolver protoExpressionResolver;
-    private final TableMetaDataCache tableMetaDataCache;
-    private final TypeConverter typeConverter;
 
     /**
      * Creates a new {@code SelectExpressionMapper} instance.
      *
      * @param sqlFunctionRegistry     the SQL function registry
      * @param protoExpressionResolver the proto expression resolver
-     * @param tableMetaDataCache      the table metadata cache
-     * @param typeConverter           the type converter
      */
     public SelectExpressionMapper(final SqlFunctionRegistry sqlFunctionRegistry,
-                                  final ProtoExpressionResolver protoExpressionResolver,
-                                  final TableMetaDataCache tableMetaDataCache,
-                                  final TypeConverter typeConverter) {
+                                  final ProtoExpressionResolver protoExpressionResolver) {
         this.sqlFunctionRegistry = sqlFunctionRegistry;
         this.protoExpressionResolver = protoExpressionResolver;
-        this.tableMetaDataCache = tableMetaDataCache;
-        this.typeConverter = typeConverter;
     }
 
     /**
@@ -90,7 +80,8 @@ public final class SelectExpressionMapper {
             // Select targets
             case SelectFieldSpec selectFieldSpec -> toSelectColumn(selectFieldSpec);
             case SelectColumnSpec selectColumnSpec -> toSelectColumn(selectColumnSpec);
-            case AliasReferenceSpec aliasReferenceSpec -> toAliasReference(aliasReferenceSpec, selectExpressionAliasMap);
+            case AliasReferenceSpec aliasReferenceSpec ->
+                    toAliasReference(aliasReferenceSpec, selectExpressionAliasMap);
             case ConvertSpec<?> convertSpec ->
                     new ConvertExpression(toSelectExpression(convertSpec.target(), selectExpressionAliasMap), convertSpec.returnType());
             case ExpressionSpecArray expressionSpecArray ->
@@ -102,7 +93,8 @@ public final class SelectExpressionMapper {
             case CountSpec countSpec -> sqlFunctionRegistry.aggregate().count();
 
             // Nestable expressions
-            case DelegateExpressionSpec nestableExpression -> resolveNestedExpression(nestableExpression, selectExpressionAliasMap);
+            case DelegateExpressionSpec nestableExpression ->
+                    resolveNestedExpression(nestableExpression, selectExpressionAliasMap);
 
             // Date/time
             case CurrentTimestampSpec currentTimestampSpec -> sqlFunctionRegistry.date().currentTimestamp();

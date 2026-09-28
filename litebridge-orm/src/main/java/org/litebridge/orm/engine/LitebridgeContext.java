@@ -229,7 +229,7 @@ public final class LitebridgeContext {
             protoExpressionResolver = new SqlProtoExpressionResolver();
         }
 
-        return new SelectExpressionMapper(databaseProvider.sqlFunctionRegistry(), protoExpressionResolver, tableMetaDataCache, databaseProvider.typeConverter());
+        return new SelectExpressionMapper(databaseProvider.sqlFunctionRegistry(), protoExpressionResolver);
     }
 
     /**

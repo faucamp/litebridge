@@ -24,6 +24,7 @@ public class ExecutionEngineReturnedKeysNamed extends AbstractExecutionEngine {
     }
 
     @Override
+    @SuppressWarnings("SqlSourceToSinkFlow")
     protected PreparedStatement prepareJdbcStatementReturnGeneratedKeys(final UpdateMetaData updateMetaData,
                                                                         final PreparedSql preparedSql,
                                                                         final ManagedConnection connection) throws SQLException {

@@ -13,7 +13,6 @@ module litebridge.db.spi.impl {
     requires org.slf4j;
     requires litebridge.commons;
     requires litebridge.db.spi;
-    requires jdk.jfr;
 
     exports org.litebridge.db.spi.impl;
     exports org.litebridge.db.spi.impl.alias;

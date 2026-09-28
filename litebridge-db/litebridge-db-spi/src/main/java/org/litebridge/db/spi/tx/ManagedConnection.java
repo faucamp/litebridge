@@ -35,6 +35,7 @@ import java.util.concurrent.Executor;
  * to an internal {@link Connection} instance. For methods that are deemed unsafe or restricted
  * for managed contexts, an {@link UnsupportedOperationException} is thrown.
  */
+@SuppressWarnings("SqlSourceToSinkFlow")
 public final class ManagedConnection implements Connection {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ManagedConnection.class);

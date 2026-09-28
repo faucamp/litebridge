@@ -286,6 +286,7 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
      * @return the created prepared statement
      * @throws SQLException if a database access error occurs
      */
+    @SuppressWarnings("SqlSourceToSinkFlow")
     protected PreparedStatement prepareJdbcStatement(final PreparedSql preparedSql,
                                                      final ManagedConnection connection) throws SQLException {
         final UpdateMetaData updateMetaData = preparedSql.updateMetaData();
