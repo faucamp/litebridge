@@ -7,7 +7,6 @@ import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.VirtualTable;
 import org.litebridge.db.spi.alias.AliasedTable;
 import org.litebridge.db.spi.expression.AliasedExpression;
 import org.litebridge.db.spi.expression.BindValueExpression;
@@ -316,24 +315,11 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 final SelectColumnSpec leftSelectColumnSpec = joinOnSpec.leftSelectColumnSpec();
                 final SelectColumnSpec rightSelectColumnSpec = joinOnSpec.rightSelectColumnSpec();
 
-                if (conditionGroupSpec.isEmpty()
-                        && leftSelectColumnSpec.getColumn().name().equals(rightSelectColumnSpec.getColumn().name())) {
-                    // No other conditions, and column names match; use USING
-                    final SelectColumnSpec usingColumnSelectSpec = new SelectColumnSpec(
-                            new Column(VirtualTable.anonymous(), leftSelectColumnSpec.getColumn().name()));
-
-                    conditionGroupSpec.newCondition(conditionJoinUsingNode.logicOperator(),
-                            null,
-                            usingColumnSelectSpec,
-                            Operator.USING,
-                            usingColumnSelectSpec);
-                } else {
-                    conditionGroupSpec.newCondition(conditionJoinUsingNode.logicOperator(),
-                            null,
-                            leftSelectColumnSpec,
-                            Operator.EQ,
-                            rightSelectColumnSpec);
-                }
+                conditionGroupSpec.newCondition(conditionJoinUsingNode.logicOperator(),
+                        null,
+                        leftSelectColumnSpec,
+                        Operator.EQ,
+                        rightSelectColumnSpec);
 
                 final ConditionGroup conditionGroup = toConditionGroup(conditionGroupSpec, List.of(leftTarget, joinTarget), selectExpressions);
                 return List.of(new Join(joinSpec.joinNode().type(), joinTarget, conditionGroup));
@@ -343,24 +329,11 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 final SelectColumnSpec leftSelectColumnSpec = joinOnSpec.leftSelectColumnSpec();
                 final SelectColumnSpec rightSelectColumnSpec = joinOnSpec.rightSelectColumnSpec();
 
-                if (conditionGroupSpec.isEmpty()
-                        && leftSelectColumnSpec.getColumn().name().equals(rightSelectColumnSpec.getColumn().name())) {
-                    // No other conditions, and column names match; use USING
-                    final SelectColumnSpec usingColumnSelectSpec = new SelectColumnSpec(
-                            new Column(VirtualTable.anonymous(), leftSelectColumnSpec.getColumn().name()));
-
-                    conditionGroupSpec.newCondition(conditionJoinUsingNode.logicOperator(),
-                            null,
-                            usingColumnSelectSpec,
-                            Operator.USING,
-                            usingColumnSelectSpec);
-                } else {
-                    conditionGroupSpec.newCondition(conditionJoinUsingNode.logicOperator(),
-                            null,
-                            leftSelectColumnSpec,
-                            Operator.EQ,
-                            rightSelectColumnSpec);
-                }
+                conditionGroupSpec.newCondition(conditionJoinUsingNode.logicOperator(),
+                        null,
+                        leftSelectColumnSpec,
+                        Operator.EQ,
+                        rightSelectColumnSpec);
 
                 final ConditionGroup conditionGroup = toConditionGroup(conditionGroupSpec, List.of(leftTarget, joinTarget), selectExpressions);
                 return List.of(new Join(joinSpec.joinNode().type(), joinTarget, conditionGroup));
@@ -710,7 +683,8 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size());
                 bindValues.addAll(createBindValues(literalExpression, value, litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter()));
                 final int dataType = value != null ? litebridgeContext.typeConverter().getSqlDataType(value.getClass()) : Types.NULL;
-                final DelegateExpression castExpression = litebridgeContext.sqlFunctionRegistry().cast().create(bindValueExpression, literalExpression.alias(), dataType);
+                final Integer size = value instanceof String string ? string.length() : null;
+                final DelegateExpression castExpression = litebridgeContext.sqlFunctionRegistry().cast().create(bindValueExpression, literalExpression.alias(), dataType, size);
                 selectExpressions.add(castExpression);
             } else {
                 selectExpressions.add(selectExpression);

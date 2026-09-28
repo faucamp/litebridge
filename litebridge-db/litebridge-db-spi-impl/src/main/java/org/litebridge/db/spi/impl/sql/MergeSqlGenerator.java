@@ -7,6 +7,7 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasedQuery;
 import org.litebridge.db.spi.alias.AliasedTable;
 import org.litebridge.db.spi.expression.BindValueExpression;
+import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.LogicCondition;
@@ -57,7 +58,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
         appendSelectTarget(sql, merge.using(), connectionProvider);
 
         sql.append(" ON (");
-        appendConditionsAndSubgroups(sql, merge.on(), merge, connectionProvider);
+        appendConditionsAndSubgroups(sql, merge.on(), ClauseType.WHERE, merge, connectionProvider);
         sql.append(')');
 
         final List<Merge.WhenMatched<Merge.WhenMatchedOperation>> whenMatchedList = merge.whenMatched();
@@ -68,7 +69,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
 
                 if (whenMatched.and() != null) {
                     sql.append(" AND ");
-                    appendConditionsAndSubgroups(sql, whenMatched.and(), merge, connectionProvider);
+                    appendConditionsAndSubgroups(sql, whenMatched.and(), ClauseType.WHERE, merge, connectionProvider);
                 }
 
                 sql.append(" THEN ");

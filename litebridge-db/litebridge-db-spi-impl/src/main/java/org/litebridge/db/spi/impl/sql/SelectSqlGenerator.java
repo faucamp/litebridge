@@ -77,7 +77,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         // Where
         if (select.where() != null) {
             sql.append(" WHERE ");
-            appendConditionsAndSubgroups(sql, select.where(), select, connectionProvider);
+            appendConditionsAndSubgroups(sql, select.where(), ClauseType.WHERE, select, connectionProvider);
         }
 
         // Group by
@@ -97,7 +97,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
 
             if (select.having() != null) {
                 sql.append(" HAVING ");
-                appendConditionsAndSubgroups(sql, select.having(), select, connectionProvider);
+                appendConditionsAndSubgroups(sql, select.having(), ClauseType.HAVING, select, connectionProvider);
             }
         }
 
@@ -173,7 +173,7 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
             sql.append(" ON ");
         }
 
-        appendConditionsAndSubgroups(sql, join.conditions(), operation, connectionProvider);
+        appendConditionsAndSubgroups(sql, join.conditions(), ClauseType.JOIN, operation, connectionProvider);
         return sql.toString();
     }
 

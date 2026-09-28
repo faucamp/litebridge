@@ -62,12 +62,13 @@ public abstract class AbstractSqlGenerator {
      *
      * @param condition          the {@link Condition} object specifying the column, operator,
      *                           and value for the SQL condition
+     * @param clauseType         the current SQL clause type (e.g., WHERE, HAVING)`
      * @param operation          the current database operation
      * @param connectionProvider the connection provider
      * @return a {@link PreparedSql} representing the constructed SQL condition fragment
      */
-    protected String createCondition(final Condition condition, final Operation operation, final ConnectionProvider connectionProvider) {
-        final String lhs = condition.lhs().toSql(operation, ClauseType.WHERE);
+    protected String createCondition(final Condition condition, final ClauseType clauseType, final Operation operation, final ConnectionProvider connectionProvider) {
+        final String lhs = condition.lhs().toSql(operation, clauseType);
         final Operator operator = condition.operator();
         final String sql;
 
@@ -82,7 +83,7 @@ public abstract class AbstractSqlGenerator {
                 if (condition.rhs() instanceof ConnectionProviderExpression connectionProviderExpression) {
                     sqlFragment = connectionProviderExpression.toSql(operation, connectionProvider);
                 } else {
-                    sqlFragment = Objects.requireNonNull(condition.rhs()).toSql(operation, ClauseType.WHERE);
+                    sqlFragment = Objects.requireNonNull(condition.rhs()).toSql(operation, clauseType);
                 }
 
                 sql = "%s %s (%s)".formatted(lhs, mapOperator(operator), sqlFragment);
@@ -194,11 +195,13 @@ public abstract class AbstractSqlGenerator {
      *
      * @param sql                The SQL builder.
      * @param conditionGroup     The condition group.
+     * @param clauseType         the current SQL clause type (e.g., WHERE, HAVING)`
      * @param operation          The current database operation.
      * @param connectionProvider The connection provider.
      */
     protected void appendConditionsAndSubgroups(final StringBuilder sql,
                                                 final ConditionGroup conditionGroup,
+                                                final ClauseType clauseType,
                                                 final Operation operation,
                                                 final ConnectionProvider connectionProvider) {
 
@@ -207,7 +210,7 @@ public abstract class AbstractSqlGenerator {
                 sql.append(' ').append(logicCondition.logicOperator()).append(' ');
             }
 
-            final String conditionSql = createCondition(logicCondition.condition(), operation, connectionProvider);
+            final String conditionSql = createCondition(logicCondition.condition(), clauseType, operation, connectionProvider);
             sql.append(conditionSql);
         }
 
@@ -217,7 +220,7 @@ public abstract class AbstractSqlGenerator {
             }
 
             sql.append(" (");
-            appendConditionsAndSubgroups(sql, logicConditionGroup.conditionGroup(), operation, connectionProvider);
+            appendConditionsAndSubgroups(sql, logicConditionGroup.conditionGroup(), clauseType, operation, connectionProvider);
             sql.append(')');
         }
     }

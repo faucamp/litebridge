@@ -1,4 +1,4 @@
-package org.litebridge.db.oracle.function.scalar;
+package org.litebridge.db.oracle.expression.function.scalar;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.expression.SelectExpression;

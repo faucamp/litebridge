@@ -192,7 +192,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(column, Operator.EQ, createLiteralExpression("testValue"));
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertNotNull(result);
@@ -206,7 +206,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(column, Operator.IS_NULL);
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertNotNull(result);
@@ -220,7 +220,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(column, Operator.IS_NOT_NULL);
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertNotNull(result);
@@ -234,7 +234,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(column, Operator.USING, column);
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertEquals("USING (TEST_COLUMN)", result);
@@ -247,7 +247,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(columnExpression, Operator.EQ, createLiteralExpression("testValue"));
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertEquals("\"t1\".TEST_COLUMN = ?", result);
@@ -260,7 +260,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(column, Operator.GT, createLiteralExpression("testValue"));
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN > ?", result);
@@ -273,7 +273,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(column, Operator.GTE, createLiteralExpression("testValue"));
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN >= ?", result);
@@ -286,7 +286,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(column, Operator.LT, createLiteralExpression("testValue"));
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN < ?", result);
@@ -299,7 +299,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(column, Operator.LTE, createLiteralExpression("testValue"));
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN <= ?", result);
@@ -312,7 +312,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(column, Operator.IN, createLiteralExpression(List.of("value1", "value2")));
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN IN (?, ?)", result);
@@ -325,7 +325,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(column, Operator.NOT_IN, createLiteralExpression(List.of("value1", "value2")));
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN NOT IN (?, ?)", result);
@@ -382,7 +382,7 @@ class AbstractSqlGeneratorTest {
         when(subselectExpression.toSql(any(Operation.class), any(ConnectionProvider.class))).thenReturn(subselectSql);
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN IN (SELECT ID FROM OTHER)", result);
@@ -395,7 +395,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(column, Operator.EQ, column);
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertEquals("\"ref\".TEST_COLUMN = \"ref\".TEST_COLUMN", result);
@@ -409,7 +409,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(lhs, Operator.EQ, createLiteralExpression("val"));
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertEquals("1 = ?", result);
@@ -422,7 +422,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(column, Operator.EQ, createLiteralExpression(null));
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN = ?", result);
@@ -435,7 +435,7 @@ class AbstractSqlGeneratorTest {
         final Condition condition = new Condition(lhs, Operator.USING, null);
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class)));
+        assertThrows(IllegalArgumentException.class, () -> sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class)));
     }
 
     @Test
@@ -471,7 +471,7 @@ class AbstractSqlGeneratorTest {
         when(cpe.toSql(any(Operation.class), any(ConnectionProvider.class))).thenReturn(fragment);
 
         // When
-        final String result = sqlGenerator.createCondition(condition, mock(Select.class), mock(ConnectionProvider.class));
+        final String result = sqlGenerator.createCondition(condition, clauseType, mock(Select.class), mock(ConnectionProvider.class));
 
         // Then
         assertEquals("TEST_TABLE.TEST_COLUMN IN (SUB_SQL)", result);

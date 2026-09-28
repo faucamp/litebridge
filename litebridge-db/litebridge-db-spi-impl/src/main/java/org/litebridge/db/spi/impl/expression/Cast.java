@@ -13,11 +13,13 @@ public class Cast extends AbstractAliasedExpression implements DelegateExpressio
 
     private final SelectExpression target;
     private final int dataType;
+    private final @Nullable Integer size;
 
-    public Cast(final SelectExpression target, @Nullable final String alias, final int dataType, final LabelGenerator labelGenerator) {
+    public Cast(final SelectExpression target, @Nullable final String alias, final int dataType, final @Nullable Integer size, final LabelGenerator labelGenerator) {
         super(alias, null, labelGenerator);
         this.target = target;
         this.dataType = dataType;
+        this.size = size;
     }
 
     @Override
@@ -27,12 +29,21 @@ public class Cast extends AbstractAliasedExpression implements DelegateExpressio
 
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
-        final String sql = "CAST(%s AS %s)".formatted(target.toSql(operation, clause), JDBCType.valueOf(dataType).getName());
+        final StringBuilder sql = new StringBuilder("CAST(")
+                .append(target.toSql(operation, clause))
+                .append(" AS ")
+                .append(JDBCType.valueOf(dataType).getName());
 
-        if (alias != null) {
-            return sql + labelGenerator.createAliasAs(alias);
+        if (size != null) {
+            sql.append('(').append(size).append(')');
         }
 
-        return sql;
+        sql.append(')');
+
+        if (alias != null) {
+            sql.append(labelGenerator.createAliasAs(alias));
+        }
+
+        return sql.toString();
     }
 }

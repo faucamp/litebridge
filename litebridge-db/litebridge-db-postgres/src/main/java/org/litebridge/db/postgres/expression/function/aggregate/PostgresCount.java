@@ -18,8 +18,8 @@ public class PostgresCount extends Count {
 
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
-        if (clause == ClauseType.SELECT) {
-            return addAliasAs("COUNT(*)", clause);
+        if (clause == ClauseType.SELECT || clause == ClauseType.HAVING) {
+            return addAliasAs("count(*)", clause);
         } else {
             return "count";
         }

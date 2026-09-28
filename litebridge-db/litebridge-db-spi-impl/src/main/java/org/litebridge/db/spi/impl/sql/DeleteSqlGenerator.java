@@ -2,6 +2,7 @@ package org.litebridge.db.spi.impl.sql;
 
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Delete;
 
@@ -37,7 +38,7 @@ public class DeleteSqlGenerator extends AbstractSqlGenerator {
 
         if (!delete.where().isEmpty()) {
             sql.append(" WHERE ");
-            appendConditionsAndSubgroups(sql, delete.where(), delete, connectionProvider);
+            appendConditionsAndSubgroups(sql, delete.where(), ClauseType.WHERE, delete, connectionProvider);
         }
 
         return sql.toString();

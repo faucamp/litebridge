@@ -23,6 +23,8 @@ import java.util.function.Function;
 
 public final class ContextBuilder {
 
+    private static final String DEFAULT_TYPE_CONVERTER = "org.litebridge.convert.DefaultTypeConverter";
+
     private @Nullable DatabaseProviderMetaData databaseProviderMetaData;
     private @Nullable SqlGenerator sqlGenerator;
     private @Nullable LabelGenerator labelGenerator;
@@ -158,8 +160,18 @@ public final class ContextBuilder {
 
     @SuppressWarnings("unchecked")
     private static TypeConverter loadDefaultTypeConverter() {
-        final Module converterModule = ModuleLayer.boot().findModule("litebridge.converter").orElseThrow(() -> new IllegalStateException("No type converter specified, and litebridge.converter module not found"));
-        final Class<TypeConverter> typeConverterClass = (Class<TypeConverter>) Class.forName(converterModule, "org.litebridge.db.spi.impl.DefaultTypeConverter");
-        return ClassUtils.newInstance(typeConverterClass);
+        final Module converterModule = ModuleLayer.boot().findModule("litebridge.converter").orElse(null);
+
+        if (converterModule != null) {
+            final Class<TypeConverter> typeConverterClass = (Class<TypeConverter>) Class.forName(converterModule, DEFAULT_TYPE_CONVERTER);
+            return ClassUtils.newInstance(typeConverterClass);
+        }
+
+        try {
+            final Class<TypeConverter> typeConverterClass = (Class<TypeConverter>) Class.forName(DEFAULT_TYPE_CONVERTER);
+            return ClassUtils.newInstance(typeConverterClass);
+        } catch (final ClassNotFoundException ex) {
+            throw new IllegalStateException("No type converter specified, and litebridge.converter module not found");
+        }
     }
 }

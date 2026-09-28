@@ -239,7 +239,7 @@ public class SqlFunctionRegistryFactory {
     }
 
     protected DelegateExpression createCast(final SelectExpression target, final Object... args) {
-        return new Cast(target, (String) args[0], (int) args[1], labelGenerator);
+        return new Cast(target, (String) args[0], (int) args[1], (Integer) args[2], labelGenerator);
     }
 
     /**

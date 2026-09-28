@@ -1,22 +1,19 @@
 package org.litebridge.db.oracle;
 
-import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.oracle.api.LitebridgeOracle;
 import org.litebridge.db.oracle.engine.OracleExecutionEngine;
 import org.litebridge.db.oracle.engine.OracleInsertAllEngine;
-import org.litebridge.db.oracle.function.OracleSqlFunctionRegistryFactory;
+import org.litebridge.db.oracle.expression.function.OracleSqlFunctionRegistryFactory;
+import org.litebridge.db.oracle.sql.OracleLabelGenerator;
 import org.litebridge.db.oracle.sql.OracleMathOperationGenerator;
 import org.litebridge.db.oracle.sql.OracleSqlGenerator;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
 import org.litebridge.db.spi.impl.ContextBuilder;
 import org.litebridge.db.spi.impl.DatabaseProviderContext;
 import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
-import org.litebridge.db.spi.impl.engine.DefaultMetaDataEngine;
 import org.litebridge.db.spi.impl.engine.ExecutionEngine;
-import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.impl.expression.SqlFunctionRegistryFactory;
 import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
@@ -41,25 +38,24 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider imple
                 new DatabaseProviderMetaData(true,
                         true,
                         DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
-
-        final MetaDataEngine metaDataEngine = new DefaultMetaDataEngine(databaseProviderMetaData);
-        final LabelGenerator labelGenerator = new LabelGenerator();
+        final LabelGenerator labelGenerator = new OracleLabelGenerator();
         final MathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(labelGenerator);
-        final SqlGenerator sqlGenerator = new OracleSqlGenerator(metaDataEngine, labelGenerator, mathOperationGenerator);
-        final TypeConverter typeConverter = new DefaultTypeConverter();
+
+        final ContextBuilder contextBuilder = ContextBuilder.newContext()
+                .withDatabaseProviderMetaData(databaseProviderMetaData)
+                .withLabelGenerator(labelGenerator)
+                .withMathOperationGenerator(mathOperationGenerator);
+
+        final SqlGenerator sqlGenerator = new OracleSqlGenerator(contextBuilder.ensureMetaDataEngine(), labelGenerator, mathOperationGenerator);
         final AliasTransformer aliasTransformer = new UppercaseAliasTransformer();
-        final ExecutionEngine executionEngine = new OracleExecutionEngine(typeConverter, aliasTransformer);
+        final ExecutionEngine executionEngine = new OracleExecutionEngine(contextBuilder.ensureTypeConverter(), aliasTransformer);
         final SqlFunctionRegistryFactory sqlFunctionRegistry = new OracleSqlFunctionRegistryFactory(labelGenerator, sqlGenerator.selectSqlGenerator());
 
-        return ContextBuilder.newContext()
+        return contextBuilder
                 .withAliasTransformer(aliasTransformer)
-                .withMathOperationGenerator(mathOperationGenerator)
-                .withDatabaseProviderMetaData(databaseProviderMetaData)
                 .withExecutionEngine(executionEngine)
-                .withLabelGenerator(labelGenerator)
                 .withSqlFunctionRegistryFactory(sqlFunctionRegistry)
                 .withSqlGenerator(sqlGenerator)
-                .withTypeConverter(typeConverter)
                 .withSequenceColumnValueGenerator(OracleSequenceColumnValueGenerator::new)
                 .build();
     }

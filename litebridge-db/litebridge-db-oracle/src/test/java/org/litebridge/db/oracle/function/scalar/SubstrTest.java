@@ -1,6 +1,7 @@
 package org.litebridge.db.oracle.function.scalar;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.oracle.expression.function.scalar.Substr;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.impl.expression.SelectColumn;
 import org.litebridge.db.spi.impl.sql.LabelGenerator;

@@ -1,7 +1,7 @@
-package org.litebridge.db.oracle.function;
+package org.litebridge.db.oracle.expression.function;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.oracle.function.scalar.Substr;
+import org.litebridge.db.oracle.expression.function.scalar.Substr;
 import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.impl.expression.SqlFunctionRegistryFactory;

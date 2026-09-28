@@ -4,6 +4,7 @@ import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.oracle.engine.OracleExecutionEngine;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.MergeSqlGenerator;
@@ -50,7 +51,7 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
         appendSelectTarget(sql, merge.using(), connectionProvider);
 
         sql.append(" ON (");
-        appendConditionsAndSubgroups(sql, merge.on(), merge, connectionProvider);
+        appendConditionsAndSubgroups(sql, merge.on(), ClauseType.JOIN, merge, connectionProvider);
         sql.append(')');
 
         final List<Merge.WhenMatched<Merge.WhenMatchedOperation>> whenMatchedList = merge.whenMatched();
@@ -181,7 +182,7 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
 
         if (whenMatched.and() != null) {
             sql.append(" WHERE ");
-            appendConditionsAndSubgroups(sql, whenMatched.and(), merge, connectionProvider);
+            appendConditionsAndSubgroups(sql, whenMatched.and(), ClauseType.WHERE, merge, connectionProvider);
         }
     }
 
@@ -195,6 +196,6 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
             throw new IllegalArgumentException("DELETE must have a WHERE clause for Oracle databases");
         }
 
-        appendConditionsAndSubgroups(sql, whenMatched.and(), merge, connectionProvider);
+        appendConditionsAndSubgroups(sql, whenMatched.and(), ClauseType.WHERE, merge, connectionProvider);
     }
 }

@@ -2,6 +2,7 @@ package org.litebridge.db.spi.impl.sql;
 
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Update;
 import org.litebridge.db.spi.update.UpdateColumn;
@@ -53,7 +54,7 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
 
         if (!update.where().isEmpty()) {
             sql.append(" WHERE ");
-            appendConditionsAndSubgroups(sql, update.where(), update, connectionProvider);
+            appendConditionsAndSubgroups(sql, update.where(), ClauseType.WHERE, update, connectionProvider);
         }
 
         return sql.toString();

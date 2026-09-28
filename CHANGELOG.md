@@ -32,6 +32,7 @@
     - `Result` and `BatchUpdateResult` result models added.
     - `VirtualTable` class added to encapsulate SELECT sources other than tables.
     - Add `tableAlias()` method to `AliasedExpression` to retrieve parent or source table aliases.
+    - Support added for SQL `CAST` function.
 - Oracle Database Provider:
     - Add custom mathematical operation SQL generator
     - Multi-row inserts are now supported via batched insert statements
