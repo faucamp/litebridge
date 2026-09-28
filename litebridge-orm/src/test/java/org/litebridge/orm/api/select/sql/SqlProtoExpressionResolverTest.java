@@ -35,7 +35,7 @@ class SqlProtoExpressionResolverTest {
         final ProtoExpressionSpec protoExpr = new ProtoColumnExpressionSpec(SelectColumnSpec.class, "name", "user_name");
 
         // When
-        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, null, table, null, ClauseType.SELECT);
+        final ColumnExpressionSpec spec = resolver.resolveSelectColumnSpec(protoExpr, null, table, null, ClauseType.SELECT);
 
         // Then
         final SelectColumnSpec selectColumnSpec = assertInstanceOf(SelectColumnSpec.class, spec);
@@ -51,7 +51,7 @@ class SqlProtoExpressionResolverTest {
 
         // When & Then
         final UnsupportedOperationException ex = assertThrows(UnsupportedOperationException.class,
-                () -> resolver.resolveSelectField(queryField, null, table, null, ClauseType.SELECT));
+                () -> resolver.resolveSelectColumnSpec(queryField, null, table, null, ClauseType.SELECT));
         assertEquals("QueryField not yet supported in SQL mode: " + queryField, ex.getMessage());
     }
 

@@ -21,11 +21,11 @@ import java.util.stream.Stream;
 public final class SqlProtoExpressionResolver extends ProtoExpressionResolver {
 
     @Override
-    protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable,
-                                                      final @Nullable OrmTable ormTable,
-                                                      final Table table,
-                                                      final @Nullable String tableAlias,
-                                                      final ClauseType clause) {
+    protected ColumnExpressionSpec resolveSelectColumnSpec(final Resolvable resolvable,
+                                                           final @Nullable OrmTable ormTable,
+                                                           final Table table,
+                                                           final @Nullable String tableAlias,
+                                                           final ClauseType clause) {
         final String alias;
 
         if (resolvable instanceof ProtoExpressionSpec protoExpressionSpec) {
@@ -38,11 +38,11 @@ public final class SqlProtoExpressionResolver extends ProtoExpressionResolver {
     }
 
     @Override
-    protected Stream<ExpressionSpec> resolveSelectField(final QueryField queryField,
-                                                        final @Nullable OrmTable ormTable,
-                                                        final Table table,
-                                                        final @Nullable String tableAlias,
-                                                        final ClauseType clause) {
+    protected Stream<ExpressionSpec> resolveSelectColumnSpec(final QueryField queryField,
+                                                             final @Nullable OrmTable ormTable,
+                                                             final Table table,
+                                                             final @Nullable String tableAlias,
+                                                             final ClauseType clause) {
         throw new UnsupportedOperationException("QueryField not yet supported in SQL mode: " + queryField);
     }
 

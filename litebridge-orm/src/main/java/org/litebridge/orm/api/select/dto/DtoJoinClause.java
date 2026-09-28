@@ -2,8 +2,8 @@ package org.litebridge.orm.api.select.dto;
 
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.condition.DtoConditionClauseStart;
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
@@ -11,7 +11,6 @@ import org.litebridge.orm.engine.ast.ConditionJoinUsingNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
 
@@ -64,7 +63,6 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         return switch (expression) {
             case QueryField queryField -> on(QueryFieldInspector.getFieldName(queryField));
             case ProtoExpressionSpec protoExpressionSpec -> on(protoExpressionSpec.column());
-            case SelectFieldSpec selectFieldSpec -> on(selectFieldSpec.field().name());
             default -> throw new IllegalArgumentException("Unsupported JOIN ON expression: " + expression);
         };
     }

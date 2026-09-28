@@ -11,13 +11,12 @@ import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
 import org.litebridge.orm.expression.Resolvable;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
+import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.ClassFieldAccessorCache;
-import org.litebridge.tracking.FieldAccessor;
 
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -43,15 +42,11 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     }
 
     @Override
-    protected ColumnExpressionSpec resolveSelectField(final Resolvable resolvable,
-                                                      final @Nullable OrmTable ormTable,
-                                                      final Table table,
-                                                      final @Nullable String tableAlias,
-                                                      final ClauseType clause) {
-        // Map the input DTO field names to database column names
-        final Class<?> dtoClass = getDtoClass(resolvable, ormTable);
-        final Column column = getColumn(dtoClass, resolvable, table, clause);
-        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, resolvable.column());
+    protected ColumnExpressionSpec resolveSelectColumnSpec(final Resolvable resolvable,
+                                                           final @Nullable OrmTable ormTable,
+                                                           final Table table,
+                                                           final @Nullable String tableAlias,
+                                                           final ClauseType clause) {
         final String alias;
 
         if (resolvable instanceof ProtoExpressionSpec protoExpressionSpec) {
@@ -60,15 +55,15 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
             alias = null;
         }
 
-        return new SelectFieldSpec(fieldAccessor, column, alias, tableAlias);
+        return new SelectColumnSpec(getColumn(resolvable, ormTable, table, clause), alias, tableAlias);
     }
 
     @Override
-    protected Stream<ExpressionSpec> resolveSelectField(final QueryField queryField,
-                                                        final @Nullable OrmTable ormTable,
-                                                        final Table table,
-                                                        final @Nullable String tableAlias,
-                                                        final ClauseType clause) {
+    protected Stream<ExpressionSpec> resolveSelectColumnSpec(final QueryField queryField,
+                                                             final @Nullable OrmTable ormTable,
+                                                             final Table table,
+                                                             final @Nullable String tableAlias,
+                                                             final ClauseType clause) {
         final ExpressionSpec pendingExpressionSpec = QueryFieldInspector.getPendingExpressionSpec(queryField);
 
         if (pendingExpressionSpec != null) {
@@ -79,13 +74,12 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
         final Class<?> dtoClass = QueryFieldInspector.getDtoClass(queryField);
         final String fieldName = QueryFieldInspector.getFieldName(queryField);
         final Column column = getColumn(dtoClass, fieldName, table, clause);
-        final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, fieldName);
-        return Stream.of(new SelectFieldSpec(fieldAccessor, column, null, tableAlias));
+        return Stream.of(new SelectColumnSpec(column, null, tableAlias));
     }
 
     private Class<?> getDtoClass(final Resolvable resolvable, final @Nullable OrmTable ormTable) {
         if (resolvable instanceof ProtoExpressionSpec protoExpressionSpec
-                && protoExpressionSpec.type() == SelectFieldSpec.class) {
+                && protoExpressionSpec.type() == SelectColumnSpec.class) {
             final Object[] args = protoExpressionSpec.args();
 
             if (!CollectionUtils.isEmpty(args)) {

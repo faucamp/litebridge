@@ -2,7 +2,6 @@ package org.litebridge.orm.expression.select;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
-import org.litebridge.tracking.FieldAccessor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -18,20 +17,6 @@ class SelectExpressionTest {
         final SelectColumnSpec spec = new SelectColumnSpec(column);
 
         // Then
-        assertEquals(column, spec.getColumn());
-    }
-
-    @Test
-    void testSelectFieldSpec() {
-        // Given
-        final FieldAccessor field = mock(FieldAccessor.class);
-        final Column column = mock(Column.class);
-
-        // When
-        final SelectFieldSpec spec = new SelectFieldSpec(field, column);
-
-        // Then
-        assertEquals(field, spec.field());
         assertEquals(column, spec.getColumn());
     }
 }

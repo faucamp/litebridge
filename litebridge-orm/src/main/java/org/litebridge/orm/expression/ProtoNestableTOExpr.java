@@ -3,7 +3,6 @@ package org.litebridge.orm.expression;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.expression.function.scalar.UpperSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -24,7 +23,7 @@ public final class ProtoNestableTOExpr<T> extends AbstractAliasable
 
     /**
      * @param typeOverride The type of the expression result.
-     * @param target       The target expression; typically a column name to select via {@link SelectColumnSpec} or {@link SelectFieldSpec}.
+     * @param target       The target expression; typically a column name to select via {@link SelectColumnSpec}
      * @param alias        The column alias to use, or {@code null} if not specified.
      * @param type         The type of expression to create.
      * @param args         Extra expression-specific arguments.
@@ -46,7 +45,7 @@ public final class ProtoNestableTOExpr<T> extends AbstractAliasable
      *
      * @param typeOverride The type of the expression result.
      * @param type         The type of expression to create.
-     * @param target       The target expression; typically a column name to select via {@link SelectColumnSpec} or {@link SelectFieldSpec}.
+     * @param target       The target expression; typically a column name to select via {@link SelectColumnSpec}
      * @param alias        The column alias to use, or {@code null} if not specified.
      */
     public ProtoNestableTOExpr(final Class<T> typeOverride, final Class<? extends ExpressionSpec> type, final ExpressionSpec target, @Nullable final String alias) {

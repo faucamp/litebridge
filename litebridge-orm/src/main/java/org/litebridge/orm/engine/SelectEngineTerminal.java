@@ -307,7 +307,6 @@ public class SelectEngineTerminal {
                 .toList();
     }
 
-    @SuppressWarnings("unchecked")
     private <T> T unwrap(final Class<T> type, final RowColumn rowColumn, final TypeConverter typeConverter) {
         return typeConverter.convert(rowColumn.value(), type);
     }

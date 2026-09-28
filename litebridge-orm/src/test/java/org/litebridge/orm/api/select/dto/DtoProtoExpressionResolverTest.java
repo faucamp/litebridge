@@ -12,7 +12,6 @@ import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
 import org.litebridge.orm.expression.Resolvable;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
@@ -56,78 +55,74 @@ class DtoProtoExpressionResolverTest {
     }
 
     @Test
-    void resolveSelectField_withResolvable_protoExpressionSpecWithArgs() {
-        // Given
-        final ProtoExpressionSpec protoExpr = new ProtoColumnExpressionSpec(SelectFieldSpec.class, "name", null, new Object[]{SelectTestDto.class});
-        when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
-
-        // When
-        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, ormTable, table, null, ClauseType.SELECT);
-
-        // Then
-        final SelectFieldSpec fieldSpec = assertInstanceOf(SelectFieldSpec.class, spec);
-        assertSame(fieldAccessor, fieldSpec.field());
-        assertSame(expectedColumn, fieldSpec.getColumn());
-    }
-
-    @Test
-    void resolveSelectField_withResolvable_protoExpressionSpecEmptyArgs() {
-        // Given
-        final ProtoExpressionSpec protoExpr = new ProtoColumnExpressionSpec(SelectFieldSpec.class, "name", null, new Object[0]);
-        when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
-
-        // When
-        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, ormTable, table, null, ClauseType.WHERE);
-
-        // Then
-        final SelectFieldSpec fieldSpec = assertInstanceOf(SelectFieldSpec.class, spec);
-        assertSame(fieldAccessor, fieldSpec.field());
-        assertSame(expectedColumn, fieldSpec.getColumn());
-    }
-
-    @Test
-    void resolveSelectField_withResolvable_protoExpressionSpecDifferentType() {
+    void resolveSelectColumnSpec_withResolvable_protoExpressionSpecWithArgs() {
         // Given
         final ProtoExpressionSpec protoExpr = new ProtoColumnExpressionSpec(SelectColumnSpec.class, "name", null, new Object[]{SelectTestDto.class});
         when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
 
         // When
-        final ColumnExpressionSpec spec = resolver.resolveSelectField(protoExpr, ormTable, table, null, ClauseType.SELECT);
+        final ColumnExpressionSpec spec = resolver.resolveSelectColumnSpec(protoExpr, ormTable, table, null, ClauseType.SELECT);
 
         // Then
-        final SelectFieldSpec fieldSpec = assertInstanceOf(SelectFieldSpec.class, spec);
-        assertSame(fieldAccessor, fieldSpec.field());
+        final SelectColumnSpec selectColumnSpec = assertInstanceOf(SelectColumnSpec.class, spec);
+        assertSame(expectedColumn, selectColumnSpec.getColumn());
     }
 
     @Test
-    void resolveSelectField_withGenericResolvable() {
+    void resolveSelectColumnSpec_withResolvable_protoExpressionSpecEmptyArgs() {
+        // Given
+        final ProtoExpressionSpec protoExpr = new ProtoColumnExpressionSpec(SelectColumnSpec.class, "name", null, new Object[0]);
+
+        // When
+        final ColumnExpressionSpec spec = resolver.resolveSelectColumnSpec(protoExpr, ormTable, table, null, ClauseType.WHERE);
+
+        // Then
+        final SelectColumnSpec selectColumnSpec = assertInstanceOf(SelectColumnSpec.class, spec);
+        assertSame(expectedColumn, selectColumnSpec.getColumn());
+    }
+
+    @Test
+    void resolveSelectColumnSpec_withResolvable_protoExpressionSpecDifferentType() {
+        // Given
+        final ProtoExpressionSpec protoExpr = new ProtoColumnExpressionSpec(SelectColumnSpec.class, "name", null, new Object[]{SelectTestDto.class});
+        when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
+
+        // When
+        final ColumnExpressionSpec spec = resolver.resolveSelectColumnSpec(protoExpr, ormTable, table, null, ClauseType.SELECT);
+
+        // Then
+        final SelectColumnSpec selectColumnSpec = assertInstanceOf(SelectColumnSpec.class, spec);
+        assertSame(expectedColumn, selectColumnSpec.getColumn());
+    }
+
+    @Test
+    void resolveSelectColumnSpec_withGenericResolvable() {
         // Given
         final Resolvable resolvable = mock(Resolvable.class);
         when(resolvable.column()).thenReturn("name");
         when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
 
         // When
-        final ColumnExpressionSpec spec = resolver.resolveSelectField(resolvable, ormTable, table, null, ClauseType.SELECT);
+        final ColumnExpressionSpec spec = resolver.resolveSelectColumnSpec(resolvable, ormTable, table, null, ClauseType.SELECT);
 
         // Then
-        final SelectFieldSpec fieldSpec = assertInstanceOf(SelectFieldSpec.class, spec);
-        assertSame(fieldAccessor, fieldSpec.field());
+        final SelectColumnSpec selectColumnSpec = assertInstanceOf(SelectColumnSpec.class, spec);
+        assertSame(expectedColumn, selectColumnSpec.getColumn());
     }
 
     @Test
-    void resolveSelectField_withQueryField() {
+    void resolveSelectColumnSpec_withQueryField() {
         // Given
         final QueryField queryField = new QueryField(SelectTestDto.class, "name");
         when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
 
         // When
-        final Stream<ExpressionSpec> result = resolver.resolveSelectField(queryField, ormTable, table, null, ClauseType.SELECT);
+        final Stream<ExpressionSpec> result = resolver.resolveSelectColumnSpec(queryField, ormTable, table, null, ClauseType.SELECT);
 
         // Then
         final ExpressionSpec spec = result.findFirst().orElseThrow();
-        final SelectFieldSpec fieldSpec = assertInstanceOf(SelectFieldSpec.class, spec);
-        assertSame(fieldAccessor, fieldSpec.field());
-        assertSame(expectedColumn, fieldSpec.getColumn());
+        final SelectColumnSpec selectColumnSpec = assertInstanceOf(SelectColumnSpec.class, spec);
+        assertSame(expectedColumn, selectColumnSpec.getColumn());
     }
 
     @Test

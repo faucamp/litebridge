@@ -91,6 +91,7 @@
     - `SelectSpecDtoMapper`: replaced by `DtoMapper`
     - Legacy query-building specifications: `SelectSpec`, `InsertSpec`, `UpdateSpec`, `DeleteSpec`
     - Removed `AliasGeneratorFactory`
+    - Removed obsolete `SelectFieldSpec` query expression class.
 - Database Provider SPI:
     - Legacy SPI interfaces have been removed, such as operation-specific execution methods (`select()`, `insert()`,
       `nativeQuery()`, etc.).

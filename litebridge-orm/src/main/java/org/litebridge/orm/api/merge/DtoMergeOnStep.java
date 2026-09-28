@@ -5,8 +5,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
-import org.litebridge.tracking.FieldAccessor;
+import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 /**
  * DTO-mode merge step for setting up the {@code MERGE INTO ... USING ... ON} condition.
@@ -44,8 +43,7 @@ public final class DtoMergeOnStep<DTO> extends MergeOnStep<DTO, DtoMergeUpdateSt
      */
     @Override
     public MergeConditionClause<DTO, DtoMergeUpdateStep<DTO>, MergeOnConditionClauseTerminal<DTO, DtoMergeUpdateStep<DTO>, DtoMergeInsertStep>> on(final String field) {
-        final FieldAccessor fieldAccessor = litebridgeContext.classFieldAccessorCache().fieldAccessor(usingDtoClass, field);
         final Column column = litebridgeContext.tableRegistry().getOrmTableOrThrow(usingDtoClass).columnMetaDataForField(field).column();
-        return on(new SelectFieldSpec(fieldAccessor, column));
+        return on(new SelectColumnSpec(column));
     }
 }

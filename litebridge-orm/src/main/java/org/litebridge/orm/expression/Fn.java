@@ -23,7 +23,6 @@ import org.litebridge.orm.expression.select.DtoAliasSpec;
 import org.litebridge.orm.expression.select.LiteralExpressionSpec;
 import org.litebridge.orm.expression.select.QueryAliasSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.expression.select.SqlFromTargetSpec;
 import org.litebridge.orm.expression.select.TableAliasSpec;
 
@@ -101,7 +100,7 @@ public final class Fn {
      * @see Fn#f(Class, String) to specify the parent DTO class explicitly to avoid potential ambiguity.
      */
     public static ExpressionSpec f(final String field) {
-        return new ProtoColumnExpressionSpec(SelectFieldSpec.class, field, null);
+        return new ProtoColumnExpressionSpec(SelectColumnSpec.class, field, null);
     }
 
     /**
@@ -114,7 +113,7 @@ public final class Fn {
      * @return a query expression selecting the target entity/DTO field
      */
     public static ExpressionSpec f(final Class<?> dtoClass, final String field) {
-        return new ProtoColumnExpressionSpec(SelectFieldSpec.class, field, null, new Object[]{dtoClass});
+        return new ProtoColumnExpressionSpec(SelectColumnSpec.class, field, null, new Object[]{dtoClass});
     }
 
     /**
@@ -154,7 +153,7 @@ public final class Fn {
      * @return a query expression selecting the aliased target entity/DTO field
      */
     public static ExpressionSpec alias(final Class<?> dtoClass, final String field, final String alias) {
-        return new ProtoColumnExpressionSpec(SelectFieldSpec.class, field, alias, new Object[]{dtoClass});
+        return new ProtoColumnExpressionSpec(SelectColumnSpec.class, field, alias, new Object[]{dtoClass});
     }
 
     /**

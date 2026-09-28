@@ -70,10 +70,6 @@ class ColumnMetaDataTest {
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnMetaData column = new ColumnMetaData(table, "id", false, 1);
 
-        assertFalse(column.isAutoIncrement());
-        column.setAutoIncrement(true);
-        assertTrue(column.isAutoIncrement());
-
         assertNull(column.getGenerator());
         final ColumnValueGenerator generator = mock(ColumnValueGenerator.class);
         column.setGenerator(generator);

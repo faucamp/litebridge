@@ -9,10 +9,10 @@ import java.util.Objects;
 /**
  * Expression that selects a database column.
  */
-public sealed class SelectColumnSpec extends AbstractColumnExpressionSpec implements SelectTargetSpec permits SelectFieldSpec {
+public final class SelectColumnSpec extends AbstractColumnExpressionSpec implements SelectTargetSpec {
 
     private Column column;
-    protected @Nullable String alias;
+    private @Nullable String alias;
 
     /**
      * Constructor.

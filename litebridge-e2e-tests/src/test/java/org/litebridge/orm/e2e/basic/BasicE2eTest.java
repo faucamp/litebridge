@@ -75,6 +75,17 @@ public class BasicE2eTest extends AbstractE2eTest {
             assertEquals(person, result.getOwner());
         }
 
+        // Retrieve the account record and owner using an expression
+        {
+            final Account result = litebridge.select(Account.class)
+                    .join(Person.class).on(Fn.field(Account.class, "owner"))
+                    .where(Fn.field("id")).eq(person.getId())
+                    .oneOrThrow();
+
+            assertEquals(account, result);
+            assertEquals(person, result.getOwner());
+        }
+
         // Retrieve the person record using a type-safe metamodel
         {
             final Account result = litebridge.select(Account.class)

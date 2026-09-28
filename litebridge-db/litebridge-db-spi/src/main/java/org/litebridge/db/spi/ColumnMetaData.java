@@ -25,7 +25,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
     private final int dataType;
     private final int size;
     private final int decimalDigits;
-    private boolean autoIncrement;
+    private final boolean autoIncrement;
     private final @Nullable String defaultValue;
     private @Nullable ColumnValueGenerator generator;
     private @Nullable String joinColumn;
@@ -164,16 +164,6 @@ public final class ColumnMetaData implements MappedFieldTarget {
      */
     public boolean isAutoIncrement() {
         return autoIncrement;
-    }
-
-    /**
-     * Sets whether this column is an auto-increment column.
-     *
-     * @param autoIncrement {@code true} if auto-increment; {@code false} otherwise
-     */
-    @Deprecated
-    public void setAutoIncrement(final boolean autoIncrement) {
-        this.autoIncrement = autoIncrement;
     }
 
     /**

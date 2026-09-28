@@ -40,7 +40,7 @@ import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
 import org.litebridge.orm.expression.function.aggregate.CountSpec;
 import org.litebridge.orm.expression.intent.ConvertIntent;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
+import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.nativesql.NativeSqlContext;
 import org.litebridge.orm.persistence.EntityDtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
@@ -354,7 +354,7 @@ class LitebridgeTest {
         when(databaseProvider.tableMetaData(eq(table), any(ConnectionProvider.class))).thenReturn(new TableMetaData(table, List.of("MY_VAR"), List.of(columnMetaData)));
         litebridge.register(dtoTableSpec);
 
-        final ExpressionSpec aliased = new ProtoColumnExpressionSpec(SelectFieldSpec.class, "TEST_COLUMN", "testAlias");
+        final ExpressionSpec aliased = new ProtoColumnExpressionSpec(SelectColumnSpec.class, "TEST_COLUMN", "testAlias");
 
         // When
         final FromClauseStart result = litebridge.select(aliased);

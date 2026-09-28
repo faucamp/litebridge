@@ -25,7 +25,6 @@ import org.litebridge.orm.expression.intent.ExpressionSpecArray;
 import org.litebridge.orm.expression.select.AliasReferenceSpec;
 import org.litebridge.orm.expression.select.LiteralExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
 
@@ -78,7 +77,6 @@ public final class SelectExpressionMapper {
     public SelectExpression toSelectExpression(final ExpressionSpec expressionSpec, final Map<String, SelectExpression> selectExpressionAliasMap) {
         return switch (expressionSpec) {
             // Select targets
-            case SelectFieldSpec selectFieldSpec -> toSelectColumn(selectFieldSpec);
             case SelectColumnSpec selectColumnSpec -> toSelectColumn(selectColumnSpec);
             case AliasReferenceSpec aliasReferenceSpec ->
                     toAliasReference(aliasReferenceSpec, selectExpressionAliasMap);

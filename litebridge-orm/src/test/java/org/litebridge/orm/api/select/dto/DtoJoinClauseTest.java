@@ -2,7 +2,6 @@ package org.litebridge.orm.api.select.dto;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
@@ -15,9 +14,7 @@ import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Fn;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
 import org.litebridge.orm.meta.QueryField;
-import org.litebridge.tracking.FieldAccessor;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -27,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class DtoJoinClauseTest {
 
@@ -85,23 +81,6 @@ class DtoJoinClauseTest {
         assertNotNull(terminal);
         final ConditionJoinUsingNode joinUsingNode = assertInstanceOf(ConditionJoinUsingNode.class, capturedConditionNode.get());
         assertEquals("age", joinUsingNode.usingColumn());
-    }
-
-    @Test
-    void on_withSelectFieldSpec() {
-        // Given
-        final FieldAccessor fieldAccessor = mock(FieldAccessor.class);
-        when(fieldAccessor.name()).thenReturn("id");
-        final Column column = mock(Column.class);
-        final SelectFieldSpec selectFieldSpec = new SelectFieldSpec(fieldAccessor, column);
-
-        // When
-        final DtoJoinConditionClauseTerminal<SelectTestDto> terminal = joinClause.on(selectFieldSpec);
-
-        // Then
-        assertNotNull(terminal);
-        final ConditionJoinUsingNode joinUsingNode = assertInstanceOf(ConditionJoinUsingNode.class, capturedConditionNode.get());
-        assertEquals("id", joinUsingNode.usingColumn());
     }
 
     @Test
