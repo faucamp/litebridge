@@ -60,12 +60,13 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
 
     @Override
     public UpdateMetaData createUpdateMetaData(final PreparedOperation preparedOperation) {
-        return AbstractInsertEngine.createUpdateMetaData(preparedOperation,
-                () -> switch (preparedOperation.operation().table()) {
-                    case Table table -> table;
-                    case AliasedTable aliasedTable -> aliasedTable.target();
-                    default -> new Table("");
-                },
-                litebridgeContext);
+        return Objects.requireNonNull(
+                AbstractInsertEngine.createUpdateMetaData(preparedOperation,
+                        () -> switch (preparedOperation.operation().table()) {
+                            case Table table -> table;
+                            case AliasedTable aliasedTable -> aliasedTable.target();
+                            default -> new Table("");
+                        },
+                        litebridgeContext));
     }
 }

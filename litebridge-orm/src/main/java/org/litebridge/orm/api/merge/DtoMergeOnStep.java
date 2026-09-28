@@ -7,6 +7,8 @@ import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 
+import java.util.Objects;
+
 /**
  * DTO-mode merge step for setting up the {@code MERGE INTO ... USING ... ON} condition.
  *
@@ -43,7 +45,7 @@ public final class DtoMergeOnStep<DTO> extends MergeOnStep<DTO, DtoMergeUpdateSt
      */
     @Override
     public MergeConditionClause<DTO, DtoMergeUpdateStep<DTO>, MergeOnConditionClauseTerminal<DTO, DtoMergeUpdateStep<DTO>, DtoMergeInsertStep>> on(final String field) {
-        final Column column = litebridgeContext.tableRegistry().getOrmTableOrThrow(usingDtoClass).columnMetaDataForField(field).column();
+        final Column column = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(usingDtoClass)).columnMetaDataForField(field).column();
         return on(new SelectColumnSpec(column));
     }
 }

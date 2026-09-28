@@ -19,6 +19,10 @@ public class AliasReferenceImpl extends AbstractAliasedExpression implements Ali
 
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
+        if (alias == null) {
+            throw new IllegalStateException("Alias is null; cannot render SQL fragment");
+        }
+
         if (tableAlias != null) {
             return labelGenerator.quoteAlias(tableAlias) + "." + labelGenerator.quoteAlias(alias);
         } else {

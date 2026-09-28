@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Objects;
 
 public class ExecutionEngineReturnedKeysNamed extends AbstractExecutionEngine {
 
@@ -28,7 +29,7 @@ public class ExecutionEngineReturnedKeysNamed extends AbstractExecutionEngine {
     protected PreparedStatement prepareJdbcStatementReturnGeneratedKeys(final UpdateMetaData updateMetaData,
                                                                         final PreparedSql preparedSql,
                                                                         final ManagedConnection connection) throws SQLException {
-        final String[] generatedKeyNames = updateMetaData.generatedKeys().stream()
+        final String[] generatedKeyNames = Objects.requireNonNull(updateMetaData.generatedKeys()).stream()
                 .map(ColumnMetaData::name)
                 .toArray(String[]::new);
 

@@ -246,7 +246,7 @@ public final class Fn {
      * @param columnAlias The alias to use for the column; may be {@code null}.
      * @return a query expression selecting the target column.
      */
-    public static ExpressionSpec ca(final Table table, final String column, final String columnAlias) {
+    public static ExpressionSpec ca(final Table table, final String column, final @Nullable String columnAlias) {
         return new SelectColumnSpec(new Column(table, column), columnAlias, null);
     }
 
@@ -275,7 +275,7 @@ public final class Fn {
      * @param alias  The alias to use for the column.
      * @return a query expression selecting the target column.
      */
-    public static ExpressionSpec ca(final String column, final String alias) {
+    public static ExpressionSpec ca(final String column, final @Nullable String alias) {
         return new ProtoColumnExpressionSpec(SelectColumnSpec.class, column, alias);
     }
 

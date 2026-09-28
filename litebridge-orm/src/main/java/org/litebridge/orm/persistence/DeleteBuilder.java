@@ -4,6 +4,8 @@ import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
+import java.util.Objects;
+
 /**
  * A builder class for constructing SQL DELETE statements.
  * <p>
@@ -30,6 +32,6 @@ public final class DeleteBuilder extends AbstractConditionalStatementBuilder {
 
     @Override
     public PreparedOperation build() {
-        return litebridgeContext.createQueryCompiler().compile(node);
+        return litebridgeContext.createQueryCompiler().compile(Objects.requireNonNull(node));
     }
 }

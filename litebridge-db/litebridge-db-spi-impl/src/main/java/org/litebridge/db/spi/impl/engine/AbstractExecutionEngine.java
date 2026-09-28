@@ -79,14 +79,14 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
                     return new InsertResult(affectedRowsArray.length, Collections.emptyList());
                 }
 
-                final List<Map<ColumnMetaData, Object>> generatedKeysPerAffectedRow = extractGeneratedKeysBatch(updateMetaData.generatedKeys(), affectedRowsArray.length, preparedStatement);
+                final List<Map<ColumnMetaData, Object>> generatedKeysPerAffectedRow = extractGeneratedKeysBatch(Objects.requireNonNull(updateMetaData.generatedKeys()), affectedRowsArray.length, preparedStatement);
                 return new InsertResult(affectedRowsArray.length, generatedKeysPerAffectedRow);
             } else {
                 addPreparedStatementBindValues(preparedStatement, preparedSql.bindValues());
                 final int affectedRows = preparedStatement.executeUpdate();
 
                 if (updateMetaData.returnGeneratedKeys() && affectedRows > 0) {
-                    final Map<ColumnMetaData, Object> generatedKeys = extractGeneratedKeys(updateMetaData.generatedKeys(), preparedStatement);
+                    final Map<ColumnMetaData, Object> generatedKeys = extractGeneratedKeys(Objects.requireNonNull(updateMetaData.generatedKeys()), preparedStatement);
                     return new InsertResult(affectedRows, generatedKeys);
                 } else {
                     return new InsertResult(affectedRows);
