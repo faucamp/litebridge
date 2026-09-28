@@ -96,6 +96,7 @@
     - Legacy SPI interfaces have been removed, such as operation-specific execution methods (`select()`, `insert()`,
       `nativeQuery()`, etc.).
     - `ColumnIdentifierGenerator`; replaced by `LabelGenerator`.
+    - Removed `ColumnValue`, `RowValue` etc due to alias handling improvements.
 
 ## [0.4.0] - 2026-08-10
 
