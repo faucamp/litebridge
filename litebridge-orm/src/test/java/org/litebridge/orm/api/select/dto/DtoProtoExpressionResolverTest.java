@@ -15,7 +15,6 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.util.stream.Stream;
@@ -27,7 +26,6 @@ import static org.mockito.Mockito.when;
 
 class DtoProtoExpressionResolverTest {
 
-    private ClassFieldAccessorCache classFieldAccessorCache;
     private TableRegistry tableRegistry;
     private OrmTable ormTable;
     private Table table;
@@ -38,7 +36,6 @@ class DtoProtoExpressionResolverTest {
 
     @BeforeEach
     void setUp() {
-        classFieldAccessorCache = mock(ClassFieldAccessorCache.class);
         tableRegistry = mock(TableRegistry.class);
         ormTable = mock(OrmTable.class);
         table = new Table("test_table");
@@ -51,14 +48,13 @@ class DtoProtoExpressionResolverTest {
         when(ormTable.columnMetaDataForField("name")).thenReturn(columnMetaData);
         doReturnDtoClass(ormTable, SelectTestDto.class);
 
-        resolver = new DtoProtoExpressionResolver(classFieldAccessorCache, tableRegistry);
+        resolver = new DtoProtoExpressionResolver(tableRegistry);
     }
 
     @Test
     void resolveSelectColumnSpec_withResolvable_protoExpressionSpecWithArgs() {
         // Given
         final ProtoExpressionSpec protoExpr = new ProtoColumnExpressionSpec(SelectColumnSpec.class, "name", null, new Object[]{SelectTestDto.class});
-        when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
 
         // When
         final ColumnExpressionSpec spec = resolver.resolveSelectColumnSpec(protoExpr, ormTable, table, null, ClauseType.SELECT);
@@ -85,7 +81,6 @@ class DtoProtoExpressionResolverTest {
     void resolveSelectColumnSpec_withResolvable_protoExpressionSpecDifferentType() {
         // Given
         final ProtoExpressionSpec protoExpr = new ProtoColumnExpressionSpec(SelectColumnSpec.class, "name", null, new Object[]{SelectTestDto.class});
-        when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
 
         // When
         final ColumnExpressionSpec spec = resolver.resolveSelectColumnSpec(protoExpr, ormTable, table, null, ClauseType.SELECT);
@@ -100,7 +95,6 @@ class DtoProtoExpressionResolverTest {
         // Given
         final Resolvable resolvable = mock(Resolvable.class);
         when(resolvable.column()).thenReturn("name");
-        when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
 
         // When
         final ColumnExpressionSpec spec = resolver.resolveSelectColumnSpec(resolvable, ormTable, table, null, ClauseType.SELECT);
@@ -114,7 +108,6 @@ class DtoProtoExpressionResolverTest {
     void resolveSelectColumnSpec_withQueryField() {
         // Given
         final QueryField queryField = new QueryField(SelectTestDto.class, "name");
-        when(classFieldAccessorCache.fieldAccessorOrThrow(SelectTestDto.class, "name")).thenReturn(fieldAccessor);
 
         // When
         final Stream<ExpressionSpec> result = resolver.resolveSelectColumnSpec(queryField, ormTable, table, null, ClauseType.SELECT);

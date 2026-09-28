@@ -16,7 +16,6 @@ import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
-import org.litebridge.tracking.ClassFieldAccessorCache;
 
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -26,18 +25,14 @@ import java.util.stream.Stream;
  */
 public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
 
-    private final ClassFieldAccessorCache classFieldAccessorCache;
     private final TableRegistry tableRegistry;
 
     /**
      * Creates a new instance of {@code DtoProtoExpressionResolver} without a select specification.
      *
-     * @param classFieldAccessorCache the field accessor cache
-     * @param tableRegistry           the table registry
+     * @param tableRegistry the table registry
      */
-    public DtoProtoExpressionResolver(final ClassFieldAccessorCache classFieldAccessorCache,
-                                      final TableRegistry tableRegistry) {
-        this.classFieldAccessorCache = classFieldAccessorCache;
+    public DtoProtoExpressionResolver(final TableRegistry tableRegistry) {
         this.tableRegistry = tableRegistry;
     }
 
