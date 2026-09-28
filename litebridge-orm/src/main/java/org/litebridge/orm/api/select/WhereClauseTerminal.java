@@ -1,7 +1,5 @@
 package org.litebridge.orm.api.select;
 
-import org.litebridge.orm.api.spec.FieldColumnSpec;
-
 /**
  * Terminal clause for constructing SQL WHERE conditions, allowing transitions
  * to GROUP BY or ORDER BY stages in a fluent and type-safe query-building process.

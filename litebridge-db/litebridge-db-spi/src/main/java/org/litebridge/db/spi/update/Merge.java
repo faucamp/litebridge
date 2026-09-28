@@ -1,7 +1,6 @@
 package org.litebridge.db.spi.update;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.SelectTarget;
 

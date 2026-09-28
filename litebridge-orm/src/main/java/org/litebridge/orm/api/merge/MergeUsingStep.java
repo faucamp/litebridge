@@ -1,12 +1,7 @@
 package org.litebridge.orm.api.merge;
 
-import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.api.select.SelectApi;
-import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
-
-import java.util.function.Function;
 
 /**
  * Abstract base step for specifying the source in a {@code MERGE} statement.

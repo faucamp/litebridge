@@ -1,7 +1,6 @@
 package org.litebridge.db.spi.query;
 
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.VirtualTable;
 import org.litebridge.db.spi.alias.AliasedQuery;
 import org.litebridge.db.spi.alias.AliasedTable;
 

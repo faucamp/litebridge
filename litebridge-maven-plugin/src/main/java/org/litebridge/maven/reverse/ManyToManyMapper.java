@@ -69,7 +69,7 @@ public class ManyToManyMapper {
                 if (joinTableMetaData.columns().size() == 2
                         && joinTableMetaData.columns().stream()
                         .allMatch(jc -> jc.getForeignKeyConstraints().stream()
-                                .map(fkc -> fkc.foreignKey())
+                                .map(ForeignKeyConstraint::foreignKey)
                                 .anyMatch(fkColumn -> fkColumn.equals(leftColumn.column()) || fkColumn.equals(rightColumn.column())))) {
                     // Collapse the join table into a many-to-many
                     entityTables.remove(joinTable);

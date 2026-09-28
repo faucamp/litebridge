@@ -499,8 +499,7 @@ public class DtoMapper {
             final List<SpecificDtoDependency> specificDtoDepencies = partialDto.dependencies();
             final Set<FieldAccessor> specificDependenciesResolved = new HashSet<>();
 
-            for (int i = 0; i < specificDtoDepencies.size(); i++) {
-                final SpecificDtoDependency specificDtoDependency = specificDtoDepencies.get(i);
+            for (final SpecificDtoDependency specificDtoDependency : specificDtoDepencies) {
                 final Class<?> relatedDtoClass = specificDtoDependency.relatedDtoClass();
                 final PartiallyConstructedDto targetDto = specificDtoDependency.targetMappingData() != null ?
                         dtoCache.get(specificDtoDependency.targetMappingData(), specificDtoDependency.primaryKeyValue()) :

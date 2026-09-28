@@ -166,21 +166,19 @@ public class EntityDtoMapper<DTO> {
         Objects.requireNonNull(entities, "Entities cannot be null");
         final DTO dto = ClassUtils.newInstance(dtoClass);
 
-        entities.forEach(entity -> {
-            entityToDtoFieldMap.get(entity.getClass()).forEach((entityField, dtoField) -> {
-                if (dtoField.type() != entityField.type() && classFieldAccessorCache.isNestedDtoField(entityField.dtoClass(), entityField)) {
-                    // Nested entity - get the PK and add that to the DTO field
-                    final Object nestedDto = entityField.get(entity);
-                    return;
-                }
+        entities.forEach(entity -> entityToDtoFieldMap.get(entity.getClass()).forEach((entityField, dtoField) -> {
+            if (dtoField.type() != entityField.type() && classFieldAccessorCache.isNestedDtoField(entityField.dtoClass(), entityField)) {
+                // Nested entity - get the PK and add that to the DTO field
+                final Object nestedDto = entityField.get(entity);
+                return;
+            }
 
-                // Composite DTO fields may be mapped to multiple entities via nested DTOs (e.g. one-to-many relationships).
-                // The combination of differently-selected DTOs in this combination may cause set values to be overridden with nulls (such as when a JOIN was left out but still mapped here)
-                if (isFieldSet(dtoField, dtoField.get(dto))) {
-                    dtoField.set(dto, entityField.get(entity));
-                }
-            });
-        });
+            // Composite DTO fields may be mapped to multiple entities via nested DTOs (e.g. one-to-many relationships).
+            // The combination of differently-selected DTOs in this combination may cause set values to be overridden with nulls (such as when a JOIN was left out but still mapped here)
+            if (isFieldSet(dtoField, dtoField.get(dto))) {
+                dtoField.set(dto, entityField.get(entity));
+            }
+        }));
 
         return dto;
     }

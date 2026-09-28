@@ -2,7 +2,6 @@ package org.litebridge.example.common;
 
 import org.litebridge.example.common.dto.Account;
 import org.litebridge.example.common.dto.Person;
-import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.LitebridgeCore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

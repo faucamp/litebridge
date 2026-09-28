@@ -1,6 +1,5 @@
 package org.litebridge.db.spi.expression;
 
-import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.query.Select;
 
 /**

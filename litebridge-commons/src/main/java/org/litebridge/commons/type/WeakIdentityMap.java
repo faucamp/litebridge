@@ -152,7 +152,7 @@ public final class WeakIdentityMap<K, V> implements Map<K, V> {
         @Override
         public Iterator<K> iterator() {
             expungeStaleEntries();
-            return new Iterator<K>() {
+            return new Iterator<>() {
                 private final Iterator<IdentityWeakReference<K>> it = innerMap.keySet().iterator();
 
                 @Nullable

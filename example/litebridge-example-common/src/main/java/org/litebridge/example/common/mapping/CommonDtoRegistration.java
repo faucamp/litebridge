@@ -2,7 +2,6 @@ package org.litebridge.example.common.mapping;
 
 import org.litebridge.example.common.dto.Account;
 import org.litebridge.example.common.dto.Person;
-import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.LitebridgeCore;
 
 public class CommonDtoRegistration {

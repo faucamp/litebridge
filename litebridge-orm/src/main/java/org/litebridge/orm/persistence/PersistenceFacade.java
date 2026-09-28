@@ -629,25 +629,23 @@ public class PersistenceFacade {
             final OrmTable ormTable = tableProvider.getTableOrThrow(dto.getClass());
 
             if (!CollectionUtils.isEmpty(ormTable.getOneToManyReverseMappings())) {
-                ormTable.getOneToManyReverseMappings().forEach(collectionField -> {
-                    changeTracker.getTrackedDtos(collectionField.dtoClass())
-                            .forEach(trackedDto -> {
-                                final Collection<Object> collection = (Collection<Object>) collectionField.get(trackedDto.dto());
+                ormTable.getOneToManyReverseMappings().forEach(collectionField -> changeTracker.getTrackedDtos(collectionField.dtoClass())
+                        .forEach(trackedDto -> {
+                            final Collection<Object> collection = (Collection<Object>) collectionField.get(trackedDto.dto());
 
-                                // If the collection does not exist yet, initialise it
-                                if (collection == null) {
-                                    final Collection<Object> newCollection = (Collection<Object>) ClassUtils.newInstance(collectionField.type());
-                                    collectionField.set(trackedDto.dto(), newCollection);
-                                    newCollection.add(dto);
-                                    transactionManager.addRollbackCallback(() -> collectionField.set(trackedDto.dto(), null));
-                                } else if (!collection.contains(dto)) {
-                                    // Add the updated value to the collection
-                                    LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", collectionField.name(), dto);
-                                    collection.add(dto);
-                                    transactionManager.addRollbackCallback(() -> collection.remove(dto));
-                                }
-                            });
-                });
+                            // If the collection does not exist yet, initialise it
+                            if (collection == null) {
+                                final Collection<Object> newCollection = (Collection<Object>) ClassUtils.newInstance(collectionField.type());
+                                collectionField.set(trackedDto.dto(), newCollection);
+                                newCollection.add(dto);
+                                transactionManager.addRollbackCallback(() -> collectionField.set(trackedDto.dto(), null));
+                            } else if (!collection.contains(dto)) {
+                                // Add the updated value to the collection
+                                LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", collectionField.name(), dto);
+                                collection.add(dto);
+                                transactionManager.addRollbackCallback(() -> collection.remove(dto));
+                            }
+                        }));
             }
         } finally {
             tableProvider.popContext();

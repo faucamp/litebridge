@@ -1,6 +1,5 @@
 package org.litebridge.orm.api.merge;
 
-import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.select.SelectApiImpl;
 import org.litebridge.orm.api.select.SelectTerminal;

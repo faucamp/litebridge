@@ -1,15 +1,12 @@
 package org.litebridge.orm.api.merge;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.select.SelectApiImpl;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
-import org.litebridge.orm.api.select.sql.SqlFromClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.expression.select.FromTargetSpec;
 import org.litebridge.orm.expression.select.QueryAliasSpec;
 
@@ -47,7 +44,7 @@ public final class SqlMergeUsingStep extends MergeUsingStep<Row, SqlMergeUpdateS
      * @param subselect function building the subquery
      * @return the merge ON condition clause terminal
      */
-    public MergeOnStep<Row, SqlMergeUpdateStep, MergeInsertStep>  using(final Function<SelectApi, SelectTerminal<?>> subselect) {
+    public MergeOnStep<Row, SqlMergeUpdateStep, MergeInsertStep> using(final Function<SelectApi, SelectTerminal<?>> subselect) {
         final SelectTerminal<?> selectTerminal = subselect.apply(new SelectApiImpl(litebridgeContext));
         final QueryNode subselectNode = Objects.requireNonNull(SelectTerminalInspector.getNode(selectTerminal));
         return new MergeOnStep<>(subselectNode, null, mergeNode, litebridgeContext);
