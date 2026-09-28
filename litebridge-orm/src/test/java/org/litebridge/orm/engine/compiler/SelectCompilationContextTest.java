@@ -453,16 +453,11 @@ class SelectCompilationContextTest {
     void addJoinConditionUsingNodeManyToMany() {
         // Given
         final LitebridgeContext context = createMockContext();
+        when(context.mode()).thenReturn(LitebridgeContext.Mode.DTO);
+
         final Table userTable = new Table("users");
         final ColumnMetaData idCol = new ColumnMetaData(userTable, "id", true, Types.INTEGER, 0);
         final TableMetaData userMeta = new TableMetaData(userTable, List.of("id"), List.of(idCol));
-
-        final TableRegistry tableRegistry = context.tableRegistry();
-        final OrmTable userOrmTable = mock(OrmTable.class);
-        when(userOrmTable.getMetaData()).thenReturn(userMeta);
-        when(userOrmTable.mappedColumns()).thenReturn(List.of(idCol));
-        when(userOrmTable.getContextTableRegistry()).thenReturn(tableRegistry);
-        when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(userOrmTable);
 
         final Table joinTable = new Table("user_roles");
         final ColumnMetaData joinUserCol = new ColumnMetaData(joinTable, "user_id", true, Types.INTEGER, 0);
@@ -479,7 +474,19 @@ class SelectCompilationContextTest {
         when(roleOrmTable.getMetaData()).thenReturn(roleMeta);
         when(roleOrmTable.mappedColumns()).thenReturn(List.of(rolePkCol));
         when(roleOrmTable.dtoClass()).thenReturn((Class) RoleDto.class);
+
+        final TableRegistry tableRegistry = context.tableRegistry();
+        final OrmTable userOrmTable = mock(OrmTable.class);
+        when(userOrmTable.getMetaData()).thenReturn(userMeta);
+        when(userOrmTable.mappedColumns()).thenReturn(List.of(idCol));
+        when(userOrmTable.getContextTableRegistry()).thenReturn(tableRegistry);
+        when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(userOrmTable);
         when(tableRegistry.getOrmTableOrThrow(RoleDto.class)).thenReturn(roleOrmTable);
+        when(tableRegistry.getOrmTableOrThrow(any(Table.class))).thenReturn(userOrmTable);
+        when(tableRegistry.getOrmTable(any(Table.class))).thenReturn(userOrmTable);
+        when(tableRegistry.getOrmTable(any(String.class))).thenReturn(userOrmTable);
+        when(tableRegistry.getOrmTableOrThrow(any(String.class))).thenReturn(userOrmTable);
+        when(context.tableMetaDataCache().ensureTableMetaData(joinTable)).thenReturn(joinMeta);
 
         final FieldAccessor collection = mock(FieldAccessor.class);
         final MappedManyToMany mappedManyToMany = new MappedManyToMany(joinOrmTable, "user_id", collection, () -> roleOrmTable, "role_id");
@@ -495,9 +502,21 @@ class SelectCompilationContextTest {
         joinNode.setCondition(usingNode);
 
         compilationContext.addJoin(joinNode);
-
-        // When / Then
         compilationContext.addJoinUsingCondition(usingNode);
+
+        // When
+        final Select select = (Select) compilationContext.toOperation();
+
+        // Then
+        assertNotNull(select);
+        assertNotNull(select.joins());
+        assertEquals(2, select.joins().size());
+        final Join firstJoin = select.joins().get(0);
+        final Join secondJoin = select.joins().get(1);
+        assertEquals(Join.JoinType.INNER, firstJoin.type());
+        assertEquals(Join.JoinType.INNER, secondJoin.type());
+        assertNotNull(firstJoin.conditions());
+        assertNotNull(secondJoin.conditions());
     }
 
     static class UserDto {

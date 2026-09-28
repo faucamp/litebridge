@@ -198,29 +198,30 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final List<Join> joins = new ArrayList<>(joinSpecs.size());
 
         for (final JoinSpec joinSpec : joinSpecs) {
-            joins.add(processJoinClause(joinSpec, from, selectExpressions));
+            joins.addAll(processJoinClause(joinSpec, from, selectExpressions));
         }
 
         return joins;
     }
 
-    private Join processJoinClause(final JoinSpec joinSpec, final SelectTarget from, final SelectExpressions selectExpressions) {
+    private List<Join> processJoinClause(final JoinSpec joinSpec, final SelectTarget from, final SelectExpressions selectExpressions) {
         final JoinNode joinNode = joinSpec.joinNode();
-        SelectTarget joinTarget = joinSpec.getJoinTarget();
+        final SelectTarget joinTarget = joinSpec.getJoinTarget();
 
         // Compile condition specs and create new Join
         if (joinSpec.getConditionJoinUsingNode() != null) {
-            joinTarget = processJoinUsingConditionNode(joinSpec.getConditionJoinUsingNode(), joinTarget, joinSpec, from);
+            return processJoinUsingConditionNode(joinSpec.getConditionJoinUsingNode(), joinTarget, joinSpec, from, selectExpressions);
         }
 
         final ConditionGroup conditionGroup = toConditionGroup(joinSpec.conditionGroupStack().current(), List.of(from, joinTarget), selectExpressions);
-        return new Join(joinNode.type(), joinTarget, conditionGroup);
+        return List.of(new Join(joinNode.type(), joinTarget, conditionGroup));
     }
 
-    private SelectTarget processJoinUsingConditionNode(final ConditionJoinUsingNode conditionJoinUsingNode,
-                                                       final SelectTarget joinTarget,
-                                                       final JoinSpec joinSpec,
-                                                       final SelectTarget from) {
+    private List<Join> processJoinUsingConditionNode(final ConditionJoinUsingNode conditionJoinUsingNode,
+                                                     final SelectTarget joinTarget,
+                                                     final JoinSpec joinSpec,
+                                                     final SelectTarget from,
+                                                     final SelectExpressions selectExpressions) {
         final String fieldName = Objects.requireNonNull(conditionJoinUsingNode.usingColumn(), "USING column not provided");
         final Table leftTable = getTable(from);
         final OrmTable leftOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(leftTable);
@@ -253,6 +254,9 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                             Operator.EQ,
                             rightSelectColumnSpec);
                 }
+
+                final ConditionGroup conditionGroup = toConditionGroup(conditionGroupSpec, List.of(from, joinTarget), selectExpressions);
+                return List.of(new Join(joinSpec.joinNode().type(), joinTarget, conditionGroup));
             }
             case MappedOneToMany mappedOneToMany -> {
                 final JoinOnSpec joinOnSpec = processOneToManyReverseJoin(joinTarget, mappedOneToMany, from, true);
@@ -277,62 +281,49 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                             Operator.EQ,
                             rightSelectColumnSpec);
                 }
+
+                final ConditionGroup conditionGroup = toConditionGroup(conditionGroupSpec, List.of(from, joinTarget), selectExpressions);
+                return List.of(new Join(joinSpec.joinNode().type(), joinTarget, conditionGroup));
             }
             case MappedManyToMany mappedManyToMany -> {
-                final List<JoinOnSpec> joinOnSpecs = processManyToManyJoin(mappedManyToMany, from);
-                final Table joinTable;
-                final String joinTableAlias;
+                final List<JoinOnSpec> joinOnSpecs = processManyToManyJoin(mappedManyToMany, from, joinTarget);
 
                 // First join
-                {
-                    final JoinOnSpec firstJoinOnSpec = joinOnSpecs.getFirst();
-                    final SelectColumnSpec leftSelectColumnSpec = firstJoinOnSpec.leftSelectColumnSpec();
-                    final SelectColumnSpec rightSelectColumnSpec = firstJoinOnSpec.rightSelectColumnSpec();
-                    joinTable = rightSelectColumnSpec.getColumn().table();
-                    joinTableAlias = rightSelectColumnSpec.getTableAlias();
+                final JoinOnSpec firstJoinOnSpec = joinOnSpecs.getFirst();
+                final SelectColumnSpec firstLeftSelectColumnSpec = firstJoinOnSpec.leftSelectColumnSpec();
+                final SelectColumnSpec firstRightSelectColumnSpec = firstJoinOnSpec.rightSelectColumnSpec();
+                final Table joinTable = firstRightSelectColumnSpec.getColumn().table();
+                final String joinTableAlias = firstRightSelectColumnSpec.getTableAlias();
+                final SelectTarget aliasedJoinTable = joinTableAlias != null ? new AliasedTable(joinTableAlias, joinTable) : joinTable;
 
-                    if (conditionGroupSpec.isEmpty()
-                            && leftSelectColumnSpec.getColumn().name().equals(rightSelectColumnSpec.getColumn().name())) {
-                        // No other conditions, and column names match; use USING
-                        final SelectColumnSpec usingColumnSelectSpec = new SelectColumnSpec(
-                                new Column(VirtualTable.anonymous(), leftSelectColumnSpec.getColumn().name()));
+                final ConditionGroupSpec firstConditionGroupSpec = new ConditionGroupSpec();
+                firstConditionGroupSpec.newCondition(conditionJoinUsingNode.logicOperator(),
+                        null,
+                        firstLeftSelectColumnSpec,
+                        Operator.EQ,
+                        firstRightSelectColumnSpec);
 
-                        conditionGroupSpec.newCondition(conditionJoinUsingNode.logicOperator(),
-                                null,
-                                usingColumnSelectSpec,
-                                Operator.USING,
-                                usingColumnSelectSpec);
-                    } else {
-                        conditionGroupSpec.newCondition(conditionJoinUsingNode.logicOperator(),
-                                null,
-                                leftSelectColumnSpec,
-                                Operator.EQ,
-                                rightSelectColumnSpec);
-                    }
-                }
+                final ConditionGroup firstConditionGroup = toConditionGroup(firstConditionGroupSpec, List.of(from, aliasedJoinTable), selectExpressions);
+                final Join firstJoin = new Join(joinSpec.joinNode().type(), aliasedJoinTable, firstConditionGroup);
 
                 // Second join
                 final JoinOnSpec secondJoinOnSpec = joinOnSpecs.getLast();
-                final Class<?> rightDtoClass = mappedManyToMany.targetOrmTable().get().dtoClass();
-                final JoinNode secondJoinNode = new JoinNode(null, joinSpec.type(), rightDtoClass, null, null, null, null);
-                final JoinSpec secondJoinSpec = new JoinSpec(secondJoinNode);
-                final ConditionGroupSpec secondConditionGroupSpec = secondJoinSpec.conditionGroupStack().current();
+                final SelectColumnSpec secondLeftSelectColumnSpec = secondJoinOnSpec.leftSelectColumnSpec();
+                final SelectColumnSpec secondRightSelectColumnSpec = secondJoinOnSpec.rightSelectColumnSpec();
 
-                final SelectColumnSpec leftSelectColumnSpec = secondJoinOnSpec.leftSelectColumnSpec();
-                final SelectColumnSpec rightSelectColumnSpec = secondJoinOnSpec.rightSelectColumnSpec();
-                secondConditionGroupSpec.newCondition(conditionJoinUsingNode.logicOperator(),
+                conditionGroupSpec.newCondition(conditionJoinUsingNode.logicOperator(),
                         null,
-                        leftSelectColumnSpec,
+                        secondLeftSelectColumnSpec,
                         Operator.EQ,
-                        rightSelectColumnSpec);
+                        secondRightSelectColumnSpec);
 
-                joinSpecs.add(secondJoinSpec);
-                return joinTableAlias != null ? new AliasedTable(joinTableAlias, joinTable) : joinTable;
+                final ConditionGroup secondConditionGroup = toConditionGroup(conditionGroupSpec, List.of(aliasedJoinTable, joinTarget), selectExpressions);
+                final Join secondJoin = new Join(joinSpec.joinNode().type(), joinTarget, secondConditionGroup);
+
+                return List.of(firstJoin, secondJoin);
             }
             default -> throw new UnsupportedOperationException("Unsupported mapped field target: " + mappedFieldTarget);
         }
-
-        return joinTarget;
     }
 
     private @Nullable ConditionGroup processWhereClause(final List<SelectTarget> selectTargets, final SelectExpressions selectExpressions) {
@@ -741,9 +732,11 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 Objects.requireNonNull(rightSelectColumnSpec, "Right JOIN column not selected"));
     }
 
-    private List<JoinOnSpec> processManyToManyJoin(final MappedManyToMany mappedManyToMany, final SelectTarget leftSelectTarget) {
+    private List<JoinOnSpec> processManyToManyJoin(final MappedManyToMany mappedManyToMany, final SelectTarget leftSelectTarget, final SelectTarget rightSelectTarget) {
         final JoinOnSpec leftLeftJoinOnSpec = createManyToManyLeftJoinOnSpec(mappedManyToMany, leftSelectTarget);
-        return List.of(leftLeftJoinOnSpec, createManyToManyRightJoinOnSpec(mappedManyToMany, leftLeftJoinOnSpec.rightSelectColumnSpec().getColumn().table()));
+        final Table joinTable = leftLeftJoinOnSpec.rightSelectColumnSpec().getColumn().table();
+        final String joinTableAlias = leftLeftJoinOnSpec.rightSelectColumnSpec().getTableAlias();
+        return List.of(leftLeftJoinOnSpec, createManyToManyRightJoinOnSpec(mappedManyToMany, joinTable, joinTableAlias, rightSelectTarget));
     }
 
     private JoinOnSpec createManyToManyLeftJoinOnSpec(final MappedManyToMany mappedManyToMany, final SelectTarget leftSelectTarget) {
@@ -774,9 +767,11 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         return new JoinOnSpec(leftSelectColumnSpec, joinSelectColumnSpec);
     }
 
-    private JoinOnSpec createManyToManyRightJoinOnSpec(final MappedManyToMany mappedManyToMany, final Table joinTable) {
+    private JoinOnSpec createManyToManyRightJoinOnSpec(final MappedManyToMany mappedManyToMany,
+                                                       final Table joinTable,
+                                                       final @Nullable String joinTableAlias,
+                                                       final SelectTarget rightSelectTarget) {
         // Join column
-        final String joinTableAlias = aliasGenerator.tableAlias(joinTable);
         final TableMetaData joinTableMetaData = getTableMetaData(joinTable);
         final Column joinTableColumn = joinTableMetaData.column(mappedManyToMany.inverseJoinColumn()).column();
         final SelectColumnSpec joinSelectColumnSpec = new SelectColumnSpec(joinTableColumn, null, joinTableAlias);
@@ -790,11 +785,10 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         }
 
         final Table rightTable = rightTableMetaData.table();
-        final String rightTableAlias = aliasGenerator.newTableAlias(rightTable);
+        final String rightTableAlias = getAlias(rightSelectTarget) != null ? getAlias(rightSelectTarget) : aliasGenerator.newTableAlias(rightTable);
         //TODO: add support for composite primary keys in many-to-many joins
-        final ColumnMetaData rightColumnMetaData = rightTableMetaData.column(mappedManyToMany.inverseJoinColumn());
+        final ColumnMetaData rightColumnMetaData = rightTableMetaData.primaryKey().getFirst();
         final Column rightColumn = rightColumnMetaData.column();
-        final String rightColumnAlias = aliasGenerator.newColumnAlias(rightColumn);
 
         // Add joined table columns to select
         final SqlFunctionRegistry sqlFunctionRegistry = litebridgeContext.sqlFunctionRegistry();
@@ -823,7 +817,8 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
         ensureJoinSelectExpressions().add(new SelectExpressions(joinSelectExpressions, aliases));
 
-        return new JoinOnSpec(joinSelectColumnSpec, rightSelectColumnSpec);
+        return new JoinOnSpec(joinSelectColumnSpec,
+                Objects.requireNonNull(rightSelectColumnSpec, "Right JOIN column not selected"));
     }
 
     private JoinOnSpec processOneToManyReverseJoin(final SelectTarget rightSelectTarget,
