@@ -100,22 +100,22 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final String... columns) {
-        return new SqlGroupByClauseTerminal(selectNode, columns, node, selectEngineTerminal, litebridgeContext);
+        return new SqlGroupByClauseTerminal(selectNode, columns, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public SqlGroupByClauseTerminal groupBy(final ExpressionSpec... expressions) {
-        return new SqlGroupByClauseTerminal(selectNode, expressions, node, selectEngineTerminal, litebridgeContext);
+        return new SqlGroupByClauseTerminal(selectNode, expressions, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(columns, node, selectEngineTerminal, litebridgeContext);
+        return new SqlOrderByClause(columns, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... expressions) {
-        return new SqlOrderByClause(expressions, node, selectEngineTerminal, litebridgeContext);
+        return new SqlOrderByClause(expressions, node(), selectEngineTerminal, litebridgeContext);
     }
 
     private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {

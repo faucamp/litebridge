@@ -70,11 +70,11 @@ public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTermina
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(columns, node, selectEngineTerminal, litebridgeContext);
+        return new SqlOrderByClause(columns, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... expressions) {
-        return new SqlOrderByClause(expressions, node, selectEngineTerminal, litebridgeContext);
+        return new SqlOrderByClause(expressions, node(), selectEngineTerminal, litebridgeContext);
     }
 }

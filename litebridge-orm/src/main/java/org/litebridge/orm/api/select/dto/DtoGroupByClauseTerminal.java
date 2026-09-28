@@ -62,11 +62,11 @@ public final class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTe
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
+        return new DtoOrderByClause<>(fields, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... expressions) {
-        return new DtoOrderByClause<>(expressions, node, selectEngineTerminal, litebridgeContext);
+        return new DtoOrderByClause<>(expressions, node(), selectEngineTerminal, litebridgeContext);
     }
 }

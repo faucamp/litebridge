@@ -115,7 +115,7 @@ public abstract class DelegatingSelectTerminal<DTO> implements SelectTerminal<DT
         return litebridgeContext;
     }
 
-    QueryNode node() {
+    protected QueryNode node() {
         if (pendingNode != null) {
             return pendingNode.get();
         } else {

@@ -80,12 +80,12 @@ public final class SqlHavingConditionClauseTerminal
 
     @Override
     public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(columns, node, selectEngineTerminal, litebridgeContext);
+        return new SqlOrderByClause(columns, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public SqlOrderByClause orderBy(final ExpressionSpec... expressions) {
-        return new SqlOrderByClause(expressions, node, selectEngineTerminal, litebridgeContext);
+        return new SqlOrderByClause(expressions, node(), selectEngineTerminal, litebridgeContext);
     }
 
     private SqlHavingConditionClause havingImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {

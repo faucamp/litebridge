@@ -131,22 +131,22 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     @Override
     public DtoGroupByClauseTerminal<DTO> groupBy(final String... fields) {
-        return new DtoGroupByClauseTerminal<>(fields, node, selectEngineTerminal, litebridgeContext);
+        return new DtoGroupByClauseTerminal<>(fields, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoGroupByClauseTerminal<DTO> groupBy(final ExpressionSpec... expressions) {
-        return new DtoGroupByClauseTerminal<>(expressions, node, selectEngineTerminal, litebridgeContext);
+        return new DtoGroupByClauseTerminal<>(expressions, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
+        return new DtoOrderByClause<>(fields, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
-        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
+        return new DtoOrderByClause<>(fields, node(), selectEngineTerminal, litebridgeContext);
     }
 
     private DtoWhereConditionClauseTerminal<DTO> createWithIdClause(final Object id) {

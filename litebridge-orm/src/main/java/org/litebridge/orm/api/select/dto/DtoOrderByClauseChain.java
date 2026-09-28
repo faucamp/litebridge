@@ -29,11 +29,11 @@ public final class DtoOrderByClauseChain<DTO>
 
     @Override
     public DtoOrderByClause<DTO> then(final String... fields) {
-        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
+        return new DtoOrderByClause<>(fields, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoOrderByClause<DTO> then(final ExpressionSpec... fields) {
-        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
+        return new DtoOrderByClause<>(fields, node(), selectEngineTerminal, litebridgeContext);
     }
 }

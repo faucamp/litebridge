@@ -80,12 +80,12 @@ public final class DtoHavingConditionClauseTerminal<DTO>
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final String... fields) {
-        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
+        return new DtoOrderByClause<>(fields, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public DtoOrderByClause<DTO> orderBy(final ExpressionSpec... fields) {
-        return new DtoOrderByClause<>(fields, node, selectEngineTerminal, litebridgeContext);
+        return new DtoOrderByClause<>(fields, node(), selectEngineTerminal, litebridgeContext);
     }
 
     private DtoHavingConditionClause<DTO> havingImpl(final LogicOperator logicOperator, final @Nullable String field, final @Nullable ExpressionSpec expression) {

@@ -28,11 +28,11 @@ public final class SqlOrderByClauseChain
 
     @Override
     public SqlOrderByClause then(final String... columns) {
-        return new SqlOrderByClause(columns, node, selectEngineTerminal, litebridgeContext);
+        return new SqlOrderByClause(columns, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public SqlOrderByClause then(final ExpressionSpec... expressions) {
-        return new SqlOrderByClause(expressions, node, selectEngineTerminal, litebridgeContext);
+        return new SqlOrderByClause(expressions, node(), selectEngineTerminal, litebridgeContext);
     }
 }
