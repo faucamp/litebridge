@@ -81,7 +81,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
 
     @Override
     public SqlJoinClause join(final String table) {
-        return new SqlJoinClause(null, litebridgeContext, conditionNode -> {
+        return new SqlJoinClause(litebridgeContext, conditionNode -> {
             final JoinNode joinNode = new JoinNode(node, Join.JoinType.INNER, null, null, table, null, null);
             joinNode.setCondition(conditionNode);
             return new SqlJoinConditionClauseTerminal(selectNode, joinNode, selectEngineTerminal, litebridgeContext);

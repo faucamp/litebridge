@@ -101,7 +101,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
 
     @Override
     public DtoJoinClause<DTO> join(final Class<?> dtoClass) {
-        return new DtoJoinClause<>(null, litebridgeContext, conditionNode -> {
+        return new DtoJoinClause<>(litebridgeContext, conditionNode -> {
             final JoinNode joinNode = new JoinNode(node, Join.JoinType.INNER, dtoClass, null, null, null, null);
             joinNode.setCondition(conditionNode);
             return new DtoJoinConditionClauseTerminal<>(joinNode, selectEngineTerminal, litebridgeContext);

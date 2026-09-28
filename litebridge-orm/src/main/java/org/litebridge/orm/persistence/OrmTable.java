@@ -120,14 +120,12 @@ public class OrmTable {
         }));
 
         // Add mapped field-target entries in the order of the db expressions
-        this.metaData.columns().forEach(column -> {
-            processedFieldTargetMap.entrySet().stream()
-                    .filter(entry ->
-                            entry.getValue() instanceof ColumnMetaData columnMetaData
-                                    && columnMetaData.equals(column))
-                    .findFirst()
-                    .ifPresent(orderedFieldTargetEntries::add);
-        });
+        this.metaData.columns().forEach(column -> processedFieldTargetMap.entrySet().stream()
+                .filter(entry ->
+                        entry.getValue() instanceof ColumnMetaData columnMetaData
+                                && columnMetaData.equals(column))
+                .findFirst()
+                .ifPresent(orderedFieldTargetEntries::add));
 
         // Append remaining entries to the end of the list
         if (orderedFieldTargetEntries.size() < fieldAccessorTargetMap.size()) {
@@ -253,12 +251,8 @@ public class OrmTable {
      */
     public <DTO> TrackedDto<DTO> ensureTrackedDto(final DTO dto) {
         final TrackedDto<DTO> trackedDto = changeTracker.getTrackedDtoOrNull(dto);
-
-        if (trackedDto == null) {
-            return changeTracker.getTrackedDto(changeTracker.trackDtoFields(dto, fieldAccessorTargetMap.keySet(), true));
-        } else {
-            return trackedDto;
-        }
+        return Objects.requireNonNullElseGet(trackedDto,
+                () -> changeTracker.getTrackedDto(changeTracker.trackDtoFields(dto, fieldAccessorTargetMap.keySet(), true)));
     }
 
     /**
@@ -298,7 +292,7 @@ public class OrmTable {
         if (target == null && fieldAccessor instanceof FieldAccessorChain chain) {
             target = fieldAccessorTargetMap.get(chain.fieldAccessors().getFirst());
         }
-        
+
         return target;
     }
 

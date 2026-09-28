@@ -143,11 +143,8 @@ public final class ContextBuilder {
 
         final SqlFunctionRegistry sqlFunctionRegistry;
 
-        if (sqlFunctionRegistryFactory != null) {
-            sqlFunctionRegistry = sqlFunctionRegistryFactory.create();
-        } else {
-            sqlFunctionRegistry = new SqlFunctionRegistryFactory(finalLabelGenerator, finalSqlGenerator.selectSqlGenerator()).create();
-        }
+        sqlFunctionRegistry = Objects.requireNonNullElseGet(sqlFunctionRegistryFactory,
+                () -> new SqlFunctionRegistryFactory(finalLabelGenerator, finalSqlGenerator.selectSqlGenerator())).create();
 
         return new DatabaseProviderContext(
                 finalSqlGenerator,

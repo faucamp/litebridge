@@ -77,11 +77,7 @@ public sealed class QueryField implements ExpressionSpec permits NumericQueryFie
      * @return a {@link ProtoColumnExpressionSpec} expression instance to convert the return value of the nested expression
      */
     public <T> ConvertSpec<T> convert(final Class<T> returnType) {
-        if (pendingExpressionSpec != null) {
-            return Fn.convert(pendingExpressionSpec, returnType);
-        }
-
-        return Fn.convert(Fn.field(field), returnType);
+        return Fn.convert(Objects.requireNonNullElseGet(pendingExpressionSpec, () -> Fn.field(field)), returnType);
     }
 
     /**

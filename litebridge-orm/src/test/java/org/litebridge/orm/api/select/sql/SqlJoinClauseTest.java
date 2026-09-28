@@ -9,7 +9,6 @@ import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Fn;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
@@ -20,23 +19,20 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 class SqlJoinClauseTest {
 
     private LitebridgeContext litebridgeContext;
-    private SelectNode selectNode;
     private AtomicReference<QueryNode> capturedConditionNode;
     private SqlJoinClause joinClause;
 
     @BeforeEach
     void setUp() {
         litebridgeContext = mock(LitebridgeContext.class);
-        selectNode = new SelectNode(null, null, null, null, null, null);
         capturedConditionNode = new AtomicReference<>();
-        joinClause = new SqlJoinClause(selectNode, litebridgeContext, conditionNode -> {
+        joinClause = new SqlJoinClause(litebridgeContext, conditionNode -> {
             capturedConditionNode.set(conditionNode);
             return mock(SqlJoinConditionClauseTerminal.class);
         });
@@ -52,7 +48,6 @@ class SqlJoinClauseTest {
         conditionClause.eq(10L);
         final QueryNode node = capturedConditionNode.get();
         final ConditionNode conditionNode = assertInstanceOf(ConditionNode.class, node);
-        assertSame(selectNode, conditionNode.previous());
         assertEquals("user_id", conditionNode.lhsColumn());
         assertEquals(Operator.EQ, conditionNode.operator());
         assertEquals(10L, conditionNode.rhs());
@@ -112,7 +107,6 @@ class SqlJoinClauseTest {
         assertNotNull(terminal);
         final QueryNode node = capturedConditionNode.get();
         final ConditionNode conditionNode = assertInstanceOf(ConditionNode.class, node);
-        assertSame(selectNode, conditionNode.previous());
         assertEquals(LogicOperator.NOOP, conditionNode.logicOperator());
         assertEquals("user_id", conditionNode.lhsColumn());
         assertEquals(Operator.USING, conditionNode.operator());

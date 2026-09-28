@@ -96,7 +96,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
 
     protected Condition toCondition(final ConditionSpec conditionSpec, final List<SelectTarget> selectTargets, final SelectExpressions selectExpressions) {
         final SelectExpressionMapper selectExpressionMapper = litebridgeContext.selectExpressionMapper();
-        final Operator operator = conditionSpec.operator();
+        final Operator operator = Objects.requireNonNull(conditionSpec.operator());
         ExpressionSpec lhsExpressionSpec;
 
         // Compile condition specs

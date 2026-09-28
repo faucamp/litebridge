@@ -4,6 +4,8 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Fn;
 import org.litebridge.orm.expression.ProtoNestableTOExpr;
 
+import java.util.Objects;
+
 /**
  * Metamodel field for querying string-based columns in a type-safe manner.
  * <p>
@@ -35,11 +37,8 @@ public final class StringQueryField extends QueryField {
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      */
     public StringQueryField upper() {
-        if (pendingExpressionSpec != null) {
-            return new StringQueryField(this, Fn.upper(pendingExpressionSpec));
-        } else {
-            return new StringQueryField(this, Fn.upper(Fn.f(dtoClass, field)));
-        }
+        return new StringQueryField(this,
+                Fn.upper(Objects.requireNonNullElseGet(pendingExpressionSpec, () -> Fn.f(dtoClass, field))));
     }
 
     /**
@@ -48,10 +47,7 @@ public final class StringQueryField extends QueryField {
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      */
     public StringQueryField lower() {
-        if (pendingExpressionSpec != null) {
-            return new StringQueryField(this, Fn.lower(pendingExpressionSpec));
-        } else {
-            return new StringQueryField(this, Fn.lower(Fn.f(dtoClass, field)));
-        }
+        return new StringQueryField(this,
+                Fn.lower(Objects.requireNonNullElseGet(pendingExpressionSpec, () -> Fn.f(dtoClass, field))));
     }
 }

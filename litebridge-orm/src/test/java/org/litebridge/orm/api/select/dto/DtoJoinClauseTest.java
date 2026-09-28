@@ -10,7 +10,6 @@ import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.ConditionJoinUsingNode;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Fn;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
@@ -33,9 +32,8 @@ class DtoJoinClauseTest {
     @BeforeEach
     void setUp() {
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
-        final SelectNode selectNode = new SelectNode(null, SelectTestDto.class, null, null, null, null);
         capturedConditionNode = new AtomicReference<>();
-        joinClause = new DtoJoinClause<>(selectNode, litebridgeContext, conditionNode -> {
+        joinClause = new DtoJoinClause<>(litebridgeContext, conditionNode -> {
             capturedConditionNode.set(conditionNode);
             return mock(DtoJoinConditionClauseTerminal.class);
         });

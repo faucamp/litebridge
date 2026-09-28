@@ -3,7 +3,6 @@ package org.litebridge.orm.api.select.impl;
 import org.litebridge.orm.api.select.JoinClause;
 import org.litebridge.orm.api.select.JoinConditionClause;
 import org.litebridge.orm.api.select.JoinConditionClauseTerminal;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 
 /**
@@ -20,11 +19,6 @@ public abstract class AbstractJoinClause<DTO,
         implements JoinClause<DTO, JCC, JCCT> {
 
     /**
-     * The current query node.
-     */
-    protected final QueryNode node;
-
-    /**
      * The Litebridge context.
      */
     protected final LitebridgeContext litebridgeContext;
@@ -32,11 +26,9 @@ public abstract class AbstractJoinClause<DTO,
     /**
      * Creates a new {@code AbstractJoinClause} instance.
      *
-     * @param node              the current query node
      * @param litebridgeContext the Litebridge context
      */
-    public AbstractJoinClause(final QueryNode node, final LitebridgeContext litebridgeContext) {
-        this.node = node;
+    public AbstractJoinClause(final LitebridgeContext litebridgeContext) {
         this.litebridgeContext = litebridgeContext;
     }
 }
