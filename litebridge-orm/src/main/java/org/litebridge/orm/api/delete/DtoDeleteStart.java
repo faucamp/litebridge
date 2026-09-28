@@ -2,11 +2,11 @@ package org.litebridge.orm.api.delete;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.update.UpdateStepBase;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
-import org.litebridge.orm.api.update.UpdateStepBase;
-import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -21,7 +21,6 @@ public final class DtoDeleteStart<DTO> extends UpdateStepBase
         DtoDeleteWhereConditionClauseTerminal<DTO>>,
         DeleteTerminal {
 
-    private final Class<DTO> dtoClass;
     private final DeleteNode deleteNode;
 
     /**
@@ -33,7 +32,6 @@ public final class DtoDeleteStart<DTO> extends UpdateStepBase
     public DtoDeleteStart(final Class<DTO> dtoClass,
                           final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
-        this.dtoClass = dtoClass;
         this.deleteNode = new DeleteNode(null, null, dtoClass);
     }
 
@@ -52,7 +50,7 @@ public final class DtoDeleteStart<DTO> extends UpdateStepBase
                 LogicOperator.NOOP,
                 field,
                 expression,
-                node -> new DtoDeleteWhereConditionClauseTerminalImpl<>(dtoClass, new WhereNode(deleteNode, node), litebridgeContext));
+                node -> new DtoDeleteWhereConditionClauseTerminalImpl<>(new WhereNode(deleteNode, node), litebridgeContext));
     }
 
     QueryNode node() {

@@ -248,7 +248,7 @@ public class LitebridgeCore implements SelectApi {
         this.litebridgeConfig = litebridgeConfig != null ? litebridgeConfig : new LitebridgeConfig();
         this.changeTracker = new ChangeTracker(lookup);
         this.tableMetaDataCache = new TableMetaDataCache(this.databaseProvider, transactionManager);
-        final TableMapper tableMapper = new TableMapper(this.databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        final TableMapper tableMapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
         this.registrationEngine = new RegistrationEngine(this.databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
         this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor, createLitebridgeContext(LitebridgeContext.Mode.DTO));
 

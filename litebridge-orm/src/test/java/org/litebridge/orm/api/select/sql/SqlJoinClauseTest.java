@@ -12,7 +12,6 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Fn;
-import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridge.orm.expression.ProtoExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 
@@ -21,7 +20,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -38,7 +36,7 @@ class SqlJoinClauseTest {
         litebridgeContext = mock(LitebridgeContext.class);
         selectNode = new SelectNode(null, null, null, null, null, null);
         capturedConditionNode = new AtomicReference<>();
-        joinClause = new SqlJoinClause("orders", selectNode, litebridgeContext, conditionNode -> {
+        joinClause = new SqlJoinClause(selectNode, litebridgeContext, conditionNode -> {
             capturedConditionNode.set(conditionNode);
             return mock(SqlJoinConditionClauseTerminal.class);
         });

@@ -45,7 +45,6 @@ import java.util.stream.Collectors;
  */
 public final class TableMapper {
 
-    private final TransactionalDatabaseProvider databaseProvider;
     private final TableRegistry tableRegistry;
     private final ChangeTracker changeTracker;
     private final ClassFieldAccessorCache classFieldAccessorCache;
@@ -54,16 +53,13 @@ public final class TableMapper {
     /**
      * Creates a new {@code TableMapper} instance.
      *
-     * @param databaseProvider   the transactional database provider
      * @param tableRegistry      the table registry
      * @param changeTracker      the change tracker
      * @param tableMetaDataCache the table metadata cache
      */
-    public TableMapper(final TransactionalDatabaseProvider databaseProvider,
-                       final TableRegistry tableRegistry,
+    public TableMapper(final TableRegistry tableRegistry,
                        final ChangeTracker changeTracker,
                        final TableMetaDataCache tableMetaDataCache) {
-        this.databaseProvider = databaseProvider;
         this.tableRegistry = tableRegistry;
         this.changeTracker = changeTracker;
         this.classFieldAccessorCache = changeTracker.classFieldAccessorCache();

@@ -35,7 +35,7 @@ class TableMapperComplexTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(TransactionManager.class));
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        final TableMapper mapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
 
         // Register Order first
         final Table orderTable = new Table("", "public", "orders");
@@ -77,7 +77,7 @@ class TableMapperComplexTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(TransactionManager.class));
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        final TableMapper mapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
 
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), String.class, mock(TableSpec.class), Collections.emptySet()));
@@ -100,7 +100,7 @@ class TableMapperComplexTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(TransactionManager.class));
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        final TableMapper mapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
 
         // Customer
         final Table customerTable = new Table("", "public", "customers");

@@ -47,7 +47,7 @@ public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
 
     @Override
     public SqlJoinClause join(final String table) {
-        return new SqlJoinClause(table, null, litebridgeContext, conditionNode -> {
+        return new SqlJoinClause(null, litebridgeContext, conditionNode -> {
             final JoinNode joinNode = new JoinNode(node, Join.JoinType.INNER, null, null, table, null, null);
             joinNode.setCondition(conditionNode);
             return new SqlJoinConditionClauseTerminal(selectNode, joinNode, selectEngineTerminal, litebridgeContext);

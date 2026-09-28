@@ -18,24 +18,20 @@ public final class SqlJoinClause extends AbstractJoinClause<Row,
         SqlJoinConditionClause,
         SqlJoinConditionClauseTerminal> {
 
-    private final String selectedTable;
     private final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator;
 
     /**
      * Creates a new instance of {@code SqlJoinClause}.
      *
-     * @param selectedTable     the selected table name
      * @param node              the current query node
      * @param litebridgeContext the Litebridge context
      * @param terminalCreator   the function to create the terminal clause
      */
-    public SqlJoinClause(final String selectedTable,
-                         final QueryNode node,
+    public SqlJoinClause(final QueryNode node,
                          final LitebridgeContext litebridgeContext,
                          final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator) {
         super(node, litebridgeContext);
         this.terminalCreator = terminalCreator;
-        this.selectedTable = selectedTable;
     }
 
     /**

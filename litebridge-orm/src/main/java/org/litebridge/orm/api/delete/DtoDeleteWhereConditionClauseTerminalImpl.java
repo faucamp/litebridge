@@ -3,8 +3,8 @@ package org.litebridge.orm.api.delete;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.condition.DtoConditionClauseStart;
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.QueryNode;
@@ -21,21 +21,17 @@ import java.util.function.Function;
 public final class DtoDeleteWhereConditionClauseTerminalImpl<DTO>
         implements DtoDeleteWhereConditionClauseTerminal<DTO>, DeleteTerminal {
 
-    private final Class<DTO> dtoClass;
     private final LitebridgeContext litebridgeContext;
     private QueryNode node;
 
     /**
      * Creates a new {@code DtoDeleteWhereConditionClauseTerminalImpl} instance.
      *
-     * @param dtoClass          the mapped DTO/entity class
      * @param node              the current query node
      * @param litebridgeContext the Litebridge context
      */
-    public DtoDeleteWhereConditionClauseTerminalImpl(final Class<DTO> dtoClass,
-                                                     final QueryNode node,
+    public DtoDeleteWhereConditionClauseTerminalImpl(final QueryNode node,
                                                      final LitebridgeContext litebridgeContext) {
-        this.dtoClass = dtoClass;
         this.node = node;
         this.litebridgeContext = litebridgeContext;
     }

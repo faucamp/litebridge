@@ -41,7 +41,7 @@ class TableMapperTest {
         TransactionalDatabaseProvider transactionalDatabaseProvider = org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "databaseProvider", TransactionalDatabaseProvider.class);
         TableMetaDataCache tableMetaDataCache = org.litebridge.commons.ObjectUtils.getFieldValue(litebridge, "tableMetaDataCache", TableMetaDataCache.class);
 
-        tableMapper = new TableMapper(transactionalDatabaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        tableMapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
     }
 
     @Test

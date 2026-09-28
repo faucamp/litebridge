@@ -1,6 +1,7 @@
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
+@SuppressWarnings("module")
 module litebridge.example.h2.jpms {
     requires flyway.core;
     requires java.sql;

@@ -31,7 +31,7 @@ class TableMapperExtraTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(org.litebridge.db.spi.tx.TransactionManager.class));
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        final TableMapper mapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
 
         final TableSpec tableSpec = mock(TableSpec.class);
         when(tableSpec.fieldColumnMap()).thenReturn(Collections.emptyMap());
@@ -45,7 +45,7 @@ class TableMapperExtraTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(org.litebridge.db.spi.tx.TransactionManager.class));
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        final TableMapper mapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
 
         final Table table = new Table("", "public", "TEST");
         final ColumnMetaData idCol = new ColumnMetaData(table, "ID", false, Types.BIGINT);
@@ -64,7 +64,7 @@ class TableMapperExtraTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(org.litebridge.db.spi.tx.TransactionManager.class));
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        final TableMapper mapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
 
         final Table table = new Table("", "public", "TEST");
         final ColumnMetaData idCol = new ColumnMetaData(table, "ID", false, Types.BIGINT);
@@ -82,7 +82,7 @@ class TableMapperExtraTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(org.litebridge.db.spi.tx.TransactionManager.class));
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        final TableMapper mapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
 
         final Table table = new Table("", "public", "TEST");
         final ColumnMetaData idCol = new ColumnMetaData(table, "ID", false, Types.BIGINT);
@@ -100,7 +100,7 @@ class TableMapperExtraTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(org.litebridge.db.spi.tx.TransactionManager.class));
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        final TableMapper mapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
 
         final Table table = new Table("", "public", "TEST");
         final ColumnMetaData idCol = new ColumnMetaData(table, "ID", false, Types.BIGINT);
@@ -124,7 +124,7 @@ class TableMapperExtraTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(org.litebridge.db.spi.tx.TransactionManager.class));
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        final TableMapper mapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
 
         final Table table = new Table("", "public", "TEST");
         final ColumnMetaData idCol = new ColumnMetaData(table, "ID", false, Types.BIGINT);
@@ -148,7 +148,7 @@ class TableMapperExtraTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(org.litebridge.db.spi.tx.TransactionManager.class));
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        final TableMapper mapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
 
         final Table table = new Table("", "public", "TEST");
         final ColumnMetaData idCol = new ColumnMetaData(table, "ID", false, Types.BIGINT);
@@ -168,7 +168,7 @@ class TableMapperExtraTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(org.litebridge.db.spi.tx.TransactionManager.class));
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        final TableMapper mapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
 
         final Table table = new Table("", "public", "TEST");
         final ColumnMetaData idCol = new ColumnMetaData(table, "ID", false, Types.BIGINT);
@@ -189,7 +189,7 @@ class TableMapperExtraTest {
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, mock(org.litebridge.db.spi.tx.TransactionManager.class));
-        final TableMapper mapper = new TableMapper(databaseProvider, tableRegistry, changeTracker, tableMetaDataCache);
+        final TableMapper mapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
 
         final Table table = new Table("", "public", "TEST");
         final ColumnMetaData idCol = new ColumnMetaData(table, "ID", false, Types.BIGINT);
