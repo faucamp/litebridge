@@ -156,9 +156,9 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
 
         for (final LogicCondition logicCondition : conditionGroup.conditions()) {
             final Condition condition = logicCondition.condition();
-            if (condition.rhs() instanceof BindValueExpression bve) {
-                for (int i = 0; i < bve.size(); i++) {
-                    parameterIndices.add(bve.index() + i);
+            if (condition.rhs() instanceof BindValueExpression(int index, int size)) {
+                for (int i = 0; i < size; i++) {
+                    parameterIndices.add(index + i);
                 }
             }
         }
