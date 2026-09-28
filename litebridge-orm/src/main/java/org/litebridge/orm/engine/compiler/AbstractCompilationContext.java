@@ -96,13 +96,13 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
 
     protected Condition toCondition(final ConditionSpec conditionSpec, final List<SelectTarget> selectTargets, final SelectExpressions selectExpressions) {
         final SelectExpressionMapper selectExpressionMapper = litebridgeContext.selectExpressionMapper();
-        final Operator operator = conditionSpec.getOperator();
+        final Operator operator = conditionSpec.operator();
         ExpressionSpec lhsExpressionSpec;
 
         // Compile condition specs
-        if (conditionSpec.getLhsExpression() != null) {
+        if (conditionSpec.lhsExpression() != null) {
             // Expression specification
-            lhsExpressionSpec = resolveConditionExpressionSpec(conditionSpec.getLhsExpression(), selectTargets, operator);
+            lhsExpressionSpec = resolveConditionExpressionSpec(conditionSpec.lhsExpression(), selectTargets, operator);
         } else if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
             // DTO field name
             final SelectTarget selectTarget = selectTargets.getFirst();
@@ -110,24 +110,24 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             final String tableAlias = operator == Operator.USING ? null : getAlias(selectTarget);
 
             final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
-            final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(Objects.requireNonNull(conditionSpec.getLhsColumn()));
+            final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(Objects.requireNonNull(conditionSpec.lhsColumn()));
             final Column column = columnMetaData.column();
             final String columnAlias = aliasGenerator.columnAlias(column);
             lhsExpressionSpec = new SelectColumnSpec(column, columnAlias, tableAlias);
         } else {
             // Column name
-            final String columnName = Objects.requireNonNull(conditionSpec.getLhsColumn());
+            final String columnName = Objects.requireNonNull(conditionSpec.lhsColumn());
             final SelectTarget selectTarget = findSelectTarget(columnName, selectTargets);
             final Table table = getTable(selectTarget);
             final String tableAlias = operator == Operator.USING ? null : getAlias(selectTarget);
 
-            final Column column = new Column(table, Objects.requireNonNull(conditionSpec.getLhsColumn()));
+            final Column column = new Column(table, Objects.requireNonNull(conditionSpec.lhsColumn()));
             final String columnAlias = aliasGenerator.columnAlias(column);
             lhsExpressionSpec = new SelectColumnSpec(column, columnAlias, tableAlias);
         }
 
         final SelectExpression lhsSelectExpression = selectExpressionMapper.toSelectExpression(lhsExpressionSpec, selectExpressions.aliases());
-        final Object value = conditionSpec.getValue();
+        final Object value = conditionSpec.value();
 
         if (value instanceof QueryNode subselectNode) {
             // Subselect
