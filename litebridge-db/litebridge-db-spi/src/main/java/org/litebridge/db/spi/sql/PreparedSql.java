@@ -36,7 +36,7 @@ public record PreparedSql(String sql,
      * @param sql The SQL query string.
      */
     public PreparedSql(String sql,
-                       List<@Nullable BindValue> bindValues) {
+                       List<BindValue> bindValues) {
         this(sql, bindValues, null, null);
     }
 

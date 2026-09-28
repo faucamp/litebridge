@@ -75,6 +75,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
     private Class<?> getDtoClass(final Resolvable resolvable, final @Nullable OrmTable ormTable) {
         if (resolvable instanceof ProtoExpressionSpec protoExpressionSpec
                 && protoExpressionSpec.type() == SelectColumnSpec.class) {
+            //noinspection NullableProblems
             final Object[] args = protoExpressionSpec.args();
 
             if (!CollectionUtils.isEmpty(args)) {

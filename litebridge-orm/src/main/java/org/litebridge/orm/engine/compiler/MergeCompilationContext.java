@@ -227,6 +227,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
     public void addInsertValues(final InsertValuesNode insertValuesNode) {
         final WhenMatchedSpec whenMatchedSpec = getWhenMatchedSpec();
         final List<ColumnMetaData> columnMetaDataList = getWhenMatchedSpec().getColumnMetaDataList();
+        //noinspection NullableProblems
         final Object[] values = insertValuesNode.values();
 
         for (int i = 0; i < values.length; i++) {

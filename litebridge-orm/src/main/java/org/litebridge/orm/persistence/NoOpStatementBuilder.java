@@ -1,5 +1,6 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.update.Update;
@@ -59,7 +60,7 @@ public final class NoOpStatementBuilder implements StatementBuilder {
      * @throws UnsupportedOperationException Always thrown as this operation is not supported in the {@code NoOpStatementBuilder} implementation.
      */
     @Override
-    public void setField(final String fieldName, final Object value) {
+    public void setField(final String fieldName, final @Nullable Object value) {
         throw new UnsupportedOperationException();
     }
 

@@ -1,5 +1,6 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -26,7 +27,7 @@ public final class DeleteBuilder extends AbstractConditionalStatementBuilder {
     }
 
     @Override
-    public void setField(final String fieldName, final Object value) {
+    public void setField(final String fieldName, final @Nullable Object value) {
         throw new UnsupportedOperationException("setField is not supported for DeleteBuilder");
     }
 

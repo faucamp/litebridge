@@ -13,7 +13,6 @@ public interface LitebridgeConfigurer {
     /**
      * Called when Configures the given instance of Litebridge.
      *
-     *
      * @param litebridge the Litebridge instance to configure
      */
     void configure(final Litebridge litebridge);

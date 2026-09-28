@@ -1,6 +1,5 @@
 package org.litebridge.orm.api.merge;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -58,7 +57,7 @@ public sealed class MergeAndStep<DTO, MUS extends MergeUpdateStep>
         return andImpl(null, expression);
     }
 
-    private @NonNull MergeConditionClause<DTO, MUS, MergeWhenMatchedConditionClauseTerminal<DTO, MUS>> andImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {
+    private MergeConditionClause<DTO, MUS, MergeWhenMatchedConditionClauseTerminal<DTO, MUS>> andImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {
         return new MergeConditionClause<>(litebridgeContext,
                 LogicOperator.NOOP,
                 column,

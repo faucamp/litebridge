@@ -30,7 +30,7 @@ public final class LowerSpec extends AbstractColumnExpressionSpec implements Str
     }
 
     @Override
-    public void setTableAlias(final String tableAlias) {
+    public void setTableAlias(final @Nullable String tableAlias) {
         // Propagate the table alias to the lower level
         target.setTableAlias(tableAlias);
     }

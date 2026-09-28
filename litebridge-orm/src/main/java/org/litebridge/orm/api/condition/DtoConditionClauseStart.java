@@ -1,10 +1,9 @@
 package org.litebridge.orm.api.condition;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -35,7 +34,7 @@ public class DtoConditionClauseStart<DTO> extends AbstractConditionClauseStart<D
         return whereImpl(null, expression);
     }
 
-    private @NonNull CbDtoConditionClause<DTO> whereImpl(final @Nullable String field, final @Nullable ExpressionSpec expression) {
+    private CbDtoConditionClause<DTO> whereImpl(final @Nullable String field, final @Nullable ExpressionSpec expression) {
         return new CbDtoConditionClause<>(litebridgeContext,
                 LogicOperator.NOOP,
                 field,

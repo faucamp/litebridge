@@ -248,6 +248,7 @@ public class SelectEngineTerminal {
                         .toList();
             } else {
                 // Single type override
+                //noinspection NullableProblems
                 return unwrap(dtoClass, rows, litebridgeContext.typeConverter());
             }
         } else {
@@ -427,6 +428,7 @@ public class SelectEngineTerminal {
             }
 
             final Row result;
+            //noinspection NullableProblems
             final Class<?>[] resultTypes = selectNode.resultTypes();
 
             if (resultTypes != null) {
