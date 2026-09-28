@@ -78,7 +78,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
 
         if (usingNode.query() != null) {
             final String queryAlias = usingNode.alias() != null ? usingNode.alias() : aliasGenerator.newAlias("using");
-            using = getSelectTargetQuery(Objects.requireNonNull(usingNode.query()), queryAlias, true);
+            using = getSelectTargetQuery(Objects.requireNonNull(usingNode.query()), queryAlias);
             return;
         }
 

@@ -218,10 +218,20 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
     }
 
     protected final OrmTable getOrmTable(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass) {
-        final OrmTable ormTable;
+        return getOrmTable(dtoClass, contextDtoClass, null);
+    }
+
+    protected final OrmTable getOrmTable(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass, final @Nullable Class<?> fallbackContextDtoClass) {
+        OrmTable ormTable;
 
         if (contextDtoClass != null) {
             ormTable = tableRegistry.getOrmTableInContextOrThrow(dtoClass, contextDtoClass);
+        } else if (fallbackContextDtoClass != null) {
+            ormTable = tableRegistry.getOrmTable(dtoClass);
+
+            if (ormTable == null) {
+                ormTable = tableRegistry.getOrmTableInContextOrThrow(dtoClass, fallbackContextDtoClass);
+            }
         } else {
             ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
         }
@@ -258,14 +268,15 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
 
     protected final SelectTarget getSelectTargetDto(final Class<?> dtoClass,
                                                     final @Nullable Class<?> contextDtoClass,
-                                                    final @Nullable String alias, final boolean createAliasIfNull) {
-        final OrmTable ormTable = getOrmTable(dtoClass, contextDtoClass);
+                                                    final @Nullable Class<?> fallbackContextDtoClass,
+                                                    final @Nullable String alias) {
+        final OrmTable ormTable = getOrmTable(dtoClass, contextDtoClass, fallbackContextDtoClass);
         final Table table = ormTable.getMetaData().table();
         final String tableAlias = alias != null ? alias : aliasGenerator.newTableAlias(table);
         return new AliasedTable(tableAlias, table);
     }
 
-    protected final SelectTarget getSelectTargetTable(final String tableName, final @Nullable String alias, final boolean createAliasIfNull) {
+    protected final SelectTarget getSelectTargetTable(final String tableName, final @Nullable String alias) {
         final Table table = tableRegistry.getOrCreateSpiTable(tableName);
 
         if (alias != null) {
@@ -275,7 +286,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         }
     }
 
-    protected final SelectTarget getSelectTargetQuery(final QueryNode fromQueryNode, final @Nullable String alias, final boolean createAliasIfNull) {
+    protected final SelectTarget getSelectTargetQuery(final QueryNode fromQueryNode, final @Nullable String alias) {
         final SelectTarget query;
         litebridgeContext.aliasGenerator().pushScope();
         final PreparedOperation preparedOperation = litebridgeContext.createQueryCompiler().compile(fromQueryNode);

@@ -160,8 +160,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 selectNode.contextDtoClass(),
                 selectNode.table(),
                 selectNode.fromQueryNode(),
-                selectNode.alias(),
-                litebridgeContext.mode() == LitebridgeContext.Mode.DTO);
+                selectNode.alias());
     }
 
     private List<SelectTarget> addJoinSelectTargets(final SelectTarget from) {
@@ -180,8 +179,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                     joinNode.contextDtoClass(),
                     joinNode.table(),
                     joinNode.queryNode(),
-                    joinNode.alias(),
-                    litebridgeContext.mode() == LitebridgeContext.Mode.DTO);
+                    joinNode.alias());
 
             joinSpec.setJoinTarget(joinTarget);
             selectTargets.add(joinTarget);
@@ -648,19 +646,18 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                                          final @Nullable Class<?> contextDtoClass,
                                          final @Nullable String tableName,
                                          final @Nullable QueryNode fromQueryNode,
-                                         final @Nullable String alias,
-                                         final boolean createAliasIfNull) {
+                                         final @Nullable String alias) {
         final SelectTarget selectTarget;
 
         if (dtoClass != null) {
             // Selecting a DTO/entity
-            selectTarget = getSelectTargetDto(dtoClass, contextDtoClass, alias, createAliasIfNull);
+            selectTarget = getSelectTargetDto(dtoClass, contextDtoClass, selectNode.dtoClass(), alias);
         } else if (tableName != null) {
             // Selecting a table directly
-            selectTarget = getSelectTargetTable(tableName, alias, createAliasIfNull);
+            selectTarget = getSelectTargetTable(tableName, alias);
         } else if (fromQueryNode != null) {
             // Selecting from a subquery
-            selectTarget = getSelectTargetQuery(fromQueryNode, alias, createAliasIfNull);
+            selectTarget = getSelectTargetQuery(fromQueryNode, alias);
         } else {
             // Select without a source table; database providers handle this differently (e.g. "DUAL" in Oracle)
             selectTarget = SelectTarget.voidTarget();
