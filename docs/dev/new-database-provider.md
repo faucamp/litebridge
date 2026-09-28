@@ -84,7 +84,6 @@ By extending `AbstractDatabaseProvider`, the focus can be placed on the database
 Key methods to override in the provider implementation:
 
 - **Constructor**: Call `super(new DefaultTypeConverter())` or provide a custom converter.
-- **`createColumnIdentifierGenerator()`**: Return a custom `ColumnIdentifierGenerator` to define how to quote identifiers (tables, columns) and handle alias declarations.
 - **`createSelectSqlGenerator()`**: Return a custom `SelectSqlGenerator` to implement specific pagination syntax or other `SELECT` statement customizations.
 - **`createAliasTransformer()`**: Return a custom `AliasTransformer` if the database expects specific alias formatting (e.g., all uppercase).
 - **`createPreparedStatementUsingConnection(...)`**: Customize how `PreparedStatement` instances are created, for example to handle generated keys differently.

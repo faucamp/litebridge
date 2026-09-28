@@ -1,6 +1,5 @@
 package org.litebridge.db.oracle.sql;
 
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.math.MathOperator;

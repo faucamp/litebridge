@@ -69,7 +69,7 @@
     - Split SQL generation and execution into distinct engine components for improved flexibility and maintainability.
     - Native SQL and ORM-generated SQL now follow the same execution path.
     - Mathematical operations can now be overridden more simply in database providers
-    - `LabelGenerator` replace `ColumnIdentifierGenerator`; simplify and standardise alias handling
+    - `LabelGenerator` replaces `ColumnIdentifierGenerator`; simplify and standardise alias handling
     - Refactor and simplify `SelectExpression` reference implementations.
 - PostgreSQL Database Provider:
     - Add postgres-specific `COUNT(*)` expression to handle references to it in conditions using expression functions correctly.
