@@ -32,7 +32,7 @@ public abstract sealed class AbstractTODelegateExpressionSpec<T>
     }
 
     @Override
-    public void setTableAlias(final String tableAlias) {
+    public void setTableAlias(final @Nullable String tableAlias) {
         // Propagate the table alias to the lower level
         target.setTableAlias(tableAlias);
     }

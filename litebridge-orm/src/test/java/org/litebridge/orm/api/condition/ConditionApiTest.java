@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.condition;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
@@ -68,7 +69,7 @@ class ConditionApiTest {
                     return null;
                 }) {
             @Override
-            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(QueryNode conditionNode) {
+            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(@NonNull QueryNode conditionNode) {
                 capturedNode[0] = conditionNode;
                 return null;
             }
@@ -95,7 +96,7 @@ class ConditionApiTest {
                     return null;
                 }) {
             @Override
-            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(QueryNode conditionNode) {
+            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(@NonNull QueryNode conditionNode) {
                 capturedNode[0] = conditionNode;
                 return null;
             }

@@ -1,5 +1,6 @@
 package org.litebridge.orm.engine.compiler;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.query.LogicOperator;
 
@@ -21,7 +22,7 @@ class ContextStackTest {
         }
 
         @Override
-        protected String newSubInstance(final LogicOperator logicOperator) {
+        protected String newSubInstance(final @NonNull LogicOperator logicOperator) {
             return logicOperator.name() + "-" + (++counter);
         }
     }

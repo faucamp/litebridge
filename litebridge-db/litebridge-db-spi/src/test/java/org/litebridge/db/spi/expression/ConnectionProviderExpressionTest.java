@@ -1,5 +1,6 @@
 package org.litebridge.db.spi.expression;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.query.Select;
@@ -35,7 +36,7 @@ class ConnectionProviderExpressionTest {
     private static class TestConnectionProviderExpression implements ConnectionProviderExpression {
 
         @Override
-        public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
+        public String toSql(final @NonNull Operation operation, final @NonNull ConnectionProvider connectionProvider) {
             return "SELECT * FROM TABLE";
         }
     }

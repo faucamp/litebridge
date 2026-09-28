@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.select.impl;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
@@ -45,7 +46,7 @@ class AbstractCbConditionClauseTest {
                     return null;
                 }) {
             @Override
-            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(QueryNode conditionNode) {
+            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(@NonNull QueryNode conditionNode) {
                 capturedNode[0] = conditionNode;
                 return null;
             }

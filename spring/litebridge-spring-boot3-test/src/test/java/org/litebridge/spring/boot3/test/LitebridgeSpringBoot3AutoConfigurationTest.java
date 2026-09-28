@@ -1,6 +1,7 @@
 package org.litebridge.spring.boot3.test;
 
 import org.flywaydb.core.Flyway;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
@@ -200,32 +201,32 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         }
 
         @Override
-        public DatabaseMetaData databaseMetaData(final ConnectionProvider connectionProvider) throws SQLException {
+        public DatabaseMetaData databaseMetaData(final @NonNull ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 
         @Override
-        public TableMetaData tableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {
+        public TableMetaData tableMetaData(final @NonNull Table table, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 
         @Override
-        public <T extends Result> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) throws SQLException {
+        public <T extends Result> T executeUpdate(final @NonNull PreparedSql preparedSql, final @NonNull Class<T> resultType, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 
         @Override
-        public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        public BatchUpdateResult executeBatch(final @NonNull List<PreparedSql> preparedSql, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 
         @Override
-        public List<Row> executeQuery(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        public List<Row> executeQuery(final @NonNull PreparedSql preparedSql, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
             return List.of();
         }
 
         @Override
-        public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
+        public String toSql(final @NonNull Operation operation, final @NonNull ConnectionProvider connectionProvider) {
             return "";
         }
 
@@ -235,7 +236,7 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         }
 
         @Override
-        public SequenceColumnValueGenerator sequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
+        public SequenceColumnValueGenerator sequenceColumnValueGenerator(final @NonNull String sequence) throws UnsupportedOperationException {
             throw new UnsupportedOperationException();
         }
 
