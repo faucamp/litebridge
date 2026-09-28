@@ -1,18 +1,8 @@
 package org.litebridge.db.spi;
 
-import org.jspecify.annotations.Nullable;
-import org.litebridge.commons.ObjectUtils;
-
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.StringJoiner;
-import java.util.TreeMap;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Metadata for a database table, including its primary keys and expressions.

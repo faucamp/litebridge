@@ -35,12 +35,13 @@ class ColumnTest {
     }
 
     @Test
-    void equals_sameInstance() {
+    void equals_sameDataDifferentInstance() {
         // Given
         final Column column = new Column(table, "testName");
+        final Column otherInstance = new Column(table, "testName");
 
         // When/Then
-        assertTrue(column.equals(column));
+        assertEquals(column, otherInstance);
     }
 
     @Test

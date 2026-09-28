@@ -103,7 +103,7 @@ class TableTest {
         assertEquals(original.catalog(), copy.catalog());
         assertEquals(original.schema(), copy.schema());
         assertEquals(original.name(), copy.name());
-        assertTrue(original.equals(copy));
+        assertEquals(original, copy);
     }
 
     @Test

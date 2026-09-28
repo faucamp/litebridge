@@ -5,15 +5,6 @@ package org.litebridge.db.spi.update;
  * <p>
  * It encapsulates the number of rows affected by each operation in an array.
  */
-public final class BatchUpdateResult implements UpdateOpResult {
+public record BatchUpdateResult(int[] rowsAffected) implements UpdateOpResult {
 
-    private final int[] rowsAffected;
-
-    public BatchUpdateResult(final int[] rowsAffected) {
-        this.rowsAffected = rowsAffected;
-    }
-
-    public int[] rowsAffected() {
-        return rowsAffected;
-    }
 }

@@ -1,6 +1,5 @@
 package org.litebridge.db.spi;
 
-import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
@@ -8,17 +7,13 @@ import java.util.StringJoiner;
  * <p>
  * It extends the functionality of the {@code Aliased} class to include the concept of table association.
  * Columns can be used to construct queries and represent database metadata.
+ *
+ * @param name  Name of the database column.
+ * @param table Table to which this column belongs.
  */
-public final class Column {
+public record Column(String name, Table table) {
 
     private static final Table NO_TABLE = VirtualTable.anonymous();
-
-    /**
-     * Target name
-     */
-    private final String name;
-
-    private final Table table;
 
     /**
      * Construct a new {@code Column} instance associated with the specified table and column name.
@@ -27,8 +22,7 @@ public final class Column {
      * @param name  the name of the column; must not be null
      */
     public Column(final Table table, final String name) {
-        this.name = name;
-        this.table = table;
+        this(name, table);
     }
 
     /**
@@ -40,26 +34,8 @@ public final class Column {
         this(NO_TABLE, name);
     }
 
-    /**
-     * Retrieve the name of the aliased entity.
-     *
-     * @return the name of the aliased entity
-     */
-    public String name() {
-        return name;
-    }
-
     public boolean hasTable() {
         return table != null && table != NO_TABLE;
-    }
-
-    /**
-     * Retrieve the {@code Table} instance associated with this {@code Column}.
-     *
-     * @return the {@code Table} to which this column belongs
-     */
-    public Table table() {
-        return table;
     }
 
     /**
@@ -73,18 +49,6 @@ public final class Column {
         } else {
             return name();
         }
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        return this == o || (o instanceof final Column column
-                && Objects.equals(name, column.name)
-                && Objects.equals(table, column.table));
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, table);
     }
 
     /**
