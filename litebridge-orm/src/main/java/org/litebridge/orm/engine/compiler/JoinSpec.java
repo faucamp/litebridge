@@ -2,6 +2,7 @@ package org.litebridge.orm.engine.compiler;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.Join;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.orm.engine.ast.ConditionJoinUsingNode;
 import org.litebridge.orm.engine.ast.JoinNode;
 
@@ -12,6 +13,7 @@ final class JoinSpec {
     private final @Nullable JoinNode joinNode;
     private final ConditionGroupSpecStack conditionGroupSpecStack = new ConditionGroupSpecStack();
     private @Nullable ConditionJoinUsingNode conditionJoinUsingNode;
+    private @Nullable SelectTarget joinTarget;
 
     JoinSpec(final JoinNode joinNode) {
         this.joinNode = joinNode;
@@ -39,5 +41,13 @@ final class JoinSpec {
 
     public Join.JoinType type() {
         return joinNode().type();
+    }
+
+    public SelectTarget getJoinTarget() {
+        return Objects.requireNonNull(joinTarget);
+    }
+
+    public void setJoinTarget(@Nullable final SelectTarget joinTarget) {
+        this.joinTarget = joinTarget;
     }
 }

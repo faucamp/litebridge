@@ -351,9 +351,27 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return new TargetResolution(selectTarget, table, ormTable, tableAlias);
     }
 
-    protected AliasedTable createAliasedTable(final Table table) {
-        final String tableAlias = aliasGenerator.newTableAlias(table);
-        return new AliasedTable(tableAlias, table);
+    protected final boolean matchesSelectTarget(final ExpressionSpec expressionSpec, final SelectTarget selectTarget) {
+        return switch (expressionSpec) {
+            case QueryField queryField -> {
+                final Class<?> dtoClass = QueryFieldInspector.getDtoClass(queryField);
+                final Table table = tableRegistry.getOrmTableOrThrow(dtoClass).getMetaData().table();
+
+                yield table.equals(getTable(selectTarget));
+            }
+            case ColumnExpressionSpec columnExpressionSpec -> {
+                final String tableAlias = columnExpressionSpec.getTableAlias();
+
+                if (tableAlias == null) {
+                    yield matchesSelectTarget(columnExpressionSpec.getColumn().name(), selectTarget);
+                }
+
+                yield tableAlias.equals(getAlias(selectTarget));
+            }
+            case Resolvable resolvable -> matchesSelectTarget(resolvable.column(), selectTarget);
+            // Default to the FROM clause (first target)
+            default -> true;
+        };
     }
 
     protected final @Nullable SelectTarget findSelectTargetOrNull(final ExpressionSpec expressionSpec, final List<SelectTarget> selectTargets) {
@@ -410,8 +428,6 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             return selectTargets.getFirst();
         }
 
-        final TableMetaDataCache tableMetaDataCache = litebridgeContext.tableMetaDataCache();
-        final boolean dtoMode = litebridgeContext.mode() == LitebridgeContext.Mode.DTO;
         SelectTarget selectTarget = null;
 
         for (SelectTarget st : selectTargets) {
@@ -423,21 +439,9 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
                 continue;
             }
 
-            if (dtoMode) {
-                final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
-
-                if (ormTable.hasField(columnName)) {
-                    selectTarget = st;
-                    break;
-                }
-            } else {
-                final TableMetaData tableMetaData = tableMetaDataCache.ensureTableMetaData(table);
-
-                if (tableMetaData.hasColumn(columnName)) {
-                    // Column found in select target table
-                    selectTarget = st;
-                    break;
-                }
+            if (matchesSelectTarget(columnName, st)) {
+                selectTarget = st;
+                break;
             }
         }
 
@@ -446,6 +450,28 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         }
 
         return selectTarget;
+    }
+
+    protected final boolean matchesSelectTarget(final String columnName, final SelectTarget selectTarget) {
+        if (columnName.isEmpty()) {
+            // Aggregate function or similar (e.g. COUNT(*)); return the "FROM" target (first)
+            return true;
+        }
+
+        final Table table = getTable(selectTarget);
+
+        if (table.isVirtual()) {
+            return true;
+        }
+
+        if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
+            final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
+            return ormTable.hasField(columnName);
+        } else {
+            final TableMetaDataCache tableMetaDataCache = litebridgeContext.tableMetaDataCache();
+            final TableMetaData tableMetaData = tableMetaDataCache.ensureTableMetaData(table);
+            return tableMetaData.hasColumn(columnName);
+        }
     }
 
     private ExpressionSpec resolveConditionExpressionSpec(final ExpressionSpec expressionSpec,

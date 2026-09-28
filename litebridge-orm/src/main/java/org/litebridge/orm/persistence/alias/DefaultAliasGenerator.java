@@ -68,12 +68,16 @@ public final class DefaultAliasGenerator implements AliasGenerator {
 
     @Override
     public String newTableAlias(final Table table) {
-        return scope.current().tableAliasMap.computeIfAbsent(table, t -> newAlias(t.name()));
+        final String tableAlias = newAlias(table.name());
+        scope.current().tableAliasMap.put(table, tableAlias);
+        return tableAlias;
     }
 
     @Override
     public String newColumnAlias(final Column column) {
-        return scope.current().columnAliasMap.computeIfAbsent(column, c -> newAlias(c.qualifiedName()));
+        final String columnAlias = newAlias(column.qualifiedName());
+        scope.current().columnAliasMap.put(column, columnAlias);
+        return columnAlias;
     }
 
     @Override
