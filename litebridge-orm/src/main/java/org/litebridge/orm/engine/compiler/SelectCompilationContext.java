@@ -392,7 +392,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final Table table = getTable(selectTarget);
         final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
         final TableMetaData tableMetaData = ormTable.getMetaData();
-        final ConditionGroupSpec conditionGroupSpec = whereConditionGroupSpecStack.current();
+        final ConditionGroupSpec conditionGroupSpec = Objects.requireNonNull(whereConditionGroupSpecStack).current();
 
         final String[] primaryKeyFieldNames = tableMetaData.primaryKey().stream()
                 .map(columnMetaData -> ormTable.getFieldForColumnName(columnMetaData.name()).name())
@@ -484,7 +484,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                         .map(fieldName -> {
                             final SelectTarget selectTarget = findSelectTarget(fieldName, selectTargets);
                             final Table table = getTable(selectTarget);
-                            final OrmTable ormTable = tableRegistry.getOrmTable(table);
+                            final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
                             final String tableAlias = getAlias(selectTarget);
                             final Column column = ormTable.columnMetaDataForField(fieldName).column();
                             final String columnAlias = aliasGenerator.columnAlias(column);
@@ -514,7 +514,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         return havingConditionGroupSpecStack != null ? toConditionGroup(havingConditionGroupSpecStack.current(), selectTargets, selectExpressions) : null;
     }
 
-    private List<OrderBy> processOrderByClauses(final List<SelectTarget> selectTargets, final SelectExpressions selectExpressions) {
+    private @Nullable List<OrderBy> processOrderByClauses(final List<SelectTarget> selectTargets, final SelectExpressions selectExpressions) {
         if (orderByNodes == null) {
             return null;
         }
@@ -753,7 +753,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final Table rightTable = getTable(rightSelectTarget);
         final String rightTableAlias = getAlias(rightSelectTarget);
         final TableMetaData rightTableMetaData = getTableMetaData(rightTable);
-        final ColumnMetaData rightColumnMetaData = rightTableMetaData.column(leftColumnMetaData.getJoinColumn());
+        final ColumnMetaData rightColumnMetaData = rightTableMetaData.column(Objects.requireNonNull(leftColumnMetaData.getJoinColumn()));
 
         // Add right table columns to select
         SelectColumnSpec rightSelectColumnSpec = null;

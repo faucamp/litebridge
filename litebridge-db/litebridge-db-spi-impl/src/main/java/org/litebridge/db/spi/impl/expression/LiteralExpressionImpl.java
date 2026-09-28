@@ -39,12 +39,9 @@ public class LiteralExpressionImpl extends AbstractAliasedExpression implements 
         this(value, null, labelGenerator);
     }
 
+    @Override
     public @Nullable Object value() {
         return value;
-    }
-
-    public @Nullable String alias() {
-        return alias;
     }
 
     @Override

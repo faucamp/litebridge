@@ -126,7 +126,7 @@ public final class ProtoNestableTOExpr<T> extends AbstractAliasable
 
     @Override
     public int hashCode() {
-        return Objects.hash(typeOverride, type, target, alias, args);
+        return Objects.hash(typeOverride, type, target, alias, Arrays.hashCode(args));
     }
 
     @Override

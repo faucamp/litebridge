@@ -7,6 +7,7 @@ import java.util.StringJoiner;
 /**
  * Database configuration for reverse engineering.
  */
+@SuppressWarnings("NotNullFieldNotInitialized")
 public final class DatabaseConfig {
 
     /**

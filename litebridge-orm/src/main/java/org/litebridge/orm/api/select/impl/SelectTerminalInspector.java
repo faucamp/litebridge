@@ -1,6 +1,5 @@
 package org.litebridge.orm.api.select.impl;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.engine.ast.QueryNode;
 
@@ -18,7 +17,7 @@ public final class SelectTerminalInspector {
      * @param selectTerminal the {@link SelectTerminal} to inspect
      * @return the {@link QueryNode} associated with the given {@link SelectTerminal}
      */
-    public static @Nullable QueryNode getNode(final SelectTerminal<?> selectTerminal) {
+    public static QueryNode getNode(final SelectTerminal<?> selectTerminal) {
         if (selectTerminal instanceof DelegatingSelectTerminal<?> delegatingSelector) {
             return delegatingSelector.node();
         } else {

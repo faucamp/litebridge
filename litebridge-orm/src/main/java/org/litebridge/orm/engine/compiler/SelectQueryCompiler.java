@@ -14,6 +14,8 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 
+import java.util.Objects;
+
 /**
  * Specialised query node compiler for SELECT statements.
  */
@@ -48,7 +50,7 @@ final class SelectQueryCompiler extends AbstractQueryCompiler<SelectCompilationC
 
     private void applyJoinNode(final JoinNode joinNode, final SelectCompilationContext compilationContext) {
         final ConditionGroupSpecStack conditionGroupSpecStack = compilationContext.addJoin(joinNode);
-        flattenAndApplyConditionNode(joinNode.condition(), conditionGroupSpecStack, compilationContext);
+        flattenAndApplyConditionNode(Objects.requireNonNull(joinNode.condition()), conditionGroupSpecStack, compilationContext);
     }
 
     private void applyWhereNode(final WhereNode whereNode, final SelectCompilationContext compilationContext) {

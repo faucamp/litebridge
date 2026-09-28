@@ -8,6 +8,7 @@ import java.sql.JDBCType;
 /**
  * SQL type mapping customisation configuration for reverse engineering.
  */
+@SuppressWarnings("NotNullFieldNotInitialized")
 public class SqlTypeMappingConfig {
 
     /**

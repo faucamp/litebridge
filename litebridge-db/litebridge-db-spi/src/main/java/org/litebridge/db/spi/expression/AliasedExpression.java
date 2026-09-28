@@ -9,7 +9,7 @@ public interface AliasedExpression extends SelectExpression {
      *
      * @return The optional alias.
      */
-    String alias();
+    @Nullable String alias();
 
     /**
      * Retrieves the source/parent table alias of this expression.

@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -297,17 +298,22 @@ public class SelectEngineTerminal {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> List<T> unwrap(final Class<T> type, final List<Row> rows, final TypeConverter typeConverter) {
+    private <T> List<@Nullable T> unwrap(final Class<T> type, final List<Row> rows, final TypeConverter typeConverter) {
         if (type == Row.class) {
             return (List<T>) rows;
         }
 
-        return rows.stream()
-                .map(row -> unwrap(type, row.column(0), typeConverter))
-                .toList();
+        final List<@Nullable T> list = new ArrayList<>(rows.size());
+
+        for (final Row row : rows) {
+            final T unwrap = unwrap(type, row.column(0), typeConverter);
+            list.add(unwrap);
+        }
+
+        return list;
     }
 
-    private <T> T unwrap(final Class<T> type, final RowColumn rowColumn, final TypeConverter typeConverter) {
+    private <T> @Nullable T unwrap(final Class<T> type, final RowColumn rowColumn, final TypeConverter typeConverter) {
         return typeConverter.convert(rowColumn.value(), type);
     }
 

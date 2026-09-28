@@ -112,7 +112,7 @@ public final class EntityGenerator {
                                                      final Map<String, TableMetaData> tableMetaDataMap,
                                                      final ManyToManyMappingResult manyToManyMappingResult,
                                                      final Map<String, GeneratedEntity> entities) throws MojoExecutionException {
-        final @Nullable TableMappingConfig tableMappingConfig = getTableMappingConfig(tableMetaData);
+        final TableMappingConfig tableMappingConfig = getTableMappingConfig(tableMetaData);
         final String entityClassName = createEntityClassName(tableMetaData, tableMappingConfig);
 
         if (entities.containsKey(tableMetaData.qualifiedName())) {

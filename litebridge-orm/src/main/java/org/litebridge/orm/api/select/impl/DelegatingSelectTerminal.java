@@ -24,7 +24,7 @@ public abstract class DelegatingSelectTerminal<DTO> implements SelectTerminal<DT
 
     protected final SelectEngineTerminal selectEngineTerminal;
     protected final LitebridgeContext litebridgeContext;
-    protected QueryNode node;
+    protected @Nullable QueryNode node;
     protected @Nullable Supplier<QueryNode> pendingNode;
     private final @Nullable Supplier<LitebridgeContext> litebridgeContextSupplier;
 
@@ -119,7 +119,7 @@ public abstract class DelegatingSelectTerminal<DTO> implements SelectTerminal<DT
         if (pendingNode != null) {
             return pendingNode.get();
         } else {
-            return node;
+            return Objects.requireNonNull(node);
         }
     }
 }

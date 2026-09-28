@@ -1099,7 +1099,7 @@ public class DtoMapper {
         private final OrmTable ormTable;
         private final int[] pkColumnIndexes;
         private final List<FieldMapping> fieldMappings;
-        private @Nullable int[] constructorArgIndices;
+        private int @Nullable [] constructorArgIndices;
         private @Nullable List<GenericDtoDependency> genericDtoDependencies;
 
         private MappingData(final Class<?> dtoClass,
@@ -1144,7 +1144,7 @@ public class DtoMapper {
             return constructorArgIndices;
         }
 
-        public void setConstructorArgIndices(final @Nullable int[] constructorArgIndices) {
+        public void setConstructorArgIndices(final int @Nullable [] constructorArgIndices) {
             this.constructorArgIndices = constructorArgIndices;
         }
 
@@ -1168,14 +1168,14 @@ public class DtoMapper {
             return Objects.equals(this.dtoClass, that.dtoClass) &&
                     Objects.equals(this.table, that.table) &&
                     Objects.equals(this.ormTable, that.ormTable) &&
-                    Objects.equals(this.pkColumnIndexes, that.pkColumnIndexes) &&
+                    Arrays.equals(this.pkColumnIndexes, that.pkColumnIndexes) &&
                     Objects.equals(this.fieldMappings, that.fieldMappings) &&
-                    Objects.equals(this.constructorArgIndices, that.constructorArgIndices);
+                    Arrays.equals(this.constructorArgIndices, that.constructorArgIndices);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(dtoClass, table, ormTable, pkColumnIndexes, fieldMappings, constructorArgIndices);
+            return Objects.hash(dtoClass, table, ormTable, Arrays.hashCode(pkColumnIndexes), fieldMappings, Arrays.hashCode(constructorArgIndices));
         }
 
         @Override

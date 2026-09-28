@@ -22,6 +22,7 @@ public class OutputConfig {
      * Output package for generated entity classes/metamodels
      */
     @Parameter(required = true)
+    @SuppressWarnings("NotNullFieldNotInitialized")
     private String outputPackage;
 
     /**

@@ -189,7 +189,7 @@ public final class QueryBindValueExtractor {
 
     private static void extractBindValuesAtLevel(final QueryNode lastNode,
                                                  final List<@Nullable Object> bindValues,
-                                                 final @Nullable LitebridgeContext litebridgeContext) {
+                                                 final LitebridgeContext litebridgeContext) {
         final List<QueryNode> nodes = chainInSourceOrder(lastNode);
         final List<ConditionGroupNode> subgroups = new ArrayList<>();
 

@@ -8,6 +8,8 @@ import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridge.orm.expression.intent.ConvertSpec;
 import org.litebridge.orm.expression.select.AliasReferenceSpec;
 
+import java.util.Objects;
+
 /**
  * Basic metamodel field definition.
  * <p>
@@ -48,7 +50,7 @@ public sealed class QueryField implements ExpressionSpec permits NumericQueryFie
     }
 
     public ExpressionSpec as(final AliasReferenceSpec alias) {
-        return as(alias.alias());
+        return as(Objects.requireNonNull(alias.alias()));
     }
 
     public ExpressionSpec as(final String alias) {
