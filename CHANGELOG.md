@@ -70,9 +70,11 @@
     - Mathematical operations can now be overridden more simply in database providers
     - `LabelGenerator` replace `ColumnIdentifierGenerator`; simplify and standardise alias handling
     - Refactor and simplify `SelectExpression` reference implementations.
+- PostgreSQL Database Provider:
+    - Add postgres-specific `COUNT(*)` expression to handle references to it in conditions using expression functions correctly.
 - Oracle Database Provider:
     - Improve aliasing behaviour by enforcing Oracle's SELECT clause processing order
-
+ 
 ### Fixed
 
 - Oracle Database Provider:

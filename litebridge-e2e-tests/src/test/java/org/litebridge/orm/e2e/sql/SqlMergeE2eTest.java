@@ -168,7 +168,7 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
         {
             final UpdateResult insertResult = litebridge.mergeInto(personTable, m -> m
                     .using(Fn.alias(q -> q
-                                    .select(Fn.literal(123).as("PERSON_ID")),
+                                    .select(Fn.literal(123).as(personId)),
                             "X"))
                     .on(personId).eq(Fn.aliasRef("X", personId))
                     .whenMatched(u -> u
@@ -192,7 +192,7 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
         {
             final UpdateResult updateResult = litebridge.mergeInto(personTable, m -> m
                     .using(Fn.alias(q -> q
-                                    .select(Fn.literal(123).as("PERSON_ID")),
+                                    .select(Fn.literal(123).as(personId)),
                             "X"))
                     .on(personId).eq(Fn.aliasRef("X", personId))
                     .whenMatched(u -> u

@@ -91,23 +91,51 @@ public final class ContextBuilder {
         return this;
     }
 
+    public DatabaseProviderMetaData ensureDatabaseProviderMetaData() {
+        databaseProviderMetaData = Objects.requireNonNullElseGet(databaseProviderMetaData, () -> new DatabaseProviderMetaData(true, true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW));
+        return databaseProviderMetaData;
+    }
+
+    public MetaDataEngine ensureMetaDataEngine() {
+        metaDataEngine = Objects.requireNonNullElseGet(metaDataEngine, () -> new DefaultMetaDataEngine(ensureDatabaseProviderMetaData()));
+        return metaDataEngine;
+    }
+
+    public LabelGenerator ensureLabelGenerator() {
+        labelGenerator = Objects.requireNonNullElseGet(labelGenerator, LabelGenerator::new);
+        return labelGenerator;
+    }
+
+    public MathOperationGenerator ensureMathOperationGenerator() {
+        mathOperationGenerator = Objects.requireNonNullElseGet(mathOperationGenerator, () -> new MathOperationGenerator(ensureLabelGenerator()));
+        return mathOperationGenerator;
+    }
+
+    public SqlGenerator ensureSqlGenerator() {
+        sqlGenerator = Objects.requireNonNullElseGet(sqlGenerator, () -> new DefaultSqlGenerator(ensureMetaDataEngine(), ensureLabelGenerator(), ensureMathOperationGenerator()));
+        return sqlGenerator;
+    }
+
+    public TypeConverter ensureTypeConverter() {
+        typeConverter = Objects.requireNonNullElseGet(typeConverter, ContextBuilder::loadDefaultTypeConverter);
+        return typeConverter;
+    }
+
+    public AliasTransformer ensureAliasTransformer() {
+        aliasTransformer = Objects.requireNonNullElseGet(aliasTransformer, DefaultAliasTransformer::new);
+        return aliasTransformer;
+    }
+
+    public ExecutionEngine ensureExecutionEngine() {
+        executionEngine = Objects.requireNonNullElseGet(executionEngine, () -> new ExecutionEngineReturnedKeysAuto(ensureTypeConverter(), ensureAliasTransformer(), ensureDatabaseProviderMetaData().insertCapability()));
+        return executionEngine;
+    }
+
     public DatabaseProviderContext build() {
-        final DatabaseProviderMetaData finalDatabaseProviderMetaData =
-                Objects.requireNonNullElseGet(databaseProviderMetaData, () -> new DatabaseProviderMetaData(true, true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW));
-        final MetaDataEngine finalMetaDataEngine =
-                Objects.requireNonNullElseGet(metaDataEngine, () -> new DefaultMetaDataEngine(finalDatabaseProviderMetaData));
-        final LabelGenerator finalLabelGenerator =
-                Objects.requireNonNullElseGet(labelGenerator, LabelGenerator::new);
-        final MathOperationGenerator finalMathOperationGenerator =
-                Objects.requireNonNullElseGet(mathOperationGenerator, () -> new MathOperationGenerator(finalLabelGenerator));
-        final SqlGenerator finalSqlGenerator =
-                Objects.requireNonNullElseGet(sqlGenerator, () -> new DefaultSqlGenerator(finalMetaDataEngine, finalLabelGenerator, finalMathOperationGenerator));
-        final TypeConverter finalTypeConverter =
-                Objects.requireNonNullElseGet(typeConverter, ContextBuilder::loadDefaultTypeConverter);
-        final AliasTransformer finalAliasTransformer =
-                Objects.requireNonNullElseGet(aliasTransformer, DefaultAliasTransformer::new);
-        final ExecutionEngine finalExecutionEngine =
-                Objects.requireNonNullElseGet(executionEngine, () -> new ExecutionEngineReturnedKeysAuto(finalTypeConverter, finalAliasTransformer, finalDatabaseProviderMetaData.insertCapability()));
+        final MetaDataEngine finalMetaDataEngine = ensureMetaDataEngine();
+        final LabelGenerator finalLabelGenerator = ensureLabelGenerator();
+        final SqlGenerator finalSqlGenerator = ensureSqlGenerator();
+        final ExecutionEngine finalExecutionEngine = ensureExecutionEngine();
         final Function<String, SequenceColumnValueGenerator> finalSequenceColumnValueGenerator =
                 Objects.requireNonNullElseGet(sequenceColumnValueGeneratorCreator, () -> DefaultSequenceColumnValueGenerator::new);
 

@@ -4,9 +4,10 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.update.BatchUpdateResult;
-import org.litebridge.db.spi.update.UpdateOpResult;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -23,6 +24,7 @@ import java.util.Map;
  */
 public final class NativeSqlContext {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(NativeSqlContext.class);
     private final NativeSqlCache nativeSqlCache = new NativeSqlCache();
     private final TransactionalDatabaseProvider databaseProvider;
 
@@ -173,11 +175,17 @@ public final class NativeSqlContext {
     }
 
     private List<Row> query(final PreparedSql preparedSql) {
+        final List<Row> result;
+
         try {
-            return databaseProvider.executeQuery(preparedSql, databaseProvider.transactionManager());
+            result = databaseProvider.executeQuery(preparedSql, databaseProvider.transactionManager());
+            LOGGER.debug("Row count: {}", result.size());
+            LOGGER.trace("Query result: {}", result);
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to execute raw SQL: " + preparedSql.sql(), ex);
         }
+
+        return result;
     }
 
     private BatchUpdateResult executeBatch(final List<PreparedSql> operations) {
