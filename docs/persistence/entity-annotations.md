@@ -126,7 +126,7 @@ scanner.
 
 ### Spring Integration
 
-In Spring applications, the `LitebridgeEntityScanner` can be used to automatically discover and register annotated entities. See [Spring Manual Configuration](../spring/manual-configuration.md#entity-and-mapping-scanning) and [Spring Boot Starter](../spring/spring-boot-starter.md#entity-and-mapping-registration) for more details.
+In Spring applications, the `LitebridgeEntityScanner` can be used to automatically discover and register annotated entities. See [Spring Manual Configuration](../spring/manual-configuration.md) and [Spring Boot Starter](../spring/spring-boot-starter.md#entity-and-mapping-registration) for more details.
 
 ## Relationships
 

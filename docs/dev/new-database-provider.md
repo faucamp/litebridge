@@ -183,7 +183,7 @@ To fully validate the provider, it can be added to the E2E test suite in `litebr
 1. Add the new module as a test dependency in `litebridge-orm/pom.xml`.
 2. Update the E2E test configuration to include the database (usually involving Testcontainers):
    1. Add a new `org.litebridge.orm.e2e.setup.DbEnvironment` implementation for the database.
-   1. Update `org.litebridge.orm.e2e.setup.MultiDbTestExtension` and add the new environment as an invocation context.
-4. Verify that all standard E2E tests pass against the new provider.
+   2. Update `org.litebridge.orm.e2e.setup.MultiDbTestExtension` and add the new environment as an invocation context.
+3. Verify that all standard E2E tests pass against the new provider.
 
 Refer to the [End-to-End Tests](tests.md) documentation for more details on running integration tests.
